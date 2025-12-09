@@ -1781,6 +1781,59 @@ export async function fetchStudentTestResults(testId = null) {
   }
 }
 
+// Fetch all student test results with filtering options
+export async function fetchAllStudentTestResults(filters = {}) {
+  const isServer = typeof window === "undefined";
+
+  if (isServer) {
+    return [];
+  }
+
+  try {
+    const token = localStorage.getItem("student_token");
+    if (!token) {
+      return [];
+    }
+
+    const {
+      examId,
+      subjectId,
+      unitId,
+      chapterId,
+      topicId,
+      subTopicId,
+      limit = 1000,
+    } = filters;
+
+    // Build query parameters
+    const params = new URLSearchParams();
+    if (examId) params.append("examId", examId);
+    if (subjectId) params.append("subjectId", subjectId);
+    if (unitId) params.append("unitId", unitId);
+    if (chapterId) params.append("chapterId", chapterId);
+    if (topicId) params.append("topicId", topicId);
+    if (subTopicId) params.append("subTopicId", subTopicId);
+    if (limit) params.append("limit", limit.toString());
+
+    const url = `/student/test-results?${params.toString()}`;
+
+    const response = await api.get(url, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (response.data.success && Array.isArray(response.data.data)) {
+      return response.data.data;
+    }
+    return [];
+  } catch (error) {
+    logger.error("Error fetching all test results:", error);
+    return [];
+  }
+}
+
 // Re-export slug utilities for backward compatibility
 export const createSlug = createSlugUtil;
 export const findByIdOrSlug = findByIdOrSlugUtil;

@@ -91,7 +91,16 @@ const TabsClient = ({
 
         case "Performance":
           return (
-            <PerformanceTab entityType={entityType} entityName={entityName} />
+            <PerformanceTab
+              entityType={entityType}
+              entityName={entityName}
+              examId={examId}
+              subjectId={subjectId}
+              unitId={unitId}
+              chapterId={chapterId}
+              topicId={topicId}
+              subTopicId={subTopicId}
+            />
           );
 
         default:
