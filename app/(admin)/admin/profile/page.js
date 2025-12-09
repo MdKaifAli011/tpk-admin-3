@@ -78,30 +78,50 @@ const ProfilePage = () => {
     return roles.find((r) => r.value === roleValue) || roles[4]; // Default to viewer
   };
 
-  // Fetch current user data
+  // Fetch current user data from server (verifies user still exists)
   useEffect(() => {
-    const fetchUserData = () => {
+    const fetchUserData = async () => {
       try {
         setLoading(true);
         setError(null);
 
-        // Get user from localStorage
-        const userStr = localStorage.getItem("user");
-        if (userStr) {
-          const userData = JSON.parse(userStr);
-          setUser(userData);
-          setFormData({
-            name: userData.name || "",
-            email: userData.email || "",
-            password: "",
-            confirmPassword: "",
-          });
-        } else {
-          setError("User data not found. Please login again.");
+        // CRITICAL: Verify user exists in database, not just localStorage
+        // This ensures deleted users are immediately logged out
+        try {
+          const response = await api.get("/auth/verify");
+
+          if (response.data.success && response.data.data) {
+            // User exists and is active - update state
+            const userData = response.data.data;
+            setUser(userData);
+            setFormData({
+              name: userData.name || "",
+              email: userData.email || "",
+              password: "",
+              confirmPassword: "",
+            });
+            // Update localStorage with fresh data
+            localStorage.setItem("user", JSON.stringify(userData));
+          } else {
+            // User not found or inactive
+            throw new Error("User account not found or inactive");
+          }
+        } catch (err) {
+          // User deleted or token invalid - clear everything and redirect
+          console.error("Error verifying user:", err);
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          setError("Your account is no longer available. Please login again.");
+          // Redirect to login after a short delay
+          setTimeout(() => {
+            window.location.href = "/admin/login";
+          }, 2000);
         }
       } catch (err) {
         console.error("Error fetching user data:", err);
-        setError("Failed to load user data");
+        setError("Failed to load user data. Please login again.");
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
       } finally {
         setLoading(false);
       }
@@ -193,7 +213,8 @@ const ProfilePage = () => {
     } catch (err) {
       console.error("Error updating profile:", err);
       const errorMessage =
-        err.response?.data?.message || "Failed to update profile. Please try again.";
+        err.response?.data?.message ||
+        "Failed to update profile. Please try again.";
       setError(errorMessage);
       showError(errorMessage);
     } finally {
@@ -248,7 +269,9 @@ const ProfilePage = () => {
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center bg-white rounded-lg border border-gray-200 p-8 max-w-md">
             <span className="text-3xl mb-4 inline-block">👤</span>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">No User Data</h3>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">
+              No User Data
+            </h3>
             <p className="text-sm text-gray-500 mb-6">
               User data not found. Please login again.
             </p>
@@ -375,7 +398,8 @@ const ProfilePage = () => {
                 </span>
               </div>
               <p className="text-xs text-gray-500 mt-1">
-                Role cannot be changed. Contact administrator to change your role.
+                Role cannot be changed. Contact administrator to change your
+                role.
               </p>
             </div>
 
@@ -569,4 +593,3 @@ const ProfilePage = () => {
 };
 
 export default ProfilePage;
-

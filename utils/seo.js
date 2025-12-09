@@ -3,6 +3,7 @@
 // ============================================
 
 import { SEO_DEFAULTS, APP_CONFIG } from "@/constants";
+import { logger } from "@/utils/logger";
 
 /**
  * Generate SEO metadata for pages
@@ -13,12 +14,14 @@ import { SEO_DEFAULTS, APP_CONFIG } from "@/constants";
 export function generateMetadata(data, options = {}) {
   const { type = "", name = "", path = "" } = options;
 
-  // Debug logging
-  console.log("=== generateSEO DEBUG ===");
-  console.log("Received data:", data);
-  console.log("Data title:", data?.title);
-  console.log("Data title type:", typeof data?.title);
-  console.log("Options name:", name);
+  // Debug logging (only in development)
+  if (process.env.NODE_ENV === "development") {
+    logger.debug("=== generateSEO DEBUG ===");
+    logger.debug("Received data:", data);
+    logger.debug("Data title:", data?.title);
+    logger.debug("Data title type:", typeof data?.title);
+    logger.debug("Options name:", name);
+  }
 
   // Use admin-provided SEO data if available, otherwise generate defaults
   // Prioritize admin-provided title - if it exists and has content, use it as-is
@@ -30,15 +33,21 @@ export function generateMetadata(data, options = {}) {
   ) {
     // Use admin-provided title exactly as provided
     title = data.title.trim();
-    console.log("Using admin title:", title);
+    if (process.env.NODE_ENV === "development") {
+      logger.debug("Using admin title:", title);
+    }
   } else if (name) {
     // Fallback to name-based title
     title = `${name} - ${APP_CONFIG.name}`;
-    console.log("Using fallback title from name:", title);
+    if (process.env.NODE_ENV === "development") {
+      logger.debug("Using fallback title from name:", title);
+    }
   } else {
     // Final fallback to default
     title = SEO_DEFAULTS.TITLE;
-    console.log("Using default title:", title);
+    if (process.env.NODE_ENV === "development") {
+      logger.debug("Using default title:", title);
+    }
   }
 
   // Ensure title doesn't exceed recommended length

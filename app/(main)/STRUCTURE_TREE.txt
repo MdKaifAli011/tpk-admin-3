@@ -1,0 +1,283 @@
+app/(main)/
+│
+├── 📄 layout.js                    # Main layout with SEO metadata
+├── 📄 page.js                      # Homepage (606 lines)
+├── 📄 error.jsx                    # Error boundary
+├── 📄 loading.jsx                  # Loading component
+├── 📄 not-found.js                 # 404 page
+│
+├── 📁 layout/
+│   ├── 📄 MainLayout.jsx           # Main layout wrapper (134 lines)
+│   ├── 📄 Navbar.jsx              # Top navigation
+│   ├── 📄 Sidebar.jsx             # Sidebar navigation (530 lines)
+│   └── 📄 Footer.jsx              # Footer component
+│
+├── 📁 components/
+│   ├── 📄 ChapterCompletionTracker.jsx
+│   ├── 📄 ChapterProgressItem.jsx
+│   ├── 📄 ChaptersListClient.jsx
+│   ├── 📄 ChaptersSectionClient.jsx
+│   ├── 📄 Collapsible.jsx
+│   ├── 📄 CongratulationsModal.jsx
+│   ├── 📄 ContactForm.jsx
+│   ├── 📄 DiscussionForumTab.jsx
+│   ├── 📄 DownloadButton.jsx
+│   ├── 📄 DownloadModal.jsx
+│   ├── 📄 ErrorState.jsx
+│   ├── 📄 ExamCard.jsx
+│   ├── 📄 ExamDropdown.jsx
+│   ├── 📄 HeaderCard.jsx
+│   ├── 📄 ListItem.jsx
+│   ├── 📄 LoadingState.jsx
+│   ├── 📄 LoginPromptModal.jsx
+│   ├── 📄 NavigationClient.jsx
+│   ├── 📄 OverviewTab.jsx
+│   ├── 📄 PerformanceTab.jsx
+│   ├── 📄 PracticeTestList.jsx
+│   ├── 📄 PracticeTestTab.jsx
+│   ├── 📄 ProgressTracker.jsx
+│   ├── 📄 PropTypes.js
+│   ├── 📄 RichContent.jsx
+│   ├── 📄 ScrollToTop.jsx
+│   ├── 📄 ServiceWorkerRegistration.jsx
+│   ├── 📄 SidebarNavigationTree.jsx  # (360 lines)
+│   ├── 📄 SkeletonLoader.jsx
+│   ├── 📄 SubjectCompletionTracker.jsx
+│   ├── 📄 SubjectProgressClient.jsx
+│   ├── 📄 TabsClient.jsx
+│   ├── 📄 TestSubmissionRegistrationModal.jsx
+│   ├── 📄 TextEllipsis.jsx
+│   ├── 📄 UnitCompletionTracker.jsx
+│   ├── 📄 UnitProgressClient.jsx
+│   ├── 📄 UnitsListClient.jsx
+│   ├── 📄 UnitsSectionClient.jsx
+│   │
+│   ├── 📁 forms/
+│   │   ├── 📄 FormFieldInput.jsx
+│   │   ├── 📄 FormRenderer.jsx
+│   │   ├── 📄 formUtils.js
+│   │   ├── 📄 SubmitStatusMessage.jsx
+│   │   └── 📄 VerificationInput.jsx
+│   │
+│   ├── 📁 constants/
+│   │   └── 📄 formConstants.js
+│   │
+│   ├── 📁 utils/
+│   │   └── 📄 formValidation.js
+│   │
+│   └── 📁 hooks/
+│       └── 📄 useVerification.js
+│
+├── 📁 lib/
+│   ├── 📄 api.js                  # API client
+│   ├── 📄 hierarchicalNavigation.js
+│   │
+│   ├── 📁 hooks/
+│   │   ├── 📄 useDataFetching.js
+│   │   ├── 📄 useOptimizedFetch.js
+│   │   └── 📄 usePathnameWithoutRerender.js
+│   │
+│   └── 📁 utils/
+│       └── 📄 mathJaxLoader.js
+│
+├── 📁 hooks/
+│   ├── 📄 useProgress.js          # Progress tracking
+│   └── 📄 useStudent.js           # Student data
+│
+├── 📁 login/
+│   └── 📄 page.js                 # Login page (267 lines)
+│
+├── 📁 register/
+│   └── 📄 page.js                 # Registration page (931 lines)
+│
+├── 📁 contact/
+│   └── 📄 page.js                 # Contact page (434 lines)
+│
+└── 📁 [exam]/                     # Dynamic exam route
+    ├── 📄 layout.js
+    ├── 📄 page.js
+    ├── 📄 loading.js
+    ├── 📄 error.js
+    │
+    └── 📁 [subject]/              # Dynamic subject route
+        ├── 📄 layout.js
+        ├── 📄 page.js
+        │
+        └── 📁 [unit]/             # Dynamic unit route
+            ├── 📄 layout.js
+            ├── 📄 page.js
+            │
+            └── 📁 [chapter]/      # Dynamic chapter route
+                ├── 📄 layout.js
+                ├── 📄 page.js
+                │
+                └── 📁 [topic]/    # Dynamic topic route
+                    ├── 📄 layout.js
+                    ├── 📄 page.js
+                    │
+                    └── 📁 [subtopic]/  # Dynamic subtopic route
+                        ├── 📄 layout.js
+                        ├── 📄 page.js
+                        │
+                        └── 📁 [definition]/  # Dynamic definition route
+                            ├── 📄 layout.js
+                            └── 📄 page.js
+
+
+═══════════════════════════════════════════════════════════════
+                    ROUTE STRUCTURE
+═══════════════════════════════════════════════════════════════
+
+Static Routes:
+  /                    → page.js (Homepage)
+  /login               → login/page.js
+  /register            → register/page.js
+  /contact             → contact/page.js
+
+Dynamic Routes (Hierarchical):
+  /[exam]                                    → [exam]/page.js
+  /[exam]/[subject]                          → [exam]/[subject]/page.js
+  /[exam]/[subject]/[unit]                   → [exam]/[subject]/[unit]/page.js
+  /[exam]/[subject]/[unit]/[chapter]         → [exam]/[subject]/[unit]/[chapter]/page.js
+  /[exam]/[subject]/[unit]/[chapter]/[topic] → [exam]/[subject]/[unit]/[chapter]/[topic]/page.js
+  /[exam]/[subject]/[unit]/[chapter]/[topic]/[subtopic]
+    → [exam]/[subject]/[unit]/[chapter]/[topic]/[subtopic]/page.js
+  /[exam]/[subject]/[unit]/[chapter]/[topic]/[subtopic]/[definition]
+    → [exam]/[subject]/[unit]/[chapter]/[topic]/[subtopic]/[definition]/page.js
+
+Example URLs:
+  /jee
+  /jee/physics
+  /jee/physics/mechanics
+  /jee/physics/mechanics/kinematics
+  /jee/physics/mechanics/kinematics/motion
+  /jee/physics/mechanics/kinematics/motion/velocity
+  /jee/physics/mechanics/kinematics/motion/velocity/speed
+
+
+═══════════════════════════════════════════════════════════════
+                    COMPONENT CATEGORIES
+═══════════════════════════════════════════════════════════════
+
+Progress Tracking:
+  - ChapterCompletionTracker.jsx
+  - ChapterProgressItem.jsx
+  - SubjectCompletionTracker.jsx
+  - UnitCompletionTracker.jsx
+  - ProgressTracker.jsx
+  - ChapterProgressItem.jsx
+
+Content Display:
+  - ExamCard.jsx
+  - ExamDropdown.jsx
+  - HeaderCard.jsx
+  - RichContent.jsx
+  - TextEllipsis.jsx
+
+Navigation:
+  - NavigationClient.jsx
+  - SidebarNavigationTree.jsx
+  - ScrollToTop.jsx
+
+Lists & Sections:
+  - ChaptersListClient.jsx
+  - ChaptersSectionClient.jsx
+  - UnitsListClient.jsx
+  - UnitsSectionClient.jsx
+  - PracticeTestList.jsx
+  - ListItem.jsx
+
+Tabs & Views:
+  - TabsClient.jsx
+  - OverviewTab.jsx
+  - PerformanceTab.jsx
+  - PracticeTestTab.jsx
+  - DiscussionForumTab.jsx
+
+Modals & Dialogs:
+  - CongratulationsModal.jsx
+  - DownloadModal.jsx
+  - LoginPromptModal.jsx
+  - TestSubmissionRegistrationModal.jsx
+
+Forms:
+  - ContactForm.jsx
+  - FormFieldInput.jsx
+  - FormRenderer.jsx
+  - VerificationInput.jsx
+  - SubmitStatusMessage.jsx
+
+UI Utilities:
+  - Collapsible.jsx
+  - DownloadButton.jsx
+  - ErrorState.jsx
+  - LoadingState.jsx
+  - SkeletonLoader.jsx
+
+Service & Registration:
+  - ServiceWorkerRegistration.jsx
+
+Data Display:
+  - SubjectProgressClient.jsx
+  - UnitProgressClient.jsx
+
+
+═══════════════════════════════════════════════════════════════
+                    HOOKS & UTILITIES
+═══════════════════════════════════════════════════════════════
+
+Application Hooks (hooks/):
+  - useProgress.js          → Progress tracking logic
+  - useStudent.js           → Student data management
+
+Library Hooks (lib/hooks/):
+  - useDataFetching.js      → Data fetching logic
+  - useOptimizedFetch.js    → Optimized data fetching
+  - usePathnameWithoutRerender.js → Pathname hook
+
+Component Hooks (components/hooks/):
+  - useVerification.js      → Verification logic
+
+Utilities:
+  - lib/api.js              → API client
+  - lib/hierarchicalNavigation.js → Navigation utilities
+  - lib/utils/mathJaxLoader.js → Math rendering
+  - components/utils/formValidation.js → Form validation
+  - components/constants/formConstants.js → Form constants
+  - components/forms/formUtils.js → Form utilities
+
+
+═══════════════════════════════════════════════════════════════
+                    FILE COUNT SUMMARY
+═══════════════════════════════════════════════════════════════
+
+Root Files:           5
+Layout Files:         4
+Component Files:      30+
+Form Components:       5
+Hook Files:           5
+Utility Files:        3
+Page Files:           9 (including nested routes)
+Layout Files (nested): 9 (including nested routes)
+
+Total: ~70+ files
+
+
+═══════════════════════════════════════════════════════════════
+                    KEY FEATURES
+═══════════════════════════════════════════════════════════════
+
+✓ Modular component architecture
+✓ Deep nested dynamic routing
+✓ Progress tracking system
+✓ Form handling with validation
+✓ Modal and dialog system
+✓ Responsive sidebar navigation
+✓ Error boundaries at multiple levels
+✓ Loading states with Suspense
+✓ Custom hooks for shared logic
+✓ API client abstraction
+✓ Hierarchical content navigation
+✓ Client and server component separation
+
+

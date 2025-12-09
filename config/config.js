@@ -31,11 +31,15 @@ export const config = {
   emailPass: process.env.EMAIL_PASS,
 };
 
-// Optional: Warn if critical variables are missing
+// Validate critical environment variables
 const requiredVars = ["MONGODB_URI", "JWT_SECRET", "SESSION_SECRET"];
 requiredVars.forEach((key) => {
   if (!process.env[key]) {
-    logger.warn(`⚠️ Missing environment variable: ${key}`);
+    logger.error(`❌ CRITICAL: Missing required environment variable: ${key}`);
+    if (process.env.NODE_ENV === "production") {
+      logger.error("Application cannot start without required environment variables. Exiting...");
+      process.exit(1); // Exit in production
+    }
   }
 });
 

@@ -4,7 +4,8 @@ import { useRouter, usePathname } from "next/navigation";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
 import AuthGuard from "../components/auth/AuthGuard";
-import ErrorBoundary from "@/components/ErrorBoundary";
+import ErrorBoundary from "../../../components/ErrorBoundary";
+import api from "../../../lib/api";
 
 const MainLayout = ({ children }) => {
   const router = useRouter();
@@ -14,38 +15,43 @@ const MainLayout = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const checkAuth = () => {
-      const token = localStorage.getItem("token");
-      const user = localStorage.getItem("user");
-
+    const checkAuth = async () => {
       // If on login/register pages, don't check auth
       if (pathname === "/admin/login" || pathname === "/admin/register") {
         setIsLoading(false);
         return;
       }
 
-      if (!token || !user) {
-        // No token or user, redirect to login
+      const token = localStorage.getItem("token");
+      if (!token) {
+        // No token, redirect to login
+        localStorage.removeItem("user");
         router.push("/admin/login");
+        setIsLoading(false);
         return;
       }
 
       try {
-        // Verify user data exists
-        const userData = JSON.parse(user);
-        if (userData && userData.email) {
+        // CRITICAL: Verify token with server AND check if user exists in database
+        // This ensures deleted users are immediately logged out
+        const response = await api.get("/auth/verify");
+
+        if (response.data.success && response.data.data) {
+          // User exists and token is valid
+          const userData = response.data.data;
+          localStorage.setItem("user", JSON.stringify(userData));
           setIsAuthenticated(true);
         } else {
-          // Invalid user data
-          localStorage.removeItem("token");
-          localStorage.removeItem("user");
-          router.push("/admin/login");
+          // User not found or token invalid
+          throw new Error("User not found or token invalid");
         }
       } catch (error) {
-        // Error parsing user data - redirect to login
+        // Token invalid, expired, or user deleted from database
+        console.error("Auth verification failed:", error);
         localStorage.removeItem("token");
         localStorage.removeItem("user");
         router.push("/admin/login");
+        setIsAuthenticated(false);
       } finally {
         setIsLoading(false);
       }
@@ -88,9 +94,7 @@ const MainLayout = ({ children }) => {
 
           <main className="pt-16 lg:ml-64 lg:pt-20 px-6 py-10 transition-all duration-300 ease-in-out">
             <div className="w-full max-w-7xl mx-auto">
-              <div className="space-y-6">
-                {children}
-              </div>
+              <div className="space-y-6">{children}</div>
             </div>
           </main>
         </div>

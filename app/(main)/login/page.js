@@ -12,7 +12,7 @@ import {
   FaArrowRight,
 } from "react-icons/fa";
 import Image from "next/image";
-import api from "@/lib/api";
+import api from "../../../lib/api.js";
 
 const LoginPage = () => {
   const router = useRouter();
@@ -45,11 +45,34 @@ const LoginPage = () => {
       });
 
       if (response.data.success) {
-        // Only store token, student data will be fetched from database
+        // Store token
         if (typeof window !== "undefined") {
           localStorage.setItem("student_token", response.data.data.token);
         }
-        router.push("/");
+        
+        // Verify token immediately to ensure student exists in database
+        try {
+          const verifyResponse = await api.get("/student/auth/verify", {
+            headers: {
+              Authorization: `Bearer ${response.data.data.token}`,
+            },
+          });
+          
+          if (verifyResponse.data.success && verifyResponse.data.data?.student) {
+            // Student verified, proceed to home page
+            router.push("/");
+          } else {
+            // Student not found or inactive
+            setError("Account not found or inactive. Please contact administrator.");
+            localStorage.removeItem("student_token");
+            setLoading(false);
+          }
+        } catch (verifyError) {
+          // Token verification failed
+          setError("Failed to verify account. Please try again.");
+          localStorage.removeItem("student_token");
+          setLoading(false);
+        }
       } else {
         // Show error message, no redirect
         setError(response.data.message || "Login failed. Please try again.");

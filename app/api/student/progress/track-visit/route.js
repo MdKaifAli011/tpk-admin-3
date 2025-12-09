@@ -5,29 +5,12 @@ import Chapter from "@/models/Chapter";
 import Topic from "@/models/Topic";
 import SubTopic from "@/models/SubTopic";
 import Definition from "@/models/Definition";
-import { successResponse, errorResponse, handleApiError } from "@/utils/apiResponse";
-
-// Middleware to verify student token
-async function verifyStudentToken(request) {
-  const authHeader = request.headers.get("authorization");
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return { error: "No token provided", status: 401 };
-  }
-
-  try {
-    const token = authHeader.substring(7);
-    const { verifyToken } = await import("@/lib/auth");
-    const decoded = verifyToken(token);
-
-    if (!decoded || decoded.type !== "student") {
-      return { error: "Invalid token", status: 401 };
-    }
-
-    return { studentId: decoded.studentId, error: null };
-  } catch (error) {
-    return { error: "Invalid or expired token", status: 401 };
-  }
-}
+import {
+  successResponse,
+  errorResponse,
+  handleApiError,
+} from "@/utils/apiResponse";
+import { verifyStudentToken } from "@/lib/studentAuth";
 
 // POST: Track visit to topic, subtopic, or definition
 export async function POST(request) {
@@ -51,12 +34,15 @@ export async function POST(request) {
     // Convert IDs to strings to ensure consistent format
     const unitIdStr = String(unitId);
     const chapterIdStr = String(chapterId);
-    
+
     // For chapter visits, itemId is optional (use chapterId)
     const finalItemId = itemId ? String(itemId) : chapterIdStr;
 
     if (!["chapter", "topic", "subtopic", "definition"].includes(itemType)) {
-      return errorResponse("itemType must be 'chapter', 'topic', 'subtopic', or 'definition'", 400);
+      return errorResponse(
+        "itemType must be 'chapter', 'topic', 'subtopic', or 'definition'",
+        400
+      );
     }
 
     // Find or create progress document
@@ -119,7 +105,7 @@ export async function POST(request) {
       try {
         // Chapter itself counts as 1 item
         const chapterCount = 1;
-        
+
         const topics = await Topic.find({ chapterId, status: "active" }).lean();
         const topicIds = topics.map((t) => t._id);
         const subtopics = await SubTopic.find({
@@ -137,11 +123,21 @@ export async function POST(request) {
           totalTopics: topics.length,
           totalSubtopics: subtopics.length,
           totalDefinitions: definitions.length,
-          totalItems: chapterCount + topics.length + subtopics.length + definitions.length,
+          totalItems:
+            chapterCount +
+            topics.length +
+            subtopics.length +
+            definitions.length,
         };
       } catch (error) {
         console.error("Error getting chapter item counts:", error);
-        return { totalChapter: 1, totalTopics: 0, totalSubtopics: 0, totalDefinitions: 0, totalItems: 1 };
+        return {
+          totalChapter: 1,
+          totalTopics: 0,
+          totalSubtopics: 0,
+          totalDefinitions: 0,
+          totalItems: 1,
+        };
       }
     };
 
@@ -149,20 +145,28 @@ export async function POST(request) {
     const itemCounts = await getChapterItemCounts(chapterIdStr);
     const visitedChapter = chapterProgress.visitedItems.chapter ? 1 : 0;
     const visitedTopics = chapterProgress.visitedItems.topics?.length || 0;
-    const visitedSubtopics = chapterProgress.visitedItems.subtopics?.length || 0;
-    const visitedDefinitions = chapterProgress.visitedItems.definitions?.length || 0;
-    const totalVisited = visitedChapter + visitedTopics + visitedSubtopics + visitedDefinitions;
+    const visitedSubtopics =
+      chapterProgress.visitedItems.subtopics?.length || 0;
+    const visitedDefinitions =
+      chapterProgress.visitedItems.definitions?.length || 0;
+    const totalVisited =
+      visitedChapter + visitedTopics + visitedSubtopics + visitedDefinitions;
 
     // Calculate auto progress (only if not manually overridden)
     let autoCalculatedProgress = 0;
     if (itemCounts.totalItems > 0) {
-      autoCalculatedProgress = Math.round((totalVisited / itemCounts.totalItems) * 100);
-      autoCalculatedProgress = Math.min(100, Math.max(0, autoCalculatedProgress));
+      autoCalculatedProgress = Math.round(
+        (totalVisited / itemCounts.totalItems) * 100
+      );
+      autoCalculatedProgress = Math.min(
+        100,
+        Math.max(0, autoCalculatedProgress)
+      );
     }
 
     // Update chapter progress
     chapterProgress.autoCalculatedProgress = autoCalculatedProgress;
-    
+
     // If manual override exists, use it; otherwise use auto-calculated
     if (!chapterProgress.isManualOverride) {
       chapterProgress.progress = autoCalculatedProgress;
@@ -175,19 +179,23 @@ export async function POST(request) {
     // Calculate unit progress from ALL chapters in the unit (not just those with progress data)
     // This ensures accurate calculation: (sum of all chapter progress) / (total chapters)
     try {
-      const allChapters = await Chapter.find({ unitId: unitIdStr, status: "active" }).lean();
+      const allChapters = await Chapter.find({
+        unitId: unitIdStr,
+        status: "active",
+      }).lean();
       const totalChapters = allChapters.length;
-      
+
       if (totalChapters > 0) {
         // Sum progress for all chapters (0% for chapters without progress data)
         const totalChapterProgress = allChapters.reduce((sum, chapter) => {
           // Convert chapter._id to string for Map lookup
           const chapterIdStr = String(chapter._id);
-          const chapterProgressData = studentProgress.progress.get(chapterIdStr);
+          const chapterProgressData =
+            studentProgress.progress.get(chapterIdStr);
           const chapterProgress = chapterProgressData?.progress || 0;
           return sum + chapterProgress;
         }, 0);
-        
+
         const unitProgress = Math.round(totalChapterProgress / totalChapters);
         studentProgress.unitProgress = unitProgress;
       } else {
@@ -226,4 +234,3 @@ export async function POST(request) {
     return handleApiError(error, "Failed to track visit");
   }
 }
-

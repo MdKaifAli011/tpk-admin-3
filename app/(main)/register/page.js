@@ -19,7 +19,7 @@ import {
   FaChevronDown,
 } from "react-icons/fa";
 import Image from "next/image";
-import api from "@/lib/api";
+import api from "../../../lib/api.js";
 
 /**
  * RegisterPage - Upgraded UI to match the new LoginPage theme.
@@ -259,11 +259,34 @@ const RegisterPage = () => {
       });
 
       if (response.data.success) {
-        // Only store token, student data will be fetched from database
+        // Store token
         if (typeof window !== "undefined") {
           localStorage.setItem("student_token", response.data.data.token);
         }
-        router.push("/");
+        
+        // Verify token immediately to ensure student exists in database
+        try {
+          const verifyResponse = await api.get("/student/auth/verify", {
+            headers: {
+              Authorization: `Bearer ${response.data.data.token}`,
+            },
+          });
+          
+          if (verifyResponse.data.success && verifyResponse.data.data?.student) {
+            // Student verified, proceed to home page
+            router.push("/");
+          } else {
+            // Student not found or inactive
+            setError("Account verification failed. Please try logging in.");
+            localStorage.removeItem("student_token");
+          }
+        } catch (verifyError) {
+          // Token verification failed
+          setError("Failed to verify account. Please try logging in.");
+          localStorage.removeItem("student_token");
+        } finally {
+          setLoading(false);
+        }
       } else {
         setError(response.data.message || "Registration failed");
       }

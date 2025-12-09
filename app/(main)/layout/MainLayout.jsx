@@ -1,14 +1,17 @@
 "use client";
 
 import React, { Suspense, useState, useEffect } from "react";
-import ErrorBoundary from "@/components/ErrorBoundary";
+import { usePathname } from "next/navigation";
+import ErrorBoundary from "../../../components/ErrorBoundary.jsx";
 import Navbar from "./Navbar";
 import Sidebar from "./Sidebar";
 import Footer from "./Footer";
 import ServiceWorkerRegistration from "../components/ServiceWorkerRegistration";
 import ScrollToTop from "../components/ScrollToTop";
+import api from "../../../lib/api.js";
 
 const MainLayout = ({ children, showSidebar = true, fullWidth = false }) => {
+  const pathname = usePathname();
   // Initialize sidebar as open on desktop, closed on mobile (only if showSidebar is true)
   const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
     if (!showSidebar) return false;
@@ -20,6 +23,46 @@ const MainLayout = ({ children, showSidebar = true, fullWidth = false }) => {
 
   const toggleSidebar = () => setIsSidebarOpen((v) => !v);
   const closeSidebar = () => setIsSidebarOpen(false);
+
+  /* -------------------------------------------------------
+     Student Authentication Check — Verify token on mount
+     -------------------------------------------------------- */
+  useEffect(() => {
+    const checkStudentAuth = async () => {
+      // Skip auth check on login/register pages
+      if (
+        pathname?.includes("/login") ||
+        pathname?.includes("/register")
+      ) {
+        return;
+      }
+
+      const studentToken = localStorage.getItem("student_token");
+      if (!studentToken) {
+        return;
+      }
+
+      try {
+        const response = await api.get("/student/auth/verify", {
+          headers: {
+            Authorization: `Bearer ${studentToken}`,
+          },
+        });
+
+        if (!response.data.success || !response.data.data?.student) {
+          // Student not found or inactive, clear token
+          localStorage.removeItem("student_token");
+        }
+      } catch (error) {
+        // Token invalid or expired, clear it
+        if (error.response?.status === 401 || error.response?.status === 403) {
+          localStorage.removeItem("student_token");
+        }
+      }
+    };
+
+    checkStudentAuth();
+  }, [pathname]);
 
   /* -------------------------------------------------------
      Mobile Scroll Lock — Simplified + Reliable

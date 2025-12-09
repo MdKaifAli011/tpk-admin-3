@@ -5,6 +5,7 @@ import { FaGraduationCap } from "react-icons/fa";
 import ListItem from "../components/ListItem";
 import TabsClient from "../components/TabsClient";
 import NavigationClient from "../components/NavigationClient";
+import ExamProgressClient from "../components/ExamProgressClient";
 import {
   fetchExamById,
   fetchSubjectsByExam,
@@ -92,20 +93,7 @@ const ExamPage = async ({ params }) => {
       </p>
     </div>
 
-    <div className="text-right">
-      <p className="text-[10px] text-gray-500 mb-1">Progress</p>
-
-      <div className="flex items-center gap-2">
-        <span className="font-semibold text-sm text-gray-700">0%</span>
-
-        <div className="w-20 sm:w-24 h-1.5 bg-gray-200 rounded-full overflow-hidden shadow-inner">
-          <div
-            className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 transition-all duration-300"
-            style={{ width: "0%" }}
-          ></div>
-        </div>
-      </div>
-    </div>
+    <ExamProgressClient examId={exam._id} />
 
   </div>
 </section>

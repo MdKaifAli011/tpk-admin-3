@@ -4,29 +4,12 @@ import StudentProgress from "@/models/StudentProgress";
 import Topic from "@/models/Topic";
 import SubTopic from "@/models/SubTopic";
 import Definition from "@/models/Definition";
-import { successResponse, errorResponse, handleApiError } from "@/utils/apiResponse";
-
-// Middleware to verify student token
-async function verifyStudentToken(request) {
-  const authHeader = request.headers.get("authorization");
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return { error: "No token provided", status: 401 };
-  }
-
-  try {
-    const token = authHeader.substring(7);
-    const { verifyToken } = await import("@/lib/auth");
-    const decoded = verifyToken(token);
-
-    if (!decoded || decoded.type !== "student") {
-      return { error: "Invalid token", status: 401 };
-    }
-
-    return { studentId: decoded.studentId, error: null };
-  } catch (error) {
-    return { error: "Invalid or expired token", status: 401 };
-  }
-}
+import {
+  successResponse,
+  errorResponse,
+  handleApiError,
+} from "@/utils/apiResponse";
+import { verifyStudentToken } from "@/lib/studentAuth";
 
 // Helper function to get total items count for a chapter
 async function getChapterItemCounts(chapterId) {
@@ -171,4 +154,3 @@ export async function POST(request) {
     return handleApiError(error, "Failed to calculate progress");
   }
 }
-

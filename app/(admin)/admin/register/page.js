@@ -94,9 +94,7 @@ const RegisterPage = () => {
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Create Admin Account
           </h1>
-          <p className="text-sm text-gray-600">
-            Register a new admin account
-          </p>
+          <p className="text-sm text-gray-600">Register a new admin account</p>
         </div>
 
         {/* Register Form */}
@@ -305,5 +303,3 @@ const RegisterPage = () => {
 };
 
 export default RegisterPage;
-
-

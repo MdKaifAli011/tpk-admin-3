@@ -1,9 +1,27 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
+import { useState, useEffect } from "react";
 import { FaUser, FaSignOutAlt, FaBars } from "react-icons/fa";
+import api from "../../../lib/api";
 
-const Header = ({ onMenuToggle }) => (
+const Header = ({ onMenuToggle }) => {
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    // Get user from localStorage (will be updated by AuthGuard/MainLayout)
+    const userStr = localStorage.getItem("user");
+    if (userStr) {
+      try {
+        const userData = JSON.parse(userStr);
+        setUser(userData);
+      } catch (error) {
+        // Silently handle parse error - user will be redirected by AuthGuard
+      }
+    }
+  }, []);
+
+  return (
   <header className="fixed top-0 left-0 right-0 z-50 h-16 bg-white border-b border-gray-200 shadow-sm">
     <div className="flex items-center justify-between h-full px-6">
       {/* Left: Menu Button + Logo */}
@@ -41,8 +59,12 @@ const Header = ({ onMenuToggle }) => (
             <FaUser className="text-sm" />
           </div>
           <div className="flex flex-col">
-            <span className="text-sm font-medium text-gray-900">Admin</span>
-            <span className="text-xs text-gray-500">Administrator</span>
+            <span className="text-sm font-medium text-gray-900">
+              {user?.role === "admin" ? "Admin" : user?.role || "User"}
+            </span>
+            <span className="text-xs text-gray-500">
+              {user?.name || "Administrator"}
+            </span>
           </div>
         </div>
 
@@ -57,6 +79,7 @@ const Header = ({ onMenuToggle }) => (
       </div>
     </div>
   </header>
-);
+  );
+};
 
 export default Header;

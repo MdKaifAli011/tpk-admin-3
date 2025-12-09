@@ -1,29 +1,12 @@
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import StudentProgress from "@/models/StudentProgress";
-import { successResponse, errorResponse, handleApiError } from "@/utils/apiResponse";
-
-// Middleware to verify student token
-async function verifyStudentToken(request) {
-  const authHeader = request.headers.get("authorization");
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return { error: "No token provided", status: 401 };
-  }
-
-  try {
-    const token = authHeader.substring(7);
-    const { verifyToken } = await import("@/lib/auth");
-    const decoded = verifyToken(token);
-
-    if (!decoded || decoded.type !== "student") {
-      return { error: "Invalid token", status: 401 };
-    }
-
-    return { studentId: decoded.studentId, error: null };
-  } catch (error) {
-    return { error: "Invalid or expired token", status: 401 };
-  }
-}
+import {
+  successResponse,
+  errorResponse,
+  handleApiError,
+} from "@/utils/apiResponse";
+import { verifyStudentToken } from "@/lib/studentAuth";
 
 // GET: Fetch progress for a student
 export async function GET(request) {
@@ -133,7 +116,10 @@ export async function POST(request) {
 
     await studentProgress.save();
 
-    return successResponse(studentProgress.toObject(), "Progress updated successfully");
+    return successResponse(
+      studentProgress.toObject(),
+      "Progress updated successfully"
+    );
   } catch (error) {
     return handleApiError(error, "Failed to update progress");
   }
@@ -187,9 +173,11 @@ export async function PUT(request) {
 
     await studentProgress.save();
 
-    return successResponse(studentProgress.toObject(), "Progress updated successfully");
+    return successResponse(
+      studentProgress.toObject(),
+      "Progress updated successfully"
+    );
   } catch (error) {
     return handleApiError(error, "Failed to update progress");
   }
 }
-

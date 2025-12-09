@@ -8,6 +8,7 @@ import { STATUS } from "@/constants";
 // Cache for frequently accessed queries
 const queryCache = new Map();
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+const MAX_CACHE_SIZE = 50; // Maximum cache entries
 
 /**
  * Build MongoDB query from search params
@@ -71,13 +72,7 @@ export async function getCachedOrExecute(cacheKey, queryFn, options = {}) {
     });
 
     // Clean up old cache entries periodically
-    if (queryCache.size > 100) {
-      for (const [key, value] of queryCache.entries()) {
-        if (now - value.timestamp > CACHE_TTL) {
-          queryCache.delete(key);
-        }
-      }
-    }
+    cleanupQueryCache();
   }
 
   return result;
@@ -132,6 +127,28 @@ export async function optimizedFind(Model, query, options = {}) {
   ]);
 
   return [total, documents];
+}
+
+/**
+ * Cleanup cache - remove expired entries and enforce size limit (LRU)
+ */
+function cleanupQueryCache() {
+  const now = Date.now();
+  
+  // First, remove expired entries
+  for (const [key, value] of queryCache.entries()) {
+    if (now - value.timestamp > CACHE_TTL) {
+      queryCache.delete(key);
+    }
+  }
+  
+  // If still over limit, remove oldest entries (LRU)
+  if (queryCache.size > MAX_CACHE_SIZE) {
+    const entries = Array.from(queryCache.entries());
+    entries.sort((a, b) => a[1].timestamp - b[1].timestamp);
+    const toDelete = entries.slice(0, entries.length - MAX_CACHE_SIZE);
+    toDelete.forEach(([key]) => queryCache.delete(key));
+  }
 }
 
 /**

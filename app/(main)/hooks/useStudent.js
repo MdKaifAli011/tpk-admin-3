@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { logger } from "../../../utils/logger.js";
 
 /**
  * Custom hook to fetch and manage student data from the database
@@ -61,7 +62,7 @@ export const useStudent = () => {
         }
       }
     } catch (err) {
-      console.error("Error fetching student data:", err);
+      logger.error("Error fetching student data:", err);
       setError("Failed to load student data");
       setStudent(null);
     } finally {

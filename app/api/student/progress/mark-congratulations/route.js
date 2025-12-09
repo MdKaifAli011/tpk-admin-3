@@ -1,29 +1,12 @@
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import StudentProgress from "@/models/StudentProgress";
-import { successResponse, errorResponse, handleApiError } from "@/utils/apiResponse";
-
-// Middleware to verify student token
-async function verifyStudentToken(request) {
-  const authHeader = request.headers.get("authorization");
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return { error: "No token provided", status: 401 };
-  }
-
-  try {
-    const token = authHeader.substring(7);
-    const { verifyToken } = await import("@/lib/auth");
-    const decoded = verifyToken(token);
-
-    if (!decoded || decoded.type !== "student") {
-      return { error: "Invalid token", status: 401 };
-    }
-
-    return { studentId: decoded.studentId, error: null };
-  } catch (error) {
-    return { error: "Invalid or expired token", status: 401 };
-  }
-}
+import {
+  successResponse,
+  errorResponse,
+  handleApiError,
+} from "@/utils/apiResponse";
+import { verifyStudentToken } from "@/lib/studentAuth";
 
 // POST: Mark congratulations as shown for chapter, unit, or subject
 export async function POST(request) {
@@ -41,12 +24,18 @@ export async function POST(request) {
     const { type, unitId, chapterId, subjectId } = body;
 
     if (!type || !["chapter", "unit", "subject"].includes(type)) {
-      return errorResponse("Invalid type. Must be 'chapter', 'unit', or 'subject'", 400);
+      return errorResponse(
+        "Invalid type. Must be 'chapter', 'unit', or 'subject'",
+        400
+      );
     }
 
     if (type === "chapter") {
       if (!unitId || !chapterId) {
-        return errorResponse("Unit ID and Chapter ID are required for chapter type", 400);
+        return errorResponse(
+          "Unit ID and Chapter ID are required for chapter type",
+          400
+        );
       }
 
       // Find or create progress document
@@ -124,7 +113,8 @@ export async function POST(request) {
       }
 
       // Import SubjectProgress model
-      const SubjectProgress = (await import("@/models/SubjectProgress")).default;
+      const SubjectProgress = (await import("@/models/SubjectProgress"))
+        .default;
 
       // Find or create subject progress document
       let subjectProgress = await SubjectProgress.findOne({
@@ -156,4 +146,3 @@ export async function POST(request) {
     return handleApiError(error, "Failed to mark congratulations as shown");
   }
 }
-

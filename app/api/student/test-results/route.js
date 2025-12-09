@@ -6,28 +6,7 @@ import {
   errorResponse,
   handleApiError,
 } from "@/utils/apiResponse";
-
-// Middleware to verify student token
-async function verifyStudentToken(request) {
-  const authHeader = request.headers.get("authorization");
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return { error: "No token provided", status: 401 };
-  }
-
-  try {
-    const token = authHeader.substring(7);
-    const { verifyToken } = await import("@/lib/auth");
-    const decoded = verifyToken(token);
-
-    if (!decoded || decoded.type !== "student") {
-      return { error: "Invalid token", status: 401 };
-    }
-
-    return { studentId: decoded.studentId, error: null };
-  } catch (error) {
-    return { error: "Invalid or expired token", status: 401 };
-  }
-}
+import { verifyStudentToken } from "@/lib/studentAuth";
 
 // POST: Save test result
 export async function POST(request) {
@@ -246,7 +225,7 @@ export async function GET(request) {
 
     const mongoose = await import("mongoose");
     const query = { studentId: authCheck.studentId };
-    
+
     // Helper to convert to ObjectId
     const toObjectId = (id) => {
       if (!id) return null;
