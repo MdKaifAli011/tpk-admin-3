@@ -119,7 +119,8 @@ const OverviewTab = ({
                       {/* Units List */}
                       <div className="flex-1 px-3 py-2 space-y-0.5">
                         {subject.units.map((unit, unitIndex) => {
-                          const unitSlugValue = unit.slug || createSlug(unit.name);
+                          const unitSlugValue =
+                            unit.slug || createSlug(unit.name);
                           const unitUrl =
                             examSlug && subjectSlugValue
                               ? `/${examSlug}/${subjectSlugValue}/${unitSlugValue}`
@@ -165,8 +166,8 @@ const OverviewTab = ({
       {entityType === "subject" && units && units.length > 0 && (
         <div className="mt-4">
           <div className="flex items-center gap-2 mb-3">
-            <div className="h-0.5 w-8 bg-linear-to-r from-indigo-600 to-purple-600 rounded-full"></div>
-            <h3 className="text-xl sm:text-2xl font-bold text-gray-900">
+            <div className="h-0.5 w-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full"></div>
+            <h3 className="text-base sm:text-lg font-bold text-gray-900">
               Units
             </h3>
           </div>
@@ -179,29 +180,33 @@ const OverviewTab = ({
                   : null;
 
               const UnitCard = (
-                <div className="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md hover:border-indigo-300 transition-all duration-200 p-3.5 group">
-                  <div className="flex items-center justify-between">
-                    <h4
-                      className="text-base font-medium text-gray-900 line-clamp-1 flex-1 group-hover:text-indigo-600 transition-colors"
-                      title={unit.name}
-                    >
-                      {unit.name}
-                    </h4>
+                <div className="bg-gradient-to-br from-indigo-50 via-white to-purple-50 rounded-lg border border-indigo-100/60 shadow-[0_2px_12px_rgba(100,70,200,0.08)] hover:shadow-[0_4px_16px_rgba(100,70,200,0.12)] hover:border-indigo-200 transition-all duration-200 p-3 sm:p-3.5 group cursor-pointer">
+                  <div className="flex items-center justify-between gap-2.5">
+                    <div className="flex-1 min-w-0">
+                      <h4
+                        className="text-sm sm:text-base font-medium text-gray-900 line-clamp-1 group-hover:text-indigo-600 transition-colors duration-200"
+                        title={unit.name}
+                      >
+                        {unit.name}
+                      </h4>
+                    </div>
                     {unitUrl && (
-                      <div className="ml-3 shrink-0 text-indigo-600">
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M9 5l7 7-7 7"
-                          />
-                        </svg>
+                      <div className="shrink-0">
+                        <div className="w-5 h-5 rounded-full bg-indigo-100/80 group-hover:bg-indigo-200 flex items-center justify-center transition-colors duration-200">
+                          <svg
+                            className="w-3 h-3 text-indigo-600 group-hover:text-indigo-700 group-hover:translate-x-0.5 transition-all duration-200"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 5l7 7-7 7"
+                            />
+                          </svg>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -209,7 +214,11 @@ const OverviewTab = ({
               );
 
               return unitUrl ? (
-                <Link key={unit._id || unitIndex} href={unitUrl}>
+                <Link
+                  key={unit._id || unitIndex}
+                  href={unitUrl}
+                  className="block"
+                >
                   {UnitCard}
                 </Link>
               ) : (
@@ -284,7 +293,9 @@ const OverviewTab = ({
                     {subTopic.content && (
                       <div className="prose prose-sm sm:prose max-w-none prose-headings:text-gray-900 prose-p:text-gray-700 prose-p:leading-normal">
                         <RichContent
-                          key={`subtopic-list-${subTopic._id || index}-${activeTab}`}
+                          key={`subtopic-list-${
+                            subTopic._id || index
+                          }-${activeTab}`}
                           html={subTopic.content}
                         />
                       </div>
@@ -296,10 +307,10 @@ const OverviewTab = ({
           </div>
 
           {/* SubTopics Grid - for topic type */}
-          <div className="mt-5">
+          <div className="mt-4">
             <div className="flex items-center gap-2 mb-3">
-              <div className="h-0.5 w-8 bg-linear-to-r from-indigo-600 to-purple-600 rounded-full"></div>
-              <h3 className="text-xl sm:text-2xl font-bold text-gray-900">
+              <div className="h-0.5 w-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full"></div>
+              <h3 className="text-base sm:text-lg font-bold text-gray-900">
                 Subtopics
               </h3>
             </div>
@@ -317,29 +328,33 @@ const OverviewTab = ({
                     : null;
 
                 const SubTopicCard = (
-                  <div className="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md hover:border-indigo-300 transition-all duration-200 p-3 group">
-                    <div className="flex items-center justify-between">
-                      <h4
-                        className="text-base font-medium text-gray-900 line-clamp-1 flex-1 group-hover:text-indigo-600 transition-colors"
-                        title={subTopic.name}
-                      >
-                        {subTopic.name}
-                      </h4>
+                  <div className="bg-gradient-to-br from-indigo-50 via-white to-purple-50 rounded-lg border border-indigo-100/60 shadow-[0_2px_12px_rgba(100,70,200,0.08)] hover:shadow-[0_4px_16px_rgba(100,70,200,0.12)] hover:border-indigo-200 transition-all duration-200 p-3 sm:p-3.5 group cursor-pointer">
+                    <div className="flex items-center justify-between gap-2.5">
+                      <div className="flex-1 min-w-0">
+                        <h4
+                          className="text-sm sm:text-base font-medium text-gray-900 line-clamp-1 group-hover:text-indigo-600 transition-colors duration-200"
+                          title={subTopic.name}
+                        >
+                          {subTopic.name}
+                        </h4>
+                      </div>
                       {subTopicUrl && (
-                        <div className="ml-3 shrink-0 text-indigo-600">
-                          <svg
-                            className="w-4 h-4"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M9 5l7 7-7 7"
-                            />
-                          </svg>
+                        <div className="shrink-0">
+                          <div className="w-5 h-5 rounded-full bg-indigo-100/80 group-hover:bg-indigo-200 flex items-center justify-center transition-colors duration-200">
+                            <svg
+                              className="w-3 h-3 text-indigo-600 group-hover:text-indigo-700 group-hover:translate-x-0.5 transition-all duration-200"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M9 5l7 7-7 7"
+                              />
+                            </svg>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -347,7 +362,11 @@ const OverviewTab = ({
                 );
 
                 return subTopicUrl ? (
-                  <Link key={subTopic._id || index} href={subTopicUrl}>
+                  <Link
+                    key={subTopic._id || index}
+                    href={subTopicUrl}
+                    className="block"
+                  >
                     {SubTopicCard}
                   </Link>
                 ) : (
@@ -363,44 +382,47 @@ const OverviewTab = ({
       {entityType === "unit" && chapters && chapters.length > 0 && (
         <div className="mt-4">
           <div className="flex items-center gap-2 mb-3">
-            <div className="h-0.5 w-8 bg-linear-to-r from-indigo-600 to-purple-600 rounded-full"></div>
-            <h3 className="text-xl sm:text-2xl font-bold text-gray-900">
+            <div className="h-0.5 w-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full"></div>
+            <h3 className="text-base sm:text-lg font-bold text-gray-900">
               Chapters
             </h3>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {chapters.map((chapter, index) => {
-              const chapterSlugValue =
-                chapter.slug || createSlug(chapter.name);
+              const chapterSlugValue = chapter.slug || createSlug(chapter.name);
               const chapterUrl =
                 examSlug && subjectSlug && unitSlug
                   ? `/${examSlug}/${subjectSlug}/${unitSlug}/${chapterSlugValue}`
                   : null;
 
               const ChapterCard = (
-                <div className="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md hover:border-indigo-300 transition-all duration-200 p-3 group">
-                  <div className="flex items-center justify-between">
-                    <h4
-                      className="text-base font-medium text-gray-900 line-clamp-1 flex-1 group-hover:text-indigo-600 transition-colors"
-                      title={chapter.name}
-                    >
-                      {chapter.name}
-                    </h4>
+                <div className="bg-gradient-to-br from-indigo-50 via-white to-purple-50 rounded-lg border border-indigo-100/60 shadow-[0_2px_12px_rgba(100,70,200,0.08)] hover:shadow-[0_4px_16px_rgba(100,70,200,0.12)] hover:border-indigo-200 transition-all duration-200 p-3 sm:p-3.5 group cursor-pointer">
+                  <div className="flex items-center justify-between gap-2.5">
+                    <div className="flex-1 min-w-0">
+                      <h4
+                        className="text-sm sm:text-base font-medium text-gray-900 line-clamp-1 group-hover:text-indigo-600 transition-colors duration-200"
+                        title={chapter.name}
+                      >
+                        {chapter.name}
+                      </h4>
+                    </div>
                     {chapterUrl && (
-                      <div className="ml-3 shrink-0 text-indigo-600">
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M9 5l7 7-7 7"
-                          />
-                        </svg>
+                      <div className="shrink-0">
+                        <div className="w-5 h-5 rounded-full bg-indigo-100/80 group-hover:bg-indigo-200 flex items-center justify-center transition-colors duration-200">
+                          <svg
+                            className="w-3 h-3 text-indigo-600 group-hover:text-indigo-700 group-hover:translate-x-0.5 transition-all duration-200"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 5l7 7-7 7"
+                            />
+                          </svg>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -423,8 +445,8 @@ const OverviewTab = ({
       {entityType === "chapter" && topics && topics.length > 0 && (
         <div className="mt-4">
           <div className="flex items-center gap-2 mb-3">
-            <div className="h-0.5 w-8 bg-linear-to-r from-indigo-600 to-purple-600 rounded-full"></div>
-            <h3 className="text-xl sm:text-2xl font-bold text-gray-900">
+            <div className="h-0.5 w-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full"></div>
+            <h3 className="text-base sm:text-lg font-bold text-gray-900">
               Topics
             </h3>
           </div>
@@ -437,29 +459,33 @@ const OverviewTab = ({
                   : null;
 
               const TopicCard = (
-                <div className="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md hover:border-indigo-300 transition-all duration-200 p-3 group">
-                  <div className="flex items-center justify-between">
-                    <h4
-                      className="text-base font-medium text-gray-900 line-clamp-1 flex-1 group-hover:text-indigo-600 transition-colors"
-                      title={topic.name}
-                    >
-                      {topic.name}
-                    </h4>
+                <div className="bg-gradient-to-br from-indigo-50 via-white to-purple-50 rounded-lg border border-indigo-100/60 shadow-[0_2px_12px_rgba(100,70,200,0.08)] hover:shadow-[0_4px_16px_rgba(100,70,200,0.12)] hover:border-indigo-200 transition-all duration-200 p-3 sm:p-3.5 group cursor-pointer">
+                  <div className="flex items-center justify-between gap-2.5">
+                    <div className="flex-1 min-w-0">
+                      <h4
+                        className="text-sm sm:text-base font-medium text-gray-900 line-clamp-1 group-hover:text-indigo-600 transition-colors duration-200"
+                        title={topic.name}
+                      >
+                        {topic.name}
+                      </h4>
+                    </div>
                     {topicUrl && (
-                      <div className="ml-3 shrink-0 text-indigo-600">
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M9 5l7 7-7 7"
-                          />
-                        </svg>
+                      <div className="shrink-0">
+                        <div className="w-5 h-5 rounded-full bg-indigo-100/80 group-hover:bg-indigo-200 flex items-center justify-center transition-colors duration-200">
+                          <svg
+                            className="w-3 h-3 text-indigo-600 group-hover:text-indigo-700 group-hover:translate-x-0.5 transition-all duration-200"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 5l7 7-7 7"
+                            />
+                          </svg>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -467,7 +493,11 @@ const OverviewTab = ({
               );
 
               return topicUrl ? (
-                <Link key={topic._id || index} href={topicUrl}>
+                <Link
+                  key={topic._id || index}
+                  href={topicUrl}
+                  className="block"
+                >
                   {TopicCard}
                 </Link>
               ) : (
@@ -479,87 +509,85 @@ const OverviewTab = ({
       )}
 
       {/* Definitions List - for subtopic type */}
-      {entityType === "subtopic" &&
-        definitions &&
-        definitions.length > 0 && (
-          <>
-            <div className="mt-4">
-              <div className="space-y-6">
-                {definitions.map((definition, index) => {
-                  const definitionSlug =
-                    definition.slug || createSlug(definition.name);
-                  const definitionUrl =
-                    examSlug &&
-                    subjectSlug &&
-                    unitSlug &&
-                    chapterSlug &&
-                    topicSlug &&
-                    subTopicSlug
-                      ? `/${examSlug}/${subjectSlug}/${unitSlug}/${chapterSlug}/${topicSlug}/${subTopicSlug}/${definitionSlug}`
-                      : null;
+      {entityType === "subtopic" && definitions && definitions.length > 0 && (
+        <>
+          <div className="mt-4">
+            <div className="space-y-6">
+              {definitions.map((definition, index) => {
+                const definitionSlug =
+                  definition.slug || createSlug(definition.name);
+                const definitionUrl =
+                  examSlug &&
+                  subjectSlug &&
+                  unitSlug &&
+                  chapterSlug &&
+                  topicSlug &&
+                  subTopicSlug
+                    ? `/${examSlug}/${subjectSlug}/${unitSlug}/${chapterSlug}/${topicSlug}/${subTopicSlug}/${definitionSlug}`
+                    : null;
 
-                  return (
-                    <div
-                      key={definition._id || index}
-                      className="space-y-2"
-                    >
-                      {definitionUrl ? (
-                        <Link href={definitionUrl} className="group/link">
-                          <h3 className="text-lg sm:text-xl font-bold text-indigo-700 group-hover/link:text-indigo-500 group-hover/link:underline transition-all duration-200 cursor-pointer mb-2 inline-block">
-                            {definition.name}
-                          </h3>
-                        </Link>
-                      ) : (
-                        <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">
+                return (
+                  <div key={definition._id || index} className="space-y-2">
+                    {definitionUrl ? (
+                      <Link href={definitionUrl} className="group/link">
+                        <h3 className="text-lg sm:text-xl font-bold text-indigo-700 group-hover/link:text-indigo-500 group-hover/link:underline transition-all duration-200 cursor-pointer mb-2 inline-block">
                           {definition.name}
                         </h3>
-                      )}
-                      {definition.content && (
-                        <div className="prose prose-sm sm:prose max-w-none prose-headings:text-gray-900 prose-p:text-gray-700 prose-p:leading-normal">
-                          <RichContent html={definition.content} />
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
+                      </Link>
+                    ) : (
+                      <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">
+                        {definition.name}
+                      </h3>
+                    )}
+                    {definition.content && (
+                      <div className="prose prose-sm sm:prose max-w-none prose-headings:text-gray-900 prose-p:text-gray-700 prose-p:leading-normal">
+                        <RichContent html={definition.content} />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
+          </div>
 
-            {/* Definitions Grid - for subtopic type */}
-            <div className="mt-5">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="h-0.5 w-8 bg-linear-to-r from-indigo-600 to-purple-600 rounded-full"></div>
-                <h3 className="text-xl sm:text-2xl font-bold text-gray-900">
-                  Definitions
-                </h3>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {definitions.map((definition, index) => {
-                  const definitionSlug =
-                    definition.slug || createSlug(definition.name);
-                  const definitionUrl =
-                    examSlug &&
-                    subjectSlug &&
-                    unitSlug &&
-                    chapterSlug &&
-                    topicSlug &&
-                    subTopicSlug
-                      ? `/${examSlug}/${subjectSlug}/${unitSlug}/${chapterSlug}/${topicSlug}/${subTopicSlug}/${definitionSlug}`
-                      : null;
+          {/* Definitions Grid - for subtopic type */}
+          <div className="mt-4">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="h-0.5 w-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full"></div>
+              <h3 className="text-base sm:text-lg font-bold text-gray-900">
+                Definitions
+              </h3>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {definitions.map((definition, index) => {
+                const definitionSlug =
+                  definition.slug || createSlug(definition.name);
+                const definitionUrl =
+                  examSlug &&
+                  subjectSlug &&
+                  unitSlug &&
+                  chapterSlug &&
+                  topicSlug &&
+                  subTopicSlug
+                    ? `/${examSlug}/${subjectSlug}/${unitSlug}/${chapterSlug}/${topicSlug}/${subTopicSlug}/${definitionSlug}`
+                    : null;
 
-                  const DefinitionCard = (
-                    <div className="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md hover:border-indigo-300 transition-all duration-200 p-3 group">
-                      <div className="flex items-center justify-between">
+                const DefinitionCard = (
+                  <div className="bg-gradient-to-br from-indigo-50 via-white to-purple-50 rounded-lg border border-indigo-100/60 shadow-[0_2px_12px_rgba(100,70,200,0.08)] hover:shadow-[0_4px_16px_rgba(100,70,200,0.12)] hover:border-indigo-200 transition-all duration-200 p-3 sm:p-3.5 group cursor-pointer">
+                    <div className="flex items-center justify-between gap-2.5">
+                      <div className="flex-1 min-w-0">
                         <h4
-                          className="text-base font-medium text-gray-900 line-clamp-1 flex-1 group-hover:text-indigo-600 transition-colors"
+                          className="text-sm sm:text-base font-medium text-gray-900 line-clamp-1 group-hover:text-indigo-600 transition-colors duration-200"
                           title={definition.name}
                         >
                           {definition.name}
                         </h4>
-                        {definitionUrl && (
-                          <div className="ml-3 shrink-0 text-indigo-600">
+                      </div>
+                      {definitionUrl && (
+                        <div className="shrink-0">
+                          <div className="w-5 h-5 rounded-full bg-indigo-100/80 group-hover:bg-indigo-200 flex items-center justify-center transition-colors duration-200">
                             <svg
-                              className="w-4 h-4"
+                              className="w-3 h-3 text-indigo-600 group-hover:text-indigo-700 group-hover:translate-x-0.5 transition-all duration-200"
                               fill="none"
                               stroke="currentColor"
                               viewBox="0 0 24 24"
@@ -572,31 +600,30 @@ const OverviewTab = ({
                               />
                             </svg>
                           </div>
-                        )}
-                      </div>
+                        </div>
+                      )}
                     </div>
-                  );
+                  </div>
+                );
 
-                  return definitionUrl ? (
-                    <Link
-                      key={definition._id || index}
-                      href={definitionUrl}
-                    >
-                      {DefinitionCard}
-                    </Link>
-                  ) : (
-                    <div key={definition._id || index}>
-                      {DefinitionCard}
-                    </div>
-                  );
-                })}
-              </div>
+                return definitionUrl ? (
+                  <Link
+                    key={definition._id || index}
+                    href={definitionUrl}
+                    className="block"
+                  >
+                    {DefinitionCard}
+                  </Link>
+                ) : (
+                  <div key={definition._id || index}>{DefinitionCard}</div>
+                );
+              })}
             </div>
-          </>
-        )}
+          </div>
+        </>
+      )}
     </div>
   );
 };
 
 export default OverviewTab;
-
