@@ -15,7 +15,7 @@ const formSchema = new mongoose.Schema(
     },
     formName: {
       type: String,
-      required: [true, "Form name is required"],
+      required: false, // Made optional - will use formId as fallback
       trim: true,
     },
     description: {

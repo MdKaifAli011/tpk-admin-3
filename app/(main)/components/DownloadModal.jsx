@@ -123,7 +123,7 @@ const DownloadModal = ({ isOpen, onClose }) => {
         className: formData.className.trim(),
         phoneNumber: formData.countryCode + formData.phoneNumber.trim(),
         form_name: "download-modal", // Form identifier
-        source: typeof window !== "undefined" ? window.location.href : "", // Current URL
+        source: typeof window !== "undefined" ? window.location.pathname : "", // Current path (e.g., /neet)
         prepared: "", // Can be customized if needed
       });
 

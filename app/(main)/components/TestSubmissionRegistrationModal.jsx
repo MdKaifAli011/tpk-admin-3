@@ -273,6 +273,11 @@ const TestSubmissionRegistrationModal = ({
     try {
       const fullPhoneNumber =
         formData.countryCode + formData.phoneNumber.trim().replace(/^\+/, "");
+      
+      // Get the source URL pathname (e.g., /neet) where student is registering from
+      const sourcePath =
+        typeof window !== "undefined" ? window.location.pathname : "";
+      
       const response = await api.post("/student/auth/register", {
         firstName: formData.firstName.trim(),
         lastName: formData.lastName.trim(),
@@ -282,6 +287,7 @@ const TestSubmissionRegistrationModal = ({
         className: formData.className.trim(),
         prepared: formData.prepared || null,
         country: formData.country || null,
+        source: sourcePath, // Send the URL path where student registered from
       });
 
       if (response.data?.success) {

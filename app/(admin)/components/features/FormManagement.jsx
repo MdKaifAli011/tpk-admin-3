@@ -38,7 +38,7 @@ const FormManagement = () => {
 
   const handleDelete = async (form) => {
     if (
-      !window.confirm(`Are you sure you want to delete "${form.formName}"?`)
+      !window.confirm(`Are you sure you want to delete form "${form.formId}"?`)
     ) {
       return;
     }
@@ -154,9 +154,6 @@ const FormManagement = () => {
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Form Name
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Form ID
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -181,18 +178,15 @@ const FormManagement = () => {
                     >
                       <td className="px-4 py-3 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900">
-                          {form.formName}
+                          <code className="text-sm bg-gray-100 px-2 py-1 rounded text-gray-700 font-mono">
+                            {form.formId}
+                          </code>
                         </div>
                         {form.description && (
                           <div className="text-xs text-gray-500 mt-1">
                             {form.description}
                           </div>
                         )}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap">
-                        <code className="text-xs bg-gray-100 px-2 py-1 rounded text-gray-700">
-                          {form.formId}
-                        </code>
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap">
                         <span className="text-sm text-gray-600">

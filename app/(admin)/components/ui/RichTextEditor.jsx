@@ -18,6 +18,7 @@ const RichTextEditor = ({
   const editorRef = useRef(null);
   const [isReady, setIsReady] = useState(false);
   const [showFormModal, setShowFormModal] = useState(false);
+  const [showButtonModal, setShowButtonModal] = useState(false);
   const [forms, setForms] = useState([]);
   const [loadingForms, setLoadingForms] = useState(false);
   const [selectedForm, setSelectedForm] = useState(null);
@@ -27,6 +28,11 @@ const RichTextEditor = ({
     buttonText: "",
     buttonLink: "",
     imageUrl: "",
+  });
+  const [buttonOptions, setButtonOptions] = useState({
+    text: "",
+    color: "#2563eb", // Default blue
+    link: "",
   });
   const onChangeRef = useRef(onChange);
   const valueRef = useRef(value);
@@ -292,7 +298,7 @@ const RichTextEditor = ({
   const handleFormSelect = (form) => {
     setSelectedForm(form);
     setInsertOptions({
-      title: form.settings?.title || form.formName || "",
+      title: form.settings?.title || form.formId || "",
       description: form.settings?.description || "",
       buttonText: form.settings?.buttonText || "Open Form",
       buttonLink: "",
@@ -305,7 +311,7 @@ const RichTextEditor = ({
     if (!editor || !selectedForm) return;
 
     const formId = selectedForm.formId;
-    const title = insertOptions.title.trim() || selectedForm.formName;
+    const title = insertOptions.title.trim() || selectedForm.formId;
     const description = insertOptions.description.trim();
     const buttonText = insertOptions.buttonText.trim() || "Open Form";
     const buttonLink = insertOptions.buttonLink.trim();
@@ -351,6 +357,109 @@ const RichTextEditor = ({
     });
   };
 
+  const insertButtonCode = () => {
+    const editor = editorRef.current;
+    if (!editor || !buttonOptions.text.trim()) return;
+
+    const buttonText = buttonOptions.text.trim();
+    const buttonColor = buttonOptions.color || "#2563eb";
+    const buttonLink = buttonOptions.link.trim();
+
+    const escapeHtml = (str) => {
+      if (!str) return "";
+      return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    };
+
+    // Convert hex color to RGB for better browser compatibility
+    const hexToRgb = (hex) => {
+      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+      return result
+        ? {
+            r: parseInt(result[1], 16),
+            g: parseInt(result[2], 16),
+            b: parseInt(result[3], 16),
+          }
+        : { r: 37, g: 99, b: 235 }; // Default blue
+    };
+
+    const rgb = hexToRgb(buttonColor);
+    const rgbString = `${rgb.r}, ${rgb.g}, ${rgb.b}`;
+
+    // Inline button styles - truly inline-block for insertion anywhere in text
+    const buttonStyle = `
+      display: inline-block;
+      padding: 8px 16px;
+      background-color: ${buttonColor};
+      color: #ffffff;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+      text-align: center;
+      transition: all 0.2s ease;
+      font-family: inherit;
+      line-height: 1.5;
+      margin: 2px 4px;
+      box-shadow: 0 2px 4px rgba(${rgbString}, 0.2);
+      vertical-align: middle;
+      white-space: nowrap;
+    `;
+
+    let buttonHtml;
+
+    if (buttonLink && buttonLink.trim()) {
+      // Button with link - truly inline
+      buttonHtml = `
+        <span class="inline-button-wrapper" style="display: inline-block; vertical-align: middle;" contenteditable="false">
+          <a 
+            href="${escapeHtml(buttonLink)}" 
+            class="inline-button" 
+            style="${buttonStyle}"
+            onmouseover="this.style.backgroundColor='rgba(${rgbString}, 0.9)'; this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 6px rgba(${rgbString}, 0.3)'"
+            onmouseout="this.style.backgroundColor='${buttonColor}'; this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(${rgbString}, 0.2)'"
+            target="_blank"
+            rel="noopener noreferrer"
+            data-button-link="${escapeHtml(buttonLink)}"
+          >
+            ${escapeHtml(buttonText)}
+          </a>
+        </span>
+      `;
+    } else {
+      // Button without link (just styled button) - truly inline
+      buttonHtml = `
+        <span class="inline-button-wrapper" style="display: inline-block; vertical-align: middle;" contenteditable="false">
+          <button 
+            type="button"
+            class="inline-button" 
+            style="${buttonStyle}"
+            onmouseover="this.style.backgroundColor='rgba(${rgbString}, 0.9)'; this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 6px rgba(${rgbString}, 0.3)'"
+            onmouseout="this.style.backgroundColor='${buttonColor}'; this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(${rgbString}, 0.2)'"
+            disabled
+            readonly
+          >
+            ${escapeHtml(buttonText)}
+          </button>
+        </span>
+      `;
+    }
+
+    editor.insertHtml(buttonHtml);
+    setShowButtonModal(false);
+    setButtonOptions({
+      text: "",
+      color: "#2563eb",
+      link: "",
+    });
+  };
+
   return (
     <>
       <div
@@ -358,9 +467,29 @@ const RichTextEditor = ({
           disabled ? "opacity-90" : ""
         } ${className}`}
       >
-        {/* Insert Form Button */}
+        {/* Insert Form and Button */}
         {isReady && !disabled && (
-          <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50 flex items-center justify-end">
+          <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50 flex items-center justify-end gap-2">
+            <button
+              onClick={() => setShowButtonModal(true)}
+              className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+              type="button"
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"
+                />
+              </svg>
+              Insert Button
+            </button>
             <button
               onClick={() => setShowFormModal(true)}
               className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
@@ -472,7 +601,9 @@ const RichTextEditor = ({
                           >
                             <div className="flex items-start justify-between gap-2 mb-2">
                               <h3 className="text-sm font-semibold text-gray-900">
-                                {form.formName}
+                                <code className="text-sm font-mono bg-gray-100 px-2 py-0.5 rounded">
+                                  {form.formId}
+                                </code>
                               </h3>
                               {form.submissionCount > 0 && (
                                 <span className="text-xs text-gray-500 whitespace-nowrap">
@@ -489,9 +620,6 @@ const RichTextEditor = ({
                             )}
 
                             <div className="flex items-center gap-3 flex-wrap">
-                              <code className="text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded font-mono">
-                                {form.formId}
-                              </code>
                               <span className="text-xs text-gray-500">
                                 {form.fields?.length || 0} field
                                 {form.fields?.length !== 1 ? "s" : ""}
@@ -538,7 +666,9 @@ const RichTextEditor = ({
                     <div className="flex items-start justify-between pb-3 border-b border-gray-200">
                       <div className="flex-1">
                         <h3 className="text-base font-semibold text-gray-900 mb-1">
-                          {selectedForm.formName}
+                          <code className="text-base font-mono bg-gray-100 px-2 py-1 rounded">
+                            {selectedForm.formId}
+                          </code>
                         </h3>
                         <button
                           onClick={() => setSelectedForm(null)}
@@ -583,7 +713,7 @@ const RichTextEditor = ({
                           )}
                           {/* Title - shown second */}
                           <h4 className="text-sm font-semibold text-gray-900 mb-3">
-                            {insertOptions.title || selectedForm.formName}
+                            {insertOptions.title || selectedForm.formId}
                           </h4>
                           {/* Button Preview */}
                           <div className="mt-3">
@@ -736,6 +866,198 @@ const RichTextEditor = ({
                   </div>
                 )}
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Button Insertion Modal */}
+      {showButtonModal && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-200">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b bg-white">
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900">
+                  Insert Button
+                </h2>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Create a responsive button with custom text, color, and link
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setShowButtonModal(false);
+                  setButtonOptions({
+                    text: "",
+                    color: "#2563eb",
+                    link: "",
+                  });
+                }}
+                className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-2 rounded-lg transition"
+              >
+                <FaTimes className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-6 space-y-4">
+              {/* Button Text */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Button Text <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={buttonOptions.text}
+                  onChange={(e) =>
+                    setButtonOptions({ ...buttonOptions, text: e.target.value })
+                  }
+                  placeholder="e.g., Click Here, Learn More, Download"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                />
+              </div>
+
+              {/* Button Color */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Button Color
+                </label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="color"
+                    value={buttonOptions.color}
+                    onChange={(e) =>
+                      setButtonOptions({
+                        ...buttonOptions,
+                        color: e.target.value,
+                      })
+                    }
+                    className="w-16 h-10 border border-gray-300 rounded-lg cursor-pointer"
+                  />
+                  <input
+                    type="text"
+                    value={buttonOptions.color}
+                    onChange={(e) =>
+                      setButtonOptions({
+                        ...buttonOptions,
+                        color: e.target.value,
+                      })
+                    }
+                    placeholder="#2563eb"
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm font-mono"
+                  />
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  Choose a color or enter a hex code
+                </p>
+              </div>
+
+              {/* Button Link */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Button Link <span className="text-gray-400">(Optional)</span>
+                </label>
+                <input
+                  type="url"
+                  value={buttonOptions.link}
+                  onChange={(e) =>
+                    setButtonOptions({ ...buttonOptions, link: e.target.value })
+                  }
+                  placeholder="https://example.com or /page"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Leave empty for a button without link
+                </p>
+              </div>
+
+              {/* Preview */}
+              <div className="pt-4 border-t border-gray-200">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Preview
+                </label>
+                <div className="bg-gray-50 rounded-lg p-4 flex items-center justify-center">
+                  <div className="w-full max-w-xs">
+                    {buttonOptions.text ? (
+                      buttonOptions.link ? (
+                        <a
+                          href={buttonOptions.link}
+                          className="inline-block w-full px-4 py-2.5 text-center text-white rounded-lg font-medium transition-all"
+                          style={{
+                            backgroundColor: buttonOptions.color,
+                            boxShadow: `0 2px 4px rgba(${
+                              buttonOptions.color === "#2563eb"
+                                ? "37, 99, 235"
+                                : "0, 0, 0"
+                            }, 0.2)`,
+                          }}
+                          onClick={(e) => e.preventDefault()}
+                        >
+                          {buttonOptions.text}
+                        </a>
+                      ) : (
+                        <button
+                          type="button"
+                          className="inline-block w-full px-4 py-2.5 text-center text-white rounded-lg font-medium transition-all cursor-default"
+                          style={{
+                            backgroundColor: buttonOptions.color,
+                            boxShadow: `0 2px 4px rgba(${
+                              buttonOptions.color === "#2563eb"
+                                ? "37, 99, 235"
+                                : "0, 0, 0"
+                            }, 0.2)`,
+                          }}
+                          disabled
+                        >
+                          {buttonOptions.text}
+                        </button>
+                      )
+                    ) : (
+                      <p className="text-sm text-gray-400 italic">
+                        Enter button text to see preview
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50">
+              <button
+                onClick={() => {
+                  setShowButtonModal(false);
+                  setButtonOptions({
+                    text: "",
+                    color: "#2563eb",
+                    link: "",
+                  });
+                }}
+                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-900 rounded-lg text-sm font-medium transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={insertButtonCode}
+                disabled={!buttonOptions.text.trim()}
+                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"
+                  />
+                </svg>
+                Insert Button
+              </button>
             </div>
           </div>
         </div>

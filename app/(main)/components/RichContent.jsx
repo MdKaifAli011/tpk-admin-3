@@ -111,6 +111,52 @@ const RichContent = ({ html }) => {
     };
   }, []);
 
+  // Handle button clicks - ensure links work properly
+  useEffect(() => {
+    if (!containerRef.current || !html) return;
+
+    const handleButtonClick = (e) => {
+      // Check if clicked element is a button link or inside a button wrapper
+      const buttonLink = e.target.closest('.inline-button-wrapper a, .inline-button');
+      if (!buttonLink) return;
+
+      // If it's an anchor tag, handle the link
+      if (buttonLink.tagName === 'A') {
+        const href = buttonLink.getAttribute('href') || buttonLink.getAttribute('data-button-link');
+        if (href) {
+          // Handle relative URLs - use Next.js router for internal navigation
+          if (href.startsWith('/')) {
+            e.preventDefault();
+            // Use window.location for reliable navigation
+            window.location.href = href;
+          } else if (href.startsWith('http://') || href.startsWith('https://')) {
+            // External links - let default behavior handle it (target="_blank" already set)
+            // No need to prevent default
+          } else if (href.startsWith('#')) {
+            // Anchor links - let default behavior handle it
+            // No need to prevent default
+          } else {
+            // Treat as relative URL
+            e.preventDefault();
+            window.location.href = `/${href}`;
+          }
+        }
+      } else if (buttonLink.tagName === 'BUTTON') {
+        // Button without link - do nothing or handle as needed
+        e.preventDefault();
+      }
+    };
+
+    const container = containerRef.current;
+    
+    // Use event delegation for dynamically inserted buttons
+    container.addEventListener('click', handleButtonClick, true);
+
+    return () => {
+      container.removeEventListener('click', handleButtonClick, true);
+    };
+  }, [html]);
+
   useEffect(() => {
     let isMounted = true;
 
@@ -488,7 +534,7 @@ const RichContent = ({ html }) => {
               formConfig?.settings?.buttonText ||
               formData?.buttonText ||
               "Open Form";
-            const formName = formConfig?.formName || formId;
+            const formName = formId; // Use formId as form name
             const formDescription = formConfig?.description || "";
 
             return (

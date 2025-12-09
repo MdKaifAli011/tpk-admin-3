@@ -10,7 +10,6 @@ const FormBuilder = ({ form, onClose }) => {
   const { toasts, removeToast, success, error: showError } = useToast();
   const [formData, setFormData] = useState({
     formId: "",
-    formName: "",
     description: "",
     fields: [],
     settings: {
@@ -32,11 +31,10 @@ const FormBuilder = ({ form, onClose }) => {
       // Editing existing form - load its data
       setFormData({
         formId: form.formId || "",
-        formName: form.formName || "",
         description: form.description || "",
         fields: form.fields || [],
         settings: {
-          title: form.settings?.title || form.formName || "",
+          title: form.settings?.title || form.formId || "",
           description: form.settings?.description || "",
           buttonText: form.settings?.buttonText || "Submit",
           successMessage:
@@ -55,7 +53,6 @@ const FormBuilder = ({ form, onClose }) => {
       // Creating new form - pre-populate with required Lead fields
       setFormData({
         formId: "",
-        formName: "",
         description: "",
         fields: getDefaultRequiredFields(),
         settings: {
@@ -147,10 +144,6 @@ const FormBuilder = ({ form, onClose }) => {
         "Form ID can only contain lowercase letters, numbers, and hyphens";
     }
 
-    if (!formData.formName.trim()) {
-      newErrors.formName = "Form name is required";
-    }
-
     if (formData.fields.length === 0) {
       newErrors.fields = "At least one field is required";
     }
@@ -185,7 +178,6 @@ const FormBuilder = ({ form, onClose }) => {
     try {
       const payload = {
         formId: formData.formId.trim().toLowerCase(),
-        formName: formData.formName.trim(),
         description: formData.description.trim(),
         fields: formData.fields.map((field) => ({
           fieldId: field.fieldId,
@@ -274,31 +266,8 @@ const FormBuilder = ({ form, onClose }) => {
                 <p className="mt-1 text-xs text-red-600">{errors.formId}</p>
               )}
               <p className="mt-1 text-xs text-gray-500">
-                Lowercase letters, numbers, and hyphens only. Cannot be changed
-                after creation.
+                Lowercase letters, numbers, and hyphens only. This will be used as the form name. Cannot be changed after creation.
               </p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Form Name <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={formData.formName}
-                onChange={(e) =>
-                  setFormData({ ...formData, formName: e.target.value })
-                }
-                placeholder="e.g., Download Form, Contact Form"
-                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm ${
-                  errors.formName
-                    ? "border-red-300 bg-red-50"
-                    : "border-gray-300"
-                }`}
-              />
-              {errors.formName && (
-                <p className="mt-1 text-xs text-red-600">{errors.formName}</p>
-              )}
             </div>
 
             {form && (
@@ -323,7 +292,7 @@ const FormBuilder = ({ form, onClose }) => {
                 <p className="text-xs text-blue-800">
                   <strong>Note:</strong> All required fields (Name, Email,
                   Country, Class Name, Phone Number) are automatically added.
-                  You can customize them after creation. Additional settings can
+                  You can customize them after creation. The Form ID will be used as the form name. Additional settings can
                   be configured when editing the form.
                 </p>
               </div>
@@ -386,7 +355,7 @@ const FormBuilder = ({ form, onClose }) => {
                       settings: { ...formData.settings, title: e.target.value },
                     })
                   }
-                  placeholder="Form title (defaults to form name)"
+                  placeholder="Form title (defaults to form ID)"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                 />
               </div>

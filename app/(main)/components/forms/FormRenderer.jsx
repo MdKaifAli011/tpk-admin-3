@@ -178,6 +178,9 @@ const FormRenderer = ({
         }
       };
 
+      // Get the pathname (e.g., /neet) instead of full URL
+      const sourcePath =
+        typeof window !== "undefined" ? window.location.pathname : "";
       const sourceUrl =
         typeof window !== "undefined" ? window.location.href : "";
       const extractedExamName = extractExamName(sourceUrl);
@@ -185,9 +188,9 @@ const FormRenderer = ({
       // Prepare submission data
       const submissionData = {
         ...formData,
-        form_name: formConfig?.formName || formId,
+        form_name: formId, // Use formId as form_name
         form_id: formId,
-        source: sourceUrl,
+        source: sourcePath, // Store pathname (e.g., /neet) instead of full URL
         prepared: extractedExamName || prepared || "",
       };
 
@@ -404,7 +407,7 @@ const FormRenderer = ({
             {imageUrl && !imageError ? (
               <Image
                 src={imageUrl}
-                alt={title || formConfig?.formName || "Form"}
+                alt={title || formConfig?.formId || "Form"}
                 fill
                 className="object-cover object-center"
                 style={{
@@ -443,7 +446,7 @@ const FormRenderer = ({
                 id="form-title"
                 className="text-xl font-bold text-gray-900 mb-3"
               >
-                {title || formConfig.settings.title || formConfig.formName}
+                {title || formConfig.settings.title || formConfig.formId}
               </h2>
 
               <form onSubmit={handleSubmit} className="space-y-2.5" noValidate>

@@ -112,6 +112,7 @@ const ContactForm = () => {
         country: formData.country.trim(),
         className: formData.className.trim(),
         phoneNumber: formData.countryCode + formData.phoneNumber.trim(),
+        source: typeof window !== "undefined" ? window.location.pathname : "", // Current path (e.g., /neet)
       });
 
       if (response.data?.success) {

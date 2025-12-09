@@ -6,6 +6,52 @@ import {
   getPermissionMessage,
 } from "../../hooks/usePermissions";
 
+// Helper function to construct full URL from path or return original URL
+const getFullUrl = (source) => {
+  if (!source) return null;
+  
+  // If it starts with "/", it's a path - construct full URL
+  if (source.startsWith("/")) {
+    if (typeof window !== "undefined") {
+      return `${window.location.origin}${source}`;
+    }
+    // Fallback for SSR - will be handled client-side
+    return source;
+  }
+  
+  // If it's already a full URL (starts with http:// or https://), return as is
+  if (source.startsWith("http://") || source.startsWith("https://")) {
+    return source;
+  }
+  
+  // Otherwise, treat as path
+  if (typeof window !== "undefined") {
+    return `${window.location.origin}/${source}`;
+  }
+  return source;
+};
+
+// Helper function to get display text for source
+const getSourceDisplayText = (source) => {
+  if (!source) return "N/A";
+  
+  // If it's a path, show the path
+  if (source.startsWith("/")) {
+    return source;
+  }
+  
+  // If it's a full URL, try to extract pathname
+  try {
+    const url = new URL(source);
+    return url.pathname || url.hostname || source;
+  } catch {
+    // If URL parsing fails, show original (truncated if too long)
+    return source.length > 30
+      ? source.substring(0, 30) + "..."
+      : source;
+  }
+};
+
 const LeadTable = ({ leads, onView, onDelete }) => {
   const { canDelete, role } = usePermissions();
   const [selectedLeads, setSelectedLeads] = useState(new Set());
@@ -389,25 +435,14 @@ const LeadTable = ({ leads, onView, onDelete }) => {
                   <td className="px-2 py-2 whitespace-nowrap">
                     {lead.source ? (
                       <a
-                        href={lead.source}
+                        href={getFullUrl(lead.source) || lead.source}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-sm text-blue-600 hover:text-blue-800 transition-colors truncate max-w-[250px]"
-                        title={lead.source}
+                        title={getFullUrl(lead.source) || lead.source}
                       >
                         <span className="truncate">
-                          {(() => {
-                            try {
-                              const url = new URL(lead.source);
-                              return (
-                                url.pathname || url.hostname || lead.source
-                              );
-                            } catch {
-                              return lead.source.length > 30
-                                ? lead.source.substring(0, 30) + "..."
-                                : lead.source;
-                            }
-                          })()}
+                          {getSourceDisplayText(lead.source)}
                         </span>
                       </a>
                     ) : (
@@ -551,23 +586,14 @@ const LeadTable = ({ leads, onView, onDelete }) => {
                   <div className="col-span-2">
                     <div className="text-xs text-gray-500 mb-0.5">Source</div>
                     <a
-                      href={lead.source}
+                      href={getFullUrl(lead.source) || lead.source}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-xs text-blue-600 hover:text-blue-800 transition-colors truncate block"
-                      title={lead.source}
+                      title={getFullUrl(lead.source) || lead.source}
                     >
                       <span className="truncate">
-                        {(() => {
-                          try {
-                            const url = new URL(lead.source);
-                            return url.pathname || url.hostname || lead.source;
-                          } catch {
-                            return lead.source.length > 40
-                              ? lead.source.substring(0, 40) + "..."
-                              : lead.source;
-                          }
-                        })()}
+                        {getSourceDisplayText(lead.source)}
                       </span>
                     </a>
                   </div>

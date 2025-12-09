@@ -49,10 +49,6 @@ export async function POST(request) {
       return errorResponse("Form ID is required", 400);
     }
 
-    if (!body.formName?.trim()) {
-      return errorResponse("Form name is required", 400);
-    }
-
     if (
       !body.fields ||
       !Array.isArray(body.fields) ||
@@ -78,14 +74,14 @@ export async function POST(request) {
 
     const form = await Form.create({
       formId: body.formId.trim().toLowerCase(),
-      formName: body.formName.trim(),
+      formName: body.formId.trim().toLowerCase(), // Use formId as formName for backward compatibility
       description: body.description?.trim() || "",
       fields: body.fields.map((field, index) => ({
         ...field,
         order: field.order || index,
       })),
       settings: {
-        title: body.settings?.title?.trim() || body.formName.trim(),
+        title: body.settings?.title?.trim() || body.formId.trim().toLowerCase(),
         description: body.settings?.description?.trim() || "",
         buttonText: body.settings?.buttonText?.trim() || "Submit",
         successMessage:

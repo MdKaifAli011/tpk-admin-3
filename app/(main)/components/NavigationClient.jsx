@@ -5,7 +5,7 @@ import Link from "next/link";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 
 const base =
-  "group flex flex-col justify-center rounded-lg min-h-[58px] transition-all duration-200 w-full p-2.5 sm:p-3";
+  "group flex flex-col justify-center rounded-lg min-h-[58px] transition-all duration-200 w-full p-2.5 sm:p-3 overflow-hidden";
 
 const NavigationClient = ({ prevNav, nextNav }) => {
   return (
@@ -26,9 +26,9 @@ const NavigationClient = ({ prevNav, nextNav }) => {
               Previous
             </span>
 
-            <div className="flex items-center gap-1.5 min-w-0">
-              <FaChevronLeft className="text-indigo-600 group-hover:text-indigo-700 text-xs sm:text-sm" />
-              <span className="text-xs sm:text-sm font-medium text-indigo-700 truncate">
+            <div className="flex items-center gap-1.5 min-w-0 overflow-hidden">
+              <FaChevronLeft className="text-indigo-600 group-hover:text-indigo-700 text-xs sm:text-sm shrink-0" />
+              <span className="text-xs sm:text-sm font-medium text-indigo-700 truncate min-w-0 flex-1" title={prevNav.label}>
                 {prevNav.label}
               </span>
             </div>
@@ -51,11 +51,11 @@ const NavigationClient = ({ prevNav, nextNav }) => {
               Next
             </span>
 
-            <div className="flex items-center gap-1.5 min-w-0">
-              <span className="text-xs sm:text-sm font-semibold truncate max-w-full">
+            <div className="flex items-center gap-1.5 min-w-0 overflow-hidden">
+              <span className="text-xs sm:text-sm font-semibold truncate min-w-0 flex-1" title={nextNav.label}>
                 {nextNav.label}
               </span>
-              <FaChevronRight className="text-white text-xs sm:text-sm" />
+              <FaChevronRight className="text-white text-xs sm:text-sm shrink-0" />
             </div>
           </Link>
         ) : (

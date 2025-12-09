@@ -70,7 +70,7 @@ export const studentPropType = PropTypes.shape({
 
 export const formConfigPropType = PropTypes.shape({
   _id: PropTypes.string.isRequired,
-  formName: PropTypes.string.isRequired,
+  formName: PropTypes.string, // Made optional - formId is used as name
   formId: PropTypes.string.isRequired,
   description: PropTypes.string,
   fields: PropTypes.arrayOf(

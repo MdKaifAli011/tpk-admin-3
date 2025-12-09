@@ -53,7 +53,6 @@ export async function PUT(request, { params }) {
     }
 
     // Update fields
-    if (body.formName) form.formName = body.formName.trim();
     if (body.description !== undefined)
       form.description = body.description.trim();
     if (body.status) form.status = body.status;
@@ -78,7 +77,7 @@ export async function PUT(request, { params }) {
       form.settings = {
         ...form.settings,
         ...body.settings,
-        title: body.settings.title?.trim() || form.settings.title,
+        title: body.settings.title?.trim() || form.formId || form.settings.title,
         description:
           body.settings.description?.trim() || form.settings.description,
         buttonText:

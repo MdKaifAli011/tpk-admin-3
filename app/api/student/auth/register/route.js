@@ -23,6 +23,7 @@ export async function POST(request) {
       className,
       prepared,
       country,
+      source, // URL path where student registered from (e.g., /neet)
     } = body;
 
     // Validate required fields
@@ -86,17 +87,25 @@ export async function POST(request) {
     let lead;
     if (existingLead) {
       // Update existing lead
+      const updateData = {
+        name: leadName,
+        phoneNumber: phoneNumber.trim(),
+        className: className.trim(),
+        prepared: prepared?.trim() || null,
+        country: country?.trim() || null,
+        status: "updated",
+        updateCount: (existingLead.updateCount || 0) + 1,
+        form_id: "student-registration", // Set form_id for student registration
+      };
+      
+      // Update source if provided (URL path where student registered from)
+      if (source?.trim()) {
+        updateData.source = source.trim();
+      }
+      
       lead = await Lead.findOneAndUpdate(
         { email: normalizedEmail },
-        {
-          name: leadName,
-          phoneNumber: phoneNumber.trim(),
-          className: className.trim(),
-          prepared: prepared?.trim() || null,
-          country: country?.trim() || null,
-          status: "updated",
-          updateCount: (existingLead.updateCount || 0) + 1,
-        },
+        updateData,
         { new: true }
       );
     } else {
@@ -110,7 +119,8 @@ export async function POST(request) {
         country: country?.trim() || null,
         status: "new",
         updateCount: 0,
-        source: "student_registration",
+        source: source?.trim() || "/register", // Use provided source URL path or default to /register
+        form_id: "student-registration", // Set form_id for student registration
       });
     }
 
