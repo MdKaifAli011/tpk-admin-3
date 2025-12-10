@@ -28,17 +28,63 @@ export const useProgress = (unitId, chapters = []) => {
     return localStorage.getItem("student_token");
   }, []);
 
+  // Load progress from localStorage (defined first to avoid circular dependency)
+  const loadProgressFromLocalStorage = useCallback(() => {
+    if (typeof window === "undefined") {
+      return { progress: {}, unitProgress: 0 };
+    }
+
+    try {
+      const stored = localStorage.getItem(storageKey);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        // Remove _unitProgress if it exists (old format)
+        const { _unitProgress, ...progress } = parsed;
+        return {
+          progress,
+          unitProgress: _unitProgress || 0,
+        };
+      }
+    } catch (error) {
+      // Handle specific localStorage errors
+      if (error instanceof SyntaxError) {
+        console.error("Error parsing progress from localStorage:", error);
+        // Clear corrupted data
+        try {
+          localStorage.removeItem(storageKey);
+        } catch (clearError) {
+          console.error("Error clearing corrupted localStorage:", clearError);
+        }
+      } else if (error.name === 'QuotaExceededError') {
+        console.error("localStorage quota exceeded");
+      } else {
+        console.error("Error loading progress from localStorage:", error);
+      }
+    }
+
+    // Initialize with default values
+    const defaultProgress = {};
+    chapters.forEach((chapter) => {
+      defaultProgress[chapter._id] = {
+        progress: 0,
+        isCompleted: false,
+      };
+    });
+    return { progress: defaultProgress, unitProgress: 0 };
+  }, [storageKey, chapters]);
+
   // Load progress from database
-  const loadProgressFromDB = useCallback(async () => {
+  const loadProgressFromDB = useCallback(async (abortSignal) => {
     if (!isAuthenticated) {
-      // If not authenticated, load from localStorage only
-      return loadProgressFromLocalStorage();
+      // If not authenticated, return empty progress (no localStorage fallback)
+      return { progress: {}, unitProgress: 0 };
     }
 
     try {
       const token = getAuthToken();
       if (!token) {
-        return loadProgressFromLocalStorage();
+        // No token, return empty progress
+        return { progress: {}, unitProgress: 0 };
       }
 
       const response = await fetch(`/api/student/progress?unitId=${unitId}`, {
@@ -46,6 +92,7 @@ export const useProgress = (unitId, chapters = []) => {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
+        signal: abortSignal,
       });
 
       if (response.ok) {
@@ -74,66 +121,39 @@ export const useProgress = (unitId, chapters = []) => {
             });
           }
 
-          // Also update localStorage as cache
-          if (typeof window !== "undefined") {
-            try {
-              localStorage.setItem(storageKey, JSON.stringify(progressObj));
-            } catch (error) {
-              console.error("Error caching progress to localStorage:", error);
-            }
-          }
+          // DO NOT save to localStorage - unit progress only in DB
+          // Removed localStorage caching for unit progress
 
           return {
             progress: progressObj,
             unitProgress: progressDoc.unitProgress || 0,
           };
         }
+      } else if (response.status === 401) {
+        // Authentication error
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("student_token");
+        }
+        setIsAuthenticated(false);
       }
     } catch (error) {
+      // Ignore abort errors
+      if (error.name === 'AbortError') {
+        return null;
+      }
       console.error("Error loading progress from database:", error);
     }
 
-    // Fallback to localStorage
-    return loadProgressFromLocalStorage();
-  }, [unitId, isAuthenticated, getAuthToken, storageKey]);
+    // Return empty progress if DB fetch fails (no localStorage fallback)
+    return { progress: {}, unitProgress: 0 };
+  }, [unitId, isAuthenticated, getAuthToken]);
 
-  // Load progress from localStorage
-  const loadProgressFromLocalStorage = useCallback(() => {
-    if (typeof window === "undefined") {
-      return { progress: {}, unitProgress: 0 };
-    }
-
-    try {
-      const stored = localStorage.getItem(storageKey);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        // Remove _unitProgress if it exists (old format)
-        const { _unitProgress, ...progress } = parsed;
-        return {
-          progress,
-          unitProgress: _unitProgress || 0,
-        };
-      }
-    } catch (error) {
-      console.error("Error loading progress from localStorage:", error);
-    }
-
-    // Initialize with default values
-    const defaultProgress = {};
-    chapters.forEach((chapter) => {
-      defaultProgress[chapter._id] = {
-        progress: 0,
-        isCompleted: false,
-      };
-    });
-    return { progress: defaultProgress, unitProgress: 0 };
-  }, [storageKey, chapters]);
 
   // Save progress to database
   const saveProgressToDB = useCallback(
     async (progressData, calculatedUnitProgress) => {
       if (!isAuthenticated) {
-        // If not authenticated, only save to localStorage
+        // If not authenticated, don't save anywhere (unit and subject progress only in DB)
         return;
       }
 
@@ -144,6 +164,7 @@ export const useProgress = (unitId, chapters = []) => {
 
       // Debounce saves to avoid too many API calls
       saveTimeoutRef.current = setTimeout(async () => {
+        // Check if component is still mounted (via ref check)
         try {
           const token = getAuthToken();
           if (!token) return;
@@ -168,10 +189,20 @@ export const useProgress = (unitId, chapters = []) => {
           });
 
           if (!response.ok) {
-            console.error("Failed to save progress to database");
+            if (response.status === 401) {
+              // Authentication error
+              if (typeof window !== "undefined") {
+                localStorage.removeItem("student_token");
+              }
+              setIsAuthenticated(false);
+            } else {
+              console.error("Failed to save progress to database:", response.status, response.statusText);
+            }
           }
         } catch (error) {
-          console.error("Error saving progress to database:", error);
+          if (error.name !== 'AbortError') {
+            console.error("Error saving progress to database:", error);
+          }
         }
       }, 500); // 500ms debounce
     },
@@ -179,9 +210,12 @@ export const useProgress = (unitId, chapters = []) => {
   );
 
   // Calculate unit progress from chapters
+  // IMPORTANT: Uses ALL chapters passed to hook (consistent with API calculation)
   const calculateUnitProgress = useCallback((progressData) => {
     if (chapters.length === 0) return 0;
 
+    // Sum progress for ALL chapters (0% for chapters without progress data)
+    // This matches the API calculation in track-visit route
     const totalProgress = chapters.reduce((sum, chapter) => {
       const chapterData = progressData[chapter._id] || { progress: 0 };
       return sum + (chapterData.progress || 0);
@@ -192,38 +226,79 @@ export const useProgress = (unitId, chapters = []) => {
 
   // Initialize progress on mount
   useEffect(() => {
+    let isMounted = true;
+    const abortController = new AbortController();
+
     const init = async () => {
       setIsLoading(true);
       const authStatus = checkAuth();
       setIsAuthenticated(authStatus);
 
-      const loaded = await loadProgressFromDB();
-      setChaptersProgress(loaded.progress);
-      setUnitProgress(loaded.unitProgress);
-      setIsLoading(false);
-      isInitialLoadRef.current = false;
+      try {
+        const loaded = await loadProgressFromDB(abortController.signal);
+        
+        if (!isMounted || !loaded) return;
+        
+        setChaptersProgress(loaded.progress);
+        setUnitProgress(loaded.unitProgress);
+        isInitialLoadRef.current = false;
+      } catch (error) {
+        if (error.name !== 'AbortError') {
+          console.error("Error initializing progress:", error);
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
     };
 
     init();
+
+    return () => {
+      isMounted = false;
+      abortController.abort();
+    };
   }, [unitId, checkAuth, loadProgressFromDB]);
 
   // Listen for progress updates from visit tracking
   useEffect(() => {
+    let isMounted = true;
+    const abortController = new AbortController();
+
     const handleProgressUpdate = async (event) => {
+      if (!isMounted) return;
       if (event.detail?.unitId === unitId && isAuthenticated) {
-        // Reload progress from database to get latest updates
-        const loaded = await loadProgressFromDB();
-        setChaptersProgress(loaded.progress);
-        setUnitProgress(loaded.unitProgress);
+        try {
+          // Reload progress from database to get latest updates
+          const loaded = await loadProgressFromDB(abortController.signal);
+          if (isMounted && loaded) {
+            setChaptersProgress(loaded.progress);
+            setUnitProgress(loaded.unitProgress);
+          }
+        } catch (error) {
+          if (error.name !== 'AbortError') {
+            console.error("Error updating progress:", error);
+          }
+        }
       }
     };
 
     const handleChapterProgressUpdate = async () => {
+      if (!isMounted) return;
       if (isAuthenticated) {
-        // Reload progress from database
-        const loaded = await loadProgressFromDB();
-        setChaptersProgress(loaded.progress);
-        setUnitProgress(loaded.unitProgress);
+        try {
+          // Reload progress from database
+          const loaded = await loadProgressFromDB(abortController.signal);
+          if (isMounted && loaded) {
+            setChaptersProgress(loaded.progress);
+            setUnitProgress(loaded.unitProgress);
+          }
+        } catch (error) {
+          if (error.name !== 'AbortError') {
+            console.error("Error updating chapter progress:", error);
+          }
+        }
       }
     };
 
@@ -233,6 +308,8 @@ export const useProgress = (unitId, chapters = []) => {
     }
 
     return () => {
+      isMounted = false;
+      abortController.abort();
       if (typeof window !== "undefined") {
         window.removeEventListener("progress-updated", handleProgressUpdate);
         window.removeEventListener("chapterProgressUpdate", handleChapterProgressUpdate);
@@ -266,33 +343,27 @@ export const useProgress = (unitId, chapters = []) => {
           },
         };
 
-        // Save to localStorage immediately for fast UI updates
-        try {
-          if (typeof window !== "undefined") {
-            localStorage.setItem(storageKey, JSON.stringify(updated));
-          }
-        } catch (error) {
-          console.error("Error saving progress to localStorage:", error);
-        }
-
         // Calculate and update unit progress
         const newUnitProgress = calculateUnitProgress(updated);
         setUnitProgress(newUnitProgress);
 
-        // Save to database (debounced)
-        if (!isInitialLoadRef.current) {
+        // Save to database only (no localStorage for authenticated users)
+        if (!isInitialLoadRef.current && isAuthenticated) {
           saveProgressToDB(updated, newUnitProgress);
         }
 
         // Dispatch custom event for real-time updates
         if (typeof window !== "undefined") {
-          setTimeout(() => {
-            window.dispatchEvent(
-              new CustomEvent("progress-updated", {
-                detail: { unitId, unitProgress: newUnitProgress },
-              })
-            );
-          }, 0);
+          // Use requestAnimationFrame for better performance than setTimeout
+          requestAnimationFrame(() => {
+            if (typeof window !== "undefined") {
+              window.dispatchEvent(
+                new CustomEvent("progress-updated", {
+                  detail: { unitId, unitProgress: newUnitProgress },
+                })
+              );
+            }
+          });
         }
 
         return updated;

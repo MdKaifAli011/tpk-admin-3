@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import StudentProgress from "@/models/StudentProgress";
+import Chapter from "@/models/Chapter";
 import Topic from "@/models/Topic";
 import SubTopic from "@/models/SubTopic";
 import Definition from "@/models/Definition";
@@ -12,8 +13,12 @@ import {
 import { verifyStudentToken } from "@/lib/studentAuth";
 
 // Helper function to get total items count for a chapter
+// NOTE: This matches track-visit route - chapter visit counts as 1 item
 async function getChapterItemCounts(chapterId) {
   try {
+    // Chapter itself counts as 1 item (consistent with track-visit route)
+    const chapterCount = 1;
+
     // Get all topics in this chapter
     const topics = await Topic.find({ chapterId, status: "active" }).lean();
     const topicIds = topics.map((t) => t._id);
@@ -32,34 +37,38 @@ async function getChapterItemCounts(chapterId) {
     }).lean();
 
     return {
+      totalChapter: chapterCount,
       totalTopics: topics.length,
       totalSubtopics: subtopics.length,
       totalDefinitions: definitions.length,
-      totalItems: topics.length + subtopics.length + definitions.length,
+      totalItems: chapterCount + topics.length + subtopics.length + definitions.length,
     };
   } catch (error) {
     console.error("Error getting chapter item counts:", error);
     return {
+      totalChapter: 1,
       totalTopics: 0,
       totalSubtopics: 0,
       totalDefinitions: 0,
-      totalItems: 0,
+      totalItems: 1,
     };
   }
 }
 
 // Helper function to calculate chapter progress from visited items
+// NOTE: This matches track-visit route - includes chapter visit in calculation
 function calculateChapterProgress(chapterProgress, itemCounts) {
   if (!chapterProgress || !chapterProgress.visitedItems) {
     return 0;
   }
 
   const { visitedItems } = chapterProgress;
+  const visitedChapter = visitedItems.chapter ? 1 : 0;
   const visitedTopics = visitedItems.topics?.length || 0;
   const visitedSubtopics = visitedItems.subtopics?.length || 0;
   const visitedDefinitions = visitedItems.definitions?.length || 0;
 
-  const totalVisited = visitedTopics + visitedSubtopics + visitedDefinitions;
+  const totalVisited = visitedChapter + visitedTopics + visitedSubtopics + visitedDefinitions;
   const totalItems = itemCounts.totalItems;
 
   if (totalItems === 0) return 0;
@@ -125,18 +134,45 @@ export async function POST(request) {
     // Update chapter progress in the Map
     studentProgress.progress.set(chapterId, chapterProgress);
 
-    // Calculate unit progress from all chapters
-    const chapters = Array.from(studentProgress.progress.values());
-    const totalChapterProgress = chapters.reduce(
-      (sum, ch) => sum + (ch.progress || 0),
-      0
-    );
-    const unitProgress =
-      chapters.length > 0
-        ? Math.round(totalChapterProgress / chapters.length)
-        : 0;
+    // Calculate unit progress from ALL chapters in the unit (not just those with progress data)
+    // This ensures accurate calculation: (sum of all chapter progress) / (total chapters)
+    // This matches the calculation in track-visit route for consistency
+    try {
+      const allChapters = await Chapter.find({
+        unitId,
+        status: "active",
+      }).lean();
+      const totalChapters = allChapters.length;
 
-    studentProgress.unitProgress = unitProgress;
+      if (totalChapters > 0) {
+        // Sum progress for all chapters (0% for chapters without progress data)
+        const totalChapterProgress = allChapters.reduce((sum, chapter) => {
+          // Convert chapter._id to string for Map lookup
+          const chapterIdStr = String(chapter._id);
+          const chapterProgressData = studentProgress.progress.get(chapterIdStr);
+          const chapterProgress = chapterProgressData?.progress || 0;
+          return sum + chapterProgress;
+        }, 0);
+
+        const unitProgress = Math.round(totalChapterProgress / totalChapters);
+        studentProgress.unitProgress = unitProgress;
+      } else {
+        studentProgress.unitProgress = 0;
+      }
+    } catch (error) {
+      console.error("Error calculating unit progress:", error);
+      // Fallback: calculate from chapters with progress data
+      const chapters = Array.from(studentProgress.progress.values());
+      const totalChapterProgress = chapters.reduce(
+        (sum, ch) => sum + (ch.progress || 0),
+        0
+      );
+      const unitProgress =
+        chapters.length > 0
+          ? Math.round(totalChapterProgress / chapters.length)
+          : 0;
+      studentProgress.unitProgress = unitProgress;
+    }
 
     await studentProgress.save();
 

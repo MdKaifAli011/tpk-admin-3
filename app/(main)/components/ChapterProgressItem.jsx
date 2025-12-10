@@ -27,12 +27,29 @@ const ChapterProgressItem = ({
   const [congratulationsShown, setCongratulationsShown] = useState(false);
   const prevProgressRef = useRef(initialProgress);
   const isInitializedRef = useRef(false);
+  const congratulationsShownRef = useRef(false); // Use ref to avoid dependency issues
+  const abortControllerRef = useRef(null);
   
   // Reset initialization flag when chapter or unit changes
   React.useEffect(() => {
+    // Abort any pending async operations
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    
     isInitializedRef.current = false;
+    congratulationsShownRef.current = false;
     setCongratulationsShown(false);
     setShowCongratulations(false);
+    
+    // Create new abort controller for this chapter/unit
+    abortControllerRef.current = new AbortController();
+    
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
   }, [chapter._id, unitId]);
 
   // Sync with prop changes (from database updates)
@@ -45,18 +62,37 @@ const ChapterProgressItem = ({
   // Check if congratulations were already shown (prevent duplicate)
   // CRITICAL: This must complete before allowing modal to show
   React.useEffect(() => {
+    let isMounted = true;
+    
     if (unitId && chapter._id) {
       isInitializedRef.current = false;
-      checkChapterCongratulationsShown(chapter._id, unitId).then((hasShown) => {
-        setCongratulationsShown(hasShown);
-        isInitializedRef.current = true; // Mark as initialized
-        if (hasShown) {
-          setShowCongratulations(false);
-        }
-      });
+      const controller = abortControllerRef.current;
+      
+      checkChapterCongratulationsShown(chapter._id, unitId)
+        .then((hasShown) => {
+          if (!isMounted || (controller && controller.signal.aborted)) return;
+          
+          congratulationsShownRef.current = hasShown;
+          setCongratulationsShown(hasShown);
+          isInitializedRef.current = true; // Mark as initialized
+          if (hasShown) {
+            setShowCongratulations(false);
+          }
+        })
+        .catch((error) => {
+          if (!isMounted || (controller && controller.signal.aborted)) return;
+          console.error("Error checking congratulations:", error);
+          // On error, mark as initialized to prevent blocking
+          isInitializedRef.current = true;
+          congratulationsShownRef.current = false;
+        });
     } else {
       isInitializedRef.current = true; // If no unitId/chapterId, mark as initialized
     }
+    
+    return () => {
+      isMounted = false;
+    };
   }, [chapter._id, unitId]);
 
   const weightage = chapter.weightage ?? "20%";
@@ -94,19 +130,29 @@ const ChapterProgressItem = ({
     // 1. Progress just reached exactly 100% (wasn't 100% before)
     // 2. We haven't shown the modal for this completion yet
     // 3. Initialization is complete (prevents showing on page visit)
-    if (newProgress === 100 && prevProgress < 100 && !congratulationsShown && unitId && isInitializedRef.current) {
+    if (newProgress === 100 && prevProgress < 100 && !congratulationsShownRef.current && unitId && isInitializedRef.current) {
       setShowCongratulations(true);
       // Mark as shown in database to prevent duplicate
-      const success = await markChapterCongratulationsShown(chapter._id, unitId);
-      if (success) {
-        setCongratulationsShown(true);
+      try {
+        const success = await markChapterCongratulationsShown(chapter._id, unitId);
+        if (success) {
+          congratulationsShownRef.current = true;
+          setCongratulationsShown(true);
+        }
+      } catch (error) {
+        console.error("Error marking congratulations as shown:", error);
+        // Don't block UI on error, just log it
       }
     }
     
     if (onProgressChange) {
-      onProgressChange(chapter._id, newProgress, newProgress === 100);
+      try {
+        onProgressChange(chapter._id, newProgress, newProgress === 100);
+      } catch (error) {
+        console.error("Error updating progress:", error);
+      }
     }
-  }, [chapter._id, onProgressChange, congratulationsShown, unitId]);
+  }, [chapter._id, onProgressChange, unitId]);
 
   const handleMarkAsDone = useCallback(async (e) => {
     e.stopPropagation();
@@ -124,17 +170,27 @@ const ChapterProgressItem = ({
       // 1. Previous progress was less than 100% (just completed)
       // 2. We haven't shown the modal for this completion yet
       // 3. Initialization is complete (prevents showing on page visit)
-      if (prevProgress < 100 && !congratulationsShown && unitId && isInitializedRef.current) {
+      if (prevProgress < 100 && !congratulationsShownRef.current && unitId && isInitializedRef.current) {
         setShowCongratulations(true);
         // Mark as shown in database to prevent duplicate
-        const success = await markChapterCongratulationsShown(chapter._id, unitId);
-        if (success) {
-          setCongratulationsShown(true);
+        try {
+          const success = await markChapterCongratulationsShown(chapter._id, unitId);
+          if (success) {
+            congratulationsShownRef.current = true;
+            setCongratulationsShown(true);
+          }
+        } catch (error) {
+          console.error("Error marking congratulations as shown:", error);
+          // Don't block UI on error
         }
       }
       
       if (onMarkAsDone) {
-        onMarkAsDone(chapter._id);
+        try {
+          onMarkAsDone(chapter._id);
+        } catch (error) {
+          console.error("Error marking chapter as done:", error);
+        }
       }
     } else {
       // Reset if unchecked
@@ -142,12 +198,17 @@ const ChapterProgressItem = ({
       setIsCompleted(false);
       prevProgressRef.current = 0;
       // Reset congratulations shown flag when unchecked
+      congratulationsShownRef.current = false;
       setCongratulationsShown(false);
       if (onReset) {
-        onReset(chapter._id);
+        try {
+          onReset(chapter._id);
+        } catch (error) {
+          console.error("Error resetting chapter progress:", error);
+        }
       }
     }
-  }, [chapter._id, onMarkAsDone, onReset, congratulationsShown, unitId]);
+  }, [chapter._id, onMarkAsDone, onReset, unitId]);
 
   const handleMouseDown = useCallback((e) => {
     e.stopPropagation();

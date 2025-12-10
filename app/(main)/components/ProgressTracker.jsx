@@ -24,7 +24,20 @@ const ProgressTracker = ({
     const finalItemId = itemId || chapterId;
 
     // Check if student is authenticated
-    const token = localStorage.getItem("student_token");
+    let token;
+    try {
+      if (typeof window === "undefined") return;
+      token = localStorage.getItem("student_token");
+    } catch (error) {
+      // Handle localStorage errors (quota, disabled, etc.)
+      if (error.name === 'QuotaExceededError') {
+        logger.warn("localStorage quota exceeded, cannot track progress");
+      } else {
+        logger.warn("Error accessing localStorage:", error);
+      }
+      return;
+    }
+    
     if (!token) {
       // Not authenticated, skip tracking
       return;
@@ -69,17 +82,35 @@ const ProgressTracker = ({
             logger.warn("Failed to track visit:", data.message || "Unknown error");
           }
         } else {
-          // Try to get error details from response
-          let errorMessage = "Failed to track visit";
-          try {
-            const errorData = await response.json();
-            errorMessage = errorData.message || errorData.error || errorMessage;
-          } catch (e) {
-            errorMessage = `Failed to track visit: ${response.status} ${response.statusText}`;
+          // Handle specific HTTP error codes
+          if (response.status === 401) {
+            // Authentication error - clear token
+            try {
+              if (typeof window !== "undefined") {
+                localStorage.removeItem("student_token");
+              }
+            } catch (e) {
+              logger.warn("Error clearing token:", e);
+            }
+            logger.warn("Authentication failed, token cleared");
+          } else {
+            // Try to get error details from response
+            let errorMessage = "Failed to track visit";
+            try {
+              const errorData = await response.json();
+              errorMessage = errorData.message || errorData.error || errorMessage;
+            } catch (e) {
+              errorMessage = `Failed to track visit: ${response.status} ${response.statusText}`;
+            }
+            logger.warn(errorMessage);
           }
-          logger.warn(errorMessage);
         }
       } catch (error) {
+        // Handle network errors, abort errors, etc.
+        if (error.name === 'AbortError') {
+          // Request was aborted, ignore
+          return;
+        }
         logger.error("Error tracking visit:", error);
       }
     };

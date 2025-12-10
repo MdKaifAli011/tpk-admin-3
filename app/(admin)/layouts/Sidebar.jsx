@@ -10,6 +10,7 @@ import {
   FaClipboardList,
   FaUserTag,
   FaTimes,
+  FaUserGraduate,
 } from "react-icons/fa";
 
 const ALL_MENU_ITEMS = [
@@ -38,6 +39,11 @@ const ALL_MENU_ITEMS = [
     name: "Lead Management",
     href: "/admin/lead",
     icon: FaUserTag,
+  },
+  {
+    name: "Student Management",
+    href: "/admin/student",
+    icon: FaUserGraduate,
   },
   {
     name: "Form Management",

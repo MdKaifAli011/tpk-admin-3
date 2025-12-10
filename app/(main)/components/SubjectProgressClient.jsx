@@ -130,48 +130,36 @@ const SubjectProgressClient = ({ subjectId, subjectName, unitIds = [], initialPr
               });
             }
             prevProgressRef.current = dbProgress;
+            
+            // Save subject progress to database
+            try {
+              const saveResponse = await fetch("/api/student/progress/subject", {
+                method: "POST",
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  subjectId,
+                  subjectProgress: dbProgress,
+                }),
+              });
+              
+              if (!saveResponse.ok) {
+                console.error("Failed to save subject progress to database");
+              }
+            } catch (error) {
+              console.error("Error saving subject progress to database:", error);
+            }
+            
             return;
           }
         }
 
-        // Fallback to localStorage
-        // Loop through ALL units and get their progress (0 if not found)
-        const totalUnitProgress = unitIds.reduce((sum, unitId) => {
-          const storageKey = `unit-progress-${unitId}`;
-          const stored = localStorage.getItem(storageKey);
-          
-          if (stored) {
-            try {
-              const data = JSON.parse(stored);
-              // Check if unit progress is already calculated
-              if (data._unitProgress !== undefined) {
-                return sum + data._unitProgress;
-              } else {
-                // Calculate from chapters (fallback)
-                const chapterKeys = Object.keys(data).filter(key => !key.startsWith('_'));
-                if (chapterKeys.length > 0) {
-                  const unitProgress = chapterKeys.reduce((sum, key) => {
-                    return sum + (data[key]?.progress || 0);
-                  }, 0);
-                  const avgProgress = Math.round(unitProgress / chapterKeys.length);
-                  return sum + avgProgress;
-                }
-              }
-            } catch (error) {
-              console.error(`Error parsing progress for unit ${unitId}:`, error);
-            }
-          }
-          // Return 0 for units without progress data
-          return sum;
-        }, 0);
-
-        // Calculate: Sum of all unit progress / Total number of units
-        // This ensures ALL units are included in the calculation (even with 0% progress)
-        const subjectProgress = Math.round(totalUnitProgress / unitIds.length);
+        // If not authenticated, set progress to 0 (no localStorage fallback)
+        const subjectProgress = 0;
         
         // On first check (initialization), set prevProgress to current progress
-        // This prevents showing modal when visiting a page where subject is already completed
-        // IMPORTANT: Once shown, NEVER show again, even on page reload or revisit
         if (!isInitializedRef.current && !isCheckingRef.current) {
           isCheckingRef.current = true;
           checkSubjectCongratulationsShown(subjectId).then((hasShown) => {
@@ -179,37 +167,12 @@ const SubjectProgressClient = ({ subjectId, subjectName, unitIds = [], initialPr
             setProgress(subjectProgress);
             prevProgressRef.current = subjectProgress;
             isInitializedRef.current = true;
-            // If already shown before, ensure modal is closed
             if (hasShown) {
               setShowCongratulations(false);
             }
             isCheckingRef.current = false;
           });
-          return; // Don't show modal on initial load
-        }
-        
-        // CRITICAL: Only check for modal if initialization is complete
-        // This prevents race condition where modal shows before async check completes
-        if (!isInitializedRef.current) {
-          return; // Don't check for modal until initialization is done
-        }
-
-        // Check if we've already shown congratulations for this completion
-        const wasCompleted = prevProgressRef.current === 100;
-        const isNowCompleted = subjectProgress === 100;
-        
-        // Show congratulations only if:
-        // 1. Progress just reached exactly 100% (wasn't 100% before)
-        // 2. We haven't shown the modal for this completion yet
-        // 3. Initialization is complete (prevents showing on page visit)
-        if (isNowCompleted && !wasCompleted && !congratulationsShown && isInitializedRef.current) {
-          setShowCongratulations(true);
-          // Mark as shown in database
-          markSubjectCongratulationsShown(subjectId).then((success) => {
-            if (success) {
-              setCongratulationsShown(true);
-            }
-          });
+          return;
         }
         
         setProgress(subjectProgress);
@@ -223,14 +186,7 @@ const SubjectProgressClient = ({ subjectId, subjectName, unitIds = [], initialPr
     // Check on mount
     calculateProgress();
 
-    // Listen for storage events (from other tabs/windows)
-    const handleStorageChange = async (e) => {
-      if (e.key && e.key.startsWith('unit-progress-')) {
-        await calculateProgress();
-      }
-    };
-
-    // Listen for custom progress-updated event
+    // Listen for custom progress-updated event (from unit progress updates)
     const handleProgressUpdate = async () => {
       await calculateProgress();
     };
@@ -240,21 +196,23 @@ const SubjectProgressClient = ({ subjectId, subjectName, unitIds = [], initialPr
       await calculateProgress();
     };
 
-    window.addEventListener("storage", handleStorageChange);
     window.addEventListener("progress-updated", handleProgressUpdate);
     window.addEventListener("chapterProgressUpdate", handleChapterProgressUpdate);
 
-    // Poll for changes as backup (since storage event doesn't fire in same tab)
-    // Reduced polling frequency to improve performance and reduce memory usage
-    // Poll less frequently - only when authenticated and visible
-    const pollInterval = authStatus ? 5000 : 3000; // Increased from 2s/1s to 5s/3s
-    const interval = setInterval(calculateProgress, pollInterval);
+    // Poll for changes when authenticated (to sync with DB updates from other tabs)
+    // Poll less frequently to improve performance
+    const pollInterval = authStatus ? 5000 : null; // Only poll when authenticated
+    let interval = null;
+    if (pollInterval) {
+      interval = setInterval(calculateProgress, pollInterval);
+    }
 
     return () => {
-      window.removeEventListener("storage", handleStorageChange);
       window.removeEventListener("progress-updated", handleProgressUpdate);
       window.removeEventListener("chapterProgressUpdate", handleChapterProgressUpdate);
-      clearInterval(interval);
+      if (interval) {
+        clearInterval(interval);
+      }
     };
   }, [subjectId, unitIds, isAuthenticated, congratulationsShown]);
 

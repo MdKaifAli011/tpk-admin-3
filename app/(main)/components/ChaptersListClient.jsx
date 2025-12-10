@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import ChapterProgressItem from "./ChapterProgressItem";
 import { useProgress } from "../hooks/useProgress";
 import { createSlug as createSlugUtil } from "@/utils/slug";
@@ -23,11 +23,22 @@ const ChaptersListClient = ({
   } = useProgress(unitId, chapters);
 
   // Notify parent component when unit progress changes
+  // Use ref to store callback to avoid dependency issues
+  const onUnitProgressChangeRef = useRef(onUnitProgressChange);
+  
   useEffect(() => {
-    if (onUnitProgressChange) {
-      onUnitProgressChange(unitProgress);
+    onUnitProgressChangeRef.current = onUnitProgressChange;
+  }, [onUnitProgressChange]);
+  
+  useEffect(() => {
+    if (onUnitProgressChangeRef.current) {
+      try {
+        onUnitProgressChangeRef.current(unitProgress);
+      } catch (error) {
+        console.error("Error in onUnitProgressChange callback:", error);
+      }
     }
-  }, [unitProgress, onUnitProgressChange]);
+  }, [unitProgress]); // Removed onUnitProgressChange from dependencies
 
   if (chapters.length === 0) {
     return (
@@ -41,7 +52,7 @@ const ChaptersListClient = ({
     <div className="divide-y divide-gray-100">
       {chapters.map((chapter, index) => {
         const chapterSlug = chapter.slug || createSlugUtil(chapter.name);
-        const chapterProgressData = getChapterProgress(chapter._id);
+        const chapterProgressData = getChapterProgress(chapter._id) || { progress: 0, isCompleted: false };
         const chapterUrl = `/${examSlug}/${subjectSlug}/${unitSlug}/${chapterSlug}`;
 
         return (

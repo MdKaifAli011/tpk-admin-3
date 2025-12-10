@@ -9,16 +9,33 @@ import {
 
 const ChapterCompletionTracker = ({ chapterId, chapterName, unitId }) => {
   const [showModal, setShowModal] = useState(false);
-  const [previousProgress, setPreviousProgress] = useState(null);
-  const [congratulationsShown, setCongratulationsShown] = useState(false);
+  const previousProgressRef = useRef(null); // Use ref to avoid dependency issues
+  const congratulationsShownRef = useRef(false); // Use ref to avoid dependency issues
   const isInitializedRef = useRef(false);
   const isCheckingRef = useRef(false);
+  const abortControllerRef = useRef(null);
 
   // Reset initialization flag when chapterId or unitId changes
   useEffect(() => {
+    // Abort any pending async operations
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    
     isInitializedRef.current = false;
-    setPreviousProgress(null);
-    setCongratulationsShown(false);
+    isCheckingRef.current = false;
+    previousProgressRef.current = null;
+    congratulationsShownRef.current = false;
+    setShowModal(false);
+    
+    // Create new abort controller
+    abortControllerRef.current = new AbortController();
+    
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
   }, [chapterId, unitId]);
 
   useEffect(() => {
@@ -59,16 +76,36 @@ const ChapterCompletionTracker = ({ chapterId, chapterName, unitId }) => {
 
         // Fallback to localStorage if not authenticated or if database doesn't have data
         if (chapterProgress === 0 && typeof window !== "undefined") {
-          const stored = localStorage.getItem(storageKey);
-          if (stored) {
-            try {
-              const data = JSON.parse(stored);
-              const chapterData = data[chapterId];
-              if (chapterData) {
-                chapterProgress = chapterData.progress || 0;
+          try {
+            const stored = localStorage.getItem(storageKey);
+            if (stored) {
+              try {
+                const data = JSON.parse(stored);
+                const chapterData = data[chapterId];
+                if (chapterData) {
+                  chapterProgress = chapterData.progress || 0;
+                }
+              } catch (parseError) {
+                // Handle JSON parsing errors
+                if (parseError instanceof SyntaxError) {
+                  console.error("Error parsing progress from localStorage:", parseError);
+                  // Clear corrupted data
+                  try {
+                    localStorage.removeItem(storageKey);
+                  } catch (clearError) {
+                    console.error("Error clearing corrupted localStorage:", clearError);
+                  }
+                } else {
+                  console.error("Error parsing progress from localStorage:", parseError);
+                }
               }
-            } catch (error) {
-              console.error("Error parsing progress from localStorage:", error);
+            }
+          } catch (error) {
+            // Handle localStorage access errors (quota, disabled, etc.)
+            if (error.name === 'QuotaExceededError') {
+              console.error("localStorage quota exceeded");
+            } else {
+              console.error("Error accessing localStorage:", error);
             }
           }
         }
@@ -78,16 +115,30 @@ const ChapterCompletionTracker = ({ chapterId, chapterName, unitId }) => {
         // IMPORTANT: Once shown, NEVER show again, even on page reload or revisit
         if (!isInitializedRef.current && !isCheckingRef.current) {
           isCheckingRef.current = true;
-          checkChapterCongratulationsShown(chapterId, unitId).then((hasShown) => {
-            setCongratulationsShown(hasShown);
-            setPreviousProgress(chapterProgress);
-            isInitializedRef.current = true;
-            // If already shown before, ensure modal is closed
-            if (hasShown) {
-              setShowModal(false);
-            }
-            isCheckingRef.current = false;
-          });
+          const controller = abortControllerRef.current;
+          
+          checkChapterCongratulationsShown(chapterId, unitId)
+            .then((hasShown) => {
+              if (controller && controller.signal.aborted) return;
+              
+              congratulationsShownRef.current = hasShown;
+              previousProgressRef.current = chapterProgress;
+              isInitializedRef.current = true;
+              // If already shown before, ensure modal is closed
+              if (hasShown) {
+                setShowModal(false);
+              }
+              isCheckingRef.current = false;
+            })
+            .catch((error) => {
+              if (controller && controller.signal.aborted) return;
+              console.error("Error checking chapter congratulations:", error);
+              // On error, mark as initialized to prevent blocking
+              isInitializedRef.current = true;
+              congratulationsShownRef.current = false;
+              previousProgressRef.current = chapterProgress;
+              isCheckingRef.current = false;
+            });
           return; // Don't show modal on initial load
         }
 
@@ -98,24 +149,28 @@ const ChapterCompletionTracker = ({ chapterId, chapterName, unitId }) => {
         }
 
         // Check if we've already shown the modal for this completion
-        const wasCompleted = previousProgress === 100;
+        const wasCompleted = previousProgressRef.current === 100;
         const isNowCompleted = chapterProgress === 100;
 
         // Show modal only if:
         // 1. Progress just reached exactly 100% (wasn't 100% before)
         // 2. We haven't shown the modal for this completion yet
         // 3. Initialization is complete (prevents showing on page visit)
-        if (isNowCompleted && !wasCompleted && !congratulationsShown && isInitializedRef.current) {
+        if (isNowCompleted && !wasCompleted && !congratulationsShownRef.current && isInitializedRef.current) {
           setShowModal(true);
           // Mark as shown in database
-          markChapterCongratulationsShown(chapterId, unitId).then((success) => {
-            if (success) {
-              setCongratulationsShown(true);
-            }
-          });
+          markChapterCongratulationsShown(chapterId, unitId)
+            .then((success) => {
+              if (success) {
+                congratulationsShownRef.current = true;
+              }
+            })
+            .catch((error) => {
+              console.error("Error marking chapter congratulations:", error);
+            });
         }
 
-        setPreviousProgress(chapterProgress);
+        previousProgressRef.current = chapterProgress;
       } catch (error) {
         console.error("Error checking chapter progress:", error);
       }
@@ -144,20 +199,32 @@ const ChapterCompletionTracker = ({ chapterId, chapterName, unitId }) => {
       checkProgress();
     };
 
-    window.addEventListener("storage", handleStorageChange);
-    window.addEventListener("progress-updated", handleProgressUpdate);
-    window.addEventListener("chapterProgressUpdate", handleChapterProgressUpdate);
+    if (typeof window !== "undefined") {
+      window.addEventListener("storage", handleStorageChange);
+      window.addEventListener("progress-updated", handleProgressUpdate);
+      window.addEventListener("chapterProgressUpdate", handleChapterProgressUpdate);
+    }
 
     // Poll for changes as backup - reduced frequency to improve performance
-    const interval = setInterval(checkProgress, 3000); // Increased from 1s to 3s
+    // Only poll when page is visible
+    const interval = setInterval(() => {
+      if (typeof document !== "undefined" && document.visibilityState === 'visible') {
+        checkProgress();
+      }
+    }, 3000);
 
     return () => {
-      window.removeEventListener("storage", handleStorageChange);
-      window.removeEventListener("progress-updated", handleProgressUpdate);
-      window.removeEventListener("chapterProgressUpdate", handleChapterProgressUpdate);
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      if (typeof window !== "undefined") {
+        window.removeEventListener("storage", handleStorageChange);
+        window.removeEventListener("progress-updated", handleProgressUpdate);
+        window.removeEventListener("chapterProgressUpdate", handleChapterProgressUpdate);
+      }
       clearInterval(interval);
     };
-  }, [chapterId, unitId, previousProgress, congratulationsShown]);
+  }, [chapterId, unitId]); // Removed previousProgress and congratulationsShown to prevent infinite loops
 
   return (
     <CongratulationsModal

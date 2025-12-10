@@ -21,6 +21,8 @@ const UnitsListClient = ({ units, subjectId, examSlug, subjectSlug }) => {
     if (!isAuthenticated) return null;
 
     try {
+      if (typeof window === "undefined") return null;
+      
       const token = localStorage.getItem("student_token");
       if (!token) return null;
 
@@ -37,6 +39,10 @@ const UnitsListClient = ({ units, subjectId, examSlug, subjectSlug }) => {
           const progressDoc = data.data[0];
           return progressDoc.unitProgress || 0;
         }
+      } else if (response.status === 401) {
+        // Authentication error - clear token
+        localStorage.removeItem("student_token");
+        setIsAuthenticated(false);
       }
     } catch (error) {
       logger.error(`Error fetching progress for unit ${unitId}:`, error);
@@ -77,6 +83,8 @@ const UnitsListClient = ({ units, subjectId, examSlug, subjectSlug }) => {
           };
         }
         // Calculate from chapters (fallback)
+        // Note: This uses only chapters with progress data, which may differ from API
+        // For consistency, should fetch all chapters from API, but this is fallback
         const chapterKeys = Object.keys(data).filter(key => !key.startsWith('_'));
         if (chapterKeys.length > 0) {
           const totalProgress = chapterKeys.reduce((sum, key) => {
@@ -90,23 +98,69 @@ const UnitsListClient = ({ units, subjectId, examSlug, subjectSlug }) => {
         }
       }
     } catch (error) {
-      logger.error(`Error reading progress for unit ${unitId}:`, error);
+      // Handle specific localStorage errors
+      if (error instanceof SyntaxError) {
+        logger.error(`Invalid JSON in localStorage for unit ${unitId}:`, error);
+        // Clear corrupted data
+        try {
+          localStorage.removeItem(`unit-progress-${unitId}`);
+        } catch (clearError) {
+          logger.error(`Error clearing corrupted localStorage:`, clearError);
+        }
+      } else if (error.name === 'QuotaExceededError') {
+        logger.error(`localStorage quota exceeded for unit ${unitId}`);
+      } else {
+        logger.error(`Error reading progress for unit ${unitId}:`, error);
+      }
     }
     return { progress: 0, isCompleted: false };
   };
 
   // Update progress data for all units
   useEffect(() => {
+    let isMounted = true;
+    const abortController = new AbortController();
+
     const authStatus = checkAuth();
     setIsAuthenticated(authStatus);
 
     const updateProgress = async () => {
-      const newProgressData = {};
-      for (const unit of units) {
-        const progress = await getUnitProgress(unit._id);
-        newProgressData[unit._id] = progress;
+      if (!isMounted) return;
+      
+      try {
+        const newProgressData = {};
+        // Use Promise.all to wait for all async operations
+        const progressPromises = units.map(async (unit) => {
+          try {
+            const progress = await getUnitProgress(unit._id);
+            return { unitId: unit._id, progress };
+          } catch (error) {
+            logger.error(`Error getting progress for unit ${unit._id}:`, error);
+            return { unitId: unit._id, progress: { progress: 0, isCompleted: false } };
+          }
+        });
+
+        const results = await Promise.all(progressPromises);
+        
+        if (!isMounted) return;
+        
+        const newData = {};
+        results.forEach(({ unitId, progress }) => {
+          newData[unitId] = progress;
+        });
+        
+        setProgressData(newData);
+      } catch (error) {
+        logger.error("Error updating progress:", error);
+        if (isMounted) {
+          // Set default values on error
+          const defaultData = {};
+          units.forEach((unit) => {
+            defaultData[unit._id] = { progress: 0, isCompleted: false };
+          });
+          setProgressData(defaultData);
+        }
       }
-      setProgressData(newProgressData);
     };
 
     // Initial update
@@ -114,6 +168,7 @@ const UnitsListClient = ({ units, subjectId, examSlug, subjectSlug }) => {
 
     // Listen for storage events
     const handleStorageChange = async (e) => {
+      if (!isMounted) return;
       if (e.key && e.key.startsWith('unit-progress-')) {
         await updateProgress();
       }
@@ -121,26 +176,39 @@ const UnitsListClient = ({ units, subjectId, examSlug, subjectSlug }) => {
 
     // Listen for custom progress-updated event
     const handleProgressUpdate = async () => {
+      if (!isMounted) return;
       await updateProgress();
     };
 
     // Also listen for chapterProgressUpdate event
     const handleChapterProgressUpdate = async () => {
+      if (!isMounted) return;
       await updateProgress();
     };
 
-    window.addEventListener("storage", handleStorageChange);
-    window.addEventListener("progress-updated", handleProgressUpdate);
-    window.addEventListener("chapterProgressUpdate", handleChapterProgressUpdate);
+    if (typeof window !== "undefined") {
+      window.addEventListener("storage", handleStorageChange);
+      window.addEventListener("progress-updated", handleProgressUpdate);
+      window.addEventListener("chapterProgressUpdate", handleChapterProgressUpdate);
+    }
 
-        // Poll for changes as backup - reduced frequency to improve performance
-        const pollInterval = authStatus ? 5000 : 3000; // Increased from 2s/1s to 5s/3s
-        const interval = setInterval(updateProgress, pollInterval);
+    // Poll for changes as backup - reduced frequency to improve performance
+    // Only poll when component is visible and authenticated
+    const pollInterval = authStatus ? 5000 : 3000;
+    const interval = setInterval(() => {
+      if (isMounted && document.visibilityState === 'visible') {
+        updateProgress();
+      }
+    }, pollInterval);
 
     return () => {
-      window.removeEventListener("storage", handleStorageChange);
-      window.removeEventListener("progress-updated", handleProgressUpdate);
-      window.removeEventListener("chapterProgressUpdate", handleChapterProgressUpdate);
+      isMounted = false;
+      abortController.abort();
+      if (typeof window !== "undefined") {
+        window.removeEventListener("storage", handleStorageChange);
+        window.removeEventListener("progress-updated", handleProgressUpdate);
+        window.removeEventListener("chapterProgressUpdate", handleChapterProgressUpdate);
+      }
       clearInterval(interval);
     };
   }, [units, isAuthenticated]);
@@ -173,10 +241,12 @@ const UnitsListClient = ({ units, subjectId, examSlug, subjectSlug }) => {
       {units.map((unit, index) => {
         const unitSlug = unit.slug || createSlugUtil(unit.name);
         const unitUrl = `/${examSlug}/${subjectSlug}/${unitSlug}`;
-        const unitProgressData = progressData[unit._id] || getUnitProgress(unit._id);
-        const progressPercent = Math.min(100, Math.max(0, unitProgressData.progress));
+        // Use progressData from state (always populated before render)
+        // Never call async function in render
+        const unitProgressData = progressData[unit._id] || { progress: 0, isCompleted: false };
+        const progressPercent = Math.min(100, Math.max(0, unitProgressData.progress || 0));
         const progressLabel = Math.round(progressPercent);
-        const isCompleted = unitProgressData.isCompleted;
+        const isCompleted = unitProgressData.isCompleted || false;
         const weightage = unit.weightage ?? "20%";
         const engagement = unit.engagement ?? "2.2K";
         const indicatorColor = getColor(index);

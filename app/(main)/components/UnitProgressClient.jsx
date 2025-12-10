@@ -16,11 +16,31 @@ const UnitProgressClient = ({ unitId, unitName, initialProgress = 0 }) => {
   const prevProgressRef = useRef(initialProgress);
   const isInitializedRef = useRef(false);
   const isCheckingRef = useRef(false);
+  const congratulationsShownRef = useRef(false); // Use ref to avoid dependency issues
+  const abortControllerRef = useRef(null);
   
   // Reset initialization flag when unitId changes
   useEffect(() => {
+    // Abort any pending async operations
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    
     isInitializedRef.current = false;
+    isCheckingRef.current = false;
     prevProgressRef.current = initialProgress;
+    congratulationsShownRef.current = false;
+    setCongratulationsShown(false);
+    setShowCongratulations(false);
+    
+    // Create new abort controller
+    abortControllerRef.current = new AbortController();
+    
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
   }, [unitId, initialProgress]);
 
   useEffect(() => {
@@ -77,16 +97,30 @@ const UnitProgressClient = ({ unitId, unitName, initialProgress = 0 }) => {
             // IMPORTANT: Once shown, NEVER show again, even on page reload or revisit
             if (!isInitializedRef.current && !isCheckingRef.current) {
               isCheckingRef.current = true;
-              checkUnitCongratulationsShown(unitId).then((hasShown) => {
-                setCongratulationsShown(hasShown);
-                prevProgressRef.current = dbProgress;
-                isInitializedRef.current = true;
-                // If already shown before, ensure modal is closed
-                if (hasShown) {
-                  setShowCongratulations(false);
-                }
-                isCheckingRef.current = false;
-              });
+              const controller = abortControllerRef.current;
+              
+              checkUnitCongratulationsShown(unitId)
+                .then((hasShown) => {
+                  if (controller && controller.signal.aborted) return;
+                  
+                  congratulationsShownRef.current = hasShown;
+                  setCongratulationsShown(hasShown);
+                  prevProgressRef.current = dbProgress;
+                  isInitializedRef.current = true;
+                  // If already shown before, ensure modal is closed
+                  if (hasShown) {
+                    setShowCongratulations(false);
+                  }
+                  isCheckingRef.current = false;
+                })
+                .catch((error) => {
+                  if (controller && controller.signal.aborted) return;
+                  console.error("Error checking unit congratulations:", error);
+                  // On error, mark as initialized to prevent blocking
+                  isInitializedRef.current = true;
+                  congratulationsShownRef.current = false;
+                  isCheckingRef.current = false;
+                });
               return dbProgress; // Don't show modal on initial load
             }
             
@@ -104,14 +138,19 @@ const UnitProgressClient = ({ unitId, unitName, initialProgress = 0 }) => {
             // 1. Progress just reached exactly 100% (wasn't 100% before)
             // 2. We haven't shown the modal for this completion yet
             // 3. Initialization is complete (prevents showing on page visit)
-            if (isNowCompleted && !wasCompleted && !congratulationsShown && isInitializedRef.current) {
+            if (isNowCompleted && !wasCompleted && !congratulationsShownRef.current && isInitializedRef.current) {
               setShowCongratulations(true);
               // Mark as shown in database
-              markUnitCongratulationsShown(unitId).then((success) => {
-                if (success) {
-                  setCongratulationsShown(true);
-                }
-              });
+              markUnitCongratulationsShown(unitId)
+                .then((success) => {
+                  if (success) {
+                    congratulationsShownRef.current = true;
+                    setCongratulationsShown(true);
+                  }
+                })
+                .catch((error) => {
+                  console.error("Error marking unit congratulations:", error);
+                });
             }
             prevProgressRef.current = dbProgress;
             return dbProgress;
@@ -119,9 +158,34 @@ const UnitProgressClient = ({ unitId, unitName, initialProgress = 0 }) => {
         }
 
         // Fallback to localStorage
-        const stored = localStorage.getItem(storageKey);
+        let stored;
+        try {
+          stored = localStorage.getItem(storageKey);
+        } catch (error) {
+          if (error.name === 'QuotaExceededError') {
+            logger.error("localStorage quota exceeded");
+          } else {
+            logger.error("Error accessing localStorage:", error);
+          }
+          stored = null;
+        }
+        
         if (stored) {
-          const data = JSON.parse(stored);
+          let data;
+          try {
+            data = JSON.parse(stored);
+          } catch (error) {
+            logger.error("Error parsing progress from localStorage:", error);
+            // Clear corrupted data
+            try {
+              localStorage.removeItem(storageKey);
+            } catch (clearError) {
+              logger.error("Error clearing corrupted localStorage:", clearError);
+            }
+            data = null;
+          }
+          
+          if (data) {
           
           // Check if unit progress is already calculated
           if (data._unitProgress !== undefined) {
@@ -132,16 +196,29 @@ const UnitProgressClient = ({ unitId, unitName, initialProgress = 0 }) => {
             // IMPORTANT: Once shown, NEVER show again, even on page reload or revisit
             if (!isInitializedRef.current && !isCheckingRef.current) {
               isCheckingRef.current = true;
-              checkUnitCongratulationsShown(unitId).then((hasShown) => {
-                setCongratulationsShown(hasShown);
-                prevProgressRef.current = newProgress;
-                isInitializedRef.current = true;
-                // If already shown before, ensure modal is closed
-                if (hasShown) {
-                  setShowCongratulations(false);
-                }
-                isCheckingRef.current = false;
-              });
+              const controller = abortControllerRef.current;
+              
+              checkUnitCongratulationsShown(unitId)
+                .then((hasShown) => {
+                  if (controller && controller.signal.aborted) return;
+                  
+                  congratulationsShownRef.current = hasShown;
+                  setCongratulationsShown(hasShown);
+                  prevProgressRef.current = newProgress;
+                  isInitializedRef.current = true;
+                  // If already shown before, ensure modal is closed
+                  if (hasShown) {
+                    setShowCongratulations(false);
+                  }
+                  isCheckingRef.current = false;
+                })
+                .catch((error) => {
+                  if (controller && controller.signal.aborted) return;
+                  console.error("Error checking unit congratulations:", error);
+                  isInitializedRef.current = true;
+                  congratulationsShownRef.current = false;
+                  isCheckingRef.current = false;
+                });
               return newProgress; // Don't show modal on initial load
             }
             
@@ -158,14 +235,19 @@ const UnitProgressClient = ({ unitId, unitName, initialProgress = 0 }) => {
             // 1. Progress just reached exactly 100% (wasn't 100% before)
             // 2. We haven't shown the modal for this completion yet
             // 3. Initialization is complete (prevents showing on page visit)
-            if (isNowCompleted && !wasCompleted && !congratulationsShown && isInitializedRef.current) {
+            if (isNowCompleted && !wasCompleted && !congratulationsShownRef.current && isInitializedRef.current) {
               setShowCongratulations(true);
               // Mark as shown in database
-              markUnitCongratulationsShown(unitId).then((success) => {
-                if (success) {
-                  setCongratulationsShown(true);
-                }
-              });
+              markUnitCongratulationsShown(unitId)
+                .then((success) => {
+                  if (success) {
+                    congratulationsShownRef.current = true;
+                    setCongratulationsShown(true);
+                  }
+                })
+                .catch((error) => {
+                  console.error("Error marking unit congratulations:", error);
+                });
             }
             prevProgressRef.current = newProgress;
             return newProgress;
@@ -184,16 +266,29 @@ const UnitProgressClient = ({ unitId, unitName, initialProgress = 0 }) => {
             // IMPORTANT: Once shown, NEVER show again, even on page reload or revisit
             if (!isInitializedRef.current && !isCheckingRef.current) {
               isCheckingRef.current = true;
-              checkUnitCongratulationsShown(unitId).then((hasShown) => {
-                setCongratulationsShown(hasShown);
-                prevProgressRef.current = avgProgress;
-                isInitializedRef.current = true;
-                // If already shown before, ensure modal is closed
-                if (hasShown) {
-                  setShowCongratulations(false);
-                }
-                isCheckingRef.current = false;
-              });
+              const controller = abortControllerRef.current;
+              
+              checkUnitCongratulationsShown(unitId)
+                .then((hasShown) => {
+                  if (controller && controller.signal.aborted) return;
+                  
+                  congratulationsShownRef.current = hasShown;
+                  setCongratulationsShown(hasShown);
+                  prevProgressRef.current = avgProgress;
+                  isInitializedRef.current = true;
+                  // If already shown before, ensure modal is closed
+                  if (hasShown) {
+                    setShowCongratulations(false);
+                  }
+                  isCheckingRef.current = false;
+                })
+                .catch((error) => {
+                  if (controller && controller.signal.aborted) return;
+                  console.error("Error checking unit congratulations:", error);
+                  isInitializedRef.current = true;
+                  congratulationsShownRef.current = false;
+                  isCheckingRef.current = false;
+                });
               return avgProgress; // Don't show modal on initial load
             }
             
@@ -210,25 +305,32 @@ const UnitProgressClient = ({ unitId, unitName, initialProgress = 0 }) => {
             // 1. Progress just reached exactly 100% (wasn't 100% before)
             // 2. We haven't shown the modal for this completion yet
             // 3. Initialization is complete (prevents showing on page visit)
-            if (isNowCompleted && !wasCompleted && !congratulationsShown && isInitializedRef.current) {
+            if (isNowCompleted && !wasCompleted && !congratulationsShownRef.current && isInitializedRef.current) {
               setShowCongratulations(true);
               // Mark as shown in database
-              markUnitCongratulationsShown(unitId).then((success) => {
-                if (success) {
-                  setCongratulationsShown(true);
-                }
-              });
+              markUnitCongratulationsShown(unitId)
+                .then((success) => {
+                  if (success) {
+                    congratulationsShownRef.current = true;
+                    setCongratulationsShown(true);
+                  }
+                })
+                .catch((error) => {
+                  console.error("Error marking unit congratulations:", error);
+                });
             }
             prevProgressRef.current = avgProgress;
             return avgProgress;
-          } else {
-            setProgress(0);
-            if (!isInitializedRef.current) {
-              prevProgressRef.current = 0;
-              isInitializedRef.current = true;
-            }
-            return 0;
           }
+          }
+          
+          // If no valid data or parsing failed, set to 0
+          setProgress(0);
+          if (!isInitializedRef.current) {
+            prevProgressRef.current = 0;
+            isInitializedRef.current = true;
+          }
+          return 0;
         } else {
           setProgress(0);
           if (!isInitializedRef.current) {
@@ -268,14 +370,19 @@ const UnitProgressClient = ({ unitId, unitName, initialProgress = 0 }) => {
         // 1. Progress just reached exactly 100% (wasn't 100% before)
         // 2. We haven't shown the modal for this completion yet
         // 3. Initialization is complete (prevents showing on page visit)
-        if (isNowCompleted && !wasCompleted && !congratulationsShown && isInitializedRef.current) {
+        if (isNowCompleted && !wasCompleted && !congratulationsShownRef.current && isInitializedRef.current) {
           setShowCongratulations(true);
           // Mark as shown in database
-          markUnitCongratulationsShown(unitId).then((success) => {
-            if (success) {
-              setCongratulationsShown(true);
-            }
-          });
+          markUnitCongratulationsShown(unitId)
+            .then((success) => {
+              if (success) {
+                congratulationsShownRef.current = true;
+                setCongratulationsShown(true);
+              }
+            })
+            .catch((error) => {
+              console.error("Error marking unit congratulations:", error);
+            });
         }
         prevProgressRef.current = newProgress;
       } else {
@@ -286,32 +393,41 @@ const UnitProgressClient = ({ unitId, unitName, initialProgress = 0 }) => {
 
     // Listen for chapterProgressUpdate event
     const handleChapterProgressUpdate = async () => {
-      const newProgress = await calculateProgress();
-      if (newProgress !== null) {
-        // CRITICAL: Only check for modal if initialization is complete
-        if (!isInitializedRef.current) {
-          prevProgressRef.current = newProgress;
-          return; // Don't check for modal until initialization is done
-        }
+      try {
+        const newProgress = await calculateProgress();
+        if (newProgress !== null) {
+          // CRITICAL: Only check for modal if initialization is complete
+          if (!isInitializedRef.current) {
+            prevProgressRef.current = newProgress;
+            return; // Don't check for modal until initialization is done
+          }
 
-        // Check if we've already shown congratulations for this completion
-        const wasCompleted = prevProgressRef.current === 100;
-        const isNowCompleted = newProgress === 100;
-        
-        // Show congratulations only if:
-        // 1. Progress just reached exactly 100% (wasn't 100% before)
-        // 2. We haven't shown the modal for this completion yet
-        // 3. Initialization is complete (prevents showing on page visit)
-        if (isNowCompleted && !wasCompleted && !congratulationsShown && isInitializedRef.current) {
-          setShowCongratulations(true);
-          // Mark as shown in database
-          markUnitCongratulationsShown(unitId).then((success) => {
-            if (success) {
-              setCongratulationsShown(true);
-            }
-          });
+          // Check if we've already shown congratulations for this completion
+          const wasCompleted = prevProgressRef.current === 100;
+          const isNowCompleted = newProgress === 100;
+          
+          // Show congratulations only if:
+          // 1. Progress just reached exactly 100% (wasn't 100% before)
+          // 2. We haven't shown the modal for this completion yet
+          // 3. Initialization is complete (prevents showing on page visit)
+          if (isNowCompleted && !wasCompleted && !congratulationsShownRef.current && isInitializedRef.current) {
+            setShowCongratulations(true);
+            // Mark as shown in database
+            markUnitCongratulationsShown(unitId)
+              .then((success) => {
+                if (success) {
+                  congratulationsShownRef.current = true;
+                  setCongratulationsShown(true);
+                }
+              })
+              .catch((error) => {
+                console.error("Error marking unit congratulations:", error);
+              });
+          }
+          prevProgressRef.current = newProgress;
         }
-        prevProgressRef.current = newProgress;
+      } catch (error) {
+        console.error("Error handling chapter progress update:", error);
       }
     };
 
@@ -322,23 +438,35 @@ const UnitProgressClient = ({ unitId, unitName, initialProgress = 0 }) => {
       }
     };
 
-    window.addEventListener("progress-updated", handleProgressUpdate);
-    window.addEventListener("chapterProgressUpdate", handleChapterProgressUpdate);
-    window.addEventListener("storage", handleStorageChange);
+    if (typeof window !== "undefined") {
+      window.addEventListener("progress-updated", handleProgressUpdate);
+      window.addEventListener("chapterProgressUpdate", handleChapterProgressUpdate);
+      window.addEventListener("storage", handleStorageChange);
+    }
 
     // Poll for changes as backup (since storage event doesn't fire in same tab)
     // Reduced polling frequency to improve performance and reduce memory usage
     // Poll less frequently - only when authenticated and visible
-    const pollInterval = authStatus ? 5000 : 3000; // Increased from 2s/1s to 5s/3s
-    const interval = setInterval(calculateProgress, pollInterval);
+    const pollInterval = authStatus ? 5000 : 3000;
+    const interval = setInterval(() => {
+      // Only poll when page is visible
+      if (typeof document !== "undefined" && document.visibilityState === 'visible') {
+        calculateProgress();
+      }
+    }, pollInterval);
 
     return () => {
-      window.removeEventListener("progress-updated", handleProgressUpdate);
-      window.removeEventListener("chapterProgressUpdate", handleChapterProgressUpdate);
-      window.removeEventListener("storage", handleStorageChange);
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      if (typeof window !== "undefined") {
+        window.removeEventListener("progress-updated", handleProgressUpdate);
+        window.removeEventListener("chapterProgressUpdate", handleChapterProgressUpdate);
+        window.removeEventListener("storage", handleStorageChange);
+      }
       clearInterval(interval);
     };
-  }, [unitId, isAuthenticated, congratulationsShown]);
+  }, [unitId, isAuthenticated]); // Removed congratulationsShown to prevent infinite loops
 
   return (
     <>
