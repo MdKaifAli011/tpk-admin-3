@@ -5,10 +5,6 @@ import { FaChevronDown } from "react-icons/fa";
 import TextEllipsis from "./TextEllipsis";
 import Collapsible from "./Collapsible";
 
-/**
- * SidebarNavigationTree - Complete navigation tree component
- * Handles subjects, units, chapters, and topics hierarchy
- */
 const SidebarNavigationTree = ({
   tree,
   navigateTo,
@@ -25,169 +21,141 @@ const SidebarNavigationTree = ({
   activeItemRef,
 }) => {
   return (
-    <div className="space-y-0.5">
+    <div className="space-y-1">
       {tree.map((subject) => {
-        const isActiveSubject =
-          subject.slug && subject.slug === subjectSlugFromPath;
-        const isOpenSubject = openSubjectId === subject.id;
+        const isActive = subject.slug === subjectSlugFromPath;
+        const isOpen = openSubjectId === subject.id;
 
         return (
-          <div
-            key={subject.id}
-            ref={isActiveSubject ? activeItemRef : null}
-          >
-            {/* Subject row */}
+          <div key={subject.id} ref={isActive ? activeItemRef : null}>
+            {/* SUBJECT */}
             <div
-              className={`w-full flex items-center gap-1.5 px-2.5 py-2 rounded transition ${
-                isActiveSubject
-                  ? "bg-blue-500 text-white font-medium"
-                  : isOpenSubject
-                  ? "bg-blue-50 text-blue-600 font-medium"
-                  : "hover:bg-gray-100 text-gray-800"
-              }`}
+              className={`
+              flex items-center gap-2 px-2.5 py-2 rounded-lg cursor-pointer 
+              transition-all duration-200 group
+              ${isActive
+                ? "bg-indigo-100/60 shadow-sm text-indigo-900 font-semibold"
+                : isOpen
+                ? "bg-indigo-50/40 text-indigo-800 font-medium"
+                : "text-slate-800 hover:bg-slate-50 font-medium"
+              }
+            `}
             >
               <button
                 onClick={() => navigateTo([subject.slug])}
-                className="flex-1 min-w-0 text-left outline-none overflow-hidden cursor-pointer"
-                style={{
-                  fontWeight: isActiveSubject || isOpenSubject ? "600" : "500",
-                }}
+                className="flex-1 overflow-hidden text-left"
               >
                 <TextEllipsis
                   maxW="max-w-full"
-                  fontSize="text-base sm:text-[15px]"
-                  className={
-                    isActiveSubject ? "text-white" : "text-gray-800"
-                  }
+                  fontSize="text-[15px]"
                 >
                   {subject.name}
                 </TextEllipsis>
               </button>
-              {subject.units.length > 0 && (
+
+              {subject.units?.length > 0 && (
                 <button
-                  className={`shrink-0 p-0.5 transition-all duration-200 cursor-pointer ${
-                    isActiveSubject
-                      ? "text-white/80 hover:text-white"
-                      : isOpenSubject
-                      ? "text-blue-600 hover:text-blue-700"
-                      : "text-gray-400 hover:text-gray-600"
-                  }`}
                   onClick={(e) => {
                     e.stopPropagation();
                     toggleSubject(subject.id);
                   }}
-                  aria-label={
-                    isOpenSubject ? "Collapse subject" : "Expand subject"
-                  }
                 >
                   <FaChevronDown
-                    className={`h-3 w-3 sm:h-3.5 sm:w-3.5 transition-transform duration-300 ease-in-out ${
-                      isOpenSubject ? "rotate-180" : "rotate-0"
-                    }`}
+                    className={`
+                      h-3 w-3 transition-transform duration-200
+                      ${isOpen ? "rotate-180" : ""}
+                      ${isActive ? "text-indigo-600" : "text-slate-400"}
+                    `}
                   />
                 </button>
               )}
             </div>
 
-            <Collapsible isOpen={isOpenSubject}>
-              <div
-                id={`subject-${subject.id}`}
-                className="pl-5 py-0.5 space-y-0.5"
-              >
-                {(subject.units || []).map((unit) => {
-                  const isActiveUnit =
-                    isActiveSubject && unit.slug === unitSlugFromPath;
-                  const isOpenUnit = openUnitId === unit.id;
+            {/* SUBJECT → UNITS */}
+            <Collapsible isOpen={isOpen}>
+              <div className="pl-3 pt-1 space-y-1">
+                {subject.units?.map((unit) => {
+                  const isUnitActive =
+                    isActive && unit.slug === unitSlugFromPath;
+                  const isUnitOpen = openUnitId === unit.id;
 
                   return (
                     <div
                       key={unit.id}
-                      ref={isActiveUnit ? activeItemRef : null}
+                      ref={isUnitActive ? activeItemRef : null}
                     >
-                      {/* Unit row */}
+                      {/* UNIT */}
                       <div
-                        className={`w-full flex items-center gap-1.5 px-2.5 py-1.5 sm:py-2 rounded transition ${
-                          isActiveUnit
-                            ? "bg-[#E9F8F3] text-[rgb(20,164,49)] font-medium"
-                            : isOpenUnit
-                            ? "bg-[#F0FDF4] text-[rgb(20,164,49)] font-medium"
-                            : "hover:bg-gray-100"
-                        }`}
-                        style={{
-                          color: "rgb(20, 164, 49)",
-                        }}
+                        className={`
+                          flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer
+                          transition-all duration-200
+                          ${isUnitActive
+                            ? "bg-emerald-100/50 text-emerald-800 font-medium shadow-sm"
+                            : isUnitOpen
+                            ? "bg-emerald-50/40 text-emerald-700 font-medium"
+                            : "text-emerald-700 hover:bg-emerald-50 font-normal"
+                          }
+                        `}
                       >
                         <button
                           onClick={() =>
                             navigateTo([subject.slug, unit.slug])
                           }
-                          className="flex-1 min-w-0 text-left outline-none overflow-hidden cursor-pointer"
-                          style={{
-                            fontWeight: isActiveUnit || isOpenUnit ? "500" : "400",
-                            color: "rgb(20, 164, 49)",
-                          }}
+                          className="flex-1 overflow-hidden text-left"
                         >
                           <TextEllipsis
                             maxW="max-w-full"
-                            fontSize="text-sm sm:text-[14px]"
-                            style={{
-                              color: "rgb(20, 164, 49)",
-                            }}
+                            fontSize="text-sm"
                           >
                             {unit.name}
                           </TextEllipsis>
                         </button>
-                        {unit.chapters.length > 0 && (
+
+                        {unit.chapters?.length > 0 && (
                           <button
-                            className="shrink-0 p-0.5 transition-all duration-200 cursor-pointer"
-                            style={{
-                              color: "rgb(20, 164, 49)",
-                            }}
                             onClick={(e) => {
                               e.stopPropagation();
                               toggleUnit(unit.id, subject.id);
                             }}
-                            aria-label={isOpenUnit ? "Collapse unit" : "Expand unit"}
                           >
                             <FaChevronDown
-                              className={`h-3 w-3 sm:h-3.5 sm:w-3.5 transition-transform duration-300 ease-in-out ${
-                                isOpenUnit ? "rotate-180" : "rotate-0"
-                              }`}
+                              className={`
+                                h-3 w-3 transition-transform duration-200
+                                ${isUnitOpen ? "rotate-180" : ""}
+                                ${isUnitActive ? "text-emerald-700" : "text-emerald-400"}
+                              `}
                             />
                           </button>
                         )}
                       </div>
 
-                      <Collapsible isOpen={isOpenUnit}>
-                        <div
-                          id={`unit-${unit.id}`}
-                          className="pl-5 py-0.5 space-y-0.5"
-                        >
-                          {(unit.chapters || []).map((chapter) => {
-                            const isActiveChapter =
-                              isActiveUnit &&
+                      {/* UNIT → CHAPTERS */}
+                      <Collapsible isOpen={isUnitOpen}>
+                        <div className="pl-3 pt-1 space-y-1">
+                          {unit.chapters?.map((chapter) => {
+                            const isChapterActive =
+                              isUnitActive &&
                               chapter.slug === chapterSlugFromPath;
-                            const isOpenChapter = openChapterId === chapter.id;
+                            const isChapterOpen =
+                              openChapterId === chapter.id;
 
                             return (
                               <div
                                 key={chapter.id}
-                                ref={
-                                  isActiveChapter ? activeItemRef : null
-                                }
+                                ref={isChapterActive ? activeItemRef : null}
                               >
-                                {/* Chapter row */}
+                                {/* CHAPTER */}
                                 <div
-                                  className={`w-full flex items-center gap-1.5 px-2.5 py-1.5 rounded transition ${
-                                    isActiveChapter
-                                      ? "bg-[#E0E7FF] text-[rgb(22,82,198)] font-medium"
-                                      : isOpenChapter
-                                      ? "bg-[#EEF2FF] text-[rgb(22,82,198)] font-medium"
-                                      : "hover:bg-gray-100"
-                                  }`}
-                                  style={{
-                                    color: "rgb(22, 82, 198)",
-                                  }}
+                                  className={`
+                                flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer
+                                transition-all duration-200
+                                ${isChapterActive
+                                  ? "bg-indigo-100/50 text-indigo-800 font-medium shadow-sm"
+                                  : isChapterOpen
+                                  ? "bg-indigo-50/40 text-indigo-700 font-medium"
+                                  : "text-indigo-700 hover:bg-indigo-50 font-normal"
+                                }
+                              `}
                                 >
                                   <button
                                     onClick={() =>
@@ -197,31 +165,18 @@ const SidebarNavigationTree = ({
                                         chapter.slug,
                                       ])
                                     }
-                                    className="flex-1 min-w-0 text-left outline-none overflow-hidden cursor-pointer"
-                                    style={{
-                                      fontWeight:
-                                        isActiveChapter || isOpenChapter
-                                          ? "500"
-                                          : "400",
-                                      color: "rgb(22, 82, 198)",
-                                    }}
+                                    className="flex-1 overflow-hidden text-left"
                                   >
                                     <TextEllipsis
                                       maxW="max-w-full"
-                                      fontSize="text-xs sm:text-[13px]"
-                                      style={{
-                                        color: "rgb(22, 82, 198)",
-                                      }}
+                                      fontSize="text-sm"
                                     >
                                       {chapter.name}
                                     </TextEllipsis>
                                   </button>
-                                  {chapter.topics.length > 0 && (
+
+                                  {chapter.topics?.length > 0 && (
                                     <button
-                                      className="shrink-0 p-0.5 transition-all duration-200 cursor-pointer"
-                                      style={{
-                                        color: "rgb(22, 82, 198)",
-                                      }}
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         toggleChapter(
@@ -230,72 +185,58 @@ const SidebarNavigationTree = ({
                                           unit.id
                                         );
                                       }}
-                                      aria-label={
-                                        isOpenChapter
-                                          ? "Collapse chapter"
-                                          : "Expand chapter"
-                                      }
                                     >
                                       <FaChevronDown
-                                        className={`h-3 w-3 sm:h-3.5 sm:w-3.5 transition-transform duration-300 ease-in-out ${
-                                          isOpenChapter
-                                            ? "rotate-180"
-                                            : "rotate-0"
-                                        }`}
+                                        className={`
+                                      h-3 w-3 transition-transform duration-200
+                                      ${isChapterOpen ? "rotate-180" : ""}
+                                      ${
+                                        isChapterActive
+                                          ? "text-indigo-700"
+                                          : "text-indigo-400"
+                                      }
+                                    `}
                                       />
                                     </button>
                                   )}
                                 </div>
 
-                                <Collapsible isOpen={isOpenChapter}>
-                                  <div
-                                    id={`chapter-${chapter.id}`}
-                                    className="pl-5 py-0.5 space-y-0.5"
-                                  >
-                                    {(chapter.topics || []).map((topic) => {
+                                {/* CHAPTER → TOPICS */}
+                                <Collapsible isOpen={isChapterOpen}>
+                                  <div className="pl-3 pt-1 space-y-0.5">
+                                    {chapter.topics?.map((topic) => {
                                       const isTopicActive =
-                                        isActiveChapter &&
+                                        isChapterActive &&
                                         topic.slug === topicSlugFromPath;
+
                                       return (
-                                        <div
+                                        <button
                                           key={topic.id}
                                           ref={
-                                            isTopicActive
-                                              ? activeItemRef
-                                              : null
+                                            isTopicActive ? activeItemRef : null
                                           }
+                                          onClick={() =>
+                                            navigateTo([
+                                              subject.slug,
+                                              unit.slug,
+                                              chapter.slug,
+                                              topic.slug,
+                                            ])
+                                          }
+                                          className={`
+                                        w-full text-left px-2 py-1.5 rounded-md
+                                        transition-all duration-200 truncate
+                                        ${
+                                          isTopicActive
+                                            ? "bg-rose-100/60 text-rose-700 font-medium shadow-sm"
+                                            : "text-rose-700 hover:bg-rose-50 font-normal"
+                                        }
+                                      `}
                                         >
-                                          {/* Topic row */}
-                                          <button
-                                            onClick={() =>
-                                              navigateTo([
-                                                subject.slug,
-                                                unit.slug,
-                                                chapter.slug,
-                                                topic.slug,
-                                              ])
-                                            }
-                                            className={`w-full px-2.5 py-1.5 rounded transition text-left overflow-hidden cursor-pointer ${
-                                              isTopicActive
-                                                ? "bg-[#FCE7F3] text-[rgb(227,48,141)] font-medium"
-                                                : "hover:bg-gray-100"
-                                            }`}
-                                            style={{
-                                              color: "rgb(227, 48, 141)",
-                                              fontWeight: isTopicActive ? "500" : "400",
-                                            }}
-                                          >
-                                            <TextEllipsis
-                                              maxW="max-w-full"
-                                              fontSize="text-xs sm:text-[12px]"
-                                              style={{
-                                                color: "rgb(227, 48, 141)",
-                                              }}
-                                            >
-                                              {topic.name}
-                                            </TextEllipsis>
-                                          </button>
-                                        </div>
+                                          <TextEllipsis maxW="max-w-full">
+                                            {topic.name}
+                                          </TextEllipsis>
+                                        </button>
                                       );
                                     })}
                                   </div>
@@ -318,4 +259,3 @@ const SidebarNavigationTree = ({
 };
 
 export default SidebarNavigationTree;
-

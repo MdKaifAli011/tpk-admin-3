@@ -425,15 +425,15 @@ export default function Sidebar({ isOpen = true, onClose }) {
 
   // render helpers
   const renderLoading = () => (
-    <div className="px-2 py-2 space-y-1.5">
+    <div className="px-2 py-2 space-y-2">
       {Array.from({ length: 6 }).map((_, i) => (
-        <div key={i} className="h-3 rounded-md bg-gray-200/70 animate-pulse" />
+        <div key={i} className="h-8 rounded-lg bg-gradient-to-r from-gray-100 via-gray-50 to-gray-100 animate-pulse" />
       ))}
     </div>
   );
 
   const renderEmpty = () => (
-    <div className="px-2 py-2 text-xs text-gray-600 text-center">
+    <div className="px-3 py-4 text-xs sm:text-sm text-gray-600 text-center bg-gray-50 rounded-lg border border-gray-200">
       {activeExam
         ? "No navigation data available for this exam."
         : "Select an exam to view its content."}
@@ -479,20 +479,20 @@ export default function Sidebar({ isOpen = true, onClose }) {
       {/* Sidebar - Premium Compact 300px (280px on mobile) */}
       {/* Positioned right after navbar - no overlap */}
       <aside
-        className={`fixed left-0 z-[40] w-[280px] sm:w-[300px] min-w-[280px] sm:min-w-[300px] max-w-[280px] sm:max-w-[300px] bg-white/98 backdrop-blur-md border-r border-gray-200 transform transition-transform duration-300 ease-out ${
+        className={`fixed left-0 z-[40] w-[280px] sm:w-[300px] min-w-[280px] sm:min-w-[300px] max-w-[280px] sm:max-w-[300px] bg-white/98 backdrop-blur-md border-r border-gray-200/80 transform transition-transform duration-300 ease-out ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         } lg:flex lg:flex-col`}
         style={{
           top: `${navbarHeight}px`,
           height: `calc(100vh - ${navbarHeight}px)`,
-          boxShadow: "0 8px 24px rgba(15, 23, 42, 0.12)",
+          boxShadow: "0 4px 20px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.02)",
         }}
         role="complementary"
         aria-label="Exam navigation sidebar"
       >
-        <div className="flex h-full flex-col overflow-y-auto overflow-x-hidden p-2 sm:p-2.5 min-h-0 min-w-[280px] sm:min-w-[300px] max-w-[280px] sm:max-w-[300px] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+        <div className="flex h-full flex-col overflow-y-auto overflow-x-hidden p-2.5 sm:p-3 min-h-0 min-w-[280px] sm:min-w-[300px] max-w-[280px] sm:max-w-[300px] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           {/* Exam dropdown */}
-          <div className="mb-2">
+          <div className="mb-2.5">
             <ExamDropdown
               exams={exams}
               activeExamId={activeExamId}
@@ -507,7 +507,7 @@ export default function Sidebar({ isOpen = true, onClose }) {
 
           {/* Search */}
           {tree.length > 0 && (
-            <div className="mb-2">
+            <div className="mb-2.5">
               <div className="relative">
                 <FaSearch className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
                 <input
@@ -516,7 +516,7 @@ export default function Sidebar({ isOpen = true, onClose }) {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search..."
-                  className="w-full rounded-lg border border-gray-200 bg-white px-7 py-1.5 text-xs sm:text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/60 focus:border-blue-400 transition-all touch-manipulation"
+                  className="w-full rounded-lg border border-gray-200 bg-white px-7 py-2 text-xs sm:text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/60 focus:border-indigo-400 transition-all duration-200 touch-manipulation shadow-[0_1px_3px_rgba(0,0,0,0.05)] hover:border-gray-300"
                 />
               </div>
             </div>
@@ -527,7 +527,7 @@ export default function Sidebar({ isOpen = true, onClose }) {
             {treeLoading && renderLoading()}
 
             {!treeLoading && error && (
-              <div className="px-2 py-2 text-xs text-red-600 font-medium">
+              <div className="px-3 py-2.5 text-xs sm:text-sm text-red-600 font-medium bg-red-50 rounded-lg border border-red-200">
                 {error}
               </div>
             )}
