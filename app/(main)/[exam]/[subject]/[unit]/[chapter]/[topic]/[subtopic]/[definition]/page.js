@@ -202,7 +202,7 @@ const DefinitionPage = async ({ params }) => {
         itemId={definition._id}
       />
       <div className="space-y-4">
-      {/* Compact Premium Educational Header */}
+{/* Premium Educational Header */}
 <section
   className="
     rounded-xl
@@ -212,26 +212,45 @@ const DefinitionPage = async ({ params }) => {
     shadow-[0_2px_12px_rgba(120,90,200,0.08)]
   "
 >
-  <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2.5">
+  <div className="flex items-start md:items-center justify-between w-full gap-3 sm:gap-4">
 
-    {/* Title + Breadcrumb */}
-    <div className="flex-1 leading-tight">
-      <h1 className="text-lg sm:text-xl font-bold text-indigo-900">
+    {/* LEFT — Definition Title + Breadcrumb */}
+    <div className="flex flex-col min-w-0 leading-tight flex-1">
+
+      {/* Definition Name */}
+      <h1
+        className="
+          text-base sm:text-lg md:text-xl font-bold text-indigo-900
+          truncate
+          max-w-[180px] sm:max-w-[260px] md:max-w-[320px]
+        "
+        title={definition.name}
+      >
         {definition.name}
       </h1>
 
-      <p className="text-[10px] sm:text-xs text-gray-600 mt-0.5">
-        {fetchedExam.name} &gt; {subject.name} &gt; {unit.name} &gt; 
-        {chapter.name} &gt; {topic.name} &gt; {subTopic.name} &gt; {definition.name}
+      {/* Breadcrumb */}
+      <p
+        className="
+          text-[10px] sm:text-xs text-gray-600 mt-0.5
+          truncate
+          max-w-[160px] sm:max-w-[260px] md:max-w-[380px]
+        "
+        title={`${fetchedExam.name} > ${subject.name} > ${unit.name} > ${chapter.name} > ${topic.name} > ${subTopic.name} > ${definition.name}`}
+      >
+        {fetchedExam.name} &gt; {subject.name} &gt; {unit.name} &gt; {chapter.name} &gt; {topic.name} &gt; {subTopic.name} &gt; {definition.name}
       </p>
     </div>
 
-    {/* Progress */}
-    <UnitProgressClient
-      unitId={unit._id}
-      unitName={unit.name}
-      initialProgress={0}
-    />
+    {/* RIGHT — UNIT Progress */}
+    <div className="shrink-0 ml-auto">
+      <UnitProgressClient
+        unitId={unit._id}
+        unitName={unit.name}
+        initialProgress={0}
+      />
+    </div>
+
   </div>
 </section>
 

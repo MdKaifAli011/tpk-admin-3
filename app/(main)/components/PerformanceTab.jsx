@@ -21,6 +21,8 @@ import {
 } from "react-icons/fa";
 import { fetchAllStudentTestResults } from "../lib/api";
 import { useStudent } from "../hooks/useStudent";
+import Button from "./Button";
+import Card from "./Card";
 
 const PerformanceTab = ({
   entityType,
@@ -275,20 +277,24 @@ const PerformanceTab = ({
 
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-4">
-            <Link
+            <Button
               href="/login"
-              className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105 active:scale-95"
+              variant="primary"
+              size="md"
+              className="flex items-center justify-center gap-2"
             >
               <FaUser className="text-sm" />
-              <span className="text-sm sm:text-base">Sign In</span>
-            </Link>
-            <Link
+              <span>Sign In</span>
+            </Button>
+            <Button
               href="/register"
-              className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-6 py-3 bg-white hover:bg-gray-50 text-blue-600 font-semibold rounded-lg border-2 border-blue-600 shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105 active:scale-95"
+              variant="outline"
+              size="md"
+              className="flex items-center justify-center gap-2 border-blue-600 text-blue-600 hover:border-blue-700 hover:text-blue-700"
             >
               <FaUserPlus className="text-sm" />
-              <span className="text-sm sm:text-base">Create Account</span>
-            </Link>
+              <span>Create Account</span>
+            </Button>
           </div>
 
           {/* Additional Info */}
@@ -479,7 +485,7 @@ const PerformanceTab = ({
       {/* Detailed Stats Row */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Accuracy */}
-        <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
+        <Card variant="standard" className="p-4">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
               <FaCheckCircle className="text-green-600 text-xl" />
@@ -494,10 +500,10 @@ const PerformanceTab = ({
               </p>
             </div>
           </div>
-        </div>
+        </Card>
 
         {/* Time Average */}
-        <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
+        <Card variant="standard" className="p-4">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
               <FaClock className="text-blue-600 text-xl" />
@@ -510,10 +516,10 @@ const PerformanceTab = ({
               <p className="text-xs text-gray-500">Time management</p>
             </div>
           </div>
-        </div>
+        </Card>
 
         {/* Answer Breakdown */}
-        <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
+        <Card variant="standard" className="p-4">
           <div className="space-y-2">
             <p className="text-xs font-semibold text-gray-700">
               Answer Breakdown
@@ -541,12 +547,12 @@ const PerformanceTab = ({
               </div>
             </div>
           </div>
-        </div>
+        </Card>
       </div>
 
       {/* Progress Chart */}
       {chartData.length > 0 && (
-        <div className="bg-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-sm">
+        <Card variant="standard" className="p-4 sm:p-6">
           <div className="flex items-center justify-between mb-4">
             <h4 className="text-base font-bold text-gray-900">
               Performance Trend
@@ -661,11 +667,11 @@ const PerformanceTab = ({
               })}
             </svg>
           </div>
-        </div>
+        </Card>
       )}
 
       {/* Recent Test Attempts */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+      <Card variant="standard" className="overflow-hidden">
         <div className="p-4 sm:p-6 border-b border-gray-200">
           <h4 className="text-base font-bold text-gray-900">
             Recent Test Attempts
@@ -816,7 +822,7 @@ const PerformanceTab = ({
             </tbody>
           </table>
         </div>
-      </div>
+      </Card>
 
       {/* Strengths & Weaknesses */}
       {testResults.length >= 3 && (

@@ -22,7 +22,7 @@ const UnitsListClient = ({ units, subjectId, examSlug, subjectSlug }) => {
 
     try {
       if (typeof window === "undefined") return null;
-      
+
       const token = localStorage.getItem("student_token");
       if (!token) return null;
 
@@ -55,7 +55,7 @@ const UnitsListClient = ({ units, subjectId, examSlug, subjectSlug }) => {
     if (progressData[unitId] !== undefined) {
       return progressData[unitId];
     }
-    
+
     // Try to fetch from database first if authenticated
     if (isAuthenticated) {
       const dbProgress = await fetchUnitProgressFromDB(unitId);
@@ -68,8 +68,9 @@ const UnitsListClient = ({ units, subjectId, examSlug, subjectSlug }) => {
     }
 
     // Fallback to localStorage
-    if (typeof window === "undefined") return { progress: 0, isCompleted: false };
-    
+    if (typeof window === "undefined")
+      return { progress: 0, isCompleted: false };
+
     try {
       const storageKey = `unit-progress-${unitId}`;
       const stored = localStorage.getItem(storageKey);
@@ -85,7 +86,9 @@ const UnitsListClient = ({ units, subjectId, examSlug, subjectSlug }) => {
         // Calculate from chapters (fallback)
         // Note: This uses only chapters with progress data, which may differ from API
         // For consistency, should fetch all chapters from API, but this is fallback
-        const chapterKeys = Object.keys(data).filter(key => !key.startsWith('_'));
+        const chapterKeys = Object.keys(data).filter(
+          (key) => !key.startsWith("_")
+        );
         if (chapterKeys.length > 0) {
           const totalProgress = chapterKeys.reduce((sum, key) => {
             return sum + (data[key]?.progress || 0);
@@ -107,7 +110,7 @@ const UnitsListClient = ({ units, subjectId, examSlug, subjectSlug }) => {
         } catch (clearError) {
           logger.error(`Error clearing corrupted localStorage:`, clearError);
         }
-      } else if (error.name === 'QuotaExceededError') {
+      } else if (error.name === "QuotaExceededError") {
         logger.error(`localStorage quota exceeded for unit ${unitId}`);
       } else {
         logger.error(`Error reading progress for unit ${unitId}:`, error);
@@ -126,7 +129,7 @@ const UnitsListClient = ({ units, subjectId, examSlug, subjectSlug }) => {
 
     const updateProgress = async () => {
       if (!isMounted) return;
-      
+
       try {
         const newProgressData = {};
         // Use Promise.all to wait for all async operations
@@ -136,19 +139,22 @@ const UnitsListClient = ({ units, subjectId, examSlug, subjectSlug }) => {
             return { unitId: unit._id, progress };
           } catch (error) {
             logger.error(`Error getting progress for unit ${unit._id}:`, error);
-            return { unitId: unit._id, progress: { progress: 0, isCompleted: false } };
+            return {
+              unitId: unit._id,
+              progress: { progress: 0, isCompleted: false },
+            };
           }
         });
 
         const results = await Promise.all(progressPromises);
-        
+
         if (!isMounted) return;
-        
+
         const newData = {};
         results.forEach(({ unitId, progress }) => {
           newData[unitId] = progress;
         });
-        
+
         setProgressData(newData);
       } catch (error) {
         logger.error("Error updating progress:", error);
@@ -169,7 +175,7 @@ const UnitsListClient = ({ units, subjectId, examSlug, subjectSlug }) => {
     // Listen for storage events
     const handleStorageChange = async (e) => {
       if (!isMounted) return;
-      if (e.key && e.key.startsWith('unit-progress-')) {
+      if (e.key && e.key.startsWith("unit-progress-")) {
         await updateProgress();
       }
     };
@@ -189,14 +195,17 @@ const UnitsListClient = ({ units, subjectId, examSlug, subjectSlug }) => {
     if (typeof window !== "undefined") {
       window.addEventListener("storage", handleStorageChange);
       window.addEventListener("progress-updated", handleProgressUpdate);
-      window.addEventListener("chapterProgressUpdate", handleChapterProgressUpdate);
+      window.addEventListener(
+        "chapterProgressUpdate",
+        handleChapterProgressUpdate
+      );
     }
 
     // Poll for changes as backup - reduced frequency to improve performance
     // Only poll when component is visible and authenticated
     const pollInterval = authStatus ? 5000 : 3000;
     const interval = setInterval(() => {
-      if (isMounted && document.visibilityState === 'visible') {
+      if (isMounted && document.visibilityState === "visible") {
         updateProgress();
       }
     }, pollInterval);
@@ -207,7 +216,10 @@ const UnitsListClient = ({ units, subjectId, examSlug, subjectSlug }) => {
       if (typeof window !== "undefined") {
         window.removeEventListener("storage", handleStorageChange);
         window.removeEventListener("progress-updated", handleProgressUpdate);
-        window.removeEventListener("chapterProgressUpdate", handleChapterProgressUpdate);
+        window.removeEventListener(
+          "chapterProgressUpdate",
+          handleChapterProgressUpdate
+        );
       }
       clearInterval(interval);
     };
@@ -230,8 +242,29 @@ const UnitsListClient = ({ units, subjectId, examSlug, subjectSlug }) => {
 
   if (units.length === 0) {
     return (
-      <div className="px-4 sm:px-6 py-10 text-center text-gray-500">
-        No units available for this subject.
+      <div className="px-4 sm:px-6 py-12 text-center">
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
+          <svg
+            className="w-8 h-8 text-gray-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+            />
+          </svg>
+        </div>
+        <p className="text-sm font-semibold text-gray-900 sm:text-base mb-1">
+          No units available
+        </p>
+        <p className="text-xs text-gray-500 sm:text-sm">
+          Units will appear here once they are added to this subject.
+        </p>
       </div>
     );
   }
@@ -243,8 +276,14 @@ const UnitsListClient = ({ units, subjectId, examSlug, subjectSlug }) => {
         const unitUrl = `/${examSlug}/${subjectSlug}/${unitSlug}`;
         // Use progressData from state (always populated before render)
         // Never call async function in render
-        const unitProgressData = progressData[unit._id] || { progress: 0, isCompleted: false };
-        const progressPercent = Math.min(100, Math.max(0, unitProgressData.progress || 0));
+        const unitProgressData = progressData[unit._id] || {
+          progress: 0,
+          isCompleted: false,
+        };
+        const progressPercent = Math.min(
+          100,
+          Math.max(0, unitProgressData.progress || 0)
+        );
         const progressLabel = Math.round(progressPercent);
         const isCompleted = unitProgressData.isCompleted || false;
         const weightage = unit.weightage ?? "20%";
@@ -312,7 +351,7 @@ const UnitsListClient = ({ units, subjectId, examSlug, subjectSlug }) => {
                     style={{ width: `${progressPercent}%` }}
                   />
                 </div>
-                <span className="min-w-[38px] text-right text-xs font-semibold text-gray-500">
+                <span className="min-w-[3rem] sm:min-w-[3.5rem] text-right text-xs sm:text-sm font-semibold text-gray-700 whitespace-nowrap">
                   {progressLabel}%
                 </span>
               </div>
@@ -325,4 +364,3 @@ const UnitsListClient = ({ units, subjectId, examSlug, subjectSlug }) => {
 };
 
 export default UnitsListClient;
-

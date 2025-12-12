@@ -32,7 +32,7 @@ const DiscussionForumTab = ({ entityType, entityName }) => {
         </h3>
         <p className="text-sm text-gray-700 leading-normal">{getDescription()}</p>
       </div>
-      <div className="bg-linear-to-br from-indigo-50 to-purple-50 rounded-lg p-4 border border-indigo-200">
+      <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-lg p-4 border border-indigo-200">
         <div className="flex items-center gap-2 mb-2">
           <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center">
             <svg

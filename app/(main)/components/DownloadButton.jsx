@@ -3,19 +3,22 @@ import PropTypes from "prop-types";
 import React, { useState } from "react";
 import { FaDownload } from "react-icons/fa";
 import DownloadModal from "./DownloadModal";
+import Button from "./Button";
 
 const DownloadButton = ({ unitName }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
     <>
-      <button
+      <Button
         onClick={() => setIsModalOpen(true)}
-        className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-lg transition-all shadow-md hover:shadow-lg transform hover:scale-105 active:scale-95"
+        variant="primary"
+        size="md"
+        className="inline-flex items-center gap-2"
       >
         <FaDownload className="text-sm" />
         <span>Download</span>
-      </button>
+      </Button>
       <DownloadModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}

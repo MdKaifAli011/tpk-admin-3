@@ -3,6 +3,8 @@ import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import MainLayout from "./layout/MainLayout";
 import ExamCard from "./components/ExamCard";
+import Card from "./components/Card";
+import Button from "./components/Button";
 import { ExamCardSkeleton } from "./components/SkeletonLoader";
 import { fetchExams } from "./lib/api";
 import { STATUS, PLACEHOLDERS } from "@/constants";
@@ -29,13 +31,13 @@ import {
 ======================================================= */
 function Stat({ number, label, subtext }) {
   return (
-    <div className="bg-white/90 backdrop-blur-sm shadow-lg border border-gray-100 rounded-2xl p-6 text-center hover:shadow-xl hover:-translate-y-1 transition-all group">
+    <Card variant="stat" className="p-6 text-center">
       <div className="text-4xl md:text-5xl font-extrabold bg-gradient-to-r from-indigo-600 to-pink-500 bg-clip-text text-transparent mb-2">
         {number}
       </div>
       <div className="text-base font-semibold text-gray-900 mb-1">{label}</div>
       {subtext && <div className="text-xs text-gray-500 mt-1">{subtext}</div>}
-    </div>
+    </Card>
   );
 }
 
@@ -44,7 +46,7 @@ function Stat({ number, label, subtext }) {
 ======================================================= */
 function Testimonial({ name, role, text, rating = 5, image = null }) {
   return (
-    <div className="bg-white p-8 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all h-full flex flex-col">
+    <Card variant="premium" className="p-8 h-full flex flex-col">
       <div className="flex items-center gap-1 mb-4">
         {[...Array(rating)].map((_, i) => (
           <FaStar key={i} className="text-yellow-400 text-sm" />
@@ -63,7 +65,7 @@ function Testimonial({ name, role, text, rating = 5, image = null }) {
           <div className="text-xs text-gray-500">{role}</div>
         </div>
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -252,17 +254,17 @@ function HomepageContent() {
             <div className="flex flex-col sm:flex-row justify-center gap-4 pt-4">
               <Link
                 href="#exams"
-                className="group inline-flex items-center justify-center gap-3 px-8 py-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 text-white rounded-xl font-bold text-lg shadow-xl hover:shadow-2xl hover:scale-105 transition-all"
+                className="group inline-flex items-center justify-center gap-3 px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 text-white rounded-xl font-semibold text-sm sm:text-base shadow-xl hover:shadow-2xl hover:scale-105 transition-all"
               >
                 Start Free Learning Journey
-                <FaArrowRight className="group-hover:translate-x-1 transition-transform" />
+                <FaArrowRight className="text-sm group-hover:translate-x-1 transition-transform" />
               </Link>
 
               <Link
                 href="/contact"
-                className="inline-flex items-center justify-center gap-3 px-8 py-4 bg-white border-2 border-gray-300 text-gray-900 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl hover:border-indigo-500 transition-all"
+                className="inline-flex items-center justify-center gap-3 px-6 sm:px-8 py-3 sm:py-4 bg-white border-2 border-gray-300 text-gray-900 rounded-xl font-semibold text-sm sm:text-base shadow-lg hover:shadow-xl hover:border-indigo-500 transition-all"
               >
-                <FaPlayCircle className="text-indigo-600" />
+                <FaPlayCircle className="text-indigo-600 text-sm" />
                 Watch Demo
               </Link>
             </div>
@@ -318,10 +320,10 @@ function HomepageContent() {
           <div className="inline-block px-4 py-2 bg-indigo-100 text-indigo-700 rounded-full text-sm font-semibold mb-4">
             Why Choose Us
           </div>
-          <h2 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-4">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-4">
             Everything You Need to Succeed
           </h2>
-          <p className="text-gray-600 text-xl max-w-3xl mx-auto">
+          <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
             A comprehensive learning platform designed to help you master
             concepts, track progress, and achieve exam success.
           </p>
@@ -329,10 +331,7 @@ function HomepageContent() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           {features.map((item, i) => (
-            <div
-              key={i}
-              className="group bg-white p-8 rounded-2xl shadow-lg border-2 border-gray-100 hover:border-indigo-200 hover:shadow-xl transition-all"
-            >
+            <Card key={i} variant="premium" className="group p-8">
               <div className="flex items-start justify-between mb-4">
                 <div
                   className={`w-16 h-16 rounded-xl flex items-center justify-center ${item.color} group-hover:scale-110 transition-transform`}
@@ -343,13 +342,13 @@ function HomepageContent() {
                   {item.benefit}
                 </span>
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3">
                 {item.title}
               </h3>
-              <p className="text-gray-600 text-sm leading-relaxed">
+              <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
                 {item.desc}
               </p>
-            </div>
+            </Card>
           ))}
         </div>
       </section>
@@ -366,10 +365,10 @@ function HomepageContent() {
             <div className="inline-block px-4 py-2 bg-purple-100 text-purple-700 rounded-full text-sm font-semibold mb-4">
               Get Started Today
             </div>
-            <h2 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-4">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-4">
               Choose Your Exam Path
             </h2>
-            <p className="text-gray-600 text-xl max-w-3xl mx-auto">
+            <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
               Select from our comprehensive range of exam preparation courses
               and start your journey to success.
             </p>
@@ -389,7 +388,7 @@ function HomepageContent() {
                 ))}
               </div>
             ) : (
-              <p className="text-center text-gray-500 py-12 text-lg">
+              <p className="text-center text-sm sm:text-base text-gray-500 py-12">
                 {PLACEHOLDERS.NO_DATA}
               </p>
             )}
@@ -400,10 +399,10 @@ function HomepageContent() {
             <div className="text-center mt-12">
               <Link
                 href="#exams"
-                className="inline-flex items-center gap-2 text-indigo-600 font-semibold hover:text-indigo-700 text-lg"
+                className="inline-flex items-center gap-2 text-sm sm:text-base text-indigo-600 font-semibold hover:text-indigo-700 transition-colors"
               >
                 View All Exams
-                <FaArrowRight />
+                <FaArrowRight className="text-sm" />
               </Link>
             </div>
           )}
@@ -418,10 +417,10 @@ function HomepageContent() {
           <div className="inline-block px-4 py-2 bg-green-100 text-green-700 rounded-full text-sm font-semibold mb-4">
             Simple Process
           </div>
-          <h2 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-4">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-4">
             Your Journey to Success in 3 Steps
           </h2>
-          <p className="text-gray-600 text-xl max-w-3xl mx-auto">
+          <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
             Getting started is easy. Follow these simple steps to begin your
             exam preparation journey.
           </p>
@@ -444,10 +443,12 @@ function HomepageContent() {
                 <step.icon className="text-4xl text-gray-700" />
               </div>
 
-              <h3 className="text-xl font-semibold text-gray-900 mb-3">
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3">
                 {step.title}
               </h3>
-              <p className="text-gray-600 text-sm leading-relaxed">{step.desc}</p>
+              <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
+                {step.desc}
+              </p>
             </div>
           ))}
         </div>
@@ -462,10 +463,10 @@ function HomepageContent() {
             <div className="inline-block px-4 py-2 bg-white text-indigo-700 rounded-full text-sm font-semibold mb-4 shadow-sm">
               Success Stories
             </div>
-            <h2 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-4">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-4">
               Loved by Thousands of Students
             </h2>
-            <p className="text-gray-600 text-xl max-w-3xl mx-auto">
+            <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
               See what our successful students have to say about their journey
               with TestPrepKart.
             </p>
@@ -484,10 +485,10 @@ function HomepageContent() {
       ======================================================= */}
       <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-24 bg-white">
         <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-4">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-4">
             Your Success is Our Commitment
           </h2>
-          <p className="text-gray-600 text-xl max-w-3xl mx-auto">
+          <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
             We&apos;re committed to providing you with the best learning
             experience and helping you achieve your goals.
           </p>
@@ -502,10 +503,10 @@ function HomepageContent() {
               <div className="w-16 h-16 rounded-full bg-gradient-to-r from-indigo-600 to-pink-500 flex items-center justify-center mx-auto mb-4">
                 <item.icon className="text-white text-2xl" />
               </div>
-              <h3 className="text-lg font-bold text-gray-900 mb-2">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">
                 {item.title}
               </h3>
-              <p className="text-gray-600 text-sm">{item.desc}</p>
+              <p className="text-sm sm:text-base text-gray-600">{item.desc}</p>
             </div>
           ))}
         </div>
@@ -530,7 +531,7 @@ function HomepageContent() {
               Ready to Start Your Journey?
             </div>
 
-            <h2 className="text-4xl md:text-6xl font-extrabold leading-tight">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
               Join 50,000+ Students
               <br />
               <span className="text-yellow-300">
@@ -538,7 +539,7 @@ function HomepageContent() {
               </span>
             </h2>
 
-            <p className="text-xl text-white/90 max-w-2xl mx-auto leading-relaxed">
+            <p className="text-base sm:text-lg md:text-xl text-white/90 max-w-2xl mx-auto leading-relaxed">
               Start your free learning journey today. No credit card required.
               Access premium study material and track your progress instantly.
             </p>
@@ -546,15 +547,15 @@ function HomepageContent() {
             <div className="flex flex-col sm:flex-row justify-center gap-4 pt-4">
               <Link
                 href="#exams"
-                className="group inline-flex items-center justify-center gap-3 px-10 py-5 bg-white text-indigo-700 rounded-xl font-bold text-lg shadow-2xl hover:shadow-3xl hover:scale-105 transition-all"
+                className="group inline-flex items-center justify-center gap-3 px-6 sm:px-8 md:px-10 py-3 sm:py-4 md:py-5 bg-white text-indigo-700 rounded-xl font-semibold text-sm sm:text-base md:text-lg shadow-2xl hover:shadow-3xl hover:scale-105 transition-all"
               >
                 Start Learning Free
-                <FaArrowRight className="group-hover:translate-x-1 transition-transform" />
+                <FaArrowRight className="text-sm group-hover:translate-x-1 transition-transform" />
               </Link>
 
               <Link
                 href="/register"
-                className="inline-flex items-center justify-center gap-3 px-10 py-5 bg-transparent border-3 border-white text-white rounded-xl font-bold text-lg hover:bg-white/10 transition-all"
+                className="inline-flex items-center justify-center gap-3 px-6 sm:px-8 md:px-10 py-3 sm:py-4 md:py-5 bg-transparent border-2 sm:border-3 border-white text-white rounded-xl font-semibold text-sm sm:text-base md:text-lg hover:bg-white/10 transition-all"
               >
                 Create Free Account
               </Link>

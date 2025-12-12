@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { logger } from "../../../utils/logger.js";
+import ProgressBar from "./ProgressBar";
 
 /**
  * ExamProgressClient - Client component to fetch and display exam progress
@@ -95,35 +96,18 @@ const ExamProgressClient = ({ examId, initialProgress = 0 }) => {
     };
   }, [examId, isAuthenticated]);
 
-  // Show loading state
-  if (isLoading) {
-    return (
-      <div className="text-right">
-        <p className="text-[10px] text-gray-500 mb-1">Progress</p>
-        <div className="flex items-center gap-2">
-          <span className="font-semibold text-sm text-gray-400">...</span>
-          <div className="w-20 sm:w-24 h-1.5 bg-gray-200 rounded-full overflow-hidden shadow-inner">
-            <div className="h-full bg-gray-300 animate-pulse" style={{ width: "30%" }}></div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="text-right">
       <p className="text-[10px] text-gray-500 mb-1">Progress</p>
-      <div className="flex items-center gap-2">
-        <span className="font-semibold text-sm text-gray-700">{progress}%</span>
-        <div className="w-20 sm:w-24 h-1.5 bg-gray-200 rounded-full overflow-hidden shadow-inner">
-          <div
-            className={`h-full bg-gradient-to-r from-blue-500 to-indigo-600 transition-all duration-300 ${
-              progress >= 100 ? "from-emerald-500 to-emerald-600" : ""
-            }`}
-            style={{ width: `${Math.min(100, Math.max(0, progress))}%` }}
-          ></div>
-        </div>
-      </div>
+      <ProgressBar
+        progress={progress}
+        size="md"
+        showLabel={true}
+        labelPosition="left"
+        variant="blue"
+        isLoading={isLoading}
+        className="justify-end"
+      />
     </div>
   );
 };

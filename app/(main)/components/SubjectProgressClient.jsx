@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, useRef } from "react";
 import CongratulationsModal from "./CongratulationsModal";
+import ProgressBar from "./ProgressBar";
 import {
   checkSubjectCongratulationsShown,
   markSubjectCongratulationsShown,
@@ -222,21 +223,14 @@ const SubjectProgressClient = ({ subjectId, subjectName, unitIds = [], initialPr
         <p className="text-xs text-gray-500 mb-1.5 uppercase tracking-wide">
           Subject Progress
         </p>
-        <div className="flex items-center gap-2.5 md:justify-end">
-          <span className="font-semibold text-sm text-gray-700">{progress}%</span>
-          <div className="w-full max-w-[140px] sm:max-w-[160px] h-2 bg-gray-200 rounded-full overflow-hidden">
-            <div
-              className={`h-full transition-all duration-300 ${
-                progress >= 100
-                  ? "bg-emerald-500"
-                  : progress >= 50
-                  ? "bg-emerald-400"
-                  : "bg-emerald-300"
-              }`}
-              style={{ width: `${progress}%` }}
-            ></div>
-          </div>
-        </div>
+        <ProgressBar
+          progress={progress}
+          size="lg"
+          showLabel={true}
+          labelPosition="left"
+          variant="emerald"
+          className="w-full max-w-[140px] sm:max-w-[160px] md:ml-auto"
+        />
       </div>
 
       {/* Congratulations Modal for Subject Completion */}

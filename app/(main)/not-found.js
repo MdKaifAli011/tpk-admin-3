@@ -33,16 +33,16 @@ const NotFound = () => {
             </div>
 
             {/* Error Code */}
-            <h1 className="text-9xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-600 mb-4">
+            <h1 className="text-8xl sm:text-9xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 mb-4">
               404
             </h1>
 
             {/* Error Message */}
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-4">
               Page Not Found
             </h2>
 
-            <p className="text-lg text-gray-600 mb-8 leading-relaxed">
+            <p className="text-base sm:text-lg text-gray-600 mb-8 leading-relaxed">
               Oops! The page you're looking for doesn't exist or has been moved.
               Let's get you back on track with your exam preparation journey.
             </p>
@@ -51,7 +51,7 @@ const NotFound = () => {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
               <Link
                 href="/"
-                className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                className="flex items-center justify-center gap-2 px-6 py-3 text-sm sm:text-base font-semibold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 text-white rounded-lg hover:from-indigo-700 hover:via-purple-700 hover:to-pink-600 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
               >
                 <FaHome className="text-sm" />
                 <span>Go to Homepage</span>
@@ -59,7 +59,7 @@ const NotFound = () => {
 
               <button
                 onClick={() => window.history.back()}
-                className="flex items-center gap-2 px-6 py-3 bg-white text-gray-700 font-semibold rounded-lg border-2 border-gray-300 hover:border-blue-500 hover:text-blue-600 transition-all shadow-md hover:shadow-lg"
+                className="flex items-center justify-center gap-2 px-6 py-3 text-sm sm:text-base font-semibold bg-white text-gray-700 rounded-lg border-2 border-gray-300 hover:border-indigo-500 hover:text-indigo-600 transition-all shadow-md hover:shadow-lg"
               >
                 <FaArrowLeft className="text-sm" />
                 <span>Go Back</span>
@@ -68,34 +68,34 @@ const NotFound = () => {
 
             {/* Quick Links */}
             <div className="border-t border-gray-200 pt-8">
-              <p className="text-sm text-gray-500 mb-4 font-medium">
+              <p className="text-xs sm:text-sm text-gray-500 mb-4 font-medium">
                 Popular Pages:
               </p>
               <div className="flex flex-wrap items-center justify-center gap-4">
                 <Link
                   href="/jee"
-                  className="text-blue-600 hover:text-blue-700 font-medium text-sm transition-colors"
+                  className="text-sm sm:text-base text-indigo-600 hover:text-indigo-700 font-medium transition-colors"
                 >
                   JEE Preparation
                 </Link>
                 <span className="text-gray-300">|</span>
                 <Link
                   href="/neet"
-                  className="text-blue-600 hover:text-blue-700 font-medium text-sm transition-colors"
+                  className="text-sm sm:text-base text-indigo-600 hover:text-indigo-700 font-medium transition-colors"
                 >
                   NEET Preparation
                 </Link>
                 <span className="text-gray-300">|</span>
                 <Link
                   href="/sat"
-                  className="text-blue-600 hover:text-blue-700 font-medium text-sm transition-colors"
+                  className="text-sm sm:text-base text-indigo-600 hover:text-indigo-700 font-medium transition-colors"
                 >
                   SAT Preparation
                 </Link>
                 <span className="text-gray-300">|</span>
                 <Link
                   href="/ib"
-                  className="text-blue-600 hover:text-blue-700 font-medium text-sm transition-colors"
+                  className="text-sm sm:text-base text-indigo-600 hover:text-indigo-700 font-medium transition-colors"
                 >
                   IB Preparation
                 </Link>
@@ -104,10 +104,10 @@ const NotFound = () => {
 
             {/* Search Suggestion */}
             <div className="mt-8 p-4 bg-gray-50 rounded-lg">
-              <p className="text-sm text-gray-600 mb-2">
+              <p className="text-xs sm:text-sm text-gray-600 mb-2">
                 Can't find what you're looking for?
               </p>
-              <button className="flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium text-sm transition-colors">
+              <button className="flex items-center gap-2 text-sm sm:text-base text-indigo-600 hover:text-indigo-700 font-medium transition-colors">
                 <FaSearch className="text-xs" />
                 <span>Try searching instead</span>
               </button>

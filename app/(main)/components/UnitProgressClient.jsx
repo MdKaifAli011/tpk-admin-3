@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, useRef } from "react";
 import CongratulationsModal from "./CongratulationsModal";
+import ProgressBar from "./ProgressBar";
 import { logger } from "@/utils/logger";
 import {
   checkUnitCongratulationsShown,
@@ -471,25 +472,24 @@ const UnitProgressClient = ({ unitId, unitName, initialProgress = 0 }) => {
   return (
     <>
       <div className="w-full sm:w-auto text-left sm:text-right">
-        <p className="text-[10px] sm:text-xs text-gray-500 mb-1 sm:mb-1.5 font-medium">Unit Progress</p>
-        <div className="flex items-center gap-2 sm:gap-2.5 flex-row sm:flex-row">
-          <span className="font-semibold text-xs sm:text-sm text-gray-700 whitespace-nowrap min-w-[2.5rem] sm:min-w-[3rem]">{progress}%</span>
-          <div className="flex-1 sm:flex-none w-full sm:w-24 md:w-28 h-1.5 sm:h-2 bg-gray-200 rounded-full overflow-hidden shadow-inner">
-            <div
-              className={`h-full transition-all duration-300 ${
-                progress >= 100
-                  ? "bg-emerald-500"
-                  : progress >= 50
-                  ? "bg-emerald-400"
-                  : "bg-emerald-300"
-              }`}
-              style={{ width: `${progress}%` }}
-            ></div>
-          </div>
-        </div>
+  
+        {/* Label */}
+        <p className="text-[10px] sm:text-xs text-gray-500 mb-1 sm:mb-1.5 font-medium leading-none">
+          Unit Progress
+        </p>
+  
+        {/* Progress Row */}
+        <ProgressBar
+          progress={progress}
+          size="lg"
+          showLabel={true}
+          labelPosition="left"
+          variant="emerald"
+          className="w-[110px] sm:w-[140px] md:w-[160px]"
+        />
       </div>
-
-      {/* Congratulations Modal for Unit Completion */}
+  
+      {/* Congratulations Modal */}
       <CongratulationsModal
         isOpen={showCongratulations}
         onClose={() => setShowCongratulations(false)}
@@ -498,6 +498,7 @@ const UnitProgressClient = ({ unitId, unitName, initialProgress = 0 }) => {
       />
     </>
   );
+  
 };
 
 export default UnitProgressClient;

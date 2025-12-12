@@ -78,25 +78,51 @@ const ExamPage = async ({ params }) => {
   return (
     <MainLayout>
       <div className="space-y-4">
+      
       <section
-  className="rounded-xl p-3 sm:p-4 bg-gradient-to-br from-indigo-50 via-white to-purple-50 border border-indigo-100/60 shadow-[0_2px_12px_rgba(120,90,200,0.08)]"
+  className="
+    rounded-xl
+    p-3 sm:p-4
+    bg-gradient-to-br from-indigo-50 via-white to-purple-50
+    border border-indigo-100/60
+    shadow-[0_2px_12px_rgba(120,90,200,0.08)]
+  "
 >
-  <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2.5">
+  <div className="flex items-start md:items-center justify-between w-full gap-3 sm:gap-4">
 
-    <div className="leading-tight">
-      <h1 className="text-lg sm:text-xl font-bold text-indigo-900">
+    {/* LEFT — Exam Title + Description */}
+    <div className="flex flex-col min-w-0 leading-tight flex-1">
+      <h1
+        className="
+          text-lg sm:text-xl font-bold text-indigo-900
+          truncate
+          max-w-[180px] sm:max-w-[250px] md:max-w-[320px]
+        "
+        title={`${exam.name} Preparation`}
+      >
         {exam.name} Preparation
       </h1>
 
-      <p className="text-[10px] sm:text-xs text-gray-600 mt-0.5">
+      <p
+        className="
+          text-[10px] sm:text-xs text-gray-600 mt-0.5
+          truncate
+          max-w-[160px] sm:max-w-[230px] md:max-w-[300px]
+        "
+        title={`Smart study tools for your ${exam.name} exam.`}
+      >
         Smart study tools for your {exam.name} exam.
       </p>
     </div>
 
-    <ExamProgressClient examId={exam._id} />
+    {/* RIGHT — Exam Progress */}
+    <div className="shrink-0 ml-auto">
+      <ExamProgressClient examId={exam._id} />
+    </div>
 
   </div>
 </section>
+
 
 
         {/* Tabs */}

@@ -17,24 +17,24 @@ export default function Error({ error, reset }) {
           <div className="inline-flex items-center justify-center w-20 h-20 bg-red-100 rounded-full mb-4">
             <FaExclamationTriangle className="text-red-600 text-4xl" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
+          <h1 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">
             Something went wrong
           </h1>
-          <p className="text-gray-600 mb-4">
+          <p className="text-sm sm:text-base text-gray-600 mb-4 leading-relaxed">
             {error?.message || ERROR_MESSAGES.SOMETHING_WENT_WRONG}
           </p>
         </div>
-        <div className="flex gap-3 justify-center">
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <button
             onClick={reset}
-            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+            className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all shadow-md hover:shadow-lg"
           >
             <FaRedo className="text-sm" />
             Try Again
           </button>
           <Link
             href="/"
-            className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+            className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold bg-white text-gray-700 rounded-lg border-2 border-gray-300 hover:border-indigo-500 hover:text-indigo-600 transition-all shadow-md hover:shadow-lg"
           >
             <FaHome className="text-sm" />
             Go Home

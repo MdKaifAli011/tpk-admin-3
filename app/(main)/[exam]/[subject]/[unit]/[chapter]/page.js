@@ -150,38 +150,57 @@ const ChapterPage = async ({ params }) => {
         unitId={unit._id}
       />
       <div className="space-y-4">
-        {/* Compact Premium Educational Header */}
-        <section
-          className="
-            rounded-xl
-            p-3 sm:p-4
-            bg-gradient-to-br from-indigo-50 via-white to-purple-50
-            border border-indigo-100/60
-            shadow-[0_2px_12px_rgba(120,90,200,0.08)]
-          "
-        >
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-2.5">
-            {/* Title + Breadcrumb */}
-            <div className="flex-1 w-full sm:w-auto leading-tight min-w-0">
-              <h1 className="text-base sm:text-lg md:text-xl font-bold text-indigo-900 break-words">
-                {chapter.name}
-              </h1>
+    {/* Premium Educational Header */}
+<section
+  className="
+    rounded-xl
+    p-3 sm:p-4
+    bg-gradient-to-br from-indigo-50 via-white to-purple-50
+    border border-indigo-100/60
+    shadow-[0_2px_12px_rgba(120,90,200,0.08)]
+  "
+>
+  <div className="flex items-start sm:items-center justify-between w-full gap-3 sm:gap-4">
 
-              <p className="text-[10px] sm:text-xs text-gray-600 mt-0.5 break-words line-clamp-2">
-                {fetchedExam.name} &gt; {subject.name} &gt; {unit.name} &gt; {chapter.name}
-              </p>
-            </div>
+    {/* LEFT — Unit Title + Breadcrumb */}
+    <div className="flex flex-col min-w-0 leading-tight flex-1">
 
-            {/* Progress Component */}
-            <div className="w-full sm:w-auto sm:shrink-0">
-              <UnitProgressClient
-                unitId={unit._id}
-                unitName={unit.name}
-                initialProgress={0}
-              />
-            </div>
-          </div>
-        </section>
+      {/* Unit Name */}
+      <h1
+        className="
+          text-base sm:text-lg md:text-xl font-bold text-indigo-900
+          truncate
+          max-w-[180px] sm:max-w-[260px] md:max-w-[320px]
+        "
+        title={unit.name}
+      >
+        {unit.name}
+      </h1>
+
+      {/* Breadcrumb */}
+      <p
+        className="
+          text-[10px] sm:text-xs text-gray-600 mt-0.5
+          truncate
+          max-w-[160px] sm:max-w-[260px] md:max-w-[350px]
+        "
+        title={`${fetchedExam.name} > {subject.name} > ${unit.name}`}
+      >
+        {fetchedExam.name} &gt; {subject.name} &gt; {unit.name}
+      </p>
+    </div>
+
+    {/* RIGHT — Unit Progress */}
+    <div className="shrink-0 ml-auto">
+      <UnitProgressClient
+        unitId={unit._id}
+        unitName={unit.name}
+        initialProgress={0}
+      />
+    </div>
+  </div>
+</section>
+
 
 
         {/* Tabs */}

@@ -3,6 +3,7 @@
 import React, { memo } from "react";
 import Link from "next/link";
 import { FaCheck, FaEye } from "react-icons/fa";
+import ProgressBar from "./ProgressBar";
 
 const ListItem = memo(({ item, index, href, color }) => {
   const colorVariants = {
@@ -84,17 +85,14 @@ const ListItem = memo(({ item, index, href, color }) => {
         </div>
 
         <div className="flex w-full items-center gap-3 sm:w-auto sm:justify-end">
-          <div className="flex-1 h-2 overflow-hidden rounded-full bg-gray-200 sm:w-48">
-            <div
-              className={`h-full ${
-                progressPercent >= 100 ? "bg-emerald-500" : "bg-emerald-400"
-              } transition-all duration-300`}
-              style={{ width: `${progressPercent}%` }}
-            />
-          </div>
-          <span className="min-w-[38px] text-right text-xs font-semibold text-gray-500">
-            {progressLabel}%
-          </span>
+          <ProgressBar
+            progress={progressPercent}
+            size="lg"
+            showLabel={true}
+            labelPosition="right"
+            variant={progressPercent >= 100 ? "emerald" : "emerald"}
+            className="flex-1 sm:flex-initial"
+          />
         </div>
       </div>
     </Wrapper>

@@ -4,6 +4,7 @@ import React, { lazy, Suspense } from "react";
 import Link from "next/link";
 import { FaBook, FaChartLine, FaTrophy } from "react-icons/fa";
 import RichContent from "./RichContent";
+import Card from "./Card";
 import { createSlug } from "../lib/api";
 
 // Lazy load DownloadButton - only needed for unit pages
@@ -48,14 +49,14 @@ const OverviewTab = ({
         {content ? (
           <RichContent html={content} />
         ) : (
-          <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6 text-center">
+          <Card variant="standard" className="p-4 sm:p-6 text-center">
             <p className="text-gray-600 font-medium mb-2">
               No content available for this {entityType}.
             </p>
             <p className="text-sm text-gray-500">
               Content can be added from the admin panel.
             </p>
-          </div>
+          </Card>
         )}
       </div>
 
@@ -65,7 +66,7 @@ const OverviewTab = ({
         subjectsWithUnits.length > 0 && (
           <div className="mt-4">
             <div className="flex items-center gap-2 mb-3">
-              <div className="h-0.5 w-8 bg-linear-to-r from-indigo-600 to-purple-600 rounded-full"></div>
+              <div className="h-0.5 w-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full"></div>
               <h3 className="text-xl sm:text-2xl font-bold text-gray-900">
                 Subjects & Units
               </h3>
@@ -81,12 +82,13 @@ const OverviewTab = ({
                     : null;
 
                   return (
-                    <div
+                    <Card
                       key={subject._id || subjectIndex}
-                      className="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md hover:border-indigo-300 transition-all duration-200 flex flex-col overflow-hidden"
+                      variant="standard"
+                      className="flex flex-col overflow-hidden"
                     >
                       {/* Subject Header */}
-                      <div className="bg-linear-to-r from-indigo-600 to-purple-600 px-3 py-2.5">
+                      <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-3 py-2.5">
                         {subjectUrl ? (
                           <Link href={subjectUrl}>
                             <div className="flex items-center justify-between gap-2">
@@ -155,7 +157,7 @@ const OverviewTab = ({
                           );
                         })}
                       </div>
-                    </div>
+                    </Card>
                   );
                 })}
             </div>
@@ -234,7 +236,7 @@ const OverviewTab = ({
         unitsCount !== undefined &&
         (!units || units.length === 0) && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4">
-            <div className="bg-linear-to-br from-blue-50 to-indigo-50 rounded-lg p-3 border border-blue-100">
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-3 border border-blue-100">
               <FaBook className="text-blue-600 text-lg mb-1.5" />
               <h4 className="font-semibold text-gray-900 mb-1 text-sm">
                 Units
@@ -243,14 +245,14 @@ const OverviewTab = ({
                 {unitsCount} Units
               </p>
             </div>
-            <div className="bg-linear-to-br from-purple-50 to-pink-50 rounded-lg p-3 border border-purple-100">
+            <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg p-3 border border-purple-100">
               <FaChartLine className="text-purple-600 text-lg mb-1.5" />
               <h4 className="font-semibold text-gray-900 mb-1 text-sm">
                 Subject Overview
               </h4>
               <p className="text-xs text-gray-600">Explore all units</p>
             </div>
-            <div className="bg-linear-to-br from-green-50 to-emerald-50 rounded-lg p-3 border border-green-100">
+            <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-3 border border-green-100">
               <FaTrophy className="text-green-600 text-lg mb-1.5" />
               <h4 className="font-semibold text-gray-900 mb-1 text-sm">
                 Study Resources

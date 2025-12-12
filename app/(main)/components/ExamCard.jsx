@@ -111,7 +111,7 @@ const ExamCard = memo(({ exam }) => {
 
   return (
     <div
-      className={`bg-linear-to-br ${style.gradient} rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1`}
+      className={`bg-gradient-to-br ${style.gradient} rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1`}
     >
       {/* Image Section */}
       <div

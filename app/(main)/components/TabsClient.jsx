@@ -3,6 +3,7 @@
 import React, { useState, lazy, Suspense } from "react";
 import { FaChartLine } from "react-icons/fa";
 import { ExamCardSkeleton } from "./SkeletonLoader";
+import Card from "./Card";
 
 // Lazy load tabs for code splitting - only load when needed
 const OverviewTab = lazy(() => import("./OverviewTab"));
@@ -125,7 +126,7 @@ const TabsClient = ({
   };
 
   return (
-    <section className="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden">
+    <Card variant="standard" hover={false} className="overflow-hidden">
       {/* Tab Navigation */}
       <nav className="flex overflow-x-auto sm:overflow-visible border-b border-gray-200  bg-gradient-to-br from-indigo-50 via-white to-purple-50 scrollbar-hide">
         <div className="flex min-w-max sm:min-w-0 w-full gap-4 sm:gap-6 md:gap-8 lg:gap-10 xl:gap-12 justify-around px-3 sm:px-4 md:px-6">
@@ -210,7 +211,7 @@ const TabsClient = ({
           display: none;
         }
       `}</style>
-    </section>
+    </Card>
   );
 };
 

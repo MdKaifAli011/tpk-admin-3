@@ -13,6 +13,8 @@ import {
   FaCheckCircle,
   FaArrowLeft as FaBack,
   FaTimes,
+  FaLock,
+  FaUser,
 } from "react-icons/fa";
 import {
   fetchPracticeTests,
@@ -24,6 +26,8 @@ import {
 } from "../lib/api";
 import LoadingState from "./LoadingState";
 import TestSubmissionRegistrationModal from "./TestSubmissionRegistrationModal";
+import Card from "./Card";
+import Button from "./Button";
 import { logger } from "@/utils/logger";
 
 const PracticeTestList = ({
@@ -151,12 +155,38 @@ const PracticeTestList = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, practiceTests.length]);
 
-  // Close registration modal if user logs in from another tab
+  // Close registration modal and save pending results if user logs in from another tab
   useEffect(() => {
     if (isAuthenticated && showRegistrationModal) {
       setShowRegistrationModal(false);
     }
-  }, [isAuthenticated, showRegistrationModal]);
+
+    // If student logs in and there are pending results, save them
+    if (isAuthenticated && pendingTestResults) {
+      const savePendingResults = async () => {
+        try {
+          const saveResult = await saveTestResult(pendingTestResults);
+          if (saveResult.success && saveResult.data) {
+            const testIdStr = String(pendingTestResults.testId);
+            // Update score with saved data
+            setStudentScores((prev) => ({
+              ...prev,
+              [testIdStr]: {
+                totalMarks: saveResult.data.totalMarks,
+                maximumMarks: saveResult.data.maximumMarks,
+                percentage: saveResult.data.percentage,
+              },
+            }));
+          }
+          // Clear pending results after saving
+          setPendingTestResults(null);
+        } catch (error) {
+          logger.error("Error saving pending test results:", error);
+        }
+      };
+      savePendingResults();
+    }
+  }, [isAuthenticated, showRegistrationModal, pendingTestResults]);
 
   useEffect(() => {
     const loadPracticeData = async () => {
@@ -644,7 +674,12 @@ const PracticeTestList = ({
       const calculatedResults = calculateResults();
       const testIdStr = String(selectedTest);
 
-      // If student is NOT logged in, show registration modal
+      // Always set results and mark as submitted (for display)
+      setResults(calculatedResults);
+      setIsTestSubmitted(true);
+      setIsTestStarted(false);
+
+      // If student is NOT logged in, show registration modal AND results page with prompt
       if (!isAuthenticated && test && selectedTest) {
         setPendingTestResults({
           testId: testIdStr,
@@ -671,11 +706,6 @@ const PracticeTestList = ({
         setShowRegistrationModal(true);
         return;
       }
-
-      // If authenticated, proceed normally
-      setResults(calculatedResults);
-      setIsTestSubmitted(true);
-      setIsTestStarted(false);
 
       // Save results to database if student is authenticated
       if (isAuthenticated && test && selectedTest) {
@@ -748,7 +778,7 @@ const PracticeTestList = ({
         }
       }
 
-      // Show results first
+      // Results are already set, just ensure they're displayed
       if (pendingTestResults) {
         setResults({
           totalQuestions: pendingTestResults.totalQuestions,
@@ -876,7 +906,7 @@ const PracticeTestList = ({
       <div className="flex items-center justify-center py-8">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-6 w-6 border-3 border-blue-600 border-t-transparent mb-3"></div>
-          <p className="text-xs text-gray-600">Loading practice tests...</p>
+          <p className="text-sm text-gray-600">Loading practice tests...</p>
         </div>
       </div>
     );
@@ -885,12 +915,12 @@ const PracticeTestList = ({
   // Show error if test is not found
   if (error && !selectedTest) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+      <Card variant="standard" hover={false} className="p-4">
         <div className="flex items-center gap-2 text-red-700">
           <FaTimesCircle className="text-sm" />
-          <p className="text-xs font-medium">{error}</p>
+          <p className="text-sm font-medium">{error}</p>
         </div>
-      </div>
+      </Card>
     );
   }
 
@@ -902,7 +932,7 @@ const PracticeTestList = ({
         <div className="flex items-center justify-center py-8">
           <div className="text-center">
             <div className="inline-block animate-spin rounded-full h-6 w-6 border-3 border-blue-600 border-t-transparent mb-3"></div>
-            <p className="text-xs text-gray-600">Loading practice test...</p>
+            <p className="text-sm text-gray-600">Loading practice test...</p>
           </div>
         </div>
       );
@@ -911,92 +941,173 @@ const PracticeTestList = ({
     // Show error loading test if test is not found
     if (error || !test) {
       return (
-        <div className="bg-white rounded-lg border border-gray-200 p-4 ">
+        <Card variant="standard" hover={false} className="p-4">
           <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-3">
             <div className="flex items-center gap-2 text-red-700">
               <FaTimesCircle className="text-sm" />
-              <p className="text-xs font-medium">
+              <p className="text-sm font-medium">
                 {error || "Practice test not found"}
               </p>
             </div>
           </div>
-          <button
-            onClick={handleBackToList}
-            className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-900 rounded-lg text-xs font-medium transition-colors"
-          >
+          <Button variant="ghost" size="sm" onClick={handleBackToList}>
             Back to Tests
-          </button>
-        </div>
+          </Button>
+        </Card>
       );
     }
 
     // Show no questions available if test has no questions
     if (questions.length === 0) {
       return (
-        <div className="bg-white rounded-lg border border-gray-200 p-4 ">
+        <Card variant="standard" hover={false} className="p-6">
           <div className="text-center py-8">
             <div className="text-gray-400 text-4xl mb-3">📝</div>
-            <h3 className="text-base font-semibold text-gray-900 mb-1.5">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
               No Questions Available
             </h3>
-            <p className="text-xs text-gray-600 mb-3">
+            <p className="text-sm text-gray-600 mb-4">
               This practice test doesn&apos;t have any questions yet.
             </p>
-            <button
-              onClick={handleBackToList}
-              className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-900 rounded-lg text-xs font-medium transition-colors"
-            >
+            <Button variant="ghost" size="sm" onClick={handleBackToList}>
               Back to Tests
-            </button>
+            </Button>
           </div>
-        </div>
+        </Card>
       );
     }
 
     // Show results view if test is submitted
     if (isTestSubmitted && results) {
+      // If student is NOT authenticated, show login/register prompt page
+      if (!isAuthenticated && pendingTestResults) {
+        return (
+          <div className=" bg-gradient-to-br from-gray-50 to-gray-100">
+            {/* Registration Modal */}
+            <TestSubmissionRegistrationModal
+              isOpen={showRegistrationModal && !isAuthenticated}
+              onClose={() => {
+                setShowRegistrationModal(false);
+                // Keep results visible even if modal is closed
+              }}
+              onRegistrationSuccess={handleRegistrationSuccess}
+              testName={test?.name}
+            />
+
+            {/* Login / Register Prompt Page */}
+            <Card variant="premium" hover={false} className="relative">
+              <div className="relative z-10 p-6 md:p-8">
+                {/* Lock Icon */}
+                <div className="flex justify-center mb-6">
+                  <div className="relative">
+                    <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 flex items-center justify-center shadow-lg transform transition-all duration-300 hover:scale-105">
+                      <FaLock className="text-white text-xl md:text-2xl" />
+                    </div>
+                    {/* Small Active Indicator */}
+                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white animate-pulse" />
+                  </div>
+                </div>
+
+                {/* Title */}
+                <h1 className="text-xl md:text-2xl font-bold text-gray-900 text-center mb-4 leading-tight">
+                  Login or Create Account to View Results
+                </h1>
+
+                {/* Description */}
+                <p className="text-sm text-gray-600 text-center mb-8 max-w-xl mx-auto leading-relaxed">
+                  Your test was submitted successfully! Login or register to
+                  view your detailed performance, track your strengths, and
+                  review each question in depth.
+                </p>
+
+                {/* Action Buttons */}
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                  {/* Create Account */}
+                  <Button
+                    variant="secondary"
+                    size="md"
+                    onClick={() => setShowRegistrationModal(true)}
+                    className="flex items-center gap-2"
+                  >
+                    <FaUser className="text-sm" />
+                    Create Account
+                  </Button>
+
+                  {/* Login */}
+                  <Button
+                    variant="outline"
+                    size="md"
+                    onClick={() => {
+                      if (typeof window !== "undefined") {
+                        const currentPath =
+                          window.location.pathname + window.location.search;
+                        sessionStorage.setItem(
+                          "redirectAfterLogin",
+                          currentPath
+                        );
+                        window.location.href = "/login";
+                      }
+                    }}
+                    className="flex items-center gap-2 border-purple-600 text-purple-600 hover:bg-purple-50 hover:border-purple-700 hover:text-purple-700"
+                  >
+                    <FaLock className="text-sm" />
+                    Login
+                  </Button>
+
+                  {/* Back */}
+                  <Button variant="ghost" size="md" onClick={handleBackToList}>
+                    Go Back
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          </div>
+        );
+      }
+
+      // If authenticated, show full results
       return (
         <div className="space-y-6">
           {/* Results Header */}
-          <div className="bg-white p-4  border-b border-gray-300">
+          <Card variant="standard" hover={false} className="p-6">
             <div className="text-center">
-              <h1 className="text-2xl font-semibold text-gray-900 mb-1.5">
+              <h1 className="text-2xl font-semibold text-gray-900 mb-2">
                 Test Results
               </h1>
-              <p className="text-xs text-gray-600">{test.name}</p>
+              <p className="text-sm text-gray-600">{test.name}</p>
             </div>
-          </div>
+          </Card>
 
           {/* Score Card */}
-          <div className="bg-white  p-4 ">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-              <div className="text-center p-3 bg-gray-50 rounded-lg border border-gray-200">
-                <div className="text-2xl font-semibold text-gray-900 mb-0.5">
+          <Card variant="standard" hover={false} className="p-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="text-center p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <div className="text-2xl font-semibold text-gray-900 mb-1">
                   {results.percentage}%
                 </div>
                 <div className="text-xs text-gray-600">Score</div>
               </div>
-              <div className="text-center p-3 bg-gray-50 rounded-lg border border-gray-200">
-                <div className="text-2xl font-semibold text-gray-900 mb-0.5">
+              <div className="text-center p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <div className="text-2xl font-semibold text-gray-900 mb-1">
                   {results.correctCount}
                 </div>
                 <div className="text-xs text-gray-600">Correct</div>
               </div>
-              <div className="text-center p-3 bg-gray-50 rounded-lg border border-gray-200">
-                <div className="text-2xl font-semibold text-gray-900 mb-0.5">
+              <div className="text-center p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <div className="text-2xl font-semibold text-gray-900 mb-1">
                   {results.incorrectCount}
                 </div>
                 <div className="text-xs text-gray-600">Incorrect</div>
               </div>
-              <div className="text-center p-3 bg-gray-50 rounded-lg border border-gray-200">
-                <div className="text-2xl font-semibold text-gray-900 mb-0.5">
+              <div className="text-center p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <div className="text-2xl font-semibold text-gray-900 mb-1">
                   {results.unansweredCount}
                 </div>
                 <div className="text-xs text-gray-600">Unanswered</div>
               </div>
             </div>
 
-            <div className="mt-4 pt-4 border-t border-gray-200">
+            <div className="mt-6 pt-6 border-t border-gray-200">
               <div className="flex items-center justify-between">
                 <div>
                   <div className="text-xl font-semibold text-gray-900">
@@ -1005,37 +1116,40 @@ const PracticeTestList = ({
                   <div className="text-xs text-gray-600">Total Marks</div>
                 </div>
                 <div className="text-right">
-                  <div className="text-xs text-gray-600">
+                  <div className="text-sm text-gray-600">
                     Time Taken: {Math.floor(results.timeTaken / 60)}m{" "}
                     {results.timeTaken % 60}s
                   </div>
                 </div>
               </div>
             </div>
-          </div>
+          </Card>
 
           {/* Question-wise Results */}
-          <div className="bg-white  p-4 ">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">
+          <Card variant="standard" hover={false} className="p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-6">
               Question-wise Results
             </h2>
-            <div className="space-y-4">
+            <div className="space-y-6">
               {results.questionResults.map((result, index) => {
                 const question = questions.find(
                   (q) => q._id === result.questionId
                 );
                 return (
-                  <div key={result.questionId} className=" p-4 bg-white">
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-center gap-2">
-                        <span className="flex items-center justify-center w-8 h-8 rounded-full font-medium bg-gray-100 text-gray-900 border border-gray-200 text-xs">
+                  <div
+                    key={result.questionId}
+                    className="p-4 bg-gray-50 rounded-lg border border-gray-200"
+                  >
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-center gap-3 flex-1">
+                        <span className="flex items-center justify-center w-8 h-8 rounded-full font-medium bg-white text-gray-900 border border-gray-300 text-xs">
                           {index + 1}
                         </span>
                         <h3 className="text-base font-semibold text-gray-900">
                           {result.question}
                         </h3>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 shrink-0">
                         {result.isCorrect ? (
                           <FaCheckCircle className="text-green-600 text-xl" />
                         ) : (
@@ -1056,7 +1170,7 @@ const PracticeTestList = ({
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
                       {["A", "B", "C", "D"].map((option) => {
                         const optionKey = `option${option}`;
                         const optionText = question[optionKey];
@@ -1066,12 +1180,12 @@ const PracticeTestList = ({
                         return (
                           <div
                             key={option}
-                            className={`p-2 rounded-lg border ${
+                            className={`p-3 rounded-lg border ${
                               isCorrectAnswer
                                 ? "bg-green-50 border-green-200"
                                 : isUserAnswer && !isCorrectAnswer
                                 ? "bg-red-50 border-red-200"
-                                : "bg-gray-50 border-gray-200"
+                                : "bg-white border-gray-200"
                             }`}
                           >
                             <div className="flex items-center gap-3">
@@ -1090,10 +1204,10 @@ const PracticeTestList = ({
                                 {optionText}
                               </span>
                               {isCorrectAnswer && (
-                                <FaCheckCircle className="text-green-600" />
+                                <FaCheckCircle className="text-green-600 text-sm" />
                               )}
                               {isUserAnswer && !isCorrectAnswer && (
-                                <FaTimesCircle className="text-red-600" />
+                                <FaTimesCircle className="text-red-600 text-sm" />
                               )}
                             </div>
                           </div>
@@ -1102,11 +1216,11 @@ const PracticeTestList = ({
                     </div>
 
                     {question.detailsExplanation && (
-                      <div className="mt-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
-                        <h4 className="text-xs font-semibold text-gray-900 mb-1.5">
+                      <div className="mt-4 p-4 bg-white border border-gray-200 rounded-lg">
+                        <h4 className="text-sm font-semibold text-gray-900 mb-2">
                           Explanation:
                         </h4>
-                        <p className="text-xs text-gray-600">
+                        <p className="text-sm text-gray-600 leading-relaxed">
                           {question.detailsExplanation}
                         </p>
                       </div>
@@ -1118,7 +1232,7 @@ const PracticeTestList = ({
                           href={question.videoLink}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
+                          className="text-sm text-blue-600 hover:text-blue-800 hover:underline font-medium"
                         >
                           Watch Video Explanation →
                         </a>
@@ -1128,17 +1242,16 @@ const PracticeTestList = ({
                 );
               })}
             </div>
-          </div>
+          </Card>
 
           {/* Actions */}
           <div className="flex items-center justify-center gap-3">
-            <button
-              onClick={handleBackToList}
-              className="px-4 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-900 rounded-lg text-xs font-medium transition-colors"
-            >
+            <Button variant="ghost" size="md" onClick={handleBackToList}>
               Back to Tests
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="primary"
+              size="md"
               onClick={() => {
                 setIsTestSubmitted(false);
                 setResults(null);
@@ -1150,10 +1263,9 @@ const PracticeTestList = ({
                   setTimeRemaining(durationSeconds);
                 }
               }}
-              className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-medium transition-colors"
             >
               Retake Test
-            </button>
+            </Button>
           </div>
         </div>
       );
@@ -1162,141 +1274,92 @@ const PracticeTestList = ({
     // Show pre-test start screen if test is not started
     if (!isTestStarted) {
       return (
-        <div className="">
-          {/* OUTER WRAPPER */}
-          <div className="">
-            {/* TITLE */}
-            <div className="py-4 text-center border-b border-gray-200">
-              <h1 className="text-lg md:text-xl font-bold text-gray-900">
-                {test.name}
-              </h1>
+        <Card variant="standard" hover={false} className="overflow-hidden">
+          {/* TITLE */}
+          <div className="p-6 text-center border-b border-gray-200">
+            <h1 className="text-xl font-bold text-gray-900 mb-2">
+              {test.name}
+            </h1>
+            <p className="text-sm text-gray-500">
+              Let&apos;s boost your preparation today 🚀
+            </p>
+          </div>
 
-              <p className="text-[11px] md:text-xs text-gray-500 mt-1">
-                Let's boost your preparation today 🚀
+          {/* STATS GRID */}
+          <div className="grid grid-cols-2 md:grid-cols-4 text-center border-b border-gray-200">
+            <div className="p-4 border-b md:border-b-0 md:border-r border-gray-200">
+              <p className="text-xs text-gray-500 mb-1">Duration</p>
+              <p className="text-lg font-semibold text-gray-900">
+                {test.duration}
               </p>
             </div>
-
-            {/* STATS GRID — FULLY RESPONSIVE */}
-            <div
-              className="
-    grid grid-cols-2 md:grid-cols-4 
-    text-center text-xs md:text-sm 
-    border-b border-gray-200
-  "
-            >
-              <div className="p-3 md:p-4 border-b md:border-b-0 border-r border-gray-200">
-                <p className="text-gray-500 text-[10px] md:text-xs">Duration</p>
-                <p className="text-sm md:text-lg font-bold text-gray-900">
-                  {test.duration}
-                </p>
-              </div>
-
-              <div className="p-3 md:p-4 border-b md:border-b-0 border-r border-gray-200">
-                <p className="text-gray-500 text-[10px] md:text-xs">
-                  Questions
-                </p>
-                <p className="text-sm md:text-lg font-bold text-gray-900">
-                  {questions.length}
-                </p>
-              </div>
-
-              <div className="p-3 md:p-4 border-b md:border-b-0 border-r border-gray-200">
-                <p className="text-gray-500 text-[10px] md:text-xs">
-                  Max Marks
-                </p>
-                <p className="text-sm md:text-lg font-bold text-gray-900">
-                  {test.maximumMarks}
-                </p>
-              </div>
-
-              <div className="p-3 md:p-4">
-                <p className="text-gray-500 text-[10px] md:text-xs">Negative</p>
-                <p className="text-sm md:text-lg font-bold text-gray-900">
-                  {test.negativeMarks}
-                </p>
-              </div>
+            <div className="p-4 border-b md:border-b-0 md:border-r border-gray-200">
+              <p className="text-xs text-gray-500 mb-1">Questions</p>
+              <p className="text-lg font-semibold text-gray-900">
+                {questions.length}
+              </p>
             </div>
-
-            {/* INSTRUCTIONS */}
-            <div className="p-4 md:p-6">
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 md:p-5">
-                <h3 className="text-sm md:text-base font-semibold text-gray-900 mb-2 md:mb-3">
-                  Important Instructions
-                </h3>
-
-                <ul className="text-[11px] md:text-sm text-gray-700 space-y-1.5 md:space-y-2 leading-relaxed">
-                  {(test.description?.trim()
-                    ? test.description.split("\n").map((line) => line.trim())
-                    : [
-                        "Read each question carefully.",
-                        "You may navigate between questions anytime.",
-                        "Use “Mark for Review” for doubtful questions.",
-                        test.duration
-                          ? `Complete the test within ${test.duration}.`
-                          : "No time limit.",
-                        test.negativeMarks > 0
-                          ? `Each incorrect answer deducts ${test.negativeMarks} marks.`
-                          : "No negative marking.",
-                        "Review answers before final submission.",
-                      ]
-                  ).map((line, index) => (
-                    <li key={index} className="flex gap-2">
-                      <span className="mt-[2px] text-gray-400">•</span>
-                      <span>{line}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+            <div className="p-4 border-b md:border-b-0 md:border-r border-gray-200">
+              <p className="text-xs text-gray-500 mb-1">Max Marks</p>
+              <p className="text-lg font-semibold text-gray-900">
+                {test.maximumMarks}
+              </p>
             </div>
-
-            {/* ACTION BUTTONS */}
-            <div
-              className="
-      px-4 md:px-6 py-3 
-      border-t border-gray-200 
-      bg-gray-50 
-      flex flex-col md:flex-row 
-      justify-center 
-      gap-2 md:gap-4
-    "
-            >
-              {/* CANCEL BUTTON */}
-              <button
-                onClick={handleBackToList}
-                className="
-        px-4 py-2 
-        bg-white 
-        border border-gray-300 
-        text-gray-700 
-        rounded-md 
-        text-[11px] md:text-xs font-medium 
-        hover:bg-gray-100 
-        transition
-      "
-              >
-                Cancel
-              </button>
-
-              {/* START BUTTON (OWO LEVEL) */}
-              <button
-                onClick={handleStartTest}
-                className="
-        px-5 py-2 
-        bg-gradient-to-r from-blue-600 to-indigo-600
-        text-white 
-        rounded-md 
-        text-[11px] md:text-xs font-semibold shadow 
-        hover:from-blue-700 hover:to-indigo-700
-        flex items-center justify-center 
-        gap-1.5 md:gap-2 transition
-      "
-              >
-                <FaCheck className="text-[10px] md:text-xs" />
-                Start Test
-              </button>
+            <div className="p-4">
+              <p className="text-xs text-gray-500 mb-1">Negative</p>
+              <p className="text-lg font-semibold text-gray-900">
+                {test.negativeMarks}
+              </p>
             </div>
           </div>
-        </div>
+
+          {/* INSTRUCTIONS */}
+          <div className="p-6">
+            <Card variant="gradient" hover={false} className="p-6">
+              <h3 className="text-base font-semibold text-gray-900 mb-4">
+                Important Instructions
+              </h3>
+              <ul className="text-sm text-gray-700 space-y-2 leading-relaxed">
+                {(test.description?.trim()
+                  ? test.description.split("\n").map((line) => line.trim())
+                  : [
+                      "Read each question carefully.",
+                      "You may navigate between questions anytime.",
+                      'Use "Mark for Review" for doubtful questions.',
+                      test.duration
+                        ? `Complete the test within ${test.duration}.`
+                        : "No time limit.",
+                      test.negativeMarks > 0
+                        ? `Each incorrect answer deducts ${test.negativeMarks} marks.`
+                        : "No negative marking.",
+                      "Review answers before final submission.",
+                    ]
+                ).map((line, index) => (
+                  <li key={index} className="flex gap-2">
+                    <span className="mt-0.5 text-gray-400">•</span>
+                    <span>{line}</span>
+                  </li>
+                ))}
+              </ul>
+            </Card>
+          </div>
+
+          {/* ACTION BUTTONS */}
+          <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex flex-col md:flex-row justify-center gap-3">
+            <Button variant="outline" size="md" onClick={handleBackToList}>
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              size="md"
+              onClick={handleStartTest}
+              className="flex items-center justify-center gap-2"
+            >
+              <FaCheck className="text-xs" />
+              Start Test
+            </Button>
+          </div>
+        </Card>
       );
     }
 
@@ -1310,29 +1373,12 @@ const PracticeTestList = ({
 
     return (
       <div className="space-y-2">
-        {/* Registration Modal */}
-        {!isAuthenticated && (
+        {/* Registration Modal - Only show when not in results view */}
+        {!isAuthenticated && !isTestSubmitted && (
           <TestSubmissionRegistrationModal
             isOpen={showRegistrationModal && !isAuthenticated}
             onClose={() => {
               setShowRegistrationModal(false);
-              // If user closes without registering, show results anyway
-              if (pendingTestResults) {
-                setResults({
-                  totalQuestions: pendingTestResults.totalQuestions,
-                  correctCount: pendingTestResults.correctCount,
-                  incorrectCount: pendingTestResults.incorrectCount,
-                  unansweredCount: pendingTestResults.unansweredCount,
-                  totalMarks: pendingTestResults.totalMarks,
-                  maximumMarks: pendingTestResults.maximumMarks,
-                  percentage: pendingTestResults.percentage,
-                  questionResults: pendingTestResults.questionResults,
-                  timeTaken: pendingTestResults.timeTaken,
-                });
-                setIsTestSubmitted(true);
-                setIsTestStarted(false);
-                setPendingTestResults(null);
-              }
             }}
             onRegistrationSuccess={handleRegistrationSuccess}
             testName={test?.name}
@@ -1342,10 +1388,14 @@ const PracticeTestList = ({
         {/* Submit Confirmation Modal */}
         {showSubmitModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-60 h-screen">
-            <div className="bg-white rounded-lg border border-gray-200 shadow-lg max-w-md w-full mx-4">
+            <Card
+              variant="premium"
+              hover={false}
+              className="max-w-md w-full mx-4"
+            >
               {/* Modal Header */}
-              <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
-                <h3 className="text-base font-semibold text-gray-900">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-900">
                   Submit Test?
                 </h3>
                 <button
@@ -1357,8 +1407,8 @@ const PracticeTestList = ({
               </div>
 
               {/* Modal Body */}
-              <div className="px-4 py-4">
-                <p className="text-xs text-gray-600">
+              <div className="px-6 py-4">
+                <p className="text-sm text-gray-600 leading-relaxed">
                   {unansweredCount > 0 ? (
                     <>
                       You have{" "}
@@ -1382,31 +1432,34 @@ const PracticeTestList = ({
               </div>
 
               {/* Modal Footer */}
-              <div className="flex items-center justify-end gap-2 px-4 py-3 border-t border-gray-200">
-                <button
+              <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200">
+                <Button
+                  variant="ghost"
+                  size="md"
                   onClick={() => setShowSubmitModal(false)}
-                  className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-900 rounded-lg text-xs font-medium transition-colors"
                 >
                   Keep working
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="primary"
+                  size="md"
                   onClick={() => handleSubmitTest(false)}
-                  className="px-3 py-1.5 bg-gray-900 hover:bg-gray-800 text-white rounded-lg text-xs font-medium transition-colors"
+                  className="bg-gray-900 hover:bg-gray-800"
                 >
                   Submit
-                </button>
+                </Button>
               </div>
-            </div>
+            </Card>
           </div>
         )}
         {/* Test Header */}
-        <div className="p-3  sticky top-0 z-10 border-b border-gray-300">
+        <div className="p-4 bg-white sticky top-0 z-10 border-b border-gray-200 shadow-sm">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
             <div className="flex-1">
-              <h1 className="text-base font-semibold text-gray-900 mb-1">
+              <h1 className="text-lg font-semibold text-gray-900 mb-2">
                 {test.name}
               </h1>
-              <div className="flex items-center gap-3 text-xs text-gray-600">
+              <div className="flex items-center gap-3 text-sm text-gray-600">
                 <span>
                   Question {currentQuestionIndex + 1} of {questions.length}
                 </span>
@@ -1423,14 +1476,14 @@ const PracticeTestList = ({
 
             {timeRemaining !== null && (
               <div
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border ${
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg border ${
                   timeRemaining < 300
                     ? "bg-red-50 border-red-200"
                     : "bg-gray-50 border-gray-200"
                 }`}
               >
                 <FaClock
-                  className={`text-xs ${
+                  className={`text-sm ${
                     timeRemaining < 300 ? "text-red-600" : "text-gray-600"
                   }`}
                 />
@@ -1448,16 +1501,16 @@ const PracticeTestList = ({
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* LEFT: QUESTION PANEL */}
-          <div className="lg:col-span-3   p-6 ">
+          <Card variant="standard" hover={false} className="lg:col-span-3 p-6">
             {/* QUESTION HEADER */}
-            <div className="flex items-center justify-between mb-5 pb-3 border-b border-gray-200">
-              <h2 className="text-sm font-semibold text-gray-700">
+            <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
+              <h2 className="text-base font-semibold text-gray-900">
                 Question {currentQuestionIndex + 1} of {questions.length}
               </h2>
             </div>
 
             {/* QUESTION TEXT */}
-            <div className="text-gray-900 text-[15px] leading-relaxed mb-6">
+            <div className="text-base text-gray-900 leading-relaxed mb-6">
               {currentQuestion.question}
             </div>
 
@@ -1471,33 +1524,37 @@ const PracticeTestList = ({
                   <label
                     key={opt}
                     className={`
-            flex items-start gap-3 p-3 rounded-lg cursor-pointer border transition 
-            ${
-              selected
-                ? "border-blue-500 bg-blue-50"
-                : "border-gray-300 bg-white hover:bg-gray-50"
-            }
-          `}
+                      flex items-start gap-3 p-4 rounded-lg cursor-pointer border transition-all
+                      ${
+                        selected
+                          ? "border-blue-500 bg-blue-50"
+                          : "border-gray-300 bg-white hover:bg-gray-50"
+                      }
+                    `}
                   >
                     {/* Radio Circle */}
                     <div
                       className={`
-              w-5 h-5 rounded-full flex items-center justify-center border 
-              ${selected ? "bg-blue-600 border-blue-700" : "border-gray-400"}
-            `}
+                        w-5 h-5 rounded-full flex items-center justify-center border shrink-0 mt-0.5
+                        ${
+                          selected
+                            ? "bg-blue-600 border-blue-700"
+                            : "border-gray-400"
+                        }
+                      `}
                     >
-                      {selected && (
-                        <FaCheck className="text-white text-[9px]" />
-                      )}
+                      {selected && <FaCheck className="text-white text-xs" />}
                     </div>
 
                     {/* Option Text */}
-                    <span className="text-[14px] text-gray-800 flex-1 leading-relaxed">
+                    <span className="text-sm text-gray-900 flex-1 leading-relaxed">
                       {currentQuestion[key]}
                     </span>
 
                     {/* Option Letter */}
-                    <span className="text-[10px] text-gray-500">{opt}</span>
+                    <span className="text-xs text-gray-500 font-medium shrink-0">
+                      {opt}
+                    </span>
 
                     <input
                       type="radio"
@@ -1513,31 +1570,31 @@ const PracticeTestList = ({
             </div>
 
             {/* BOTTOM BUTTONS */}
-            <div className="mt-8 flex items-center justify-between border-t border-gray-200 pt-5">
+            <div className="mt-8 flex items-center justify-between border-t border-gray-200 pt-6">
               {/* Left: Previous */}
-              <button
-                type="button"
+              <Button
+                variant="outline"
+                size="md"
                 onClick={() => goToQuestion(currentQuestionIndex - 1)}
                 disabled={currentQuestionIndex === 0}
-                className="inline-flex items-center gap-2 rounded-md border border-gray-300 px-4 py-2 text-sm text-gray-700 bg-gray-50 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40"
+                className="disabled:cursor-not-allowed disabled:opacity-40"
               >
-                {/* You can add an icon here if you want */}
                 Previous
-              </button>
+              </Button>
 
               {/* Middle: Mark / Marked */}
               <button
                 type="button"
                 onClick={() => handleToggleMarked(currentQuestion._id)}
-                className={`inline-flex items-center gap-1.5 rounded-md border px-4 py-2 text-xs font-medium transition-colors
-      ${
-        markedForReview.has(currentQuestion._id)
-          ? "border-yellow-400 bg-yellow-50 text-yellow-800 hover:bg-yellow-100"
-          : "border-gray-300 bg-gray-50 text-gray-700 hover:bg-gray-100"
-      }`}
+                className={`inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition-colors
+                  ${
+                    markedForReview.has(currentQuestion._id)
+                      ? "border-yellow-400 bg-yellow-50 text-yellow-800 hover:bg-yellow-100"
+                      : "border-gray-300 bg-gray-50 text-gray-700 hover:bg-gray-100"
+                  }`}
               >
                 <FaFlag
-                  className={`text-[11px] ${
+                  className={`text-xs ${
                     markedForReview.has(currentQuestion._id)
                       ? "text-yellow-500"
                       : "text-gray-500"
@@ -1549,34 +1606,34 @@ const PracticeTestList = ({
               </button>
 
               {/* Right: Next */}
-              <button
-                type="button"
+              <Button
+                variant="outline"
+                size="md"
                 onClick={() => goToQuestion(currentQuestionIndex + 1)}
                 disabled={currentQuestionIndex === questions.length - 1}
-                className="inline-flex items-center gap-2 rounded-md border border-gray-300 px-4 py-2 text-sm text-gray-700 bg-gray-50 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40"
+                className="disabled:cursor-not-allowed disabled:opacity-40"
               >
                 Next
-                {/* You can add an icon here if you want */}
-              </button>
+              </Button>
             </div>
-          </div>
+          </Card>
 
           {/* RIGHT: SIDEBAR */}
-          <div className="space-y-6 sticky top-20">
+          <div className="space-y-4 sticky top-20">
             {/* QUESTION PALETTE */}
-            <div className="bg-white  p-5 ">
-              <h3 className="text-xs font-medium text-gray-600 uppercase mb-3">
+            <Card variant="standard" hover={false} className="p-6">
+              <h3 className="text-xs font-medium text-gray-600 uppercase tracking-wide mb-4">
                 Question Palette
               </h3>
 
-              <div className="grid grid-cols-[repeat(auto-fit,_minmax(2rem,_1fr))] gap-2">
+              <div className="grid grid-cols-[repeat(auto-fit,minmax(2rem,1fr))] gap-2">
                 {questions.map((q, idx) => {
                   const ans = !!answers[q._id];
                   const mark = markedForReview.has(q._id);
                   const cur = idx === currentQuestionIndex;
 
                   let cls =
-                    "aspect-square max-w-8 mx-auto rounded-full flex items-center justify-center text-[11px] font-medium border transition-colors duration-150 cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2";
+                    "aspect-square max-w-8 mx-auto rounded-full flex items-center justify-center text-xs font-medium border transition-colors duration-150 cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2";
 
                   if (cur)
                     cls +=
@@ -1610,36 +1667,46 @@ const PracticeTestList = ({
                   );
                 })}
               </div>
-            </div>
+            </Card>
 
             {/* LEGEND */}
-            <div className="bg-white  p-5  text-xs space-y-2">
-              <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded bg-green-500"></span> Answered
+            <Card variant="standard" hover={false} className="p-6">
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded bg-green-500"></span>
+                  <span className="text-xs text-gray-600">Answered</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded bg-blue-600"></span>
+                  <span className="text-xs text-gray-600">Current</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded bg-yellow-400"></span>
+                  <span className="text-xs text-gray-600">Marked</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded bg-purple-500"></span>
+                  <span className="text-xs text-gray-600">
+                    Answered + Marked
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded bg-gray-200 border border-gray-400"></span>
+                  <span className="text-xs text-gray-600">Not Answered</span>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded bg-blue-600"></span> Current
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded bg-yellow-400"></span> Marked
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded bg-purple-500"></span> Answered
-                + Marked
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded bg-gray-200 border border-gray-400"></span>{" "}
-                Not Answered
-              </div>
-            </div>
+            </Card>
 
             {/* SUBMIT BUTTON */}
-            <button
+            <Button
+              variant="primary"
+              size="md"
               onClick={handleShowSubmitModal}
-              className="w-full py-2.5 bg-green-600 text-white rounded-lg font-semibold text-sm hover:bg-green-700"
+              fullWidth
+              className="bg-emerald-600 hover:bg-emerald-700"
             >
               Submit Test
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -1649,16 +1716,16 @@ const PracticeTestList = ({
   // Show test list
   if (groupedData.length === 0 && !isLoading) {
     return (
-      <div className="bg-white rounded-lg border border-gray-200 p-4  text-center">
-        <FaFileAlt className="text-3xl text-gray-400 mx-auto mb-3" />
-        <h3 className="text-base font-semibold text-gray-900 mb-1.5">
+      <Card variant="standard" hover={false} className="p-6 text-center">
+        <FaFileAlt className="text-4xl text-gray-400 mx-auto mb-4" />
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">
           No Practice Categories Available
         </h3>
-        <p className="text-xs text-gray-600">
+        <p className="text-sm text-gray-600">
           There are no practice categories available for this section yet. Check
           back later!
         </p>
-      </div>
+      </Card>
     );
   }
 
@@ -1666,47 +1733,40 @@ const PracticeTestList = ({
   return (
     <div className="space-y-4">
       {groupedData.map((group, groupIndex) => (
-        <div
+        <Card
           key={groupIndex}
-          className="
-          bg-white 
-        
-          
-           
-          hover:shadow-md 
-          transition-all 
-          duration-200
-          overflow-hidden
-        "
+          variant="standard"
+          hover={true}
+          className="overflow-hidden"
         >
           {/* TABLE FOR DESKTOP */}
           <div className="overflow-x-auto hidden md:block">
             <table className="min-w-full table-fixed">
               {/* FIXED HEADER */}
               <thead className="bg-blue-50 border-b border-gray-200">
-                <tr className="text-[11px] font-semibold text-gray-600 uppercase tracking-wide">
+                <tr className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
                   {/* Column 1 */}
-                  <th className="px-4 py-2 text-left w-[28%] text-sm text-blue-900">
+                  <th className="px-4 py-3 text-left w-[28%] text-sm text-blue-900">
                     {group.category.name}
                   </th>
 
                   {/* Column 2 */}
-                  <th className="px-3 py-2 text-center w-[10%]">Questions</th>
+                  <th className="px-3 py-3 text-center w-[10%]">Questions</th>
 
                   {/* Column 3 */}
-                  <th className="px-3 py-2 text-center w-[12%]">Max. Marks</th>
+                  <th className="px-3 py-3 text-center w-[12%]">Max. Marks</th>
 
                   {/* Column 4 */}
-                  <th className="px-3 py-2 text-center w-[12%]">Duration</th>
+                  <th className="px-3 py-3 text-center w-[12%]">Duration</th>
 
                   {/* Column 5 */}
-                  <th className="px-3 py-2 text-center w-[12%]">Attempted</th>
+                  <th className="px-3 py-3 text-center w-[12%]">Attempted</th>
 
                   {/* Column 6 */}
-                  <th className="px-3 py-2 text-right w-[13%]">Practice</th>
+                  <th className="px-3 py-3 text-right w-[13%]">Practice</th>
 
                   {/* Column 7 */}
-                  <th className="px-4 py-2 text-right w-[13%]">My Score</th>
+                  <th className="px-4 py-3 text-right w-[13%]">My Score</th>
                 </tr>
               </thead>
 
@@ -1715,35 +1775,35 @@ const PracticeTestList = ({
                 {group.tests.map((test, i) => (
                   <tr key={i} className="hover:bg-gray-50 transition-all">
                     {/* Col 1 */}
-                    <td className="px-4 py-2 w-[28%]">
-                      <div className="text-[14px] font-medium text-black">
+                    <td className="px-4 py-3 w-[28%]">
+                      <div className="text-sm font-medium text-gray-900">
                         <span className="mr-1">{test.orderNumber}.</span>
                         {test.name}
                       </div>
                     </td>
 
                     {/* Col 2 */}
-                    <td className="px-3 py-2 text-center text-[14px] text-gray-700 w-[10%]">
+                    <td className="px-3 py-3 text-center text-sm text-gray-700 w-[10%]">
                       {test.numberOfQuestions || 0}
                     </td>
 
                     {/* Col 3 */}
-                    <td className="px-3 py-2 text-center text-[14px] text-gray-700 w-[12%]">
+                    <td className="px-3 py-3 text-center text-sm text-gray-700 w-[12%]">
                       {test.maximumMarks || 0}
                     </td>
 
                     {/* Col 4 */}
-                    <td className="px-3 py-2 text-center text-[14px] text-gray-700 w-[12%]">
+                    <td className="px-3 py-3 text-center text-sm text-gray-700 w-[12%]">
                       {test.duration || "N/A"}
                     </td>
 
                     {/* Col 5 */}
-                    <td className="px-3 py-2 text-center text-[14px] text-gray-500 w-[12%]">
+                    <td className="px-3 py-3 text-center text-sm text-gray-500 w-[12%]">
                       –
                     </td>
 
                     {/* Col 6 */}
-                    <td className="px-3 py-2 text-right w-[13%]">
+                    <td className="px-3 py-3 text-right w-[13%]">
                       {(() => {
                         const testId = String(test._id || test.id);
                         const score = studentScores[testId];
@@ -1756,30 +1816,24 @@ const PracticeTestList = ({
                           score.maximumMarks !== null;
 
                         return (
-                          <button
+                          <Button
+                            variant="primary"
+                            size="sm"
                             onClick={() => setSelectedTest(test._id)}
-                            className={`
-                            px-4 py-1.5
-                            text-white 
-                            text-xs font-semibold 
-                            rounded-md 
-                            hover:shadow
-                            transition-all
-                            ${
+                            className={
                               hasScore
-                                ? "bg-green-600 hover:bg-green-700"
-                                : "bg-blue-600 hover:bg-blue-700"
+                                ? "bg-emerald-600 hover:bg-emerald-700"
+                                : ""
                             }
-                          `}
                           >
                             {hasScore ? "Retake" : "Start"}
-                          </button>
+                          </Button>
                         );
                       })()}
                     </td>
 
                     {/* Col 7 - My Score */}
-                    <td className="px-4 py-2 text-right text-sm font-bold w-[13%]">
+                    <td className="px-4 py-3 text-right w-[13%]">
                       {(() => {
                         const testId = String(test._id || test.id);
                         const score = studentScores[testId];
@@ -1793,12 +1847,12 @@ const PracticeTestList = ({
                           score.maximumMarks !== null
                         ) {
                           return (
-                            <div className="flex flex-col items-end gap-0.5">
-                              <span className="text-indigo-600 font-bold text-sm">
+                            <div className="flex flex-col items-end gap-1">
+                              <span className="text-indigo-600 font-semibold text-sm">
                                 {parseFloat(score.totalMarks).toFixed(1)}/
                                 {score.maximumMarks}
                               </span>
-                              <span className="text-xs text-gray-500 font-normal">
+                              <span className="text-xs text-gray-500">
                                 {parseFloat(score.percentage || 0).toFixed(1)}%
                               </span>
                             </div>
@@ -1806,9 +1860,7 @@ const PracticeTestList = ({
                         }
 
                         return (
-                          <span className="text-gray-500 font-normal text-sm">
-                            NA
-                          </span>
+                          <span className="text-gray-500 text-sm">NA</span>
                         );
                       })()}
                     </td>
@@ -1818,25 +1870,25 @@ const PracticeTestList = ({
             </table>
           </div>
 
-          {/* 🎯 MOBILE CARD VIEW */}
+          {/* MOBILE CARD VIEW */}
           <div className="md:hidden divide-y divide-gray-200">
             {group.tests.map((test, i) => (
-              <div key={i} className="px-4 py-3">
+              <div key={i} className="px-4 py-4">
                 {/* Show category name ONLY for the first test */}
                 {i === 0 && (
-                  <div className="text-sm font-bold text-blue-900 mb-2">
+                  <div className="text-sm font-bold text-blue-900 mb-3">
                     {group.category.name}
                   </div>
                 )}
 
                 {/* Paper Name */}
-                <div className="text-sm font-semibold text-black">
-                  <span className=" mr-1">{test.orderNumber}.</span>
+                <div className="text-sm font-semibold text-gray-900 mb-3">
+                  <span className="mr-1">{test.orderNumber}.</span>
                   {test.name}
                 </div>
 
                 {/* Details */}
-                <div className="mt-2 grid grid-cols-2 gap-2 text-[11px] text-gray-700">
+                <div className="mb-4 grid grid-cols-2 gap-3 text-xs text-gray-700">
                   <div>Questions: {test.numberOfQuestions || 0}</div>
                   <div>Marks: {test.maximumMarks || 0}</div>
                   <div>Duration: {test.duration || "N/A"}</div>
@@ -1844,7 +1896,7 @@ const PracticeTestList = ({
                 </div>
 
                 {/* Button + Score */}
-                <div className="mt-3 flex items-center justify-between">
+                <div className="flex items-center justify-between">
                   {(() => {
                     const testId = String(test._id || test.id);
                     const score = studentScores[testId];
@@ -1857,24 +1909,16 @@ const PracticeTestList = ({
                       score.maximumMarks !== null;
 
                     return (
-                      <button
+                      <Button
+                        variant="primary"
+                        size="sm"
                         onClick={() => setSelectedTest(test._id)}
-                        className={`
-                px-4 py-1.5 
-                text-white 
-                text-[11px]
-                font-semibold 
-                rounded-md 
-                transition-all
-                ${
-                  hasScore
-                    ? "bg-green-600 hover:bg-green-700"
-                    : "bg-blue-600 hover:bg-blue-700"
-                }
-              `}
+                        className={
+                          hasScore ? "bg-emerald-600 hover:bg-emerald-700" : ""
+                        }
                       >
                         {hasScore ? "Retake" : "Start"}
-                      </button>
+                      </Button>
                     );
                   })()}
 
@@ -1892,28 +1936,24 @@ const PracticeTestList = ({
                     ) {
                       return (
                         <div className="text-right">
-                          <div className="text-xs font-bold text-indigo-600">
+                          <div className="text-sm font-semibold text-indigo-600">
                             {parseFloat(score.totalMarks).toFixed(1)}/
                             {score.maximumMarks}
                           </div>
-                          <div className="text-[10px] text-gray-500 font-normal">
+                          <div className="text-xs text-gray-500">
                             {parseFloat(score.percentage || 0).toFixed(1)}%
                           </div>
                         </div>
                       );
                     }
 
-                    return (
-                      <div className="text-xs font-normal text-gray-500">
-                        NA
-                      </div>
-                    );
+                    return <div className="text-sm text-gray-500">NA</div>;
                   })()}
                 </div>
               </div>
             ))}
           </div>
-        </div>
+        </Card>
       ))}
     </div>
   );
