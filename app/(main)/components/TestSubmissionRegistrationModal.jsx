@@ -32,6 +32,7 @@ import {
   validatePassword,
   validateConfirmPassword,
 } from "./utils/formValidation";
+import Button from "./Button";
 
 const TestSubmissionRegistrationModal = ({
   isOpen,
@@ -273,11 +274,11 @@ const TestSubmissionRegistrationModal = ({
     try {
       const fullPhoneNumber =
         formData.countryCode + formData.phoneNumber.trim().replace(/^\+/, "");
-      
+
       // Get the source URL pathname (e.g., /neet) where student is registering from
       const sourcePath =
         typeof window !== "undefined" ? window.location.pathname : "";
-      
+
       const response = await api.post("/student/auth/register", {
         firstName: formData.firstName.trim(),
         lastName: formData.lastName.trim(),
@@ -342,14 +343,14 @@ const TestSubmissionRegistrationModal = ({
   if (!isOpen) return null;
 
   return (
-    <div className=" fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[100] h-screen flex items-center justify-center ">
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={handleClose}
         aria-hidden="true"
       />
 
-      <div className="relative bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden">
+      <div className="relative bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[80vh] flex flex-col overflow-hidden">
         <button
           onClick={handleClose}
           disabled={loading}
@@ -359,8 +360,8 @@ const TestSubmissionRegistrationModal = ({
           <FaTimes className="text-lg" />
         </button>
 
-        <div className=" grid grid-cols-1 lg:grid-cols-2 flex-1 overflow-hidden">
-          <div className="hidden lg:block relative bg-gradient-to-br from-purple-500 via-purple-600 to-purple-700">
+        <div className="grid grid-cols-1 lg:grid-cols-2 flex-1 overflow-hidden">
+          <div className="hidden lg:block relative bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500">
             <div className="absolute inset-0 flex items-center justify-center p-4">
               <div className="relative w-full h-full flex items-center justify-center">
                 <div className="w-48 h-64 bg-white/10 rounded-lg backdrop-blur-sm flex items-center justify-center">
@@ -375,118 +376,154 @@ const TestSubmissionRegistrationModal = ({
           </div>
 
           <div className="flex-1 overflow-y-auto">
-            <div className="p-4">
-              <div className="bg-blue-600 text-white text-xs font-medium px-3 py-1 rounded-full inline-block mb-2">
+            <div className="p-3">
+              <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-semibold px-3 py-1.5 rounded-full inline-block mb-3 shadow-sm">
                 We Will Connect With You Soon
               </div>
 
-              <h2 className="text-xl font-bold text-gray-900 mb-3">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">
                 Let&apos;s Connect With You Soon
               </h2>
 
-              <form onSubmit={handleSubmit} className="space-y-2.5">
+              <form onSubmit={handleSubmit} className="space-y-2">
                 {submitStatus && (
                   <div
-                    className={`p-3 rounded-lg flex items-start gap-2 ${
+                    className={`p-2 rounded-lg flex items-start gap-2 border ${
                       submitStatus === "success"
-                        ? "bg-green-50 border border-green-200 text-green-800"
-                        : "bg-red-50 border border-red-200 text-red-800"
+                        ? "bg-emerald-50 border-emerald-200 text-emerald-800"
+                        : "bg-red-50 border-red-200 text-red-800"
                     }`}
                   >
                     {submitStatus === "success" ? (
-                      <FaCheckCircle className="text-green-600 text-sm shrink-0 mt-0.5" />
+                      <FaCheckCircle className="text-emerald-600 text-sm shrink-0 mt-0.5" />
                     ) : (
                       <FaExclamationCircle className="text-red-600 text-sm shrink-0 mt-0.5" />
                     )}
                     <p className="text-sm font-medium">{submitMessage}</p>
                   </div>
                 )}
-                <div>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
-                      <FaUser className="text-gray-400 text-xs" />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
+                        <FaUser className="text-gray-400 text-xs" />
+                      </div>
+                      <input
+                        type="text"
+                        id="modal-firstName"
+                        name="firstName"
+                        value={formData.firstName}
+                        onChange={handleChange}
+                        className={`w-full pl-8 pr-3 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-sm ${
+                          errors.firstName
+                            ? "border-red-300 bg-red-50"
+                            : "border-gray-300 bg-white"
+                        }`}
+                        placeholder="First Name"
+                        disabled={loading}
+                      />
                     </div>
-                    <input
-                      type="text"
-                      id="modal-firstName"
-                      name="firstName"
-                      value={formData.firstName}
-                      onChange={handleChange}
-                      className={`w-full pl-8 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm ${
-                        errors.firstName
-                          ? "border-red-300 bg-red-50"
-                          : "border-gray-300 bg-white"
-                      }`}
-                      placeholder="First Name"
-                      disabled={loading}
-                    />
+                    {errors.firstName && (
+                      <p className="mt-1 text-xs text-red-600">
+                        {errors.firstName}
+                      </p>
+                    )}
                   </div>
-                  {errors.firstName && (
-                    <p className="mt-0.5 text-xs text-red-600">
-                      {errors.firstName}
-                    </p>
-                  )}
+
+                  <div>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
+                        <FaUser className="text-gray-400 text-xs" />
+                      </div>
+                      <input
+                        type="text"
+                        id="modal-lastName"
+                        name="lastName"
+                        value={formData.lastName}
+                        onChange={handleChange}
+                        className={`w-full pl-8 pr-3 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-sm ${
+                          errors.lastName
+                            ? "border-red-300 bg-red-50"
+                            : "border-gray-300 bg-white"
+                        }`}
+                        placeholder="Last Name"
+                        disabled={loading}
+                      />
+                    </div>
+                    {errors.lastName && (
+                      <p className="mt-1 text-xs text-red-600">
+                        {errors.lastName}
+                      </p>
+                    )}
+                  </div>
                 </div>
 
-                <div>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
-                      <FaUser className="text-gray-400 text-xs" />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="class-dropdown-container relative">
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none z-10">
+                        <FaGraduationCap className="text-gray-400 text-xs" />
+                      </div>
+                      <select
+                        id="modal-className"
+                        name="className"
+                        value={formData.className}
+                        onChange={(e) => {
+                          handleClassSelect(e.target.value);
+                        }}
+                        className={`w-full pl-8 pr-3 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all appearance-none bg-white text-sm ${
+                          errors.className
+                            ? "border-red-300 bg-red-50"
+                            : "border-gray-300"
+                        }`}
+                        disabled={loading}
+                      >
+                        <option value="">Select Class</option>
+                        {classOptions.map((className) => (
+                          <option key={className} value={className}>
+                            {className}
+                          </option>
+                        ))}
+                      </select>
                     </div>
-                    <input
-                      type="text"
-                      id="modal-lastName"
-                      name="lastName"
-                      value={formData.lastName}
-                      onChange={handleChange}
-                      className={`w-full pl-8 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm ${
-                        errors.lastName
-                          ? "border-red-300 bg-red-50"
-                          : "border-gray-300 bg-white"
-                      }`}
-                      placeholder="Last Name"
-                      disabled={loading}
-                    />
+                    {errors.className && (
+                      <p className="mt-1 text-xs text-red-600">
+                        {errors.className}
+                      </p>
+                    )}
                   </div>
-                  {errors.lastName && (
-                    <p className="mt-0.5 text-xs text-red-600">
-                      {errors.lastName}
-                    </p>
-                  )}
-                </div>
 
-                <div className="class-dropdown-container relative">
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none z-10">
-                      <FaGraduationCap className="text-gray-400 text-xs" />
+                  <div className="country-dropdown-container relative">
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none z-10">
+                        <FaGlobe className="text-gray-400 text-xs" />
+                      </div>
+                      <select
+                        id="modal-country"
+                        name="country"
+                        value={formData.country}
+                        onChange={handleChange}
+                        className={`w-full pl-8 pr-3 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all appearance-none bg-white text-sm ${
+                          errors.country
+                            ? "border-red-300 bg-red-50"
+                            : "border-gray-300"
+                        }`}
+                        disabled={loading}
+                      >
+                        <option value="">-- Select Country --</option>
+                        {countriesWithCodesSorted.map((country) => (
+                          <option key={country.name} value={country.name}>
+                            {country.name}
+                          </option>
+                        ))}
+                      </select>
                     </div>
-                    <select
-                      id="modal-className"
-                      name="className"
-                      value={formData.className}
-                      onChange={(e) => {
-                        handleClassSelect(e.target.value);
-                      }}
-                      className={`w-full pl-8 pr-3 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all appearance-none bg-white text-base ${
-                        errors.className
-                          ? "border-red-300 bg-red-50"
-                          : "border-gray-300"
-                      }`}
-                      disabled={loading}
-                    >
-                      <option value="">Select Class</option>
-                      {classOptions.map((className) => (
-                        <option key={className} value={className}>
-                          {className}
-                        </option>
-                      ))}
-                    </select>
+                    {errors.country && (
+                      <p className="mt-1 text-xs text-red-600">
+                        {errors.country}
+                      </p>
+                    )}
                   </div>
-                  {errors.className && (
-                    <p className="mt-0.5 text-xs text-red-600">
-                      {errors.className}
-                    </p>
-                  )}
                 </div>
 
                 <div>
@@ -500,7 +537,7 @@ const TestSubmissionRegistrationModal = ({
                       name="email"
                       value={formData.email}
                       onChange={handleChange}
-                      className={`w-full pl-8 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm ${
+                      className={`w-full pl-8 pr-3 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-sm ${
                         errors.email
                           ? "border-red-300 bg-red-50"
                           : "border-gray-300 bg-white"
@@ -510,41 +547,7 @@ const TestSubmissionRegistrationModal = ({
                     />
                   </div>
                   {errors.email && (
-                    <p className="mt-0.5 text-xs text-red-600">
-                      {errors.email}
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none z-10">
-                      <FaGlobe className="text-gray-400 text-xs" />
-                    </div>
-                    <select
-                      id="modal-country"
-                      name="country"
-                      value={formData.country}
-                      onChange={handleChange}
-                      className={`w-full pl-8 pr-3 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all appearance-none bg-white text-base ${
-                        errors.country
-                          ? "border-red-300 bg-red-50"
-                          : "border-gray-300"
-                      }`}
-                      disabled={loading}
-                    >
-                      <option value="">-- Select Country --</option>
-                      {countriesWithCodesSorted.map((country) => (
-                        <option key={country.name} value={country.name}>
-                          {country.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  {errors.country && (
-                    <p className="mt-0.5 text-xs text-red-600">
-                      {errors.country}
-                    </p>
+                    <p className="mt-1 text-xs text-red-600">{errors.email}</p>
                   )}
                 </div>
 
@@ -557,7 +560,7 @@ const TestSubmissionRegistrationModal = ({
                         name="countryCode"
                         value={formData.countryCode}
                         onChange={handleChange}
-                        className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-gray-50 text-center text-sm"
+                        className="w-full px-2 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all bg-gray-50 text-center text-sm"
                         placeholder="+91"
                         readOnly
                         disabled={loading}
@@ -573,7 +576,7 @@ const TestSubmissionRegistrationModal = ({
                         name="phoneNumber"
                         value={formData.phoneNumber}
                         onChange={handleChange}
-                        className={`w-full pl-8 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm ${
+                        className={`w-full pl-8 pr-3 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-sm ${
                           errors.phoneNumber
                             ? "border-red-300 bg-red-50"
                             : "border-gray-300 bg-white"
@@ -584,7 +587,7 @@ const TestSubmissionRegistrationModal = ({
                     </div>
                   </div>
                   {errors.phoneNumber && (
-                    <p className="mt-0.5 text-xs text-red-600">
+                    <p className="mt-1 text-xs text-red-600">
                       {errors.phoneNumber}
                     </p>
                   )}
@@ -601,7 +604,7 @@ const TestSubmissionRegistrationModal = ({
                       name="password"
                       value={formData.password}
                       onChange={handleChange}
-                      className={`w-full pl-8 pr-10 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm ${
+                      className={`w-full pl-8 pr-10 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-sm ${
                         errors.password
                           ? "border-red-300 bg-red-50"
                           : "border-gray-300 bg-white"
@@ -612,7 +615,7 @@ const TestSubmissionRegistrationModal = ({
                     <button
                       type="button"
                       onClick={() => setShowPassword((s) => !s)}
-                      className="absolute inset-y-0 right-0 pr-2.5 flex items-center text-gray-400 hover:text-blue-600"
+                      className="absolute inset-y-0 right-0 pr-2.5 flex items-center text-gray-400 hover:text-indigo-600 transition-colors"
                       disabled={loading}
                     >
                       {showPassword ? (
@@ -623,7 +626,7 @@ const TestSubmissionRegistrationModal = ({
                     </button>
                   </div>
                   {errors.password && (
-                    <p className="mt-0.5 text-xs text-red-600">
+                    <p className="mt-1 text-xs text-red-600">
                       {errors.password}
                     </p>
                   )}
@@ -640,7 +643,7 @@ const TestSubmissionRegistrationModal = ({
                       name="confirmPassword"
                       value={formData.confirmPassword}
                       onChange={handleChange}
-                      className={`w-full pl-8 pr-10 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm ${
+                      className={`w-full pl-8 pr-10 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-sm ${
                         errors.confirmPassword
                           ? "border-red-300 bg-red-50"
                           : "border-gray-300 bg-white"
@@ -653,7 +656,7 @@ const TestSubmissionRegistrationModal = ({
                       onClick={() =>
                         setShowConfirmPassword(!showConfirmPassword)
                       }
-                      className="absolute inset-y-0 right-0 pr-2.5 flex items-center text-gray-400 hover:text-blue-600"
+                      className="absolute inset-y-0 right-0 pr-2.5 flex items-center text-gray-400 hover:text-indigo-600 transition-colors"
                       disabled={loading}
                     >
                       {showConfirmPassword ? (
@@ -664,7 +667,7 @@ const TestSubmissionRegistrationModal = ({
                     </button>
                   </div>
                   {errors.confirmPassword && (
-                    <p className="mt-0.5 text-xs text-red-600">
+                    <p className="mt-1 text-xs text-red-600">
                       {errors.confirmPassword}
                     </p>
                   )}
@@ -680,7 +683,7 @@ const TestSubmissionRegistrationModal = ({
                       name="prepared"
                       value={formData.prepared}
                       onChange={handleChange}
-                      className="w-full pl-8 pr-3 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all appearance-none bg-white text-base border-gray-300"
+                      className="w-full pl-8 pr-3 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all appearance-none bg-white text-sm border-gray-300"
                       disabled={loading}
                     >
                       <option value="">Select exam (optional)</option>
@@ -699,13 +702,13 @@ const TestSubmissionRegistrationModal = ({
                       errors.verification
                         ? "border-red-300 bg-red-50"
                         : isVerified
-                        ? "border-green-500 bg-green-50"
+                        ? "border-emerald-500 bg-emerald-50"
                         : "border-gray-300 bg-white"
                     }`}
                   >
                     <div className="shrink-0">
                       {isVerified ? (
-                        <div className="w-7 h-7 bg-green-500 rounded flex items-center justify-center">
+                        <div className="w-7 h-7 bg-emerald-500 rounded flex items-center justify-center">
                           <svg
                             className="w-4 h-4 text-white"
                             fill="none"
@@ -754,11 +757,11 @@ const TestSubmissionRegistrationModal = ({
                           placeholder={
                             verificationQuestion.includes("=") ? "Ans" : "Code"
                           }
-                          className={`w-full px-2 py-1.5 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-center font-semibold text-sm ${
+                          className={`w-full px-2 py-1.5 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-center font-semibold text-sm ${
                             errors.verification
                               ? "border-red-300 bg-red-50"
                               : isVerified
-                              ? "border-green-500 bg-green-50"
+                              ? "border-emerald-500 bg-emerald-50"
                               : "border-gray-300 bg-white"
                           }`}
                           autoComplete="off"
@@ -769,7 +772,7 @@ const TestSubmissionRegistrationModal = ({
                         type="button"
                         onClick={generateVerification}
                         disabled={loading}
-                        className="shrink-0 p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="shrink-0 p-1.5 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         title="Refresh verification"
                       >
                         <svg
@@ -789,25 +792,31 @@ const TestSubmissionRegistrationModal = ({
                     </div>
                   </div>
                   {errors.verification && (
-                    <p className="mt-0.5 text-xs text-red-600">
+                    <p className="mt-1 text-xs text-red-600">
                       {errors.verification}
                     </p>
                   )}
                 </div>
 
-                <div className="pt-1 flex gap-2">
-                  <button
+                <div className="pt-2 flex gap-3">
+                  <Button
                     type="button"
                     onClick={handleClose}
                     disabled={loading}
-                    className="flex-1 px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    variant="ghost"
+                    size="md"
+                    fullWidth
+                    className="flex items-center justify-center"
                   >
                     Cancel
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="submit"
                     disabled={loading}
-                    className="flex-1 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    variant="primary"
+                    size="md"
+                    fullWidth
+                    className="flex items-center justify-center gap-2"
                   >
                     {loading ? (
                       <>
@@ -817,7 +826,7 @@ const TestSubmissionRegistrationModal = ({
                     ) : (
                       <span>Submit</span>
                     )}
-                  </button>
+                  </Button>
                 </div>
               </form>
             </div>
