@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
+import Link from "next/link";
 import {
   FaChartLine,
   FaTrophy,
@@ -14,6 +15,9 @@ import {
   FaCalendarAlt,
   FaAward,
   FaFire,
+  FaUser,
+  FaUserPlus,
+  FaLock,
 } from "react-icons/fa";
 import { fetchAllStudentTestResults } from "../lib/api";
 import { useStudent } from "../hooks/useStudent";
@@ -120,8 +124,7 @@ const PerformanceTab = ({
 
     // Calculate improvement (compare first half vs second half)
     const sortedByDate = [...testResults].sort(
-      (a, b) =>
-        new Date(a.submittedAt || 0) - new Date(b.submittedAt || 0)
+      (a, b) => new Date(a.submittedAt || 0) - new Date(b.submittedAt || 0)
     );
     const midPoint = Math.floor(sortedByDate.length / 2);
     const firstHalf = sortedByDate.slice(0, midPoint);
@@ -199,8 +202,7 @@ const PerformanceTab = ({
   const chartData = useMemo(() => {
     const sorted = [...testResults]
       .sort(
-        (a, b) =>
-          new Date(b.submittedAt || 0) - new Date(a.submittedAt || 0)
+        (a, b) => new Date(b.submittedAt || 0) - new Date(a.submittedAt || 0)
       )
       .slice(0, 10)
       .reverse();
@@ -215,24 +217,93 @@ const PerformanceTab = ({
   // Calculate accuracy rate
   const accuracyRate =
     stats.totalQuestions > 0
-      ? Math.round(
-          (stats.correctAnswers / stats.totalQuestions) * 100 * 100
-        ) / 100
+      ? Math.round((stats.correctAnswers / stats.totalQuestions) * 100 * 100) /
+        100
       : 0;
 
   // Not authenticated state
   if (!isAuthenticated) {
     return (
       <div className="space-y-4 px-3 sm:px-4 py-3 sm:py-4">
-        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-6 border border-blue-200 text-center">
-          <FaChartLine className="text-4xl text-blue-600 mx-auto mb-3" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            Login Required
-          </h3>
-          <p className="text-sm text-gray-600">
-            Please log in to view your performance analytics and track your
-            progress.
-          </p>
+        <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 rounded-xl p-6 sm:p-8 border-2 border-blue-200 shadow-lg">
+          <div className="text-center mb-6">
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full mb-4 shadow-md">
+              <FaLock className="text-3xl text-white" />
+            </div>
+            <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">
+              Authentication Required
+            </h3>
+            <p className="text-sm sm:text-base text-gray-700 mb-2 max-w-2xl mx-auto leading-relaxed">
+              To access your performance analytics and track your learning
+              progress, you need to be logged in to your account.
+            </p>
+            <p className="text-xs sm:text-sm text-gray-600 mb-6 max-w-xl mx-auto">
+              Sign in to view detailed statistics, test results, progress
+              trends, and personalized insights for {entityName}.
+            </p>
+          </div>
+
+          {/* Features List */}
+          <div className="bg-white/60 rounded-lg p-4 sm:p-5 mb-6 border border-blue-100">
+            <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+              <FaChartLine className="text-blue-600" />
+              What you&apos;ll get after logging in:
+            </h4>
+            <ul className="space-y-2 text-left">
+              <li className="flex items-start gap-2 text-xs sm:text-sm text-gray-700">
+                <FaCheckCircle className="text-green-600 mt-0.5 flex-shrink-0" />
+                <span>View detailed performance analytics and statistics</span>
+              </li>
+              <li className="flex items-start gap-2 text-xs sm:text-sm text-gray-700">
+                <FaCheckCircle className="text-green-600 mt-0.5 flex-shrink-0" />
+                <span>Track your test scores and improvement trends</span>
+              </li>
+              <li className="flex items-start gap-2 text-xs sm:text-sm text-gray-700">
+                <FaCheckCircle className="text-green-600 mt-0.5 flex-shrink-0" />
+                <span>Monitor accuracy rates and time management</span>
+              </li>
+              <li className="flex items-start gap-2 text-xs sm:text-sm text-gray-700">
+                <FaCheckCircle className="text-green-600 mt-0.5 flex-shrink-0" />
+                <span>Access your complete test history and results</span>
+              </li>
+              <li className="flex items-start gap-2 text-xs sm:text-sm text-gray-700">
+                <FaCheckCircle className="text-green-600 mt-0.5 flex-shrink-0" />
+                <span>Identify strengths and areas for improvement</span>
+              </li>
+            </ul>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-4">
+            <Link
+              href="/login"
+              className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105 active:scale-95"
+            >
+              <FaUser className="text-sm" />
+              <span className="text-sm sm:text-base">Sign In</span>
+            </Link>
+            <Link
+              href="/register"
+              className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-6 py-3 bg-white hover:bg-gray-50 text-blue-600 font-semibold rounded-lg border-2 border-blue-600 shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105 active:scale-95"
+            >
+              <FaUserPlus className="text-sm" />
+              <span className="text-sm sm:text-base">Create Account</span>
+            </Link>
+          </div>
+
+          {/* Additional Info */}
+          <div className="mt-6 pt-6 border-t border-blue-200">
+            <p className="text-xs text-gray-600 text-center">
+              Don&apos;t have an account yet?{" "}
+              <Link
+                href="/register"
+                className="text-blue-600 hover:text-blue-700 font-semibold underline underline-offset-2 transition-colors"
+              >
+                Create a free account
+              </Link>{" "}
+              to start tracking your performance and unlock all features.
+            </p>
+          </div>
         </div>
       </div>
     );
@@ -282,9 +353,9 @@ const PerformanceTab = ({
             No Test Results Yet
           </h3>
           <p className="text-sm text-gray-600">
-            Complete practice tests to see your performance analytics here.
-            Your scores, progress trends, and improvement metrics will be
-            displayed once you start taking tests.
+            Complete practice tests to see your performance analytics here. Your
+            scores, progress trends, and improvement metrics will be displayed
+            once you start taking tests.
           </p>
         </div>
       </div>
@@ -318,7 +389,9 @@ const PerformanceTab = ({
               <FaChartLine className="text-white text-lg" />
             </div>
             <span
-              className={`text-2xl font-bold ${getScoreColor(stats.averageScore)}`}
+              className={`text-2xl font-bold ${getScoreColor(
+                stats.averageScore
+              )}`}
             >
               {stats.averageScore.toFixed(1)}%
             </span>
@@ -523,7 +596,10 @@ const PerformanceTab = ({
                 points={chartData
                   .map(
                     (d, i) =>
-                      `${40 + (i * (chartWidth - 60)) / (chartData.length - 1 || 1)},${
+                      `${
+                        40 +
+                        (i * (chartWidth - 60)) / (chartData.length - 1 || 1)
+                      },${
                         chartHeight -
                         (d.percentage / maxPercentage) * (chartHeight - 40) -
                         20
@@ -539,7 +615,8 @@ const PerformanceTab = ({
 
               {/* Data points */}
               {chartData.map((d, i) => {
-                const x = 40 + (i * (chartWidth - 60)) / (chartData.length - 1 || 1);
+                const x =
+                  40 + (i * (chartWidth - 60)) / (chartData.length - 1 || 1);
                 const y =
                   chartHeight -
                   (d.percentage / maxPercentage) * (chartHeight - 40) -
@@ -568,7 +645,8 @@ const PerformanceTab = ({
 
               {/* X-axis labels */}
               {chartData.map((d, i) => {
-                const x = 40 + (i * (chartWidth - 60)) / (chartData.length - 1 || 1);
+                const x =
+                  40 + (i * (chartWidth - 60)) / (chartData.length - 1 || 1);
                 return (
                   <text
                     key={i}
@@ -624,118 +702,117 @@ const PerformanceTab = ({
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {testResults
-                .slice(0, 10)
-                .map((result, index) => {
-                  const prevResult = testResults[index + 1];
-                  const trend =
-                    prevResult && result.percentage
-                      ? result.percentage - prevResult.percentage
-                      : 0;
-                  const resultAccuracy =
-                    result.totalQuestions > 0
-                      ? Math.round(
-                          ((result.correctCount || 0) /
-                            result.totalQuestions) *
-                            100 *
-                            100
-                        ) / 100
-                      : 0;
-                  
-                  // Get test name from populated testId
-                  // When populated, testId is an object: {_id: "...", name: "Test Name"}
-                  // If not populated, testId is just the ObjectId string
-                  const testName = 
-                    (result.testId && typeof result.testId === 'object' && result.testId.name) 
-                      ? result.testId.name 
-                      : "Test";
+              {testResults.slice(0, 10).map((result, index) => {
+                const prevResult = testResults[index + 1];
+                const trend =
+                  prevResult && result.percentage
+                    ? result.percentage - prevResult.percentage
+                    : 0;
+                const resultAccuracy =
+                  result.totalQuestions > 0
+                    ? Math.round(
+                        ((result.correctCount || 0) / result.totalQuestions) *
+                          100 *
+                          100
+                      ) / 100
+                    : 0;
 
-                  return (
-                    <tr
-                      key={index}
-                      className="hover:bg-gray-50 transition-colors"
-                    >
-                      <td className="px-4 py-3">
-                        <div className="max-w-[200px]">
-                          <span className="text-xs font-semibold text-gray-900 line-clamp-2">
-                            {testName}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <FaCalendarAlt className="text-gray-400 text-xs" />
-                          <span className="text-xs text-gray-700">
-                            {formatDate(result.submittedAt)}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={`text-sm font-bold ${getScoreColor(
-                            result.percentage || 0
-                          )}`}
-                        >
-                          {(result.percentage || 0).toFixed(1)}%
+                // Get test name from populated testId
+                // When populated, testId is an object: {_id: "...", name: "Test Name"}
+                // If not populated, testId is just the ObjectId string
+                const testName =
+                  result.testId &&
+                  typeof result.testId === "object" &&
+                  result.testId.name
+                    ? result.testId.name
+                    : "Test";
+
+                return (
+                  <tr
+                    key={index}
+                    className="hover:bg-gray-50 transition-colors"
+                  >
+                    <td className="px-4 py-3">
+                      <div className="max-w-[200px]">
+                        <span className="text-xs font-semibold text-gray-900 line-clamp-2">
+                          {testName}
                         </span>
-                      </td>
-                      <td className="px-4 py-3">
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <FaCalendarAlt className="text-gray-400 text-xs" />
                         <span className="text-xs text-gray-700">
-                          {result.totalMarks?.toFixed(1) || 0} /{" "}
-                          {result.maximumMarks?.toFixed(1) || 0}
+                          {formatDate(result.submittedAt)}
                         </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <div className="w-16 h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                            <div
-                              className={`h-full ${
-                                resultAccuracy >= 80
-                                  ? "bg-green-500"
-                                  : resultAccuracy >= 60
-                                  ? "bg-blue-500"
-                                  : resultAccuracy >= 40
-                                  ? "bg-yellow-500"
-                                  : "bg-red-500"
-                              }`}
-                              style={{ width: `${resultAccuracy}%` }}
-                            />
-                          </div>
-                          <span className="text-xs text-gray-600">
-                            {resultAccuracy.toFixed(0)}%
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`text-sm font-bold ${getScoreColor(
+                          result.percentage || 0
+                        )}`}
+                      >
+                        {(result.percentage || 0).toFixed(1)}%
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="text-xs text-gray-700">
+                        {result.totalMarks?.toFixed(1) || 0} /{" "}
+                        {result.maximumMarks?.toFixed(1) || 0}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-16 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full ${
+                              resultAccuracy >= 80
+                                ? "bg-green-500"
+                                : resultAccuracy >= 60
+                                ? "bg-blue-500"
+                                : resultAccuracy >= 40
+                                ? "bg-yellow-500"
+                                : "bg-red-500"
+                            }`}
+                            style={{ width: `${resultAccuracy}%` }}
+                          />
+                        </div>
+                        <span className="text-xs text-gray-600">
+                          {resultAccuracy.toFixed(0)}%
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="text-xs text-gray-700">
+                        {formatTime(result.timeTaken)}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      {trend > 0 ? (
+                        <div className="flex items-center gap-1 text-green-600">
+                          <FaArrowUp className="text-xs" />
+                          <span className="text-xs font-semibold">
+                            +{trend.toFixed(1)}%
                           </span>
                         </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className="text-xs text-gray-700">
-                          {formatTime(result.timeTaken)}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        {trend > 0 ? (
-                          <div className="flex items-center gap-1 text-green-600">
-                            <FaArrowUp className="text-xs" />
-                            <span className="text-xs font-semibold">
-                              +{trend.toFixed(1)}%
-                            </span>
-                          </div>
-                        ) : trend < 0 ? (
-                          <div className="flex items-center gap-1 text-red-600">
-                            <FaArrowDown className="text-xs" />
-                            <span className="text-xs font-semibold">
-                              {trend.toFixed(1)}%
-                            </span>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-1 text-gray-400">
-                            <FaMinus className="text-xs" />
-                            <span className="text-xs">—</span>
-                          </div>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
+                      ) : trend < 0 ? (
+                        <div className="flex items-center gap-1 text-red-600">
+                          <FaArrowDown className="text-xs" />
+                          <span className="text-xs font-semibold">
+                            {trend.toFixed(1)}%
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1 text-gray-400">
+                          <FaMinus className="text-xs" />
+                          <span className="text-xs">—</span>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -752,7 +829,9 @@ const PerformanceTab = ({
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-700">Consistent Performance</span>
+                <span className="text-sm text-gray-700">
+                  Consistent Performance
+                </span>
                 <span className="text-sm font-semibold text-green-600">
                   {stats.improvement > 0 ? "Improving" : "Stable"}
                 </span>
@@ -783,9 +862,7 @@ const PerformanceTab = ({
             <div className="space-y-2">
               {stats.averageScore < 60 && (
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-700">
-                    Overall Score
-                  </span>
+                  <span className="text-sm text-gray-700">Overall Score</span>
                   <span className="text-sm font-semibold text-orange-600">
                     Below 60%
                   </span>
