@@ -11,31 +11,7 @@ import {
 } from "@/utils/apiResponse";
 import { STATUS, ERROR_MESSAGES } from "@/constants";
 import { requireAuth } from "@/middleware/authMiddleware";
-
-// Cache for frequently accessed queries
-export const queryCache = new Map();
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
-const MAX_CACHE_SIZE = 50; // Maximum cache entries
-
-// Helper function to cleanup cache (LRU + expired entries)
-function cleanupCache() {
-  const now = Date.now();
-  
-  // First, remove expired entries
-  for (const [key, value] of queryCache.entries()) {
-    if (now - value.timestamp > CACHE_TTL) {
-      queryCache.delete(key);
-    }
-  }
-  
-  // If still over limit, remove oldest entries (LRU)
-  if (queryCache.size > MAX_CACHE_SIZE) {
-    const entries = Array.from(queryCache.entries());
-    entries.sort((a, b) => a[1].timestamp - b[1].timestamp);
-    const toDelete = entries.slice(0, entries.length - MAX_CACHE_SIZE);
-    toDelete.forEach(([key]) => queryCache.delete(key));
-  }
-}
+import cacheManager from "@/utils/cacheManager";
 
 // ---------- GET ALL PRACTICE QUESTIONS (optimized) ----------
 export async function GET(request) {
@@ -61,25 +37,22 @@ export async function GET(request) {
     }
 
     // Create cache key
-    const cacheKey = `practice-questions-${JSON.stringify(query)}-${page}-${limit}`;
-    const now = Date.now();
+    const cacheKey = `practice-questions-${JSON.stringify(
+      query
+    )}-${page}-${limit}`;
 
     // Check cache (only for active status)
-    const cached = queryCache.get(cacheKey);
-    if (
-      cached &&
-      statusFilter === STATUS.ACTIVE &&
-      now - cached.timestamp < CACHE_TTL
-    ) {
-      return NextResponse.json(cached.data);
+    if (statusFilter === STATUS.ACTIVE) {
+      const cached = cacheManager.get(cacheKey);
+      if (cached) {
+        return NextResponse.json(cached);
+      }
     }
 
     // Optimize query execution
     const shouldCount = page === 1 || limit < 100;
     const [total, questions] = await Promise.all([
-      shouldCount
-        ? PracticeQuestion.countDocuments(query)
-        : Promise.resolve(0),
+      shouldCount ? PracticeQuestion.countDocuments(query) : Promise.resolve(0),
       PracticeQuestion.find(query)
         .populate("subCategoryId", "name status categoryId")
         .sort({ orderNumber: 1, createdAt: -1 })
@@ -93,8 +66,7 @@ export async function GET(request) {
 
     // Cache the response (only for active status)
     if (statusFilter === STATUS.ACTIVE) {
-      queryCache.set(cacheKey, { data: response, timestamp: now });
-      cleanupCache();
+      cacheManager.set(cacheKey, response, 5 * 60 * 1000); // 5 minutes TTL
     }
 
     return NextResponse.json(response);
@@ -203,7 +175,7 @@ export async function POST(request) {
       .lean();
 
     // Clear cache
-    queryCache.clear();
+    cacheManager.clear("practice-questions-");
 
     return successResponse(
       populatedQuestion,
@@ -214,4 +186,3 @@ export async function POST(request) {
     return handleApiError(error, ERROR_MESSAGES.SAVE_FAILED);
   }
 }
-

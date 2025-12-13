@@ -6,13 +6,11 @@ const subjectProgressSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Student",
       required: true,
-      index: true,
     },
     subjectId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Subject",
       required: true,
-      index: true,
     },
     subjectProgress: {
       type: Number,

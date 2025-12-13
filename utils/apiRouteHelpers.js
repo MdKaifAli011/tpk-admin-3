@@ -4,11 +4,7 @@
 
 import mongoose from "mongoose";
 import { STATUS } from "@/constants";
-
-// Cache for frequently accessed queries
-const queryCache = new Map();
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
-const MAX_CACHE_SIZE = 50; // Maximum cache entries
+import cacheManager from "@/utils/cacheManager";
 
 /**
  * Build MongoDB query from search params
@@ -51,13 +47,12 @@ export function buildQueryFromParams(searchParams, options = {}) {
  */
 export async function getCachedOrExecute(cacheKey, queryFn, options = {}) {
   const { useCache = true, statusFilter } = options;
-  const now = Date.now();
 
   // Check cache (only for active status queries)
   if (useCache && statusFilter === STATUS.ACTIVE) {
-    const cached = queryCache.get(cacheKey);
-    if (cached && (now - cached.timestamp < CACHE_TTL)) {
-      return cached.data;
+    const cached = cacheManager.get(cacheKey);
+    if (cached) {
+      return cached;
     }
   }
 
@@ -66,13 +61,7 @@ export async function getCachedOrExecute(cacheKey, queryFn, options = {}) {
 
   // Cache the result (only for active status)
   if (useCache && statusFilter === STATUS.ACTIVE) {
-    queryCache.set(cacheKey, {
-      data: result,
-      timestamp: now,
-    });
-
-    // Clean up old cache entries periodically
-    cleanupQueryCache();
+    cacheManager.set(cacheKey, result, 5 * 60 * 1000); // 5 minutes TTL
   }
 
   return result;
@@ -117,12 +106,7 @@ export async function optimizedFind(Model, query, options = {}) {
       }
 
       // Apply sort, skip, limit
-      return queryBuilder
-        .sort(sort)
-        .skip(skip)
-        .limit(limit)
-        .lean()
-        .exec();
+      return queryBuilder.sort(sort).skip(skip).limit(limit).lean().exec();
     })(),
   ]);
 
@@ -130,40 +114,9 @@ export async function optimizedFind(Model, query, options = {}) {
 }
 
 /**
- * Cleanup cache - remove expired entries and enforce size limit (LRU)
- */
-function cleanupQueryCache() {
-  const now = Date.now();
-  
-  // First, remove expired entries
-  for (const [key, value] of queryCache.entries()) {
-    if (now - value.timestamp > CACHE_TTL) {
-      queryCache.delete(key);
-    }
-  }
-  
-  // If still over limit, remove oldest entries (LRU)
-  if (queryCache.size > MAX_CACHE_SIZE) {
-    const entries = Array.from(queryCache.entries());
-    entries.sort((a, b) => a[1].timestamp - b[1].timestamp);
-    const toDelete = entries.slice(0, entries.length - MAX_CACHE_SIZE);
-    toDelete.forEach(([key]) => queryCache.delete(key));
-  }
-}
-
-/**
  * Clear cache for a specific pattern or all
  * @param {string} pattern - Cache key pattern (optional)
  */
 export function clearQueryCache(pattern = null) {
-  if (pattern) {
-    for (const [key] of queryCache.entries()) {
-      if (key.includes(pattern)) {
-        queryCache.delete(key);
-      }
-    }
-  } else {
-    queryCache.clear();
-  }
+  cacheManager.clear(pattern);
 }
-

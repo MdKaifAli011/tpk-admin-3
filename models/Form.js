@@ -106,7 +106,7 @@ const formSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-formSchema.index({ formId: 1 });
+// Note: formId index is automatically created by unique: true
 formSchema.index({ status: 1 });
 formSchema.index({ createdAt: -1 });
 

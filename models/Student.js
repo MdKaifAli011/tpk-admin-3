@@ -89,7 +89,7 @@ studentSchema.methods.toJSON = function () {
 };
 
 // Indexes for performance
-studentSchema.index({ email: 1 });
+// Note: email index is automatically created by unique: true
 studentSchema.index({ status: 1 });
 studentSchema.index({ className: 1 });
 studentSchema.index({ prepared: 1 });

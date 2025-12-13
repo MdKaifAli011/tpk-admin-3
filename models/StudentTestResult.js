@@ -6,13 +6,11 @@ const studentTestResultSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Student",
       required: true,
-      index: true,
     },
     testId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "PracticeSubCategory",
       required: true,
-      index: true,
     },
     // Hierarchical references
     examId: {
@@ -141,6 +139,7 @@ const studentTestResultSchema = new mongoose.Schema(
 );
 
 // Indexes for better query performance
+// Note: Compound index on studentId + testId covers queries on studentId alone
 studentTestResultSchema.index({ studentId: 1, testId: 1 });
 studentTestResultSchema.index({ studentId: 1, submittedAt: -1 });
 studentTestResultSchema.index({ testId: 1 });
@@ -148,6 +147,7 @@ studentTestResultSchema.index({ studentId: 1, examId: 1 });
 studentTestResultSchema.index({ studentId: 1, subjectId: 1 });
 
 // Compound index to get best score per test
+// Note: This overlaps with { studentId: 1, testId: 1 } but adds percentage for sorting
 studentTestResultSchema.index({ studentId: 1, testId: 1, percentage: -1 });
 
 // Pre-save validation hook to ensure data integrity

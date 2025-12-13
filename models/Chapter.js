@@ -66,7 +66,7 @@ chapterSchema.index({ unitId: 1, slug: 1 }, { unique: true, sparse: true });
 chapterSchema.pre("save", async function (next) {
   if (this.isModified("name") || this.isNew) {
     const baseSlug = createSlug(this.name);
-    
+
     // Check if slug exists within the same unit (excluding current document for updates)
     const checkExists = async (slug, excludeId) => {
       const query = { unitId: this.unitId, slug };
@@ -76,7 +76,7 @@ chapterSchema.pre("save", async function (next) {
       const existing = await mongoose.models.Chapter.findOne(query);
       return !!existing;
     };
-    
+
     this.slug = await generateUniqueSlug(
       baseSlug,
       checkExists,
@@ -96,16 +96,29 @@ chapterSchema.pre("findOneAndDelete", async function () {
       );
 
       // Get models - dynamically import if not already registered
-      const Topic = mongoose.models.Topic || (await import("./Topic.js")).default;
-      const SubTopic = mongoose.models.SubTopic || (await import("./SubTopic.js")).default;
-      const Definition = mongoose.models.Definition || (await import("./Definition.js")).default;
-      const DefinitionDetails = mongoose.models.DefinitionDetails || (await import("./DefinitionDetails.js")).default;
-      const ChapterDetails = mongoose.models.ChapterDetails || (await import("./ChapterDetails.js")).default;
-      const PracticeSubCategory = mongoose.models.PracticeSubCategory || (await import("./PracticeSubCategory.js")).default;
-      const PracticeQuestion = mongoose.models.PracticeQuestion || (await import("./PracticeQuestion.js")).default;
+      const Topic =
+        mongoose.models.Topic || (await import("./Topic.js")).default;
+      const SubTopic =
+        mongoose.models.SubTopic || (await import("./SubTopic.js")).default;
+      const Definition =
+        mongoose.models.Definition || (await import("./Definition.js")).default;
+      const DefinitionDetails =
+        mongoose.models.DefinitionDetails ||
+        (await import("./DefinitionDetails.js")).default;
+      const ChapterDetails =
+        mongoose.models.ChapterDetails ||
+        (await import("./ChapterDetails.js")).default;
+      const PracticeSubCategory =
+        mongoose.models.PracticeSubCategory ||
+        (await import("./PracticeSubCategory.js")).default;
+      const PracticeQuestion =
+        mongoose.models.PracticeQuestion ||
+        (await import("./PracticeQuestion.js")).default;
 
       // Delete chapter details first
-      const chapterDetailsResult = await ChapterDetails.deleteMany({ chapterId: chapter._id });
+      const chapterDetailsResult = await ChapterDetails.deleteMany({
+        chapterId: chapter._id,
+      });
       console.log(
         `🗑️ Cascading delete: Deleted ${chapterDetailsResult.deletedCount} ChapterDetails for chapter ${chapter._id}`
       );
@@ -129,7 +142,9 @@ chapterSchema.pre("findOneAndDelete", async function () {
       );
 
       // Delete all definitions in this chapter
-      const definitionsResult = await Definition.deleteMany({ chapterId: chapter._id });
+      const definitionsResult = await Definition.deleteMany({
+        chapterId: chapter._id,
+      });
       console.log(
         `🗑️ Cascading delete: Deleted ${definitionsResult.deletedCount} Definitions for chapter ${chapter._id}`
       );
@@ -198,4 +213,3 @@ const Chapter =
   mongoose.models.Chapter || mongoose.model("Chapter", chapterSchema);
 
 export default Chapter;
-

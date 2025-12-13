@@ -6,31 +6,7 @@ import { parsePagination, createPaginationResponse } from "@/utils/pagination";
 import { successResponse, errorResponse, handleApiError } from "@/utils/apiResponse";
 import { STATUS, ERROR_MESSAGES } from "@/constants";
 import { requireAuth, requireAction } from "@/middleware/authMiddleware";
-
-// Cache for frequently accessed queries (simple in-memory cache)
-export const queryCache = new Map();
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
-const MAX_CACHE_SIZE = 50; // Maximum cache entries
-
-// Helper function to cleanup cache (LRU + expired entries)
-function cleanupCache() {
-  const now = Date.now();
-  
-  // First, remove expired entries
-  for (const [key, value] of queryCache.entries()) {
-    if (now - value.timestamp > CACHE_TTL) {
-      queryCache.delete(key);
-    }
-  }
-  
-  // If still over limit, remove oldest entries (LRU)
-  if (queryCache.size > MAX_CACHE_SIZE) {
-    const entries = Array.from(queryCache.entries());
-    entries.sort((a, b) => a[1].timestamp - b[1].timestamp);
-    const toDelete = entries.slice(0, entries.length - MAX_CACHE_SIZE);
-    toDelete.forEach(([key]) => queryCache.delete(key));
-  }
-}
+import cacheManager from "@/utils/cacheManager";
 
 // ---------- GET ALL UNITS ----------
 export async function GET(request) {
@@ -67,12 +43,13 @@ export async function GET(request) {
 
     // Create cache key
     const cacheKey = `units-${JSON.stringify(query)}-${page}-${limit}`;
-    const cached = queryCache.get(cacheKey);
-    const now = Date.now();
 
     // Check cache (only for active status queries to avoid stale data)
-    if (cached && statusFilter === STATUS.ACTIVE && (now - cached.timestamp < CACHE_TTL)) {
-      return NextResponse.json(cached.data);
+    if (statusFilter === STATUS.ACTIVE) {
+      const cached = cacheManager.get(cacheKey);
+      if (cached) {
+        return NextResponse.json(cached);
+      }
     }
 
     // Optimize query: only get count if we need pagination info
@@ -126,11 +103,7 @@ export async function GET(request) {
 
     // Cache the response (only for active status)
     if (statusFilter === STATUS.ACTIVE) {
-      queryCache.set(cacheKey, {
-        data: response,
-        timestamp: now,
-      });
-      cleanupCache();
+      cacheManager.set(cacheKey, response, 5 * 60 * 1000); // 5 minutes TTL
     }
 
     return NextResponse.json(response);
@@ -221,7 +194,7 @@ export async function POST(request) {
       .lean();
 
     // Clear cache when new unit is created
-    queryCache.clear();
+    cacheManager.clear("units-");
 
     return successResponse(populatedUnit, "Unit created successfully", 201);
   } catch (error) {

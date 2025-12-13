@@ -10,6 +10,7 @@ import {
   notFoundResponse,
 } from "@/utils/apiResponse";
 import { ERROR_MESSAGES, STATUS } from "@/constants";
+import cacheManager from "@/utils/cacheManager";
 
 // ---------- GET SINGLE PRACTICE QUESTION ----------
 export async function GET(_request, { params }) {
@@ -90,7 +91,9 @@ export async function PUT(request, { params }) {
       if (!mongoose.Types.ObjectId.isValid(subCategoryId)) {
         return errorResponse("Invalid subCategoryId format", 400);
       }
-      const subCategoryExists = await PracticeSubCategory.findById(subCategoryId);
+      const subCategoryExists = await PracticeSubCategory.findById(
+        subCategoryId
+      );
       if (!subCategoryExists) {
         return errorResponse("Practice subcategory not found", 404);
       }
@@ -128,10 +131,7 @@ export async function PUT(request, { params }) {
     }
 
     // Clear cache
-    const questionRouteModule = await import("../route");
-    if (questionRouteModule?.queryCache) {
-      questionRouteModule.queryCache.clear();
-    }
+    cacheManager.clear("practice-questions-");
 
     return successResponse(updated, "Practice question updated successfully");
   } catch (error) {
@@ -210,7 +210,8 @@ export async function PATCH(request, { params }) {
       }
       updateData.subCategoryId = body.subCategoryId;
     }
-    if (body.orderNumber !== undefined) updateData.orderNumber = body.orderNumber;
+    if (body.orderNumber !== undefined)
+      updateData.orderNumber = body.orderNumber;
     if (body.status !== undefined) updateData.status = body.status;
 
     if (Object.keys(updateData).length === 0) {
@@ -233,10 +234,7 @@ export async function PATCH(request, { params }) {
     }
 
     // Clear cache
-    const questionRouteModule = await import("../route");
-    if (questionRouteModule?.queryCache) {
-      questionRouteModule.queryCache.clear();
-    }
+    cacheManager.clear("practice-questions-");
 
     return successResponse(updated, "Practice question updated successfully");
   } catch (error) {
@@ -260,14 +258,10 @@ export async function DELETE(_request, { params }) {
     }
 
     // Clear cache
-    const questionRouteModule = await import("../route");
-    if (questionRouteModule?.queryCache) {
-      questionRouteModule.queryCache.clear();
-    }
+    cacheManager.clear("practice-questions-");
 
     return successResponse(null, "Practice question deleted successfully", 200);
   } catch (error) {
     return handleApiError(error, ERROR_MESSAGES.DELETE_FAILED);
   }
 }
-

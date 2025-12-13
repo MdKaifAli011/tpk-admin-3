@@ -65,11 +65,11 @@ const practiceQuestionSchema = new mongoose.Schema(
 
 // Index for better query performance
 practiceQuestionSchema.index({ subCategoryId: 1, status: 1 });
-practiceQuestionSchema.index({ subCategoryId: 1, orderNumber: 1 });
 practiceQuestionSchema.index({ status: 1 });
 practiceQuestionSchema.index({ createdAt: -1 });
 
 // Ensure unique ordering per subcategory only when orderNumber is set
+// Note: This index covers queries on subCategoryId + orderNumber, so separate index not needed
 practiceQuestionSchema.index(
   { subCategoryId: 1, orderNumber: 1 },
   { unique: true, partialFilterExpression: { orderNumber: { $exists: true } } }

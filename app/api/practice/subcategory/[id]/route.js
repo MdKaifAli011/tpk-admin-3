@@ -13,6 +13,7 @@ import {
 } from "@/utils/apiResponse";
 import { ERROR_MESSAGES, STATUS } from "@/constants";
 import { requireAuth, requireAction } from "@/middleware/authMiddleware";
+import cacheManager from "@/utils/cacheManager";
 
 // ---------- GET SINGLE PRACTICE SUBCATEGORY ----------
 export async function GET(_request, { params }) {
@@ -192,10 +193,7 @@ export async function PUT(request, { params }) {
     }
 
     // Clear cache
-    const subCategoryRouteModule = await import("../route");
-    if (subCategoryRouteModule?.queryCache) {
-      subCategoryRouteModule.queryCache.clear();
-    }
+    cacheManager.clear("practice-subcategories-");
 
     return successResponse(
       updated,
@@ -336,10 +334,7 @@ export async function PATCH(request, { params }) {
     }
 
     // Clear cache
-    const subCategoryRouteModule = await import("../route");
-    if (subCategoryRouteModule?.queryCache) {
-      subCategoryRouteModule.queryCache.clear();
-    }
+    cacheManager.clear("practice-subcategories-");
 
     return successResponse(
       updated,
@@ -372,10 +367,7 @@ export async function DELETE(_request, { params }) {
     }
 
     // Clear cache
-    const subCategoryRouteModule = await import("../route");
-    if (subCategoryRouteModule?.queryCache) {
-      subCategoryRouteModule.queryCache.clear();
-    }
+    cacheManager.clear("practice-subcategories-");
 
     return successResponse(
       deleted,

@@ -11,6 +11,7 @@ import {
 import { ERROR_MESSAGES, STATUS } from "@/constants";
 import { requireAction } from "@/middleware/authMiddleware";
 import { logger } from "@/utils/logger";
+import cacheManager from "@/utils/cacheManager";
 
 // ---------- PATCH PRACTICE SUBCATEGORY STATUS ----------
 export async function PATCH(request, { params }) {
@@ -54,15 +55,8 @@ export async function PATCH(request, { params }) {
     }
 
     // Clear cache
-    try {
-      const subCategoryRouteModule = await import("../../route");
-      if (subCategoryRouteModule?.queryCache) {
-        subCategoryRouteModule.queryCache.clear();
-        logger.info("Cleared practice subcategory query cache");
-      }
-    } catch (cacheError) {
-      logger.warn("Could not clear practice subcategory cache:", cacheError);
-    }
+    cacheManager.clear("practice-subcategories-");
+    logger.info("Cleared practice subcategory query cache");
 
     return successResponse(
       updated,

@@ -37,9 +37,10 @@ requiredVars.forEach((key) => {
   if (!process.env[key]) {
     logger.error(`❌ CRITICAL: Missing required environment variable: ${key}`);
     if (process.env.NODE_ENV === "production") {
-      logger.error("Application cannot start without required environment variables. Exiting...");
+      logger.error(
+        "Application cannot start without required environment variables. Exiting..."
+      );
       process.exit(1); // Exit in production
     }
   }
 });
-

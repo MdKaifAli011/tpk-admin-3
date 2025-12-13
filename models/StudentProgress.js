@@ -6,13 +6,11 @@ const studentProgressSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Student",
       required: true,
-      index: true,
     },
     unitId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Unit",
       required: true,
-      index: true,
     },
     progress: {
       type: Map,

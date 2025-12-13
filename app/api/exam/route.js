@@ -14,31 +14,7 @@ import {
 } from "@/utils/apiRouteHelpers";
 import { STATUS, ERROR_MESSAGES } from "@/constants";
 import { requireAction, requireAuth } from "@/middleware/authMiddleware";
-
-// Cache for frequently accessed queries
-export const queryCache = new Map();
-const CACHE_TTL = 30 * 1000; // 30 seconds (reduced from 5 minutes for faster updates)
-const MAX_CACHE_SIZE = 50; // Maximum cache entries
-
-// Helper function to cleanup cache (LRU + expired entries)
-function cleanupCache() {
-  const now = Date.now();
-  
-  // First, remove expired entries
-  for (const [key, value] of queryCache.entries()) {
-    if (now - value.timestamp > CACHE_TTL) {
-      queryCache.delete(key);
-    }
-  }
-  
-  // If still over limit, remove oldest entries (LRU)
-  if (queryCache.size > MAX_CACHE_SIZE) {
-    const entries = Array.from(queryCache.entries());
-    entries.sort((a, b) => a[1].timestamp - b[1].timestamp);
-    const toDelete = entries.slice(0, entries.length - MAX_CACHE_SIZE);
-    toDelete.forEach(([key]) => queryCache.delete(key));
-  }
-}
+import cacheManager from "@/utils/cacheManager";
 
 // ✅ GET: Fetch all exams with pagination (optimized)
 export async function GET(request) {
@@ -70,19 +46,15 @@ export async function GET(request) {
 
     // Create cache key
     const cacheKey = `exams-${statusFilter}-${page}-${limit}`;
-    const now = Date.now();
 
     // Check cache (only for active status, and skip cache for admin requests)
     // Skip cache if request has no-cache header (for immediate updates)
     const noCache = request.headers.get("cache-control") === "no-cache";
-    const cached = queryCache.get(cacheKey);
-    if (
-      !noCache &&
-      cached &&
-      statusFilter === STATUS.ACTIVE &&
-      now - cached.timestamp < CACHE_TTL
-    ) {
-      return NextResponse.json(cached.data);
+    if (!noCache && statusFilter === STATUS.ACTIVE) {
+      const cached = cacheManager.get(cacheKey);
+      if (cached) {
+        return NextResponse.json(cached);
+      }
     }
 
     // Optimize query execution
@@ -150,8 +122,7 @@ export async function GET(request) {
 
     // Cache the response (only for active status)
     if (statusFilter === STATUS.ACTIVE) {
-      queryCache.set(cacheKey, { data: response, timestamp: now });
-      cleanupCache();
+      cacheManager.set(cacheKey, response, 30 * 1000); // 30 seconds TTL
     }
 
     return NextResponse.json(response);
@@ -205,7 +176,7 @@ export async function POST(request) {
     });
 
     // Clear cache when new exam is created
-    queryCache.clear();
+    cacheManager.clear("exams-");
 
     return successResponse(newExam, "Exam created successfully", 201);
   } catch (error) {

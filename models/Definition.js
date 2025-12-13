@@ -60,18 +60,32 @@ const definitionSchema = new mongoose.Schema(
 definitionSchema.index({ subTopicId: 1, orderNumber: 1 }, { unique: true });
 
 // Compound index for unique slug per subTopic
-definitionSchema.index({ subTopicId: 1, slug: 1 }, { unique: true, sparse: true });
+definitionSchema.index(
+  { subTopicId: 1, slug: 1 },
+  { unique: true, sparse: true }
+);
 
 // Pre-save hook to auto-populate chapterId from topicId if missing (for backward compatibility)
 definitionSchema.pre("save", async function (next) {
   // If chapterId is missing but topicId exists, populate it from the topic
-  if ((!this.chapterId || this.chapterId === null || this.chapterId === undefined) && this.topicId) {
+  if (
+    (!this.chapterId ||
+      this.chapterId === null ||
+      this.chapterId === undefined) &&
+    this.topicId
+  ) {
     try {
       const Topic = mongoose.models.Topic || mongoose.model("Topic");
-      const topic = await Topic.findById(this.topicId).select("chapterId").lean();
+      const topic = await Topic.findById(this.topicId)
+        .select("chapterId")
+        .lean();
       if (topic?.chapterId) {
         this.chapterId = topic.chapterId;
-        console.log(`✅ Auto-populated chapterId ${topic.chapterId} from topicId ${this.topicId} for definition ${this._id || 'new'}`);
+        console.log(
+          `✅ Auto-populated chapterId ${topic.chapterId} from topicId ${
+            this.topicId
+          } for definition ${this._id || "new"}`
+        );
       }
     } catch (error) {
       console.error("Error auto-populating chapterId from topicId:", error);
@@ -85,7 +99,7 @@ definitionSchema.pre("save", async function (next) {
 definitionSchema.pre("save", async function (next) {
   if (this.isModified("name") || this.isNew) {
     const baseSlug = createSlug(this.name);
-    
+
     // Check if slug exists within the same subTopic (excluding current document for updates)
     const checkExists = async (slug, excludeId) => {
       const query = { subTopicId: this.subTopicId, slug };
@@ -95,7 +109,7 @@ definitionSchema.pre("save", async function (next) {
       const existing = await mongoose.models.Definition.findOne(query);
       return !!existing;
     };
-    
+
     this.slug = await generateUniqueSlug(
       baseSlug,
       checkExists,
@@ -115,9 +129,13 @@ definitionSchema.pre("findOneAndDelete", async function () {
       );
 
       // Get model - use mongoose.model() to ensure model is loaded
-      const DefinitionDetails = mongoose.models.DefinitionDetails || mongoose.model("DefinitionDetails");
+      const DefinitionDetails =
+        mongoose.models.DefinitionDetails ||
+        mongoose.model("DefinitionDetails");
 
-      const result = await DefinitionDetails.deleteMany({ definitionId: definition._id });
+      const result = await DefinitionDetails.deleteMany({
+        definitionId: definition._id,
+      });
       console.log(
         `🗑️ Cascading delete: Deleted ${result.deletedCount} DefinitionDetails for definition ${definition._id}`
       );
@@ -137,4 +155,3 @@ if (mongoose.connection?.models?.Definition) {
 const Definition = mongoose.model("Definition", definitionSchema);
 
 export default Definition;
-
