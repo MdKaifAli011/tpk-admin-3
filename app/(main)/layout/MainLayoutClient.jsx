@@ -1,5 +1,5 @@
 "use client";
-import React, { Suspense, useState, useEffect, useCallback } from "react";
+import React, { Suspense, useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { usePathname } from "next/navigation";
 import ErrorBoundary from "../../../components/ErrorBoundary.jsx";
 import Navbar from "./Navbar";
@@ -12,14 +12,19 @@ import api from "../../../lib/api.js";
 export default function MainLayoutClient({ children }) {
   const pathname = usePathname();
   
-  // Determine if sidebar should be shown (false for homepage and contact page)
-  const showSidebar = pathname !== "/" && pathname !== "/contact";
+  // Memoize showSidebar to prevent unnecessary recalculations
+  const showSidebar = useMemo(() => {
+    return pathname !== "/" && pathname !== "/contact";
+  }, [pathname]);
   
-  // Initialize sidebar as open on desktop, closed on mobile (only if showSidebar is true)
+  // Track previous showSidebar value to detect actual changes
+  const prevShowSidebarRef = useRef(showSidebar);
+  
+  // Initialize sidebar as open on desktop, closed on mobile
+  // Only initialize once, don't reset on every navigation
   const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
-    if (!showSidebar) return false;
     if (typeof window !== "undefined") {
-      return window.innerWidth >= 1024; // lg breakpoint
+      return window.innerWidth >= 1024; // lg breakpoint - open on desktop by default
     }
     return true; // Default to open for SSR
   });
@@ -32,12 +37,23 @@ export default function MainLayoutClient({ children }) {
     setIsSidebarOpen(false);
   }, []);
 
-  // Update sidebar state when showSidebar changes
+  // Only update sidebar state when transitioning TO/FROM pages that don't show sidebar
+  // This prevents flickering during normal navigation
   useEffect(() => {
-    if (!showSidebar) {
-      setIsSidebarOpen(false);
-    } else if (typeof window !== "undefined" && window.innerWidth >= 1024) {
-      setIsSidebarOpen(true);
+    const prevShowSidebar = prevShowSidebarRef.current;
+    prevShowSidebarRef.current = showSidebar;
+    
+    // Only update if showSidebar actually changed (transitioning to/from homepage/contact)
+    if (prevShowSidebar !== showSidebar) {
+      if (!showSidebar) {
+        // Navigating to homepage/contact - close sidebar
+        setIsSidebarOpen(false);
+      } else {
+        // Navigating from homepage/contact to a page with sidebar - open on desktop
+        if (typeof window !== "undefined" && window.innerWidth >= 1024) {
+          setIsSidebarOpen(true);
+        }
+      }
     }
   }, [showSidebar]);
 
@@ -119,6 +135,109 @@ export default function MainLayoutClient({ children }) {
     return () => window.removeEventListener("resize", handleResize);
   }, [isSidebarOpen, showSidebar]);
 
+  /* -------------------------------------------------------
+     Mobile Swipe Gesture — Swipe from left edge to open sidebar
+     (Standard mobile pattern: start from left edge, swipe right)
+     -------------------------------------------------------- */
+  const touchStartRef = useRef(null);
+  const touchStartXRef = useRef(0);
+  const touchStartYRef = useRef(0);
+
+  useEffect(() => {
+    // Only enable swipe gesture on mobile and when sidebar should be shown
+    if (!showSidebar) return;
+
+    const handleTouchStart = (e) => {
+      // Only handle touches on mobile
+      if (typeof window === "undefined" || window.innerWidth >= 1024) return;
+
+      const touch = e.touches[0];
+      if (!touch) return;
+
+      const startX = touch.clientX;
+      const startY = touch.clientY;
+
+      // Only start tracking if touch starts from left edge (within 20px)
+      // This prevents interfering with normal scrolling
+      if (startX <= 20) {
+        touchStartRef.current = true;
+        touchStartXRef.current = startX;
+        touchStartYRef.current = startY;
+      }
+    };
+
+    const handleTouchMove = (e) => {
+      if (!touchStartRef.current) return;
+
+      const touch = e.touches[0];
+      if (!touch) return;
+
+      const currentX = touch.clientX;
+      const currentY = touch.clientY;
+      const deltaX = currentX - touchStartXRef.current;
+      const deltaY = Math.abs(currentY - touchStartYRef.current);
+
+      // Prevent default scrolling if we're swiping horizontally
+      // Only prevent if horizontal movement is greater than vertical (swipe gesture)
+      if (Math.abs(deltaX) > deltaY && Math.abs(deltaX) > 10) {
+        e.preventDefault();
+      }
+    };
+
+    const handleTouchEnd = (e) => {
+      if (!touchStartRef.current) {
+        touchStartRef.current = null;
+        return;
+      }
+
+      const touch = e.changedTouches[0];
+      if (!touch) {
+        touchStartRef.current = null;
+        return;
+      }
+
+      const endX = touch.clientX;
+      const endY = touch.clientY;
+      const deltaX = endX - touchStartXRef.current;
+      const deltaY = Math.abs(endY - touchStartYRef.current);
+
+      // Detect swipe-from-left-edge gesture:
+      // 1. Started from left edge (already checked in touchstart)
+      // 2. Swiped right (deltaX > 0) - finger moves right, opening sidebar
+      // 3. Horizontal movement is greater than vertical (swipe gesture, not scroll)
+      // 4. Minimum swipe distance of 50px for reliable detection
+      const isSwipeRight = deltaX > 0;
+      const isHorizontalSwipe = Math.abs(deltaX) > deltaY;
+      const minSwipeDistance = 50;
+
+      if (
+        isSwipeRight &&
+        isHorizontalSwipe &&
+        Math.abs(deltaX) >= minSwipeDistance &&
+        !isSidebarOpen
+      ) {
+        // Open sidebar on swipe-right gesture
+        setIsSidebarOpen(true);
+      }
+
+      // Reset touch tracking
+      touchStartRef.current = null;
+      touchStartXRef.current = 0;
+      touchStartYRef.current = 0;
+    };
+
+    // Attach touch event listeners to document for global swipe detection
+    document.addEventListener("touchstart", handleTouchStart, { passive: true });
+    document.addEventListener("touchmove", handleTouchMove, { passive: false });
+    document.addEventListener("touchend", handleTouchEnd, { passive: true });
+
+    return () => {
+      document.removeEventListener("touchstart", handleTouchStart);
+      document.removeEventListener("touchmove", handleTouchMove);
+      document.removeEventListener("touchend", handleTouchEnd);
+    };
+  }, [showSidebar, isSidebarOpen]);
+
   // If on login/register pages, render without layout
   if (pathname === "/login" || pathname === "/register") {
     return <>{children}</>;
@@ -133,10 +252,8 @@ export default function MainLayoutClient({ children }) {
         <Navbar onMenuToggle={toggleSidebar} isMenuOpen={isSidebarOpen} />
 
         <div className="flex flex-1 relative">
-          {/* Persistent Sidebar - won't re-render on navigation */}
-          {showSidebar && (
-            <Sidebar isOpen={isSidebarOpen} onClose={closeSidebar} />
-          )}
+          {/* Persistent Sidebar - always rendered to prevent flickering */}
+          <Sidebar isOpen={showSidebar && isSidebarOpen} onClose={closeSidebar} />
 
           {/* Main content area - only this changes on navigation */}
           <main

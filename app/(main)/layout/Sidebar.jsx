@@ -69,28 +69,53 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
   // sync prop
   useEffect(() => setSidebarOpen(isOpen), [isOpen]);
 
-  // Monitor navbar height CSS variable for accurate positioning
+  // Monitor navbar height for accurate positioning - ensures no gap
   useEffect(() => {
     const updateNavbarHeight = () => {
-      const height = getComputedStyle(document.documentElement)
+      // Directly measure navbar element for most accurate height
+      const navbar = document.querySelector("nav[data-navbar]");
+      if (navbar) {
+        const height = navbar.offsetHeight;
+        if (height > 0) {
+          setNavbarHeight(height);
+          return;
+        }
+      }
+      
+      // Fallback to CSS variable if direct measurement fails
+      const cssHeight = getComputedStyle(document.documentElement)
         .getPropertyValue("--navbar-height")
         .trim();
-      if (height && height !== "0px") {
-        const numericHeight = parseInt(height, 10);
+      if (cssHeight && cssHeight !== "0px") {
+        const numericHeight = parseInt(cssHeight, 10);
         if (!isNaN(numericHeight) && numericHeight > 0) {
           setNavbarHeight(numericHeight);
         }
       }
     };
 
-    // Initial check
+    // Initial check immediately
     updateNavbarHeight();
 
-    // Watch for changes
+    // Use ResizeObserver for accurate real-time tracking
+    const navbar = document.querySelector("nav[data-navbar]");
+    let resizeObserver = null;
+    
+    if (navbar && typeof ResizeObserver !== "undefined") {
+      resizeObserver = new ResizeObserver(() => {
+        updateNavbarHeight();
+      });
+      resizeObserver.observe(navbar);
+    }
+
+    // Also watch for changes as fallback
     const interval = setInterval(updateNavbarHeight, 100);
-    const timeout = setTimeout(() => clearInterval(interval), 2000); // Stop after 2s
+    const timeout = setTimeout(() => clearInterval(interval), 2000);
 
     return () => {
+      if (resizeObserver) {
+        resizeObserver.disconnect();
+      }
       clearInterval(interval);
       clearTimeout(timeout);
     };
@@ -477,14 +502,16 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
       )}
 
       {/* Sidebar - Premium Compact 300px (280px on mobile) */}
-      {/* Positioned right after navbar - no overlap */}
+      {/* Positioned flush with navbar bottom - no gap */}
+      {/* Always rendered but hidden when not needed to prevent flickering */}
       <aside
         className={`fixed left-0 z-[40] w-[280px] sm:w-[300px] min-w-[280px] sm:min-w-[300px] max-w-[280px] sm:max-w-[300px] bg-white/98 backdrop-blur-md border-r border-gray-200/80 transform transition-transform duration-300 ease-out ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
-        } lg:flex lg:flex-col`}
+          sidebarOpen && isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+        } ${!isOpen ? "lg:hidden" : ""} lg:flex lg:flex-col`}
         style={{
           top: `${navbarHeight}px`,
           height: `calc(100vh - ${navbarHeight}px)`,
+          marginTop: 0,
           boxShadow: "0 4px 20px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.02)",
         }}
         role="complementary"
