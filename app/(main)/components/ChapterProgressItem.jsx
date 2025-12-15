@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState, useCallback, useRef } from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
 import Link from "next/link";
 import { FaCheck, FaEye } from "react-icons/fa";
 import CongratulationsModal from "./CongratulationsModal";
+import LoginPromptModal from "./LoginPromptModal";
 import {
   checkChapterCongratulationsShown,
   markChapterCongratulationsShown,
@@ -25,10 +26,60 @@ const ChapterProgressItem = ({
   const [isDragging, setIsDragging] = useState(false);
   const [showCongratulations, setShowCongratulations] = useState(false);
   const [congratulationsShown, setCongratulationsShown] = useState(false);
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [pendingProgress, setPendingProgress] = useState(null); // Store progress that needs authentication
   const prevProgressRef = useRef(initialProgress);
   const isInitializedRef = useRef(false);
   const congratulationsShownRef = useRef(false); // Use ref to avoid dependency issues
   const abortControllerRef = useRef(null);
+
+  // Check authentication status and apply pending progress after login
+  useEffect(() => {
+    const checkAuth = () => {
+      if (typeof window !== "undefined") {
+        const token = localStorage.getItem("student_token");
+        const wasAuthenticated = isAuthenticated;
+        const nowAuthenticated = !!token;
+        setIsAuthenticated(nowAuthenticated);
+
+        // If user just logged in and there's pending progress, apply it
+        if (!wasAuthenticated && nowAuthenticated && pendingProgress !== null) {
+          // Apply the pending progress
+          setLocalProgress(pendingProgress);
+          setIsCompleted(pendingProgress === 100);
+          prevProgressRef.current = pendingProgress;
+
+          // Save the progress
+          if (onProgressChange) {
+            try {
+              onProgressChange(chapter._id, pendingProgress, pendingProgress === 100);
+            } catch (error) {
+              console.error("Error updating progress after login:", error);
+            }
+          }
+
+          // Clear pending progress
+          setPendingProgress(null);
+        }
+      }
+    };
+
+    checkAuth();
+
+    // Listen for login events
+    const handleLogin = () => {
+      checkAuth();
+    };
+
+    window.addEventListener("student-login", handleLogin);
+    window.addEventListener("storage", checkAuth);
+
+    return () => {
+      window.removeEventListener("student-login", handleLogin);
+      window.removeEventListener("storage", checkAuth);
+    };
+  }, [isAuthenticated, pendingProgress, chapter._id, onProgressChange]);
 
   // Reset initialization flag when chapter or unit changes
   React.useEffect(() => {
@@ -57,7 +108,11 @@ const ChapterProgressItem = ({
     setLocalProgress(initialProgress);
     setIsCompleted(initialIsCompleted);
     prevProgressRef.current = initialProgress;
-  }, [initialProgress, initialIsCompleted]);
+    // Clear pending progress when prop updates (user logged in and progress synced)
+    if (isAuthenticated && pendingProgress !== null) {
+      setPendingProgress(null);
+    }
+  }, [initialProgress, initialIsCompleted, isAuthenticated, pendingProgress]);
 
   // Check if congratulations were already shown (prevent duplicate)
   // CRITICAL: This must complete before allowing modal to show
@@ -122,6 +177,21 @@ const ChapterProgressItem = ({
       e.stopPropagation();
       const newProgress = parseInt(e.target.value);
       const prevProgress = prevProgressRef.current;
+
+      // Check authentication - if not authenticated, show login prompt
+      if (!isAuthenticated) {
+        // Store the intended progress value
+        setPendingProgress(newProgress);
+        // Allow visual update but don't save
+        setLocalProgress(newProgress);
+        setIsCompleted(newProgress === 100);
+        
+        // Show login prompt modal
+        setShowLoginPrompt(true);
+        return;
+      }
+
+      // User is authenticated - proceed with normal flow
       setLocalProgress(newProgress);
       setIsCompleted(newProgress === 100);
       prevProgressRef.current = newProgress;
@@ -163,13 +233,21 @@ const ChapterProgressItem = ({
         }
       }
     },
-    [chapter._id, onProgressChange, unitId]
+    [chapter._id, onProgressChange, unitId, isAuthenticated]
   );
 
   const handleMarkAsDone = useCallback(
     async (e) => {
       e.stopPropagation();
       const checked = e.target.checked;
+
+      // Check authentication - if not authenticated, show login prompt
+      if (!isAuthenticated && checked) {
+        // Don't allow marking as done without login
+        e.target.checked = false;
+        setShowLoginPrompt(true);
+        return;
+      }
 
       if (checked) {
         // Mark as done
@@ -214,23 +292,28 @@ const ChapterProgressItem = ({
           }
         }
       } else {
-        // Reset if unchecked
-        setLocalProgress(0);
-        setIsCompleted(false);
-        prevProgressRef.current = 0;
-        // Reset congratulations shown flag when unchecked
-        congratulationsShownRef.current = false;
-        setCongratulationsShown(false);
-        if (onReset) {
-          try {
-            onReset(chapter._id);
-          } catch (error) {
-            console.error("Error resetting chapter progress:", error);
+        // Reset if unchecked (only if authenticated)
+        if (isAuthenticated) {
+          setLocalProgress(0);
+          setIsCompleted(false);
+          prevProgressRef.current = 0;
+          // Reset congratulations shown flag when unchecked
+          congratulationsShownRef.current = false;
+          setCongratulationsShown(false);
+          if (onReset) {
+            try {
+              onReset(chapter._id);
+            } catch (error) {
+              console.error("Error resetting chapter progress:", error);
+            }
           }
+        } else {
+          // If not authenticated, prevent unchecking
+          e.target.checked = true;
         }
       }
     },
-    [chapter._id, onMarkAsDone, onReset, unitId]
+    [chapter._id, onMarkAsDone, onReset, unitId, isAuthenticated]
   );
 
   const handleMouseDown = useCallback((e) => {
@@ -502,6 +585,21 @@ const ChapterProgressItem = ({
         onClose={() => setShowCongratulations(false)}
         chapterName={chapter.name}
         type="chapter"
+      />
+
+      {/* Login Prompt Modal - Shows when unauthenticated user tries to change progress */}
+      <LoginPromptModal
+        isOpen={showLoginPrompt}
+        onClose={() => {
+          setShowLoginPrompt(false);
+          // Reset to previous progress if user closes without logging in
+          if (pendingProgress !== null && !isAuthenticated) {
+            setLocalProgress(prevProgressRef.current);
+            setIsCompleted(prevProgressRef.current === 100);
+            setPendingProgress(null);
+          }
+        }}
+        chapterName={chapter.name}
       />
     </div>
   );

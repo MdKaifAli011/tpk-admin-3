@@ -97,7 +97,7 @@ examSchema.pre("findOneAndDelete", async function () {
       // Step 2: Find practice subcategories (depends on practiceCategoryIds)
       const practiceSubCategories = practiceCategoryIds.length > 0
         ? await PracticeSubCategory.find({
-            categoryId: { $in: practiceCategoryIds },
+        categoryId: { $in: practiceCategoryIds },
           })
             .select("_id")
             .lean()

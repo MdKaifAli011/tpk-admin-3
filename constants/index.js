@@ -111,6 +111,7 @@ export const SEO_DEFAULTS = {
     "practice tests",
   ],
   OG_IMAGE: "/logo.png",
+  FAVICON: "https://www.testprepkart.com/public/assets/images/fevicon.png",
 };
 
 // Entity Types

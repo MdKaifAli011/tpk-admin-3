@@ -23,6 +23,32 @@ export const metadata = {
   title: SEO_DEFAULTS.TITLE,
   description: SEO_DEFAULTS.DESCRIPTION,
   keywords: SEO_DEFAULTS.KEYWORDS.join(", "),
+  icons: {
+    icon: [
+      {
+        url: SEO_DEFAULTS.FAVICON,
+        type: "image/png",
+      },
+      {
+        url: SEO_DEFAULTS.FAVICON,
+        sizes: "32x32",
+        type: "image/png",
+      },
+      {
+        url: SEO_DEFAULTS.FAVICON,
+        sizes: "16x16",
+        type: "image/png",
+      },
+    ],
+    apple: [
+      {
+        url: SEO_DEFAULTS.FAVICON,
+        sizes: "180x180",
+        type: "image/png",
+      },
+    ],
+    shortcut: SEO_DEFAULTS.FAVICON,
+  },
   openGraph: {
     title: SEO_DEFAULTS.TITLE,
     description: SEO_DEFAULTS.DESCRIPTION,
