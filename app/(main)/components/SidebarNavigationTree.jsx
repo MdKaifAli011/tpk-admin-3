@@ -43,7 +43,7 @@ const SidebarNavigationTree = ({
             >
               <button
                 onClick={() => navigateTo([subject.slug])}
-                className="flex-1 overflow-hidden text-left"
+                className="flex-1 overflow-hidden text-left cursor-pointer hover:opacity-80 transition-opacity"
               >
                 <TextEllipsis
                   maxW="max-w-full"
@@ -59,6 +59,7 @@ const SidebarNavigationTree = ({
                     e.stopPropagation();
                     toggleSubject(subject.id);
                   }}
+                  className="cursor-pointer hover:opacity-70 transition-opacity"
                 >
                   <FaChevronDown
                     className={`
@@ -101,7 +102,7 @@ const SidebarNavigationTree = ({
                           onClick={() =>
                             navigateTo([subject.slug, unit.slug])
                           }
-                          className="flex-1 overflow-hidden text-left"
+                          className="flex-1 overflow-hidden text-left cursor-pointer hover:opacity-80 transition-opacity"
                         >
                           <TextEllipsis
                             maxW="max-w-full"
@@ -117,6 +118,7 @@ const SidebarNavigationTree = ({
                               e.stopPropagation();
                               toggleUnit(unit.id, subject.id);
                             }}
+                            className="cursor-pointer hover:opacity-70 transition-opacity"
                           >
                             <FaChevronDown
                               className={`
@@ -165,7 +167,7 @@ const SidebarNavigationTree = ({
                                         chapter.slug,
                                       ])
                                     }
-                                    className="flex-1 overflow-hidden text-left"
+                                    className="flex-1 overflow-hidden text-left cursor-pointer hover:opacity-80 transition-opacity"
                                   >
                                     <TextEllipsis
                                       maxW="max-w-full"
@@ -185,6 +187,7 @@ const SidebarNavigationTree = ({
                                           unit.id
                                         );
                                       }}
+                                      className="cursor-pointer hover:opacity-70 transition-opacity"
                                     >
                                       <FaChevronDown
                                         className={`
@@ -225,7 +228,8 @@ const SidebarNavigationTree = ({
                                           }
                                           className={`
                                         w-full text-left px-2 py-1.5 rounded-md
-                                        transition-all duration-200 truncate
+                                        transition-all duration-200 truncate cursor-pointer
+                                        hover:opacity-80
                                         ${
                                           isTopicActive
                                             ? "bg-rose-100/60 text-rose-700 font-medium shadow-sm"
