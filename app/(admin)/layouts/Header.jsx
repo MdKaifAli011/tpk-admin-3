@@ -1,25 +1,33 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, memo } from "react";
 import { FaUser, FaSignOutAlt, FaBars } from "react-icons/fa";
-import api from "../../../lib/api";
+import { usePathname } from "next/navigation";
 
-const Header = ({ onMenuToggle }) => {
+const Header = memo(({ onMenuToggle }) => {
+  const pathname = usePathname();
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    // Get user from localStorage (will be updated by AuthGuard/MainLayout)
-    const userStr = localStorage.getItem("user");
-    if (userStr) {
-      try {
-        const userData = JSON.parse(userStr);
-        setUser(userData);
-      } catch (error) {
-        // Silently handle parse error - user will be redirected by AuthGuard
+    // Get user from localStorage and update on pathname change
+    const updateUser = () => {
+      const userStr = localStorage.getItem("user");
+      if (userStr) {
+        try {
+          const userData = JSON.parse(userStr);
+          setUser(userData);
+        } catch (error) {
+          // Silently handle parse error
+        }
       }
-    }
-  }, []);
+    };
+
+    updateUser();
+    // Listen for storage changes (when user data is updated elsewhere)
+    window.addEventListener("storage", updateUser);
+    return () => window.removeEventListener("storage", updateUser);
+  }, [pathname]); // Update when pathname changes (in case user data was updated)
 
   return (
   <header className="fixed top-0 left-0 right-0 z-50 h-16 bg-white border-b border-gray-200 shadow-sm">
@@ -80,6 +88,8 @@ const Header = ({ onMenuToggle }) => {
     </div>
   </header>
   );
-};
+});
+
+Header.displayName = "Header";
 
 export default Header;

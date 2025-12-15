@@ -1,13 +1,8 @@
 import React from 'react'
-import MainLayout from '../../layouts/MainLayout'
 import LeadManagement from '../../components/features/LeadManagement'
 
 const LeadPage = () => {
-  return (
-    <MainLayout>
-      <LeadManagement />
-    </MainLayout>
-  )
-}
+  return <LeadManagement />;
+};
 
-export default LeadPage
+export default LeadPage;

@@ -87,145 +87,110 @@ subjectSchema.pre("findOneAndDelete", async function () {
       const PracticeSubCategory = mongoose.models.PracticeSubCategory || (await import("./PracticeSubCategory.js")).default;
       const PracticeQuestion = mongoose.models.PracticeQuestion || (await import("./PracticeQuestion.js")).default;
 
-      // Delete subject details first
-      const subjectDetailsResult = await SubjectDetails.deleteMany({
-        subjectId: subject._id,
-      });
+      // Step 1: Find all related entities in parallel (where possible)
+      const [units, practiceCategories] = await Promise.all([
+        Unit.find({ subjectId: subject._id }).select("_id").lean(),
+        PracticeCategory.find({ subjectId: subject._id }).select("_id").lean(),
+      ]);
+
+      const unitIds = units.map((u) => u._id);
+      const practiceCategoryIds = practiceCategories.map((c) => c._id);
+
       console.log(
-        `🗑️ Cascading delete: Deleted ${subjectDetailsResult.deletedCount} SubjectDetails for subject ${subject._id}`
+        `🗑️ Found ${units.length} units and ${practiceCategories.length} practice categories for subject ${subject._id}`
       );
 
-      // Find all units in this subject
-      const units = await Unit.find({ subjectId: subject._id });
-      const unitIds = units.map((unit) => unit._id);
-      console.log(`🗑️ Found ${units.length} units for subject ${subject._id}`);
+      // Step 2: Find chapters and practice subcategories in parallel
+      const [chapters, practiceSubCategories] = await Promise.all([
+        unitIds.length > 0
+          ? Chapter.find({ unitId: { $in: unitIds } }).select("_id").lean()
+          : Promise.resolve([]),
+        practiceCategoryIds.length > 0
+          ? PracticeSubCategory.find({ categoryId: { $in: practiceCategoryIds } })
+              .select("_id")
+              .lean()
+          : Promise.resolve([]),
+      ]);
 
-      // Find all chapters in these units
-      const chapters = await Chapter.find({ unitId: { $in: unitIds } });
-      const chapterIds = chapters.map((chapter) => chapter._id);
+      const chapterIds = chapters.map((c) => c._id);
+      const practiceSubCategoryIds = practiceSubCategories.map((sc) => sc._id);
+
       console.log(
-        `🗑️ Found ${chapters.length} chapters for subject ${subject._id}`
+        `🗑️ Found ${chapters.length} chapters and ${practiceSubCategories.length} practice subcategories for subject ${subject._id}`
       );
 
-      // Find all definitions in these chapters
-      const definitions = await Definition.find({ chapterId: { $in: chapterIds } });
-      const definitionIds = definitions.map((definition) => definition._id);
+      // Step 3: Find definitions and topics in parallel
+      const [definitions, topics] = await Promise.all([
+        chapterIds.length > 0
+          ? Definition.find({ chapterId: { $in: chapterIds } }).select("_id").lean()
+          : Promise.resolve([]),
+        chapterIds.length > 0
+          ? Topic.find({ chapterId: { $in: chapterIds } }).select("_id").lean()
+          : Promise.resolve([]),
+      ]);
+
+      const definitionIds = definitions.map((d) => d._id);
+      const topicIds = topics.map((t) => t._id);
+
       console.log(
-        `🗑️ Found ${definitions.length} definitions for subject ${subject._id}`
+        `🗑️ Found ${definitions.length} definitions and ${topics.length} topics for subject ${subject._id}`
       );
 
-      // Delete all definition details
-      let definitionDetailsResult = { deletedCount: 0 };
-      if (definitionIds.length > 0) {
-        definitionDetailsResult = await DefinitionDetails.deleteMany({
-          definitionId: { $in: definitionIds },
-        });
-      }
+      // Step 4: Delete all independent entities in parallel
+      const [
+        subjectDetailsResult,
+        unitsResult,
+        practiceCategoriesResult,
+      ] = await Promise.all([
+        SubjectDetails.deleteMany({ subjectId: subject._id }),
+        Unit.deleteMany({ subjectId: subject._id }),
+        PracticeCategory.deleteMany({ subjectId: subject._id }),
+      ]);
+
       console.log(
-        `🗑️ Cascading delete: Deleted ${definitionDetailsResult.deletedCount} DefinitionDetails for subject ${subject._id}`
+        `🗑️ Cascading delete: Deleted ${subjectDetailsResult.deletedCount} SubjectDetails, ${unitsResult.deletedCount} Units, ${practiceCategoriesResult.deletedCount} PracticeCategories for subject ${subject._id}`
       );
 
-      // Delete all definitions in these chapters
-      let definitionsResult = { deletedCount: 0 };
-      if (chapterIds.length > 0) {
-        definitionsResult = await Definition.deleteMany({
-          chapterId: { $in: chapterIds },
-        });
-      }
+      // Step 5: Delete chapters, topics, definitions, and practice subcategories in parallel
+      const [
+        chaptersResult,
+        topicsResult,
+        definitionsResult,
+        practiceSubCategoriesResult,
+      ] = await Promise.all([
+        unitIds.length > 0
+          ? Chapter.deleteMany({ unitId: { $in: unitIds } })
+          : Promise.resolve({ deletedCount: 0 }),
+        chapterIds.length > 0
+          ? Topic.deleteMany({ chapterId: { $in: chapterIds } })
+          : Promise.resolve({ deletedCount: 0 }),
+        chapterIds.length > 0
+          ? Definition.deleteMany({ chapterId: { $in: chapterIds } })
+          : Promise.resolve({ deletedCount: 0 }),
+        practiceCategoryIds.length > 0
+          ? PracticeSubCategory.deleteMany({ categoryId: { $in: practiceCategoryIds } })
+          : Promise.resolve({ deletedCount: 0 }),
+      ]);
+
       console.log(
-        `🗑️ Cascading delete: Deleted ${definitionsResult.deletedCount} Definitions for subject ${subject._id}`
+        `🗑️ Cascading delete: Deleted ${chaptersResult.deletedCount} Chapters, ${topicsResult.deletedCount} Topics, ${definitionsResult.deletedCount} Definitions, ${practiceSubCategoriesResult.deletedCount} PracticeSubCategories for subject ${subject._id}`
       );
 
-      // Find all topics in these chapters
-      const topics = await Topic.find({ chapterId: { $in: chapterIds } });
-      const topicIds = topics.map((topic) => topic._id);
-      console.log(
-        `🗑️ Found ${topics.length} topics for subject ${subject._id}`
-      );
+      // Step 6: Delete dependent entities in parallel
+      const [definitionDetailsResult, subTopicsResult, practiceQuestionsResult] = await Promise.all([
+        definitionIds.length > 0
+          ? DefinitionDetails.deleteMany({ definitionId: { $in: definitionIds } })
+          : Promise.resolve({ deletedCount: 0 }),
+        topicIds.length > 0
+          ? SubTopic.deleteMany({ topicId: { $in: topicIds } })
+          : Promise.resolve({ deletedCount: 0 }),
+        practiceSubCategoryIds.length > 0
+          ? PracticeQuestion.deleteMany({ subCategoryId: { $in: practiceSubCategoryIds } })
+          : Promise.resolve({ deletedCount: 0 }),
+      ]);
 
-      // Delete all subtopics in these topics
-      let subTopicsResult = { deletedCount: 0 };
-      if (topicIds.length > 0) {
-        subTopicsResult = await SubTopic.deleteMany({
-          topicId: { $in: topicIds },
-        });
-      }
       console.log(
-        `🗑️ Cascading delete: Deleted ${subTopicsResult.deletedCount} SubTopics for subject ${subject._id}`
-      );
-
-      // Delete all topics in these chapters
-      let topicsResult = { deletedCount: 0 };
-      if (chapterIds.length > 0) {
-        topicsResult = await Topic.deleteMany({
-          chapterId: { $in: chapterIds },
-        });
-      }
-      console.log(
-        `🗑️ Cascading delete: Deleted ${topicsResult.deletedCount} Topics for subject ${subject._id}`
-      );
-
-      // Delete all chapters in these units
-      let chaptersResult = { deletedCount: 0 };
-      if (unitIds.length > 0) {
-        chaptersResult = await Chapter.deleteMany({ unitId: { $in: unitIds } });
-      }
-      console.log(
-        `🗑️ Cascading delete: Deleted ${chaptersResult.deletedCount} Chapters for subject ${subject._id}`
-      );
-
-      // Delete all units in this subject
-      const unitsResult = await Unit.deleteMany({ subjectId: subject._id });
-      console.log(
-        `🗑️ Cascading delete: Deleted ${unitsResult.deletedCount} Units for subject ${subject._id}`
-      );
-
-      // Find all practice categories for this subject
-      const practiceCategories = await PracticeCategory.find({ subjectId: subject._id });
-      const practiceCategoryIds = practiceCategories.map((category) => category._id);
-      console.log(
-        `🗑️ Found ${practiceCategories.length} practice categories for subject ${subject._id}`
-      );
-
-      // Find all practice subcategories in these categories
-      const practiceSubCategories = await PracticeSubCategory.find({
-        categoryId: { $in: practiceCategoryIds },
-      });
-      const practiceSubCategoryIds = practiceSubCategories.map(
-        (subCategory) => subCategory._id
-      );
-      console.log(
-        `🗑️ Found ${practiceSubCategories.length} practice subcategories for subject ${subject._id}`
-      );
-
-      // Delete all practice questions in these subcategories
-      let practiceQuestionsResult = { deletedCount: 0 };
-      if (practiceSubCategoryIds.length > 0) {
-        practiceQuestionsResult = await PracticeQuestion.deleteMany({
-          subCategoryId: { $in: practiceSubCategoryIds },
-        });
-      }
-      console.log(
-        `🗑️ Cascading delete: Deleted ${practiceQuestionsResult.deletedCount} PracticeQuestions for subject ${subject._id}`
-      );
-
-      // Delete all practice subcategories
-      let practiceSubCategoriesResult = { deletedCount: 0 };
-      if (practiceCategoryIds.length > 0) {
-        practiceSubCategoriesResult = await PracticeSubCategory.deleteMany({
-          categoryId: { $in: practiceCategoryIds },
-        });
-      }
-      console.log(
-        `🗑️ Cascading delete: Deleted ${practiceSubCategoriesResult.deletedCount} PracticeSubCategories for subject ${subject._id}`
-      );
-
-      // Delete all practice categories
-      const practiceCategoriesResult = await PracticeCategory.deleteMany({
-        subjectId: subject._id,
-      });
-      console.log(
-        `🗑️ Cascading delete: Deleted ${practiceCategoriesResult.deletedCount} PracticeCategories for subject ${subject._id}`
+        `🗑️ Cascading delete: Deleted ${definitionDetailsResult.deletedCount} DefinitionDetails, ${subTopicsResult.deletedCount} SubTopics, ${practiceQuestionsResult.deletedCount} PracticeQuestions for subject ${subject._id}`
       );
     }
   } catch (error) {

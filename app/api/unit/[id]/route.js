@@ -8,6 +8,7 @@ import mongoose from "mongoose";
 import { successResponse, errorResponse, handleApiError, notFoundResponse } from "@/utils/apiResponse";
 import { ERROR_MESSAGES } from "@/constants";
 import { requireAuth, requireAction } from "@/middleware/authMiddleware";
+import cacheManager from "@/utils/cacheManager";
 
 // ---------- GET SINGLE UNIT ----------
 export async function GET(request, { params }) {
@@ -97,14 +98,7 @@ export async function PUT(request, { params }) {
     }
 
     // Clear cache when unit is updated
-    try {
-      const unitRouteModule = await import("../route");
-      if (unitRouteModule?.queryCache) {
-        unitRouteModule.queryCache.clear();
-      }
-    } catch (cacheError) {
-      // Ignore cache errors
-    }
+    cacheManager.clear("unit");
 
     return successResponse(updated, "Unit updated successfully");
   } catch (error) {
@@ -158,14 +152,7 @@ export async function PATCH(request, { params }) {
     }
 
     // Clear cache when unit is updated
-    try {
-      const unitRouteModule = await import("../route");
-      if (unitRouteModule?.queryCache) {
-        unitRouteModule.queryCache.clear();
-      }
-    } catch (cacheError) {
-      // Ignore cache errors
-    }
+    cacheManager.clear("unit");
 
     return successResponse(updated, "Unit updated successfully");
   } catch (error) {

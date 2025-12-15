@@ -9,6 +9,7 @@ import {
   notFoundResponse,
 } from "@/utils/apiResponse";
 import { ERROR_MESSAGES, STATUS } from "@/constants";
+import cacheManager from "@/utils/cacheManager";
 
 // ---------- GET SINGLE PRACTICE CATEGORY ----------
 export async function GET(_request, { params }) {
@@ -115,10 +116,7 @@ export async function PUT(request, { params }) {
     }
 
     // Clear cache
-    const categoryRouteModule = await import("../route");
-    if (categoryRouteModule?.queryCache) {
-      categoryRouteModule.queryCache.clear();
-    }
+    cacheManager.clear("practice-categories");
 
     return successResponse(updated, "Practice category updated successfully");
   } catch (error) {
@@ -186,10 +184,7 @@ export async function PATCH(request, { params }) {
     }
 
     // Clear cache
-    const categoryRouteModule = await import("../route");
-    if (categoryRouteModule?.queryCache) {
-      categoryRouteModule.queryCache.clear();
-    }
+    cacheManager.clear("practice-categories");
 
     return successResponse(updated, "Practice category updated successfully");
   } catch (error) {
@@ -213,10 +208,7 @@ export async function DELETE(_request, { params }) {
     }
 
     // Clear cache
-    const categoryRouteModule = await import("../route");
-    if (categoryRouteModule?.queryCache) {
-      categoryRouteModule.queryCache.clear();
-    }
+    cacheManager.clear("practice-categories");
 
     return successResponse(deleted, "Practice category deleted successfully");
   } catch (error) {

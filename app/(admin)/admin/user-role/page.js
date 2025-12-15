@@ -1,6 +1,5 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import MainLayout from "../../layouts/MainLayout";
 import {
   FaUsers,
   FaShieldAlt,
@@ -270,8 +269,7 @@ const UserRolePage = () => {
   };
 
   return (
-    <MainLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* Page Header */}
         <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 border border-gray-200 rounded-lg shadow-sm p-6">
           <div className="flex items-center justify-between">
@@ -972,7 +970,6 @@ const UserRolePage = () => {
           })}
         </div>
       </div>
-    </MainLayout>
   );
 };
 

@@ -1,6 +1,5 @@
 "use client";
 import React, { useState, useEffect, useMemo } from "react";
-import MainLayout from "../layouts/MainLayout";
 import Link from "next/link";
 import {
   FaClipboardList,
@@ -252,26 +251,21 @@ const AdminDashboard = () => {
 
   if (isLoading) {
     return (
-      <MainLayout>
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <LoadingSpinner size="large" />
-        </div>
-      </MainLayout>
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <LoadingSpinner size="large" />
+      </div>
     );
   }
 
   if (error) {
     return (
-      <MainLayout>
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg shadow-sm">
-          {error}
-        </div>
-      </MainLayout>
+      <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg shadow-sm">
+        {error}
+      </div>
     );
   }
 
   return (
-    <MainLayout>
       <div className="space-y-6">
         {/* Header */}
         <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 rounded-lg border border-gray-200 p-6 shadow-sm">
@@ -490,7 +484,6 @@ const AdminDashboard = () => {
           </div>
         </div>
       </div>
-    </MainLayout>
   );
 };
 

@@ -8,6 +8,7 @@ import Topic from "@/models/Topic";
 import SubTopic from "@/models/SubTopic";
 import mongoose from "mongoose";
 import { logger } from "@/utils/logger";
+import cacheManager from "@/utils/cacheManager";
 
 // ---------- PATCH SUBJECT STATUS (with Cascading) ----------
 export async function PATCH(request, { params }) {
@@ -101,15 +102,7 @@ export async function PATCH(request, { params }) {
     logger.info(`Updated ${unitsResult.modifiedCount} Units`);
 
     // Clear cache for subject queries
-    try {
-      const subjectRouteModule = await import("../../route");
-      if (subjectRouteModule?.queryCache) {
-        subjectRouteModule.queryCache.clear();
-        logger.info("Cleared subject query cache");
-      }
-    } catch (cacheError) {
-      logger.warn("Could not clear subject cache:", cacheError);
-    }
+    cacheManager.clear("subject");
 
     return NextResponse.json({
       success: true,

@@ -3,6 +3,7 @@ import connectDB from "@/lib/mongodb";
 import PracticeCategory from "@/models/PracticeCategory";
 import mongoose from "mongoose";
 import { logger } from "@/utils/logger";
+import cacheManager from "@/utils/cacheManager";
 
 // ---------- PATCH PRACTICE CATEGORY STATUS ----------
 export async function PATCH(request, { params }) {
@@ -47,15 +48,7 @@ export async function PATCH(request, { params }) {
     }
 
     // Clear cache
-    try {
-      const categoryRouteModule = await import("../../route");
-      if (categoryRouteModule?.queryCache) {
-        categoryRouteModule.queryCache.clear();
-        logger.info("Cleared practice category query cache");
-      }
-    } catch (cacheError) {
-      logger.warn("Could not clear practice category cache:", cacheError);
-    }
+    cacheManager.clear("practice-categories");
 
     return NextResponse.json({
       success: true,

@@ -1,6 +1,5 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import MainLayout from "../../layouts/MainLayout";
 import {
   FaUser,
   FaEnvelope,
@@ -238,46 +237,40 @@ const ProfilePage = () => {
 
   if (loading) {
     return (
-      <MainLayout>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <LoadingSpinner size="large" />
-            <p className="text-sm text-gray-500 mt-4">Loading profile...</p>
-          </div>
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <LoadingSpinner size="large" />
+          <p className="text-sm text-gray-500 mt-4">Loading profile...</p>
         </div>
-      </MainLayout>
+      </div>
     );
   }
 
   if (error && !user) {
     return (
-      <MainLayout>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center bg-white rounded-lg border border-red-200 p-8 max-w-md">
-            <span className="text-3xl mb-4 inline-block">⚠️</span>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">Error</h3>
-            <p className="text-sm text-gray-500 mb-6">{error}</p>
-          </div>
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center bg-white rounded-lg border border-red-200 p-8 max-w-md">
+          <span className="text-3xl mb-4 inline-block">⚠️</span>
+          <h3 className="text-xl font-bold text-gray-900 mb-2">Error</h3>
+          <p className="text-sm text-gray-500 mb-6">{error}</p>
         </div>
-      </MainLayout>
+      </div>
     );
   }
 
   if (!user) {
     return (
-      <MainLayout>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center bg-white rounded-lg border border-gray-200 p-8 max-w-md">
-            <span className="text-3xl mb-4 inline-block">👤</span>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">
-              No User Data
-            </h3>
-            <p className="text-sm text-gray-500 mb-6">
-              User data not found. Please login again.
-            </p>
-          </div>
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center bg-white rounded-lg border border-gray-200 p-8 max-w-md">
+          <span className="text-3xl mb-4 inline-block">👤</span>
+          <h3 className="text-xl font-bold text-gray-900 mb-2">
+            No User Data
+          </h3>
+          <p className="text-sm text-gray-500 mb-6">
+            User data not found. Please login again.
+          </p>
         </div>
-      </MainLayout>
+      </div>
     );
   }
 
@@ -285,7 +278,7 @@ const ProfilePage = () => {
   const RoleIcon = roleInfo.icon;
 
   return (
-    <MainLayout>
+    <>
       <ToastContainer toasts={toasts} removeToast={removeToast} />
       <div className="space-y-6">
         {/* Page Header */}
@@ -588,7 +581,7 @@ const ProfilePage = () => {
           </div>
         </div>
       </div>
-    </MainLayout>
+    </>
   );
 };
 

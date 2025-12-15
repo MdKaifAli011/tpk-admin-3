@@ -14,6 +14,7 @@ import {
 } from "@/utils/apiResponse";
 import { ERROR_MESSAGES } from "@/constants";
 import { requireAuth, requireAction } from "@/middleware/authMiddleware";
+import cacheManager from "@/utils/cacheManager";
 
 // ---------- GET SINGLE SUBJECT ----------
 export async function GET(_request, { params }) {
@@ -119,14 +120,7 @@ export async function PUT(request, { params }) {
     }
 
     // Clear cache when subject is updated
-    try {
-      const subjectRouteModule = await import("../route");
-      if (subjectRouteModule?.queryCache) {
-        subjectRouteModule.queryCache.clear();
-      }
-    } catch (cacheError) {
-      // Ignore cache errors
-    }
+    cacheManager.clear("subject");
 
     return successResponse(updated, "Subject updated successfully");
   } catch (error) {
@@ -176,14 +170,7 @@ export async function PATCH(request, { params }) {
     }
 
     // Clear cache when subject is updated
-    try {
-      const subjectRouteModule = await import("../route");
-      if (subjectRouteModule?.queryCache) {
-        subjectRouteModule.queryCache.clear();
-      }
-    } catch (cacheError) {
-      // Ignore cache errors
-    }
+    cacheManager.clear("subject");
 
     return successResponse(updated, "Subject updated successfully");
   } catch (error) {

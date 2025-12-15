@@ -91,45 +91,34 @@ topicSchema.pre("findOneAndDelete", async function () {
       const PracticeSubCategory = mongoose.models.PracticeSubCategory || (await import("./PracticeSubCategory.js")).default;
       const PracticeQuestion = mongoose.models.PracticeQuestion || (await import("./PracticeQuestion.js")).default;
 
-      // Delete topic details first
-      const topicDetailsResult = await TopicDetails.deleteMany({ topicId: topic._id });
-      console.log(
-        `🗑️ Cascading delete: Deleted ${topicDetailsResult.deletedCount} TopicDetails for topic ${topic._id}`
-      );
-
-      const result = await SubTopic.deleteMany({ topicId: topic._id });
-      console.log(
-        `🗑️ Cascading delete: Deleted ${result.deletedCount} SubTopics for topic ${topic._id}`
-      );
-
-      // Find all practice subcategories for this topic
+      // Step 1: Find practice subcategories
       const practiceSubCategories = await PracticeSubCategory.find({
         topicId: topic._id,
-      });
-      const practiceSubCategoryIds = practiceSubCategories.map(
-        (subCategory) => subCategory._id
-      );
+      }).select("_id").lean();
+      const practiceSubCategoryIds = practiceSubCategories.map((sc) => sc._id);
+
       console.log(
         `🗑️ Found ${practiceSubCategories.length} practice subcategories for topic ${topic._id}`
       );
 
-      // Delete all practice questions in these subcategories
-      let practiceQuestionsResult = { deletedCount: 0 };
-      if (practiceSubCategoryIds.length > 0) {
-        practiceQuestionsResult = await PracticeQuestion.deleteMany({
-          subCategoryId: { $in: practiceSubCategoryIds },
-        });
-      }
+      // Step 2: Delete all independent entities in parallel
+      const [topicDetailsResult, subTopicsResult, practiceSubCategoriesResult] = await Promise.all([
+        TopicDetails.deleteMany({ topicId: topic._id }),
+        SubTopic.deleteMany({ topicId: topic._id }),
+        PracticeSubCategory.deleteMany({ topicId: topic._id }),
+      ]);
+
       console.log(
-        `🗑️ Cascading delete: Deleted ${practiceQuestionsResult.deletedCount} PracticeQuestions for topic ${topic._id}`
+        `🗑️ Cascading delete: Deleted ${topicDetailsResult.deletedCount} TopicDetails, ${subTopicsResult.deletedCount} SubTopics, ${practiceSubCategoriesResult.deletedCount} PracticeSubCategories for topic ${topic._id}`
       );
 
-      // Delete all practice subcategories
-      const practiceSubCategoriesResult = await PracticeSubCategory.deleteMany({
-        topicId: topic._id,
-      });
+      // Step 3: Delete dependent entities
+      const practiceQuestionsResult = practiceSubCategoryIds.length > 0
+        ? await PracticeQuestion.deleteMany({ subCategoryId: { $in: practiceSubCategoryIds } })
+        : { deletedCount: 0 };
+
       console.log(
-        `🗑️ Cascading delete: Deleted ${practiceSubCategoriesResult.deletedCount} PracticeSubCategories for topic ${topic._id}`
+        `🗑️ Cascading delete: Deleted ${practiceQuestionsResult.deletedCount} PracticeQuestions for topic ${topic._id}`
       );
     }
   } catch (error) {

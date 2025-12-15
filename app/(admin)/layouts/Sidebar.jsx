@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, memo, useMemo } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -58,35 +58,48 @@ const ALL_MENU_ITEMS = [
   },
 ];
 
-const Sidebar = ({ isOpen, onClose }) => {
+const Sidebar = memo(({ isOpen, onClose }) => {
   const pathname = usePathname();
+  const [userRole, setUserRole] = useState(null);
 
-  // Get user role from localStorage
-  const getUserRole = () => {
-    if (typeof window === "undefined") return null;
-    const user = localStorage.getItem("user");
-    if (user) {
-      try {
-        const userData = JSON.parse(user);
-        return userData.role || null;
-      } catch (error) {
-        console.error("Error parsing user data:", error);
-        return null;
+  // Get user role from localStorage (memoized)
+  useEffect(() => {
+    const getUserRole = () => {
+      if (typeof window === "undefined") return null;
+      const user = localStorage.getItem("user");
+      if (user) {
+        try {
+          const userData = JSON.parse(user);
+          return userData.role || null;
+        } catch (error) {
+          console.error("Error parsing user data:", error);
+          return null;
+        }
       }
-    }
-    return null;
-  };
+      return null;
+    };
 
-  // Filter menu items based on user role
-  const userRole = getUserRole();
-  const MENU_ITEMS = ALL_MENU_ITEMS.filter((item) => {
-    // Show admin-only items only if user is admin
-    if (item.adminOnly) {
-      return userRole === "admin";
-    }
-    // Show all other items to all users
-    return true;
-  });
+    setUserRole(getUserRole());
+    
+    // Listen for storage changes
+    const handleStorageChange = () => {
+      setUserRole(getUserRole());
+    };
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, [pathname]); // Update when pathname changes
+
+  // Filter menu items based on user role (memoized)
+  const MENU_ITEMS = useMemo(() => {
+    return ALL_MENU_ITEMS.filter((item) => {
+      // Show admin-only items only if user is admin
+      if (item.adminOnly) {
+        return userRole === "admin";
+      }
+      // Show all other items to all users
+      return true;
+    });
+  }, [userRole]);
 
   const isActive = (href) =>
     pathname === href || pathname.startsWith(href + "/");
@@ -198,5 +211,8 @@ const Sidebar = ({ isOpen, onClose }) => {
       </aside>
     </>
   );
-};
+});
+
+Sidebar.displayName = "Sidebar";
+
 export default Sidebar;

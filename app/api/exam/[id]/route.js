@@ -11,6 +11,7 @@ import { successResponse, errorResponse, handleApiError, notFoundResponse } from
 import { ERROR_MESSAGES } from "@/constants";
 import { requireAction, requireAuth } from "@/middleware/authMiddleware";
 import { logger } from "@/utils/logger";
+import cacheManager from "@/utils/cacheManager";
 
 // ---------- GET SINGLE EXAM ----------
 export async function GET(request, { params }) {
@@ -96,15 +97,7 @@ export async function PUT(request, { params }) {
     });
 
     // Clear cache when exam is updated
-    try {
-      const examRouteModule = await import("../route");
-      if (examRouteModule?.queryCache) {
-        examRouteModule.queryCache.clear();
-        logger.info("Cleared exam query cache after update");
-      }
-    } catch (cacheError) {
-      logger.warn("Could not clear exam cache:", cacheError);
-    }
+    cacheManager.clear("exam");
 
     return successResponse(updated, "Exam updated successfully");
   } catch (error) {
@@ -217,15 +210,7 @@ export async function PATCH(request, { params }) {
     }
 
     // Clear cache for exam queries
-    try {
-      const examRouteModule = await import("../route");
-      if (examRouteModule?.queryCache) {
-        examRouteModule.queryCache.clear();
-        logger.info("Cleared exam query cache");
-      }
-    } catch (cacheError) {
-      logger.warn("Could not clear exam cache:", cacheError);
-    }
+    cacheManager.clear("exam");
 
     return successResponse(
       updated,
@@ -258,15 +243,7 @@ export async function DELETE(request, { params }) {
     }
 
     // Clear cache when exam is deleted
-    try {
-      const examRouteModule = await import("../route");
-      if (examRouteModule?.queryCache) {
-        examRouteModule.queryCache.clear();
-        logger.info("Cleared exam query cache after delete");
-      }
-    } catch (cacheError) {
-      logger.warn("Could not clear exam cache:", cacheError);
-    }
+    cacheManager.clear("exam");
 
     return successResponse(deleted, "Exam deleted successfully");
   } catch (error) {
