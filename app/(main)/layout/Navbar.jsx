@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, memo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -19,7 +19,7 @@ import {
 import Image from "next/image";
 import { useStudent } from "../hooks/useStudent";
 
-const Navbar = ({ onMenuToggle, isMenuOpen }) => {
+const Navbar = memo(({ onMenuToggle, isMenuOpen }) => {
   const [isNavMenuOpen, setIsNavMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const router = useRouter();
@@ -416,6 +416,8 @@ const Navbar = ({ onMenuToggle, isMenuOpen }) => {
       </div>
     </nav>
   );
-};
+});
+
+Navbar.displayName = "Navbar";
 
 export default Navbar;

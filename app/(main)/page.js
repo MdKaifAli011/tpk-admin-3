@@ -1,7 +1,6 @@
 "use client";
 import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
-import MainLayout from "./layout/MainLayout";
 import ExamCard from "./components/ExamCard";
 import Card from "./components/Card";
 import Button from "./components/Button";
@@ -588,19 +587,17 @@ function HomepageContent() {
 ======================================================= */
 export default function HomePage() {
   return (
-    <MainLayout showSidebar={false}>
-      <Suspense
-        fallback={
-          <div className="flex justify-center items-center min-h-screen">
-            <div className="text-center">
-              <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-indigo-500 border-t-transparent mb-4"></div>
-              <p className="text-gray-500">Loading amazing content...</p>
-            </div>
+    <Suspense
+      fallback={
+        <div className="flex justify-center items-center min-h-screen">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-indigo-500 border-t-transparent mb-4"></div>
+            <p className="text-gray-500">Loading amazing content...</p>
           </div>
-        }
-      >
-        <HomepageContent />
-      </Suspense>
-    </MainLayout>
+        </div>
+      }
+    >
+      <HomepageContent />
+    </Suspense>
   );
 }

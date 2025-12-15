@@ -1,6 +1,5 @@
 import React from "react";
 import { notFound } from "next/navigation";
-import MainLayout from "../../../../../../../layout/MainLayout";
 import { FaBookOpen } from "react-icons/fa";
 import TabsClient from "../../../../../../../components/TabsClient";
 import NavigationClient from "../../../../../../../components/NavigationClient";
@@ -194,7 +193,7 @@ const DefinitionPage = async ({ params }) => {
   ]);
 
   return (
-    <MainLayout>
+    <>
       <ProgressTracker
         unitId={unit._id}
         chapterId={chapter._id}
@@ -296,7 +295,7 @@ const DefinitionPage = async ({ params }) => {
           nextNav={nextNav}
         />
       </div>
-    </MainLayout>
+    </>
   );
 };
 

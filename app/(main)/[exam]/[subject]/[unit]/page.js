@@ -1,6 +1,5 @@
 import React from "react";
 import { notFound } from "next/navigation";
-import MainLayout from "../../../layout/MainLayout";
 import { FaBook } from "react-icons/fa";
 import TabsClient from "../../../components/TabsClient";
 import NavigationClient from "../../../components/NavigationClient";
@@ -111,8 +110,7 @@ const UnitPage = async ({ params }) => {
   ]);
 
   return (
-    <MainLayout>
-      <div className="space-y-4">
+    <div className="space-y-4">
       {/* Premium Educational Header */}
 <section
   className="
@@ -200,7 +198,6 @@ const UnitPage = async ({ params }) => {
         {/* Unit Completion Tracker */}
         <UnitCompletionTracker unitId={unit._id} unitName={unit.name} />
       </div>
-    </MainLayout>
   );
 };
 

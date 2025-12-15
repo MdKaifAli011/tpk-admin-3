@@ -1,6 +1,5 @@
 "use client";
 import React from "react";
-import MainLayout from "../layout/MainLayout";
 import ContactForm from "../components/ContactForm";
 import {
   FaPhone,
@@ -154,8 +153,7 @@ const ContactPage = () => {
   ];
 
   return (
-    <MainLayout showSidebar={false}>
-      <div className="space-y-8 py-6">
+    <div className="space-y-8 py-6">
         {/* Hero Section */}
         <section className="bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 rounded-xl p-6 md:p-8 lg:p-10 border border-purple-100">
           <div className="text-center max-w-3xl mx-auto">
@@ -426,7 +424,6 @@ const ContactPage = () => {
           </div>
         </section>
       </div>
-    </MainLayout>
   );
 };
 

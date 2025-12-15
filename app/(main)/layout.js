@@ -1,6 +1,8 @@
 import { generateMetadata as generateSEO } from "@/utils/seo";
 import { SEO_DEFAULTS } from "@/constants";
+import MainLayoutClient from "./layout/MainLayoutClient";
 
+// Export metadata for the main layout (homepage and general pages)
 export const metadata = generateSEO(
   {
     title: "TestPrepKart - Entrance Exam Preparation for NRI Students Worldwide",
@@ -27,8 +29,7 @@ export default function MainLayout({ children }) {
         type="image/png"
         fetchPriority="high"
       />
-      {children}
+      <MainLayoutClient>{children}</MainLayoutClient>
     </>
   );
 }
-

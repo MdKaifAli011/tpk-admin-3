@@ -1,6 +1,5 @@
 ﻿import React from "react";
 import { notFound } from "next/navigation";
-import MainLayout from "../layout/MainLayout";
 import { FaGraduationCap } from "react-icons/fa";
 import ListItem from "../components/ListItem";
 import TabsClient from "../components/TabsClient";
@@ -76,8 +75,7 @@ const ExamPage = async ({ params }) => {
   ]);
 
   return (
-    <MainLayout>
-      <div className="space-y-4">
+    <div className="space-y-4">
       
       <section
   className="
@@ -143,7 +141,6 @@ const ExamPage = async ({ params }) => {
           nextNav={nextNav}
         />
       </div>
-    </MainLayout>
   );
 };
 

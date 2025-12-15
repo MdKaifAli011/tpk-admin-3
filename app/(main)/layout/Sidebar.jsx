@@ -34,7 +34,7 @@ const buildNode = (item) => ({
 /* ------------------------------------------------------------------------- */
 /* MAIN SIDEBAR                                                              */
 /* ------------------------------------------------------------------------- */
-export default function Sidebar({ isOpen = true, onClose }) {
+const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
   const router = useRouter();
   const pathname = usePathname();
 
@@ -559,4 +559,8 @@ export default function Sidebar({ isOpen = true, onClose }) {
       </aside>
     </>
   );
-}
+});
+
+Sidebar.displayName = "Sidebar";
+
+export default Sidebar;
