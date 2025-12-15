@@ -43,12 +43,13 @@ export async function GET(request) {
     
     // Create cache key
     const cacheKey = `practice-categories-${JSON.stringify(query)}-${page}-${limit}`;
-    const now = Date.now();
 
     // Check cache (only for active status)
-    const cached = queryCache.get(cacheKey);
-    if (cached && statusFilter === STATUS.ACTIVE && (now - cached.timestamp < CACHE_TTL)) {
-      return NextResponse.json(cached.data);
+    if (statusFilter === STATUS.ACTIVE) {
+      const cached = cacheManager.get(cacheKey);
+      if (cached) {
+        return NextResponse.json(cached);
+      }
     }
 
     // Optimize query execution
@@ -69,8 +70,7 @@ export async function GET(request) {
 
     // Cache the response (only for active status)
     if (statusFilter === STATUS.ACTIVE) {
-      queryCache.set(cacheKey, { data: response, timestamp: now });
-      cleanupCache();
+      cacheManager.set(cacheKey, response);
     }
 
     return NextResponse.json(response);
@@ -167,7 +167,7 @@ export async function POST(request) {
       .lean();
 
     // Clear cache
-    queryCache.clear();
+    cacheManager.clear("practice-categories");
 
     return successResponse(
       populatedCategory,

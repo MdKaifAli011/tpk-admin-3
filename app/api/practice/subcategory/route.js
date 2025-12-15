@@ -179,16 +179,13 @@ export async function GET(request) {
       page,
       limit,
     })}`;
-    const now = Date.now();
 
     // Check cache (only for active status)
-    const cached = queryCache.get(cacheKey);
-    if (
-      cached &&
-      statusFilter === STATUS.ACTIVE &&
-      now - cached.timestamp < CACHE_TTL
-    ) {
-      return NextResponse.json(cached.data);
+    if (statusFilter === STATUS.ACTIVE) {
+      const cached = cacheManager.get(cacheKey);
+      if (cached) {
+        return NextResponse.json(cached);
+      }
     }
 
     // Optimize query execution
@@ -219,7 +216,7 @@ export async function GET(request) {
 
     // Cache the response (only for active status)
     if (statusFilter === STATUS.ACTIVE) {
-      cacheManager.set(cacheKey, response, 5 * 60 * 1000); // 5 minutes TTL
+      cacheManager.set(cacheKey, response);
     }
 
     return NextResponse.json(response);
@@ -363,7 +360,7 @@ export async function POST(request) {
       .lean();
 
     // Clear cache
-    cacheManager.clear("practice-subcategories-");
+    cacheManager.clear("practiceSubCategories");
 
     return successResponse(
       populatedSubCategory,
