@@ -1,5 +1,12 @@
 "use client";
-import React, { Suspense, useState, useEffect, useCallback, useMemo, useRef } from "react";
+import React, {
+  Suspense,
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  useRef,
+} from "react";
 import { usePathname } from "next/navigation";
 import ErrorBoundary from "../../../components/ErrorBoundary.jsx";
 import Navbar from "./Navbar";
@@ -11,15 +18,15 @@ import api from "../../../lib/api.js";
 
 export default function MainLayoutClient({ children }) {
   const pathname = usePathname();
-  
+
   // Memoize showSidebar to prevent unnecessary recalculations
   const showSidebar = useMemo(() => {
     return pathname !== "/" && pathname !== "/contact";
   }, [pathname]);
-  
+
   // Track previous showSidebar value to detect actual changes
   const prevShowSidebarRef = useRef(showSidebar);
-  
+
   // Initialize sidebar as open on desktop, closed on mobile
   // Only initialize once, don't reset on every navigation
   const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
@@ -42,7 +49,7 @@ export default function MainLayoutClient({ children }) {
   useEffect(() => {
     const prevShowSidebar = prevShowSidebarRef.current;
     prevShowSidebarRef.current = showSidebar;
-    
+
     // Only update if showSidebar actually changed (transitioning to/from homepage/contact)
     if (prevShowSidebar !== showSidebar) {
       if (!showSidebar) {
@@ -63,10 +70,7 @@ export default function MainLayoutClient({ children }) {
   useEffect(() => {
     const checkStudentAuth = async () => {
       // Skip auth check on login/register pages
-      if (
-        pathname?.includes("/login") ||
-        pathname?.includes("/register")
-      ) {
+      if (pathname?.includes("/login") || pathname?.includes("/register")) {
         return;
       }
 
@@ -227,7 +231,9 @@ export default function MainLayoutClient({ children }) {
     };
 
     // Attach touch event listeners to document for global swipe detection
-    document.addEventListener("touchstart", handleTouchStart, { passive: true });
+    document.addEventListener("touchstart", handleTouchStart, {
+      passive: true,
+    });
     document.addEventListener("touchmove", handleTouchMove, { passive: false });
     document.addEventListener("touchend", handleTouchEnd, { passive: true });
 
@@ -253,7 +259,10 @@ export default function MainLayoutClient({ children }) {
 
         <div className="flex flex-1 relative">
           {/* Persistent Sidebar - always rendered to prevent flickering */}
-          <Sidebar isOpen={showSidebar && isSidebarOpen} onClose={closeSidebar} />
+          <Sidebar
+            isOpen={showSidebar && isSidebarOpen}
+            onClose={closeSidebar}
+          />
 
           {/* Main content area - only this changes on navigation */}
           <main
@@ -271,13 +280,27 @@ export default function MainLayoutClient({ children }) {
               [scrollbar-width:none]
             `}
           >
-            <div className="w-full max-w-7xl mx-auto">
+            <div className="w-full max-w-7xl mx-auto min-h-[400px]">
               <Suspense
                 fallback={
-                  <div className="flex items-center justify-center py-16">
+                  <div className="flex items-center justify-center min-h-[500px] sm:min-h-[600px] py-12 sm:py-16">
                     <div className="text-center">
-                      <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-500 border-t-transparent mb-4"></div>
-                      <p className="text-gray-600 text-sm">Loading...</p>
+                      {/* Spinner with gradient and glow effect */}
+                      <div className="relative inline-flex items-center justify-center mb-4 sm:mb-5">
+                        {/* Glow effect */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 rounded-full blur-2xl opacity-30 animate-pulse" />
+                        {/* Spinner */}
+                        <div className="relative">
+                          <div
+                            className="inline-block animate-spin rounded-full h-12 w-12 sm:h-14 sm:w-14 md:h-16 md:w-16 border-4 border-indigo-500 border-t-transparent"
+                            style={{ animationDuration: "1s" }}
+                          />
+                        </div>
+                      </div>
+                      {/* Loading text */}
+                      <p className="text-sm sm:text-base font-semibold text-gray-700">
+                        Loading...
+                      </p>
                     </div>
                   </div>
                 }
@@ -294,4 +317,3 @@ export default function MainLayoutClient({ children }) {
     </ErrorBoundary>
   );
 }
-

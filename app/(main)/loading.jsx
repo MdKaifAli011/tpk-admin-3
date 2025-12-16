@@ -3,15 +3,25 @@ import { FaSpinner } from "react-icons/fa";
 
 export default function Loading() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="flex items-center justify-center min-h-[500px] sm:min-h-[600px] py-12 sm:py-16">
       <div className="text-center">
-        <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 mb-4 sm:mb-6">
-          <FaSpinner className="text-indigo-600 text-4xl sm:text-5xl animate-spin" />
+        {/* Spinner with gradient and glow effect */}
+        <div className="relative inline-flex items-center justify-center mb-4 sm:mb-5">
+          {/* Glow effect */}
+          <div className="absolute inset-0 bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 rounded-full blur-2xl opacity-30 animate-pulse" />
+          {/* Spinner */}
+          <div className="relative">
+            <FaSpinner
+              className="text-indigo-600 text-4xl sm:text-5xl md:text-6xl animate-spin"
+              style={{ animationDuration: "1s" }}
+            />
+          </div>
         </div>
-        <p className="text-sm sm:text-base font-medium text-gray-600">Loading...</p>
+        {/* Loading text */}
+        <p className="text-sm sm:text-base font-semibold text-gray-700">
+          Loading...
+        </p>
       </div>
     </div>
   );
 }
-
-

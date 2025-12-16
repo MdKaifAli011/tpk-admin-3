@@ -295,7 +295,7 @@ const UnitsListClient = ({ units, subjectId, examSlug, subjectSlug }) => {
             <FaCheck className="text-xs" />
           </span>
         ) : (
-          <span className="text-xs font-medium text-gray-400">In Progress</span>
+          <span className="text-xs font-medium text-gray-400">Progress</span>
         );
 
         return (

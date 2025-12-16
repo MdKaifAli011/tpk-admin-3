@@ -43,6 +43,7 @@ const ChaptersSectionClient = ({
           examSlug={examSlug}
           subjectSlug={subjectSlug}
           unitSlug={unitSlug}
+          examName={examName}
           onUnitProgressChange={onUnitProgressChange}
         />
       </div>

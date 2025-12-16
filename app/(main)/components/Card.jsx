@@ -47,8 +47,10 @@ const Card = ({
           hover ? "hover:shadow-xl hover:-translate-y-1" : ""
         }`;
 
+      case "none":
+        return `${base} bg-white  border-none shadow-none `;
       default:
-        return `${base} bg-white rounded-xle border border-gray-200 shadow-sm`;
+        return `${base} bg-white rounded-xl border border-gray-200 shadow-sm`;
     }
   };
 

@@ -20,6 +20,8 @@ import {
 } from "react-icons/fa";
 import Image from "next/image";
 import api from "../../../lib/api.js";
+import Navbar from "../layout/Navbar";
+import Footer from "../layout/Footer";
 
 /**
  * RegisterPage - Upgraded UI to match the new LoginPage theme.
@@ -247,11 +249,11 @@ const RegisterPage = () => {
     try {
       const fullPhoneNumber =
         formData.countryCode + formData.phoneNumber.trim().replace(/^\+/, "");
-      
+
       // Get the source URL pathname (e.g., /neet) where student is registering from
       const sourcePath =
         typeof window !== "undefined" ? window.location.pathname : "";
-      
+
       const response = await api.post("/student/auth/register", {
         firstName: formData.firstName.trim(),
         lastName: formData.lastName.trim(),
@@ -269,7 +271,7 @@ const RegisterPage = () => {
         if (typeof window !== "undefined") {
           localStorage.setItem("student_token", response.data.data.token);
         }
-        
+
         // Verify token immediately to ensure student exists in database
         try {
           const verifyResponse = await api.get("/student/auth/verify", {
@@ -277,8 +279,11 @@ const RegisterPage = () => {
               Authorization: `Bearer ${response.data.data.token}`,
             },
           });
-          
-          if (verifyResponse.data.success && verifyResponse.data.data?.student) {
+
+          if (
+            verifyResponse.data.success &&
+            verifyResponse.data.data?.student
+          ) {
             // Student verified, proceed to home page
             router.push("/");
           } else {
@@ -313,646 +318,663 @@ const RegisterPage = () => {
 
   /* ---------- Render ---------- */
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-white to-purple-100 flex items-center justify-center p-6 relative overflow-hidden">
-      {/* subtle grid background */}
-      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_bottom_right,_var(--tw-gradient-stops))] from-indigo-50 to-transparent opacity-40"></div>
-      {/* soft glows */}
-      <div className="absolute -left-10 top-8 w-72 h-72 rounded-full bg-indigo-300 blur-3xl opacity-30 pointer-events-none"></div>
-      <div className="absolute -right-10 bottom-8 w-72 h-72 rounded-full bg-pink-300 blur-3xl opacity-30 pointer-events-none"></div>
+    <>
+      <Navbar onMenuToggle={() => {}} isMenuOpen={false} />
+      <div className="min-h-screen pt-24 sm:pt-28 md:pt-32 bg-gradient-to-br from-indigo-100 via-white to-purple-100 flex flex-col relative overflow-hidden">
+        {/* Main Content */}
+        <div className="flex-1 flex items-center justify-center p-4 sm:p-6 relative">
+          {/* subtle grid background */}
+          <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_bottom_right,_var(--tw-gradient-stops))] from-indigo-50 to-transparent opacity-40"></div>
+          {/* soft glows */}
+          <div className="absolute -left-10 top-8 w-72 h-72 rounded-full bg-indigo-300 blur-3xl opacity-30 pointer-events-none"></div>
+          <div className="absolute -right-10 bottom-8 w-72 h-72 rounded-full bg-pink-300 blur-3xl opacity-30 pointer-events-none"></div>
 
-      <div className="relative z-10 w-full max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
-        {/* Left Illustration + marketing (different illustration as requested) */}
-        <div className="hidden md:flex flex-col items-start justify-center px-6">
-          <Image
-            src="/images/register.png"
-            alt="Register Illustration"
-            width={520}
-            height={520}
-            className="drop-shadow-xl"
-            priority
-          />
-          <h2 className="mt-6 text-3xl font-extrabold text-gray-900 leading-tight">
-            Join the community of{" "}
-            <span className="text-indigo-600">aspiring achievers</span>
-          </h2>
-          <p className="mt-3 text-gray-600 max-w-sm">
-            Create your free account to access practice tests, video lessons,
-            and personalized study plans tailored to your goals.
-          </p>
-        </div>
-
-        {/* Right: Form Card */}
-        <div className="mx-auto w-full max-w-md">
-          <div className="text-center mb-5">
-            <Link
-              href="/"
-              className="inline-block mb-2 transform hover:scale-105 transition-transform duration-300"
-            >
-              <div className="relative inline-block">
-                <Image
-                  src="/logo.png"
-                  alt="TestPrepKart Logo"
-                  width={84}
-                  height={84}
-                  className="rounded-full"
-                  priority
-                />
-                <div className="absolute -top-0.5 -right-0.5">
-                  <FaStar className="text-yellow-400 text-base animate-pulse" />
-                </div>
-              </div>
-            </Link>
-            <h1 className="text-2xl font-bold text-gray-900 mb-1 bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-              Create Your Account
-            </h1>
-            <p className="text-sm text-gray-600 font-medium">
-              Join thousands of students preparing for success
-            </p>
-          </div>
-
-          <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-6 border border-white/20">
-            {/* Error box */}
-            {error && (
-              <div className="mb-4 p-3 bg-red-50 border-l-4 border-red-500 rounded-lg text-xs text-red-700 animate-[shake_0.3s_ease-in-out]">
-                <div className="flex items-center gap-2">⚠️ {error}</div>
-              </div>
-            )}
-
-            {/* Progress (matching login style) */}
-            <div className="mb-5">
-              <div className="flex items-center gap-3">
-                <div className="flex flex-col items-center">
-                  <div
-                    className={`flex items-center justify-center w-8 h-8 rounded-full text-xs font-semibold ${
-                      step >= 1
-                        ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg"
-                        : "bg-gray-200 text-gray-500"
-                    }`}
-                  >
-                    {step > 1 ? <FaCheckCircle /> : <span>1</span>}
-                  </div>
-                  <span
-                    className={`text-[11px] mt-1 ${
-                      step >= 1 ? "text-indigo-600" : "text-gray-400"
-                    }`}
-                  >
-                    Basic
-                  </span>
-                </div>
-                <div
-                  className={`flex-1 h-1 rounded-full ${
-                    step >= 2
-                      ? "bg-gradient-to-r from-indigo-600 to-purple-600"
-                      : "bg-gray-200"
-                  }`}
-                ></div>
-                <div className="flex flex-col items-center">
-                  <div
-                    className={`flex items-center justify-center w-8 h-8 rounded-full text-xs font-semibold ${
-                      step >= 2
-                        ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg"
-                        : "bg-gray-200 text-gray-500"
-                    }`}
-                  >
-                    {step > 2 ? <FaCheckCircle /> : <span>2</span>}
-                  </div>
-                  <span
-                    className={`text-[11px] mt-1 ${
-                      step >= 2 ? "text-indigo-600" : "text-gray-400"
-                    }`}
-                  >
-                    Account
-                  </span>
-                </div>
-              </div>
+          <div className="relative z-10 w-full max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
+            {/* Left Illustration + marketing (different illustration as requested) */}
+            <div className="hidden md:flex flex-col items-start justify-center px-6">
+              <Image
+                src="/images/register.png"
+                alt="Register Illustration"
+                width={520}
+                height={520}
+                className="drop-shadow-xl"
+                priority
+              />
+              <h2 className="mt-6 text-3xl font-extrabold text-gray-900 leading-tight">
+                Join the community of{" "}
+                <span className="text-indigo-600">aspiring achievers</span>
+              </h2>
+              <p className="mt-3 text-gray-600 max-w-sm">
+                Create your free account to access practice tests, video
+                lessons, and personalized study plans tailored to your goals.
+              </p>
             </div>
 
-            {/* Animated transition container */}
-            <div
-              className={`transition-all duration-250 ${
-                stepTransition
-                  ? "opacity-0 translate-x-4"
-                  : "opacity-100 translate-x-0"
-              }`}
-            >
-              {step === 1 ? (
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    handleNext();
-                  }}
+            {/* Right: Form Card */}
+            <div className="mx-auto w-full max-w-md">
+              <div className="text-center mb-5">
+                <Link
+                  href="/"
+                  className="inline-block mb-2 transform hover:scale-105 transition-transform duration-300"
                 >
-                  <div className="space-y-4">
-                    <div className="text-center mb-2">
-                      <h3 className="text-lg font-semibold text-gray-900">
-                        Let's get started
-                      </h3>
-                      <p className="text-xs text-gray-500">
-                        Tell us a bit about yourself
-                      </p>
+                  <div className="relative inline-block">
+                    <Image
+                      src="/logo.png"
+                      alt="TestPrepKart Logo"
+                      width={84}
+                      height={84}
+                      className="rounded-full"
+                      priority
+                    />
+                    <div className="absolute -top-0.5 -right-0.5">
+                      <FaStar className="text-yellow-400 text-base animate-pulse" />
                     </div>
-
-                    {/* First Name */}
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-700 mb-1">
-                        First Name <span className="text-red-500">*</span>
-                      </label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <FaUser
-                            className={`text-xs ${
-                              formData.firstName
-                                ? "text-indigo-600"
-                                : "text-gray-400"
-                            }`}
-                          />
-                        </div>
-                        <input
-                          name="firstName"
-                          value={formData.firstName}
-                          onChange={handleChange}
-                          placeholder="John"
-                          className={`w-full pl-9 pr-3 py-2.5 rounded-lg border-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition ${
-                            errors.firstName
-                              ? "border-red-300 bg-red-50"
-                              : "border-gray-200 bg-gray-50"
-                          }`}
-                        />
-                      </div>
-                      {errors.firstName && (
-                        <p className="mt-1 text-xs text-red-600">
-                          {errors.firstName}
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Last Name */}
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-700 mb-1">
-                        Last Name <span className="text-red-500">*</span>
-                      </label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <FaUser
-                            className={`text-xs ${
-                              formData.lastName
-                                ? "text-indigo-600"
-                                : "text-gray-400"
-                            }`}
-                          />
-                        </div>
-                        <input
-                          name="lastName"
-                          value={formData.lastName}
-                          onChange={handleChange}
-                          placeholder="Doe"
-                          className={`w-full pl-9 pr-3 py-2.5 rounded-lg border-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition ${
-                            errors.lastName
-                              ? "border-red-300 bg-red-50"
-                              : "border-gray-200 bg-gray-50"
-                          }`}
-                        />
-                      </div>
-                      {errors.lastName && (
-                        <p className="mt-1 text-xs text-red-600">
-                          {errors.lastName}
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Class dropdown */}
-                    <div className="class-dropdown-container relative">
-                      <label className="block text-xs font-semibold text-gray-700 mb-1">
-                        Select Class <span className="text-red-500">*</span>
-                      </label>
-                      <div>
-                        <button
-                          type="button"
-                          onClick={() => setShowClassDropdown((s) => !s)}
-                          className={`w-full flex items-center justify-between pl-9 pr-3 py-2.5 rounded-lg border-2 text-sm ${
-                            errors.className
-                              ? "border-red-300 bg-red-50"
-                              : formData.className
-                              ? "border-indigo-500 bg-white"
-                              : "border-gray-200 bg-gray-50"
-                          }`}
-                        >
-                          <div className="flex items-center gap-2">
-                            <FaGraduationCap
-                              className={`text-xs ${
-                                formData.className
-                                  ? "text-indigo-600"
-                                  : "text-gray-400"
-                              }`}
-                            />
-                            <span
-                              className={`${
-                                formData.className
-                                  ? "text-gray-900"
-                                  : "text-gray-400"
-                              }`}
-                            >
-                              {formData.className || "Select Class"}
-                            </span>
-                          </div>
-                          <FaChevronDown
-                            className={`text-xs ${
-                              showClassDropdown ? "rotate-180 transform" : ""
-                            }`}
-                          />
-                        </button>
-
-                        {showClassDropdown && (
-                          <div className="absolute z-50 w-full mt-2 bg-white border-2 border-gray-200 rounded-lg shadow-lg max-h-56 overflow-y-auto">
-                            {CLASS_OPTIONS.map((c) => (
-                              <button
-                                key={c}
-                                type="button"
-                                onClick={() => handleClassSelect(c)}
-                                className={`w-full text-left px-4 py-2 text-sm ${
-                                  formData.className === c
-                                    ? "bg-gray-100 text-indigo-600 font-semibold"
-                                    : "text-gray-700 hover:bg-gray-50"
-                                }`}
-                              >
-                                {c}
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                      {errors.className && (
-                        <p className="mt-1 text-xs text-red-600">
-                          {errors.className}
-                        </p>
-                      )}
-                    </div>
-
-                    <button
-                      type="submit"
-                      className="w-full mt-3 py-2.5 rounded-lg text-white font-bold text-sm bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
-                    >
-                      Continue <FaArrowRight className="text-xs" />
-                    </button>
                   </div>
-                </form>
-              ) : (
-                <form onSubmit={handleSubmit}>
-                  <div className="space-y-4">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-900">
-                          Almost there!
-                        </h3>
-                        <p className="text-xs text-gray-500">
-                          Complete your account details
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={handleBack}
-                        className="p-2 rounded-lg hover:bg-indigo-50 text-indigo-600"
+                </Link>
+                <h1 className="text-2xl font-bold text-gray-900 mb-1 bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                  Create Your Account
+                </h1>
+                <p className="text-sm text-gray-600 font-medium">
+                  Join thousands of students preparing for success
+                </p>
+              </div>
+
+              <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-6 border border-white/20">
+                {/* Error box */}
+                {error && (
+                  <div className="mb-4 p-3 bg-red-50 border-l-4 border-red-500 rounded-lg text-xs text-red-700 animate-[shake_0.3s_ease-in-out]">
+                    <div className="flex items-center gap-2">⚠️ {error}</div>
+                  </div>
+                )}
+
+                {/* Progress (matching login style) */}
+                <div className="mb-5">
+                  <div className="flex items-center gap-3">
+                    <div className="flex flex-col items-center">
+                      <div
+                        className={`flex items-center justify-center w-8 h-8 rounded-full text-xs font-semibold ${
+                          step >= 1
+                            ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg"
+                            : "bg-gray-200 text-gray-500"
+                        }`}
                       >
-                        <FaArrowLeft />
-                      </button>
-                    </div>
-
-                    {/* Email */}
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-700 mb-1">
-                        Email Address <span className="text-red-500">*</span>
-                      </label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <FaEnvelope
-                            className={`text-xs ${
-                              formData.email
-                                ? "text-indigo-600"
-                                : "text-gray-400"
-                            }`}
-                          />
-                        </div>
-                        <input
-                          name="email"
-                          type="email"
-                          value={formData.email}
-                          onChange={handleChange}
-                          placeholder="john.doe@example.com"
-                          className={`w-full pl-9 pr-3 py-2.5 rounded-lg border-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition ${
-                            errors.email
-                              ? "border-red-300 bg-red-50"
-                              : "border-gray-200 bg-gray-50"
-                          }`}
-                        />
+                        {step > 1 ? <FaCheckCircle /> : <span>1</span>}
                       </div>
-                      {errors.email && (
-                        <p className="mt-1 text-xs text-red-600">
-                          {errors.email}
-                        </p>
-                      )}
+                      <span
+                        className={`text-[11px] mt-1 ${
+                          step >= 1 ? "text-indigo-600" : "text-gray-400"
+                        }`}
+                      >
+                        Basic
+                      </span>
                     </div>
+                    <div
+                      className={`flex-1 h-1 rounded-full ${
+                        step >= 2
+                          ? "bg-gradient-to-r from-indigo-600 to-purple-600"
+                          : "bg-gray-200"
+                      }`}
+                    ></div>
+                    <div className="flex flex-col items-center">
+                      <div
+                        className={`flex items-center justify-center w-8 h-8 rounded-full text-xs font-semibold ${
+                          step >= 2
+                            ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg"
+                            : "bg-gray-200 text-gray-500"
+                        }`}
+                      >
+                        {step > 2 ? <FaCheckCircle /> : <span>2</span>}
+                      </div>
+                      <span
+                        className={`text-[11px] mt-1 ${
+                          step >= 2 ? "text-indigo-600" : "text-gray-400"
+                        }`}
+                      >
+                        Account
+                      </span>
+                    </div>
+                  </div>
+                </div>
 
-                    {/* Country + Phone in row */}
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="country-dropdown-container relative">
-                        <label className="block text-xs font-semibold text-gray-700 mb-1">
-                          Country{" "}
-                          <span className="text-xs text-gray-500">
-                            (Optional)
-                          </span>
-                        </label>
+                {/* Animated transition container */}
+                <div
+                  className={`transition-all duration-250 ${
+                    stepTransition
+                      ? "opacity-0 translate-x-4"
+                      : "opacity-100 translate-x-0"
+                  }`}
+                >
+                  {step === 1 ? (
+                    <form
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        handleNext();
+                      }}
+                    >
+                      <div className="space-y-4">
+                        <div className="text-center mb-2">
+                          <h3 className="text-lg font-semibold text-gray-900">
+                            Let&apos;s get started
+                          </h3>
+                          <p className="text-xs text-gray-500">
+                            Tell us a bit about yourself
+                          </p>
+                        </div>
+
+                        {/* First Name */}
                         <div>
-                          <button
-                            type="button"
-                            onClick={() => setShowCountryDropdown((s) => !s)}
-                            className={`w-full flex items-center justify-between pl-9 pr-3 py-2.5 rounded-lg border-2 text-sm ${
-                              formData.country
-                                ? "border-indigo-500 bg-white"
-                                : "border-gray-200 bg-gray-50"
-                            }`}
-                          >
-                            <div className="flex items-center gap-2 min-w-0">
-                              <FaGlobe
+                          <label className="block text-xs font-semibold text-gray-700 mb-1">
+                            First Name <span className="text-red-500">*</span>
+                          </label>
+                          <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                              <FaUser
                                 className={`text-xs ${
-                                  formData.country
+                                  formData.firstName
                                     ? "text-indigo-600"
                                     : "text-gray-400"
                                 }`}
                               />
-                              <span
-                                className={`${
-                                  formData.country
-                                    ? "text-gray-900 truncate"
-                                    : "text-gray-400"
-                                }`}
-                              >
-                                {formData.country || "Select country"}
-                              </span>
                             </div>
-                            <FaChevronDown
-                              className={`text-xs ${
-                                showCountryDropdown
-                                  ? "rotate-180 transform"
-                                  : ""
+                            <input
+                              name="firstName"
+                              value={formData.firstName}
+                              onChange={handleChange}
+                              placeholder="John"
+                              className={`w-full pl-9 pr-3 py-2.5 rounded-lg border-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition ${
+                                errors.firstName
+                                  ? "border-red-300 bg-red-50"
+                                  : "border-gray-200 bg-gray-50"
                               }`}
                             />
-                          </button>
+                          </div>
+                          {errors.firstName && (
+                            <p className="mt-1 text-xs text-red-600">
+                              {errors.firstName}
+                            </p>
+                          )}
+                        </div>
 
-                          {showCountryDropdown && (
-                            <div className="absolute z-50 w-full mt-2 bg-white border-2 border-gray-200 rounded-lg shadow-lg max-h-56 overflow-y-auto">
-                              {COUNTRIES.map((c) => (
-                                <button
-                                  key={c.name}
-                                  type="button"
-                                  onClick={() => handleCountrySelect(c)}
-                                  className={`w-full text-left px-3 py-2 text-sm flex items-center gap-2 ${
-                                    formData.country === c.name
-                                      ? "bg-gray-100 text-indigo-600 font-semibold"
-                                      : "text-gray-700 hover:bg-gray-50"
+                        {/* Last Name */}
+                        <div>
+                          <label className="block text-xs font-semibold text-gray-700 mb-1">
+                            Last Name <span className="text-red-500">*</span>
+                          </label>
+                          <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                              <FaUser
+                                className={`text-xs ${
+                                  formData.lastName
+                                    ? "text-indigo-600"
+                                    : "text-gray-400"
+                                }`}
+                              />
+                            </div>
+                            <input
+                              name="lastName"
+                              value={formData.lastName}
+                              onChange={handleChange}
+                              placeholder="Doe"
+                              className={`w-full pl-9 pr-3 py-2.5 rounded-lg border-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition ${
+                                errors.lastName
+                                  ? "border-red-300 bg-red-50"
+                                  : "border-gray-200 bg-gray-50"
+                              }`}
+                            />
+                          </div>
+                          {errors.lastName && (
+                            <p className="mt-1 text-xs text-red-600">
+                              {errors.lastName}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Class dropdown */}
+                        <div className="class-dropdown-container relative">
+                          <label className="block text-xs font-semibold text-gray-700 mb-1">
+                            Select Class <span className="text-red-500">*</span>
+                          </label>
+                          <div>
+                            <button
+                              type="button"
+                              onClick={() => setShowClassDropdown((s) => !s)}
+                              className={`w-full flex items-center justify-between pl-9 pr-3 py-2.5 rounded-lg border-2 text-sm ${
+                                errors.className
+                                  ? "border-red-300 bg-red-50"
+                                  : formData.className
+                                  ? "border-indigo-500 bg-white"
+                                  : "border-gray-200 bg-gray-50"
+                              }`}
+                            >
+                              <div className="flex items-center gap-2">
+                                <FaGraduationCap
+                                  className={`text-xs ${
+                                    formData.className
+                                      ? "text-indigo-600"
+                                      : "text-gray-400"
+                                  }`}
+                                />
+                                <span
+                                  className={`${
+                                    formData.className
+                                      ? "text-gray-900"
+                                      : "text-gray-400"
                                   }`}
                                 >
-                                  <span className="text-base">{c.flag}</span>
-                                  <span className="flex-1 truncate">
-                                    {c.name}
-                                  </span>
-                                  <span className="text-xs text-gray-500">
-                                    {c.code}
-                                  </span>
-                                </button>
-                              ))}
-                            </div>
+                                  {formData.className || "Select Class"}
+                                </span>
+                              </div>
+                              <FaChevronDown
+                                className={`text-xs ${
+                                  showClassDropdown
+                                    ? "rotate-180 transform"
+                                    : ""
+                                }`}
+                              />
+                            </button>
+
+                            {showClassDropdown && (
+                              <div className="absolute z-50 w-full mt-2 bg-white border-2 border-gray-200 rounded-lg shadow-lg max-h-56 overflow-y-auto">
+                                {CLASS_OPTIONS.map((c) => (
+                                  <button
+                                    key={c}
+                                    type="button"
+                                    onClick={() => handleClassSelect(c)}
+                                    className={`w-full text-left px-4 py-2 text-sm ${
+                                      formData.className === c
+                                        ? "bg-gray-100 text-indigo-600 font-semibold"
+                                        : "text-gray-700 hover:bg-gray-50"
+                                    }`}
+                                  >
+                                    {c}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                          {errors.className && (
+                            <p className="mt-1 text-xs text-red-600">
+                              {errors.className}
+                            </p>
                           )}
                         </div>
-                      </div>
 
-                      <div>
-                        <label className="block text-xs font-semibold text-gray-700 mb-1">
-                          Mobile Number <span className="text-red-500">*</span>
-                        </label>
-                        <div className="relative">
-                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <span className="text-xs font-semibold text-indigo-600">
-                              {formData.countryCode}
-                            </span>
-                          </div>
-                          <input
-                            name="phoneNumber"
-                            type="tel"
-                            value={formData.phoneNumber}
-                            onChange={handleChange}
-                            placeholder="1234567890"
-                            className={`w-full pl-20 pr-3 py-2.5 rounded-lg border-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition ${
-                              errors.phoneNumber
-                                ? "border-red-300 bg-red-50"
-                                : "border-gray-200 bg-gray-50"
-                            }`}
-                          />
-                          <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                            <FaPhone className="text-xs text-gray-400" />
-                          </div>
-                        </div>
-                        {errors.phoneNumber && (
-                          <p className="mt-1 text-xs text-red-600">
-                            {errors.phoneNumber}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Password */}
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-700 mb-1">
-                        Password <span className="text-red-500">*</span>
-                      </label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <FaLock
-                            className={`text-xs ${
-                              formData.password
-                                ? "text-indigo-600"
-                                : "text-gray-400"
-                            }`}
-                          />
-                        </div>
-                        <input
-                          name="password"
-                          type={showPassword ? "text" : "password"}
-                          value={formData.password}
-                          onChange={handleChange}
-                          placeholder="Minimum 6 characters"
-                          className={`w-full pl-9 pr-12 py-2.5 rounded-lg border-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition ${
-                            errors.password
-                              ? "border-red-300 bg-red-50"
-                              : "border-gray-200 bg-gray-50"
-                          }`}
-                        />
                         <button
-                          type="button"
-                          onClick={() => setShowPassword((s) => !s)}
-                          className="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-indigo-600"
+                          type="submit"
+                          className="w-full mt-3 py-2.5 rounded-lg text-white font-bold text-sm bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
                         >
-                          {showPassword ? (
-                            <FaEyeSlash className="text-xs" />
-                          ) : (
-                            <FaEye className="text-xs" />
-                          )}
+                          Continue <FaArrowRight className="text-xs" />
                         </button>
                       </div>
-                      {errors.password && (
-                        <p className="mt-1 text-xs text-red-600">
-                          {errors.password}
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Confirm Password */}
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-700 mb-1">
-                        Confirm Password <span className="text-red-500">*</span>
-                      </label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <FaLock
-                            className={`text-xs ${
-                              formData.confirmPassword
-                                ? "text-indigo-600"
-                                : "text-gray-400"
-                            }`}
-                          />
-                        </div>
-                        <input
-                          name="confirmPassword"
-                          type={showConfirmPassword ? "text" : "password"}
-                          value={formData.confirmPassword}
-                          onChange={handleChange}
-                          placeholder="Re-enter your password"
-                          className={`w-full pl-9 pr-12 py-2.5 rounded-lg border-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition ${
-                            errors.confirmPassword
-                              ? "border-red-300 bg-red-50"
-                              : "border-gray-200 bg-gray-50"
-                          }`}
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowConfirmPassword((s) => !s)}
-                          className="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-indigo-600"
-                        >
-                          {showConfirmPassword ? (
-                            <FaEyeSlash className="text-xs" />
-                          ) : (
-                            <FaEye className="text-xs" />
-                          )}
-                        </button>
-                      </div>
-                      {errors.confirmPassword && (
-                        <p className="mt-1 text-xs text-red-600">
-                          {errors.confirmPassword}
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Preparing For (exams) */}
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-700 mb-1">
-                        Preparing For{" "}
-                        <span className="text-xs text-gray-500">
-                          (Optional)
-                        </span>
-                      </label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <FaGraduationCap
-                            className={`text-xs ${
-                              formData.prepared
-                                ? "text-indigo-600"
-                                : "text-gray-400"
-                            }`}
-                          />
-                        </div>
-                        <select
-                          name="prepared"
-                          value={formData.prepared}
-                          onChange={handleChange}
-                          className="w-full pl-9 pr-8 py-2.5 rounded-lg border-2 text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
-                        >
-                          <option value="">Select exam (optional)</option>
-                          {exams.map((exam) => (
-                            <option
-                              key={exam._id || exam.name}
-                              value={exam.name}
-                            >
-                              {exam.name}
-                            </option>
-                          ))}
-                        </select>
-                        <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                          <FaChevronDown className="text-xs text-gray-400" />
-                        </div>
-                      </div>
-                    </div>
-
-                    <button
-                      type="submit"
-                      disabled={loading}
-                      className="w-full mt-2 py-2.5 rounded-lg text-white font-bold text-sm bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 shadow-lg hover:shadow-xl flex items-center justify-center gap-2 disabled:opacity-50"
-                    >
-                      {loading ? (
-                        <>
-                          <svg
-                            className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
+                    </form>
+                  ) : (
+                    <form onSubmit={handleSubmit}>
+                      <div className="space-y-4">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <h3 className="text-lg font-semibold text-gray-900">
+                              Almost there!
+                            </h3>
+                            <p className="text-xs text-gray-500">
+                              Complete your account details
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={handleBack}
+                            className="p-2 rounded-lg hover:bg-indigo-50 text-indigo-600"
                           >
-                            <circle
-                              className="opacity-25"
-                              cx="12"
-                              cy="12"
-                              r="10"
-                              stroke="currentColor"
-                              strokeWidth="4"
-                            ></circle>
-                            <path
-                              className="opacity-75"
-                              fill="currentColor"
-                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                            ></path>
-                          </svg>
-                          Creating Account...
-                        </>
-                      ) : (
-                        <>
-                          Create Account <FaCheckCircle className="text-xs" />
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </form>
-              )}
-            </div>
+                            <FaArrowLeft />
+                          </button>
+                        </div>
 
-            {/* Bottom links */}
-            <div className="mt-5 pt-4 border-t border-gray-200 text-center">
-              <p className="text-xs text-gray-600">
-                Already have an account?{" "}
-                <Link
-                  href="/login"
-                  className="text-indigo-600 hover:text-indigo-700 font-bold"
-                >
-                  Sign In
-                </Link>
-              </p>
-            </div>
+                        {/* Email */}
+                        <div>
+                          <label className="block text-xs font-semibold text-gray-700 mb-1">
+                            Email Address{" "}
+                            <span className="text-red-500">*</span>
+                          </label>
+                          <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                              <FaEnvelope
+                                className={`text-xs ${
+                                  formData.email
+                                    ? "text-indigo-600"
+                                    : "text-gray-400"
+                                }`}
+                              />
+                            </div>
+                            <input
+                              name="email"
+                              type="email"
+                              value={formData.email}
+                              onChange={handleChange}
+                              placeholder="john.doe@example.com"
+                              className={`w-full pl-9 pr-3 py-2.5 rounded-lg border-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition ${
+                                errors.email
+                                  ? "border-red-300 bg-red-50"
+                                  : "border-gray-200 bg-gray-50"
+                              }`}
+                            />
+                          </div>
+                          {errors.email && (
+                            <p className="mt-1 text-xs text-red-600">
+                              {errors.email}
+                            </p>
+                          )}
+                        </div>
 
-            <p className="mt-3 text-[11px] text-center text-gray-500">
-              By continuing, you agree to our{" "}
-              <span className="text-indigo-600">Terms</span> &{" "}
-              <span className="text-indigo-600">Privacy Policy</span>.
-            </p>
+                        {/* Country + Phone in row */}
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="country-dropdown-container relative">
+                            <label className="block text-xs font-semibold text-gray-700 mb-1">
+                              Country{" "}
+                              <span className="text-xs text-gray-500">
+                                (Optional)
+                              </span>
+                            </label>
+                            <div>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setShowCountryDropdown((s) => !s)
+                                }
+                                className={`w-full flex items-center justify-between pl-9 pr-3 py-2.5 rounded-lg border-2 text-sm ${
+                                  formData.country
+                                    ? "border-indigo-500 bg-white"
+                                    : "border-gray-200 bg-gray-50"
+                                }`}
+                              >
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <FaGlobe
+                                    className={`text-xs ${
+                                      formData.country
+                                        ? "text-indigo-600"
+                                        : "text-gray-400"
+                                    }`}
+                                  />
+                                  <span
+                                    className={`${
+                                      formData.country
+                                        ? "text-gray-900 truncate"
+                                        : "text-gray-400"
+                                    }`}
+                                  >
+                                    {formData.country || "Select country"}
+                                  </span>
+                                </div>
+                                <FaChevronDown
+                                  className={`text-xs ${
+                                    showCountryDropdown
+                                      ? "rotate-180 transform"
+                                      : ""
+                                  }`}
+                                />
+                              </button>
+
+                              {showCountryDropdown && (
+                                <div className="absolute z-50 w-full mt-2 bg-white border-2 border-gray-200 rounded-lg shadow-lg max-h-56 overflow-y-auto">
+                                  {COUNTRIES.map((c) => (
+                                    <button
+                                      key={c.name}
+                                      type="button"
+                                      onClick={() => handleCountrySelect(c)}
+                                      className={`w-full text-left px-3 py-2 text-sm flex items-center gap-2 ${
+                                        formData.country === c.name
+                                          ? "bg-gray-100 text-indigo-600 font-semibold"
+                                          : "text-gray-700 hover:bg-gray-50"
+                                      }`}
+                                    >
+                                      <span className="text-base">
+                                        {c.flag}
+                                      </span>
+                                      <span className="flex-1 truncate">
+                                        {c.name}
+                                      </span>
+                                      <span className="text-xs text-gray-500">
+                                        {c.code}
+                                      </span>
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-semibold text-gray-700 mb-1">
+                              Mobile Number{" "}
+                              <span className="text-red-500">*</span>
+                            </label>
+                            <div className="relative">
+                              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <span className="text-xs font-semibold text-indigo-600">
+                                  {formData.countryCode}
+                                </span>
+                              </div>
+                              <input
+                                name="phoneNumber"
+                                type="tel"
+                                value={formData.phoneNumber}
+                                onChange={handleChange}
+                                placeholder="1234567890"
+                                className={`w-full pl-20 pr-3 py-2.5 rounded-lg border-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition ${
+                                  errors.phoneNumber
+                                    ? "border-red-300 bg-red-50"
+                                    : "border-gray-200 bg-gray-50"
+                                }`}
+                              />
+                              <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                <FaPhone className="text-xs text-gray-400" />
+                              </div>
+                            </div>
+                            {errors.phoneNumber && (
+                              <p className="mt-1 text-xs text-red-600">
+                                {errors.phoneNumber}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Password */}
+                        <div>
+                          <label className="block text-xs font-semibold text-gray-700 mb-1">
+                            Password <span className="text-red-500">*</span>
+                          </label>
+                          <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                              <FaLock
+                                className={`text-xs ${
+                                  formData.password
+                                    ? "text-indigo-600"
+                                    : "text-gray-400"
+                                }`}
+                              />
+                            </div>
+                            <input
+                              name="password"
+                              type={showPassword ? "text" : "password"}
+                              value={formData.password}
+                              onChange={handleChange}
+                              placeholder="Minimum 6 characters"
+                              className={`w-full pl-9 pr-12 py-2.5 rounded-lg border-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition ${
+                                errors.password
+                                  ? "border-red-300 bg-red-50"
+                                  : "border-gray-200 bg-gray-50"
+                              }`}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowPassword((s) => !s)}
+                              className="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-indigo-600"
+                            >
+                              {showPassword ? (
+                                <FaEyeSlash className="text-xs" />
+                              ) : (
+                                <FaEye className="text-xs" />
+                              )}
+                            </button>
+                          </div>
+                          {errors.password && (
+                            <p className="mt-1 text-xs text-red-600">
+                              {errors.password}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Confirm Password */}
+                        <div>
+                          <label className="block text-xs font-semibold text-gray-700 mb-1">
+                            Confirm Password{" "}
+                            <span className="text-red-500">*</span>
+                          </label>
+                          <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                              <FaLock
+                                className={`text-xs ${
+                                  formData.confirmPassword
+                                    ? "text-indigo-600"
+                                    : "text-gray-400"
+                                }`}
+                              />
+                            </div>
+                            <input
+                              name="confirmPassword"
+                              type={showConfirmPassword ? "text" : "password"}
+                              value={formData.confirmPassword}
+                              onChange={handleChange}
+                              placeholder="Re-enter your password"
+                              className={`w-full pl-9 pr-12 py-2.5 rounded-lg border-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition ${
+                                errors.confirmPassword
+                                  ? "border-red-300 bg-red-50"
+                                  : "border-gray-200 bg-gray-50"
+                              }`}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowConfirmPassword((s) => !s)}
+                              className="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-indigo-600"
+                            >
+                              {showConfirmPassword ? (
+                                <FaEyeSlash className="text-xs" />
+                              ) : (
+                                <FaEye className="text-xs" />
+                              )}
+                            </button>
+                          </div>
+                          {errors.confirmPassword && (
+                            <p className="mt-1 text-xs text-red-600">
+                              {errors.confirmPassword}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Preparing For (exams) */}
+                        <div>
+                          <label className="block text-xs font-semibold text-gray-700 mb-1">
+                            Preparing For{" "}
+                            <span className="text-xs text-gray-500">
+                              (Optional)
+                            </span>
+                          </label>
+                          <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                              <FaGraduationCap
+                                className={`text-xs ${
+                                  formData.prepared
+                                    ? "text-indigo-600"
+                                    : "text-gray-400"
+                                }`}
+                              />
+                            </div>
+                            <select
+                              name="prepared"
+                              value={formData.prepared}
+                              onChange={handleChange}
+                              className="w-full pl-9 pr-8 py-2.5 rounded-lg border-2 text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
+                            >
+                              <option value="">Select exam (optional)</option>
+                              {exams.map((exam) => (
+                                <option
+                                  key={exam._id || exam.name}
+                                  value={exam.name}
+                                >
+                                  {exam.name}
+                                </option>
+                              ))}
+                            </select>
+                            <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                              <FaChevronDown className="text-xs text-gray-400" />
+                            </div>
+                          </div>
+                        </div>
+
+                        <button
+                          type="submit"
+                          disabled={loading}
+                          className="w-full mt-2 py-2.5 rounded-lg text-white font-bold text-sm bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 shadow-lg hover:shadow-xl flex items-center justify-center gap-2 disabled:opacity-50"
+                        >
+                          {loading ? (
+                            <>
+                              <svg
+                                className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                              >
+                                <circle
+                                  className="opacity-25"
+                                  cx="12"
+                                  cy="12"
+                                  r="10"
+                                  stroke="currentColor"
+                                  strokeWidth="4"
+                                ></circle>
+                                <path
+                                  className="opacity-75"
+                                  fill="currentColor"
+                                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                ></path>
+                              </svg>
+                              Creating Account...
+                            </>
+                          ) : (
+                            <>
+                              Create Account{" "}
+                              <FaCheckCircle className="text-xs" />
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </form>
+                  )}
+                </div>
+
+                {/* Bottom links */}
+                <div className="mt-5 pt-4 border-t border-gray-200 text-center">
+                  <p className="text-xs text-gray-600">
+                    Already have an account?{" "}
+                    <Link
+                      href="/login"
+                      className="text-indigo-600 hover:text-indigo-700 font-bold"
+                    >
+                      Sign In
+                    </Link>
+                  </p>
+                </div>
+
+                <p className="mt-3 text-[11px] text-center text-gray-500">
+                  By continuing, you agree to our{" "}
+                  <span className="text-indigo-600">Terms</span> &{" "}
+                  <span className="text-indigo-600">Privacy Policy</span>.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+      <Footer />
+    </>
   );
 };
 

@@ -15,6 +15,7 @@ const ChapterProgressItem = ({
   index,
   href,
   unitId,
+  examName,
   progress: initialProgress = 0,
   isCompleted: initialIsCompleted = false,
   onProgressChange,
@@ -599,7 +600,7 @@ const ChapterProgressItem = ({
             setPendingProgress(null);
           }
         }}
-        chapterName={chapter.name}
+        examName={examName}
       />
     </div>
   );

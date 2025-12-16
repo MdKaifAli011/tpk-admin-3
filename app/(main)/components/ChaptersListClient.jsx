@@ -11,6 +11,7 @@ const ChaptersListClient = ({
   examSlug,
   subjectSlug,
   unitSlug,
+  examName,
   onUnitProgressChange,
 }) => {
   const {
@@ -83,6 +84,7 @@ const ChaptersListClient = ({
             index={index}
             href={chapterUrl}
             unitId={unitId}
+            examName={examName}
             progress={chapterProgressData.progress}
             isCompleted={chapterProgressData.isCompleted}
             onProgressChange={updateChapterProgress}

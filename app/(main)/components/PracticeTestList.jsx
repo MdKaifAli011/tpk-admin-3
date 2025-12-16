@@ -1274,14 +1274,14 @@ const PracticeTestList = ({
     // Show pre-test start screen if test is not started
     if (!isTestStarted) {
       return (
-        <Card variant="standard" hover={false} className="overflow-hidden">
+        <Card variant="none" hover={false} className="overflow-hidden">
           {/* TITLE */}
           <div className="p-6 text-center border-b border-gray-200">
             <h1 className="text-xl font-bold text-gray-900 mb-2">
               {test.name}
             </h1>
             <p className="text-sm text-gray-500">
-              Let&apos;s boost your preparation today 🚀
+              Let&apos;s boost your preparation today 
             </p>
           </div>
 
@@ -1315,7 +1315,7 @@ const PracticeTestList = ({
 
           {/* INSTRUCTIONS */}
           <div className="p-6">
-            <Card variant="gradient" hover={false} className="p-6">
+            <Card variant="none" hover={false} className="p-6">
               <h3 className="text-base font-semibold text-gray-900 mb-4">
                 Important Instructions
               </h3>
@@ -1345,7 +1345,7 @@ const PracticeTestList = ({
           </div>
 
           {/* ACTION BUTTONS */}
-          <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex flex-col md:flex-row justify-center gap-3">
+          <div className="px-6 py-4 border-t border-gray-200  flex flex-col md:flex-row justify-center gap-3">
             <Button variant="outline" size="md" onClick={handleBackToList}>
               Cancel
             </Button>
@@ -1453,7 +1453,7 @@ const PracticeTestList = ({
           </div>
         )}
         {/* Test Header */}
-        <div className="p-4 bg-white sticky top-0 z-10 border-b border-gray-200 shadow-sm">
+        <div className="p-4 bg-white sticky top-0 z-10 border-b border-gray-200 ">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
             <div className="flex-1">
               <h1 className="text-lg font-semibold text-gray-900 mb-2">
@@ -1501,7 +1501,7 @@ const PracticeTestList = ({
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* LEFT: QUESTION PANEL */}
-          <Card variant="standard" hover={false} className="lg:col-span-3 p-6">
+          <Card variant="none" hover={false} className="lg:col-span-3 p-6">
             {/* QUESTION HEADER */}
             <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
               <h2 className="text-base font-semibold text-gray-900">
@@ -1621,8 +1621,8 @@ const PracticeTestList = ({
           {/* RIGHT: SIDEBAR */}
           <div className="space-y-4 sticky top-20">
             {/* QUESTION PALETTE */}
-            <Card variant="standard" hover={false} className="p-6">
-              <h3 className="text-xs font-medium text-gray-600 uppercase tracking-wide mb-4">
+            <Card variant="none" hover={false} className="p-6">
+              <h3 className="text-xs font-medium text-gray-600 uppercase tracking-wide mb-4 border-b border-gray-200 pb-2">
                 Question Palette
               </h3>
 
@@ -1670,8 +1670,8 @@ const PracticeTestList = ({
             </Card>
 
             {/* LEGEND */}
-            <Card variant="standard" hover={false} className="p-6">
-              <div className="space-y-3">
+            <Card variant="none" hover={false} className=" p-6">
+              <div className="border-y border-gray-200 py-3">
                 <div className="flex items-center gap-2">
                   <span className="w-3 h-3 rounded bg-green-500"></span>
                   <span className="text-xs text-gray-600">Answered</span>
@@ -1703,7 +1703,7 @@ const PracticeTestList = ({
               size="md"
               onClick={handleShowSubmitModal}
               fullWidth
-              className="bg-emerald-600 hover:bg-emerald-700"
+              className="mb-4"
             >
               Submit Test
             </Button>
@@ -1716,7 +1716,7 @@ const PracticeTestList = ({
   // Show test list
   if (groupedData.length === 0 && !isLoading) {
     return (
-      <Card variant="standard" hover={false} className="p-6 text-center">
+      <Card variant="none" hover={false} className="p-6 text-center">
         <FaFileAlt className="text-4xl text-gray-400 mx-auto mb-4" />
         <h3 className="text-lg font-semibold text-gray-900 mb-2">
           No Practice Categories Available
@@ -1735,9 +1735,9 @@ const PracticeTestList = ({
       {groupedData.map((group, groupIndex) => (
         <Card
           key={groupIndex}
-          variant="standard"
+          variant="none"
           hover={true}
-          className="overflow-hidden"
+          className="overflow-hidden border-none "
         >
           {/* TABLE FOR DESKTOP */}
           <div className="overflow-x-auto hidden md:block">
