@@ -17,7 +17,7 @@ const ChaptersSectionClient = ({
   return (
     <section className="bg-transparent">
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        <div className="px-4 sm:px-6 py-4 border-b border-gray-100">
+        <div className="px-4 sm:px-6 py-4 border-b border-gray-100  bg-gradient-to-br from-indigo-50 via-white to-purple-50">
           <div className="flex items-start gap-2">
             <div>
               <h2 className="text-base sm:text-lg font-semibold text-gray-900">
