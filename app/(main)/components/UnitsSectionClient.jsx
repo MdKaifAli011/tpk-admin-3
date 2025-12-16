@@ -41,12 +41,29 @@ const UnitsSectionClient = ({
           </div>
         </div>
 
-        <UnitsListClient
-          units={units}
-          subjectId={subjectId}
-          examSlug={examSlug}
-          subjectSlug={subjectSlug}
-        />
+        <div className="relative group cursor-help">
+          {/* Tooltip */}
+          <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 ease-in-out z-10 pointer-events-none">
+            <div className="bg-gray-900 text-white text-xs rounded-lg py-2.5 px-4 shadow-xl max-w-xs text-center">
+              <p className="font-semibold mb-1.5 text-indigo-300">
+                Units Overview
+              </p>
+              <p className="text-gray-300 leading-relaxed">
+                Click on any unit to view its chapters and topics. Progress is
+                automatically calculated from your chapter completion status.
+              </p>
+              {/* Tooltip arrow */}
+              <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-[6px] border-r-[6px] border-t-[6px] border-transparent border-t-gray-900"></div>
+            </div>
+          </div>
+
+          <UnitsListClient
+            units={units}
+            subjectId={subjectId}
+            examSlug={examSlug}
+            subjectSlug={subjectSlug}
+          />
+        </div>
       </div>
     </section>
   );
