@@ -11,7 +11,7 @@ import {
   FaTrophy,
 } from "react-icons/fa";
 
-const LoginPromptModal = ({ isOpen, onClose, chapterName }) => {
+const LoginPromptModal = ({ isOpen, onClose, examName }) => {
   const router = useRouter();
   const [animate, setAnimate] = useState(false);
 
@@ -82,11 +82,11 @@ const LoginPromptModal = ({ isOpen, onClose, chapterName }) => {
 
         {/* Description */}
         <p className="mt-2 text-sm sm:text-base text-gray-600 text-center leading-relaxed">
-          {chapterName ? (
+          {examName ? (
             <>
               Login to track your progress for{" "}
               <span className="font-semibold text-indigo-600">
-                {chapterName}
+                {examName} Preparation
               </span>
               .
             </>
