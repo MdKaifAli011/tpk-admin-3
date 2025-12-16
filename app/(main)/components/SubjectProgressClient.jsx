@@ -134,6 +134,13 @@ const SubjectProgressClient = ({ subjectId, subjectName, unitIds = [], initialPr
             
             // Save subject progress to database
             try {
+              // Get token for authorization header
+              const token = localStorage.getItem("student_token");
+              if (!token) {
+                console.error("No token available for saving subject progress");
+                return;
+              }
+              
               const saveResponse = await fetch("/api/student/progress/subject", {
                 method: "POST",
                 headers: {

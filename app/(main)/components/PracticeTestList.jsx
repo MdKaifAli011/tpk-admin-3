@@ -969,7 +969,7 @@ const PracticeTestList = ({
             <p className="text-sm text-gray-600 mb-4">
               This practice test doesn&apos;t have any questions yet.
             </p>
-            <Button variant="ghost" size="sm" onClick={handleBackToList}>
+            <Button variant="ghost" size="sm" onClick={handleBackToList} >
               Back to Tests
             </Button>
           </div>
@@ -995,13 +995,13 @@ const PracticeTestList = ({
             />
 
             {/* Login / Register Prompt Page */}
-            <Card variant="premium" hover={false} className="relative">
+            <Card variant="none" hover={false} className="relative">
               <div className="relative z-10 p-6 md:p-8">
                 {/* Lock Icon */}
                 <div className="flex justify-center mb-6">
                   <div className="relative">
-                    <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 flex items-center justify-center shadow-lg transform transition-all duration-300 hover:scale-105">
-                      <FaLock className="text-white text-xl md:text-2xl" />
+                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 flex items-center justify-center shadow-lg transform transition-all duration-300 hover:scale-105">
+                      <FaLock className="text-white text-lg md:text-xl" />
                     </div>
                     {/* Small Active Indicator */}
                     <div className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white animate-pulse" />
@@ -1009,7 +1009,7 @@ const PracticeTestList = ({
                 </div>
 
                 {/* Title */}
-                <h1 className="text-xl md:text-2xl font-bold text-gray-900 text-center mb-4 leading-tight">
+                <h1 className="text-lg md:text-xl font-semibold text-gray-900 text-center mb-4 leading-tight">
                   Login or Create Account to View Results
                 </h1>
 
@@ -1025,7 +1025,7 @@ const PracticeTestList = ({
                   {/* Create Account */}
                   <Button
                     variant="secondary"
-                    size="md"
+                    size="sm"
                     onClick={() => setShowRegistrationModal(true)}
                     className="flex items-center gap-2"
                   >
@@ -1036,7 +1036,7 @@ const PracticeTestList = ({
                   {/* Login */}
                   <Button
                     variant="outline"
-                    size="md"
+                    size="sm"
                     onClick={() => {
                       if (typeof window !== "undefined") {
                         const currentPath =
@@ -1055,7 +1055,7 @@ const PracticeTestList = ({
                   </Button>
 
                   {/* Back */}
-                  <Button variant="ghost" size="md" onClick={handleBackToList}>
+                    <Button variant="ghost" size="sm" onClick={handleBackToList}>
                     Go Back
                   </Button>
                 </div>
@@ -1069,8 +1069,8 @@ const PracticeTestList = ({
       return (
         <div className="space-y-6">
           {/* Results Header */}
-          <Card variant="standard" hover={false} className="p-6">
-            <div className="text-center">
+          <Card variant="none" hover={false} className="p-6">
+            <div className="text-center border-b border-gray-200 pb-4">
               <h1 className="text-2xl font-semibold text-gray-900 mb-2">
                 Test Results
               </h1>
@@ -1079,8 +1079,8 @@ const PracticeTestList = ({
           </Card>
 
           {/* Score Card */}
-          <Card variant="standard" hover={false} className="p-6">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <Card variant="none" hover={false} className="px-6 ">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 ">
               <div className="text-center p-4 bg-gray-50 rounded-lg border border-gray-200">
                 <div className="text-2xl font-semibold text-gray-900 mb-1">
                   {results.percentage}%
@@ -1107,7 +1107,7 @@ const PracticeTestList = ({
               </div>
             </div>
 
-            <div className="mt-6 pt-6 border-t border-gray-200">
+            <div className="mt-6 pt-6 border-t border-gray-200 border-b pb-6">
               <div className="flex items-center justify-between">
                 <div>
                   <div className="text-xl font-semibold text-gray-900">
@@ -1126,7 +1126,7 @@ const PracticeTestList = ({
           </Card>
 
           {/* Question-wise Results */}
-          <Card variant="standard" hover={false} className="p-6">
+          <Card variant="none" hover={false} className="px-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-6">
               Question-wise Results
             </h2>
@@ -1245,8 +1245,8 @@ const PracticeTestList = ({
           </Card>
 
           {/* Actions */}
-          <div className="flex items-center justify-center gap-3">
-            <Button variant="ghost" size="md" onClick={handleBackToList}>
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <Button variant="ghost" size="md" onClick={handleBackToList} >
               Back to Tests
             </Button>
             <Button
