@@ -7,6 +7,9 @@ import AuthGuard from "./components/auth/AuthGuard";
 import ErrorBoundary from "../../components/ErrorBoundary";
 import api from "../../lib/api";
 
+// Base path - should match next.config.mjs basePath
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
+
 export default function AdminLayout({ children }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -17,7 +20,12 @@ export default function AdminLayout({ children }) {
   useEffect(() => {
     const checkAuth = async () => {
       // If on login/register pages, don't check auth
-      if (pathname === "/admin/login" || pathname === "/admin/register") {
+      if (
+        pathname === `${basePath}/admin/login` ||
+        pathname === `${basePath}/admin/register` ||
+        pathname === "/admin/login" ||
+        pathname === "/admin/register"
+      ) {
         setIsLoading(false);
         return;
       }
@@ -26,7 +34,7 @@ export default function AdminLayout({ children }) {
       if (!token) {
         // No token, redirect to login
         localStorage.removeItem("user");
-        router.push("/admin/login");
+        router.push(`${basePath}/admin/login`);
         setIsLoading(false);
         return;
       }
@@ -50,7 +58,7 @@ export default function AdminLayout({ children }) {
         console.error("Auth verification failed:", error);
         localStorage.removeItem("token");
         localStorage.removeItem("user");
-        router.push("/admin/login");
+        router.push(`${basePath}/admin/login`);
         setIsAuthenticated(false);
       } finally {
         setIsLoading(false);
@@ -69,7 +77,12 @@ export default function AdminLayout({ children }) {
   }, []);
 
   // If on login/register pages, render without layout
-  if (pathname === "/admin/login" || pathname === "/admin/register") {
+  if (
+    pathname === `${basePath}/admin/login` ||
+    pathname === `${basePath}/admin/register` ||
+    pathname === "/admin/login" ||
+    pathname === "/admin/register"
+  ) {
     return <>{children}</>;
   }
 

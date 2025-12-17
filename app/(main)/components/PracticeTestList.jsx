@@ -969,7 +969,7 @@ const PracticeTestList = ({
             <p className="text-sm text-gray-600 mb-4">
               This practice test doesn&apos;t have any questions yet.
             </p>
-            <Button variant="ghost" size="sm" onClick={handleBackToList} >
+            <Button variant="ghost" size="sm" onClick={handleBackToList}>
               Back to Tests
             </Button>
           </div>
@@ -1039,13 +1039,14 @@ const PracticeTestList = ({
                     size="sm"
                     onClick={() => {
                       if (typeof window !== "undefined") {
+                        const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
                         const currentPath =
                           window.location.pathname + window.location.search;
                         sessionStorage.setItem(
                           "redirectAfterLogin",
                           currentPath
                         );
-                        window.location.href = "/login";
+                        window.location.href = `${basePath}/login`;
                       }
                     }}
                     className="flex items-center gap-2 border-purple-600 text-purple-600 hover:bg-purple-50 hover:border-purple-700 hover:text-purple-700"
@@ -1055,7 +1056,7 @@ const PracticeTestList = ({
                   </Button>
 
                   {/* Back */}
-                    <Button variant="ghost" size="sm" onClick={handleBackToList}>
+                  <Button variant="ghost" size="sm" onClick={handleBackToList}>
                     Go Back
                   </Button>
                 </div>
@@ -1246,7 +1247,7 @@ const PracticeTestList = ({
 
           {/* Actions */}
           <div className="flex items-center justify-center gap-3 mb-4">
-            <Button variant="ghost" size="md" onClick={handleBackToList} >
+            <Button variant="ghost" size="md" onClick={handleBackToList}>
               Back to Tests
             </Button>
             <Button
@@ -1281,7 +1282,7 @@ const PracticeTestList = ({
               {test.name}
             </h1>
             <p className="text-sm text-gray-500">
-              Let&apos;s boost your preparation today 
+              Let&apos;s boost your preparation today
             </p>
           </div>
 

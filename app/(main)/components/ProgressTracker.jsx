@@ -3,6 +3,9 @@
 import { useEffect } from "react";
 import { logger } from "@/utils/logger";
 
+// Base path - should match next.config.mjs basePath
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
+
 /**
  * Client component to track student visits to chapters, topics, subtopics, and definitions
  * Automatically tracks visits when students view content pages
@@ -19,7 +22,7 @@ const ProgressTracker = ({
     if (!unitId || !chapterId || !itemType) {
       return;
     }
-    
+
     // For chapter visits, itemId is optional (use chapterId)
     const finalItemId = itemId || chapterId;
 
@@ -30,14 +33,14 @@ const ProgressTracker = ({
       token = localStorage.getItem("student_token");
     } catch (error) {
       // Handle localStorage errors (quota, disabled, etc.)
-      if (error.name === 'QuotaExceededError') {
+      if (error.name === "QuotaExceededError") {
         logger.warn("localStorage quota exceeded, cannot track progress");
       } else {
         logger.warn("Error accessing localStorage:", error);
       }
       return;
     }
-    
+
     if (!token) {
       // Not authenticated, skip tracking
       return;
@@ -46,7 +49,7 @@ const ProgressTracker = ({
     // Track visit
     const trackVisit = async () => {
       try {
-        const response = await fetch("/api/student/progress/track-visit", {
+        const response = await fetch(`${basePath}/api/student/progress/track-visit`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -79,7 +82,10 @@ const ProgressTracker = ({
             }
           } else {
             // Log the error message from the API
-            logger.warn("Failed to track visit:", data.message || "Unknown error");
+            logger.warn(
+              "Failed to track visit:",
+              data.message || "Unknown error"
+            );
           }
         } else {
           // Handle specific HTTP error codes
@@ -98,7 +104,8 @@ const ProgressTracker = ({
             let errorMessage = "Failed to track visit";
             try {
               const errorData = await response.json();
-              errorMessage = errorData.message || errorData.error || errorMessage;
+              errorMessage =
+                errorData.message || errorData.error || errorMessage;
             } catch (e) {
               errorMessage = `Failed to track visit: ${response.status} ${response.statusText}`;
             }
@@ -107,7 +114,7 @@ const ProgressTracker = ({
         }
       } catch (error) {
         // Handle network errors, abort errors, etc.
-        if (error.name === 'AbortError') {
+        if (error.name === "AbortError") {
           // Request was aborted, ignore
           return;
         }
@@ -125,4 +132,3 @@ const ProgressTracker = ({
 };
 
 export default ProgressTracker;
-

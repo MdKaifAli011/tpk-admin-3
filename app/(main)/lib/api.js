@@ -9,18 +9,22 @@ import { logger } from "@/utils/logger";
 // Create slug utility function for use in this file (local variable)
 const createSlugLocal = createSlugUtil;
 
+// Base path - should match next.config.mjs basePath
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
+
 // Helper to get base URL for server-side requests
 const getBaseUrl = () => {
   if (typeof window !== "undefined") {
-    // Client-side: use relative URL
-    return "";
+    // Client-side: use basePath for relative URLs
+    return basePath;
   }
   // Server-side: use absolute URL from environment or default to localhost
-  return (
+  const serverBaseUrl = 
     process.env.NEXT_PUBLIC_API_URL?.replace("/api", "") ||
     process.env.NEXT_PUBLIC_APP_URL ||
-    "http://localhost:3000"
-  );
+    "http://localhost:3000";
+  // Server-side: append basePath to the URL
+  return `${serverBaseUrl}${basePath}`;
 };
 
 // Request cache for deduplication (prevents duplicate requests)

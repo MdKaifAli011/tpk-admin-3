@@ -15,6 +15,9 @@ import {
 } from "react-icons/fa";
 import Image from "next/image";
 
+// Base path - should match next.config.mjs basePath
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
+
 const Footer = () => {
   const usefulLinks = [
     "Connect With Counselor",
@@ -45,7 +48,7 @@ const Footer = () => {
             {/* Logo */}
             <Link href="/">
               <Image
-                src="/logo.png"
+                src={`${basePath}/logo.png`}
                 alt="TestPrepKart Logo"
                 width={150}
                 height={150}

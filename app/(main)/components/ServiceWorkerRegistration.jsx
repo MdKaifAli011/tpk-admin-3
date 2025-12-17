@@ -2,6 +2,9 @@
 
 import { useEffect } from "react";
 
+// Base path - should match next.config.mjs basePath
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
+
 /**
  * Service Worker Registration Component
  * Registers service worker for offline support and caching
@@ -13,9 +16,9 @@ const ServiceWorkerRegistration = () => {
       "serviceWorker" in navigator &&
       process.env.NODE_ENV === "production"
     ) {
-      // Register service worker
+      // Register service worker with basePath
       navigator.serviceWorker
-        .register("/sw.js")
+        .register(`${basePath}/sw.js`)
         .then((registration) => {
           // Update available - notify user (optional)
           registration.addEventListener("updatefound", () => {

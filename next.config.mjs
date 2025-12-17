@@ -1,5 +1,17 @@
+import { fileURLToPath } from "url";
+import { dirname, resolve } from "path";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Base path configuration - all routes will be prefixed with /self-study
+  basePath: "/self-study",
+
+  // Fix workspace root warning - explicitly set the root directory
+  outputFileTracingRoot: resolve(__dirname),
+
   // Production optimizations
   reactStrictMode: true,
   poweredByHeader: false,
@@ -45,7 +57,7 @@ const nextConfig = {
   async headers() {
     return [
       {
-        source: "/:path*",
+        source: "/self-study/:path*", // Apply headers to paths under /self-study
         headers: [
           {
             key: "X-DNS-Prefetch-Control",

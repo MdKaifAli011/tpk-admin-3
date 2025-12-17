@@ -111,7 +111,7 @@ export function generateMetadata(data, options = {}) {
       siteName: APP_CONFIG.name,
       images: [
         {
-          url: `${APP_CONFIG.url}${SEO_DEFAULTS.OG_IMAGE}`,
+          url: `${APP_CONFIG.url}${process.env.NEXT_PUBLIC_BASE_PATH || ""}${SEO_DEFAULTS.OG_IMAGE}`,
           width: 1200,
           height: 630,
           alt: optimizedTitle,
@@ -123,7 +123,7 @@ export function generateMetadata(data, options = {}) {
       card: "summary_large_image",
       title: optimizedTitle,
       description: optimizedDescription,
-      images: [`${APP_CONFIG.url}${SEO_DEFAULTS.OG_IMAGE}`],
+      images: [`${APP_CONFIG.url}${process.env.NEXT_PUBLIC_BASE_PATH || ""}${SEO_DEFAULTS.OG_IMAGE}`],
       creator: "@testprepkart",
       site: "@testprepkart",
     },

@@ -23,6 +23,9 @@ import api from "../../../lib/api.js";
 import Navbar from "../layout/Navbar";
 import Footer from "../layout/Footer";
 
+// Base path - should match next.config.mjs basePath
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
+
 /**
  * RegisterPage - Upgraded UI to match the new LoginPage theme.
  * - Uses a left-side illustration (different from Login) at /education-register-illustration.png
@@ -135,7 +138,9 @@ const RegisterPage = () => {
   useEffect(() => {
     const loadExams = async () => {
       try {
-        const response = await fetch("/api/exam?status=active&limit=100");
+        const response = await fetch(
+          `${basePath}/api/exam?status=active&limit=100`
+        );
         if (response.ok) {
           const data = await response.json();
           if (data.success && data.data) {
@@ -285,7 +290,7 @@ const RegisterPage = () => {
             verifyResponse.data.data?.student
           ) {
             // Student verified, proceed to home page
-            router.push("/");
+            router.push(`${basePath}/`);
           } else {
             // Student not found or inactive
             setError("Account verification failed. Please try logging in.");
@@ -333,7 +338,7 @@ const RegisterPage = () => {
             {/* Left Illustration + marketing (different illustration as requested) */}
             <div className="hidden md:flex flex-col items-start justify-center px-6">
               <Image
-                src="/images/register.png"
+                src={`${basePath}/images/register.png`}
                 alt="Register Illustration"
                 width={520}
                 height={520}
@@ -359,7 +364,7 @@ const RegisterPage = () => {
                 >
                   <div className="relative inline-block">
                     <Image
-                      src="/logo.png"
+                      src={`${basePath}/logo.png`}
                       alt="TestPrepKart Logo"
                       width={84}
                       height={84}

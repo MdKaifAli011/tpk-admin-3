@@ -8,7 +8,12 @@ import {
   markSubjectCongratulationsShown,
 } from "@/lib/congratulations";
 
-const SubjectProgressClient = ({ subjectId, subjectName, unitIds = [], initialProgress = 0 }) => {
+const SubjectProgressClient = ({
+  subjectId,
+  subjectName,
+  unitIds = [],
+  initialProgress = 0,
+}) => {
   const [progress, setProgress] = useState(initialProgress);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showCongratulations, setShowCongratulations] = useState(false);
@@ -16,7 +21,7 @@ const SubjectProgressClient = ({ subjectId, subjectName, unitIds = [], initialPr
   const prevProgressRef = useRef(initialProgress);
   const isInitializedRef = useRef(false);
   const isCheckingRef = useRef(false);
-  
+
   // Reset initialization flag when subjectId or unitIds change
   useEffect(() => {
     isInitializedRef.current = false;
@@ -49,12 +54,15 @@ const SubjectProgressClient = ({ subjectId, subjectName, unitIds = [], initialPr
         // Fetch progress for all units
         const unitProgressPromises = unitIds.map(async (unitId) => {
           try {
-            const response = await fetch(`/api/student/progress?unitId=${unitId}`, {
-              headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json",
-              },
-            });
+            const response = await fetch(
+              `/api/student/progress?unitId=${unitId}`,
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                },
+              }
+            );
 
             if (response.ok) {
               const data = await response.json();
@@ -89,7 +97,7 @@ const SubjectProgressClient = ({ subjectId, subjectName, unitIds = [], initialPr
           const dbProgress = await fetchProgressFromDB();
           if (dbProgress !== null) {
             setProgress(dbProgress);
-            
+
             // On first check (initialization), set prevProgress to current progress
             // This prevents showing modal when visiting a page where subject is already completed
             if (!isInitializedRef.current && !isCheckingRef.current) {
@@ -106,7 +114,7 @@ const SubjectProgressClient = ({ subjectId, subjectName, unitIds = [], initialPr
               });
               return; // Don't show modal on initial load
             }
-            
+
             // CRITICAL: Only check for modal if initialization is complete
             // This prevents race condition where modal shows before async check completes
             if (!isInitializedRef.current) {
@@ -116,12 +124,17 @@ const SubjectProgressClient = ({ subjectId, subjectName, unitIds = [], initialPr
             // Check if we've already shown congratulations for this completion
             const wasCompleted = prevProgressRef.current === 100;
             const isNowCompleted = dbProgress === 100;
-            
+
             // Show congratulations only if:
             // 1. Progress just reached exactly 100% (wasn't 100% before)
             // 2. We haven't shown the modal for this completion yet
             // 3. Initialization is complete (prevents showing on page visit)
-            if (isNowCompleted && !wasCompleted && !congratulationsShown && isInitializedRef.current) {
+            if (
+              isNowCompleted &&
+              !wasCompleted &&
+              !congratulationsShown &&
+              isInitializedRef.current
+            ) {
               setShowCongratulations(true);
               // Mark as shown in database
               markSubjectCongratulationsShown(subjectId).then((success) => {
@@ -131,7 +144,7 @@ const SubjectProgressClient = ({ subjectId, subjectName, unitIds = [], initialPr
               });
             }
             prevProgressRef.current = dbProgress;
-            
+
             // Save subject progress to database
             try {
               // Get token for authorization header
@@ -140,33 +153,39 @@ const SubjectProgressClient = ({ subjectId, subjectName, unitIds = [], initialPr
                 console.error("No token available for saving subject progress");
                 return;
               }
-              
-              const saveResponse = await fetch("/api/student/progress/subject", {
-                method: "POST",
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                  subjectId,
-                  subjectProgress: dbProgress,
-                }),
-              });
-              
+
+              const saveResponse = await fetch(
+                "/api/student/progress/subject",
+                {
+                  method: "POST",
+                  headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({
+                    subjectId,
+                    subjectProgress: dbProgress,
+                  }),
+                }
+              );
+
               if (!saveResponse.ok) {
                 console.error("Failed to save subject progress to database");
               }
             } catch (error) {
-              console.error("Error saving subject progress to database:", error);
+              console.error(
+                "Error saving subject progress to database:",
+                error
+              );
             }
-            
+
             return;
           }
         }
 
         // If not authenticated, set progress to 0 (no localStorage fallback)
         const subjectProgress = 0;
-        
+
         // On first check (initialization), set prevProgress to current progress
         if (!isInitializedRef.current && !isCheckingRef.current) {
           isCheckingRef.current = true;
@@ -182,7 +201,7 @@ const SubjectProgressClient = ({ subjectId, subjectName, unitIds = [], initialPr
           });
           return;
         }
-        
+
         setProgress(subjectProgress);
         prevProgressRef.current = subjectProgress;
       } catch (error) {
@@ -205,7 +224,10 @@ const SubjectProgressClient = ({ subjectId, subjectName, unitIds = [], initialPr
     };
 
     window.addEventListener("progress-updated", handleProgressUpdate);
-    window.addEventListener("chapterProgressUpdate", handleChapterProgressUpdate);
+    window.addEventListener(
+      "chapterProgressUpdate",
+      handleChapterProgressUpdate
+    );
 
     // Poll for changes when authenticated (to sync with DB updates from other tabs)
     // Poll less frequently to improve performance
@@ -217,7 +239,10 @@ const SubjectProgressClient = ({ subjectId, subjectName, unitIds = [], initialPr
 
     return () => {
       window.removeEventListener("progress-updated", handleProgressUpdate);
-      window.removeEventListener("chapterProgressUpdate", handleChapterProgressUpdate);
+      window.removeEventListener(
+        "chapterProgressUpdate",
+        handleChapterProgressUpdate
+      );
       if (interval) {
         clearInterval(interval);
       }

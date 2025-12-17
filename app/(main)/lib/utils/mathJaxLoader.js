@@ -2,7 +2,10 @@
  * MathJax loader utility with proper initialization
  */
 
-const MATHJAX_SCRIPT_SRC = "/vendor/mathjax/MathJax.js?config=TeX-AMS_HTML";
+// Base path - should match next.config.mjs basePath
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
+
+const MATHJAX_SCRIPT_SRC = `${basePath}/vendor/mathjax/MathJax.js?config=TeX-AMS_HTML`;
 
 let mathJaxPromise = null;
 let mathJaxError = false;

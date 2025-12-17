@@ -22,6 +22,9 @@ import {
   countryCodeMap,
   classOptions,
 } from "./constants/formConstants";
+
+// Base path - should match next.config.mjs basePath
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
 import { useVerification } from "./hooks/useVerification";
 import {
   validateName,
@@ -77,7 +80,7 @@ const TestSubmissionRegistrationModal = ({
   useEffect(() => {
     const loadExams = async () => {
       try {
-        const response = await fetch("/api/exam?status=active&limit=100");
+        const response = await fetch(`${basePath}/api/exam?status=active&limit=100`);
         if (response.ok) {
           const data = await response.json();
           if (data.success && data.data) {

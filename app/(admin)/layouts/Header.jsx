@@ -5,6 +5,9 @@ import { useState, useEffect, memo } from "react";
 import { FaUser, FaSignOutAlt, FaBars } from "react-icons/fa";
 import { usePathname } from "next/navigation";
 
+// Base path - should match next.config.mjs basePath
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
+
 const Header = memo(({ onMenuToggle }) => {
   const pathname = usePathname();
   const [user, setUser] = useState(null);
@@ -46,7 +49,7 @@ const Header = memo(({ onMenuToggle }) => {
         {/* Logo */}
         <div className="flex items-center">
           <Image
-            src="/logo.png"
+            src={`${basePath}/logo.png`}
             alt="TestPrepKart Logo"
             width={150}
             height={150}

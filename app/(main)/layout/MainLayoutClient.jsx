@@ -21,7 +21,11 @@ export default function MainLayoutClient({ children }) {
 
   // Memoize showSidebar to prevent unnecessary recalculations
   const showSidebar = useMemo(() => {
-    return pathname !== "/" && pathname !== "/contact";
+    return (
+      pathname !== "/" &&
+      pathname !== "/contact" &&
+      !pathname?.startsWith("/calculator")
+    );
   }, [pathname]);
 
   // Track previous showSidebar value to detect actual changes

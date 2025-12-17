@@ -233,16 +233,20 @@ const FormRenderer = ({
             try {
               // Validate URL before redirecting
               const url = buttonLink.trim();
+              const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
               if (
                 url.startsWith("http://") ||
-                url.startsWith("https://") ||
-                url.startsWith("/")
+                url.startsWith("https://")
               ) {
+                // External URL - use as is
                 window.location.href = url;
+              } else if (url.startsWith("/")) {
+                // Relative URL starting with / - include basePath
+                window.location.href = `${basePath}${url}`;
               } else {
                 // If no protocol, assume it's a relative URL or add https://
                 window.location.href = url.startsWith("/")
-                  ? url
+                  ? `${basePath}${url}`
                   : `https://${url}`;
               }
             } catch (error) {

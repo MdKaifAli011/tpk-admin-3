@@ -16,6 +16,9 @@ import api from "../../../lib/api.js";
 import Navbar from "../layout/Navbar";
 import Footer from "../layout/Footer";
 
+// Base path - should match next.config.mjs basePath
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
+
 const LoginPage = () => {
   const router = useRouter();
 
@@ -65,7 +68,7 @@ const LoginPage = () => {
             verifyResponse.data.data?.student
           ) {
             // Student verified, proceed to home page
-            router.push("/");
+            router.push(`${basePath}/`);
           } else {
             // Student not found or inactive
             setError(
@@ -120,7 +123,7 @@ const LoginPage = () => {
             {/* LEFT SECTION – Illustration + Text */}
             <div className="hidden md:flex flex-col items-start px-6">
               <Image
-                src="/images/login.png"
+                src={`${basePath}/images/login.png`}
                 alt="Learning Illustration"
                 width={420}
                 height={420}
@@ -143,7 +146,7 @@ const LoginPage = () => {
               {/* Logo */}
               <div className="text-center mb-6">
                 <Image
-                  src="/logo.png"
+                  src={`${basePath}/logo.png`}
                   alt="Logo"
                   width={85}
                   height={85}

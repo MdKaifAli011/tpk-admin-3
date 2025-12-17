@@ -7,11 +7,14 @@ const CACHE_NAME = "testprepkart-v1";
 const RUNTIME_CACHE = "testprepkart-runtime-v1";
 const STATIC_CACHE = "testprepkart-static-v1";
 
+// Base path - should match next.config.mjs basePath
+const BASE_PATH = "/self-study";
+
 // Assets to cache on install
 const STATIC_ASSETS = [
-  "/",
-  "/favicon.ico",
-  "/logo.png",
+  `${BASE_PATH}/`,
+  `${BASE_PATH}/favicon.ico`,
+  `${BASE_PATH}/logo.png`,
 ];
 
 // Install event - cache static assets
@@ -62,7 +65,13 @@ self.addEventListener("fetch", (event) => {
   }
 
   // Skip API requests (they should always be fresh)
-  if (url.pathname.startsWith("/api/")) {
+  // Handle both /api/ and /self-study/api/
+  if (url.pathname.startsWith("/api/") || url.pathname.startsWith(`${BASE_PATH}/api/`)) {
+    return;
+  }
+
+  // Skip Next.js internal routes
+  if (url.pathname.startsWith("/_next/")) {
     return;
   }
 
@@ -115,7 +124,7 @@ self.addEventListener("fetch", (event) => {
             }
             // Fallback to offline page if available
             if (request.destination === "document") {
-              return caches.match("/offline.html");
+              return caches.match(`${BASE_PATH}/offline.html`);
             }
           });
         })

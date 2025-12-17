@@ -3,6 +3,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { logger } from "../../../utils/logger.js";
 
+// Base path - should match next.config.mjs basePath
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
+
 /**
  * Custom hook to fetch and manage student data from the database
  * Replaces localStorage usage for student data
@@ -36,7 +39,7 @@ export const useStudent = () => {
       setIsLoading(true);
       setError(null);
 
-      const response = await fetch("/api/student/auth/verify", {
+      const response = await fetch(`${basePath}/api/student/auth/verify`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -99,4 +102,3 @@ export const useStudent = () => {
     getToken,
   };
 };
-

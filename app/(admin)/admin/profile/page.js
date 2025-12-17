@@ -113,7 +113,8 @@ const ProfilePage = () => {
           setError("Your account is no longer available. Please login again.");
           // Redirect to login after a short delay
           setTimeout(() => {
-            window.location.href = "/admin/login";
+            const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
+            window.location.href = `${basePath}/admin/login`;
           }, 2000);
         }
       } catch (err) {
@@ -263,9 +264,7 @@ const ProfilePage = () => {
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center bg-white rounded-lg border border-gray-200 p-8 max-w-md">
           <span className="text-3xl mb-4 inline-block">👤</span>
-          <h3 className="text-xl font-bold text-gray-900 mb-2">
-            No User Data
-          </h3>
+          <h3 className="text-xl font-bold text-gray-900 mb-2">No User Data</h3>
           <p className="text-sm text-gray-500 mb-6">
             User data not found. Please login again.
           </p>

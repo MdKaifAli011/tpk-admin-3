@@ -2,6 +2,9 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 
+// Base path - should match next.config.mjs basePath
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
+
 /**
  * Custom hook for managing progress tracking
  * Handles database persistence and local storage caching
@@ -55,7 +58,7 @@ export const useProgress = (unitId, chapters = []) => {
         } catch (clearError) {
           console.error("Error clearing corrupted localStorage:", clearError);
         }
-      } else if (error.name === 'QuotaExceededError') {
+      } else if (error.name === "QuotaExceededError") {
         console.error("localStorage quota exceeded");
       } else {
         console.error("Error loading progress from localStorage:", error);
@@ -74,80 +77,85 @@ export const useProgress = (unitId, chapters = []) => {
   }, [storageKey, chapters]);
 
   // Load progress from database
-  const loadProgressFromDB = useCallback(async (abortSignal) => {
-    if (!isAuthenticated) {
-      // If not authenticated, return empty progress (no localStorage fallback)
-      return { progress: {}, unitProgress: 0 };
-    }
-
-    try {
-      const token = getAuthToken();
-      if (!token) {
-        // No token, return empty progress
+  const loadProgressFromDB = useCallback(
+    async (abortSignal) => {
+      if (!isAuthenticated) {
+        // If not authenticated, return empty progress (no localStorage fallback)
         return { progress: {}, unitProgress: 0 };
       }
 
-      const response = await fetch(`/api/student/progress?unitId=${unitId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        signal: abortSignal,
-      });
+      try {
+        const token = getAuthToken();
+        if (!token) {
+          // No token, return empty progress
+          return { progress: {}, unitProgress: 0 };
+        }
 
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success && data.data && data.data.length > 0) {
-          const progressDoc = data.data[0];
-          // Convert Map to object (progress is already converted to object by API)
-          const progressObj = {};
-          if (progressDoc.progress && typeof progressDoc.progress === "object") {
-            Object.keys(progressDoc.progress).forEach((key) => {
-              const value = progressDoc.progress[key];
-              progressObj[key] = {
-                progress: value.progress || 0,
-                isCompleted: value.isCompleted || false,
-                isManualOverride: value.isManualOverride || false,
-                manualProgress: value.manualProgress || null,
-                autoCalculatedProgress: value.autoCalculatedProgress || 0,
-                visitedItems: value.visitedItems || {
-                  chapter: false,
-                  topics: [],
-                  subtopics: [],
-                  definitions: [],
-                },
-                congratulationsShown: value.congratulationsShown || false,
-              };
-            });
+        const response = await fetch(`${basePath}/api/student/progress?unitId=${unitId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          signal: abortSignal,
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.data && data.data.length > 0) {
+            const progressDoc = data.data[0];
+            // Convert Map to object (progress is already converted to object by API)
+            const progressObj = {};
+            if (
+              progressDoc.progress &&
+              typeof progressDoc.progress === "object"
+            ) {
+              Object.keys(progressDoc.progress).forEach((key) => {
+                const value = progressDoc.progress[key];
+                progressObj[key] = {
+                  progress: value.progress || 0,
+                  isCompleted: value.isCompleted || false,
+                  isManualOverride: value.isManualOverride || false,
+                  manualProgress: value.manualProgress || null,
+                  autoCalculatedProgress: value.autoCalculatedProgress || 0,
+                  visitedItems: value.visitedItems || {
+                    chapter: false,
+                    topics: [],
+                    subtopics: [],
+                    definitions: [],
+                  },
+                  congratulationsShown: value.congratulationsShown || false,
+                };
+              });
+            }
+
+            // DO NOT save to localStorage - unit progress only in DB
+            // Removed localStorage caching for unit progress
+
+            return {
+              progress: progressObj,
+              unitProgress: progressDoc.unitProgress || 0,
+            };
           }
-
-          // DO NOT save to localStorage - unit progress only in DB
-          // Removed localStorage caching for unit progress
-
-          return {
-            progress: progressObj,
-            unitProgress: progressDoc.unitProgress || 0,
-          };
+        } else if (response.status === 401) {
+          // Authentication error
+          if (typeof window !== "undefined") {
+            localStorage.removeItem("student_token");
+          }
+          setIsAuthenticated(false);
         }
-      } else if (response.status === 401) {
-        // Authentication error
-        if (typeof window !== "undefined") {
-          localStorage.removeItem("student_token");
+      } catch (error) {
+        // Ignore abort errors
+        if (error.name === "AbortError") {
+          return null;
         }
-        setIsAuthenticated(false);
+        console.error("Error loading progress from database:", error);
       }
-    } catch (error) {
-      // Ignore abort errors
-      if (error.name === 'AbortError') {
-        return null;
-      }
-      console.error("Error loading progress from database:", error);
-    }
 
-    // Return empty progress if DB fetch fails (no localStorage fallback)
-    return { progress: {}, unitProgress: 0 };
-  }, [unitId, isAuthenticated, getAuthToken]);
-
+      // Return empty progress if DB fetch fails (no localStorage fallback)
+      return { progress: {}, unitProgress: 0 };
+    },
+    [unitId, isAuthenticated, getAuthToken]
+  );
 
   // Save progress to database
   const saveProgressToDB = useCallback(
@@ -175,7 +183,7 @@ export const useProgress = (unitId, chapters = []) => {
             progressMap[chapterId] = progressData[chapterId];
           });
 
-          const response = await fetch("/api/student/progress", {
+          const response = await fetch(`${basePath}/api/student/progress`, {
             method: "PUT",
             headers: {
               Authorization: `Bearer ${token}`,
@@ -196,11 +204,15 @@ export const useProgress = (unitId, chapters = []) => {
               }
               setIsAuthenticated(false);
             } else {
-              console.error("Failed to save progress to database:", response.status, response.statusText);
+              console.error(
+                "Failed to save progress to database:",
+                response.status,
+                response.statusText
+              );
             }
           }
         } catch (error) {
-          if (error.name !== 'AbortError') {
+          if (error.name !== "AbortError") {
             console.error("Error saving progress to database:", error);
           }
         }
@@ -211,18 +223,21 @@ export const useProgress = (unitId, chapters = []) => {
 
   // Calculate unit progress from chapters
   // IMPORTANT: Uses ALL chapters passed to hook (consistent with API calculation)
-  const calculateUnitProgress = useCallback((progressData) => {
-    if (chapters.length === 0) return 0;
+  const calculateUnitProgress = useCallback(
+    (progressData) => {
+      if (chapters.length === 0) return 0;
 
-    // Sum progress for ALL chapters (0% for chapters without progress data)
-    // This matches the API calculation in track-visit route
-    const totalProgress = chapters.reduce((sum, chapter) => {
-      const chapterData = progressData[chapter._id] || { progress: 0 };
-      return sum + (chapterData.progress || 0);
-    }, 0);
+      // Sum progress for ALL chapters (0% for chapters without progress data)
+      // This matches the API calculation in track-visit route
+      const totalProgress = chapters.reduce((sum, chapter) => {
+        const chapterData = progressData[chapter._id] || { progress: 0 };
+        return sum + (chapterData.progress || 0);
+      }, 0);
 
-    return Math.round(totalProgress / chapters.length);
-  }, [chapters]);
+      return Math.round(totalProgress / chapters.length);
+    },
+    [chapters]
+  );
 
   // Initialize progress on mount
   useEffect(() => {
@@ -236,14 +251,14 @@ export const useProgress = (unitId, chapters = []) => {
 
       try {
         const loaded = await loadProgressFromDB(abortController.signal);
-        
+
         if (!isMounted || !loaded) return;
-        
+
         setChaptersProgress(loaded.progress);
         setUnitProgress(loaded.unitProgress);
         isInitialLoadRef.current = false;
       } catch (error) {
-        if (error.name !== 'AbortError') {
+        if (error.name !== "AbortError") {
           console.error("Error initializing progress:", error);
         }
       } finally {
@@ -277,7 +292,7 @@ export const useProgress = (unitId, chapters = []) => {
             setUnitProgress(loaded.unitProgress);
           }
         } catch (error) {
-          if (error.name !== 'AbortError') {
+          if (error.name !== "AbortError") {
             console.error("Error updating progress:", error);
           }
         }
@@ -295,7 +310,7 @@ export const useProgress = (unitId, chapters = []) => {
             setUnitProgress(loaded.unitProgress);
           }
         } catch (error) {
-          if (error.name !== 'AbortError') {
+          if (error.name !== "AbortError") {
             console.error("Error updating chapter progress:", error);
           }
         }
@@ -304,7 +319,10 @@ export const useProgress = (unitId, chapters = []) => {
 
     if (typeof window !== "undefined") {
       window.addEventListener("progress-updated", handleProgressUpdate);
-      window.addEventListener("chapterProgressUpdate", handleChapterProgressUpdate);
+      window.addEventListener(
+        "chapterProgressUpdate",
+        handleChapterProgressUpdate
+      );
     }
 
     return () => {
@@ -312,7 +330,10 @@ export const useProgress = (unitId, chapters = []) => {
       abortController.abort();
       if (typeof window !== "undefined") {
         window.removeEventListener("progress-updated", handleProgressUpdate);
-        window.removeEventListener("chapterProgressUpdate", handleChapterProgressUpdate);
+        window.removeEventListener(
+          "chapterProgressUpdate",
+          handleChapterProgressUpdate
+        );
       }
     };
   }, [unitId, isAuthenticated, loadProgressFromDB]);
@@ -325,14 +346,16 @@ export const useProgress = (unitId, chapters = []) => {
         const autoProgress = prevChapter.autoCalculatedProgress || 0;
         // If progress differs from auto-calculated, it's a manual override
         const isManual = progress !== autoProgress;
-        
+
         const updated = {
           ...prev,
           [chapterId]: {
             progress: Math.max(0, Math.min(100, progress)),
             isCompleted: isCompleted || progress === 100,
             isManualOverride: isManual || prevChapter.isManualOverride || false,
-            manualProgress: isManual ? progress : (prevChapter.manualProgress || null),
+            manualProgress: isManual
+              ? progress
+              : prevChapter.manualProgress || null,
             autoCalculatedProgress: prevChapter.autoCalculatedProgress || 0,
             visitedItems: prevChapter.visitedItems || {
               chapter: false,

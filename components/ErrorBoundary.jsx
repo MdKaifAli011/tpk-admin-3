@@ -67,7 +67,7 @@ class ErrorBoundary extends React.Component {
                 Try Again
               </button>
               <a
-                href="/"
+                href={typeof window !== "undefined" ? `${process.env.NEXT_PUBLIC_BASE_PATH || "/self-study"}/` : "/"}
                 className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
               >
                 <FaHome className="text-sm" />

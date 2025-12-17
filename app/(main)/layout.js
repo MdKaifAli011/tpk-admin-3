@@ -19,12 +19,13 @@ export const metadata = generateSEO(
 );
 
 export default function MainLayout({ children }) {
+  const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
   return (
     <>
       {/* Preload critical resources for better FCP and LCP */}
       <link
         rel="preload"
-        href="/logo.png"
+        href={`${basePath}/logo.png`}
         as="image"
         type="image/png"
         fetchPriority="high"

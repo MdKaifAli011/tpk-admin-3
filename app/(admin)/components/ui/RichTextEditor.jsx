@@ -4,8 +4,11 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { FaTimes, FaSearch } from "react-icons/fa";
 import api from "@/lib/api";
 
-const CKEDITOR_SCRIPT = "/vendor/ckeditor/ckeditor.js";
-const MATHJAX_SCRIPT = "/vendor/mathjax/MathJax.js?config=TeX-AMS_HTML";
+// Base path - should match next.config.mjs basePath
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
+
+const CKEDITOR_SCRIPT = `${basePath}/vendor/ckeditor/ckeditor.js`;
+const MATHJAX_SCRIPT = `${basePath}/vendor/mathjax/MathJax.js?config=TeX-AMS_HTML`;
 
 const RichTextEditor = ({
   value = "",

@@ -127,8 +127,9 @@ const RichContent = ({ html }) => {
           // Handle relative URLs - use Next.js router for internal navigation
           if (href.startsWith('/')) {
             e.preventDefault();
-            // Use window.location for reliable navigation
-            window.location.href = href;
+            // Use window.location for reliable navigation - include basePath
+            const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
+            window.location.href = `${basePath}${href}`;
           } else if (href.startsWith('http://') || href.startsWith('https://')) {
             // External links - let default behavior handle it (target="_blank" already set)
             // No need to prevent default
@@ -136,9 +137,10 @@ const RichContent = ({ html }) => {
             // Anchor links - let default behavior handle it
             // No need to prevent default
           } else {
-            // Treat as relative URL
+            // Treat as relative URL - include basePath
             e.preventDefault();
-            window.location.href = `/${href}`;
+            const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
+            window.location.href = `${basePath}/${href}`;
           }
         }
       } else if (buttonLink.tagName === 'BUTTON') {
@@ -338,9 +340,10 @@ const RichContent = ({ html }) => {
       const uniqueFormIds = [...new Set(forms.map((f) => f.formId))];
 
       // Batch fetch all form configs in parallel
+      const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
       const fetchPromises = uniqueFormIds.map(async (formId) => {
         try {
-          const response = await fetch(`/api/form/${formId}`);
+          const response = await fetch(`${basePath}/api/form/${formId}`);
           if (response.ok) {
             const data = await response.json();
             if (data.success) {

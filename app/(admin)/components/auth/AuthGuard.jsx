@@ -3,6 +3,9 @@ import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import api from "@/lib/api";
 
+// Base path - should match next.config.mjs basePath
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
+
 const AuthGuard = ({ children }) => {
   const router = useRouter();
   const pathname = usePathname();
@@ -19,7 +22,7 @@ const AuthGuard = ({ children }) => {
         if (!token) {
           // No token, redirect to login
           localStorage.removeItem("user");
-          router.push("/admin/login");
+          router.push(`${basePath}/admin/login`);
           return;
         }
 
@@ -37,10 +40,12 @@ const AuthGuard = ({ children }) => {
 
             // If we're on login/register page and user is authenticated, redirect to dashboard
             if (
+              pathname === `${basePath}/admin/login` ||
+              pathname === `${basePath}/admin/register` ||
               pathname === "/admin/login" ||
               pathname === "/admin/register"
             ) {
-              router.push("/admin");
+              router.push(`${basePath}/admin`);
               return;
             }
           } else {
@@ -54,8 +59,13 @@ const AuthGuard = ({ children }) => {
           localStorage.removeItem("user");
           
           // Only redirect if not already on login/register page
-          if (pathname !== "/admin/login" && pathname !== "/admin/register") {
-            router.push("/admin/login");
+          if (
+            pathname !== `${basePath}/admin/login` &&
+            pathname !== `${basePath}/admin/register` &&
+            pathname !== "/admin/login" &&
+            pathname !== "/admin/register"
+          ) {
+            router.push(`${basePath}/admin/login`);
           }
           setIsAuthenticated(false);
         }
@@ -63,8 +73,13 @@ const AuthGuard = ({ children }) => {
         console.error("Auth check error:", error);
         localStorage.removeItem("token");
         localStorage.removeItem("user");
-        if (pathname !== "/admin/login" && pathname !== "/admin/register") {
-          router.push("/admin/login");
+        if (
+          pathname !== `${basePath}/admin/login` &&
+          pathname !== `${basePath}/admin/register` &&
+          pathname !== "/admin/login" &&
+          pathname !== "/admin/register"
+        ) {
+          router.push(`${basePath}/admin/login`);
         }
         setIsAuthenticated(false);
       } finally {
@@ -88,7 +103,12 @@ const AuthGuard = ({ children }) => {
   }
 
   // If on login/register pages, don't require auth
-  if (pathname === "/admin/login" || pathname === "/admin/register") {
+  if (
+    pathname === `${basePath}/admin/login` ||
+    pathname === `${basePath}/admin/register` ||
+    pathname === "/admin/login" ||
+    pathname === "/admin/register"
+  ) {
     return <>{children}</>;
   }
 

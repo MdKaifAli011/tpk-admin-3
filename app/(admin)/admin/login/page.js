@@ -48,7 +48,8 @@ const LoginPage = () => {
         }
 
         // Redirect to admin dashboard
-        router.push("/admin");
+        const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
+        router.push(`${basePath}/admin`);
       } else {
         setError(response.data.message || "Login failed");
       }

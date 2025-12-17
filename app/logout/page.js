@@ -2,6 +2,9 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
+// Base path - should match next.config.mjs basePath
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
+
 const LogoutPage = () => {
   const router = useRouter();
 
@@ -10,10 +13,11 @@ const LogoutPage = () => {
     if (typeof window !== "undefined") {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
+      localStorage.removeItem("student_token");
     }
 
-    // Redirect to root route
-    router.push("/");
+    // Redirect to root route with basePath
+    router.push(`${basePath}/`);
   }, [router]);
 
   return (

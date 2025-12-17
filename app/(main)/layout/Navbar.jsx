@@ -15,13 +15,32 @@ import {
   FaBars,
   FaChevronDown,
   FaSignOutAlt,
+  FaEnvelope,
+  FaPhone,
 } from "react-icons/fa";
 import Image from "next/image";
 import { useStudent } from "../hooks/useStudent";
+import ExaminationsMegaMenu from "./components/ExaminationsMegaMenu";
+import CoursesMegaMenu from "./components/CoursesMegaMenu";
+import UtilitiesMegaMenu from "./components/UtilitiesMegaMenu";
+import DownloadsMegaMenu from "./components/DownloadsMegaMenu";
+import ContactMegaMenu from "./components/ContactMegaMenu";
+import {
+  ExaminationsMobileContent,
+  CoursesMobileContent,
+  UtilitiesMobileContent,
+  DownloadsMobileContent,
+  ContactMobileContent,
+} from "./components/MobileMenuContent";
+
+// Base path - should match next.config.mjs basePath
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
 
 const Navbar = memo(({ onMenuToggle, isMenuOpen }) => {
   const [isNavMenuOpen, setIsNavMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [activeMegaMenu, setActiveMegaMenu] = useState(null);
+  const [mobileExpandedMenu, setMobileExpandedMenu] = useState(null);
   const router = useRouter();
   const { student, isLoading, isAuthenticated, logout } = useStudent();
 
@@ -95,16 +114,19 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen }) => {
       if (isUserMenuOpen && !event.target.closest(".user-menu-container")) {
         setIsUserMenuOpen(false);
       }
+      if (activeMegaMenu && !event.target.closest(".mega-menu-container")) {
+        setActiveMegaMenu(null);
+      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [isUserMenuOpen]);
+  }, [isUserMenuOpen, activeMegaMenu]);
 
   // Handle logout
   const handleLogout = () => {
     logout();
     setIsUserMenuOpen(false);
-    router.push("/");
+    router.push(`${basePath}/`);
   };
 
   // Get user display name
@@ -119,12 +141,24 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen }) => {
   };
 
   const navLinks = [
-    "Examinations",
-    "Courses",
-    "Utilities",
-    "Downloads",
-    "Contact",
+    { name: "Examinations", key: "examinations" },
+    { name: "Courses", key: "courses" },
+    { name: "Utilities", key: "utilities" },
+    { name: "Downloads", key: "downloads" },
+    { name: "Contact", key: "contact" },
   ];
+
+  const handleMegaMenuHover = (key) => {
+    setActiveMegaMenu(key);
+  };
+
+  const handleMegaMenuLeave = () => {
+    setActiveMegaMenu(null);
+  };
+
+  const toggleMobileMenu = (key) => {
+    setMobileExpandedMenu(mobileExpandedMenu === key ? null : key);
+  };
 
   return (
     <nav data-navbar className="fixed top-0 left-0 right-0 w-full z-50">
@@ -148,7 +182,12 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen }) => {
                 </span>
                 <span className="sm:hidden text-[10px]">500k</span>
               </div>
-              <div className="flex items-center gap-1">
+              <a
+                href="https://api.whatsapp.com/send?phone=15107069331"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 hover:text-blue-300 transition-colors"
+              >
                 <FaWhatsapp className="text-[10px] sm:text-xs md:text-sm" />
                 <span className="hidden lg:inline text-[10px] sm:text-xs">
                   +1 (510) 706-9331
@@ -156,7 +195,7 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen }) => {
                 <span className="lg:hidden hidden sm:inline text-[10px] sm:text-xs">
                   +1 (510) 706-9331
                 </span>
-              </div>
+              </a>
             </div>
 
             {/* Center: Hot Button with Message */}
@@ -172,11 +211,46 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen }) => {
 
             {/* Right: Social Media Icons */}
             <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2 xl:gap-3">
-              <FaYoutube className="text-[10px] sm:text-xs md:text-sm cursor-pointer hover:text-blue-400 transition-colors touch-manipulation" />
-              <FaFacebook className="text-[10px] sm:text-xs md:text-sm cursor-pointer hover:text-blue-400 transition-colors touch-manipulation" />
-              <FaTwitter className="text-[10px] sm:text-xs md:text-sm cursor-pointer hover:text-blue-400 transition-colors touch-manipulation" />
-              <FaLinkedin className="text-[10px] sm:text-xs md:text-sm cursor-pointer hover:text-blue-400 transition-colors hidden lg:inline touch-manipulation" />
-              <FaInstagram className="text-[10px] sm:text-xs md:text-sm cursor-pointer hover:text-blue-400 transition-colors hidden lg:inline touch-manipulation" />
+              <a
+                href="https://www.youtube.com/@TestprepKart"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[10px] sm:text-xs md:text-sm cursor-pointer hover:text-blue-400 transition-colors touch-manipulation"
+              >
+                <FaYoutube />
+              </a>
+              <a
+                href="https://www.facebook.com/testprepkart"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[10px] sm:text-xs md:text-sm cursor-pointer hover:text-blue-400 transition-colors touch-manipulation"
+              >
+                <FaFacebook />
+              </a>
+              <a
+                href="https://twitter.com/testprepkart"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[10px] sm:text-xs md:text-sm cursor-pointer hover:text-blue-400 transition-colors touch-manipulation"
+              >
+                <FaTwitter />
+              </a>
+              <a
+                href="https://www.linkedin.com/company/testprepkart"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[10px] sm:text-xs md:text-sm cursor-pointer hover:text-blue-400 transition-colors hidden lg:inline touch-manipulation"
+              >
+                <FaLinkedin />
+              </a>
+              <a
+                href="https://www.instagram.com/testprepkartonline"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[10px] sm:text-xs md:text-sm cursor-pointer hover:text-blue-400 transition-colors hidden lg:inline touch-manipulation"
+              >
+                <FaInstagram />
+              </a>
             </div>
           </div>
         </div>
@@ -190,7 +264,7 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen }) => {
             <div className="flex items-center shrink-0">
               <Link href="/" className="touch-manipulation">
                 <Image
-                  src="/logo.png"
+                  src={`${basePath}/logo.png`}
                   alt="TestPrepKart Logo"
                   width={150}
                   height={150}
@@ -211,17 +285,49 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen }) => {
                 <span>Category</span>
               </button>
 
-              {/* Navigation Links */}
+              {/* Navigation Links with Mega Menus */}
               <nav className="flex items-center gap-0.5 xl:gap-1 font-semibold">
                 {navLinks.map((link) => (
-                  <Link
-                    key={link}
-                    href="#"
-                    className="flex items-center gap-1 px-2 xl:px-3 py-2 text-xs xl:text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors group whitespace-nowrap"
+                  <div
+                    key={link.key}
+                    className="relative mega-menu-container"
+                    onMouseEnter={() => handleMegaMenuHover(link.key)}
+                    onMouseLeave={handleMegaMenuLeave}
                   >
-                    <span>{link}</span>
-                    <FaChevronDown className="text-xs text-gray-400 group-hover:text-blue-600 transition-colors" />
-                  </Link>
+                    <button className="flex items-center gap-1 px-2 xl:px-3 py-2 text-xs xl:text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors group whitespace-nowrap">
+                      <span>{link.name}</span>
+                      <FaChevronDown className="text-xs text-gray-400 group-hover:text-blue-600 transition-colors" />
+                    </button>
+                    {activeMegaMenu === link.key && (
+                      <>
+                        {link.key === "examinations" && (
+                          <ExaminationsMegaMenu
+                            onClose={() => setActiveMegaMenu(null)}
+                          />
+                        )}
+                        {link.key === "courses" && (
+                          <CoursesMegaMenu
+                            onClose={() => setActiveMegaMenu(null)}
+                          />
+                        )}
+                        {link.key === "utilities" && (
+                          <UtilitiesMegaMenu
+                            onClose={() => setActiveMegaMenu(null)}
+                          />
+                        )}
+                        {link.key === "downloads" && (
+                          <DownloadsMegaMenu
+                            onClose={() => setActiveMegaMenu(null)}
+                          />
+                        )}
+                        {link.key === "contact" && (
+                          <ContactMegaMenu
+                            onClose={() => setActiveMegaMenu(null)}
+                          />
+                        )}
+                      </>
+                    )}
+                  </div>
                 ))}
               </nav>
             </div>
@@ -288,7 +394,7 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen }) => {
 
               {/* Enroll Now Button */}
               <Link
-                href="/contact"
+                href={`${basePath}/coaching-inquiry`}
                 className="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-white bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 rounded-lg hover:from-indigo-700 hover:via-purple-700 hover:to-pink-600 active:from-indigo-800 active:via-purple-800 active:to-pink-700 transition-all shadow-md hover:shadow-lg whitespace-nowrap touch-manipulation"
               >
                 <span className="hidden sm:inline">Enroll Now</span>
@@ -352,24 +458,154 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen }) => {
                 data-nav-menu-open={isNavMenuOpen ? "true" : "false"}
                 className="lg:hidden border-t border-gray-200 bg-white absolute top-full left-0 right-0 z-[55] shadow-xl max-h-[calc(100vh-140px)] sm:max-h-[calc(100vh-180px)] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] animate-in slide-in-from-top-2 duration-200"
               >
+                {/* Mobile Menu Header */}
+                <div className="p-4 sm:p-6 border-b border-gray-200 bg-gradient-to-br from-indigo-50 to-purple-50">
+                  <div className="flex items-center justify-between mb-4">
+                    <Link
+                      href={`${basePath}/`}
+                      onClick={() => setIsNavMenuOpen(false)}
+                    >
+                      <Image
+                        src={`${basePath}/logo.png`}
+                        alt="TestPrepKart Logo"
+                        width={120}
+                        height={120}
+                        className="h-12 w-auto"
+                      />
+                    </Link>
+                    <button
+                      onClick={() => setIsNavMenuOpen(false)}
+                      className="p-2 text-gray-600 hover:text-gray-900 hover:bg-white rounded-lg transition-colors"
+                      aria-label="Close menu"
+                    >
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                  <p className="text-sm text-gray-700 mb-4">
+                    Hi, I&apos;m TestprepKart.
+                    <br />
+                    Your Partner In Exam Preparation
+                  </p>
+                  <ul className="space-y-2 text-sm">
+                    <li>
+                      <a
+                        href="mailto:info@testprepkart.com"
+                        className="flex items-center gap-2 text-gray-700 hover:text-indigo-600 transition-colors"
+                      >
+                        <FaEnvelope className="text-xs" />
+                        info@testprepkart.com
+                      </a>
+                    </li>
+                    <li>
+                      <a
+                        href="tel:+918800123492"
+                        className="flex items-center gap-2 text-gray-700 hover:text-indigo-600 transition-colors"
+                      >
+                        <FaPhone className="text-xs" />
+                        +91 8800123492
+                      </a>
+                    </li>
+                    <li>
+                      <a
+                        href="https://api.whatsapp.com/send?phone=15107069331"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 text-gray-700 hover:text-indigo-600 transition-colors"
+                      >
+                        <FaWhatsapp className="text-xs" />
+                        +1 (510) 706-9331
+                      </a>
+                    </li>
+                  </ul>
+                </div>
+
                 <div className="p-3 sm:p-4 space-y-1.5 sm:space-y-2">
+                  {/* Home Link */}
+                  <Link
+                    href={`${basePath}/`}
+                    onClick={() => setIsNavMenuOpen(false)}
+                    className="w-full flex items-center gap-2 px-4 py-3 sm:py-3.5 text-sm sm:text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 active:bg-gray-100 transition-colors rounded-lg touch-manipulation min-h-[44px]"
+                  >
+                    <span>Home</span>
+                  </Link>
+
                   {/* Category Button */}
                   <button className="w-full flex items-center gap-2 px-4 py-3 sm:py-3.5 bg-gray-100 rounded-lg text-sm sm:text-base font-medium text-gray-700 hover:bg-gray-200 active:bg-gray-300 transition-colors touch-manipulation min-h-[44px]">
                     <FaTh className="text-sm sm:text-base" />
                     <span>Category</span>
                   </button>
 
-                  {/* Navigation Links */}
+                  {/* Navigation Links with Mobile Mega Menus */}
                   {navLinks.map((link) => (
-                    <Link
-                      key={link}
-                      href="#"
-                      className="flex items-center justify-between px-4 py-3 sm:py-3.5 text-sm sm:text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 active:bg-gray-100 transition-colors rounded-lg touch-manipulation min-h-[44px]"
-                      onClick={() => setIsNavMenuOpen(false)}
-                    >
-                      <span>{link}</span>
-                      <FaChevronDown className="text-xs sm:text-sm text-gray-400" />
-                    </Link>
+                    <div key={link.key} className="space-y-1">
+                      <button
+                        onClick={() => toggleMobileMenu(link.key)}
+                        className="w-full flex items-center justify-between px-4 py-3 sm:py-3.5 text-sm sm:text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 active:bg-gray-100 transition-colors rounded-lg touch-manipulation min-h-[44px]"
+                      >
+                        <span>{link.name}</span>
+                        <FaChevronDown
+                          className={`text-xs sm:text-sm text-gray-400 transition-transform ${
+                            mobileExpandedMenu === link.key ? "rotate-180" : ""
+                          }`}
+                        />
+                      </button>
+                      {mobileExpandedMenu === link.key && (
+                        <div className="pl-4 pr-2 pb-2 space-y-1 bg-gray-50 rounded-lg">
+                          {link.key === "examinations" && (
+                            <ExaminationsMobileContent
+                              onClose={() => {
+                                setMobileExpandedMenu(null);
+                                setIsNavMenuOpen(false);
+                              }}
+                            />
+                          )}
+                          {link.key === "courses" && (
+                            <CoursesMobileContent
+                              onClose={() => {
+                                setMobileExpandedMenu(null);
+                                setIsNavMenuOpen(false);
+                              }}
+                            />
+                          )}
+                          {link.key === "utilities" && (
+                            <UtilitiesMobileContent
+                              onClose={() => {
+                                setMobileExpandedMenu(null);
+                                setIsNavMenuOpen(false);
+                              }}
+                            />
+                          )}
+                          {link.key === "downloads" && (
+                            <DownloadsMobileContent
+                              onClose={() => {
+                                setMobileExpandedMenu(null);
+                                setIsNavMenuOpen(false);
+                              }}
+                            />
+                          )}
+                          {link.key === "contact" && (
+                            <ContactMobileContent
+                              onClose={() => {
+                                setMobileExpandedMenu(null);
+                                setIsNavMenuOpen(false);
+                              }}
+                            />
+                          )}
+                        </div>
+                      )}
+                    </div>
                   ))}
 
                   {/* User Menu / Sign In Link */}
@@ -400,7 +636,7 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen }) => {
                     </>
                   ) : (
                     <Link
-                      href="/login"
+                      href={`${basePath}/login`}
                       className="flex items-center gap-2 px-4 py-3 sm:py-3.5 text-sm sm:text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 active:bg-gray-100 transition-colors rounded-lg touch-manipulation min-h-[44px]"
                       onClick={() => setIsNavMenuOpen(false)}
                     >
@@ -408,6 +644,56 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen }) => {
                       <span>Sign In</span>
                     </Link>
                   )}
+
+                  {/* Enroll Now Button */}
+                  <Link
+                    href={`${basePath}/coaching-inquiry`}
+                    onClick={() => setIsNavMenuOpen(false)}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3 sm:py-3.5 text-sm sm:text-base font-semibold text-white bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 rounded-lg hover:from-indigo-700 hover:via-purple-700 hover:to-pink-600 transition-all shadow-md hover:shadow-lg touch-manipulation min-h-[44px]"
+                  >
+                    <span>Enroll Now</span>
+                  </Link>
+
+                  {/* Social Media Links */}
+                  <div className="pt-4 border-t border-gray-200">
+                    <p className="text-xs font-semibold text-gray-900 mb-3">
+                      Find With Us
+                    </p>
+                    <div className="flex items-center gap-3">
+                      <a
+                        href="https://www.facebook.com/testprepkart"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-2 text-gray-600 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
+                      >
+                        <FaFacebook className="text-base" />
+                      </a>
+                      <a
+                        href="https://twitter.com/testprepkart"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-2 text-gray-600 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
+                      >
+                        <FaTwitter className="text-base" />
+                      </a>
+                      <a
+                        href="https://www.instagram.com/testprepkartonline"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-2 text-gray-600 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
+                      >
+                        <FaInstagram className="text-base" />
+                      </a>
+                      <a
+                        href="https://www.linkedin.com/company/testprepkart"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-2 text-gray-600 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
+                      >
+                        <FaLinkedin className="text-base" />
+                      </a>
+                    </div>
+                  </div>
                 </div>
               </div>
             </>
