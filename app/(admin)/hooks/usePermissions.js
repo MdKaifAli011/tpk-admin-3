@@ -57,7 +57,7 @@ export function usePermissions() {
           moderator: {
             canCreate: true,
             canEdit: true,
-            canDelete: true,
+            canDelete: false,
             canReorder: true,
             canManageUsers: false,
           },
@@ -150,7 +150,8 @@ export function getPermissionMessage(action, role) {
     delete: {
       viewer: "You don't have permission to delete. Viewer role is read-only.",
       editor: "You don't have permission to delete. Editor role can only edit and reorder.",
-      moderator: "",
+      moderator:
+        "You don't have permission to delete. Moderator role can create and update, but cannot delete.",
       super_moderator: "",
       admin: "",
     },

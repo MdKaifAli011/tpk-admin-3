@@ -99,7 +99,7 @@ const UserRolePage = () => {
     {
       action: "DELETE",
       description: "Delete resources",
-      roles: ["admin", "super_moderator", "moderator"],
+      roles: ["admin", "super_moderator"],
     },
     {
       action: "User/Role Management",
@@ -271,7 +271,7 @@ const UserRolePage = () => {
   return (
     <div className="space-y-6">
         {/* Page Header */}
-        <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 border border-gray-200 rounded-lg shadow-sm p-6">
+        <div className="bg-linear-to-r from-blue-50 via-indigo-50 to-purple-50 border border-gray-200 rounded-lg shadow-sm p-6">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
