@@ -113,8 +113,8 @@ const ProfilePage = () => {
           setError("Your account is no longer available. Please login again.");
           // Redirect to login after a short delay
           setTimeout(() => {
-            const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
-            window.location.href = `${basePath}/admin/login`;
+            // NOTE: Next.js basePath is applied automatically for internal navigation.
+            window.location.href = "/admin/login";
           }, 2000);
         }
       } catch (err) {

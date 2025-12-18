@@ -1,8 +1,6 @@
 "use client";
 import Link from "next/link";
 
-const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
-
 const ContactMegaMenu = ({ onClose }) => {
   return (
     <div className="absolute left-1/2 transform -translate-x-1/2 top-full mt-2 w-[90vw] max-w-5xl bg-white rounded-lg shadow-2xl border border-gray-200 py-6 z-50">
@@ -16,7 +14,7 @@ const ContactMegaMenu = ({ onClose }) => {
             <ul className="space-y-2">
               <li>
                 <Link
-                  href={`${basePath}/contact`}
+                  href="/contact"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -25,7 +23,7 @@ const ContactMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href={`${basePath}/class-operations`}
+                  href="/class-operations"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -34,7 +32,7 @@ const ContactMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href={`${basePath}/admissions-and-sales`}
+                  href="/admissions-and-sales"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -43,7 +41,7 @@ const ContactMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href={`${basePath}/about`}
+                  href="/about"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -61,7 +59,7 @@ const ContactMegaMenu = ({ onClose }) => {
             <ul className="space-y-2">
               <li>
                 <Link
-                  href={`${basePath}/coaching-in-usa`}
+                  href="/coaching-in-usa"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -73,7 +71,7 @@ const ContactMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href={`${basePath}/coaching-in-uae`}
+                  href="/coaching-in-uae"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -85,7 +83,7 @@ const ContactMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href={`${basePath}/coaching-in-oman`}
+                  href="/coaching-in-oman"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -94,7 +92,7 @@ const ContactMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href={`${basePath}/coaching-in-qatar`}
+                  href="/coaching-in-qatar"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -103,7 +101,7 @@ const ContactMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href={`${basePath}/coaching-in-saudi-arabia`}
+                  href="/coaching-in-saudi-arabia"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -112,7 +110,7 @@ const ContactMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href={`${basePath}/coaching-in-kuwait`}
+                  href="/coaching-in-kuwait"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -121,7 +119,7 @@ const ContactMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href={`${basePath}/coaching-in-singapore`}
+                  href="/coaching-in-singapore"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -130,7 +128,7 @@ const ContactMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href={`${basePath}/coaching-in-japan`}
+                  href="/coaching-in-japan"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -139,7 +137,7 @@ const ContactMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href={`${basePath}/coaching-in-europe`}
+                  href="/coaching-in-europe"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -148,7 +146,7 @@ const ContactMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href={`${basePath}/coaching-in-australia`}
+                  href="/coaching-in-australia"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -157,7 +155,7 @@ const ContactMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href={`${basePath}/coaching-in-canada`}
+                  href="/coaching-in-canada"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -166,7 +164,7 @@ const ContactMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href={`${basePath}/coaching-in-united-kingdom`}
+                  href="/coaching-in-united-kingdom"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >

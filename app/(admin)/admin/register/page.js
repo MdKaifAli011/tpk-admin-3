@@ -69,8 +69,8 @@ const RegisterPage = () => {
         }
 
         // Redirect to admin dashboard
-        const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
-        router.push(`${basePath}/admin`);
+        // NOTE: Next.js basePath is applied automatically for internal navigation.
+        router.push("/admin");
       } else {
         setError(response.data.message || "Registration failed");
       }

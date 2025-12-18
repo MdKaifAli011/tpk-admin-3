@@ -16,7 +16,7 @@ import api from "../../../lib/api.js";
 import Navbar from "../layout/Navbar";
 import Footer from "../layout/Footer";
 
-// Base path - should match next.config.mjs basePath
+// Base path - used for public asset URLs (Next.js applies basePath automatically for navigation)
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
 
 const LoginPage = () => {
@@ -68,7 +68,7 @@ const LoginPage = () => {
             verifyResponse.data.data?.student
           ) {
             // Student verified, proceed to home page
-            router.push(`${basePath}/`);
+            router.push("/");
           } else {
             // Student not found or inactive
             setError(

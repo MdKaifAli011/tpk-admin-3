@@ -290,7 +290,8 @@ const RegisterPage = () => {
             verifyResponse.data.data?.student
           ) {
             // Student verified, proceed to home page
-            router.push(`${basePath}/`);
+            // NOTE: Next.js basePath is applied automatically for internal navigation.
+            router.push("/");
           } else {
             // Student not found or inactive
             setError("Account verification failed. Please try logging in.");

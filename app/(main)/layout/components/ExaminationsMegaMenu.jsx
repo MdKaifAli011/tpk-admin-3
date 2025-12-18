@@ -53,7 +53,8 @@ const ExaminationsMegaMenu = ({ onClose }) => {
           {examinations.map((exam, index) => (
             <Link
               key={index}
-              href={`${basePath}${exam.href}`}
+              // NOTE: Next.js basePath is applied automatically for internal navigation.
+              href={exam.href}
               onClick={onClose}
               className="group flex-shrink-0"
             >

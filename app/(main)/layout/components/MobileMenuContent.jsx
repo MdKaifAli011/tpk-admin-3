@@ -2,8 +2,6 @@
 import Link from "next/link";
 import { FaChevronRight } from "react-icons/fa";
 
-const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
-
 export const ExaminationsMobileContent = ({ onClose }) => {
   const examinations = [
     { name: "Engineering Preparation", href: "/jee" },
@@ -19,7 +17,8 @@ export const ExaminationsMobileContent = ({ onClose }) => {
       {examinations.map((exam) => (
         <Link
           key={exam.href}
-          href={`${basePath}${exam.href}`}
+          // NOTE: Next.js basePath is applied automatically for internal navigation.
+          href={exam.href}
           onClick={onClose}
           className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
         >
@@ -39,56 +38,56 @@ export const CoursesMobileContent = ({ onClose }) => {
         </h4>
         <div className="space-y-1">
           <Link
-            href={`${basePath}/jee/course-detail/10`}
+            href="/jee/course-detail/10"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             JEE 1 Year Course (12th)
           </Link>
           <Link
-            href={`${basePath}/jee/course-detail/11`}
+            href="/jee/course-detail/11"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             JEE 2 Year Course (11th)
           </Link>
           <Link
-            href={`${basePath}/jee/course-detail/12`}
+            href="/jee/course-detail/12"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             JEE Foundation Course (9th+)
           </Link>
           <Link
-            href={`${basePath}/jee/course-detail/33`}
+            href="/jee/course-detail/33"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             JEE Crash Course (12th)
           </Link>
           <Link
-            href={`${basePath}/neet/course-detail/15`}
+            href="/neet/course-detail/15"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             NEET 1 Year Course (12th)
           </Link>
           <Link
-            href={`${basePath}/neet/course-detail/16`}
+            href="/neet/course-detail/16"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             NEET 2 Year Course (11th)
           </Link>
           <Link
-            href={`${basePath}/neet/course-detail/17`}
+            href="/neet/course-detail/17"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             NEET Foundation Course (9th)
           </Link>
           <Link
-            href={`${basePath}/neet/course-detail/34`}
+            href="/neet/course-detail/34"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
@@ -102,42 +101,42 @@ export const CoursesMobileContent = ({ onClose }) => {
         </h4>
         <div className="space-y-1">
           <Link
-            href={`${basePath}/sat/course-detail/19`}
+            href="/sat/course-detail/19"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             SAT Prep Course (42 Hours)
           </Link>
           <Link
-            href={`${basePath}/sat/course-detail/20`}
+            href="/sat/course-detail/20"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             SAT Prep Course (60 Hours)
           </Link>
           <Link
-            href={`${basePath}/sat/course-detail/21`}
+            href="/sat/course-detail/21"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             SAT Prep Course (72 Hours)
           </Link>
           <Link
-            href={`${basePath}/sat/course-detail/22`}
+            href="/sat/course-detail/22"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             SAT Prep Course (90 Hours)
           </Link>
           <Link
-            href={`${basePath}/ib/courses`}
+            href="/ib/courses"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             IB MYP Courses
           </Link>
           <Link
-            href={`${basePath}/ib/courses`}
+            href="/ib/courses"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
@@ -175,70 +174,70 @@ export const UtilitiesMobileContent = ({ onClose }) => {
         </h4>
         <div className="space-y-1">
           <Link
-            href={`${basePath}/coaching-inquiry`}
+            href="/coaching-inquiry"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             Enroll for Coaching
           </Link>
           <Link
-            href={`${basePath}/downloads`}
+            href="/downloads"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             Downloads
           </Link>
           <Link
-            href={`${basePath}/recent-announcements`}
+            href="/recent-announcements"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             Recent Announcements
           </Link>
           <Link
-            href={`${basePath}/explore`}
+            href="/explore"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             Universities
           </Link>
           <Link
-            href={`${basePath}/blog`}
+            href="/blog"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             Blog
           </Link>
           <Link
-            href={`${basePath}/jee/ebook-download`}
+            href="/jee/ebook-download"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             NRI Quota Admission Guide
           </Link>
           <Link
-            href={`${basePath}/answers`}
+            href="/answers"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             Discussion Forum
           </Link>
           <Link
-            href={`${basePath}/online-tutors`}
+            href="/online-tutors"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             Tutor Profiles
           </Link>
           <Link
-            href={`${basePath}/online-preparation`}
+            href="/online-preparation"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             Online Preparation
           </Link>
           <Link
-            href={`${basePath}/prime-videos`}
+            href="/prime-videos"
             onClick={onClose}
             target="_blank"
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
@@ -275,21 +274,21 @@ export const UtilitiesMobileContent = ({ onClose }) => {
             NEET Youtube Channel
           </a>
           <Link
-            href={`${basePath}/jee/demo-videos`}
+            href="/jee/demo-videos"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             Demo Videos
           </Link>
           <Link
-            href={`${basePath}/jee/mindmap-videos`}
+            href="/jee/mindmap-videos"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             Mindmap Videos
           </Link>
           <Link
-            href={`${basePath}/faqs`}
+            href="/faqs"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
@@ -303,7 +302,7 @@ export const UtilitiesMobileContent = ({ onClose }) => {
         </h4>
         <div className="space-y-1">
           <Link
-            href={`${basePath}/trial-session`}
+            href="/trial-session"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
@@ -313,7 +312,7 @@ export const UtilitiesMobileContent = ({ onClose }) => {
             </span>
           </Link>
           <Link
-            href={`${basePath}/jee/parent-counseling`}
+            href="/jee/parent-counseling"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
@@ -328,7 +327,7 @@ export const UtilitiesMobileContent = ({ onClose }) => {
             Buy Online Tests
           </a>
           <Link
-            href={`${basePath}/jee/dasa-counseling-kit`}
+            href="/jee/dasa-counseling-kit"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
@@ -346,7 +345,7 @@ export const UtilitiesMobileContent = ({ onClose }) => {
             SATLAS
           </a>
           <Link
-            href={`${basePath}/fee-payment`}
+            href="/fee-payment"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
@@ -367,7 +366,7 @@ export const DownloadsMobileContent = ({ onClose }) => {
         </h4>
         <div className="space-y-1">
           <Link
-            href={`${basePath}/jee/downloads/exam/JEE%20Main%20Paper%201/category/Study%20Material`}
+            href="/jee/downloads/exam/JEE%20Main%20Paper%201/category/Study%20Material"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
@@ -377,21 +376,21 @@ export const DownloadsMobileContent = ({ onClose }) => {
             </span>
           </Link>
           <Link
-            href={`${basePath}/jee/downloads/exam/JEE%20Main%20Paper%201/category/JEE%20Past%20Year%20Papers`}
+            href="/jee/downloads/exam/JEE%20Main%20Paper%201/category/JEE%20Past%20Year%20Papers"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             JEE Past Year Papers
           </Link>
           <Link
-            href={`${basePath}/jee/downloads/exam/JEE%20Main%20Paper%201/category/Sample%20Papers`}
+            href="/jee/downloads/exam/JEE%20Main%20Paper%201/category/Sample%20Papers"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             JEE Sample Papers
           </Link>
           <Link
-            href={`${basePath}/jee/downloads/exam/JEE%20Main%20Paper%201/category/JEE%20Revision%20Notes`}
+            href="/jee/downloads/exam/JEE%20Main%20Paper%201/category/JEE%20Revision%20Notes"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
@@ -408,7 +407,7 @@ export const DownloadsMobileContent = ({ onClose }) => {
             </span>
           </Link>
           <Link
-            href={`${basePath}/jee/downloads/exam/JEE%20Main%20Paper%201/category/JEE%20DPP%20%28Daily%20Practice%20Papers%29`}
+            href="/jee/downloads/exam/JEE%20Main%20Paper%201/category/JEE%20DPP%20%28Daily%20Practice%20Papers%29"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
@@ -425,28 +424,28 @@ export const DownloadsMobileContent = ({ onClose }) => {
             JEE Popular Books
           </Link>
           <Link
-            href={`${basePath}/jee/downloads/exam/JEE%20Main%20Paper%201/category/JEE%20Main%20Brochure%20Download`}
+            href="/jee/downloads/exam/JEE%20Main%20Paper%201/category/JEE%20Main%20Brochure%20Download"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             JEE Brochure
           </Link>
           <Link
-            href={`${basePath}/jee/downloads/exam/JEE%20Main%20Paper%201/category/JEE%20Main%20Cut%20Off%20Rank%20`}
+            href="/jee/downloads/exam/JEE%20Main%20Paper%201/category/JEE%20Main%20Cut%20Off%20Rank%20"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             JEE Last Year Cut Off
           </Link>
           <Link
-            href={`${basePath}/jee/downloads/exam/JEE%20Main%20Paper%201/category/DASA%20CIWG%20Brochure`}
+            href="/jee/downloads/exam/JEE%20Main%20Paper%201/category/DASA%20CIWG%20Brochure"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             DASA CIWG Brochure
           </Link>
           <Link
-            href={`${basePath}/jee/info/69/170/DASA+%2F+CIWG++Cut-Off+Score+For+NRIs+Engineering+Admission`}
+            href="/jee/info/69/170/DASA+%2F+CIWG++Cut-Off+Score+For+NRIs+Engineering+Admission"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
@@ -460,7 +459,7 @@ export const DownloadsMobileContent = ({ onClose }) => {
         </h4>
         <div className="space-y-1">
           <Link
-            href={`${basePath}/neet/downloads/exam/NEET/category/Study%20Material`}
+            href="/neet/downloads/exam/NEET/category/Study%20Material"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
@@ -470,14 +469,14 @@ export const DownloadsMobileContent = ({ onClose }) => {
             </span>
           </Link>
           <Link
-            href={`${basePath}/neet/downloads/exam/NEET/category/NEET%20Past%20Year%20Papers`}
+            href="/neet/downloads/exam/NEET/category/NEET%20Past%20Year%20Papers"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             NEET Past Year Papers
           </Link>
           <Link
-            href={`${basePath}/neet/downloads/exam/NEET/category/NEET%20Sample%20Papers`}
+            href="/neet/downloads/exam/NEET/category/NEET%20Sample%20Papers"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
@@ -511,7 +510,7 @@ export const DownloadsMobileContent = ({ onClose }) => {
             </span>
           </Link>
           <Link
-            href={`${basePath}/neet/downloads/exam/NEET/category/NEET%20Preparation%20Books`}
+            href="/neet/downloads/exam/NEET/category/NEET%20Preparation%20Books"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
@@ -567,7 +566,7 @@ export const DownloadsMobileContent = ({ onClose }) => {
             SAT Online Test Papers
           </Link>
           <Link
-            href={`${basePath}/ib/downloads/exam/IB/category/IB%20Guides%20&%20Syllabus`}
+            href="/ib/downloads/exam/IB/category/IB%20Guides%20&%20Syllabus"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
@@ -576,7 +575,7 @@ export const DownloadsMobileContent = ({ onClose }) => {
         </div>
       </div>
       <Link
-        href={`${basePath}/contact`}
+        href="/contact"
         onClick={onClose}
         className="block w-full mt-4 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all shadow-md text-center"
       >
@@ -595,28 +594,28 @@ export const ContactMobileContent = ({ onClose }) => {
         </h4>
         <div className="space-y-1">
           <Link
-            href={`${basePath}/contact`}
+            href="/contact"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             Contact TestprepKart
           </Link>
           <Link
-            href={`${basePath}/class-operations`}
+            href="/class-operations"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             Class Operations
           </Link>
           <Link
-            href={`${basePath}/admissions-and-sales`}
+            href="/admissions-and-sales"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             Admission & Sales
           </Link>
           <Link
-            href={`${basePath}/about`}
+            href="/about"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
@@ -630,7 +629,7 @@ export const ContactMobileContent = ({ onClose }) => {
         </h4>
         <div className="space-y-1">
           <Link
-            href={`${basePath}/coaching-in-usa`}
+            href="/coaching-in-usa"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
@@ -640,7 +639,7 @@ export const ContactMobileContent = ({ onClose }) => {
             </span>
           </Link>
           <Link
-            href={`${basePath}/coaching-in-uae`}
+            href="/coaching-in-uae"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
@@ -650,70 +649,70 @@ export const ContactMobileContent = ({ onClose }) => {
             </span>
           </Link>
           <Link
-            href={`${basePath}/coaching-in-oman`}
+            href="/coaching-in-oman"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             Oman
           </Link>
           <Link
-            href={`${basePath}/coaching-in-qatar`}
+            href="/coaching-in-qatar"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             Qatar
           </Link>
           <Link
-            href={`${basePath}/coaching-in-saudi-arabia`}
+            href="/coaching-in-saudi-arabia"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             Saudi Arabia
           </Link>
           <Link
-            href={`${basePath}/coaching-in-kuwait`}
+            href="/coaching-in-kuwait"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             Kuwait
           </Link>
           <Link
-            href={`${basePath}/coaching-in-singapore`}
+            href="/coaching-in-singapore"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             Singapore
           </Link>
           <Link
-            href={`${basePath}/coaching-in-japan`}
+            href="/coaching-in-japan"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             Japan
           </Link>
           <Link
-            href={`${basePath}/coaching-in-europe`}
+            href="/coaching-in-europe"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             Europe
           </Link>
           <Link
-            href={`${basePath}/coaching-in-australia`}
+            href="/coaching-in-australia"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             Australia
           </Link>
           <Link
-            href={`${basePath}/coaching-in-canada`}
+            href="/coaching-in-canada"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             Canada
           </Link>
           <Link
-            href={`${basePath}/coaching-in-united-kingdom`}
+            href="/coaching-in-united-kingdom"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >

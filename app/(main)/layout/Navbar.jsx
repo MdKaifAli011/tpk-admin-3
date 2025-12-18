@@ -126,7 +126,8 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen }) => {
   const handleLogout = () => {
     logout();
     setIsUserMenuOpen(false);
-    router.push(`${basePath}/`);
+    // NOTE: Next.js basePath is applied automatically for internal navigation.
+    router.push("/");
   };
 
   // Get user display name
@@ -394,7 +395,7 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen }) => {
 
               {/* Enroll Now Button */}
               <Link
-                href={`${basePath}/coaching-inquiry`}
+                href="/coaching-inquiry"
                 className="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-white bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 rounded-lg hover:from-indigo-700 hover:via-purple-700 hover:to-pink-600 active:from-indigo-800 active:via-purple-800 active:to-pink-700 transition-all shadow-md hover:shadow-lg whitespace-nowrap touch-manipulation"
               >
                 <span className="hidden sm:inline">Enroll Now</span>
@@ -462,7 +463,7 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen }) => {
                 <div className="p-4 sm:p-6 border-b border-gray-200 bg-gradient-to-br from-indigo-50 to-purple-50">
                   <div className="flex items-center justify-between mb-4">
                     <Link
-                      href={`${basePath}/`}
+                      href="/"
                       onClick={() => setIsNavMenuOpen(false)}
                     >
                       <Image
@@ -534,7 +535,7 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen }) => {
                 <div className="p-3 sm:p-4 space-y-1.5 sm:space-y-2">
                   {/* Home Link */}
                   <Link
-                    href={`${basePath}/`}
+                    href="/"
                     onClick={() => setIsNavMenuOpen(false)}
                     className="w-full flex items-center gap-2 px-4 py-3 sm:py-3.5 text-sm sm:text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 active:bg-gray-100 transition-colors rounded-lg touch-manipulation min-h-[44px]"
                   >
@@ -636,7 +637,7 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen }) => {
                     </>
                   ) : (
                     <Link
-                      href={`${basePath}/login`}
+                      href="/login"
                       className="flex items-center gap-2 px-4 py-3 sm:py-3.5 text-sm sm:text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 active:bg-gray-100 transition-colors rounded-lg touch-manipulation min-h-[44px]"
                       onClick={() => setIsNavMenuOpen(false)}
                     >
@@ -647,7 +648,7 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen }) => {
 
                   {/* Enroll Now Button */}
                   <Link
-                    href={`${basePath}/coaching-inquiry`}
+                    href="/coaching-inquiry"
                     onClick={() => setIsNavMenuOpen(false)}
                     className="w-full flex items-center justify-center gap-2 px-4 py-3 sm:py-3.5 text-sm sm:text-base font-semibold text-white bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 rounded-lg hover:from-indigo-700 hover:via-purple-700 hover:to-pink-600 transition-all shadow-md hover:shadow-lg touch-manipulation min-h-[44px]"
                   >

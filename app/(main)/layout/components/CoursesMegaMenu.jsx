@@ -1,8 +1,6 @@
 "use client";
 import Link from "next/link";
 
-const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
-
 const CoursesMegaMenu = ({ onClose }) => {
   return (
     <div className="absolute left-1/2 transform -translate-x-1/2 top-full mt-2 w-[90vw] max-w-5xl bg-white rounded-lg shadow-2xl border border-gray-200 py-6 z-50">
@@ -25,7 +23,7 @@ const CoursesMegaMenu = ({ onClose }) => {
             <ul className="space-y-2">
               <li>
                 <Link
-                  href={`${basePath}/jee/course-detail/10`}
+                  href="/jee/course-detail/10"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -34,7 +32,7 @@ const CoursesMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href={`${basePath}/jee/course-detail/11`}
+                  href="/jee/course-detail/11"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -43,7 +41,7 @@ const CoursesMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href={`${basePath}/jee/course-detail/12`}
+                  href="/jee/course-detail/12"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -52,7 +50,7 @@ const CoursesMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href={`${basePath}/jee/course-detail/33`}
+                  href="/jee/course-detail/33"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -61,7 +59,7 @@ const CoursesMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href={`${basePath}/neet/course-detail/15`}
+                  href="/neet/course-detail/15"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -70,7 +68,7 @@ const CoursesMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href={`${basePath}/neet/course-detail/16`}
+                  href="/neet/course-detail/16"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -79,7 +77,7 @@ const CoursesMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href={`${basePath}/neet/course-detail/17`}
+                  href="/neet/course-detail/17"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -88,7 +86,7 @@ const CoursesMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href={`${basePath}/neet/course-detail/34`}
+                  href="/neet/course-detail/34"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -106,7 +104,7 @@ const CoursesMegaMenu = ({ onClose }) => {
             <ul className="space-y-2">
               <li>
                 <Link
-                  href={`${basePath}/sat/course-detail/19`}
+                  href="/sat/course-detail/19"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -115,7 +113,7 @@ const CoursesMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href={`${basePath}/sat/course-detail/20`}
+                  href="/sat/course-detail/20"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -124,7 +122,7 @@ const CoursesMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href={`${basePath}/sat/course-detail/21`}
+                  href="/sat/course-detail/21"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -133,7 +131,7 @@ const CoursesMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href={`${basePath}/sat/course-detail/22`}
+                  href="/sat/course-detail/22"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -142,7 +140,7 @@ const CoursesMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href={`${basePath}/ib/courses`}
+                  href="/ib/courses"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -151,7 +149,7 @@ const CoursesMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href={`${basePath}/ib/courses`}
+                  href="/ib/courses"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -197,7 +195,7 @@ const CoursesMegaMenu = ({ onClose }) => {
             </li>
             <li>
               <Link
-                href={`${basePath}/trial-session`}
+                href="/trial-session"
                 onClick={onClose}
                 className="text-sm text-gray-600 hover:text-indigo-600 transition-colors flex items-center gap-1"
               >
@@ -206,7 +204,7 @@ const CoursesMegaMenu = ({ onClose }) => {
             </li>
             <li>
               <Link
-                href={`${basePath}/contact`}
+                href="/contact"
                 onClick={onClose}
                 className="text-sm text-gray-600 hover:text-indigo-600 transition-colors flex items-center gap-1"
               >

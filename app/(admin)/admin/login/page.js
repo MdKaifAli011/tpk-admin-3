@@ -48,8 +48,8 @@ const LoginPage = () => {
         }
 
         // Redirect to admin dashboard
-        const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
-        router.push(`${basePath}/admin`);
+        // NOTE: Next.js basePath is applied automatically for internal navigation.
+        router.push("/admin");
       } else {
         setError(response.data.message || "Login failed");
       }
@@ -172,7 +172,7 @@ const LoginPage = () => {
           {/* Register Link */}
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
-              Don't have an account?{" "}
+              Don&apos;t have an account?{" "}
               <Link
                 href="/admin/register"
                 className="text-blue-600 hover:text-blue-700 font-medium"

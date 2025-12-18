@@ -1,8 +1,6 @@
 "use client";
 import Link from "next/link";
 
-const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
-
 const UtilitiesMegaMenu = ({ onClose }) => {
   return (
     <div className="absolute left-1/2 transform -translate-x-1/2 top-full mt-2 w-[90vw] max-w-6xl bg-white rounded-lg shadow-2xl border border-gray-200 py-6 z-50">
@@ -16,7 +14,7 @@ const UtilitiesMegaMenu = ({ onClose }) => {
             <ul className="space-y-2">
               <li>
                 <Link
-                  href={`${basePath}/coaching-inquiry`}
+                  href="/coaching-inquiry"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -25,7 +23,7 @@ const UtilitiesMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href={`${basePath}/downloads`}
+                  href="/downloads"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -34,7 +32,7 @@ const UtilitiesMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href={`${basePath}/recent-announcements`}
+                  href="/recent-announcements"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -43,7 +41,7 @@ const UtilitiesMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href={`${basePath}/explore`}
+                  href="/explore"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -52,7 +50,7 @@ const UtilitiesMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href={`${basePath}/blog`}
+                  href="/blog"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -61,7 +59,7 @@ const UtilitiesMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href={`${basePath}/jee/ebook-download`}
+                  href="/jee/ebook-download"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -70,7 +68,7 @@ const UtilitiesMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href={`${basePath}/answers`}
+                  href="/answers"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -79,7 +77,7 @@ const UtilitiesMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href={`${basePath}/online-tutors`}
+                  href="/online-tutors"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -88,7 +86,7 @@ const UtilitiesMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href={`${basePath}/online-preparation`}
+                  href="/online-preparation"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -97,7 +95,7 @@ const UtilitiesMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href={`${basePath}/prime-videos`}
+                  href="/prime-videos"
                   onClick={onClose}
                   target="_blank"
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
@@ -144,7 +142,7 @@ const UtilitiesMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href={`${basePath}/jee/demo-videos`}
+                  href="/jee/demo-videos"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -153,7 +151,7 @@ const UtilitiesMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href={`${basePath}/jee/mindmap-videos`}
+                  href="/jee/mindmap-videos"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -162,7 +160,7 @@ const UtilitiesMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href={`${basePath}/faqs`}
+                  href="/faqs"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -180,7 +178,7 @@ const UtilitiesMegaMenu = ({ onClose }) => {
             <ul className="space-y-2">
               <li>
                 <Link
-                  href={`${basePath}/trial-session`}
+                  href="/trial-session"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -192,7 +190,7 @@ const UtilitiesMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href={`${basePath}/jee/parent-counseling`}
+                  href="/jee/parent-counseling"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -211,7 +209,7 @@ const UtilitiesMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href={`${basePath}/jee/dasa-counseling-kit`}
+                  href="/jee/dasa-counseling-kit"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -233,7 +231,7 @@ const UtilitiesMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href={`${basePath}/fee-payment`}
+                  href="/fee-payment"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -249,7 +247,7 @@ const UtilitiesMegaMenu = ({ onClose }) => {
               <div className="border border-gray-200 rounded-lg p-3 hover:border-indigo-300 transition-colors">
                 <div className="w-full h-24 bg-gray-100 rounded mb-2"></div>
                 <Link
-                  href={`${basePath}/trial-session`}
+                  href="/trial-session"
                   onClick={onClose}
                   className="text-sm font-medium text-gray-900 hover:text-indigo-600 transition-colors flex items-center justify-between"
                 >
