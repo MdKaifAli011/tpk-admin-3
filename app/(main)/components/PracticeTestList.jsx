@@ -1056,7 +1056,7 @@ const PracticeTestList = ({
                   </Button>
 
                   {/* Back */}
-                  <Button variant="ghost" size="sm" onClick={handleBackToList}>
+                    <Button variant="ghost" size="sm" onClick={handleBackToList}>
                     Go Back
                   </Button>
                 </div>
@@ -1282,7 +1282,7 @@ const PracticeTestList = ({
               {test.name}
             </h1>
             <p className="text-sm text-gray-500">
-              Let&apos;s boost your preparation today
+              Let&apos;s boost your preparation today 
             </p>
           </div>
 

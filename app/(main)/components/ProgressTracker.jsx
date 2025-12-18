@@ -22,7 +22,7 @@ const ProgressTracker = ({
     if (!unitId || !chapterId || !itemType) {
       return;
     }
-
+    
     // For chapter visits, itemId is optional (use chapterId)
     const finalItemId = itemId || chapterId;
 
@@ -40,7 +40,7 @@ const ProgressTracker = ({
       }
       return;
     }
-
+    
     if (!token) {
       // Not authenticated, skip tracking
       return;

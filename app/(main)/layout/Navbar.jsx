@@ -291,11 +291,24 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen }) => {
                 {navLinks.map((link) => (
                   <div
                     key={link.key}
-                    className="relative mega-menu-container"
+                    // Extend hover hit-area below the button so the cursor can travel
+                    // into the absolutely-positioned mega menu without triggering onMouseLeave.
+                    // We also add an invisible "hover bridge" (pseudo-element) that sits
+                    // between the button (top-full) and the dropdown (which uses mt-2/mt-3),
+                    // preventing accidental onMouseLeave when crossing the gap.
+                    className="relative mega-menu-container pb-4 after:content-[''] after:absolute after:left-0 after:right-0 after:top-full after:h-4"
                     onMouseEnter={() => handleMegaMenuHover(link.key)}
                     onMouseLeave={handleMegaMenuLeave}
                   >
-                    <button className="flex items-center gap-1 px-2 xl:px-3 py-2 text-xs xl:text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors group whitespace-nowrap">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setActiveMegaMenu(
+                          activeMegaMenu === link.key ? null : link.key
+                        )
+                      }
+                      className="flex items-center gap-1 px-2 xl:px-3 py-2 text-xs xl:text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors group whitespace-nowrap"
+                    >
                       <span>{link.name}</span>
                       <FaChevronDown className="text-xs text-gray-400 group-hover:text-blue-600 transition-colors" />
                     </button>
@@ -462,10 +475,7 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen }) => {
                 {/* Mobile Menu Header */}
                 <div className="p-4 sm:p-6 border-b border-gray-200 bg-gradient-to-br from-indigo-50 to-purple-50">
                   <div className="flex items-center justify-between mb-4">
-                    <Link
-                      href="/"
-                      onClick={() => setIsNavMenuOpen(false)}
-                    >
+                    <Link href="/" onClick={() => setIsNavMenuOpen(false)}>
                       <Image
                         src={`${basePath}/logo.png`}
                         alt="TestPrepKart Logo"
