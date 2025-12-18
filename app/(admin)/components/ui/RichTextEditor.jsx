@@ -9,6 +9,7 @@ const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
 
 const CKEDITOR_SCRIPT = `${basePath}/vendor/ckeditor/ckeditor.js`;
 const MATHJAX_SCRIPT = `${basePath}/vendor/mathjax/MathJax.js?config=TeX-AMS_HTML`;
+const CKEDITOR_CONTENTS_CSS = `${basePath}/vendor/ckeditor/contents.css`;
 
 const RichTextEditor = ({
   value = "",
@@ -215,6 +216,9 @@ const RichTextEditor = ({
         extraPlugins:
           "mathjax,colorbutton,colordialog,justify,font,clipboard,smiley",
         mathJaxLib: MATHJAX_SCRIPT,
+        // Make the iframe content match the site typography + responsive tables.
+        contentsCss: [CKEDITOR_CONTENTS_CSS],
+        bodyClass: "rich-text-content",
         autoParagraph: true,
         ignoreEmptyParagraph: true,
         allowedContent: true,

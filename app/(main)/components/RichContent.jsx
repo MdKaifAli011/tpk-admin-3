@@ -8,6 +8,7 @@ import React, {
   useCallback,
 } from "react";
 import { lazy, Suspense } from "react";
+import { useRouter } from "next/navigation";
 import loadMathJax from "../lib/utils/mathJaxLoader";
 import { logger } from "@/utils/logger";
 
@@ -100,6 +101,7 @@ const RichContent = ({ html }) => {
   const [mathJaxError, setMathJaxError] = useState(false);
   const [formStates, setFormStates] = useState({});
   const [formConfigs, setFormConfigs] = useState({});
+  const router = useRouter();
 
   // Cleanup on unmount
   useEffect(() => {
@@ -117,47 +119,52 @@ const RichContent = ({ html }) => {
 
     const handleButtonClick = (e) => {
       // Check if clicked element is a button link or inside a button wrapper
-      const buttonLink = e.target.closest('.inline-button-wrapper a, .inline-button');
+      const buttonLink = e.target.closest(
+        ".inline-button-wrapper a, .inline-button"
+      );
       if (!buttonLink) return;
 
       // If it's an anchor tag, handle the link
-      if (buttonLink.tagName === 'A') {
-        const href = buttonLink.getAttribute('href') || buttonLink.getAttribute('data-button-link');
+      if (buttonLink.tagName === "A") {
+        const href =
+          buttonLink.getAttribute("href") ||
+          buttonLink.getAttribute("data-button-link");
         if (href) {
-          // Handle relative URLs - use Next.js router for internal navigation
-          if (href.startsWith('/')) {
+          // Internal navigation: DO NOT manually prepend basePath.
+          // Next.js basePath is applied automatically to router navigation.
+          if (href.startsWith("/")) {
             e.preventDefault();
-            // Use window.location for reliable navigation - include basePath
-            const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
-            window.location.href = `${basePath}${href}`;
-          } else if (href.startsWith('http://') || href.startsWith('https://')) {
+            router.push(href);
+          } else if (
+            href.startsWith("http://") ||
+            href.startsWith("https://")
+          ) {
             // External links - let default behavior handle it (target="_blank" already set)
             // No need to prevent default
-          } else if (href.startsWith('#')) {
+          } else if (href.startsWith("#")) {
             // Anchor links - let default behavior handle it
             // No need to prevent default
           } else {
-            // Treat as relative URL - include basePath
+            // Treat as relative internal URL (e.g. "contact") - route it through Next router.
             e.preventDefault();
-            const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
-            window.location.href = `${basePath}/${href}`;
+            router.push(`/${href}`);
           }
         }
-      } else if (buttonLink.tagName === 'BUTTON') {
+      } else if (buttonLink.tagName === "BUTTON") {
         // Button without link - do nothing or handle as needed
         e.preventDefault();
       }
     };
 
     const container = containerRef.current;
-    
+
     // Use event delegation for dynamically inserted buttons
-    container.addEventListener('click', handleButtonClick, true);
+    container.addEventListener("click", handleButtonClick, true);
 
     return () => {
-      container.removeEventListener('click', handleButtonClick, true);
+      container.removeEventListener("click", handleButtonClick, true);
     };
-  }, [html]);
+  }, [html, router]);
 
   useEffect(() => {
     let isMounted = true;
@@ -377,6 +384,38 @@ const RichContent = ({ html }) => {
       isCancelled = true;
     };
   }, [forms]);
+
+  // Make tables responsive on mobile: always wrap tables in a horizontal scroll container.
+  // This guarantees x-axis scrolling when content is long, and avoids edge cases where
+  // overflow measurement fails on small screens.
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    const container = containerRef.current;
+
+    const wrapTables = () => {
+      const tables = container.querySelectorAll("table");
+      tables.forEach((table) => {
+        const parent = table.parentElement;
+        if (parent && parent.classList.contains("rich-table-wrapper")) return;
+        const wrapper = document.createElement("div");
+        wrapper.className = "rich-table-wrapper";
+        table.replaceWith(wrapper);
+        wrapper.appendChild(table);
+      });
+    };
+
+    // Run after layout/paint so widths are correct
+    const t1 = setTimeout(wrapTables, 0);
+    const t2 = setTimeout(wrapTables, 150);
+    window.addEventListener("resize", wrapTables);
+
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      window.removeEventListener("resize", wrapTables);
+    };
+  }, [html, formConfigs]);
 
   // Helper function to reprocess MathJax - optimized with debouncing
   const reprocessMathJax = useCallback(() => {
@@ -648,7 +687,7 @@ const RichContent = ({ html }) => {
           page.
         </div>
       )}
-      <div ref={containerRef} className="rich-text-content">
+      <div ref={containerRef} className="rich-text-content wrap-anywhere">
         {renderContent}
       </div>
     </>

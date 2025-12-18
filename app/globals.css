@@ -5,10 +5,13 @@
 /* Rich Text Editor Content Styles - Shared between editor and rendered content */
 .rich-text-content {
   outline: none;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  max-width: 100%;
 }
 
 .rich-text-content h1 {
-  font-size: 1.875rem;
+  font-size: clamp(1.5rem, 2.2vw, 1.875rem);
   font-weight: 600;
   line-height: 1.4;
   margin: 1.5rem 0 1rem 0;
@@ -16,7 +19,7 @@
 }
 
 .rich-text-content h2 {
-  font-size: 1.5rem;
+  font-size: clamp(1.25rem, 1.8vw, 1.5rem);
   font-weight: 600;
   line-height: 1.4;
   margin: 1.25rem 0 0.75rem 0;
@@ -24,7 +27,7 @@
 }
 
 .rich-text-content h3 {
-  font-size: 1.25rem;
+  font-size: clamp(1.125rem, 1.4vw, 1.25rem);
   font-weight: 600;
   line-height: 1.5;
   margin: 1rem 0 0.5rem 0;
@@ -34,7 +37,7 @@
 .rich-text-content p {
   margin: 0.75rem 0;
   line-height: 1.75;
-  font-size: 1rem;
+  font-size: clamp(0.95rem, 0.45vw + 0.85rem, 1rem);
   color: #4b5563;
 }
 
@@ -111,6 +114,12 @@
   margin: 1.5rem 0;
 }
 
+/* Pre/code should never overflow the page on mobile */
+.rich-text-content pre,
+.rich-text-content code {
+  max-width: 100%;
+}
+
 .rich-text-content code {
   background: #f3f4f6;
   padding: 0.25rem 0.5rem;
@@ -131,6 +140,47 @@
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Table wrapper: apply horizontal scroll only when table is wider than container */
+.rich-text-content .rich-table-wrapper {
+  max-width: 100%;
+  display: block;
+  width: 100%;
+}
+
+/* Desktop default: normal table flow (no forced horizontal scrolling) */
+.rich-text-content .rich-table-wrapper {
+  overflow-x: visible;
+}
+
+.rich-text-content .rich-table-wrapper>table {
+  width: 100%;
+}
+
+/* Mobile/Tablet: enable horizontal scroll on smaller screens */
+@media (max-width: 1024px) {
+  .rich-text-content .rich-table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .rich-text-content .rich-table-wrapper>table {
+    width: max-content;
+    min-width: 100%;
+  }
+
+  /* Keep cells readable; allow horizontal scroll rather than squishing */
+  .rich-text-content th,
+  .rich-text-content td {
+    white-space: nowrap;
+  }
+}
+
+/* If any other element is wider than the container, allow horizontal scroll safely */
+.rich-text-content .overflow-x-auto {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .rich-text-content th,
@@ -160,6 +210,12 @@
   border-radius: 8px;
   margin: 1rem 0;
   display: block;
+}
+
+/* Responsive embeds */
+.rich-text-content iframe,
+.rich-text-content video {
+  max-width: 100%;
 }
 
 .rich-text-content a {
