@@ -14,7 +14,7 @@ const ContactMegaMenu = ({ onClose }) => {
             <ul className="space-y-2">
               <li>
                 <Link
-                  href="/contact"
+                  href="https://www.testprepkart.com/contact"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -23,7 +23,7 @@ const ContactMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href="/class-operations"
+                  href="https://www.testprepkart.com/class-operations"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -32,7 +32,7 @@ const ContactMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href="/admissions-and-sales"
+                  href="https://www.testprepkart.com/admissions-and-sales"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -41,7 +41,7 @@ const ContactMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href="/about"
+                  href="https://www.testprepkart.com/about"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -59,7 +59,7 @@ const ContactMegaMenu = ({ onClose }) => {
             <ul className="space-y-2">
               <li>
                 <Link
-                  href="/coaching-in-usa"
+                  href="https://www.testprepkart.com/coaching-in-usa"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -71,7 +71,7 @@ const ContactMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href="/coaching-in-uae"
+                  href="https://www.testprepkart.com/coaching-in-uae"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -83,7 +83,7 @@ const ContactMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href="/coaching-in-oman"
+                  href="https://www.testprepkart.com/coaching-in-oman"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -92,7 +92,7 @@ const ContactMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href="/coaching-in-qatar"
+                  href="https://www.testprepkart.com/coaching-in-qatar"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -101,7 +101,7 @@ const ContactMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href="/coaching-in-saudi-arabia"
+                  href="https://www.testprepkart.com/coaching-in-saudi-arabia"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -110,7 +110,7 @@ const ContactMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href="/coaching-in-kuwait"
+                  href="https://www.testprepkart.com/coaching-in-kuwait"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -119,7 +119,7 @@ const ContactMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href="/coaching-in-singapore"
+                  href="https://www.testprepkart.com/coaching-in-singapore"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -128,7 +128,7 @@ const ContactMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href="/coaching-in-japan"
+                  href="https://www.testprepkart.com/coaching-in-japan"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -137,7 +137,7 @@ const ContactMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href="/coaching-in-europe"
+                  href="https://www.testprepkart.com/coaching-in-europe"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -146,7 +146,7 @@ const ContactMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href="/coaching-in-australia"
+                  href="https://www.testprepkart.com/coaching-in-australia"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -155,7 +155,7 @@ const ContactMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href="/coaching-in-canada"
+                  href="https://www.testprepkart.com/coaching-in-canada"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -164,7 +164,7 @@ const ContactMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href="/coaching-in-united-kingdom"
+                  href="https://www.testprepkart.com/coaching-in-united-kingdom"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >

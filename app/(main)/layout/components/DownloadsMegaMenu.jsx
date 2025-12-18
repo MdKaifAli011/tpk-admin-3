@@ -11,7 +11,7 @@ const DownloadsMegaMenu = ({ onClose }) => {
             <ul className="space-y-2">
               <li>
                 <Link
-                  href="/jee/downloads/exam/JEE%20Main%20Paper%201/category/Study%20Material"
+                  href="https://www.testprepkart.com/jee/downloads/exam/JEE%20Main%20Paper%201/category/Study%20Material"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -23,7 +23,7 @@ const DownloadsMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href="/jee/downloads/exam/JEE%20Main%20Paper%201/category/JEE%20Past%20Year%20Papers"
+                  href="https://www.testprepkart.com/jee/downloads/exam/JEE%20Main%20Paper%201/category/JEE%20Past%20Year%20Papers"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -32,7 +32,7 @@ const DownloadsMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href="/jee/downloads/exam/JEE%20Main%20Paper%201/category/Sample%20Papers"
+                  href="https://www.testprepkart.com/jee/downloads/exam/JEE%20Main%20Paper%201/category/Sample%20Papers"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -41,7 +41,7 @@ const DownloadsMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href="/jee/downloads/exam/JEE%20Main%20Paper%201/category/JEE%20Revision%20Notes"
+                  href="https://www.testprepkart.com/jee/downloads/exam/JEE%20Main%20Paper%201/category/JEE%20Revision%20Notes"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -62,7 +62,7 @@ const DownloadsMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href="/jee/downloads/exam/JEE%20Main%20Paper%201/category/JEE%20DPP%20%28Daily%20Practice%20Papers%29"
+                  href="https://www.testprepkart.com/jee/downloads/exam/JEE%20Main%20Paper%201/category/JEE%20DPP%20%28Daily%20Practice%20Papers%29"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -83,7 +83,7 @@ const DownloadsMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href="/jee/downloads/exam/JEE%20Main%20Paper%201/category/JEE%20Main%20Brochure%20Download"
+                  href="https://www.testprepkart.com/jee/downloads/exam/JEE%20Main%20Paper%201/category/JEE%20Main%20Brochure%20Download"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -92,7 +92,7 @@ const DownloadsMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href="/jee/downloads/exam/JEE%20Main%20Paper%201/category/JEE%20Main%20Cut%20Off%20Rank%20"
+                  href="https://www.testprepkart.com/jee/downloads/exam/JEE%20Main%20Paper%201/category/JEE%20Main%20Cut%20Off%20Rank%20"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -101,7 +101,7 @@ const DownloadsMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href="/jee/downloads/exam/JEE%20Main%20Paper%201/category/DASA%20CIWG%20Brochure"
+                  href="https://www.testprepkart.com/jee/downloads/exam/JEE%20Main%20Paper%201/category/DASA%20CIWG%20Brochure"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -110,7 +110,7 @@ const DownloadsMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href="/jee/info/69/170/DASA+%2F+CIWG++Cut-Off+Score+For+NRIs+Engineering+Admission"
+                  href="https://www.testprepkart.com/jee/info/69/170/DASA+%2F+CIWG++Cut-Off+Score+For+NRIs+Engineering+Admission"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -125,7 +125,7 @@ const DownloadsMegaMenu = ({ onClose }) => {
             <ul className="space-y-2">
               <li>
                 <Link
-                  href="/neet/downloads/exam/NEET/category/Study%20Material"
+                  href="https://www.testprepkart.com/neet/downloads/exam/NEET/category/Study%20Material"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -137,7 +137,7 @@ const DownloadsMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href="/neet/downloads/exam/NEET/category/NEET%20Past%20Year%20Papers"
+                  href="https://www.testprepkart.com/neet/downloads/exam/NEET/category/NEET%20Past%20Year%20Papers"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -146,7 +146,7 @@ const DownloadsMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href="/neet/downloads/exam/NEET/category/NEET%20Sample%20Papers"
+                  href="https://www.testprepkart.com/neet/downloads/exam/NEET/category/NEET%20Sample%20Papers"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -188,7 +188,7 @@ const DownloadsMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href="/neet/downloads/exam/NEET/category/NEET%20Preparation%20Books"
+                  href="https://www.testprepkart.com/neet/downloads/exam/NEET/category/NEET%20Preparation%20Books"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -257,7 +257,7 @@ const DownloadsMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href="/ib/downloads/exam/IB/category/IB%20Guides%20&%20Syllabus"
+                  href="https://www.testprepkart.com/ib/downloads/exam/IB/category/IB%20Guides%20&%20Syllabus"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -271,7 +271,7 @@ const DownloadsMegaMenu = ({ onClose }) => {
         {/* Contact Button */}
         <div className="mt-6 pt-6 border-t border-gray-200">
           <Link
-            href="/contact"
+            href="https://www.testprepkart.com/contact"
             onClick={onClose}
             className="inline-flex items-center justify-center w-full px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all shadow-md hover:shadow-lg"
           >

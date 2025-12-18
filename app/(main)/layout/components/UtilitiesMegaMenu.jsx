@@ -14,7 +14,7 @@ const UtilitiesMegaMenu = ({ onClose }) => {
             <ul className="space-y-2">
               <li>
                 <Link
-                  href="/coaching-inquiry"
+                  href="https://www.testprepkart.com/coaching-inquiry"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -23,7 +23,7 @@ const UtilitiesMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href="/downloads"
+                  href="https://www.testprepkart.com/downloads"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -32,7 +32,7 @@ const UtilitiesMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href="/recent-announcements"
+                  href="https://www.testprepkart.com/recent-announcements"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -41,7 +41,7 @@ const UtilitiesMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href="/explore"
+                  href="https://www.testprepkart.com/explore"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -50,7 +50,7 @@ const UtilitiesMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href="/blog"
+                  href="https://www.testprepkart.com/blog"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -59,7 +59,7 @@ const UtilitiesMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href="/jee/ebook-download"
+                  href="https://www.testprepkart.com/jee/ebook-download"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -68,7 +68,7 @@ const UtilitiesMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href="/answers"
+                  href="https://www.testprepkart.com/answers"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -77,7 +77,7 @@ const UtilitiesMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href="/online-tutors"
+                  href="https://www.testprepkart.com/online-tutors"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -86,7 +86,7 @@ const UtilitiesMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href="/online-preparation"
+                  href="https://www.testprepkart.com/online-preparation"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -95,7 +95,7 @@ const UtilitiesMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href="/prime-videos"
+                  href="https://www.testprepkart.com/prime-videos"
                   onClick={onClose}
                   target="_blank"
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
@@ -142,7 +142,7 @@ const UtilitiesMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href="/jee/demo-videos"
+                  href="https://www.testprepkart.com/jee/demo-videos"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -151,7 +151,7 @@ const UtilitiesMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href="/jee/mindmap-videos"
+                  href="https://www.testprepkart.com/jee/mindmap-videos"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -160,7 +160,7 @@ const UtilitiesMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href="/faqs"
+                  href="https://www.testprepkart.com/faqs"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -178,7 +178,7 @@ const UtilitiesMegaMenu = ({ onClose }) => {
             <ul className="space-y-2">
               <li>
                 <Link
-                  href="/trial-session"
+                  href="https://www.testprepkart.com/trial-session"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -190,7 +190,7 @@ const UtilitiesMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href="/jee/parent-counseling"
+                  href="https://www.testprepkart.com/jee/parent-counseling"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -209,7 +209,7 @@ const UtilitiesMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href="/jee/dasa-counseling-kit"
+                  href="https://www.testprepkart.com/jee/dasa-counseling-kit"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -231,7 +231,7 @@ const UtilitiesMegaMenu = ({ onClose }) => {
               </li>
               <li>
                 <Link
-                  href="/fee-payment"
+                  href="https://www.testprepkart.com/fee-payment"
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
@@ -247,7 +247,7 @@ const UtilitiesMegaMenu = ({ onClose }) => {
               <div className="border border-gray-200 rounded-lg p-3 hover:border-indigo-300 transition-colors">
                 <div className="w-full h-24 bg-gray-100 rounded mb-2"></div>
                 <Link
-                  href="/trial-session"
+                  href="https://www.testprepkart.com/trial-session"
                   onClick={onClose}
                   className="text-sm font-medium text-gray-900 hover:text-indigo-600 transition-colors flex items-center justify-between"
                 >

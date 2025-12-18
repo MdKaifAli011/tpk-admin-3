@@ -38,56 +38,56 @@ export const CoursesMobileContent = ({ onClose }) => {
         </h4>
         <div className="space-y-1">
           <Link
-            href="/jee/course-detail/10"
+            href="https://www.testprepkart.com/jee/course-detail/10"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             JEE 1 Year Course (12th)
           </Link>
           <Link
-            href="/jee/course-detail/11"
+            href="https://www.testprepkart.com/jee/course-detail/11"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             JEE 2 Year Course (11th)
           </Link>
           <Link
-            href="/jee/course-detail/12"
+            href="https://www.testprepkart.com/jee/course-detail/12"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             JEE Foundation Course (9th+)
           </Link>
           <Link
-            href="/jee/course-detail/33"
+            href="https://www.testprepkart.com/jee/course-detail/33"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             JEE Crash Course (12th)
           </Link>
           <Link
-            href="/neet/course-detail/15"
+            href="https://www.testprepkart.com/neet/course-detail/15"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             NEET 1 Year Course (12th)
           </Link>
           <Link
-            href="/neet/course-detail/16"
+            href="https://www.testprepkart.com/neet/course-detail/16"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             NEET 2 Year Course (11th)
           </Link>
           <Link
-            href="/neet/course-detail/17"
+            href="https://www.testprepkart.com/neet/course-detail/17"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             NEET Foundation Course (9th)
           </Link>
           <Link
-            href="/neet/course-detail/34"
+            href="https://www.testprepkart.com/neet/course-detail/34"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
@@ -101,42 +101,42 @@ export const CoursesMobileContent = ({ onClose }) => {
         </h4>
         <div className="space-y-1">
           <Link
-            href="/sat/course-detail/19"
+            href="https://www.testprepkart.com/sat/course-detail/19"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             SAT Prep Course (42 Hours)
           </Link>
           <Link
-            href="/sat/course-detail/20"
+            href="https://www.testprepkart.com/sat/course-detail/20"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             SAT Prep Course (60 Hours)
           </Link>
           <Link
-            href="/sat/course-detail/21"
+            href="https://www.testprepkart.com/sat/course-detail/21"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             SAT Prep Course (72 Hours)
           </Link>
           <Link
-            href="/sat/course-detail/22"
+            href="https://www.testprepkart.com/sat/course-detail/22"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             SAT Prep Course (90 Hours)
           </Link>
           <Link
-            href="/ib/courses"
+            href="https://www.testprepkart.com/ib/courses"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             IB MYP Courses
           </Link>
           <Link
-            href="/ib/courses"
+            href="https://www.testprepkart.com/ib/courses"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
@@ -174,70 +174,70 @@ export const UtilitiesMobileContent = ({ onClose }) => {
         </h4>
         <div className="space-y-1">
           <Link
-            href="/coaching-inquiry"
+            href="https://www.testprepkart.com/coaching-inquiry"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             Enroll for Coaching
           </Link>
           <Link
-            href="/downloads"
+            href="https://www.testprepkart.com/downloads"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             Downloads
           </Link>
           <Link
-            href="/recent-announcements"
+            href="https://www.testprepkart.com/recent-announcements"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             Recent Announcements
           </Link>
           <Link
-            href="/explore"
+            href="https://www.testprepkart.com/explore"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             Universities
           </Link>
           <Link
-            href="/blog"
+            href="https://www.testprepkart.com/blog"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             Blog
           </Link>
           <Link
-            href="/jee/ebook-download"
+            href="https://www.testprepkart.com/jee/ebook-download"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             NRI Quota Admission Guide
           </Link>
           <Link
-            href="/answers"
+            href="https://www.testprepkart.com/answers"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             Discussion Forum
           </Link>
           <Link
-            href="/online-tutors"
+            href="https://www.testprepkart.com/online-tutors"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             Tutor Profiles
           </Link>
           <Link
-            href="/online-preparation"
+            href="https://www.testprepkart.com/online-preparation"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             Online Preparation
           </Link>
           <Link
-            href="/prime-videos"
+            href="https://www.testprepkart.com/prime-videos"
             onClick={onClose}
             target="_blank"
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
@@ -274,21 +274,21 @@ export const UtilitiesMobileContent = ({ onClose }) => {
             NEET Youtube Channel
           </a>
           <Link
-            href="/jee/demo-videos"
+            href="https://www.testprepkart.com/jee/demo-videos"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             Demo Videos
           </Link>
           <Link
-            href="/jee/mindmap-videos"
+            href="https://www.testprepkart.com/jee/mindmap-videos"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             Mindmap Videos
           </Link>
           <Link
-            href="/faqs"
+            href="https://www.testprepkart.com/faqs"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
@@ -302,7 +302,7 @@ export const UtilitiesMobileContent = ({ onClose }) => {
         </h4>
         <div className="space-y-1">
           <Link
-            href="/trial-session"
+            href="https://www.testprepkart.com/trial-session"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
@@ -312,7 +312,7 @@ export const UtilitiesMobileContent = ({ onClose }) => {
             </span>
           </Link>
           <Link
-            href="/jee/parent-counseling"
+            href="https://www.testprepkart.com/jee/parent-counseling"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
@@ -327,7 +327,7 @@ export const UtilitiesMobileContent = ({ onClose }) => {
             Buy Online Tests
           </a>
           <Link
-            href="/jee/dasa-counseling-kit"
+            href="https://www.testprepkart.com/jee/dasa-counseling-kit"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
@@ -345,7 +345,7 @@ export const UtilitiesMobileContent = ({ onClose }) => {
             SATLAS
           </a>
           <Link
-            href="/fee-payment"
+            href="https://www.testprepkart.com/fee-payment"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
@@ -366,7 +366,7 @@ export const DownloadsMobileContent = ({ onClose }) => {
         </h4>
         <div className="space-y-1">
           <Link
-            href="/jee/downloads/exam/JEE%20Main%20Paper%201/category/Study%20Material"
+            href="https://www.testprepkart.com/jee/downloads/exam/JEE%20Main%20Paper%201/category/Study%20Material"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
@@ -376,21 +376,21 @@ export const DownloadsMobileContent = ({ onClose }) => {
             </span>
           </Link>
           <Link
-            href="/jee/downloads/exam/JEE%20Main%20Paper%201/category/JEE%20Past%20Year%20Papers"
+            href="https://www.testprepkart.com/jee/downloads/exam/JEE%20Main%20Paper%201/category/JEE%20Past%20Year%20Papers"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             JEE Past Year Papers
           </Link>
           <Link
-            href="/jee/downloads/exam/JEE%20Main%20Paper%201/category/Sample%20Papers"
+            href="https://www.testprepkart.com/jee/downloads/exam/JEE%20Main%20Paper%201/category/Sample%20Papers"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             JEE Sample Papers
           </Link>
           <Link
-            href="/jee/downloads/exam/JEE%20Main%20Paper%201/category/JEE%20Revision%20Notes"
+            href="https://www.testprepkart.com/jee/downloads/exam/JEE%20Main%20Paper%201/category/JEE%20Revision%20Notes"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
@@ -407,7 +407,7 @@ export const DownloadsMobileContent = ({ onClose }) => {
             </span>
           </Link>
           <Link
-            href="/jee/downloads/exam/JEE%20Main%20Paper%201/category/JEE%20DPP%20%28Daily%20Practice%20Papers%29"
+            href="https://www.testprepkart.com/jee/downloads/exam/JEE%20Main%20Paper%201/category/JEE%20DPP%20%28Daily%20Practice%20Papers%29"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
@@ -424,28 +424,28 @@ export const DownloadsMobileContent = ({ onClose }) => {
             JEE Popular Books
           </Link>
           <Link
-            href="/jee/downloads/exam/JEE%20Main%20Paper%201/category/JEE%20Main%20Brochure%20Download"
+            href="https://www.testprepkart.com/jee/downloads/exam/JEE%20Main%20Paper%201/category/JEE%20Main%20Brochure%20Download"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             JEE Brochure
           </Link>
           <Link
-            href="/jee/downloads/exam/JEE%20Main%20Paper%201/category/JEE%20Main%20Cut%20Off%20Rank%20"
+            href="https://www.testprepkart.com/jee/downloads/exam/JEE%20Main%20Paper%201/category/JEE%20Main%20Cut%20Off%20Rank%20"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             JEE Last Year Cut Off
           </Link>
           <Link
-            href="/jee/downloads/exam/JEE%20Main%20Paper%201/category/DASA%20CIWG%20Brochure"
+            href="https://www.testprepkart.com/jee/downloads/exam/JEE%20Main%20Paper%201/category/DASA%20CIWG%20Brochure"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             DASA CIWG Brochure
           </Link>
           <Link
-            href="/jee/info/69/170/DASA+%2F+CIWG++Cut-Off+Score+For+NRIs+Engineering+Admission"
+            href="https://www.testprepkart.com/jee/info/69/170/DASA+%2F+CIWG++Cut-Off+Score+For+NRIs+Engineering+Admission"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
@@ -459,7 +459,7 @@ export const DownloadsMobileContent = ({ onClose }) => {
         </h4>
         <div className="space-y-1">
           <Link
-            href="/neet/downloads/exam/NEET/category/Study%20Material"
+            href="https://www.testprepkart.com/neet/downloads/exam/NEET/category/Study%20Material"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
@@ -469,14 +469,14 @@ export const DownloadsMobileContent = ({ onClose }) => {
             </span>
           </Link>
           <Link
-            href="/neet/downloads/exam/NEET/category/NEET%20Past%20Year%20Papers"
+            href="https://www.testprepkart.com/neet/downloads/exam/NEET/category/NEET%20Past%20Year%20Papers"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             NEET Past Year Papers
           </Link>
           <Link
-            href="/neet/downloads/exam/NEET/category/NEET%20Sample%20Papers"
+            href="https://www.testprepkart.com/neet/downloads/exam/NEET/category/NEET%20Sample%20Papers"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
@@ -510,7 +510,7 @@ export const DownloadsMobileContent = ({ onClose }) => {
             </span>
           </Link>
           <Link
-            href="/neet/downloads/exam/NEET/category/NEET%20Preparation%20Books"
+            href="https://www.testprepkart.com/neet/downloads/exam/NEET/category/NEET%20Preparation%20Books"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
@@ -566,7 +566,7 @@ export const DownloadsMobileContent = ({ onClose }) => {
             SAT Online Test Papers
           </Link>
           <Link
-            href="/ib/downloads/exam/IB/category/IB%20Guides%20&%20Syllabus"
+            href="https://www.testprepkart.com/ib/downloads/exam/IB/category/IB%20Guides%20&%20Syllabus"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
@@ -575,7 +575,7 @@ export const DownloadsMobileContent = ({ onClose }) => {
         </div>
       </div>
       <Link
-        href="/contact"
+        href="https://www.testprepkart.com/contact"
         onClick={onClose}
         className="block w-full mt-4 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all shadow-md text-center"
       >
@@ -594,28 +594,28 @@ export const ContactMobileContent = ({ onClose }) => {
         </h4>
         <div className="space-y-1">
           <Link
-            href="/contact"
+            href="https://www.testprepkart.com/contact"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             Contact TestprepKart
           </Link>
           <Link
-            href="/class-operations"
+            href="https://www.testprepkart.com/class-operations"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             Class Operations
           </Link>
           <Link
-            href="/admissions-and-sales"
+            href="https://www.testprepkart.com/admissions-and-sales"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             Admission & Sales
           </Link>
           <Link
-            href="/about"
+            href="https://www.testprepkart.com/about"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
@@ -629,7 +629,7 @@ export const ContactMobileContent = ({ onClose }) => {
         </h4>
         <div className="space-y-1">
           <Link
-            href="/coaching-in-usa"
+            href="https://www.testprepkart.com/coaching-in-usa"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
@@ -639,7 +639,7 @@ export const ContactMobileContent = ({ onClose }) => {
             </span>
           </Link>
           <Link
-            href="/coaching-in-uae"
+            href="https://www.testprepkart.com/coaching-in-uae"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
@@ -649,70 +649,70 @@ export const ContactMobileContent = ({ onClose }) => {
             </span>
           </Link>
           <Link
-            href="/coaching-in-oman"
+            href="https://www.testprepkart.com/coaching-in-oman"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             Oman
           </Link>
           <Link
-            href="/coaching-in-qatar"
+            href="https://www.testprepkart.com/coaching-in-qatar"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             Qatar
           </Link>
           <Link
-            href="/coaching-in-saudi-arabia"
+            href="https://www.testprepkart.com/coaching-in-saudi-arabia"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             Saudi Arabia
           </Link>
           <Link
-            href="/coaching-in-kuwait"
+            href="https://www.testprepkart.com/coaching-in-kuwait"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             Kuwait
           </Link>
           <Link
-            href="/coaching-in-singapore"
+            href="https://www.testprepkart.com/coaching-in-singapore"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             Singapore
           </Link>
           <Link
-            href="/coaching-in-japan"
+            href="https://www.testprepkart.com/coaching-in-japan"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             Japan
           </Link>
           <Link
-            href="/coaching-in-europe"
+            href="https://www.testprepkart.com/coaching-in-europe"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             Europe
           </Link>
           <Link
-            href="/coaching-in-australia"
+            href="https://www.testprepkart.com/coaching-in-australia"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             Australia
           </Link>
           <Link
-            href="/coaching-in-canada"
+            href="https://www.testprepkart.com/coaching-in-canada"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             Canada
           </Link>
           <Link
-            href="/coaching-in-united-kingdom"
+            href="https://www.testprepkart.com/coaching-in-united-kingdom"
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >

@@ -33,9 +33,9 @@ const Footer = () => {
   const companyLinks = [
     "Contact Us",
     "Work With Us",
-    "Blog",
-    "Faculties",
-    "Partners",
+    "Blogs",
+    "Facultie",
+    "Partner",
   ];
 
   return (
@@ -46,7 +46,7 @@ const Footer = () => {
           {/* Column 1: Brand and CTA */}
           <div className="space-y-4">
             {/* Logo */}
-            <Link href="/">
+            <Link href="https://www.testprepkart.com">
               <Image
                 src={`${basePath}/logo.png`}
                 alt="TestPrepKart Logo"
@@ -66,7 +66,7 @@ const Footer = () => {
 
             {/* CTA Button */}
             <Link
-              href="/contact"
+              href="https://www.testprepkart.com/contact"
               className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 text-white rounded-lg hover:from-indigo-700 hover:via-purple-700 hover:to-pink-600 transition-all shadow-md hover:shadow-lg"
             >
               <span>Contact With Us</span>
@@ -80,16 +80,62 @@ const Footer = () => {
               Useful Links
             </h3>
             <ul className="space-y-2.5">
-              {usefulLinks.map((link, index) => (
-                <li key={index}>
-                  <Link
-                    href="#"
-                    className="text-gray-500 text-sm hover:text-blue-600 transition-colors"
-                  >
-                    {link}
-                  </Link>
-                </li>
-              ))}
+              <li>
+                <Link
+                  href="https://www.testprepkart.com/jee/parent_counseling"
+                  className="text-gray-500 text-sm hover:text-blue-600 transition-colors"
+                >
+                  Connect With Counselor
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="https://www.testprepkart.com/explore/"
+                  className="text-gray-500 text-sm hover:text-blue-600 transition-colors"
+                >
+                  University Admissions
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="https://www.testprepkart.com/prime-videos"
+                  className="text-gray-500 text-sm hover:text-blue-600 transition-colors"
+                >
+                  Prime Videos
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="https://testprepkart-operations.com/enrollment-form.php"
+                  className="text-gray-500 text-sm hover:text-blue-600 transition-colors"
+                >
+                  Enrollment Form
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="https://www.testprepkart.com/fee-payment"
+                  className="text-gray-500 text-sm hover:text-blue-600 transition-colors"
+                >
+                  Online Fee Payment
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="https://testprepkart-operations.com/"
+                  className="text-gray-500 text-sm hover:text-blue-600 transition-colors"
+                >
+                  TestprepKart Operations
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="https://testprepkart-operations.com/faculty_registration.php"
+                  className="text-gray-500 text-sm hover:text-blue-600 transition-colors"
+                >
+                  Faculty Registration
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -102,7 +148,7 @@ const Footer = () => {
               {companyLinks.map((link, index) => (
                 <li key={index}>
                   <Link
-                    href="#"
+                    href={`https://www.testprepkart.com/${link.toLowerCase().replace(/ /g, '-')}`}
                     className="text-gray-500 text-sm hover:text-blue-600 transition-colors"
                   >
                     {link}
@@ -166,19 +212,19 @@ const Footer = () => {
 
             {/* Legal Links */}
             <div className="flex flex-wrap items-center justify-center md:justify-end gap-3">
-              <Link href="#" className="hover:text-blue-600 transition-colors">
+              <Link href="https://www.testprepkart.com/policies/terms-and-conditions" className="hover:text-blue-600 transition-colors">
                 Terms of service
               </Link>
               <span className="text-gray-300">|</span>
-              <Link href="#" className="hover:text-blue-600 transition-colors">
+              <Link href="https://www.testprepkart.com/policies/privacy-policy" className="hover:text-blue-600 transition-colors">
                 Privacy policy
               </Link>
               <span className="text-gray-300">|</span>
-              <Link href="#" className="hover:text-blue-600 transition-colors">
+              <Link href="https://www.testprepkart.com/policies/refund-policy" className="hover:text-blue-600 transition-colors">
                 Refund Policy
               </Link>
               <span className="text-gray-300">|</span>
-              <Link href="#" className="hover:text-blue-600 transition-colors">
+              <Link href="https://www.testprepkart.com/register" className="hover:text-blue-600 transition-colors">
                 Login & Register
               </Link>
             </div>
