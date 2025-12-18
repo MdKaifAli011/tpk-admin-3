@@ -18,6 +18,31 @@ const RichTextEditor = ({
   disabled = false,
   className = "",
 }) => {
+  const titleCasePreserveAcronyms = (text) => {
+    if (!text) return "";
+    return String(text)
+      .split(/\s+/)
+      .filter(Boolean)
+      .map((token) => {
+        const m = token.match(/^([^A-Za-z0-9]*)([A-Za-z0-9]+)([^A-Za-z0-9]*)$/);
+        if (!m) return token;
+        const [, prefix, core, suffix] = m;
+
+        const hasLetter = /[A-Za-z]/.test(core);
+        const isAllCaps =
+          hasLetter &&
+          core === core.toUpperCase() &&
+          core !== core.toLowerCase();
+
+        const nextCore = isAllCaps
+          ? core
+          : core.charAt(0).toUpperCase() + core.slice(1).toLowerCase();
+
+        return `${prefix}${nextCore}${suffix}`;
+      })
+      .join(" ");
+  };
+
   const textareaRef = useRef(null);
   const editorRef = useRef(null);
   const [isReady, setIsReady] = useState(false);
@@ -30,6 +55,7 @@ const RichTextEditor = ({
     title: "",
     description: "",
     buttonText: "",
+    buttonColor: "#2563eb",
     buttonLink: "",
     imageUrl: "",
   });
@@ -308,6 +334,7 @@ const RichTextEditor = ({
       title: form.settings?.title || form.formId || "",
       description: form.settings?.description || "",
       buttonText: form.settings?.buttonText || "Open Form",
+      buttonColor: "#2563eb",
       buttonLink: "",
       imageUrl: "",
     });
@@ -320,9 +347,20 @@ const RichTextEditor = ({
     const formId = selectedForm.formId;
     const title = insertOptions.title.trim() || selectedForm.formId;
     const description = insertOptions.description.trim();
-    const buttonText = insertOptions.buttonText.trim() || "Open Form";
+    const buttonText = titleCasePreserveAcronyms(
+      insertOptions.buttonText.trim() || "Open Form"
+    );
+    const buttonColor = insertOptions.buttonColor?.trim() || "#2563eb";
     const buttonLink = insertOptions.buttonLink.trim();
     const imageUrl = insertOptions.imageUrl.trim();
+
+    const sanitizeHexColor = (value) => {
+      if (!value) return "#2563eb";
+      const v = String(value).trim();
+      return /^#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})$/.test(v) ? v : "#2563eb";
+    };
+
+    const safeButtonColor = sanitizeHexColor(buttonColor);
 
     const escapeHtml = (str) => {
       if (!str) return "";
@@ -334,8 +372,7 @@ const RichTextEditor = ({
         .replace(/'/g, "&#39;");
     };
 
-    const buttonStyle =
-      "display: inline-block; padding: 8px 16px; background-color: #2563eb; color: #ffffff; border: none; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; vertical-align: middle; font-family: inherit; transition: background-color 0.2s; line-height: normal; margin: 0;";
+    const buttonStyle = `display: inline-block; padding: 8px 16px; background-color: ${safeButtonColor}; color: #ffffff; border: none; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; vertical-align: middle; font-family: inherit; transition: opacity 0.2s; line-height: normal; margin: 0;`;
     const buttonHtml = `<button type="button" style="${buttonStyle}" contenteditable="false" readonly disabled>${escapeHtml(
       buttonText
     )}</button>`;
@@ -346,6 +383,8 @@ const RichTextEditor = ({
       description
     )}" data-button-text="${escapeHtml(
       buttonText
+    )}" data-button-color="${escapeHtml(
+      safeButtonColor
     )}" data-button-link="${escapeHtml(
       buttonLink
     )}" data-image-url="${escapeHtml(
@@ -359,6 +398,7 @@ const RichTextEditor = ({
       title: "",
       description: "",
       buttonText: "",
+      buttonColor: "#2563eb",
       buttonLink: "",
       imageUrl: "",
     });
@@ -368,7 +408,7 @@ const RichTextEditor = ({
     const editor = editorRef.current;
     if (!editor || !buttonOptions.text.trim()) return;
 
-    const buttonText = buttonOptions.text.trim();
+    const buttonText = titleCasePreserveAcronyms(buttonOptions.text.trim());
     const buttonColor = buttonOptions.color || "#2563eb";
     const buttonLink = buttonOptions.link.trim();
 
@@ -538,11 +578,11 @@ const RichTextEditor = ({
       {showFormModal && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           {/* Modal Container */}
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden border border-gray-200">
+          <div className="bg-white rounded shadow w-full max-w-4xl max-h-[90vh] overflow-hidden border border-gray-200">
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b bg-white sticky top-0 z-10">
+            <div className="flex items-center justify-between p-4 border-b bg-white sticky top-0 z-40">
               <div>
-                <h2 className="text-xl font-semibold text-gray-900">
+                <h2 className="text-sm font-semibold text-gray-900">
                   Insert Form
                 </h2>
                 <p className="text-xs text-gray-500 mt-0.5">
@@ -551,42 +591,42 @@ const RichTextEditor = ({
               </div>
               <button
                 onClick={() => setShowFormModal(false)}
-                className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-2 rounded-lg transition"
+                className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-2 rounded transition"
               >
-                <FaTimes className="w-5 h-5" />
+                <FaTimes className="w-4 h-4" />
               </button>
             </div>
 
             {/* Body */}
             <div
-              className="grid grid-cols-1 lg:grid-cols-2 gap-6 p-6 overflow-y-auto"
+              className="grid grid-cols-1 lg:grid-cols-2 gap-6 p-3 overflow-y-auto"
               style={{ maxHeight: "calc(90vh - 120px)" }}
             >
               {/* Left Column - Form List */}
-              <div className="space-y-4">
+              <div className="space-y-2">
                 {/* Search */}
                 <div className="relative">
-                  <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <FaSearch className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
                   <input
                     type="text"
                     placeholder="Search forms..."
-                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full pl-8 pr-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
 
                 {/* Form List */}
-                <div className="rounded-lg border border-gray-200 overflow-hidden bg-white">
+                <div className="rounded border border-gray-200 overflow-hidden bg-white">
                   {loadingForms ? (
-                    <div className="flex items-center justify-center py-12">
+                    <div className="flex items-center justify-center py-6">
                       <div className="text-center">
-                        <div className="inline-block animate-spin rounded-full h-6 w-6 border-2 border-blue-600 border-t-transparent mb-3"></div>
+                        <div className="inline-block animate-spin rounded-full h-4 w-4 border-2 border-blue-600 border-t-transparent mb-2"></div>
                         <p className="text-sm text-gray-600">
                           Loading forms...
                         </p>
                       </div>
                     </div>
                   ) : forms.length === 0 ? (
-                    <div className="text-center py-12 px-4">
+                    <div className="text-center py-6 px-3">
                       <p className="text-sm font-medium text-gray-800 mb-1">
                         No active forms
                       </p>
@@ -600,15 +640,15 @@ const RichTextEditor = ({
                         <li key={form._id}>
                           <button
                             onClick={() => handleFormSelect(form)}
-                            className={`w-full text-left p-4 transition-colors ${
+                            className={`w-full text-left p-2 transition-colors ${
                               selectedForm?._id === form._id
-                                ? "bg-blue-50 border-l-4 border-blue-600"
+                                ? "bg-blue-50 border-l-2 border-blue-600"
                                 : "hover:bg-gray-50"
                             }`}
                           >
-                            <div className="flex items-start justify-between gap-2 mb-2">
+                            <div className="flex items-start justify-between gap-2">
                               <h3 className="text-sm font-semibold text-gray-900">
-                                <code className="text-sm font-mono bg-gray-100 px-2 py-0.5 rounded">
+                                <code className="text-sm font-mono  px-2 py-0.5 rounded">
                                   {form.formId}
                                 </code>
                               </h3>
@@ -619,19 +659,6 @@ const RichTextEditor = ({
                                 </span>
                               )}
                             </div>
-
-                            {form.description && (
-                              <p className="text-xs text-gray-600 mb-2 line-clamp-2">
-                                {form.description}
-                              </p>
-                            )}
-
-                            <div className="flex items-center gap-3 flex-wrap">
-                              <span className="text-xs text-gray-500">
-                                {form.fields?.length || 0} field
-                                {form.fields?.length !== 1 ? "s" : ""}
-                              </span>
-                            </div>
                           </button>
                         </li>
                       ))}
@@ -641,12 +668,12 @@ const RichTextEditor = ({
               </div>
 
               {/* Right Column - Form Configuration */}
-              <div className="space-y-4">
+              <div className="space-y-2">
                 {!selectedForm ? (
-                  <div className="h-full min-h-[400px] border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-center p-6 bg-gray-50">
-                    <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center mb-4">
+                  <div className="h-full min-h-[200px] border-2 border-dashed border-gray-300 rounded flex flex-col items-center justify-center text-center p-3 bg-gray-50">
+                    <div className="w-10 h-10 rounded bg-gray-200 flex items-center justify-center mb-2">
                       <svg
-                        className="w-8 h-8 text-gray-400"
+                        className="w-6 h-6 text-gray-400"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -659,7 +686,7 @@ const RichTextEditor = ({
                         />
                       </svg>
                     </div>
-                    <p className="text-sm font-medium text-gray-700 mb-1">
+                    <p className="text-xs font-medium text-gray-700 mb-1">
                       Select a form
                     </p>
                     <p className="text-xs text-gray-500">
@@ -668,12 +695,12 @@ const RichTextEditor = ({
                     </p>
                   </div>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="space-y-2">
                     {/* Form Header */}
                     <div className="flex items-start justify-between pb-3 border-b border-gray-200">
                       <div className="flex-1">
-                        <h3 className="text-base font-semibold text-gray-900 mb-1">
-                          <code className="text-base font-mono bg-gray-100 px-2 py-1 rounded">
+                        <h3 className="text-sm font-semibold text-gray-900 mb-1">
+                          <code className="text-sm font-mono px-2 py-1 rounded">
                             {selectedForm.formId}
                           </code>
                         </h3>
@@ -693,10 +720,11 @@ const RichTextEditor = ({
                     </div>
 
                     {/* Preview Card */}
-                    <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
+                    <div className="border border-gray-200 rounded overflow-hidden bg-white">
                       <div className="p-4 flex gap-4 items-center">
-                        <div className="w-24 h-20 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white overflow-hidden shrink-0">
+                        <div className="w-24 h-20 rounded bg-linear-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white overflow-hidden shrink-0">
                           {insertOptions.imageUrl ? (
+                            // eslint-disable-next-line @next/next/no-img-element
                             <img
                               src={insertOptions.imageUrl}
                               alt="Form preview"
@@ -713,13 +741,13 @@ const RichTextEditor = ({
                           {/* Description Badge - shown first */}
                           {(insertOptions.description ||
                             selectedForm.description) && (
-                            <div className="bg-blue-600 text-white text-xs font-medium px-3 py-1 rounded-full inline-block mb-2">
+                            <div className="bg-blue-600 text-white text-xs font-medium px-2 py-1 rounded inline-block mb-2">
                               {insertOptions.description ||
                                 selectedForm.description}
                             </div>
                           )}
                           {/* Title - shown second */}
-                          <h4 className="text-sm font-semibold text-gray-900 mb-3">
+                          <h4 className="text-sm font-semibold text-gray-900">
                             {insertOptions.title || selectedForm.formId}
                           </h4>
                           {/* Button Preview */}
@@ -733,7 +761,7 @@ const RichTextEditor = ({
                     </div>
 
                     {/* Configuration Fields */}
-                    <div className="space-y-4">
+                    <div className="space-y-2">
                       <h4 className="text-sm font-semibold text-gray-900">
                         Form Settings
                       </h4>
@@ -753,7 +781,7 @@ const RichTextEditor = ({
                             })
                           }
                           placeholder="Enter form title"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                          className="w-full px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                         />
                       </div>
 
@@ -772,7 +800,7 @@ const RichTextEditor = ({
                           }
                           placeholder="Enter form description (optional)"
                           rows={2}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm resize-none"
+                          className="w-full px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm resize-none"
                         />
                       </div>
 
@@ -791,7 +819,7 @@ const RichTextEditor = ({
                             })
                           }
                           placeholder="https://example.com/image.jpg"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                          className="w-full px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                         />
                         <p className="mt-1 text-xs text-gray-500">
                           Image displayed in the form modal (optional)
@@ -814,8 +842,43 @@ const RichTextEditor = ({
                               })
                             }
                             placeholder="e.g., Download, Submit"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                            className="w-full px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                           />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                            Button Color{" "}
+                            <span className="text-gray-500 text-xs">
+                              (optional)
+                            </span>
+                          </label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="color"
+                              value={insertOptions.buttonColor}
+                              onChange={(e) =>
+                                setInsertOptions({
+                                  ...insertOptions,
+                                  buttonColor: e.target.value,
+                                })
+                              }
+                              className="w-12 h-9 border border-gray-300 rounded cursor-pointer"
+                              aria-label="Button color"
+                            />
+                            <input
+                              type="text"
+                              value={insertOptions.buttonColor}
+                              onChange={(e) =>
+                                setInsertOptions({
+                                  ...insertOptions,
+                                  buttonColor: e.target.value,
+                                })
+                              }
+                              placeholder="#2563eb"
+                              className="flex-1 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm font-mono"
+                            />
+                          </div>
                         </div>
 
                         <div>
@@ -835,7 +898,7 @@ const RichTextEditor = ({
                               })
                             }
                             placeholder="https://example.com"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                            className="w-full px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                           />
                         </div>
                       </div>
@@ -851,11 +914,12 @@ const RichTextEditor = ({
                             title: "",
                             description: "",
                             buttonText: "",
+                            buttonColor: "#2563eb",
                             buttonLink: "",
                             imageUrl: "",
                           });
                         }}
-                        className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-900 rounded-lg text-sm font-medium transition-colors"
+                        className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-900 rounded text-sm font-medium transition-colors"
                       >
                         Cancel
                       </button>
@@ -865,7 +929,7 @@ const RichTextEditor = ({
                           !insertOptions.title.trim() ||
                           !insertOptions.buttonText.trim()
                         }
-                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-medium transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Insert Form
                       </button>

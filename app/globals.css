@@ -10,6 +10,14 @@
   max-width: 100%;
 }
 
+/* Tables: avoid breaking words mid-word on desktop (e.g. "Stage" -> "Sta ge").
+   We still allow wrapping at spaces, and mobile keeps horizontal scroll via media query below. */
+.rich-text-content th,
+.rich-text-content td {
+  overflow-wrap: normal;
+  word-break: keep-all;
+}
+
 .rich-text-content h1 {
   font-size: clamp(1.5rem, 2.2vw, 1.875rem);
   font-weight: 600;

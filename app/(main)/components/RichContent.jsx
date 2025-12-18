@@ -23,12 +23,32 @@ const FormRenderer = lazy(() =>
   }))
 );
 
-// Helper function to capitalize button text - moved outside component to avoid recreation
-const capitalizeButtonText = (text) => {
+// Helper function to Title-Case button text while preserving ALL-CAPS tokens (e.g., "PDF", "NEET").
+// Examples:
+// - "download neet pdf" -> "Download Neet Pdf"
+// - "Dowload Neet PDF"  -> "Dowload Neet PDF"
+// - "NEET PDF"          -> "NEET PDF"
+const titleCasePreserveAcronyms = (text) => {
   if (!text) return "";
-  return text
-    .split(" ")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+  return String(text)
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((token) => {
+      // Preserve surrounding punctuation (e.g. "(PDF)", "PDF,", "pdf.")
+      const m = token.match(/^([^A-Za-z0-9]*)([A-Za-z0-9]+)([^A-Za-z0-9]*)$/);
+      if (!m) return token;
+      const [, prefix, core, suffix] = m;
+
+      const hasLetter = /[A-Za-z]/.test(core);
+      const isAllCaps =
+        hasLetter && core === core.toUpperCase() && core !== core.toLowerCase();
+
+      const nextCore = isAllCaps
+        ? core
+        : core.charAt(0).toUpperCase() + core.slice(1).toLowerCase();
+
+      return `${prefix}${nextCore}${suffix}`;
+    })
     .join(" ");
 };
 
@@ -60,6 +80,13 @@ const decodeAttr = (str) => {
   }
   decodeCache.set(str, decoded);
   return decoded;
+};
+
+// Only allow safe hex colors to avoid CSS injection via saved HTML attributes.
+const sanitizeHexColor = (value, fallback = "#2563eb") => {
+  if (!value) return fallback;
+  const v = String(value).trim();
+  return /^#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})$/.test(v) ? v : fallback;
 };
 
 // Helper function to check if HTML content is inline - moved outside to avoid recreation
@@ -277,6 +304,7 @@ const RichContent = ({ html }) => {
       title: /data-title=["']([^"']*)["']/i,
       description: /data-description=["']([^"']*)["']/i,
       buttonText: /data-button-text=["']([^"']*)["']/i,
+      buttonColor: /data-button-color=["']([^"']*)["']/i,
       buttonLink: /data-button-link=["']([^"']*)["']/i,
       imageUrl: /data-image-url=["']([^"']*)["']/i,
     };
@@ -299,6 +327,9 @@ const RichContent = ({ html }) => {
           index: formIndex,
           buttonText: decodeAttr(
             attrRegexes.buttonText.exec(fullMatch)?.[1] || ""
+          ),
+          buttonColor: sanitizeHexColor(
+            decodeAttr(attrRegexes.buttonColor.exec(fullMatch)?.[1] || "")
           ),
           title: decodeAttr(attrRegexes.title.exec(fullMatch)?.[1] || ""),
           description: decodeAttr(
@@ -521,6 +552,11 @@ const RichContent = ({ html }) => {
                 (formData.buttonText && formData.buttonText.trim()) ||
                 formConfig?.settings?.buttonText ||
                 "Open Form";
+              const buttonColor = sanitizeHexColor(
+                (formData.buttonColor && formData.buttonColor.trim()) ||
+                  formConfig?.settings?.buttonColor ||
+                  "#2563eb"
+              );
               const imageUrl =
                 (formData.imageUrl && formData.imageUrl.trim()) || "";
               const buttonLink =
@@ -535,7 +571,7 @@ const RichContent = ({ html }) => {
                         [formKey]: !prev[formKey],
                       }))
                     }
-                    className="inline-block px-2 py-1.5 sm:px-3 sm:py-2 md:px-4 md:py-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-md sm:rounded-lg text-xs sm:text-sm md:text-base font-medium transition-all duration-200 transform active:scale-95"
+                    className="inline-block px-2 py-1.5 sm:px-3 sm:py-2 md:px-4 md:py-2 text-white rounded-md sm:rounded-lg text-xs sm:text-sm md:text-base font-medium transition-all duration-200 transform active:scale-95 hover:opacity-90 active:opacity-80"
                     style={{
                       display: "inline-block",
                       verticalAlign: "baseline",
@@ -544,9 +580,10 @@ const RichContent = ({ html }) => {
                       margin: "0 4px",
                       whiteSpace: "nowrap",
                       textDecoration: "none",
+                      backgroundColor: buttonColor,
                     }}
                   >
-                    {capitalizeButtonText(buttonText || "Open Form")}
+                    {titleCasePreserveAcronyms(buttonText || "Open Form")}
                   </button>
                   {isOpen && (
                     <Suspense fallback={null}>
@@ -605,7 +642,7 @@ const RichContent = ({ html }) => {
                       }
                       className="w-full sm:w-auto px-3 py-1.5 sm:px-4 sm:py-2 md:px-5 md:py-2.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-md sm:rounded-lg text-xs sm:text-sm md:text-base font-medium transition-all duration-200 transform active:scale-95 whitespace-nowrap"
                     >
-                      {isOpen ? "Close" : capitalizeButtonText(buttonText)}
+                      {isOpen ? "Close" : titleCasePreserveAcronyms(buttonText)}
                     </button>
                   </div>
                   {isOpen && (
