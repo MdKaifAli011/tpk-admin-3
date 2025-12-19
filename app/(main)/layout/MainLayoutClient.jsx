@@ -14,6 +14,7 @@ import Sidebar from "./Sidebar";
 import Footer from "./Footer";
 import ServiceWorkerRegistration from "../components/ServiceWorkerRegistration";
 import ScrollToTop from "../components/ScrollToTop";
+import WhatsAppFloatButton from "../components/WhatsAppFloatButton";
 import api from "../../../lib/api.js";
 
 export default function MainLayoutClient({ children }) {
@@ -257,6 +258,7 @@ export default function MainLayoutClient({ children }) {
     <ErrorBoundary>
       <ServiceWorkerRegistration />
       <ScrollToTop />
+      <WhatsAppFloatButton />
       <div className="flex flex-col min-h-screen bg-gray-50">
         {/* Persistent Navbar - won't re-render on navigation */}
         <Navbar onMenuToggle={toggleSidebar} isMenuOpen={isSidebarOpen} />
