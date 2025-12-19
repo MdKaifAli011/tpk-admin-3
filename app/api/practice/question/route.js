@@ -12,6 +12,7 @@ import {
 import { STATUS, ERROR_MESSAGES } from "@/constants";
 import { requireAuth } from "@/middleware/authMiddleware";
 import cacheManager from "@/utils/cacheManager";
+import { updateSubCategoryQuestionCount } from "@/utils/apiRouteHelpers";
 
 // ---------- GET ALL PRACTICE QUESTIONS (optimized) ----------
 export async function GET(request) {
@@ -173,6 +174,9 @@ export async function POST(request) {
     const populatedQuestion = await PracticeQuestion.findById(newQuestion._id)
       .populate("subCategoryId", "name status categoryId")
       .lean();
+
+    // Auto-update numberOfQuestions count for the subcategory
+    await updateSubCategoryQuestionCount(subCategoryId);
 
     // Clear cache
     cacheManager.clear("practice-questions-");

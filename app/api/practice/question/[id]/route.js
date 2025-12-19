@@ -11,6 +11,7 @@ import {
 } from "@/utils/apiResponse";
 import { ERROR_MESSAGES, STATUS } from "@/constants";
 import cacheManager from "@/utils/cacheManager";
+import { updateSubCategoryQuestionCount } from "@/utils/apiRouteHelpers";
 
 // ---------- GET SINGLE PRACTICE QUESTION ----------
 export async function GET(_request, { params }) {
@@ -65,6 +66,9 @@ export async function PUT(request, { params }) {
     if (!existingQuestion) {
       return notFoundResponse("Practice question not found");
     }
+
+    // Store old subCategoryId to update count if it changes
+    const oldSubCategoryId = existingQuestion.subCategoryId;
 
     // Validation
     if (!question || !question.trim()) {
@@ -130,6 +134,17 @@ export async function PUT(request, { params }) {
       return notFoundResponse("Practice question not found");
     }
 
+    // Auto-update numberOfQuestions count if subCategoryId changed
+    if (subCategoryId && oldSubCategoryId?.toString() !== subCategoryId.toString()) {
+      // Update count for old subcategory (decrement)
+      await updateSubCategoryQuestionCount(oldSubCategoryId);
+      // Update count for new subcategory (increment)
+      await updateSubCategoryQuestionCount(subCategoryId);
+    } else if (subCategoryId) {
+      // If subCategoryId is provided but same, still update count (in case of other changes)
+      await updateSubCategoryQuestionCount(subCategoryId);
+    }
+
     // Clear cache
     cacheManager.clear("practice-questions-");
 
@@ -154,6 +169,9 @@ export async function PATCH(request, { params }) {
     if (!existingQuestion) {
       return notFoundResponse("Practice question not found");
     }
+
+    // Store old subCategoryId to update count if it changes
+    const oldSubCategoryId = existingQuestion.subCategoryId;
 
     const updateData = {};
 
@@ -233,6 +251,20 @@ export async function PATCH(request, { params }) {
       return notFoundResponse("Practice question not found");
     }
 
+    // Auto-update numberOfQuestions count if subCategoryId changed
+    if (body.subCategoryId !== undefined) {
+      const newSubCategoryId = body.subCategoryId;
+      if (oldSubCategoryId?.toString() !== newSubCategoryId.toString()) {
+        // Update count for old subcategory (decrement)
+        await updateSubCategoryQuestionCount(oldSubCategoryId);
+        // Update count for new subcategory (increment)
+        await updateSubCategoryQuestionCount(newSubCategoryId);
+      } else {
+        // If subCategoryId is same, still update count (in case of other changes)
+        await updateSubCategoryQuestionCount(newSubCategoryId);
+      }
+    }
+
     // Clear cache
     cacheManager.clear("practice-questions-");
 
@@ -252,10 +284,19 @@ export async function DELETE(_request, { params }) {
       return errorResponse("Invalid question ID", 400);
     }
 
-    const deleted = await PracticeQuestion.findByIdAndDelete(id);
-    if (!deleted) {
+    // Get the question before deleting to know which subcategory to update
+    const questionToDelete = await PracticeQuestion.findById(id);
+    if (!questionToDelete) {
       return notFoundResponse("Practice question not found");
     }
+
+    const subCategoryId = questionToDelete.subCategoryId;
+
+    // Delete the question
+    await PracticeQuestion.findByIdAndDelete(id);
+
+    // Auto-update numberOfQuestions count for the subcategory
+    await updateSubCategoryQuestionCount(subCategoryId);
 
     // Clear cache
     cacheManager.clear("practice-questions-");

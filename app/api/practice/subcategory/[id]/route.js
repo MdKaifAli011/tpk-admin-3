@@ -14,6 +14,7 @@ import {
 import { ERROR_MESSAGES, STATUS } from "@/constants";
 import { requireAuth, requireAction } from "@/middleware/authMiddleware";
 import cacheManager from "@/utils/cacheManager";
+import { updateSubCategoryQuestionCount } from "@/utils/apiRouteHelpers";
 
 // ---------- GET SINGLE PRACTICE SUBCATEGORY ----------
 export async function GET(_request, { params }) {
@@ -70,7 +71,6 @@ export async function PUT(request, { params }) {
       subTopicId,
       duration,
       maximumMarks,
-      numberOfQuestions,
       negativeMarks,
       orderNumber,
       status,
@@ -128,15 +128,6 @@ export async function PUT(request, { params }) {
       return errorResponse("Maximum marks must be a non-negative number", 400);
     }
     if (
-      numberOfQuestions !== undefined &&
-      (isNaN(numberOfQuestions) || numberOfQuestions < 0)
-    ) {
-      return errorResponse(
-        "Number of questions must be a non-negative number",
-        400
-      );
-    }
-    if (
       negativeMarks !== undefined &&
       (isNaN(negativeMarks) || negativeMarks < 0)
     ) {
@@ -166,8 +157,7 @@ export async function PUT(request, { params }) {
     if (subTopicId !== undefined) updateData.subTopicId = subTopicId || null;
     if (duration !== undefined) updateData.duration = duration?.trim() || "";
     if (maximumMarks !== undefined) updateData.maximumMarks = maximumMarks || 0;
-    if (numberOfQuestions !== undefined)
-      updateData.numberOfQuestions = numberOfQuestions || 0;
+    // numberOfQuestions is auto-calculated, don't allow manual updates
     if (negativeMarks !== undefined)
       updateData.negativeMarks = negativeMarks || 0;
     if (orderNumber !== undefined) updateData.orderNumber = orderNumber;
@@ -192,11 +182,23 @@ export async function PUT(request, { params }) {
       return notFoundResponse("Practice subcategory not found");
     }
 
+    // Auto-calculate numberOfQuestions
+    await updateSubCategoryQuestionCount(id);
+
+    // Refresh the updated document to get the latest numberOfQuestions
+    const refreshed = await PracticeSubCategory.findById(id)
+      .populate("categoryId", "name status examId subjectId")
+      .populate("unitId", "name status")
+      .populate("chapterId", "name status")
+      .populate("topicId", "name status")
+      .populate("subTopicId", "name status")
+      .lean();
+
     // Clear cache
     cacheManager.clear("practice-subcategories-");
 
     return successResponse(
-      updated,
+      refreshed,
       "Practice subcategory updated successfully"
     );
   } catch (error) {
@@ -291,15 +293,7 @@ export async function PATCH(request, { params }) {
       }
       updateData.maximumMarks = body.maximumMarks || 0;
     }
-    if (body.numberOfQuestions !== undefined) {
-      if (isNaN(body.numberOfQuestions) || body.numberOfQuestions < 0) {
-        return errorResponse(
-          "Number of questions must be a non-negative number",
-          400
-        );
-      }
-      updateData.numberOfQuestions = body.numberOfQuestions || 0;
-    }
+    // numberOfQuestions is auto-calculated, don't allow manual updates
     if (body.negativeMarks !== undefined) {
       if (isNaN(body.negativeMarks) || body.negativeMarks < 0) {
         return errorResponse("Negative marks must be a non-negative number", 400);
@@ -333,11 +327,23 @@ export async function PATCH(request, { params }) {
       return notFoundResponse("Practice subcategory not found");
     }
 
+    // Auto-calculate numberOfQuestions
+    await updateSubCategoryQuestionCount(id);
+
+    // Refresh the updated document to get the latest numberOfQuestions
+    const refreshed = await PracticeSubCategory.findById(id)
+      .populate("categoryId", "name status examId subjectId")
+      .populate("unitId", "name status")
+      .populate("chapterId", "name status")
+      .populate("topicId", "name status")
+      .populate("subTopicId", "name status")
+      .lean();
+
     // Clear cache
     cacheManager.clear("practice-subcategories-");
 
     return successResponse(
-      updated,
+      refreshed,
       "Practice subcategory updated successfully"
     );
   } catch (error) {

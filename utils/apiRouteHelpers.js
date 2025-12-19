@@ -120,3 +120,47 @@ export async function optimizedFind(Model, query, options = {}) {
 export function clearQueryCache(pattern = null) {
   cacheManager.clear(pattern);
 }
+
+/**
+ * Update numberOfQuestions count for a practice subcategory
+ * Automatically calculates and updates the count based on actual questions
+ * @param {string} subCategoryId - Practice subcategory ID
+ * @returns {Promise<number>} Updated count of questions
+ */
+export async function updateSubCategoryQuestionCount(subCategoryId) {
+  try {
+    if (!subCategoryId || !mongoose.Types.ObjectId.isValid(subCategoryId)) {
+      return 0;
+    }
+
+    // Dynamically import to avoid circular dependencies
+    const PracticeQuestion =
+      mongoose.models.PracticeQuestion ||
+      (await import("@/models/PracticeQuestion.js")).default;
+    const PracticeSubCategory =
+      mongoose.models.PracticeSubCategory ||
+      (await import("@/models/PracticeSubCategory.js")).default;
+
+    // Count questions for this subcategory
+    const questionCount = await PracticeQuestion.countDocuments({
+      subCategoryId,
+    });
+
+    // Update the subcategory's numberOfQuestions
+    await PracticeSubCategory.findByIdAndUpdate(subCategoryId, {
+      $set: { numberOfQuestions: questionCount },
+    });
+
+    // Clear cache for subcategories
+    cacheManager.clear("practice-subcategories-");
+
+    return questionCount;
+  } catch (error) {
+    console.error(
+      `Error updating question count for subcategory ${subCategoryId}:`,
+      error
+    );
+    // Don't throw - allow the operation to continue even if count update fails
+    return 0;
+  }
+}

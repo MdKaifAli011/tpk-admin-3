@@ -46,7 +46,6 @@ const PracticeSubCategoryManagement = ({ categoryId: propCategoryId }) => {
     orderNumber: "",
     duration: "",
     maximumMarks: "",
-    numberOfQuestions: "",
     negativeMarks: "",
     description: "",
   });
@@ -172,7 +171,9 @@ const PracticeSubCategoryManagement = ({ categoryId: propCategoryId }) => {
       return;
     }
     try {
-      const response = await api.get(`/definition?subTopicId=${subTopicId}&status=all`);
+      const response = await api.get(
+        `/definition?subTopicId=${subTopicId}&status=all`
+      );
       if (response.data?.success) {
         setDefinitions(response.data.data || []);
       }
@@ -241,7 +242,7 @@ const PracticeSubCategoryManagement = ({ categoryId: propCategoryId }) => {
   // Fetch category data when form opens for creation
   useEffect(() => {
     if (!showAddForm || editingSubCategory) return; // Only for new creation
-    
+
     // If categoryId is from URL but currentCategory is not loaded, fetch it
     if (categoryId && !currentCategory) {
       fetchCurrentCategory();
@@ -254,11 +255,11 @@ const PracticeSubCategoryManagement = ({ categoryId: propCategoryId }) => {
   useEffect(() => {
     // Skip if form is not open (to avoid unnecessary fetches)
     if (!showAddForm && !editingSubCategory) return;
-    
+
     // If categoryId is from URL, use currentCategory
     // Otherwise, find it in categories array
     let selectedCategory = null;
-    
+
     if (categoryId) {
       // Category from URL - use currentCategory
       selectedCategory = currentCategory;
@@ -282,8 +283,14 @@ const PracticeSubCategoryManagement = ({ categoryId: propCategoryId }) => {
       setSubTopics([]);
       setDefinitions([]);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentCategory, formData.categoryId, categories, categoryId, showAddForm, editingSubCategory]);
+  }, [
+    currentCategory,
+    formData.categoryId,
+    categories,
+    categoryId,
+    showAddForm,
+    editingSubCategory,
+  ]);
 
   // Handle form field changes
   const handleFormChange = (e) => {
@@ -366,7 +373,6 @@ const PracticeSubCategoryManagement = ({ categoryId: propCategoryId }) => {
       orderNumber: "",
       duration: "",
       maximumMarks: "",
-      numberOfQuestions: "",
       negativeMarks: "",
       description: "",
     });
@@ -413,7 +419,6 @@ const PracticeSubCategoryManagement = ({ categoryId: propCategoryId }) => {
         definitionId: formData.definitionId || null,
         duration: formData.duration.trim() || "",
         maximumMarks: parseFloat(formData.maximumMarks) || 0,
-        numberOfQuestions: parseInt(formData.numberOfQuestions) || 0,
         negativeMarks: parseFloat(formData.negativeMarks) || 0,
         description: formData.description.trim() || "",
       };
@@ -477,11 +482,11 @@ const PracticeSubCategoryManagement = ({ categoryId: propCategoryId }) => {
       chapterId: subCategory.chapterId?._id || subCategory.chapterId || "",
       topicId: subCategory.topicId?._id || subCategory.topicId || "",
       subTopicId: subCategory.subTopicId?._id || subCategory.subTopicId || "",
-      definitionId: subCategory.definitionId?._id || subCategory.definitionId || "",
+      definitionId:
+        subCategory.definitionId?._id || subCategory.definitionId || "",
       orderNumber: subCategory.orderNumber?.toString() || "",
       duration: subCategory.duration || "",
       maximumMarks: subCategory.maximumMarks || "",
-      numberOfQuestions: subCategory.numberOfQuestions || "",
       negativeMarks: subCategory.negativeMarks || "",
       description: subCategory.description || "",
     });
@@ -502,9 +507,13 @@ const PracticeSubCategoryManagement = ({ categoryId: propCategoryId }) => {
                       fetchSubTopics(
                         subCategory.topicId?._id || subCategory.topicId
                       ).then(() => {
-                        if (subCategory.subTopicId?._id || subCategory.subTopicId) {
+                        if (
+                          subCategory.subTopicId?._id ||
+                          subCategory.subTopicId
+                        ) {
                           fetchDefinitions(
-                            subCategory.subTopicId?._id || subCategory.subTopicId
+                            subCategory.subTopicId?._id ||
+                              subCategory.subTopicId
                           );
                         }
                       });
@@ -912,26 +921,6 @@ const PracticeSubCategoryManagement = ({ categoryId: propCategoryId }) => {
                     placeholder="e.g., 100"
                     min="0"
                     step="0.01"
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm placeholder-gray-400 transition-all"
-                    disabled={isFormLoading}
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label
-                    htmlFor="numberOfQuestions"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    Number of Questions
-                  </label>
-                  <input
-                    type="number"
-                    id="numberOfQuestions"
-                    name="numberOfQuestions"
-                    value={formData.numberOfQuestions}
-                    onChange={handleFormChange}
-                    placeholder="e.g., 50"
-                    min="0"
                     className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm placeholder-gray-400 transition-all"
                     disabled={isFormLoading}
                   />

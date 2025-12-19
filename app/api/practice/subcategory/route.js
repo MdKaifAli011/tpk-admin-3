@@ -15,6 +15,7 @@ import {
 import { STATUS, ERROR_MESSAGES } from "@/constants";
 import { requireAuth, requireAction } from "@/middleware/authMiddleware";
 import cacheManager from "@/utils/cacheManager";
+import { updateSubCategoryQuestionCount } from "@/utils/apiRouteHelpers";
 
 // ---------- GET ALL PRACTICE SUBCATEGORIES (optimized) ----------
 export async function GET(request) {
@@ -245,7 +246,6 @@ export async function POST(request) {
       subTopicId,
       duration,
       maximumMarks,
-      numberOfQuestions,
       negativeMarks,
       orderNumber,
       status,
@@ -290,15 +290,6 @@ export async function POST(request) {
       return errorResponse("Maximum marks must be a non-negative number", 400);
     }
     if (
-      numberOfQuestions !== undefined &&
-      (isNaN(numberOfQuestions) || numberOfQuestions < 0)
-    ) {
-      return errorResponse(
-        "Number of questions must be a non-negative number",
-        400
-      );
-    }
-    if (
       negativeMarks !== undefined &&
       (isNaN(negativeMarks) || negativeMarks < 0)
     ) {
@@ -331,7 +322,7 @@ export async function POST(request) {
       finalOrderNumber = maxOrderDoc ? (maxOrderDoc.orderNumber || 0) + 1 : 1;
     }
 
-    // Create new subcategory
+    // Create new subcategory (numberOfQuestions will be auto-calculated)
     const subCategory = await PracticeSubCategory.create({
       name: subCategoryName,
       categoryId,
@@ -341,12 +332,15 @@ export async function POST(request) {
       subTopicId: subTopicId || null,
       duration: duration?.trim() || "",
       maximumMarks: maximumMarks || 0,
-      numberOfQuestions: numberOfQuestions || 0,
+      numberOfQuestions: 0, // Will be auto-calculated when questions are added
       negativeMarks: negativeMarks || 0,
       orderNumber: finalOrderNumber,
       status: status || STATUS.ACTIVE,
       description: description || "",
     });
+
+    // Auto-calculate numberOfQuestions (should be 0 for new subcategory)
+    await updateSubCategoryQuestionCount(subCategory._id);
 
     // Populate the category data before returning
     const populatedSubCategory = await PracticeSubCategory.findById(
