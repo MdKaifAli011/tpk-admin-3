@@ -11,6 +11,10 @@ import VerificationInput from "./VerificationInput";
 import SubmitStatusMessage from "./SubmitStatusMessage";
 import { logger } from "@/utils/logger";
 
+{/* Default form image */ }
+const DEFAULT_FORM_IMAGE = "/images/form-placeholder.png";
+
+
 // Helper function to capitalize button text
 const capitalizeButtonText = (text) => {
   if (!text) return "";
@@ -18,6 +22,21 @@ const capitalizeButtonText = (text) => {
     .split(" ")
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
     .join(" ");
+};
+
+// Helper function to resolve image path with base path
+const resolveImagePath = (path) => {
+  if (!path) return "";
+  if (path.startsWith("http://") || path.startsWith("https://")) {
+    return path;
+  }
+  const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
+  // Avoid double slashes or double base paths
+  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  if (cleanPath.startsWith(basePath)) {
+    return cleanPath;
+  }
+  return `${basePath}${cleanPath}`;
 };
 
 const FormRenderer = ({
@@ -38,6 +57,7 @@ const FormRenderer = ({
   const [submitStatus, setSubmitStatus] = useState(null);
   const [submitMessage, setSubmitMessage] = useState("");
   const [imageError, setImageError] = useState(false);
+
 
   const {
     verificationQuestion,
@@ -207,7 +227,7 @@ const FormRenderer = ({
         setSubmitStatus("success");
         setSubmitMessage(
           formConfig.settings.successMessage ||
-            "Thank you! Your request has been submitted successfully."
+          "Thank you! Your request has been submitted successfully."
         );
 
         // Reset form
@@ -233,11 +253,9 @@ const FormRenderer = ({
             try {
               // Validate URL before redirecting
               const url = buttonLink.trim();
-              const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
-              if (
-                url.startsWith("http://") ||
-                url.startsWith("https://")
-              ) {
+              const basePath =
+                process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
+              if (url.startsWith("http://") || url.startsWith("https://")) {
                 // External URL - use as is
                 window.location.href = url;
               } else if (url.startsWith("/")) {
@@ -267,15 +285,15 @@ const FormRenderer = ({
         setSubmitStatus("error");
         setSubmitMessage(
           response.data?.message ||
-            "Failed to submit your request. Please try again."
+          "Failed to submit your request. Please try again."
         );
       }
     } catch (error) {
       setSubmitStatus("error");
       setSubmitMessage(
         error?.response?.data?.message ||
-          error?.message ||
-          "Failed to submit your request. Please check your connection and try again."
+        error?.message ||
+        "Failed to submit your request. Please check your connection and try again."
       );
     } finally {
       setIsSubmitting(false);
@@ -408,34 +426,17 @@ const FormRenderer = ({
 
         <div className="grid grid-cols-1 lg:grid-cols-2 flex-1 overflow-hidden">
           <div className="hidden lg:block relative bg-gradient-to-br from-purple-500 via-purple-600 to-purple-700 overflow-hidden">
-            {imageUrl && !imageError ? (
-              <Image
-                src={imageUrl}
-                alt={title || formConfig?.formId || "Form"}
-                fill
-                className="object-cover object-center"
-                style={{
-                  objectFit: "cover",
-                  objectPosition: "center",
-                  margin: "0",
-                  borderRadius: "0px",
-                }}
-                onError={() => setImageError(true)}
-                unoptimized
-              />
-            ) : (
-              <div className="absolute inset-0 flex items-center justify-center p-4">
-                <div className="relative w-full h-full flex items-center justify-center">
-                  <div className="w-48 h-64 bg-white/10 rounded-lg backdrop-blur-sm flex items-center justify-center">
-                    <div className="text-white/30 text-center">
-                      <FaUser className="text-6xl mx-auto mb-2" />
-                      <p className="text-xs">Image Placeholder</p>
-                    </div>
-                  </div>
-                  <div className="absolute top-1/4 right-1/4 w-48 h-48 bg-white/5 rounded-full blur-3xl"></div>
-                </div>
-              </div>
-            )}
+            {/* Use standard img tag to manually handle base path resolution */}
+            <img
+              src={resolveImagePath(imageUrl && !imageError ? imageUrl : DEFAULT_FORM_IMAGE)}
+              alt={title || formConfig?.formId || "Form"}
+              className="absolute inset-0 w-full h-full object-cover object-center"
+              style={{
+                margin: "0",
+                borderRadius: "0px",
+              }}
+              onError={() => setImageError(true)}
+            />
           </div>
 
           <div className="flex-1 overflow-y-auto">
