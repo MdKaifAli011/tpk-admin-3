@@ -19,7 +19,7 @@ const getBaseUrl = () => {
     return basePath;
   }
   // Server-side: use absolute URL from environment or default to localhost
-  const serverBaseUrl = 
+  const serverBaseUrl =
     process.env.NEXT_PUBLIC_API_URL?.replace("/api", "") ||
     process.env.NEXT_PUBLIC_APP_URL ||
     "http://localhost:3000";
@@ -1837,6 +1837,238 @@ export async function fetchAllStudentTestResults(filters = {}) {
     return [];
   }
 }
+
+// Fetch blogs (public access for active blogs)
+export const fetchBlogs = async (options = {}) => {
+  try {
+    const { examId = null, status = STATUS.ACTIVE, limit = 100 } = options;
+
+    const isServer = typeof window === "undefined";
+    const baseUrl = getBaseUrl();
+
+    // Build query string
+    let queryString = `status=${status}&limit=${limit}`;
+    if (examId) {
+      queryString += `&examId=${examId}`;
+    }
+
+    const url = `${baseUrl}/api/blog?${queryString}`;
+
+    if (isServer) {
+      // Server-side: use fetch (no auth for active blogs)
+      const response = await fetch(url, {
+        cache: "no-store",
+      });
+
+      if (!response.ok) {
+        // If auth required, return empty array
+        return [];
+      }
+
+      const data = await response.json();
+      if (data.success && data.data) {
+        return data.data || [];
+      }
+      return [];
+    } else {
+      // Client-side: try with fetch first (no auth)
+      try {
+        const response = await fetch(url);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.data) {
+            return data.data || [];
+          }
+        }
+      } catch (err) {
+        // If fetch fails, try with api (might have auth)
+        try {
+          const response = await api.get(`/blog?${queryString}`);
+          if (response.data?.success && response.data?.data) {
+            return response.data.data || [];
+          }
+        } catch (apiErr) {
+          logger.error("Error fetching blogs:", apiErr);
+        }
+      }
+      return [];
+    }
+  } catch (error) {
+    logger.error("Error fetching blogs:", error);
+    return [];
+  }
+};
+
+// Fetch blog by slug (public access for active blogs)
+export const fetchBlogBySlug = async (slug) => {
+  if (!slug) return null;
+
+  const isServer = typeof window === "undefined";
+  const baseUrl = getBaseUrl();
+
+  try {
+    // API now supports slug lookup - try fetching by slug
+    const url = `${baseUrl}/api/blog/${slug}`;
+
+    if (isServer) {
+      const response = await fetch(url, {
+        cache: "no-store",
+      });
+
+      if (!response.ok) {
+        return null;
+      }
+
+      const data = await response.json();
+      if (data.success && data.data) {
+        return data.data;
+      }
+      return null;
+    } else {
+      try {
+        const response = await fetch(url);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.data) {
+            return data.data;
+          }
+        }
+      } catch (err) {
+        // If fetch fails, try with api
+        try {
+          const response = await api.get(`/blog/${slug}`);
+          if (response.data?.success && response.data?.data) {
+            return response.data.data;
+          }
+        } catch (apiErr) {
+          logger.error("Error fetching blog by slug:", apiErr);
+        }
+      }
+      return null;
+    }
+  } catch (error) {
+    logger.error("Error fetching blog by slug:", error);
+    return null;
+  }
+};
+
+// Fetch blog details by blog ID
+export const fetchBlogDetails = async (blogId, options = {}) => {
+  if (!blogId) return null;
+
+  const { excludeContent = false } = options;
+  const isServer = typeof window === "undefined";
+  const baseUrl = getBaseUrl();
+
+  try {
+    // Add query parameter to exclude content if requested
+    const queryParam = excludeContent ? "?excludeContent=true" : "";
+    const url = `${baseUrl}/api/blog/${blogId}/details${queryParam}`;
+
+    if (isServer) {
+      const response = await fetch(url, {
+        cache: "no-store",
+      });
+
+      if (!response.ok) {
+        return null;
+      }
+
+      const data = await response.json();
+      if (data.success && data.data) {
+        return data.data;
+      }
+      return null;
+    } else {
+      try {
+        const response = await fetch(url);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.data) {
+            return data.data;
+          }
+        }
+      } catch (err) {
+        // Try with api if fetch fails
+        try {
+          const apiUrl = excludeContent 
+            ? `/blog/${blogId}/details?excludeContent=true`
+            : `/blog/${blogId}/details`;
+          const response = await api.get(apiUrl);
+          if (response.data?.success && response.data?.data) {
+            return response.data.data;
+          }
+        } catch (apiErr) {
+          logger.error("Error fetching blog details:", apiErr);
+        }
+      }
+      return null;
+    }
+  } catch (error) {
+    logger.error("Error fetching blog details:", error);
+    return null;
+  }
+};
+
+// Fetch blog categories (public access for active categories)
+export const fetchBlogCategories = async (options = {}) => {
+  try {
+    const { examId = null, status = STATUS.ACTIVE, limit = 100 } = options;
+
+    const isServer = typeof window === "undefined";
+    const baseUrl = getBaseUrl();
+
+    // Build query string
+    let queryString = `status=${status}&limit=${limit}`;
+    if (examId) {
+      queryString += `&examId=${examId}`;
+    }
+
+    const url = `${baseUrl}/api/blog/category?${queryString}`;
+
+    if (isServer) {
+      // Server-side: use fetch (no auth for active categories)
+      const response = await fetch(url, {
+        cache: "no-store",
+      });
+
+      if (!response.ok) {
+        return [];
+      }
+
+      const data = await response.json();
+      if (data.success && data.data) {
+        return data.data || [];
+      }
+      return [];
+    } else {
+      // Client-side: try with fetch first (no auth)
+      try {
+        const response = await fetch(url);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.data) {
+            return data.data || [];
+          }
+        }
+      } catch (err) {
+        // If fetch fails, try with api (might have auth)
+        try {
+          const response = await api.get(`/blog/category?${queryString}`);
+          if (response.data?.success && response.data?.data) {
+            return response.data.data || [];
+          }
+        } catch (apiErr) {
+          logger.error("Error fetching blog categories:", apiErr);
+        }
+      }
+      return [];
+    }
+  } catch (error) {
+    logger.error("Error fetching blog categories:", error);
+    return [];
+  }
+};
 
 // Re-export slug utilities for backward compatibility
 export const createSlug = createSlugUtil;

@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { FaSpinner, FaTimes, FaUser } from "react-icons/fa";
+import { FaSpinner, FaTimes, FaUser, FaExclamationCircle } from "react-icons/fa";
 import api from "@/lib/api";
 import { countryCodeMap } from "@/app/(main)/components/constants/formConstants";
 import { useVerification } from "../hooks/useVerification";

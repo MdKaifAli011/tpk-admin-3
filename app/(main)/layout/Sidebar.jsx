@@ -8,8 +8,15 @@ import React, {
   useState,
 } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { FaSearch } from "react-icons/fa";
-import { fetchExams, fetchTree, createSlug, findByIdOrSlug } from "../lib/api";
+import Link from "next/link";
+import { FaSearch, FaChevronDown, FaChevronRight } from "react-icons/fa";
+import {
+  fetchExams,
+  fetchTree,
+  createSlug,
+  findByIdOrSlug,
+  fetchBlogCategories,
+} from "../lib/api";
 import { logger } from "@/utils/logger";
 import ExamDropdown from "../components/ExamDropdown";
 import SidebarNavigationTree from "../components/SidebarNavigationTree";
@@ -46,6 +53,8 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
   const [error, setError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
+  const [blogCategories, setBlogCategories] = useState([]);
+  const [isBlogMenuOpen, setIsBlogMenuOpen] = useState(false);
 
   // internal caches & dedupe
   const hasLoadedExamsRef = useRef(false);
@@ -81,7 +90,7 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
           return;
         }
       }
-      
+
       // Fallback to CSS variable if direct measurement fails
       const cssHeight = getComputedStyle(document.documentElement)
         .getPropertyValue("--navbar-height")
@@ -100,7 +109,7 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
     // Use ResizeObserver for accurate real-time tracking
     const navbar = document.querySelector("nav[data-navbar]");
     let resizeObserver = null;
-    
+
     if (navbar && typeof ResizeObserver !== "undefined") {
       resizeObserver = new ResizeObserver(() => {
         updateNavbarHeight();
@@ -145,6 +154,10 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
   const unitSlugFromPath = pathSegments[2] || "";
   const chapterSlugFromPath = pathSegments[3] || "";
   const topicSlugFromPath = pathSegments[4] || "";
+  const categorySlugFromPath =
+    pathSegments[2] === "blog" && pathSegments[3] === "category"
+      ? pathSegments[4]
+      : null;
 
   const activeExam = useMemo(
     () => exams.find((e) => e._id === activeExamId) || null,
@@ -322,6 +335,7 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
       setOpenSubjectId(null);
       setOpenUnitId(null);
       setOpenChapterId(null);
+      setBlogCategories([]);
       return;
     }
 
@@ -330,7 +344,31 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
     setOpenChapterId(null);
 
     loadTree(activeExamId);
+
+    // Load blog categories for this exam
+    const loadCategories = async () => {
+      try {
+        const categories = await fetchBlogCategories({
+          examId: activeExamId,
+          status: "active",
+          limit: 100,
+        });
+        setBlogCategories(categories || []);
+      } catch (err) {
+        logger.error("Error loading blog categories:", err);
+        setBlogCategories([]);
+      }
+    };
+    loadCategories();
   }, [activeExamId, loadTree]);
+
+  // Auto-expand blog menu if we're on a blog or category page
+  useEffect(() => {
+    const isBlogPage = pathname.includes("/blog");
+    if (isBlogPage) {
+      setIsBlogMenuOpen(true);
+    }
+  }, [pathname]);
 
   // debounced query filtered tree
   const normalizedQuery = debouncedQuery.trim().toLowerCase();
@@ -407,14 +445,7 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
         }
       }
     }
-  }, [
-    filteredTree,
-    subjectSlugFromPath,
-    unitSlugFromPath,
-    chapterSlugFromPath,
-    topicSlugFromPath,
-    normalizedQuery,
-  ]);
+  }, [filteredTree, subjectSlugFromPath, unitSlugFromPath, chapterSlugFromPath, topicSlugFromPath, normalizedQuery]);
 
   // pick list to render
   const listToRender = filteredTree.length ? filteredTree : tree;
@@ -435,24 +466,16 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
     }, 300);
 
     return () => clearTimeout(timeoutId);
-  }, [
-    filteredTree,
-    tree,
-    openSubjectId,
-    openUnitId,
-    openChapterId,
-    subjectSlugFromPath,
-    unitSlugFromPath,
-    chapterSlugFromPath,
-    topicSlugFromPath,
-    normalizedQuery,
-  ]);
+  }, [filteredTree, tree, openSubjectId, openUnitId, openChapterId, subjectSlugFromPath, unitSlugFromPath, chapterSlugFromPath, topicSlugFromPath, normalizedQuery]);
 
   // render helpers
   const renderLoading = () => (
     <div className="px-2 py-2 space-y-2">
       {Array.from({ length: 6 }).map((_, i) => (
-        <div key={i} className="h-8 rounded-lg bg-gradient-to-r from-gray-100 via-gray-50 to-gray-100 animate-pulse" />
+        <div
+          key={i}
+          className="h-8 rounded-lg bg-gradient-to-r from-gray-100 via-gray-50 to-gray-100 animate-pulse"
+        />
       ))}
     </div>
   );
@@ -506,13 +529,16 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
       {/* Always rendered but hidden when not needed to prevent flickering */}
       <aside
         className={`fixed left-0 z-[40] w-[280px] sm:w-[300px] min-w-[280px] sm:min-w-[300px] max-w-[280px] sm:max-w-[300px] bg-white/98 backdrop-blur-md border-r border-gray-200/80 transform transition-transform duration-300 ease-out ${
-          sidebarOpen && isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+          sidebarOpen && isOpen
+            ? "translate-x-0"
+            : "-translate-x-full lg:translate-x-0"
         } ${!isOpen ? "lg:hidden" : ""} lg:flex lg:flex-col`}
         style={{
           top: `${navbarHeight}px`,
           height: `calc(100vh - ${navbarHeight}px)`,
           marginTop: 0,
-          boxShadow: "0 4px 20px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.02)",
+          boxShadow:
+            "0 4px 20px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.02)",
         }}
         role="complementary"
         aria-label="Exam navigation sidebar"
@@ -581,6 +607,114 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
                 activeItemRef={activeItemRef}
               />
             )}
+
+            {/* Static links: Blog (expandable), Download, Course */}
+            <div className="mt-2.5 pt-2.5 border-t border-gray-100">
+              <ul className="space-y-1">
+                {/* Blog with expandable categories */}
+                {activeExamSlug ? (
+                  <li>
+                    <div>
+                      <button
+                        onClick={() => setIsBlogMenuOpen(!isBlogMenuOpen)}
+                        className={`w-full flex items-center justify-between px-3 py-2 text-xs sm:text-sm font-medium rounded-lg cursor-pointer transition-all duration-200 ${
+                          pathname.includes("/blog")
+                            ? "text-indigo-600 bg-indigo-50"
+                            : "text-gray-600 hover:text-indigo-600 hover:bg-gray-50"
+                        }`}
+                      >
+                        <span>Blog</span>
+                        {isBlogMenuOpen ? (
+                          <FaChevronDown className="text-[10px] text-gray-400" />
+                        ) : (
+                          <FaChevronRight className="text-[10px] text-gray-400" />
+                        )}
+                      </button>
+                      {isBlogMenuOpen && (
+                        <ul className="ml-3 mt-1 space-y-0.5 border-l border-gray-200 pl-2">
+                          <li>
+                            <Link
+                              href={`/${activeExamSlug}/blog`}
+                              className={`block px-2 py-1.5 text-[11px] sm:text-xs rounded-md transition-all duration-200 ${
+                                pathname === `/${activeExamSlug}/blog` ||
+                                pathname === `/${activeExamSlug}/blog/`
+                                  ? "text-indigo-600 bg-indigo-50 font-medium"
+                                  : "text-gray-600 hover:text-indigo-600 hover:bg-gray-50"
+                              }`}
+                              onClick={closeOnMobile}
+                            >
+                              All Blogs
+                            </Link>
+                          </li>
+                          {blogCategories.length > 0 ? (
+                            blogCategories.map((category) => {
+                              const categorySlug = createSlug(category.name);
+                              const categoryPath = `/${activeExamSlug}/blog/category/${categorySlug}`;
+                              const isActive = pathname === categoryPath;
+                              return (
+                                <li key={category._id || category.id}>
+                                  <Link
+                                    href={categoryPath}
+                                    className={`block px-2 py-1.5 text-[11px] sm:text-xs rounded-md transition-all duration-200 ${
+                                      isActive
+                                        ? "text-indigo-600 bg-indigo-50 font-medium"
+                                        : "text-gray-600 hover:text-indigo-600 hover:bg-gray-50"
+                                    }`}
+                                    onClick={closeOnMobile}
+                                  >
+                                    {category.name}
+                                  </Link>
+                                </li>
+                              );
+                            })
+                          ) : (
+                            <li className="px-2 py-1.5 text-[11px] sm:text-xs text-gray-400 italic">
+                              No categories
+                            </li>
+                          )}
+                        </ul>
+                      )}
+                    </div>
+                  </li>
+                ) : (
+                  <li className="px-3 py-2 text-xs sm:text-sm font-medium text-gray-400">
+                    Blog
+                  </li>
+                )}
+
+                {/* Download and Course */}
+                {[
+                  { name: "Download", path: "download" },
+                  { name: "Course", path: "course" },
+                ].map((item) =>
+                  activeExamSlug ? (
+                    <li key={item.name}>
+                      <Link
+                        href={`/${activeExamSlug}/${item.path}`}
+                        className={`block px-3 py-2 text-xs sm:text-sm font-medium rounded-lg cursor-pointer transition-all duration-200 ${
+                          pathname === `/${activeExamSlug}/${item.path}` ||
+                          pathname.startsWith(
+                            `/${activeExamSlug}/${item.path}/`
+                          )
+                            ? "text-indigo-600 bg-indigo-50"
+                            : "text-gray-600 hover:text-indigo-600 hover:bg-gray-50"
+                        }`}
+                        onClick={closeOnMobile}
+                      >
+                        {item.name}
+                      </Link>
+                    </li>
+                  ) : (
+                    <li
+                      key={item.name}
+                      className="px-3 py-2 text-xs sm:text-sm font-medium text-gray-400"
+                    >
+                      {item.name}
+                    </li>
+                  )
+                )}
+              </ul>
+            </div>
           </div>
         </div>
       </aside>

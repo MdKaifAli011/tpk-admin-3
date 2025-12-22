@@ -11,6 +11,9 @@ import {
   FaUserTag,
   FaTimes,
   FaUserGraduate,
+  FaNewspaper,
+  FaChevronDown,
+  FaChevronRight,
 } from "react-icons/fa";
 
 const ALL_MENU_ITEMS = [
@@ -56,11 +59,21 @@ const ALL_MENU_ITEMS = [
     icon: FaUserTag,
     adminOnly: true,
   },
+  {
+    name: "Blog Management",
+    href: "/admin/blog",
+    icon: FaNewspaper,
+    children: [
+      { name: "Blog List", href: "/admin/blog" },
+      { name: "Blog Categories", href: "/admin/blog-category" },
+    ],
+  },
 ];
 
 const Sidebar = memo(({ isOpen, onClose }) => {
   const pathname = usePathname();
   const [userRole, setUserRole] = useState(null);
+  const [expandedMenus, setExpandedMenus] = useState({});
 
   // Get user role from localStorage (memoized)
   useEffect(() => {
@@ -80,7 +93,7 @@ const Sidebar = memo(({ isOpen, onClose }) => {
     };
 
     setUserRole(getUserRole());
-    
+
     // Listen for storage changes
     const handleStorageChange = () => {
       setUserRole(getUserRole());
@@ -103,6 +116,34 @@ const Sidebar = memo(({ isOpen, onClose }) => {
 
   const isActive = (href) =>
     pathname === href || pathname.startsWith(href + "/");
+  
+  const toggleMenu = (name) => {
+    setExpandedMenus((prev) => ({
+      ...prev,
+      [name]: !prev[name],
+    }));
+  };
+  
+  // Auto-expand menu if current path matches
+  useEffect(() => {
+    const filteredItems = ALL_MENU_ITEMS.filter((item) => {
+      if (item.adminOnly) {
+        return userRole === "admin";
+      }
+      return true;
+    });
+    
+    filteredItems.forEach((item) => {
+      if (item.children) {
+        const hasActiveChild = item.children.some((child) =>
+          isActive(child.href)
+        );
+        if (hasActiveChild) {
+          setExpandedMenus((prev) => ({ ...prev, [item.name]: true }));
+        }
+      }
+    });
+  }, [pathname, userRole]);
 
   return (
     <>
@@ -116,9 +157,8 @@ const Sidebar = memo(({ isOpen, onClose }) => {
 
       {/* Sidebar with slide animation */}
       <aside
-        className={`fixed top-0 left-0 z-40 h-screen w-64 flex flex-col bg-white border-r border-gray-200 shadow-sm transition-all duration-300 ease-in-out ${
-          isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
-        }`}
+        className={`fixed top-0 left-0 z-40 h-screen w-64 flex flex-col bg-white border-r border-gray-200 shadow-sm transition-all duration-300 ease-in-out ${isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+          }`}
       >
         {/* Mobile Close Button */}
         <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200 lg:hidden">
@@ -138,8 +178,77 @@ const Sidebar = memo(({ isOpen, onClose }) => {
         {/* Navigation Links */}
         <nav className="flex-1 px-4 pt-2 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
           <div className="flex flex-col gap-1">
-            {MENU_ITEMS.map(({ name, href, icon: Icon }, index) => {
+            {MENU_ITEMS.map(({ name, href, icon: Icon, children }, index) => {
               const active = isActive(href);
+              const isExpanded = expandedMenus[name] || false;
+              const hasActiveChild = children?.some((child) => isActive(child.href));
+              
+              if (children) {
+                return (
+                  <div key={name}>
+                    <button
+                      onClick={() => toggleMenu(name)}
+                      className={`
+                        group w-full flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-colors
+                        ${hasActiveChild || active
+                          ? "bg-blue-600 text-white font-medium"
+                          : "text-gray-700 font-normal hover:bg-gray-50 hover:text-gray-900"
+                        }
+                      `}
+                      style={
+                        isOpen
+                          ? {
+                            animation: `slideInLeft 0.4s ease-out ${index * 0.05
+                              }s both`,
+                          }
+                          : {}
+                      }
+                    >
+                      <Icon
+                        className={`text-base flex-shrink-0 ${hasActiveChild || active
+                          ? "text-white"
+                          : "text-gray-500 group-hover:text-gray-700"
+                          }`}
+                      />
+                      <span className="flex-1 whitespace-nowrap overflow-hidden text-ellipsis text-left">
+                        {name}
+                      </span>
+                      {isExpanded ? (
+                        <FaChevronDown className={`text-xs flex-shrink-0 ${hasActiveChild || active ? "text-white" : "text-gray-500"}`} />
+                      ) : (
+                        <FaChevronRight className={`text-xs flex-shrink-0 ${hasActiveChild || active ? "text-white" : "text-gray-500"}`} />
+                      )}
+                    </button>
+                    {isExpanded && (
+                      <div className="ml-4 mt-1 space-y-1">
+                        {children.map((child) => {
+                          const childActive = isActive(child.href);
+                          return (
+                            <Link
+                              key={child.name}
+                              href={child.href}
+                              onClick={onClose}
+                              className={`
+                                group flex items-center gap-3 px-3 py-2 text-xs rounded-lg transition-colors
+                                ${childActive
+                                  ? "bg-blue-100 text-blue-700 font-medium"
+                                  : "text-gray-600 font-normal hover:bg-gray-50 hover:text-gray-900"
+                                }
+                              `}
+                            >
+                              <span className="w-2 h-2 rounded-full bg-current opacity-50"></span>
+                              <span className="flex-1 whitespace-nowrap overflow-hidden text-ellipsis">
+                                {child.name}
+                              </span>
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+              
               return (
                 <Link
                   href={href}
@@ -147,28 +256,25 @@ const Sidebar = memo(({ isOpen, onClose }) => {
                   onClick={onClose}
                   className={`
                     group flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-colors
-                    ${
-                      active
-                        ? "bg-blue-600 text-white font-medium"
-                        : "text-gray-700 font-normal hover:bg-gray-50 hover:text-gray-900"
+                    ${active
+                      ? "bg-blue-600 text-white font-medium"
+                      : "text-gray-700 font-normal hover:bg-gray-50 hover:text-gray-900"
                     }
                   `}
                   style={
                     isOpen
                       ? {
-                          animation: `slideInLeft 0.4s ease-out ${
-                            index * 0.05
+                        animation: `slideInLeft 0.4s ease-out ${index * 0.05
                           }s both`,
-                        }
+                      }
                       : {}
                   }
                 >
                   <Icon
-                    className={`text-base flex-shrink-0 ${
-                      active
-                        ? "text-white"
-                        : "text-gray-500 group-hover:text-gray-700"
-                    }`}
+                    className={`text-base flex-shrink-0 ${active
+                      ? "text-white"
+                      : "text-gray-500 group-hover:text-gray-700"
+                      }`}
                   />
                   <span className="flex-1 whitespace-nowrap overflow-hidden text-ellipsis">
                     {name}
@@ -184,18 +290,16 @@ const Sidebar = memo(({ isOpen, onClose }) => {
           <Link
             href="/admin/profile"
             onClick={onClose}
-            className={`group flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-colors mb-4 ${
-              pathname === "/admin/profile"
-                ? "bg-blue-600 text-white font-medium"
-                : "text-gray-700 font-normal hover:bg-gray-50 hover:text-gray-900"
-            }`}
+            className={`group flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-colors mb-4 ${pathname === "/admin/profile"
+              ? "bg-blue-600 text-white font-medium"
+              : "text-gray-700 font-normal hover:bg-gray-50 hover:text-gray-900"
+              }`}
           >
             <FaUser
-              className={`text-base flex-shrink-0 ${
-                pathname === "/admin/profile"
-                  ? "text-white"
-                  : "text-gray-500 group-hover:text-gray-700"
-              }`}
+              className={`text-base flex-shrink-0 ${pathname === "/admin/profile"
+                ? "text-white"
+                : "text-gray-500 group-hover:text-gray-700"
+                }`}
             />
             <span className="flex-1 whitespace-nowrap overflow-hidden text-ellipsis">
               Profile Settings

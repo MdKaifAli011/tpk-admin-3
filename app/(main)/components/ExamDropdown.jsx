@@ -89,9 +89,7 @@ const ExamDropdown = ({ exams = [], activeExamId, onSelect }) => {
         className="flex w-full items-center justify-between gap-3 rounded-lg px-3.5 py-2.5 text-left transition-all duration-200 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-[0_2px_12px_rgba(100,70,200,0.2)] hover:shadow-[0_4px_16px_rgba(100,70,200,0.3)] focus:outline-none focus:ring-2 focus:ring-indigo-500/70 focus:ring-offset-1 cursor-pointer"
       >
         <div className="flex items-center gap-2 truncate min-w-0">
-          <span className="text-[10px] uppercase tracking-wide text-blue-100 shrink-0 font-semibold">
-            Exam
-          </span>
+        
           <TextEllipsis
             maxW="max-w-[200px]"
             className="font-semibold text-white text-sm sm:text-base"
