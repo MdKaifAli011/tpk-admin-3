@@ -19,11 +19,12 @@ const BlogCategoryPage = async ({ params }) => {
     notFound();
   }
 
-  // Fetch all categories for this exam
+  // Fetch all categories for this exam - force refresh to get latest
   const categories = await fetchBlogCategories({
     examId: exam._id,
     status: "active",
     limit: 100,
+    forceRefresh: true,
   });
 
   // Find the category by slug
@@ -39,13 +40,14 @@ const BlogCategoryPage = async ({ params }) => {
   const examName = exam.name ? exam.name.toUpperCase() : "EXAM";
   const examSlug = createSlug(exam.name);
 
-  // Fetch blogs for this exam and category
+  // Fetch blogs for this exam and category - force refresh to get latest
   let blogs = [];
   try {
     const allBlogs = await fetchBlogs({
       examId: exam._id,
       status: "active",
       limit: 100,
+      forceRefresh: true,
     });
     
     // Filter blogs by categoryId

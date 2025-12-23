@@ -18,11 +18,28 @@ const getBaseUrl = () => {
     // Client-side: use basePath for relative URLs
     return basePath;
   }
-  // Server-side: use absolute URL from environment or default to localhost
-  const serverBaseUrl =
+  // Server-side: use absolute URL from environment
+  let serverBaseUrl =
     process.env.NEXT_PUBLIC_API_URL?.replace("/api", "") ||
-    process.env.NEXT_PUBLIC_APP_URL ||
-    "http://localhost:3000";
+    process.env.NEXT_PUBLIC_APP_URL;
+
+  // If no environment variable, try to construct from PORT
+  if (!serverBaseUrl) {
+    // Try to get port from process.env.PORT
+    // Note: When Next.js auto-selects a port (e.g., 3001 when 3000 is busy),
+    // it doesn't set PORT env var. You should set NEXT_PUBLIC_APP_URL instead.
+    const port = process.env.PORT;
+    if (port) {
+      const host = process.env.HOST || "localhost";
+      serverBaseUrl = `http://${host}:${port}`;
+    } else {
+      // For Next.js server-side fetches within the same app, we can use relative URLs
+      // Next.js will resolve them correctly to the current server
+      // This is the safest fallback when no env vars are set
+      return basePath;
+    }
+  }
+
   // Server-side: append basePath to the URL
   return `${serverBaseUrl}${basePath}`;
 };
@@ -1841,39 +1858,105 @@ export async function fetchAllStudentTestResults(filters = {}) {
 // Fetch blogs (public access for active blogs)
 export const fetchBlogs = async (options = {}) => {
   try {
-    const { examId = null, status = STATUS.ACTIVE, limit = 100 } = options;
+    const {
+      examId = null,
+      status = STATUS.ACTIVE,
+      limit = 100,
+      forceRefresh = false,
+    } = options;
 
     const isServer = typeof window === "undefined";
     const baseUrl = getBaseUrl();
 
-    // Build query string
+    // Convert examId to string if it's an ObjectId object
+    const examIdString = examId
+      ? examId.toString
+        ? examId.toString()
+        : String(examId)
+      : null;
+
+    // Build query string with cache-busting timestamp if forceRefresh
     let queryString = `status=${status}&limit=${limit}`;
-    if (examId) {
-      queryString += `&examId=${examId}`;
+    if (examIdString) {
+      queryString += `&examId=${encodeURIComponent(examIdString)}`;
+    }
+    // Add cache-busting parameter for client-side when forceRefresh is true
+    if (!isServer && forceRefresh) {
+      queryString += `&_t=${Date.now()}`;
     }
 
     const url = `${baseUrl}/api/blog?${queryString}`;
 
     if (isServer) {
       // Server-side: use fetch (no auth for active blogs)
-      const response = await fetch(url, {
-        cache: "no-store",
-      });
+      // For server-side fetches, use the URL as constructed by getBaseUrl()
+      // If getBaseUrl() returns a relative path, Next.js will resolve it correctly
+      try {
+        const response = await fetch(url, {
+          cache: "no-store",
+          // Add headers to help Next.js resolve the request correctly
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
 
-      if (!response.ok) {
-        // If auth required, return empty array
+        if (!response.ok) {
+          // Log error for debugging
+          const errorText = await response
+            .text()
+            .catch(() => "Unable to read error");
+          logger.error("Blog API response not OK:", {
+            status: response.status,
+            statusText: response.statusText,
+            url,
+            errorText,
+            examId: examIdString,
+            statusFilter: status,
+          });
+          return [];
+        }
+
+        const data = await response.json();
+        if (data.success && data.data) {
+          // Log for debugging
+          logger.info("Fetched blogs:", {
+            count: data.data.length,
+            examId: examIdString,
+            url,
+            blogs: data.data.map((b) => ({
+              _id: b._id,
+              name: b.name,
+              examId: b.examId,
+            })),
+          });
+          return data.data || [];
+        } else {
+          logger.warn("Blog API returned unsuccessful response:", {
+            success: data.success,
+            message: data.message,
+            url,
+            examId: examIdString,
+          });
+        }
+        return [];
+      } catch (fetchError) {
+        logger.error("Error fetching blogs from API:", {
+          error: fetchError.message,
+          stack: fetchError.stack,
+          url,
+          examId: examIdString,
+        });
         return [];
       }
-
-      const data = await response.json();
-      if (data.success && data.data) {
-        return data.data || [];
-      }
-      return [];
     } else {
-      // Client-side: try with fetch first (no auth)
+      // Client-side: try with fetch first (no auth) - always bypass cache
       try {
-        const response = await fetch(url);
+        const response = await fetch(url, {
+          cache: "no-store",
+          headers: {
+            "Cache-Control": "no-cache",
+          },
+        });
         if (response.ok) {
           const data = await response.json();
           if (data.success && data.data) {
@@ -1883,7 +1966,11 @@ export const fetchBlogs = async (options = {}) => {
       } catch (err) {
         // If fetch fails, try with api (might have auth)
         try {
-          const response = await api.get(`/blog?${queryString}`);
+          const response = await api.get(`/blog?${queryString}`, {
+            headers: {
+              "Cache-Control": "no-cache",
+            },
+          });
           if (response.data?.success && response.data?.data) {
             return response.data.data || [];
           }
@@ -1991,7 +2078,7 @@ export const fetchBlogDetails = async (blogId, options = {}) => {
       } catch (err) {
         // Try with api if fetch fails
         try {
-          const apiUrl = excludeContent 
+          const apiUrl = excludeContent
             ? `/blog/${blogId}/details?excludeContent=true`
             : `/blog/${blogId}/details`;
           const response = await api.get(apiUrl);
@@ -2013,15 +2100,31 @@ export const fetchBlogDetails = async (blogId, options = {}) => {
 // Fetch blog categories (public access for active categories)
 export const fetchBlogCategories = async (options = {}) => {
   try {
-    const { examId = null, status = STATUS.ACTIVE, limit = 100 } = options;
+    const {
+      examId = null,
+      status = STATUS.ACTIVE,
+      limit = 100,
+      forceRefresh = false,
+    } = options;
 
     const isServer = typeof window === "undefined";
     const baseUrl = getBaseUrl();
 
-    // Build query string
+    // Convert examId to string if it's an ObjectId object
+    const examIdString = examId
+      ? examId.toString
+        ? examId.toString()
+        : String(examId)
+      : null;
+
+    // Build query string with cache-busting timestamp if forceRefresh
     let queryString = `status=${status}&limit=${limit}`;
-    if (examId) {
-      queryString += `&examId=${examId}`;
+    if (examIdString) {
+      queryString += `&examId=${encodeURIComponent(examIdString)}`;
+    }
+    // Add cache-busting parameter for client-side when forceRefresh is true
+    if (!isServer && forceRefresh) {
+      queryString += `&_t=${Date.now()}`;
     }
 
     const url = `${baseUrl}/api/blog/category?${queryString}`;
@@ -2033,18 +2136,36 @@ export const fetchBlogCategories = async (options = {}) => {
       });
 
       if (!response.ok) {
+        // Log error for debugging
+        logger.error("Blog category API response not OK:", {
+          status: response.status,
+          statusText: response.statusText,
+          url,
+        });
         return [];
       }
 
       const data = await response.json();
       if (data.success && data.data) {
+        // Log for debugging in development
+        if (process.env.NODE_ENV === "development") {
+          logger.info("Fetched blog categories:", {
+            count: data.data.length,
+            examId: examIdString,
+          });
+        }
         return data.data || [];
       }
       return [];
     } else {
-      // Client-side: try with fetch first (no auth)
+      // Client-side: try with fetch first (no auth) - always bypass cache
       try {
-        const response = await fetch(url);
+        const response = await fetch(url, {
+          cache: "no-store",
+          headers: {
+            "Cache-Control": "no-cache",
+          },
+        });
         if (response.ok) {
           const data = await response.json();
           if (data.success && data.data) {
@@ -2054,7 +2175,11 @@ export const fetchBlogCategories = async (options = {}) => {
       } catch (err) {
         // If fetch fails, try with api (might have auth)
         try {
-          const response = await api.get(`/blog/category?${queryString}`);
+          const response = await api.get(`/blog/category?${queryString}`, {
+            headers: {
+              "Cache-Control": "no-cache",
+            },
+          });
           if (response.data?.success && response.data?.data) {
             return response.data.data || [];
           }

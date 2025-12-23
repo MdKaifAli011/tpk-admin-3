@@ -345,13 +345,14 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
 
     loadTree(activeExamId);
 
-    // Load blog categories for this exam
+    // Load blog categories for this exam - always force refresh to get latest data
     const loadCategories = async () => {
       try {
         const categories = await fetchBlogCategories({
           examId: activeExamId,
           status: "active",
           limit: 100,
+          forceRefresh: true, // Force refresh to bypass any caching
         });
         setBlogCategories(categories || []);
       } catch (err) {
@@ -360,15 +361,33 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
       }
     };
     loadCategories();
-  }, [activeExamId, loadTree]);
+  }, [activeExamId, loadTree, pathname]); // Added pathname to reload when navigating
 
   // Auto-expand blog menu if we're on a blog or category page
+  // Also refresh blog categories when navigating to blog pages
   useEffect(() => {
     const isBlogPage = pathname.includes("/blog");
     if (isBlogPage) {
       setIsBlogMenuOpen(true);
+      // Refresh blog categories when visiting blog pages to ensure latest data
+      if (activeExamId) {
+        const loadCategories = async () => {
+          try {
+            const categories = await fetchBlogCategories({
+              examId: activeExamId,
+              status: "active",
+              limit: 100,
+              forceRefresh: true,
+            });
+            setBlogCategories(categories || []);
+          } catch (err) {
+            logger.error("Error refreshing blog categories:", err);
+          }
+        };
+        loadCategories();
+      }
     }
-  }, [pathname]);
+  }, [pathname, activeExamId]);
 
   // debounced query filtered tree
   const normalizedQuery = debouncedQuery.trim().toLowerCase();

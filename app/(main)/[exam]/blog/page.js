@@ -27,13 +27,48 @@ const BlogPage = async ({ params }) => {
   // Fetch blogs for this exam (or all active blogs if no exam filter)
   let blogs = [];
   try {
-    blogs = await fetchBlogs({
-      examId: exam._id,
-      status: "active",
-      limit: 50,
-    });
+    // Ensure exam._id is converted to string
+    const examIdString = exam._id
+      ? exam._id.toString
+        ? exam._id.toString()
+        : String(exam._id)
+      : null;
+
+    if (!examIdString) {
+      console.error("Blog page: No exam ID found", {
+        exam: exam ? { _id: exam._id, name: exam.name } : null,
+      });
+      blogs = [];
+    } else {
+      // Log the exam ID being used
+      console.log("Blog page: Fetching blogs for exam", {
+        examId: examIdString,
+        examName: exam.name,
+        examIdType: typeof exam._id,
+      });
+
+      blogs = await fetchBlogs({
+        examId: examIdString,
+        status: "active",
+        limit: 50,
+        forceRefresh: true, // Force refresh to get latest data
+      });
+
+      // Log the results
+      console.log("Blog page: Fetched blogs result", {
+        examId: examIdString,
+        examName: exam.name,
+        blogCount: blogs.length,
+        blogs: blogs.map((b) => ({
+          _id: b._id,
+          name: b.name,
+          examId: b.examId,
+        })),
+      });
+    }
   } catch (error) {
     console.error("Error fetching blogs:", error);
+    console.error("Error stack:", error.stack);
     blogs = [];
   }
 
@@ -42,7 +77,9 @@ const BlogPage = async ({ params }) => {
     blogs.map(async (blog) => {
       try {
         // Exclude content field when fetching for cards - we only need shortDescription/metaDescription
-        const details = await fetchBlogDetails(blog._id, { excludeContent: true });
+        const details = await fetchBlogDetails(blog._id, {
+          excludeContent: true,
+        });
         return { ...blog, details };
       } catch (error) {
         return { ...blog, details: null };

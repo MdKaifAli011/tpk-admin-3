@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import Blog from "@/models/Blog";
+import mongoose from "mongoose";
 import {
     successResponse,
     errorResponse,
@@ -12,12 +13,13 @@ import { STATUS } from "@/constants";
 export async function GET(request) {
     try {
         const { searchParams } = new URL(request.url);
-        const statusFilter = searchParams.get("status") || "all";
+        const statusFilterParam = searchParams.get("status") || "all";
+        const statusFilter = statusFilterParam.toLowerCase();
         const examId = searchParams.get("examId");
 
         // Allow public access for active blogs only (for public blog pages)
         // Require authentication for inactive/all blogs (admin access)
-        const isPublicRequest = statusFilter === "active" || statusFilter === STATUS.ACTIVE;
+        const isPublicRequest = statusFilter === "active" || statusFilter === STATUS.ACTIVE.toLowerCase();
         
         if (!isPublicRequest) {
             const authCheck = await requireAuth(request);
@@ -29,13 +31,19 @@ export async function GET(request) {
         await connectDB();
 
         let query = {};
+        // Use case-insensitive status matching
         if (statusFilter !== "all") {
-            query.status = statusFilter;
+            query.status = { $regex: new RegExp(`^${statusFilter}$`, "i") };
         }
 
-        // Filter by examId if provided
+        // Filter by examId if provided - convert to ObjectId for proper matching
         if (examId) {
-            query.examId = examId;
+            if (mongoose.Types.ObjectId.isValid(examId)) {
+                query.examId = new mongoose.Types.ObjectId(examId);
+            } else {
+                // If invalid ObjectId, return empty array
+                return successResponse([]);
+            }
         }
 
         // Sort by newest first and populate Exam and Category
@@ -44,7 +52,15 @@ export async function GET(request) {
             .populate("examId", "name slug")
             .populate("categoryId", "name");
 
-        return successResponse(blogs);
+        // Filter results to ensure status matches (case-insensitive)
+        const filteredBlogs = blogs.filter((blog) => {
+            if (statusFilter !== "all" && blog.status) {
+                return blog.status.toLowerCase() === statusFilter;
+            }
+            return true;
+        });
+
+        return successResponse(filteredBlogs);
     } catch (error) {
         return handleApiError(error, "Failed to fetch blogs");
     }
