@@ -29,8 +29,14 @@ const blogDetailsSchema = new mongoose.Schema(
       trim: true,
       default: "",
     },
-    // SEO keywords
+    // SEO keywords (for meta tags)
     keywords: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    // Tags (for displaying on blog page)
+    tags: {
       type: String,
       trim: true,
       default: "",

@@ -10,6 +10,7 @@ import {
   createSlug,
 } from "../../../lib/api";
 import RichContent from "../../../components/RichContent";
+import BlogComments from "./BlogComments";
 
 // Helper function to resolve image path with base path
 const resolveImagePath = (path) => {
@@ -60,6 +61,7 @@ const BlogDetailPage = async ({ params }) => {
   const displayTitle = blog.name || "Untitled Blog";
   const metaDescription = blogDetails?.metaDescription || "";
   const keywords = blogDetails?.keywords || "";
+  const tags = blogDetails?.tags || "";
 
   // Check if image is external URL
   const imageSrc = resolveImagePath(blog.image);
@@ -150,23 +152,26 @@ const BlogDetailPage = async ({ params }) => {
           </div>
         )}
 
-        {/* Keywords */}
-        {keywords && (
+        {/* Tags */}
+        {tags && (
           <div className="mt-8 pt-6 border-t border-gray-200">
             <p className="text-xs text-gray-500 mb-2">Tags:</p>
             <div className="flex flex-wrap gap-2">
-              {keywords.split(",").map((keyword, index) => (
+              {tags.split(",").map((tag, index) => (
                 <span
                   key={index}
                   className="px-3 py-1 text-xs bg-indigo-50 text-indigo-700 rounded-full border border-indigo-100"
                 >
-                  {keyword.trim()}
+                  {tag.trim()}
                 </span>
               ))}
             </div>
           </div>
         )}
       </article>
+
+      {/* Comments Section */}
+      <BlogComments blogId={blog._id} />
 
       {/* Bottom Navigation */}
       <div className="flex justify-between items-center pt-2">

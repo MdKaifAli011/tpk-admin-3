@@ -47,7 +47,8 @@ blogCategorySchema.index(
   { unique: true, partialFilterExpression: { orderNumber: { $exists: true } } }
 );
 
-// Cascading delete: When a BlogCategory is deleted, update blogs to remove category reference
+// Cascading delete: When a BlogCategory is deleted, delete all blogs in that category
+// This will also trigger Blog's cascading delete middleware to remove BlogDetails
 blogCategorySchema.pre("findOneAndDelete", async function () {
   try {
     const category = await this.model.findOne(this.getQuery());
@@ -58,15 +59,35 @@ blogCategorySchema.pre("findOneAndDelete", async function () {
       // Get Blog model - dynamically import if not already registered
       const Blog = mongoose.models.Blog || (await import("./Blog.js")).default;
 
-      // Update all blogs with this category to remove the category reference
-      const updateResult = await Blog.updateMany(
-        { categoryId: category._id },
-        { $unset: { categoryId: "" } }
-      );
+      // Find all blogs with this category
+      const blogsToDelete = await Blog.find({
+        categoryId: category._id,
+      }).select("_id");
 
-      console.log(
-        `🗑️ Cascading delete: Updated ${updateResult.modifiedCount} blogs to remove category reference`
-      );
+      if (blogsToDelete.length > 0) {
+        // Delete each blog individually to trigger Blog's cascading delete middleware
+        // This ensures BlogDetails are properly deleted via Blog's pre("findOneAndDelete") hook
+        let deletedCount = 0;
+        for (const blog of blogsToDelete) {
+          try {
+            await Blog.findByIdAndDelete(blog._id);
+            deletedCount++;
+            console.log(
+              `🗑️ Cascading delete: Deleted blog ${blog._id} (BlogDetails auto-deleted)`
+            );
+          } catch (blogError) {
+            console.error(`❌ Error deleting blog ${blog._id}:`, blogError);
+          }
+        }
+
+        console.log(
+          `🗑️ Cascading delete: Deleted ${deletedCount} blog(s) associated with category ${category._id}`
+        );
+      } else {
+        console.log(
+          `🗑️ Cascading delete: No blogs found for category ${category._id}`
+        );
+      }
     }
   } catch (error) {
     console.error(

@@ -36,13 +36,8 @@ export async function GET(request) {
     
     // Build query with case-insensitive status matching
     const query = {};
-    if (examId) {
-      if (mongoose.Types.ObjectId.isValid(examId)) {
-        query.examId = new mongoose.Types.ObjectId(examId);
-      } else {
-        // If invalid ObjectId, return empty array
-        return NextResponse.json(createPaginationResponse([], 0, page, limit));
-      }
+    if (examId && mongoose.Types.ObjectId.isValid(examId)) {
+      query.examId = examId;
     }
     if (statusFilter !== "all") {
       query.status = { $regex: new RegExp(`^${statusFilter}$`, "i") };

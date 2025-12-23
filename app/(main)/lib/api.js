@@ -18,30 +18,10 @@ const getBaseUrl = () => {
     // Client-side: use basePath for relative URLs
     return basePath;
   }
-  // Server-side: use absolute URL from environment
-  let serverBaseUrl =
-    process.env.NEXT_PUBLIC_API_URL?.replace("/api", "") ||
-    process.env.NEXT_PUBLIC_APP_URL;
-
-  // If no environment variable, try to construct from PORT
-  if (!serverBaseUrl) {
-    // Try to get port from process.env.PORT
-    // Note: When Next.js auto-selects a port (e.g., 3001 when 3000 is busy),
-    // it doesn't set PORT env var. You should set NEXT_PUBLIC_APP_URL instead.
-    const port = process.env.PORT;
-    if (port) {
-      const host = process.env.HOST || "localhost";
-      serverBaseUrl = `http://${host}:${port}`;
-    } else {
-      // For Next.js server-side fetches within the same app, we can use relative URLs
-      // Next.js will resolve them correctly to the current server
-      // This is the safest fallback when no env vars are set
-      return basePath;
-    }
-  }
-
-  // Server-side: append basePath to the URL
-  return `${serverBaseUrl}${basePath}`;
+  // Server-side: Always prefer localhost to avoid network loopback issues (public IP not reachable from inside)
+  const port = process.env.PORT || 3000;
+  // If we are in production, we still prioritize localhost for internal API calls
+  return `http://localhost:${port}${basePath}`;
 };
 
 // Request cache for deduplication (prevents duplicate requests)
@@ -103,8 +83,7 @@ export const fetchExams = async (options = {}) => {
           // If axios fails, try with fetch (no auth)
           if (status === STATUS.ACTIVE) {
             return fetch(
-              `${
-                baseUrl || ""
+              `${baseUrl || ""
               }/api/exam?page=${page}&limit=${limit}&status=${status}`
             )
               .then((res) => res.json())
@@ -257,7 +236,7 @@ export const fetchSubjectsByExam = async (examId, options = {}) => {
               const matchesExam =
                 String(subjectExamId) === String(examId) ||
                 subject.examId?.name?.toLowerCase() ===
-                  String(examId).toLowerCase();
+                String(examId).toLowerCase();
               const matchesStatus = subject.status
                 ? subject.status.toLowerCase() === STATUS.ACTIVE.toLowerCase()
                 : false;
@@ -275,7 +254,7 @@ export const fetchSubjectsByExam = async (examId, options = {}) => {
               String(subjectExamId) === String(examId) ||
               subject.examId === examId ||
               subject.examId?.name?.toLowerCase() ===
-                String(examId).toLowerCase();
+              String(examId).toLowerCase();
             const matchesStatus = subject.status
               ? subject.status.toLowerCase() === STATUS.ACTIVE.toLowerCase()
               : false;
@@ -304,7 +283,7 @@ export const fetchSubjectsByExam = async (examId, options = {}) => {
             const matchesExam =
               String(subjectExamId) === String(examId) ||
               subject.examId?.name?.toLowerCase() ===
-                String(examId).toLowerCase();
+              String(examId).toLowerCase();
             const matchesStatus = subject.status
               ? subject.status.toLowerCase() === STATUS.ACTIVE.toLowerCase()
               : false;
@@ -324,7 +303,7 @@ export const fetchSubjectsByExam = async (examId, options = {}) => {
             String(subjectExamId) === String(examId) ||
             subject.examId === examId ||
             subject.examId?.name?.toLowerCase() ===
-              String(examId).toLowerCase();
+            String(examId).toLowerCase();
           const matchesStatus = subject.status
             ? subject.status.toLowerCase() === STATUS.ACTIVE.toLowerCase()
             : false;
@@ -411,9 +390,8 @@ export const fetchUnitsBySubject = async (subjectId, examId, options = {}) => {
 
   try {
     const { page = 1, limit = 100 } = options;
-    const url = `${baseUrl}/api/unit?subjectId=${subjectId}${
-      examId ? `&examId=${examId}` : ""
-    }&page=${page}&limit=${limit}&status=${STATUS.ACTIVE}`;
+    const url = `${baseUrl}/api/unit?subjectId=${subjectId}${examId ? `&examId=${examId}` : ""
+      }&page=${page}&limit=${limit}&status=${STATUS.ACTIVE}`;
 
     if (isServer) {
       // Server-side: use fetch
@@ -444,8 +422,7 @@ export const fetchUnitsBySubject = async (subjectId, examId, options = {}) => {
     } else {
       // Client-side: use axios
       const response = await api.get(
-        `/unit?subjectId=${subjectId}${
-          examId ? `&examId=${examId}` : ""
+        `/unit?subjectId=${subjectId}${examId ? `&examId=${examId}` : ""
         }&page=${page}&limit=${limit}&status=${STATUS.ACTIVE}`
       );
 
@@ -1858,105 +1835,39 @@ export async function fetchAllStudentTestResults(filters = {}) {
 // Fetch blogs (public access for active blogs)
 export const fetchBlogs = async (options = {}) => {
   try {
-    const {
-      examId = null,
-      status = STATUS.ACTIVE,
-      limit = 100,
-      forceRefresh = false,
-    } = options;
+    const { examId = null, status = STATUS.ACTIVE, limit = 100 } = options;
 
     const isServer = typeof window === "undefined";
     const baseUrl = getBaseUrl();
 
-    // Convert examId to string if it's an ObjectId object
-    const examIdString = examId
-      ? examId.toString
-        ? examId.toString()
-        : String(examId)
-      : null;
-
-    // Build query string with cache-busting timestamp if forceRefresh
+    // Build query string
     let queryString = `status=${status}&limit=${limit}`;
-    if (examIdString) {
-      queryString += `&examId=${encodeURIComponent(examIdString)}`;
-    }
-    // Add cache-busting parameter for client-side when forceRefresh is true
-    if (!isServer && forceRefresh) {
-      queryString += `&_t=${Date.now()}`;
+    if (examId) {
+      queryString += `&examId=${examId}`;
     }
 
     const url = `${baseUrl}/api/blog?${queryString}`;
 
     if (isServer) {
       // Server-side: use fetch (no auth for active blogs)
-      // For server-side fetches, use the URL as constructed by getBaseUrl()
-      // If getBaseUrl() returns a relative path, Next.js will resolve it correctly
-      try {
-        const response = await fetch(url, {
-          cache: "no-store",
-          // Add headers to help Next.js resolve the request correctly
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
+      const response = await fetch(url, {
+        cache: "no-store",
+      });
 
-        if (!response.ok) {
-          // Log error for debugging
-          const errorText = await response
-            .text()
-            .catch(() => "Unable to read error");
-          logger.error("Blog API response not OK:", {
-            status: response.status,
-            statusText: response.statusText,
-            url,
-            errorText,
-            examId: examIdString,
-            statusFilter: status,
-          });
-          return [];
-        }
-
-        const data = await response.json();
-        if (data.success && data.data) {
-          // Log for debugging
-          logger.info("Fetched blogs:", {
-            count: data.data.length,
-            examId: examIdString,
-            url,
-            blogs: data.data.map((b) => ({
-              _id: b._id,
-              name: b.name,
-              examId: b.examId,
-            })),
-          });
-          return data.data || [];
-        } else {
-          logger.warn("Blog API returned unsuccessful response:", {
-            success: data.success,
-            message: data.message,
-            url,
-            examId: examIdString,
-          });
-        }
-        return [];
-      } catch (fetchError) {
-        logger.error("Error fetching blogs from API:", {
-          error: fetchError.message,
-          stack: fetchError.stack,
-          url,
-          examId: examIdString,
-        });
+      if (!response.ok) {
+        // If auth required, return empty array
         return [];
       }
+
+      const data = await response.json();
+      if (data.success && data.data) {
+        return data.data || [];
+      }
+      return [];
     } else {
-      // Client-side: try with fetch first (no auth) - always bypass cache
+      // Client-side: try with fetch first (no auth)
       try {
-        const response = await fetch(url, {
-          cache: "no-store",
-          headers: {
-            "Cache-Control": "no-cache",
-          },
-        });
+        const response = await fetch(url);
         if (response.ok) {
           const data = await response.json();
           if (data.success && data.data) {
@@ -1966,11 +1877,7 @@ export const fetchBlogs = async (options = {}) => {
       } catch (err) {
         // If fetch fails, try with api (might have auth)
         try {
-          const response = await api.get(`/blog?${queryString}`, {
-            headers: {
-              "Cache-Control": "no-cache",
-            },
-          });
+          const response = await api.get(`/blog?${queryString}`);
           if (response.data?.success && response.data?.data) {
             return response.data.data || [];
           }
@@ -2100,31 +2007,15 @@ export const fetchBlogDetails = async (blogId, options = {}) => {
 // Fetch blog categories (public access for active categories)
 export const fetchBlogCategories = async (options = {}) => {
   try {
-    const {
-      examId = null,
-      status = STATUS.ACTIVE,
-      limit = 100,
-      forceRefresh = false,
-    } = options;
+    const { examId = null, status = STATUS.ACTIVE, limit = 100 } = options;
 
     const isServer = typeof window === "undefined";
     const baseUrl = getBaseUrl();
 
-    // Convert examId to string if it's an ObjectId object
-    const examIdString = examId
-      ? examId.toString
-        ? examId.toString()
-        : String(examId)
-      : null;
-
-    // Build query string with cache-busting timestamp if forceRefresh
+    // Build query string
     let queryString = `status=${status}&limit=${limit}`;
-    if (examIdString) {
-      queryString += `&examId=${encodeURIComponent(examIdString)}`;
-    }
-    // Add cache-busting parameter for client-side when forceRefresh is true
-    if (!isServer && forceRefresh) {
-      queryString += `&_t=${Date.now()}`;
+    if (examId) {
+      queryString += `&examId=${examId}`;
     }
 
     const url = `${baseUrl}/api/blog/category?${queryString}`;
@@ -2136,36 +2027,18 @@ export const fetchBlogCategories = async (options = {}) => {
       });
 
       if (!response.ok) {
-        // Log error for debugging
-        logger.error("Blog category API response not OK:", {
-          status: response.status,
-          statusText: response.statusText,
-          url,
-        });
         return [];
       }
 
       const data = await response.json();
       if (data.success && data.data) {
-        // Log for debugging in development
-        if (process.env.NODE_ENV === "development") {
-          logger.info("Fetched blog categories:", {
-            count: data.data.length,
-            examId: examIdString,
-          });
-        }
         return data.data || [];
       }
       return [];
     } else {
-      // Client-side: try with fetch first (no auth) - always bypass cache
+      // Client-side: try with fetch first (no auth)
       try {
-        const response = await fetch(url, {
-          cache: "no-store",
-          headers: {
-            "Cache-Control": "no-cache",
-          },
-        });
+        const response = await fetch(url);
         if (response.ok) {
           const data = await response.json();
           if (data.success && data.data) {
@@ -2175,11 +2048,7 @@ export const fetchBlogCategories = async (options = {}) => {
       } catch (err) {
         // If fetch fails, try with api (might have auth)
         try {
-          const response = await api.get(`/blog/category?${queryString}`, {
-            headers: {
-              "Cache-Control": "no-cache",
-            },
-          });
+          const response = await api.get(`/blog/category?${queryString}`);
           if (response.data?.success && response.data?.data) {
             return response.data.data || [];
           }

@@ -5,7 +5,8 @@ import { ToastContainer, useToast } from "../ui/Toast";
 import { LoadingSpinner } from "../ui/SkeletonLoader";
 import RichTextEditor from "../ui/RichTextEditor";
 import api from "@/lib/api";
-import { FaArrowLeft, FaSave, FaImage, FaGlobe } from "react-icons/fa";
+import { createSlug } from "@/utils/slug";
+import { FaArrowLeft, FaSave, FaImage, FaGlobe, FaEye } from "react-icons/fa";
 
 const BlogDetailPage = ({ blogId }) => {
   const router = useRouter();
@@ -32,7 +33,8 @@ const BlogDetailPage = ({ blogId }) => {
     title: "", // SEO Title
     metaDescription: "", // SEO Desc
     shortDescription: "", // Short description for card display
-    keywords: "", // SEO KW
+    keywords: "", // SEO KW (for meta tags)
+    tags: "", // Tags (for displaying on blog page)
   });
 
   const fetchBlogDetails = useCallback(async () => {
@@ -66,6 +68,7 @@ const BlogDetailPage = ({ blogId }) => {
           metaDescription: detailsData.metaDescription || "",
           shortDescription: detailsData.shortDescription || "",
           keywords: detailsData.keywords || "",
+          tags: detailsData.tags || "",
         };
         setFormData(initialFormData);
         setOriginalFormData(initialFormData);
@@ -112,6 +115,42 @@ const BlogDetailPage = ({ blogId }) => {
     );
   };
 
+  // Generate public blog URL
+  const getPublicBlogUrl = () => {
+    if (!blog || !blog.slug) return null;
+    
+    // Get exam slug from blog's examId
+    const exam = exams.find(
+      (e) => e._id === (blog.examId?._id || blog.examId)
+    );
+    
+    // Also check if examId is populated in blog object
+    const examData = blog.examId?.name ? blog.examId : exam;
+    
+    if (!examData || !examData.name) {
+      // If no exam, we can't generate a valid URL
+      // The public blog pages require an exam context
+      return null;
+    }
+    
+    // Use exam slug if available, otherwise create from name
+    const examSlug = examData.slug || createSlug(examData.name);
+    const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
+    
+    // Construct URL: /self-study/{examSlug}/blog/{blogSlug}
+    return `${basePath}/${examSlug}/blog/${blog.slug}`;
+  };
+
+  // Handle View button click
+  const handleViewPublic = () => {
+    const publicUrl = getPublicBlogUrl();
+    if (publicUrl) {
+      window.open(publicUrl, "_blank", "noopener,noreferrer");
+    } else {
+      showError("Cannot view blog: Exam information is missing or blog slug is not available.");
+    }
+  };
+
   // Save all fields but keep editor open (draft save)
   const handleSave = async () => {
     try {
@@ -130,6 +169,7 @@ const BlogDetailPage = ({ blogId }) => {
         metaDescription: formData.metaDescription.trim(),
         shortDescription: formData.shortDescription.trim(),
         keywords: formData.keywords.trim(),
+        tags: formData.tags.trim(),
       });
 
       const [coreRes, detailsRes] = await Promise.all([
@@ -177,6 +217,7 @@ const BlogDetailPage = ({ blogId }) => {
         metaDescription: formData.metaDescription.trim(),
         shortDescription: formData.shortDescription.trim(),
         keywords: formData.keywords.trim(),
+        tags: formData.tags.trim(),
       });
 
       const [coreRes, detailsRes] = await Promise.all([
@@ -338,6 +379,18 @@ const BlogDetailPage = ({ blogId }) => {
               <option value="active">Active</option>
               <option value="inactive">Inactive</option>
             </select>
+
+            {/* View Public Blog Button */}
+            {blog && blog.slug && getPublicBlogUrl() && (
+              <button
+                onClick={handleViewPublic}
+                className="px-3 py-1.5 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:shadow-md text-gray-700 text-sm font-medium transition-all duration-200 flex items-center gap-2"
+                title="View public blog post"
+              >
+                <FaEye className="w-4 h-4" />
+                <span className="hidden sm:inline">View</span>
+              </button>
+            )}
 
             {isEditing ? (
               <>
@@ -628,7 +681,7 @@ const BlogDetailPage = ({ blogId }) => {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Keywords
+                      Keywords (Meta)
                     </label>
                     <input
                       type="text"
@@ -636,9 +689,30 @@ const BlogDetailPage = ({ blogId }) => {
                       value={formData.keywords}
                       onChange={handleChange}
                       disabled={!isEditing}
-                      placeholder="comma, separated, tags"
+                      placeholder="comma, separated, keywords (for SEO meta tags)"
                       className="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-gray-700 placeholder:text-gray-400 disabled:bg-gray-50 disabled:cursor-not-allowed"
                     />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Used for SEO meta keywords (not displayed on page).
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Tags
+                    </label>
+                    <input
+                      type="text"
+                      name="tags"
+                      value={formData.tags}
+                      onChange={handleChange}
+                      disabled={!isEditing}
+                      placeholder="comma, separated, tags (displayed on blog page)"
+                      className="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-gray-700 placeholder:text-gray-400 disabled:bg-gray-50 disabled:cursor-not-allowed"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Tags displayed on the blog post page (separate from SEO keywords).
+                    </p>
                   </div>
                 </div>
               </div>

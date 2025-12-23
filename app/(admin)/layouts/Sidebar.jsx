@@ -66,6 +66,7 @@ const ALL_MENU_ITEMS = [
     children: [
       { name: "Blog List", href: "/admin/blog" },
       { name: "Blog Categories", href: "/admin/blog-category" },
+      { name: "Blog Comments", href: "/admin/blog-comment" },
     ],
   },
 ];
