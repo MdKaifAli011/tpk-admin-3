@@ -2064,6 +2064,211 @@ export const fetchBlogCategories = async (options = {}) => {
   }
 };
 
+// ========== DOWNLOAD API FUNCTIONS ==========
+
+// Fetch download folders by exam ID
+export const fetchDownloadFolders = async (examId, options = {}) => {
+  try {
+    const { status = STATUS.ACTIVE, limit = 100 } = options;
+
+    const isServer = typeof window === "undefined";
+    const baseUrl = getBaseUrl();
+
+    const params = new URLSearchParams();
+    params.append("parentFolderId", "null");
+    params.append("status", status);
+    params.append("limit", limit.toString());
+    if (examId) {
+      params.append("examId", examId);
+    }
+
+    const url = `${baseUrl}/api/download/folder?${params.toString()}`;
+
+    if (isServer) {
+      const response = await fetch(url, {
+        cache: "no-store",
+      });
+
+      if (!response.ok) {
+        return [];
+      }
+
+      const data = await response.json();
+      if (data.success && data.data) {
+        return data.data || [];
+      }
+      return [];
+    } else {
+      const response = await api.get(`/download/folder?${params.toString()}`);
+
+      if (response.data.success && response.data.data) {
+        return response.data.data || [];
+      }
+      return [];
+    }
+  } catch (error) {
+    logger.error("Error fetching download folders:", error);
+    return [];
+  }
+};
+
+// Fetch download folder by ID or slug
+export const fetchDownloadFolderById = async (folderId) => {
+  if (!folderId) return null;
+
+  const isServer = typeof window === "undefined";
+  const baseUrl = getBaseUrl();
+
+  try {
+    const isObjectId = /^[0-9a-fA-F]{24}$/.test(folderId);
+    if (isObjectId) {
+      if (isServer) {
+        const response = await fetch(`${baseUrl}/api/download/folder/${folderId}`, {
+          next: { revalidate: 60 },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.data) {
+            return data.data;
+          }
+        }
+      } else {
+        const response = await api.get(`/download/folder/${folderId}`);
+        if (response.data.success && response.data.data) {
+          return response.data.data;
+        }
+      }
+    }
+    return null;
+  } catch (error) {
+    logger.error("Error fetching download folder:", error);
+    return null;
+  }
+};
+
+// Fetch subfolders by parent folder ID
+export const fetchSubfoldersByFolder = async (folderId, options = {}) => {
+  if (!folderId) return [];
+
+  const { status = STATUS.ACTIVE, limit = 100 } = options;
+  const isServer = typeof window === "undefined";
+  const baseUrl = getBaseUrl();
+
+  try {
+    const params = new URLSearchParams();
+    params.append("parentFolderId", folderId);
+    params.append("status", status);
+    params.append("limit", limit.toString());
+
+    const url = `${baseUrl}/api/download/folder?${params.toString()}`;
+
+    if (isServer) {
+      const response = await fetch(url, {
+        cache: "no-store",
+      });
+
+      if (!response.ok) {
+        return [];
+      }
+
+      const data = await response.json();
+      if (data.success && data.data) {
+        return data.data || [];
+      }
+      return [];
+    } else {
+      const response = await api.get(`/download/folder?${params.toString()}`);
+
+      if (response.data.success && response.data.data) {
+        return response.data.data || [];
+      }
+      return [];
+    }
+  } catch (error) {
+    logger.error("Error fetching subfolders:", error);
+    return [];
+  }
+};
+
+// Fetch files by folder ID (subfolder)
+export const fetchFilesByFolder = async (folderId, options = {}) => {
+  if (!folderId) return [];
+
+  const { status = STATUS.ACTIVE, limit = 100 } = options;
+  const isServer = typeof window === "undefined";
+  const baseUrl = getBaseUrl();
+
+  try {
+    const params = new URLSearchParams();
+    params.append("folderId", folderId);
+    params.append("status", status);
+    params.append("limit", limit.toString());
+
+    const url = `${baseUrl}/api/download/file?${params.toString()}`;
+
+    if (isServer) {
+      const response = await fetch(url, {
+        cache: "no-store",
+      });
+
+      if (!response.ok) {
+        return [];
+      }
+
+      const data = await response.json();
+      if (data.success && data.data) {
+        return data.data || [];
+      }
+      return [];
+    } else {
+      const response = await api.get(`/download/file?${params.toString()}`);
+
+      if (response.data.success && response.data.data) {
+        return response.data.data || [];
+      }
+      return [];
+    }
+  } catch (error) {
+    logger.error("Error fetching files:", error);
+    return [];
+  }
+};
+
+// Submit download form (unlock downloads)
+export const submitDownloadForm = async (formData) => {
+  const isServer = typeof window === "undefined";
+
+  if (isServer) {
+    return { success: false, message: "Cannot submit form on server" };
+  }
+
+  try {
+    // Store form data in localStorage to unlock downloads
+    localStorage.setItem("download_form_submitted", "true");
+    localStorage.setItem("download_form_data", JSON.stringify(formData));
+
+    // Optionally send to API if you want to track submissions
+    // const response = await api.post("/download/form", formData);
+    // if (response.data.success) {
+    //   return { success: true, data: response.data.data };
+    // }
+
+    return { success: true, message: "Form submitted successfully" };
+  } catch (error) {
+    return {
+      success: false,
+      message: error.message || "Failed to submit form",
+    };
+  }
+};
+
+// Check if download form is submitted
+export const isDownloadFormSubmitted = () => {
+  if (typeof window === "undefined") return false;
+  return localStorage.getItem("download_form_submitted") === "true";
+};
+
 // Re-export slug utilities for backward compatibility
 export const createSlug = createSlugUtil;
 export const findByIdOrSlug = findByIdOrSlugUtil;

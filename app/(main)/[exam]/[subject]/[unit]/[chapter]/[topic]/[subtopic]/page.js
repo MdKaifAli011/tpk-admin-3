@@ -5,6 +5,7 @@ import NavigationClient from "../../../../../../components/NavigationClient";
 import ChaptersSectionClient from "../../../../../../components/ChaptersSectionClient";
 import UnitProgressClient from "../../../../../../components/UnitProgressClient";
 import ProgressTracker from "../../../../../../components/ProgressTracker";
+import DefinitionPreviewClient from "../../../../../../components/DefinitionPreviewClient";
 import { ERROR_MESSAGES } from "@/constants";
 import {
   fetchExamById,
@@ -285,46 +286,30 @@ const SubTopicPage = async ({ params }) => {
         {/* Definitions Section */}
         {fetchedDefinitions && fetchedDefinitions.length > 0 && (
           <section className="bg-transparent">
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-              <div className="px-4 sm:px-6 py-4 border-b border-gray-100">
-                <div className="flex items-start gap-2">
-                  <div>
-                    <h2 className="text-base sm:text-lg font-semibold text-gray-900">
-                      Definitions
-                    </h2>
-                    <p className="mt-1 text-xs sm:text-sm text-gray-500">
-                      Explore definitions related to this subtopic.
-                    </p>
-                  </div>
-                </div>
+            <div className="space-y-6">
+              <div className="px-1">
+                <h2 className="text-base sm:text-lg font-semibold text-gray-900">
+                  Definitions
+                </h2>
+                <p className="mt-1 text-xs sm:text-sm text-gray-500">
+                  Explore definitions related to this subtopic.
+                </p>
               </div>
 
-              <div className="divide-y divide-gray-100">
+              <div className="space-y-6">
                 {fetchedDefinitions.map((definition, index) => {
                   const definitionSlug =
                     definition.slug || createSlug(definition.name);
+                  const definitionUrl = `/${examSlug}/${subjectSlugValue}/${unitSlugValue}/${chapterSlugValue}/${topicSlugValue}/${subTopicSlugValue}/${definitionSlug}`;
+                  const definitionContent = definitionDetailsArray[index]?.content || "";
+
                   return (
-                    <a
+                    <DefinitionPreviewClient
                       key={definition._id}
-                      href={`/${examSlug}/${subjectSlugValue}/${unitSlugValue}/${chapterSlugValue}/${topicSlugValue}/${subTopicSlugValue}/${definitionSlug}`}
-                      className="block px-4 sm:px-6 py-4 hover:bg-gray-50 transition-colors"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1 min-w-0">
-                          <h3 className="text-sm sm:text-base font-medium text-gray-900 hover:text-indigo-600 transition-colors">
-                            {definition.name}
-                          </h3>
-                          {definition.orderNumber && (
-                            <p className="text-xs text-gray-500 mt-1">
-                              Order: {definition.orderNumber}
-                            </p>
-                          )}
-                        </div>
-                        <div className="ml-4 flex-shrink-0">
-                          <span className="text-xs text-gray-400">→</span>
-                        </div>
-                      </div>
-                    </a>
+                      definition={definition}
+                      definitionUrl={definitionUrl}
+                      definitionContent={definitionContent}
+                    />
                   );
                 })}
               </div>

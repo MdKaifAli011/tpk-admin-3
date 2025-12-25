@@ -28,6 +28,7 @@ const SubTopicsManagement = () => {
   const [chapters, setChapters] = useState([]);
   const [filterChapters, setFilterChapters] = useState([]); // Separate chapters for filter section
   const [topics, setTopics] = useState([]);
+  const [filterTopics, setFilterTopics] = useState([]); // Separate topics for filter section
   const [formData, setFormData] = useState({
     name: "",
     examId: "",
@@ -386,21 +387,53 @@ const SubTopicsManagement = () => {
     );
   }, [filterChapters, filterUnit]);
 
+  // Fetch topics for filter section
+  const fetchTopicsForFilter = useCallback(async (chapterId) => {
+    if (!chapterId) {
+      setFilterTopics([]);
+      return;
+    }
+    try {
+      const response = await api.get(
+        `/topic?chapterId=${chapterId}&status=all&limit=1000`
+      );
+      if (response.data.success) {
+        const topicsData = response.data.data || [];
+        // Sort by orderNumber in ascending order
+        const sorted = topicsData.sort((a, b) => {
+          const ao = a.orderNumber || 0;
+          const bo = b.orderNumber || 0;
+          return ao - bo;
+        });
+        setFilterTopics(sorted);
+      } else {
+        console.error("Failed to fetch filter topics:", response.data.message);
+        setFilterTopics([]);
+      }
+    } catch (error) {
+      console.error("Error fetching filter topics:", error);
+      setFilterTopics([]);
+    }
+  }, []);
+
+  // Fetch topics for filter section when filterChapter changes
+  useEffect(() => {
+    if (filterChapter) {
+      fetchTopicsForFilter(filterChapter);
+    } else {
+      setFilterTopics([]);
+    }
+  }, [filterChapter, fetchTopicsForFilter]);
+
   // Filter topics based on selected chapter for filters
   const filteredFilterTopics = useMemo(() => {
     if (!filterChapter) return [];
-    const filtered = topics.filter(
+    return filterTopics.filter(
       (topic) =>
         topic.chapterId?._id === filterChapter ||
         topic.chapterId === filterChapter
     );
-    // Sort by orderNumber in ascending order
-    return filtered.sort((a, b) => {
-      const ao = a.orderNumber || 0;
-      const bo = b.orderNumber || 0;
-      return ao - bo;
-    });
-  }, [topics, filterChapter]);
+  }, [filterTopics, filterChapter]);
 
   // Filter subTopics based on filters
   const filteredSubTopics = useMemo(() => {
@@ -471,6 +504,7 @@ const SubTopicsManagement = () => {
     setFilterUnit("");
     setFilterChapter("");
     setFilterTopic("");
+    setFilterTopics([]);
   };
 
   const handleFormChange = (e) => {
@@ -1590,6 +1624,7 @@ const SubTopicsManagement = () => {
                       setFilterUnit("");
                       setFilterChapter("");
                       setFilterTopic("");
+                      setFilterTopics([]);
                     }}
                     className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm bg-white"
                   >
@@ -1614,6 +1649,7 @@ const SubTopicsManagement = () => {
                       setFilterUnit("");
                       setFilterChapter("");
                       setFilterTopic("");
+                      setFilterTopics([]);
                     }}
                     disabled={!filterExam}
                     className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm bg-white disabled:bg-gray-100 disabled:text-gray-400"
@@ -1640,6 +1676,7 @@ const SubTopicsManagement = () => {
                       setFilterUnit(e.target.value);
                       setFilterChapter("");
                       setFilterTopic("");
+                      setFilterTopics([]);
                     }}
                     disabled={!filterSubject}
                     className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm bg-white disabled:bg-gray-100 disabled:text-gray-400"
@@ -1665,6 +1702,9 @@ const SubTopicsManagement = () => {
                     onChange={(e) => {
                       setFilterChapter(e.target.value);
                       setFilterTopic("");
+                      if (!e.target.value) {
+                        setFilterTopics([]);
+                      }
                     }}
                     disabled={!filterUnit}
                     className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm bg-white disabled:bg-gray-100 disabled:text-gray-400"
@@ -1720,6 +1760,7 @@ const SubTopicsManagement = () => {
                           setFilterUnit("");
                           setFilterChapter("");
                           setFilterTopic("");
+                          setFilterTopics([]);
                         }}
                         className="hover:bg-green-200 rounded-full p-0.5 transition-colors"
                       >
@@ -1738,6 +1779,7 @@ const SubTopicsManagement = () => {
                           setFilterUnit("");
                           setFilterChapter("");
                           setFilterTopic("");
+                          setFilterTopics([]);
                         }}
                         className="hover:bg-purple-200 rounded-full p-0.5 transition-colors"
                       >
@@ -1754,6 +1796,7 @@ const SubTopicsManagement = () => {
                           setFilterUnit("");
                           setFilterChapter("");
                           setFilterTopic("");
+                          setFilterTopics([]);
                         }}
                         className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"
                       >
@@ -1770,6 +1813,7 @@ const SubTopicsManagement = () => {
                         onClick={() => {
                           setFilterChapter("");
                           setFilterTopic("");
+                          setFilterTopics([]);
                         }}
                         className="hover:bg-indigo-200 rounded-full p-0.5 transition-colors"
                       >
@@ -1780,7 +1824,7 @@ const SubTopicsManagement = () => {
                   {filterTopic && (
                     <span className="inline-flex items-center gap-1 px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-semibold">
                       Topic:{" "}
-                      {topics.find((t) => t._id === filterTopic)?.name || "N/A"}
+                      {filterTopics.find((t) => t._id === filterTopic)?.name || "N/A"}
                       <button
                         onClick={() => setFilterTopic("")}
                         className="hover:bg-orange-200 rounded-full p-0.5 transition-colors"

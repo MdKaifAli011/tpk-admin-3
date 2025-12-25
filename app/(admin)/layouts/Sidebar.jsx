@@ -69,6 +69,16 @@ const ALL_MENU_ITEMS = [
       { name: "Blog Comments", href: "/admin/blog-comment" },
     ],
   },
+  {
+    name: "Download Management",
+    href: "/admin/download",
+    icon: FaRegFolderOpen,
+    children: [
+      { name: "Folders", href: "/admin/download" },
+      { name: "Subfolders", href: "/admin/download/subfolder" },
+      { name: "Files", href: "/admin/download/file" },
+    ],
+  },
 ];
 
 const Sidebar = memo(({ isOpen, onClose }) => {

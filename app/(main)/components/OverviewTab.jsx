@@ -11,6 +11,8 @@ import { truncateHtmlContent, hasMoreContent } from "../lib/utils/contentUtils";
 
 // Lazy load DownloadButton - only needed for unit pages
 const DownloadButton = lazy(() => import("./DownloadButton"));
+// Lazy load DefinitionPreviewClient - only needed for subtopic pages
+const DefinitionPreviewClient = lazy(() => import("./DefinitionPreviewClient"));
 
 // SubTopic Preview Component with Fixed 300px Height
 const SubTopicPreview = ({
@@ -60,11 +62,11 @@ const SubTopicPreview = ({
       )}
       {subTopic.content && (
         <div className="space-y-0">
-          {/* Premium Content Container with Fixed 300px Height */}
+          {/* Premium Content Container with Max 300px Height */}
           <div className="subtopic-container bg-gradient-to-br from-indigo-50/40 via-white to-purple-50/30 rounded-xl border border-indigo-100/60 shadow-[0_2px_12px_rgba(100,70,200,0.08)] overflow-hidden transition-all duration-300 hover:shadow-[0_4px_16px_rgba(100,70,200,0.12)] hover:border-indigo-200/80 relative">
-            {/* Content Wrapper - Fixed 300px Height */}
-            <div className="relative h-[300px] overflow-hidden">
-              <div className="h-full overflow-y-auto p-5 sm:p-6 md:p-7 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+            {/* Content Wrapper - Max 300px Height, Auto when content is less */}
+            <div className="relative max-h-[300px] min-h-0 overflow-hidden">
+              <div className="max-h-[300px] min-h-0 overflow-y-auto p-5 sm:p-6 md:p-7 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                 <div className="prose prose-sm sm:prose max-w-none prose-headings:text-gray-900 prose-headings:font-semibold prose-p:text-gray-700 prose-p:leading-relaxed prose-a:text-indigo-600 prose-a:no-underline hover:prose-a:underline prose-strong:text-gray-900 prose-code:text-indigo-700 prose-pre:bg-gray-50 prose-pre:border prose-pre:border-gray-200 prose-pre:rounded-lg prose-ul:text-gray-700 prose-ol:text-gray-700 prose-li:text-gray-700">
                   <RichContent
                     key={`subtopic-preview-${
@@ -615,24 +617,21 @@ const OverviewTab = ({
                     : null;
 
                 return (
-                  <div key={definition._id || index} className="space-y-2">
-                    {definitionUrl ? (
-                      <Link href={definitionUrl} className="group/link">
-                        <h3 className="text-lg sm:text-xl font-bold text-indigo-700 group-hover/link:text-indigo-500 group-hover/link:underline transition-all duration-200 cursor-pointer mb-2 inline-block">
-                          {definition.name}
-                        </h3>
-                      </Link>
-                    ) : (
-                      <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">
-                        {definition.name}
-                      </h3>
-                    )}
-                    {definition.content && (
-                      <div className="prose prose-sm sm:prose max-w-none prose-headings:text-gray-900 prose-p:text-gray-700 prose-p:leading-normal">
-                        <RichContent html={definition.content} />
+                  <Suspense
+                    key={definition._id || index}
+                    fallback={
+                      <div className="space-y-3">
+                        <div className="h-6 bg-gray-200 animate-pulse rounded w-1/3"></div>
+                        <div className="h-[300px] bg-gray-100 animate-pulse rounded-xl"></div>
                       </div>
-                    )}
-                  </div>
+                    }
+                  >
+                    <DefinitionPreviewClient
+                      definition={definition}
+                      definitionUrl={definitionUrl}
+                      definitionContent={definition.content || ""}
+                    />
+                  </Suspense>
                 );
               })}
             </div>

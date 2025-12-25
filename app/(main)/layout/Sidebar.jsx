@@ -16,6 +16,7 @@ import {
   createSlug,
   findByIdOrSlug,
   fetchBlogCategories,
+  fetchDownloadFolders,
 } from "../lib/api";
 import { logger } from "@/utils/logger";
 import ExamDropdown from "../components/ExamDropdown";
@@ -55,6 +56,8 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [blogCategories, setBlogCategories] = useState([]);
   const [isBlogMenuOpen, setIsBlogMenuOpen] = useState(false);
+  const [downloadFolders, setDownloadFolders] = useState([]);
+  const [isDownloadMenuOpen, setIsDownloadMenuOpen] = useState(false);
 
   // internal caches & dedupe
   const hasLoadedExamsRef = useRef(false);
@@ -360,6 +363,21 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
       }
     };
     loadCategories();
+
+    // Load download folders for this exam
+    const loadDownloadFolders = async () => {
+      try {
+        const folders = await fetchDownloadFolders(activeExamId, {
+          status: "active",
+          limit: 100,
+        });
+        setDownloadFolders(folders || []);
+      } catch (err) {
+        logger.error("Error loading download folders:", err);
+        setDownloadFolders([]);
+      }
+    };
+    loadDownloadFolders();
   }, [activeExamId, loadTree]);
 
   // Auto-expand blog menu if we're on a blog or category page
@@ -367,6 +385,14 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
     const isBlogPage = pathname.includes("/blog");
     if (isBlogPage) {
       setIsBlogMenuOpen(true);
+    }
+  }, [pathname]);
+
+  // Auto-expand download menu if we're on a download page
+  useEffect(() => {
+    const isDownloadPage = pathname.includes("/download");
+    if (isDownloadPage) {
+      setIsDownloadMenuOpen(true);
     }
   }, [pathname]);
 
@@ -682,36 +708,97 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
                   </li>
                 )}
 
-                {/* Download and Course */}
-                {[
-                  { name: "Download", path: "download" },
-                  { name: "Course", path: "course" },
-                ].map((item) =>
-                  activeExamSlug ? (
-                    <li key={item.name}>
-                      <Link
-                        href={`/${activeExamSlug}/${item.path}`}
-                        className={`block px-3 py-2 text-xs sm:text-sm font-medium rounded-lg cursor-pointer transition-all duration-200 ${
-                          pathname === `/${activeExamSlug}/${item.path}` ||
-                          pathname.startsWith(
-                            `/${activeExamSlug}/${item.path}/`
-                          )
+                {/* Download with expandable folders */}
+                {activeExamSlug ? (
+                  <li>
+                    <div>
+                      <button
+                        onClick={() => setIsDownloadMenuOpen(!isDownloadMenuOpen)}
+                        className={`w-full flex items-center justify-between px-3 py-2 text-xs sm:text-sm font-medium rounded-lg cursor-pointer transition-all duration-200 ${
+                          pathname.includes("/download")
                             ? "text-indigo-600 bg-indigo-50"
                             : "text-gray-600 hover:text-indigo-600 hover:bg-gray-50"
                         }`}
-                        onClick={closeOnMobile}
                       >
-                        {item.name}
-                      </Link>
-                    </li>
-                  ) : (
-                    <li
-                      key={item.name}
-                      className="px-3 py-2 text-xs sm:text-sm font-medium text-gray-400"
+                        <span>Download</span>
+                        {isDownloadMenuOpen ? (
+                          <FaChevronDown className="text-[10px] text-gray-400" />
+                        ) : (
+                          <FaChevronRight className="text-[10px] text-gray-400" />
+                        )}
+                      </button>
+                      {isDownloadMenuOpen && (
+                        <ul className="ml-3 mt-1 space-y-0.5 border-l border-gray-200 pl-2">
+                          <li>
+                            <Link
+                              href={`/${activeExamSlug}/download`}
+                              className={`block px-2 py-1.5 text-[11px] sm:text-xs rounded-md transition-all duration-200 ${
+                                pathname === `/${activeExamSlug}/download` ||
+                                pathname === `/${activeExamSlug}/download/`
+                                  ? "text-indigo-600 bg-indigo-50 font-medium"
+                                  : "text-gray-600 hover:text-indigo-600 hover:bg-gray-50"
+                              }`}
+                              onClick={closeOnMobile}
+                            >
+                              All Folders
+                            </Link>
+                          </li>
+                          {downloadFolders.length > 0 ? (
+                            downloadFolders.map((folder) => {
+                              const folderSlug = folder.slug || createSlug(folder.name);
+                              const folderPath = `/${activeExamSlug}/download/${folderSlug}`;
+                              const isActive = pathname === folderPath || pathname.startsWith(`${folderPath}/`);
+                              return (
+                                <li key={folder._id}>
+                                  <Link
+                                    href={folderPath}
+                                    className={`block px-2 py-1.5 text-[11px] sm:text-xs rounded-md transition-all duration-200 ${
+                                      isActive
+                                        ? "text-indigo-600 bg-indigo-50 font-medium"
+                                        : "text-gray-600 hover:text-indigo-600 hover:bg-gray-50"
+                                    }`}
+                                    onClick={closeOnMobile}
+                                  >
+                                    {folder.name}
+                                  </Link>
+                                </li>
+                              );
+                            })
+                          ) : (
+                            <li className="px-2 py-1.5 text-[11px] sm:text-xs text-gray-400 italic">
+                              No folders
+                            </li>
+                          )}
+                        </ul>
+                      )}
+                    </div>
+                  </li>
+                ) : (
+                  <li className="px-3 py-2 text-xs sm:text-sm font-medium text-gray-400">
+                    Download
+                  </li>
+                )}
+
+                {/* Course */}
+                {activeExamSlug ? (
+                  <li>
+                    <Link
+                      href={`/${activeExamSlug}/course`}
+                      className={`block px-3 py-2 text-xs sm:text-sm font-medium rounded-lg cursor-pointer transition-all duration-200 ${
+                        pathname === `/${activeExamSlug}/course` ||
+                        pathname.startsWith(`/${activeExamSlug}/course/`)
+                          ? "text-indigo-600 bg-indigo-50"
+                          : "text-gray-600 hover:text-indigo-600 hover:bg-gray-50"
+                      }`}
+                      onClick={closeOnMobile}
                     >
-                      {item.name}
-                    </li>
-                  )
+                      Course
+                    </Link>
+                  </li>
+                ) : (
+                  <li className="px-3 py-2 text-xs sm:text-sm font-medium text-gray-400">
+                    Course
+                  </li>
                 )}
               </ul>
             </div>
