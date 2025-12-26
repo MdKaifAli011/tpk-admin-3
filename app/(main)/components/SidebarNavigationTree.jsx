@@ -48,6 +48,7 @@ const SidebarNavigationTree = ({
                 <TextEllipsis
                   maxW="max-w-full"
                   fontSize="text-[15px]"
+            
                 >
                   {subject.name}
                 </TextEllipsis>
@@ -59,7 +60,7 @@ const SidebarNavigationTree = ({
                     e.stopPropagation();
                     toggleSubject(subject.id);
                   }}
-                  className="cursor-pointer hover:opacity-70 transition-opacity"
+                  className="cursor-pointer hover:opacity-70  w-20 flex justify-end transition-opacity"
                 >
                   <FaChevronDown
                     className={`
@@ -118,7 +119,7 @@ const SidebarNavigationTree = ({
                               e.stopPropagation();
                               toggleUnit(unit.id, subject.id);
                             }}
-                            className="cursor-pointer hover:opacity-70 transition-opacity"
+                            className="cursor-pointer hover:opacity-70 w-20 flex justify-end transition-opacity"
                           >
                             <FaChevronDown
                               className={`
@@ -187,7 +188,7 @@ const SidebarNavigationTree = ({
                                           unit.id
                                         );
                                       }}
-                                      className="cursor-pointer hover:opacity-70 transition-opacity"
+                                      className="cursor-pointer hover:opacity-70 w-20 flex justify-end transition-opacity"
                                     >
                                       <FaChevronDown
                                         className={`

@@ -60,7 +60,7 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
   const [isDownloadMenuOpen, setIsDownloadMenuOpen] = useState(false);
 
   const userToggledBlogRef = useRef(false);
-const userToggledDownloadRef = useRef(false);
+  const userToggledDownloadRef = useRef(false);
 
   // internal caches & dedupe
   const hasLoadedExamsRef = useRef(false);
@@ -385,9 +385,9 @@ const userToggledDownloadRef = useRef(false);
 
   // Auto-expand blog menu if we're on a blog or category page
   useEffect(() => {
-  if (userToggledBlogRef.current) return;
-  setIsBlogMenuOpen(pathname.includes("/blog"));
-}, [pathname]);
+    if (userToggledBlogRef.current) return;
+    setIsBlogMenuOpen(pathname.includes("/blog"));
+  }, [pathname]);
 
   // Auto-expand download menu if we're on a download page
   useEffect(() => {
@@ -552,8 +552,6 @@ const userToggledDownloadRef = useRef(false);
       )}
 
       {/* Sidebar - Premium Compact 300px (280px on mobile) */}
-      {/* Positioned flush with navbar bottom - no gap */}
-      {/* Always rendered but hidden when not needed to prevent flickering */}
       <aside
         className={`fixed left-0 z-[40] w-[280px] sm:w-[300px] min-w-[280px] sm:min-w-[300px] max-w-[280px] sm:max-w-[300px] bg-white/98 backdrop-blur-md border-r border-gray-200/80 transform transition-transform duration-300 ease-out ${
           sidebarOpen && isOpen
@@ -643,17 +641,17 @@ const userToggledDownloadRef = useRef(false);
                   <li>
                     <div>
                       <button
-  onClick={() => {
-    userToggledBlogRef.current = true;
-    setIsBlogMenuOpen((prev) => !prev);
-    setIsDownloadMenuOpen(false); // UX: close other menu
-  }}
-  className={`w-full flex items-center justify-between px-3 py-2 text-xs sm:text-sm font-medium rounded-lg cursor-pointer transition-all duration-200 ${
-    pathname.includes("/blog")
-      ? "text-indigo-600 bg-indigo-50"
-      : "text-gray-600 hover:text-indigo-600 hover:bg-gray-50"
-  }`}
->
+                        onClick={() => {
+                          userToggledBlogRef.current = true;
+                          setIsBlogMenuOpen((prev) => !prev);
+                          setIsDownloadMenuOpen(false); // UX: close other menu
+                        }}
+                        className={`w-full flex items-center justify-between px-3 py-2 font-semibold rounded-lg cursor-pointer transition-all duration-200 ${
+                          pathname.includes("/blog")
+                            ? "bg-indigo-100/60 shadow-sm text-indigo-900 "
+                            : "text-black hover:text-indigo-600 hover:bg-gray-50"
+                        }`}
+                      >
                         <span>Blog</span>
                         {isBlogMenuOpen ? (
                           <FaChevronDown className="text-[10px] text-gray-400" />
@@ -666,11 +664,11 @@ const userToggledDownloadRef = useRef(false);
                           <li>
                             <Link
                               href={`/${activeExamSlug}/blog`}
-                              className={`block px-2 py-1.5 text-sm sm:text-md rounded-md transition-all duration-200 ${
+                              className={`block px-2 py-1.5 font-normal text-[14px] rounded-md transition-all duration-200 ${
                                 pathname === `/${activeExamSlug}/blog` ||
                                 pathname === `/${activeExamSlug}/blog/`
-                                  ? "text-indigo-600 bg-indigo-50 font-medium"
-                                  : "text-gray-600 hover:text-indigo-600 hover:bg-gray-50"
+                                  ? "text-indigo-600 bg-indigo-50 font-normal text-[14px]"
+                                  : "text-black hover:text-indigo-600 hover:bg-gray-50"
                               }`}
                               onClick={closeOnMobile}
                             >
@@ -686,10 +684,10 @@ const userToggledDownloadRef = useRef(false);
                                 <li key={category._id || category.id}>
                                   <Link
                                     href={categoryPath}
-                                    className={`block px-2 py-1.5 text-sm sm:text-md rounded-md transition-all duration-200 ${
+                                    className={`block px-2 py-1.5 rounded-md font-light text-[14px] transition-all duration-200 ${
                                       isActive
-                                        ? "text-indigo-600 bg-indigo-50 font-medium"
-                                        : "text-gray-600 hover:text-indigo-600 hover:bg-gray-50"
+                                        ? "bg-indigo-100/60 shadow-sm text-indigo-900 "
+                                        : "text-black hover:text-indigo-600 hover:bg-gray-50"
                                     }`}
                                     onClick={closeOnMobile}
                                   >
@@ -708,7 +706,7 @@ const userToggledDownloadRef = useRef(false);
                     </div>
                   </li>
                 ) : (
-                  <li className="px-3 py-2 text-sm sm:text-md font-medium text-gray-400">
+                  <li className="px-3 py-2 text-sm sm:text-md font-medium text-[14px] text-gray-400">
                     Blog
                   </li>
                 )}
@@ -718,17 +716,17 @@ const userToggledDownloadRef = useRef(false);
                   <li>
                     <div>
                       <button
-  onClick={() => {
-    userToggledDownloadRef.current = true;
-    setIsDownloadMenuOpen((prev) => !prev);
-    setIsBlogMenuOpen(false);
-  }}
-  className={`w-full flex items-center justify-between px-3 py-2 text-sm sm:text-md font-medium rounded-lg cursor-pointer transition-all duration-200 ${
-    pathname.includes("/download")
-      ? "text-indigo-600 bg-indigo-50"
-      : "text-gray-600 hover:text-indigo-600 hover:bg-gray-50"
-  }`}
->
+                        onClick={() => {
+                          userToggledDownloadRef.current = true;
+                          setIsDownloadMenuOpen((prev) => !prev);
+                          setIsBlogMenuOpen(false);
+                        }}
+                        className={`w-full flex items-center justify-between px-3 py-2 font-medium text-[14px] rounded-lg cursor-pointer transition-all duration-200 ${
+                          pathname.includes("/download")
+                            ? "text-indigo-600 bg-indigo-50"
+                            : "text-black hover:text-indigo-600 hover:bg-gray-50"
+                        }`}
+                      >
                         <span>Download</span>
                         {isDownloadMenuOpen ? (
                           <FaChevronDown className="text-[10px] text-gray-400" />
@@ -741,10 +739,10 @@ const userToggledDownloadRef = useRef(false);
                           <li>
                             <Link
                               href={`/${activeExamSlug}/download`}
-                              className={`block px-2 py-1.5 text-md sm:text-sm rounded-md transition-all duration-200 ${
+                              className={`block px-2 py-1.5 font-normal text-[14px] rounded-md transition-all duration-200 ${
                                 pathname === `/${activeExamSlug}/download` ||
                                 pathname === `/${activeExamSlug}/download/`
-                                  ? "text-indigo-600 bg-indigo-50 font-medium"
+                                  ? "text-indigo-600 bg-indigo-50 font-normal text-[14px]"
                                   : "text-gray-600 hover:text-indigo-600 hover:bg-gray-50"
                               }`}
                               onClick={closeOnMobile}
@@ -754,17 +752,20 @@ const userToggledDownloadRef = useRef(false);
                           </li>
                           {downloadFolders.length > 0 ? (
                             downloadFolders.map((folder) => {
-                              const folderSlug = folder.slug || createSlug(folder.name);
+                              const folderSlug =
+                                folder.slug || createSlug(folder.name);
                               const folderPath = `/${activeExamSlug}/download/${folderSlug}`;
-                              const isActive = pathname === folderPath || pathname.startsWith(`${folderPath}/`);
+                              const isActive =
+                                pathname === folderPath ||
+                                pathname.startsWith(`${folderPath}/`);
                               return (
                                 <li key={folder._id}>
                                   <Link
                                     href={folderPath}
-                                    className={`block px-2 py-1.5 text-sm sm:text-sm rounded-md transition-all duration-200 ${
+                                    className={`block px-2 py-1.5 font-normal text-[14px] rounded-md transition-all duration-200 ${
                                       isActive
-                                        ? "text-indigo-600 bg-indigo-50 font-medium"
-                                        : "text-gray-600 hover:text-indigo-600 hover:bg-gray-50"
+                                        ? "text-indigo-600 font-normal text-[14px] bg-indigo-50 "
+                                        : "text-gray-600 font-normal text-[14px] hover:text-indigo-600 hover:bg-gray-50"
                                     }`}
                                     onClick={closeOnMobile}
                                   >
@@ -793,11 +794,11 @@ const userToggledDownloadRef = useRef(false);
                   <li>
                     <Link
                       href={`/${activeExamSlug}/course`}
-                      className={`block px-3 py-2 text-xs sm:text-sm font-medium rounded-lg cursor-pointer transition-all duration-200 ${
+                      className={`block px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg cursor-pointer transition-all duration-200 ${
                         pathname === `/${activeExamSlug}/course` ||
                         pathname.startsWith(`/${activeExamSlug}/course/`)
                           ? "text-indigo-600 bg-indigo-50"
-                          : "text-gray-600 hover:text-indigo-600 hover:bg-gray-50"
+                          : "text-black hover:text-indigo-600 hover:bg-gray-50"
                       }`}
                       onClick={closeOnMobile}
                     >
