@@ -5,8 +5,11 @@ import { ToastContainer, useToast } from "../ui/Toast";
 import api from "@/lib/api";
 import { LoadingSpinner } from "../ui/SkeletonLoader";
 import FormBuilder from "./FormBuilder";
+import { PermissionButton } from "../common/PermissionButton";
+import { usePermissions, getPermissionMessage } from "../../hooks/usePermissions";
 
 const FormManagement = () => {
+  const { canCreate } = usePermissions();
   const [forms, setForms] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -91,13 +94,14 @@ const FormManagement = () => {
               Create and manage dynamic forms for your application.
             </p>
           </div>
-          <button
+          <PermissionButton
+            action="create"
             onClick={handleCreateNew}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
           >
             <FaPlus className="text-sm" />
             Create New Form
-          </button>
+          </PermissionButton>
         </div>
       </div>
 
@@ -211,20 +215,22 @@ const FormManagement = () => {
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <button
+                          <PermissionButton
+                            action="edit"
                             onClick={() => handleEdit(form)}
                             className="p-1.5 bg-green-50 text-green-600 rounded-lg transition-colors hover:bg-green-100"
                             title="Edit Form"
                           >
                             <FaEdit className="w-3.5 h-3.5" />
-                          </button>
-                          <button
+                          </PermissionButton>
+                          <PermissionButton
+                            action="delete"
                             onClick={() => handleDelete(form)}
                             className="p-1.5 bg-red-50 text-red-600 rounded-lg transition-colors hover:bg-red-100"
                             title="Delete Form"
                           >
                             <FaTrash className="w-3.5 h-3.5" />
-                          </button>
+                          </PermissionButton>
                         </div>
                       </td>
                     </tr>

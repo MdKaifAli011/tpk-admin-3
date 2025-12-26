@@ -11,6 +11,8 @@ import {
 } from "react-icons/fa";
 import { ToastContainer, useToast } from "../ui/Toast";
 import api from "@/lib/api";
+import { PermissionButton } from "../common/PermissionButton";
+import { usePermissions, getPermissionMessage } from "../../hooks/usePermissions";
 
 const StatusBadge = ({ status, onClick }) => {
   const getStatusStyles = (s) => {
@@ -68,26 +70,49 @@ const SubfolderList = ({ subfolders, onEdit, onDelete, onToggleStatus }) => {
               {subfolder.parentFolderId?.name || "Unknown"} {subfolder.description && `• ${subfolder.description}`}
             </div>
           </div>
-          <StatusBadge
-            status={subfolder.status}
-            onClick={() => onToggleStatus(subfolder)}
-          />
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => onEdit(subfolder)}
-              className="p-1.5 bg-blue-50 text-blue-600 rounded-lg transition-colors hover:bg-blue-100"
-              title="Edit Subfolder"
-            >
-              <FaEdit className="text-sm" />
-            </button>
-            <button
-              onClick={() => onDelete(subfolder)}
-              className="p-1.5 bg-red-50 text-red-600 rounded-lg transition-colors hover:bg-red-100"
-              title="Delete Subfolder"
-            >
-              <FaTrash className="text-sm" />
-            </button>
-          </div>
+          {(() => {
+            const getStatusStylesLocal = (s) => {
+              switch (s) {
+                case "active":
+                  return "bg-green-100 text-green-800";
+                case "inactive":
+                  return "bg-red-100 text-red-800";
+                default:
+                  return "bg-gray-100 text-gray-800";
+              }
+            };
+
+            return (
+              <>
+                <PermissionButton
+                  action="toggle"
+                  onClick={() => onToggleStatus(subfolder)}
+                  className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusStylesLocal(subfolder.status)}`}
+                  title={getPermissionMessage("reorder", role)}
+                >
+                  {(subfolder.status || "active").charAt(0).toUpperCase() + (subfolder.status || "active").slice(1)}
+                </PermissionButton>
+                <div className="flex items-center gap-1">
+                  <PermissionButton
+                    action="edit"
+                    onClick={() => onEdit(subfolder)}
+                    className="p-1.5 bg-blue-50 text-blue-600 rounded-lg transition-colors hover:bg-blue-100"
+                    title={getPermissionMessage("edit", role)}
+                  >
+                    <FaEdit className="text-sm" />
+                  </PermissionButton>
+                  <PermissionButton
+                    action="delete"
+                    onClick={() => onDelete(subfolder)}
+                    className="p-1.5 bg-red-50 text-red-600 rounded-lg transition-colors hover:bg-red-100"
+                    title={getPermissionMessage("delete", role)}
+                  >
+                    <FaTrash className="text-sm" />
+                  </PermissionButton>
+                </div>
+              </>
+            );
+          })()}
         </div>
       ))}
     </div>
@@ -114,6 +139,7 @@ const DownloadSubfolderManagement = () => {
 
   const [formError, setFormError] = useState(null);
   const { toasts, removeToast, success, error: showError } = useToast();
+  const { role } = usePermissions();
   const isFetchingRef = useRef(false);
 
   const fetchData = async () => {
@@ -346,7 +372,8 @@ const DownloadSubfolderManagement = () => {
                 Create and manage subfolders inside your root folders.
               </p>
             </div>
-            <button
+            <PermissionButton
+              action="create"
               onClick={() => {
                 if (!selectedFolderId) {
                   showError("Please select a folder first");
@@ -364,9 +391,10 @@ const DownloadSubfolderManagement = () => {
               }}
               className="px-2 py-1 bg-[#0056FF] hover:bg-[#0044CC] text-white rounded-lg text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={!selectedFolderId}
+              title={getPermissionMessage("create", role)}
             >
               Add New Subfolder
-            </button>
+            </PermissionButton>
           </div>
         </div>
 

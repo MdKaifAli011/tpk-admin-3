@@ -17,6 +17,8 @@ import {
   FaKey,
 } from "react-icons/fa";
 import api from "@/lib/api";
+import { usePermissions, getPermissionMessage } from "../../hooks/usePermissions";
+import { PermissionButton } from "../../components/common/PermissionButton";
 
 const UserRolePage = () => {
   const [users, setUsers] = useState([]);
@@ -267,6 +269,8 @@ const UserRolePage = () => {
     const matrixItem = permissionMatrix.find((m) => m.action === action);
     return matrixItem?.roles.includes(role) || false;
   };
+
+  const { canManageUsers, role: currentRole } = usePermissions();
 
   return (
     <div className="space-y-6">
@@ -537,10 +541,12 @@ const UserRolePage = () => {
                   >
                     Cancel
                   </button>
-                  <button
+                  <PermissionButton
+                    action="delete"
                     onClick={handleDeleteUser}
-                    disabled={deleting}
+                    disabled={!canManageUsers || deleting}
                     className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    title={getPermissionMessage("delete", currentRole)}
                   >
                     {deleting ? (
                       <>
@@ -553,7 +559,7 @@ const UserRolePage = () => {
                         <span>Delete User</span>
                       </>
                     )}
-                  </button>
+                  </PermissionButton>
                 </div>
               </div>
             </div>
@@ -777,13 +783,16 @@ const UserRolePage = () => {
                   Manage user roles and permissions
                 </p>
               </div>
-              <button
+              <PermissionButton
+                action="create"
                 onClick={() => setShowCreateForm(!showCreateForm)}
                 className="px-4 py-2 bg-[#0056FF] text-white rounded-lg text-sm font-medium hover:bg-[#0044CC] transition-colors shadow-sm flex items-center gap-2"
+                title={getPermissionMessage("create", currentRole)}
+                disabled={!canManageUsers}
               >
                 <FaUserPlus className="text-sm" />
                 {showCreateForm ? "Cancel" : "Create User"}
-              </button>
+              </PermissionButton>
             </div>
           </div>
 
@@ -876,7 +885,8 @@ const UserRolePage = () => {
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                           {isEditing ? (
                             <div className="flex items-center justify-end gap-2">
-                              <button
+                              <PermissionButton
+                                action="edit"
                                 onClick={() => {
                                   handleRoleUpdate(
                                     user._id,
@@ -884,10 +894,11 @@ const UserRolePage = () => {
                                   );
                                 }}
                                 className="p-2 bg-green-50 text-green-600 rounded-lg transition-colors hover:bg-green-100"
-                                title="Save"
+                                title={getPermissionMessage("edit", currentRole)}
+                                disabled={!canManageUsers}
                               >
                                 <FaCheck className="text-sm" />
-                              </button>
+                              </PermissionButton>
                               <button
                                 onClick={() => {
                                   setEditingUser(null);
@@ -901,26 +912,30 @@ const UserRolePage = () => {
                             </div>
                           ) : (
                             <div className="flex items-center justify-end gap-2">
-                              <button
+                              <PermissionButton
+                                action="edit"
                                 onClick={() => {
                                   setEditingUser(user._id);
                                   setSelectedRole(user.role);
                                 }}
                                 className="p-2 bg-blue-50 text-blue-600 rounded-lg transition-colors hover:bg-blue-100"
-                                title="Edit Role"
+                                title={getPermissionMessage("edit", currentRole)}
+                                disabled={!canManageUsers}
                               >
                                 <FaEdit className="text-sm" />
-                              </button>
-                              <button
+                              </PermissionButton>
+                              <PermissionButton
+                                action="delete"
                                 onClick={() => {
                                   setUserToDelete(user);
                                   setShowDeleteConfirm(true);
                                 }}
                                 className="p-2 bg-red-50 text-red-600 rounded-lg transition-colors hover:bg-red-100"
-                                title="Delete User"
+                                title={getPermissionMessage("delete", currentRole)}
+                                disabled={!canManageUsers}
                               >
                                 <FaTrash className="text-sm" />
-                              </button>
+                              </PermissionButton>
                             </div>
                           )}
                         </td>

@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { STATUS } from "@/constants";
+import { STATUS } from "../constants/index.js";
 
 const practiceSubCategorySchema = new mongoose.Schema(
   {

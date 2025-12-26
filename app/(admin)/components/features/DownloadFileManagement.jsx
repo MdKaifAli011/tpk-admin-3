@@ -14,6 +14,8 @@ import {
   FaDownload,
 } from "react-icons/fa";
 import { ToastContainer, useToast } from "../ui/Toast";
+import { PermissionButton } from "../common/PermissionButton";
+import { usePermissions, getPermissionMessage } from "../../hooks/usePermissions";
 import api from "@/lib/api";
 
 const StatusBadge = ({ status, onClick }) => {
@@ -41,7 +43,8 @@ const StatusBadge = ({ status, onClick }) => {
   );
 };
 
-const FileTable = ({ files, folders, subfolders, onEdit, onDelete, onToggleStatus }) => {
+  const FileTable = ({ files, folders, subfolders, onEdit, onDelete, onToggleStatus }) => {
+    const { role } = usePermissions();
   const getSubfolderName = (subfolderId) => {
     const subfolder = subfolders.find(
       (f) => f._id === subfolderId || f._id === (subfolderId?._id || subfolderId)
@@ -202,20 +205,22 @@ const FileTable = ({ files, folders, subfolders, onEdit, onDelete, onToggleStatu
                             </td>
                             <td className="px-4 py-3 text-right">
                               <div className="flex items-center justify-end gap-1">
-                                <button
+                                <PermissionButton
+                                  action="edit"
                                   onClick={() => onEdit(file)}
                                   className="p-1 bg-blue-50 text-blue-600 rounded-lg transition-colors hover:bg-blue-100"
                                   title="Edit File"
                                 >
                                   <FaEdit className="text-sm" />
-                                </button>
-                                <button
+                                </PermissionButton>
+                                <PermissionButton
+                                  action="delete"
                                   onClick={() => onDelete(file)}
                                   className="p-1 bg-red-50 text-red-600 rounded-lg transition-colors hover:bg-red-100"
                                   title="Delete File"
                                 >
                                   <FaTrash className="text-sm" />
-                                </button>
+                                </PermissionButton>
                               </div>
                             </td>
                           </tr>

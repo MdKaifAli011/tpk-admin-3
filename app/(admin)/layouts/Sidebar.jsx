@@ -42,16 +42,19 @@ const ALL_MENU_ITEMS = [
     name: "Lead Management",
     href: "/admin/lead",
     icon: FaUserTag,
+     adminOnly: true,
   },
   {
     name: "Student Management",
     href: "/admin/student",
     icon: FaUserGraduate,
+     adminOnly: true,
   },
   {
     name: "Form Management",
     href: "/admin/form",
     icon: FaClipboardList,
+     adminOnly: true,
   },
   {
     name: "User Role Management",
@@ -187,8 +190,8 @@ const Sidebar = memo(({ isOpen, onClose }) => {
         <div className="hidden lg:block h-16 border-b border-gray-200" />
 
         {/* Navigation Links */}
-        <nav className="flex-1 px-4 pt-2 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
-          <div className="flex flex-col gap-1">
+        <nav className="flex-1 px-4 pt-2 overflow-y-auto hide-scrollbar">
+        <div className="flex flex-col gap-1">
             {MENU_ITEMS.map(({ name, href, icon: Icon, children }, index) => {
               const active = isActive(href);
               const isExpanded = expandedMenus[name] || false;

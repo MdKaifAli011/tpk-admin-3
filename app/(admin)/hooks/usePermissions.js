@@ -36,7 +36,12 @@ export function usePermissions() {
 
       try {
         const user = JSON.parse(userStr);
-        const role = user.role || "viewer";
+        // Normalize role string to a canonical key
+        const rawRole = user.role || "viewer";
+        const role = String(rawRole)
+          .toLowerCase()
+          .replace(/\s+/g, "_")
+          .replace(/[^a-z0-9_]/g, "");
 
         // Define permissions based on role
         const rolePermissions = {

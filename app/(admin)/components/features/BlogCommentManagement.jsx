@@ -13,6 +13,8 @@ import {
 import { ToastContainer, useToast } from "../ui/Toast";
 import { LoadingSpinner } from "../ui/SkeletonLoader";
 import api from "@/lib/api";
+import { PermissionButton } from "../common/PermissionButton";
+import { usePermissions, getPermissionMessage } from "../../hooks/usePermissions";
 
 const StatusBadge = ({ status }) => {
   const getStatusStyles = (s) => {
@@ -55,6 +57,7 @@ const StatusBadge = ({ status }) => {
 
 const BlogCommentManagement = () => {
   const { toasts, removeToast, success, error: showError } = useToast();
+  const { role } = usePermissions();
   const [comments, setComments] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [filters, setFilters] = useState({
@@ -403,29 +406,32 @@ const BlogCommentManagement = () => {
                       <div className="flex items-start gap-2 flex-shrink-0">
                         {comment.status === "pending" && (
                           <>
-                            <button
+                            <PermissionButton
+                              action="edit"
                               onClick={() => handleStatusChange(comment._id, "approved")}
                               className="p-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors"
-                              title="Approve"
+                              title={getPermissionMessage("edit", role)}
                             >
                               <FaCheckCircle className="w-4 h-4" />
-                            </button>
-                            <button
+                            </PermissionButton>
+                            <PermissionButton
+                              action="edit"
                               onClick={() => handleStatusChange(comment._id, "rejected")}
                               className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
-                              title="Reject"
+                              title={getPermissionMessage("edit", role)}
                             >
                               <FaTimesCircle className="w-4 h-4" />
-                            </button>
+                            </PermissionButton>
                           </>
                         )}
-                        <button
+                        <PermissionButton
+                          action="delete"
                           onClick={() => handleDelete(comment._id)}
                           className="p-2 bg-gray-50 text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
-                          title="Delete"
+                          title={getPermissionMessage("delete", role)}
                         >
                           <FaTrash className="w-4 h-4" />
-                        </button>
+                        </PermissionButton>
                       </div>
                     </div>
                   </div>

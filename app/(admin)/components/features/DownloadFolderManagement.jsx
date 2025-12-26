@@ -14,6 +14,8 @@ import {
 } from "react-icons/fa";
 import { ToastContainer, useToast } from "../ui/Toast";
 import api from "@/lib/api";
+import { PermissionButton } from "../common/PermissionButton";
+import { usePermissions, getPermissionMessage } from "../../hooks/usePermissions";
 
 const StatusBadge = ({ status, onClick }) => {
   const getStatusStyles = (s) => {
@@ -77,20 +79,22 @@ const FolderList = ({ folders, onEdit, onDelete, onToggleStatus }) => {
             onClick={() => onToggleStatus(folder)}
           />
           <div className="flex items-center gap-1">
-            <button
+            <PermissionButton
+              action="edit"
               onClick={() => onEdit(folder)}
               className="p-1.5 bg-blue-50 text-blue-600 rounded-lg transition-colors hover:bg-blue-100"
               title="Edit Folder"
             >
               <FaEdit className="text-sm" />
-            </button>
-            <button
+            </PermissionButton>
+            <PermissionButton
+              action="delete"
               onClick={() => onDelete(folder)}
               className="p-1.5 bg-red-50 text-red-600 rounded-lg transition-colors hover:bg-red-100"
               title="Delete Folder"
             >
               <FaTrash className="text-sm" />
-            </button>
+            </PermissionButton>
           </div>
         </div>
       ))}
@@ -323,7 +327,8 @@ const DownloadFolderManagement = () => {
                 Create and organize folders and subfolders for your downloads.
               </p>
             </div>
-            <button
+            <PermissionButton
+              action="create"
               onClick={() => {
                 setShowAddForm(true);
                 setShowEditForm(false);
@@ -332,7 +337,7 @@ const DownloadFolderManagement = () => {
               className="px-2 py-1 bg-[#0056FF] hover:bg-[#0044CC] text-white rounded-lg text-xs font-medium transition-colors"
             >
               Add New Folder
-            </button>
+            </PermissionButton>
           </div>
         </div>
 

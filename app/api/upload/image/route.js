@@ -6,7 +6,6 @@ import { writeFile, mkdir } from "fs/promises";
 import { existsSync } from "fs";
 import path from "path";
 import UploadCounter from "@/models/UploadCounter";
-import { randomUUID } from "crypto";
 import { requireAction } from "@/middleware/authMiddleware";
 import {
   successResponse,
@@ -14,6 +13,7 @@ import {
   handleApiError,
 } from "@/utils/apiResponse";
 import connectDB from "@/lib/mongodb";
+
 import Exam from "@/models/Exam";
 import Subject from "@/models/Subject";
 import Unit from "@/models/Unit";
@@ -43,60 +43,90 @@ const createSlug = (name) => {
     .replace(/^-+|-+$/g, "");
 };
 
+// Build folder path from hierarchy
 const buildFolderPath = async (context) => {
-  const pathParts = [];
+  const parts = [];
 
   if (context.examId) {
     const exam = await Exam.findById(context.examId).select("name").lean();
-    if (exam) pathParts.push(createSlug(exam.name));
+    if (exam) parts.push(createSlug(exam.name));
   }
 
   if (context.subjectId) {
-    const subject = await Subject.findById(context.subjectId)
-      .select("name")
-      .lean();
-    if (subject) pathParts.push(createSlug(subject.name));
+    const subject = await Subject.findById(context.subjectId).select("name").lean();
+    if (subject) parts.push(createSlug(subject.name));
   }
 
   if (context.unitId) {
     const unit = await Unit.findById(context.unitId).select("name").lean();
-    if (unit) pathParts.push(createSlug(unit.name));
+    if (unit) parts.push(createSlug(unit.name));
   }
 
   if (context.chapterId) {
-    const chapter = await Chapter.findById(context.chapterId)
-      .select("name")
-      .lean();
-    if (chapter) pathParts.push(createSlug(chapter.name));
+    const chapter = await Chapter.findById(context.chapterId).select("name").lean();
+    if (chapter) parts.push(createSlug(chapter.name));
   }
 
   if (context.topicId) {
     const topic = await Topic.findById(context.topicId).select("name").lean();
-    if (topic) pathParts.push(createSlug(topic.name));
+    if (topic) parts.push(createSlug(topic.name));
   }
 
   if (context.subtopicId) {
-    const subtopic = await SubTopic.findById(context.subtopicId)
-      .select("name")
-      .lean();
-    if (subtopic) pathParts.push(createSlug(subtopic.name));
+    const subtopic = await SubTopic.findById(context.subtopicId).select("name").lean();
+    if (subtopic) parts.push(createSlug(subtopic.name));
   }
 
   if (context.definitionId) {
-    const definition = await Definition.findById(context.definitionId)
-      .select("name")
-      .lean();
-    if (definition) pathParts.push(createSlug(definition.name));
+    const definition = await Definition.findById(context.definitionId).select("name").lean();
+    if (definition) parts.push(createSlug(definition.name));
   }
 
-  if (pathParts.length === 0) pathParts.push("general");
+  if (parts.length === 0) parts.push("general");
 
-  return path.join(assetsBaseDir, ...pathParts);
+  return path.join(assetsBaseDir, ...parts);
 };
 
-// NOTE: avoid scanning or maintaining counters inside the project
-// tree because dynamic file patterns can trigger Turbopack to
-// include many files. Use a unique filename (timestamp + UUID).
+// 🔥 Build filename prefix based on deepest context
+const buildFilePrefix = async (context) => {
+  let examName = "";
+  let targetName = "";
+
+  if (context.examId) {
+    const exam = await Exam.findById(context.examId).select("name").lean();
+    if (exam) examName = createSlug(exam.name);
+  }
+
+  if (context.definitionId) {
+    const d = await Definition.findById(context.definitionId).select("name").lean();
+    if (d) targetName = createSlug(d.name);
+  } else if (context.subtopicId) {
+    const s = await SubTopic.findById(context.subtopicId).select("name").lean();
+    if (s) targetName = createSlug(s.name);
+  } else if (context.topicId) {
+    const t = await Topic.findById(context.topicId).select("name").lean();
+    if (t) targetName = createSlug(t.name);
+  } else if (context.chapterId) {
+    const c = await Chapter.findById(context.chapterId).select("name").lean();
+    if (c) targetName = createSlug(c.name);
+  } else if (context.unitId) {
+    const u = await Unit.findById(context.unitId).select("name").lean();
+    if (u) targetName = createSlug(u.name);
+  } else if (context.subjectId) {
+    const s = await Subject.findById(context.subjectId).select("name").lean();
+    if (s) targetName = createSlug(s.name);
+  }
+
+  if (examName && targetName) {
+    return `${examName}_${targetName}_testprepkart`;
+  }
+
+  if (examName) {
+    return `${examName}_testprepkart`;
+  }
+
+  return `general_testprepkart`;
+};
 
 // --------------------------------------------------
 // API
@@ -135,23 +165,23 @@ export async function POST(request) {
       definitionId: formData.get("definitionId") || null,
     };
 
+    // Folder
     const folderPath = await buildFolderPath(context);
     if (!existsSync(folderPath)) {
       await mkdir(folderPath, { recursive: true });
     }
 
+    // Extension
     const originalName = file.name || "file";
     const extension = originalName.includes(".")
       ? originalName.split(".").pop().toLowerCase()
       : "bin";
 
-    // Use DB-backed sequential filename per folder to generate
-    // stable names like 1.png, 2.png, ... without scanning folders.
+    // DB counter (per folder)
     const relativeFolder = path
       .relative(assetsBaseDir, folderPath)
       .replace(/\\/g, "/");
 
-    // Atomically increment counter for this folder
     const counter = await UploadCounter.findOneAndUpdate(
       { path: relativeFolder },
       { $inc: { last: 1 } },
@@ -159,12 +189,17 @@ export async function POST(request) {
     );
 
     const seqNumber = counter.last || 1;
-    const filename = `${seqNumber}.${extension}`;
-    const filePath = path.join(folderPath, filename);
 
+    // Filename
+    const prefix = await buildFilePrefix(context);
+    const filename = `${prefix}_${seqNumber}.${extension}`;
+
+    // Save
     const buffer = Buffer.from(await file.arrayBuffer());
+    const filePath = path.join(folderPath, filename);
     await writeFile(filePath, buffer);
 
+    // URL
     const relativeToAssets = path
       .relative(assetsBaseDir, filePath)
       .replace(/\\/g, "/");

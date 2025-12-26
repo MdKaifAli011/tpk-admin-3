@@ -283,40 +283,6 @@ const SubTopicPage = async ({ params }) => {
           unitName={unit.name}
         />
 
-        {/* Definitions Section */}
-        {fetchedDefinitions && fetchedDefinitions.length > 0 && (
-          <section className="bg-transparent">
-            <div className="space-y-6">
-              <div className="px-1">
-                <h2 className="text-base sm:text-lg font-semibold text-gray-900">
-                  Definitions
-                </h2>
-                <p className="mt-1 text-xs sm:text-sm text-gray-500">
-                  Explore definitions related to this subtopic.
-                </p>
-              </div>
-
-              <div className="space-y-6">
-                {fetchedDefinitions.map((definition, index) => {
-                  const definitionSlug =
-                    definition.slug || createSlug(definition.name);
-                  const definitionUrl = `/${examSlug}/${subjectSlugValue}/${unitSlugValue}/${chapterSlugValue}/${topicSlugValue}/${subTopicSlugValue}/${definitionSlug}`;
-                  const definitionContent = definitionDetailsArray[index]?.content || "";
-
-                  return (
-                    <DefinitionPreviewClient
-                      key={definition._id}
-                      definition={definition}
-                      definitionUrl={definitionUrl}
-                      definitionContent={definitionContent}
-                    />
-                  );
-                })}
-              </div>
-            </div>
-          </section>
-        )}
-
         {/* Navigation */}
         <NavigationClient
           backUrl={`/${examSlug}/${subjectSlugValue}/${unitSlugValue}/${chapterSlugValue}/${topicSlugValue}`}

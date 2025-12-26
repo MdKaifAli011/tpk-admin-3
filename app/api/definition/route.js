@@ -7,6 +7,7 @@ import Unit from "@/models/Unit";
 import Topic from "@/models/Topic";
 import SubTopic from "@/models/SubTopic";
 import mongoose from "mongoose";
+import OrderCounter from "@/models/OrderCounter";
 import { parsePagination, createPaginationResponse } from "@/utils/pagination";
 import { successResponse, errorResponse, handleApiError } from "@/utils/apiResponse";
 import { STATUS, ERROR_MESSAGES } from "@/constants";
@@ -269,28 +270,72 @@ export async function POST(request) {
         );
       }
 
-      // Determine order number
+      // Determine order number. Prefer atomic per-subTopic counter to avoid races.
       let finalOrderNumber = item.orderNumber;
       if (!finalOrderNumber) {
-        const lastDefinition = await Definition.findOne({ subTopicId })
-          .sort({ orderNumber: -1 })
-          .select("orderNumber");
-        finalOrderNumber = lastDefinition ? lastDefinition.orderNumber + 1 : 1;
+        try {
+          const key = `definition:${subTopicId}`;
+          const counter = await OrderCounter.findOneAndUpdate(
+            { key },
+            { $inc: { last: 1 } },
+            { upsert: true, new: true }
+          ).lean();
+          if (counter && typeof counter.last === "number") {
+            finalOrderNumber = counter.last;
+          }
+        } catch (counterErr) {
+          // Fallback to legacy computation if counter fails
+          const lastDefinition = await Definition.findOne({ subTopicId })
+            .sort({ orderNumber: -1 })
+            .select("orderNumber");
+          finalOrderNumber = lastDefinition ? lastDefinition.orderNumber + 1 : 1;
+        }
       }
 
       // Create new definition (content/SEO fields are now in DefinitionDetails)
-      const doc = await Definition.create({
-        name: definitionName,
-        examId: item.examId,
-        subjectId: item.subjectId,
-        unitId: item.unitId,
-        chapterId: finalChapterId, // Use auto-populated chapterId if original was missing
-        topicId: item.topicId,
-        subTopicId,
-        orderNumber: finalOrderNumber,
-        status: item.status || STATUS.ACTIVE,
-      });
-      createdDefinitions.push(doc._id);
+      // Attempt create and retry once on duplicate-key error by recomputing order using chapter scope.
+      try {
+        const doc = await Definition.create({
+          name: definitionName,
+          examId: item.examId,
+          subjectId: item.subjectId,
+          unitId: item.unitId,
+          chapterId: finalChapterId, // Use auto-populated chapterId if original was missing
+          topicId: item.topicId,
+          subTopicId,
+          orderNumber: finalOrderNumber,
+          status: item.status || STATUS.ACTIVE,
+        });
+        createdDefinitions.push(doc._id);
+      } catch (err) {
+        // If duplicate key error (possible index on chapterId+orderNumber exists),
+        // recompute orderNumber scoped to chapterId and retry once.
+        if (err?.code === 11000) {
+          try {
+            const lastByChapter = await Definition.findOne({ chapterId: finalChapterId })
+              .sort({ orderNumber: -1 })
+              .select("orderNumber");
+            const altOrder = lastByChapter ? lastByChapter.orderNumber + 1 : 1;
+            const doc2 = await Definition.create({
+              name: definitionName,
+              examId: item.examId,
+              subjectId: item.subjectId,
+              unitId: item.unitId,
+              chapterId: finalChapterId,
+              topicId: item.topicId,
+              subTopicId,
+              orderNumber: altOrder,
+              status: item.status || STATUS.ACTIVE,
+            });
+            createdDefinitions.push(doc2._id);
+          } catch (err2) {
+            // If still failing, bubble up original error for consistent handling
+            throw err2;
+          }
+        } else {
+          throw err;
+        }
+      }
     }
 
     // Populate and return

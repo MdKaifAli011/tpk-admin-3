@@ -13,6 +13,8 @@ import {
   FaNewspaper,
 } from "react-icons/fa";
 import { ToastContainer, useToast } from "../ui/Toast";
+import { PermissionButton } from "../common/PermissionButton";
+import { usePermissions, getPermissionMessage } from "../../hooks/usePermissions";
 import api from "@/lib/api";
 import { useRouter } from "next/navigation";
 
@@ -46,6 +48,7 @@ const StatusBadge = ({ status, onClick }) => {
 };
 
 const BlogTable = ({ blogs, onEdit, onDelete, onToggleStatus }) => {
+  const { role } = usePermissions();
   if (!blogs || blogs.length === 0) {
     return (
       <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200 shadow-sm">
@@ -182,20 +185,22 @@ const BlogTable = ({ blogs, onEdit, onDelete, onToggleStatus }) => {
                 </td>
                 <td className="px-2 py-1 whitespace-nowrap text-right w-32">
                   <div className="flex items-center justify-end gap-1">
-                    <button
+                    <PermissionButton
+                      action="edit"
                       onClick={() => onEdit(blog)}
                       className="p-1 bg-blue-50 text-blue-600 rounded-lg transition-colors hover:bg-blue-100"
-                      title="Edit Blog"
+                      title={getPermissionMessage("edit", role)}
                     >
                       <FaEdit className="text-sm" />
-                    </button>
-                    <button
+                    </PermissionButton>
+                    <PermissionButton
+                      action="delete"
                       onClick={() => onDelete(blog)}
                       className="p-1 bg-red-50 text-red-600 rounded-lg transition-colors hover:bg-red-100"
-                      title="Delete Blog"
+                      title={getPermissionMessage("delete", role)}
                     >
                       <FaTrash className="text-sm" />
-                    </button>
+                    </PermissionButton>
                   </div>
                 </td>
               </tr>
@@ -287,20 +292,22 @@ const BlogTable = ({ blogs, onEdit, onDelete, onToggleStatus }) => {
                 </div>
               </div>
               <div className="flex items-center gap-1 ml-3">
-                <button
+                <PermissionButton
+                  action="edit"
                   onClick={() => onEdit(blog)}
                   className="p-1 bg-blue-50 text-blue-600 rounded-lg transition-colors hover:bg-blue-100"
-                  title="Edit Blog"
+                  title={getPermissionMessage("edit", role)}
                 >
                   <FaEdit className="text-sm" />
-                </button>
-                <button
+                </PermissionButton>
+                <PermissionButton
+                  action="delete"
                   onClick={() => onDelete(blog)}
                   className="p-1 bg-red-50 text-red-600 rounded-lg transition-colors hover:bg-red-100"
-                  title="Delete Blog"
+                  title={getPermissionMessage("delete", role)}
                 >
                   <FaTrash className="text-sm" />
-                </button>
+                </PermissionButton>
               </div>
             </div>
           </div>
@@ -311,6 +318,7 @@ const BlogTable = ({ blogs, onEdit, onDelete, onToggleStatus }) => {
 };
 
 const BlogManagement = () => {
+    const { role } = usePermissions();
   const router = useRouter();
   const [showAddForm, setShowAddForm] = useState(false);
   const [isDataLoading, setIsDataLoading] = useState(false);
@@ -569,10 +577,6 @@ const BlogManagement = () => {
                       </option>
                     ))}
                   </select>
-                </div>
-
-                {/* Category */}
-                <div className="space-y-2">
                   <label
                     htmlFor="categoryId"
                     className="block text-sm font-medium text-gray-700"

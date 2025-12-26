@@ -85,11 +85,14 @@ export async function PUT(request, { params }) {
     const { toTitleCase } = await import("@/utils/titleCase");
     const subjectName = toTitleCase(name);
 
-    // Check for duplicate name
+    // Check for duplicate name within the same exam.
+    // If `examId` is not provided in the request body, use the existing subject's examId
+    // so the duplicate check is always scoped to an exam and doesn't block same names across different exams.
+    const targetExamId = examId || existingSubject.examId;
     const duplicate = await Subject.findOne({
       name: subjectName,
       _id: { $ne: id },
-      ...(examId && { examId }),
+      examId: targetExamId,
     });
     if (duplicate) {
       return errorResponse("Subject with same name already exists", 409);
