@@ -59,6 +59,9 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
   const [downloadFolders, setDownloadFolders] = useState([]);
   const [isDownloadMenuOpen, setIsDownloadMenuOpen] = useState(false);
 
+  const userToggledBlogRef = useRef(false);
+const userToggledDownloadRef = useRef(false);
+
   // internal caches & dedupe
   const hasLoadedExamsRef = useRef(false);
   const treeCacheRef = useRef(new Map());
@@ -382,11 +385,9 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
 
   // Auto-expand blog menu if we're on a blog or category page
   useEffect(() => {
-    const isBlogPage = pathname.includes("/blog");
-    if (isBlogPage) {
-      setIsBlogMenuOpen(true);
-    }
-  }, [pathname]);
+  if (userToggledBlogRef.current) return;
+  setIsBlogMenuOpen(pathname.includes("/blog"));
+}, [pathname]);
 
   // Auto-expand download menu if we're on a download page
   useEffect(() => {
@@ -642,13 +643,17 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
                   <li>
                     <div>
                       <button
-                        onClick={() => setIsBlogMenuOpen(!isBlogMenuOpen)}
-                        className={`w-full flex items-center justify-between px-3 py-2 text-xs sm:text-sm font-medium rounded-lg cursor-pointer transition-all duration-200 ${
-                          pathname.includes("/blog")
-                            ? "text-indigo-600 bg-indigo-50"
-                            : "text-gray-600 hover:text-indigo-600 hover:bg-gray-50"
-                        }`}
-                      >
+  onClick={() => {
+    userToggledBlogRef.current = true;
+    setIsBlogMenuOpen((prev) => !prev);
+    setIsDownloadMenuOpen(false); // UX: close other menu
+  }}
+  className={`w-full flex items-center justify-between px-3 py-2 text-xs sm:text-sm font-medium rounded-lg cursor-pointer transition-all duration-200 ${
+    pathname.includes("/blog")
+      ? "text-indigo-600 bg-indigo-50"
+      : "text-gray-600 hover:text-indigo-600 hover:bg-gray-50"
+  }`}
+>
                         <span>Blog</span>
                         {isBlogMenuOpen ? (
                           <FaChevronDown className="text-[10px] text-gray-400" />
@@ -713,13 +718,17 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
                   <li>
                     <div>
                       <button
-                        onClick={() => setIsDownloadMenuOpen(!isDownloadMenuOpen)}
-                        className={`w-full flex items-center justify-between px-3 py-2 text-sm sm:text-md font-medium rounded-lg cursor-pointer transition-all duration-200 ${
-                          pathname.includes("/download")
-                            ? "text-indigo-600 bg-indigo-50"
-                            : "text-gray-600 hover:text-indigo-600 hover:bg-gray-50"
-                        }`}
-                      >
+  onClick={() => {
+    userToggledDownloadRef.current = true;
+    setIsDownloadMenuOpen((prev) => !prev);
+    setIsBlogMenuOpen(false);
+  }}
+  className={`w-full flex items-center justify-between px-3 py-2 text-sm sm:text-md font-medium rounded-lg cursor-pointer transition-all duration-200 ${
+    pathname.includes("/download")
+      ? "text-indigo-600 bg-indigo-50"
+      : "text-gray-600 hover:text-indigo-600 hover:bg-gray-50"
+  }`}
+>
                         <span>Download</span>
                         {isDownloadMenuOpen ? (
                           <FaChevronDown className="text-[10px] text-gray-400" />
