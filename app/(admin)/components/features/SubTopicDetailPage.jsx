@@ -388,6 +388,12 @@ const SubTopicDetailPage = ({ subTopicId }) => {
             onChange={handleContentChange}
             placeholder="Write detailed content for this subtopic..."
             disabled={!isEditing}
+            examId={subTopic?.examId?._id || subTopic?.examId || null}
+            subjectId={subTopic?.subjectId?._id || subTopic?.subjectId || null}
+            unitId={subTopic?.unitId?._id || subTopic?.unitId || null}
+            chapterId={subTopic?.chapterId?._id || subTopic?.chapterId || null}
+            topicId={subTopic?.topicId?._id || subTopic?.topicId || null}
+            subtopicId={subTopic?._id || null}
           />
         </div>
 

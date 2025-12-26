@@ -378,6 +378,8 @@ const SubjectDetailPage = ({ subjectId }) => {
             onChange={(v) => setFormData({ ...formData, content: v })}
             placeholder="Write detailed content for this subject..."
             disabled={!isEditing}
+            examId={subject?.examId?._id || subject?.examId || null}
+            subjectId={subject?._id || null}
           />
         </div>
 

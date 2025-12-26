@@ -370,6 +370,9 @@ const UnitDetailPage = ({ unitId }) => {
             onChange={(v) => setFormData({ ...formData, content: v })}
             placeholder="Write detailed content for this unit..."
             disabled={!isEditing}
+            examId={unit?.examId?._id || unit?.examId || null}
+            subjectId={unit?.subjectId?._id || unit?.subjectId || null}
+            unitId={unit?._id || null}
           />
         </div>
 

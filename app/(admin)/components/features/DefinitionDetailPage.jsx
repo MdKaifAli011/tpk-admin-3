@@ -399,6 +399,13 @@ const DefinitionDetailPage = ({ definitionId }) => {
             onChange={handleContentChange}
             placeholder="Write detailed content for this definition..."
             disabled={!isEditing}
+            examId={definition?.examId?._id || definition?.examId || null}
+            subjectId={definition?.subjectId?._id || definition?.subjectId || null}
+            unitId={definition?.unitId?._id || definition?.unitId || null}
+            chapterId={definition?.chapterId?._id || definition?.chapterId || null}
+            topicId={definition?.topicId?._id || definition?.topicId || null}
+            subtopicId={definition?.subTopicId?._id || definition?.subTopicId || null}
+            definitionId={definition?._id || null}
           />
         </div>
 

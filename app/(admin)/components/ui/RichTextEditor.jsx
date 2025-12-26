@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { FaTimes, FaSearch } from "react-icons/fa";
+import { FaTimes, FaSearch, FaImage, FaUpload, FaSpinner } from "react-icons/fa";
 import api from "@/lib/api";
 
 // Base path - should match next.config.mjs basePath
@@ -17,6 +17,14 @@ const RichTextEditor = ({
   placeholder = "Start writing your content...",
   disabled = false,
   className = "",
+  // Context props for image uploads
+  examId = null,
+  subjectId = null,
+  unitId = null,
+  chapterId = null,
+  topicId = null,
+  subtopicId = null,
+  definitionId = null,
 }) => {
   const titleCasePreserveAcronyms = (text) => {
     if (!text) return "";
@@ -48,6 +56,9 @@ const RichTextEditor = ({
   const [isReady, setIsReady] = useState(false);
   const [showFormModal, setShowFormModal] = useState(false);
   const [showButtonModal, setShowButtonModal] = useState(false);
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [imageError, setImageError] = useState("");
   const [forms, setForms] = useState([]);
   const [loadingForms, setLoadingForms] = useState(false);
   const [selectedForm, setSelectedForm] = useState(null);
@@ -507,6 +518,106 @@ const RichTextEditor = ({
     });
   };
 
+  // Handle image upload
+  const handleImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = ["image/png", "image/jpeg", "image/jpg", "image/gif", "image/webp"];
+    if (!allowedTypes.includes(file.type)) {
+      setImageError("Invalid file type. Only PNG, JPEG, GIF, and WebP are allowed.");
+      return;
+    }
+
+    // Validate file size (max 10MB)
+    const maxSize = 10 * 1024 * 1024;
+    if (file.size > maxSize) {
+      setImageError("File size exceeds 10MB limit.");
+      return;
+    }
+
+    await uploadAndInsertImage(file);
+  };
+
+  // Handle clipboard paste
+  useEffect(() => {
+    if (!isReady || disabled || !showImageModal) return;
+
+    const handlePaste = async (e) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        if (item.type.indexOf("image") !== -1) {
+          e.preventDefault();
+          const file = item.getAsFile();
+          if (file) {
+            await uploadAndInsertImage(file);
+          }
+          break;
+        }
+      }
+    };
+
+    document.addEventListener("paste", handlePaste);
+    return () => {
+      document.removeEventListener("paste", handlePaste);
+    };
+  }, [isReady, disabled, showImageModal]);
+
+  // Upload image and insert into editor
+  const uploadAndInsertImage = async (file) => {
+    try {
+      setUploadingImage(true);
+      setImageError("");
+
+      const formData = new FormData();
+      formData.append("image", file);
+
+      // Add context IDs if available
+      if (examId) formData.append("examId", examId);
+      if (subjectId) formData.append("subjectId", subjectId);
+      if (unitId) formData.append("unitId", unitId);
+      if (chapterId) formData.append("chapterId", chapterId);
+      if (topicId) formData.append("topicId", topicId);
+      if (subtopicId) formData.append("subtopicId", subtopicId);
+      if (definitionId) formData.append("definitionId", definitionId);
+
+      const response = await api.post("/upload/image", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      if (response.data?.success && response.data?.data?.url) {
+        const imageUrl = response.data.data.url;
+        const editor = editorRef.current;
+
+        if (editor) {
+          // Insert image into editor
+          const imageHtml = `<img src="${imageUrl}" alt="Uploaded image" style="max-width: 100%; height: auto;" />`;
+          editor.insertHtml(imageHtml);
+        }
+
+        setShowImageModal(false);
+        setImageError("");
+      } else {
+        setImageError(response.data?.message || "Failed to upload image");
+      }
+    } catch (error) {
+      console.error("Image upload error:", error);
+      setImageError(
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to upload image. Please try again."
+      );
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
   return (
     <>
       <div
@@ -514,9 +625,17 @@ const RichTextEditor = ({
           disabled ? "opacity-90" : ""
         } ${className}`}
       >
-        {/* Insert Form and Button */}
+        {/* Insert Form, Button, and Image */}
         {isReady && !disabled && (
           <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50 flex items-center justify-end gap-2">
+            <button
+              onClick={() => setShowImageModal(true)}
+              className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+              type="button"
+            >
+              <FaImage className="w-4 h-4" />
+              Insert Image
+            </button>
             <button
               onClick={() => setShowButtonModal(true)}
               className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
@@ -1129,6 +1248,81 @@ const RichTextEditor = ({
                 </svg>
                 Insert Button
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Image Upload Modal */}
+      {showImageModal && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-200">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b bg-white">
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900">
+                  Insert Image
+                </h2>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Upload an image or paste from clipboard
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setShowImageModal(false);
+                  setImageError("");
+                }}
+                className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-2 rounded-lg transition"
+              >
+                <FaTimes className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-6 space-y-4">
+              {/* File Input */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Select Image
+                </label>
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-purple-400 transition-colors">
+                  <input
+                    type="file"
+                    id="image-upload"
+                    accept="image/png,image/jpeg,image/jpg,image/gif,image/webp"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                    disabled={uploadingImage}
+                  />
+                  <label
+                    htmlFor="image-upload"
+                    className="cursor-pointer flex flex-col items-center"
+                  >
+                    <FaUpload className="w-8 h-8 text-gray-400 mb-2" />
+                    <span className="text-sm text-gray-600">
+                      Click to select or paste image (Ctrl+V)
+                    </span>
+                    <span className="text-xs text-gray-500 mt-1">
+                      PNG, JPEG, GIF, WebP (max 10MB)
+                    </span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Error Message */}
+              {imageError && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm text-red-600">{imageError}</p>
+                </div>
+              )}
+
+              {/* Upload Progress */}
+              {uploadingImage && (
+                <div className="flex items-center justify-center gap-2 p-4">
+                  <FaSpinner className="w-5 h-5 animate-spin text-purple-600" />
+                  <span className="text-sm text-gray-600">Uploading image...</span>
+                </div>
+              )}
             </div>
           </div>
         </div>

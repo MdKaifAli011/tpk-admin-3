@@ -388,6 +388,11 @@ const TopicDetailPage = ({ topicId }) => {
             onChange={handleContentChange}
             placeholder="Write detailed content for this topic..."
             disabled={!isEditing}
+            examId={topic?.examId?._id || topic?.examId || null}
+            subjectId={topic?.subjectId?._id || topic?.subjectId || null}
+            unitId={topic?.unitId?._id || topic?.unitId || null}
+            chapterId={topic?.chapterId?._id || topic?.chapterId || null}
+            topicId={topic?._id || null}
           />
         </div>
 

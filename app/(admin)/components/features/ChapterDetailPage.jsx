@@ -371,6 +371,10 @@ const ChapterDetailPage = () => {
             onChange={(v) => setFormData({ ...formData, content: v })}
             placeholder="Write detailed content for this chapter..."
             disabled={!isEditing}
+            examId={chapter?.examId?._id || chapter?.examId || null}
+            subjectId={chapter?.subjectId?._id || chapter?.subjectId || null}
+            unitId={chapter?.unitId?._id || chapter?.unitId || null}
+            chapterId={chapter?._id || null}
           />
         </div>
 

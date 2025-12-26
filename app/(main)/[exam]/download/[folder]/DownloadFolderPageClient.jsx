@@ -43,6 +43,12 @@ const DownloadFolderPageClient = ({
     setShowModal(false);
   };
 
+  const handleModalClose = () => {
+    setShowModal(false);
+    // Check localStorage again in case form was submitted
+    setIsFormSubmitted(isDownloadFormSubmitted());
+  };
+
   const handleFolderChange = (folder) => {
     const folderSlug = folder.slug || createSlug(folder.name);
     router.push(`/${examSlug}/download/${folderSlug}`);
@@ -427,7 +433,7 @@ const DownloadFolderPageClient = ({
       {/* Download Modal */}
       <DownloadModal
         isOpen={showModal}
-        onClose={() => setShowModal(false)}
+        onClose={handleModalClose}
         onSuccess={handleFormSuccess}
       />
     </>

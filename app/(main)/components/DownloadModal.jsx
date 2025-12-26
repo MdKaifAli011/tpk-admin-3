@@ -11,7 +11,7 @@ import {
   FaTimes,
   FaPhone,
 } from "react-icons/fa";
-import api from "@/lib/api";
+import api, { submitDownloadForm } from "@/lib/api";
 import {
   countriesWithCodesSorted,
   countryCodeMap,
@@ -27,7 +27,7 @@ import {
   validateClassName,
 } from "./utils/formValidation";
 
-const DownloadModal = ({ isOpen, onClose }) => {
+const DownloadModal = ({ isOpen, onClose, onSuccess }) => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -149,6 +149,18 @@ const DownloadModal = ({ isOpen, onClose }) => {
           );
         }
 
+        // Unlock download buttons by saving form submission status
+        const formSubmissionData = {
+          name: formData.name.trim(),
+          email: formData.email.trim(),
+          country: formData.country.trim(),
+          className: formData.className.trim(),
+          phoneNumber: formData.countryCode + formData.phoneNumber.trim(),
+          submittedAt: new Date().toISOString(),
+        };
+
+        await submitDownloadForm(formSubmissionData);
+
         setFormData({
           name: "",
           email: "",
@@ -160,6 +172,12 @@ const DownloadModal = ({ isOpen, onClose }) => {
         setErrors({});
         resetVerification();
         generateVerification();
+
+        // Call onSuccess callback if provided
+        if (onSuccess) {
+          onSuccess();
+        }
+
         setTimeout(() => {
           onClose();
           setSubmitStatus(null);
