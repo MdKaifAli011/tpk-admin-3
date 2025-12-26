@@ -661,7 +661,7 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
                           <li>
                             <Link
                               href={`/${activeExamSlug}/blog`}
-                              className={`block px-2 py-1.5 text-[11px] sm:text-xs rounded-md transition-all duration-200 ${
+                              className={`block px-2 py-1.5 text-sm sm:text-md rounded-md transition-all duration-200 ${
                                 pathname === `/${activeExamSlug}/blog` ||
                                 pathname === `/${activeExamSlug}/blog/`
                                   ? "text-indigo-600 bg-indigo-50 font-medium"
@@ -681,7 +681,7 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
                                 <li key={category._id || category.id}>
                                   <Link
                                     href={categoryPath}
-                                    className={`block px-2 py-1.5 text-[11px] sm:text-xs rounded-md transition-all duration-200 ${
+                                    className={`block px-2 py-1.5 text-sm sm:text-md rounded-md transition-all duration-200 ${
                                       isActive
                                         ? "text-indigo-600 bg-indigo-50 font-medium"
                                         : "text-gray-600 hover:text-indigo-600 hover:bg-gray-50"
@@ -694,7 +694,7 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
                               );
                             })
                           ) : (
-                            <li className="px-2 py-1.5 text-[11px] sm:text-xs text-gray-400 italic">
+                            <li className="px-2 py-1.5 text-sm sm:text-md text-gray-400 italic">
                               No categories
                             </li>
                           )}
@@ -703,7 +703,7 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
                     </div>
                   </li>
                 ) : (
-                  <li className="px-3 py-2 text-xs sm:text-sm font-medium text-gray-400">
+                  <li className="px-3 py-2 text-sm sm:text-md font-medium text-gray-400">
                     Blog
                   </li>
                 )}
@@ -714,7 +714,7 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
                     <div>
                       <button
                         onClick={() => setIsDownloadMenuOpen(!isDownloadMenuOpen)}
-                        className={`w-full flex items-center justify-between px-3 py-2 text-xs sm:text-sm font-medium rounded-lg cursor-pointer transition-all duration-200 ${
+                        className={`w-full flex items-center justify-between px-3 py-2 text-sm sm:text-md font-medium rounded-lg cursor-pointer transition-all duration-200 ${
                           pathname.includes("/download")
                             ? "text-indigo-600 bg-indigo-50"
                             : "text-gray-600 hover:text-indigo-600 hover:bg-gray-50"
@@ -732,7 +732,7 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
                           <li>
                             <Link
                               href={`/${activeExamSlug}/download`}
-                              className={`block px-2 py-1.5 text-[11px] sm:text-xs rounded-md transition-all duration-200 ${
+                              className={`block px-2 py-1.5 text-md sm:text-sm rounded-md transition-all duration-200 ${
                                 pathname === `/${activeExamSlug}/download` ||
                                 pathname === `/${activeExamSlug}/download/`
                                   ? "text-indigo-600 bg-indigo-50 font-medium"
@@ -752,7 +752,7 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
                                 <li key={folder._id}>
                                   <Link
                                     href={folderPath}
-                                    className={`block px-2 py-1.5 text-[11px] sm:text-xs rounded-md transition-all duration-200 ${
+                                    className={`block px-2 py-1.5 text-sm sm:text-sm rounded-md transition-all duration-200 ${
                                       isActive
                                         ? "text-indigo-600 bg-indigo-50 font-medium"
                                         : "text-gray-600 hover:text-indigo-600 hover:bg-gray-50"
