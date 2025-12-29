@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, lazy, Suspense } from "react";
+import React, { useState, lazy, Suspense, useEffect } from "react";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { FaChartLine } from "react-icons/fa";
 import { ExamCardSkeleton } from "./SkeletonLoader";
 import Card from "./Card";
@@ -12,6 +13,39 @@ const PracticeTestTab = lazy(() => import("./PracticeTestTab"));
 const PerformanceTab = lazy(() => import("./PerformanceTab"));
 
 const TABS = ["Overview", "Discussion Forum", "Practice Test", "Performance"];
+
+// Helper to convert Tab Name to URL param
+const toUrlParam = (tabName) => {
+  switch (tabName) {
+    case "Discussion Forum":
+      return "discussion";
+    case "Practice Test":
+      return "practice";
+    case "Performance":
+      return "performance";
+    case "Overview":
+    default:
+      return "overview";
+  }
+};
+
+// Helper to convert URL param to Tab Name
+const fromUrlParam = (param) => {
+  if (!param) return "Overview";
+  switch (param.toLowerCase()) {
+    case "discussion":
+      return "Discussion Forum";
+    case "practice":
+    case "practics": // Handle user mentioned typo if needed, just in case
+      return "Practice Test";
+    case "performance":
+    case "performace": // Handle user mentioned typo if needed
+      return "Performance";
+    case "overview":
+    default:
+      return "Overview";
+  }
+};
 
 const TabsClient = ({
   activeTab: initialTab = TABS[0],
@@ -41,7 +75,32 @@ const TabsClient = ({
   subjectsWithUnits = [],
   units = [],
 }) => {
-  const [activeTab, setActiveTab] = useState(initialTab);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+
+  // Initialize activeTab from URL, default to existing logic (Overview)
+  const currentTabParam = searchParams.get("tab");
+  const [activeTab, setActiveTab] = useState(() => fromUrlParam(currentTabParam));
+
+  // Sync state with URL changes (handling back/forward button)
+  useEffect(() => {
+    const tabFromUrl = fromUrlParam(searchParams.get("tab"));
+    if (tabFromUrl !== activeTab) {
+      setActiveTab(tabFromUrl);
+    }
+  }, [searchParams]);
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab); // Optimistic UI update
+
+    // Create new params to preserve existing query params if any (though usually clean for tabs)
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("tab", toUrlParam(tab));
+
+    // Replace URL without page reload/scroll reset
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  };
 
   const renderTabContent = () => {
     const tabContent = (() => {
@@ -75,6 +134,14 @@ const TabsClient = ({
             <DiscussionForumTab
               entityType={entityType}
               entityName={entityName}
+              examId={examId}
+              subjectId={subjectId}
+              unitId={unitId}
+              chapterId={chapterId}
+              topicId={topicId}
+              subTopicId={subTopicId}
+              definitions={definitions}
+              currentDefinitionId={currentDefinitionId}
             />
           );
 
@@ -137,16 +204,15 @@ const TabsClient = ({
             return (
               <button
                 key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`relative px-2.5 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-2.5 text-[10px] sm:text-xs md:text-sm font-semibold whitespace-nowrap transition-all duration-300 border-b-2 group overflow-hidden shrink-0 ${
-                  isActive
+                onClick={() => handleTabChange(tab)}
+                className={`relative px-2.5 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-2.5 text-[10px] sm:text-xs md:text-sm font-semibold whitespace-nowrap transition-all duration-300 border-b-2 group overflow-hidden shrink-0 ${isActive
                     ? isPerformanceTab
                       ? "text-emerald-700 border-emerald-600 bg-gradient-to-b from-emerald-50 via-white to-white shadow-sm"
                       : "text-indigo-600 border-indigo-600 bg-white"
                     : isPerformanceTab
-                    ? "text-emerald-600 hover:text-emerald-700 border-transparent bg-emerald-50/30 hover:bg-emerald-50/50"
-                    : "text-gray-500 hover:text-gray-700 border-transparent"
-                }`}
+                      ? "text-emerald-600 hover:text-emerald-700 border-transparent bg-emerald-50/30 hover:bg-emerald-50/50"
+                      : "text-gray-500 hover:text-gray-700 border-transparent"
+                  }`}
               >
                 {/* Background glow effect for Performance tab when active */}
                 {isPerformanceTab && isActive && (
@@ -162,11 +228,10 @@ const TabsClient = ({
                 <span className="flex items-center gap-1.5 sm:gap-2 relative z-10">
                   {isPerformanceTab && (
                     <FaChartLine
-                      className={`text-xs sm:text-sm transition-all duration-300 ${
-                        isActive
+                      className={`text-xs sm:text-sm transition-all duration-300 ${isActive
                           ? "text-emerald-600 animate-pulse"
                           : "text-emerald-500 group-hover:scale-110 group-hover:rotate-[-5deg]"
-                      }`}
+                        }`}
                     />
                   )}
                   <span className="relative inline-block">

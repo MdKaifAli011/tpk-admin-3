@@ -6,6 +6,7 @@ import {
   checkChapterCongratulationsShown,
   markChapterCongratulationsShown,
 } from "@/lib/congratulations";
+import api from "@/lib/api";
 
 const ChapterCompletionTracker = ({ chapterId, chapterName, unitId }) => {
   const [showModal, setShowModal] = useState(false);
@@ -21,16 +22,16 @@ const ChapterCompletionTracker = ({ chapterId, chapterName, unitId }) => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
-    
+
     isInitializedRef.current = false;
     isCheckingRef.current = false;
     previousProgressRef.current = null;
     congratulationsShownRef.current = false;
     setShowModal(false);
-    
+
     // Create new abort controller
     abortControllerRef.current = new AbortController();
-    
+
     return () => {
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
@@ -45,28 +46,19 @@ const ChapterCompletionTracker = ({ chapterId, chapterName, unitId }) => {
 
     const checkProgress = async () => {
       try {
-        // Check if student is authenticated
-        const token = typeof window !== "undefined" ? localStorage.getItem("student_token") : null;
         let chapterProgress = 0;
+        const token = typeof window !== "undefined" ? localStorage.getItem("student_token") : null;
 
         if (token) {
           // Fetch from database
           try {
-            const response = await fetch(`/api/student/progress?unitId=${unitId}`, {
-              headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json",
-              },
-            });
+            const response = await api.get(`/student/progress?unitId=${unitId}`);
 
-            if (response.ok) {
-              const data = await response.json();
-              if (data.success && data.data && data.data.length > 0) {
-                const progressDoc = data.data[0];
-                const chapterData = progressDoc.progress?.[chapterId];
-                if (chapterData) {
-                  chapterProgress = chapterData.progress || 0;
-                }
+            if (response.data.success && response.data.data && response.data.data.length > 0) {
+              const progressDoc = response.data.data[0];
+              const chapterData = progressDoc.progress?.[chapterId];
+              if (chapterData) {
+                chapterProgress = chapterData.progress || 0;
               }
             }
           } catch (error) {
@@ -116,11 +108,11 @@ const ChapterCompletionTracker = ({ chapterId, chapterName, unitId }) => {
         if (!isInitializedRef.current && !isCheckingRef.current) {
           isCheckingRef.current = true;
           const controller = abortControllerRef.current;
-          
+
           checkChapterCongratulationsShown(chapterId, unitId)
             .then((hasShown) => {
               if (controller && controller.signal.aborted) return;
-              
+
               congratulationsShownRef.current = hasShown;
               previousProgressRef.current = chapterProgress;
               isInitializedRef.current = true;

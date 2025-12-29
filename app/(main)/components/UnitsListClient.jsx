@@ -5,6 +5,7 @@ import Link from "next/link";
 import { FaCheck, FaEye } from "react-icons/fa";
 import { createSlug as createSlugUtil } from "@/utils/slug";
 import { logger } from "@/utils/logger";
+import api from "@/lib/api";
 
 const UnitsListClient = ({ units, subjectId, examSlug, subjectSlug }) => {
   const [progressData, setProgressData] = useState({});
@@ -23,29 +24,21 @@ const UnitsListClient = ({ units, subjectId, examSlug, subjectSlug }) => {
     try {
       if (typeof window === "undefined") return null;
 
-      const token = localStorage.getItem("student_token");
-      if (!token) return null;
+      // Note: Token injection is handled by api interceptor
+      const response = await api.get(`/student/progress?unitId=${unitId}`);
 
-      const response = await fetch(`/api/student/progress?unitId=${unitId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success && data.data && data.data.length > 0) {
-          const progressDoc = data.data[0];
-          return progressDoc.unitProgress || 0;
-        }
-      } else if (response.status === 401) {
-        // Authentication error - clear token
-        localStorage.removeItem("student_token");
-        setIsAuthenticated(false);
+      if (response.data.success && response.data.data && response.data.data.length > 0) {
+        const progressDoc = response.data.data[0];
+        return progressDoc.unitProgress || 0;
       }
     } catch (error) {
-      logger.error(`Error fetching progress for unit ${unitId}:`, error);
+      // 401 is handled by api interceptor (redirects if needed)
+      // For other errors, just log
+      if (error.response?.status !== 401) {
+        logger.error(`Error fetching progress for unit ${unitId}:`, error);
+      } else {
+        setIsAuthenticated(false);
+      }
     }
     return null;
   };
@@ -341,13 +334,12 @@ const UnitsListClient = ({ units, subjectId, examSlug, subjectSlug }) => {
               <div className="flex w-full items-center gap-3 sm:w-auto sm:justify-end">
                 <div className="flex-1 h-2 overflow-hidden rounded-full bg-gray-200 sm:w-48">
                   <div
-                    className={`h-full transition-all duration-300 ${
-                      progressPercent >= 100
+                    className={`h-full transition-all duration-300 ${progressPercent >= 100
                         ? "bg-emerald-500"
                         : progressPercent >= 50
-                        ? "bg-emerald-400"
-                        : "bg-emerald-300"
-                    }`}
+                          ? "bg-emerald-400"
+                          : "bg-emerald-300"
+                      }`}
                     style={{ width: `${progressPercent}%` }}
                   />
                 </div>

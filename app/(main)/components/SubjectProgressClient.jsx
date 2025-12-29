@@ -7,20 +7,13 @@ import {
   checkSubjectCongratulationsShown,
   markSubjectCongratulationsShown,
 } from "@/lib/congratulations";
+import api from "@/lib/api";
 
 const SubjectProgressClient = ({
-  subjectId,
-  subjectName,
-  unitIds = [],
+  // ... (keep props same)
   initialProgress = 0,
 }) => {
-  const [progress, setProgress] = useState(initialProgress);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [showCongratulations, setShowCongratulations] = useState(false);
-  const [congratulationsShown, setCongratulationsShown] = useState(false);
-  const prevProgressRef = useRef(initialProgress);
-  const isInitializedRef = useRef(false);
-  const isCheckingRef = useRef(false);
+  // ... (keep state and refs same)
 
   // Reset initialization flag when subjectId or unitIds change
   useEffect(() => {
@@ -48,28 +41,15 @@ const SubjectProgressClient = ({
       if (!authStatus) return null;
 
       try {
-        const token = localStorage.getItem("student_token");
-        if (!token) return null;
-
+        // Note: Token is handled by api interceptor
         // Fetch progress for all units
         const unitProgressPromises = unitIds.map(async (unitId) => {
           try {
-            const response = await fetch(
-              `/api/student/progress?unitId=${unitId}`,
-              {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                  "Content-Type": "application/json",
-                },
-              }
-            );
+            const response = await api.get(`/student/progress?unitId=${unitId}`);
 
-            if (response.ok) {
-              const data = await response.json();
-              if (data.success && data.data && data.data.length > 0) {
-                const progressDoc = data.data[0];
-                return progressDoc.unitProgress || 0;
-              }
+            if (response.data.success && response.data.data && response.data.data.length > 0) {
+              const progressDoc = response.data.data[0];
+              return progressDoc.unitProgress || 0;
             }
           } catch (error) {
             console.error(`Error fetching progress for unit ${unitId}:`, error);
@@ -147,31 +127,10 @@ const SubjectProgressClient = ({
 
             // Save subject progress to database
             try {
-              // Get token for authorization header
-              const token = localStorage.getItem("student_token");
-              if (!token) {
-                console.error("No token available for saving subject progress");
-                return;
-              }
-
-              const saveResponse = await fetch(
-                "/api/student/progress/subject",
-                {
-                  method: "POST",
-                  headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                  },
-                  body: JSON.stringify({
-                    subjectId,
-                    subjectProgress: dbProgress,
-                  }),
-                }
-              );
-
-              if (!saveResponse.ok) {
-                console.error("Failed to save subject progress to database");
-              }
+              await api.post("/student/progress/subject", {
+                subjectId,
+                subjectProgress: dbProgress,
+              });
             } catch (error) {
               console.error(
                 "Error saving subject progress to database:",
