@@ -18,7 +18,8 @@ import {
   FaCheck,
   FaEllipsisH,
   FaPaperPlane,
-  FaTimes
+  FaTimes,
+  FaThumbtack
 } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import api from "@/lib/api";
@@ -53,6 +54,11 @@ const ThreadCard = ({ thread, onClick }) => {
     >
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
+          {thread.isPinned && (
+             <span className="flex items-center gap-1 bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold border border-indigo-200 uppercase tracking-widest shadow-sm">
+                <FaThumbtack className="text-[10px]" /> Pinned
+             </span>
+          )}
           {thread.tags?.map((tag, idx) => (
             <span key={idx} className={`px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wider ${tag === 'Urgent' ? 'bg-red-50 text-red-600 border border-red-100' :
                 tag === 'Hot' ? 'bg-orange-50 text-orange-600 border border-orange-100' :
@@ -142,6 +148,36 @@ const ThreadDetail = ({ slug, onBack }) => {
     fetchDetail();
   }, [fetchDetail]);
 
+  const handleLike = async () => {
+      if (!thread) return;
+      // Optimistic update could be done here, but safe fetch first
+      try {
+        const res = await api.post(`/discussion/threads/${thread.slug}/like`);
+        if (res.data.success) {
+            setThread(prev => ({ ...prev, upvotes: res.data.data }));
+        }
+      } catch (err) {
+        console.error("Like failed", err);
+      }
+  };
+
+  const handleLikeReply = async (replyId) => {
+      try {
+        const res = await api.post(`/discussion/replies/${replyId}/like`);
+        if (res.data.success) {
+            setReplies(prev => prev.map(r => {
+                if (r._id === replyId) {
+                    // Toggle locally based on success, assuming API returns updated upvotes list
+                    return { ...r, upvotes: res.data.data, isLiked: !r.isLiked };
+                }
+                return r;
+            }));
+        }
+      } catch (err) {
+        console.error("Like reply failed", err);
+      }
+  };
+
   const handlePostReply = async () => {
     if (!replyContent.trim()) return;
     setIsSubmitting(true);
@@ -205,8 +241,14 @@ const ThreadDetail = ({ slug, onBack }) => {
         <div className="flex gap-6">
           {/* Vote Column */}
           <div className="hidden sm:flex flex-col items-center gap-1 text-gray-400">
-            <button className="p-2 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"><FaThumbsUp className="text-xl" /></button>
-            <span className="font-bold text-gray-700 text-sm">{thread.upvotes?.length || 0}</span>
+            <button 
+              onClick={handleLike} 
+              className={`p-2 rounded-lg transition-colors ${thread.isLiked ? 'text-indigo-600 bg-indigo-50 shadow-sm ring-1 ring-indigo-200' : 'hover:text-indigo-600 hover:bg-indigo-50'}`}
+              title={thread.isLiked ? "Unlike" : "Like"}
+            >
+              <FaThumbsUp className="text-xl" />
+            </button>
+            <span className={`font-bold text-sm ${thread.isLiked ? 'text-indigo-600' : 'text-gray-700'}`}>{thread.upvotes?.length || 0}</span>
           </div>
 
           {/* Content Column */}
@@ -275,8 +317,13 @@ const ThreadDetail = ({ slug, onBack }) => {
               )}
               <div className="flex gap-4">
                 <div className="hidden sm:flex flex-col items-center gap-1 text-gray-400">
-                  <FaThumbsUp className="hover:text-indigo-600 cursor-pointer transition-colors" />
-                  <span className="text-xs font-bold">{reply.upvotes?.length || 0}</span>
+                  <button 
+                    onClick={() => handleLikeReply(reply._id)}
+                    className={`p-1.5 rounded-lg transition-colors ${reply.isLiked ? 'text-indigo-600 bg-indigo-50 ring-1 ring-indigo-200' : 'hover:text-indigo-600 hover:bg-indigo-50'}`}
+                  >
+                     <FaThumbsUp className="text-sm" />
+                  </button>
+                  <span className={`text-xs font-bold ${reply.isLiked ? 'text-indigo-600' : 'text-gray-500'}`}>{reply.upvotes?.length || 0}</span>
                 </div>
 
                 <div className="flex-1">
@@ -410,7 +457,7 @@ const DiscussionForumTab = ({
     if (!newTitle.trim() || !newContent.trim()) return;
     setIsCreating(true);
     try {
-      await api.post("/discussion/threads", {
+      const res = await api.post("/discussion/threads", {
         title: newTitle,
         content: newContent,
         tags: [newTag],
@@ -421,7 +468,14 @@ const DiscussionForumTab = ({
       setShowCreateModal(false);
       setNewTitle("");
       setNewContent("");
-      fetchThreads(); // Refresh list
+      // fetchThreads(); // No need to fetch list if we open it
+      
+      // Auto-open the new thread
+      if (res.data?.data?.slug) {
+         handleThreadClick(res.data.data.slug);
+      } else {
+         fetchThreads();
+      }
     } catch (error) {
       console.error("Failed to create thread", error);
       alert("Failed to create thread: " + (error.response?.data?.message || "Unknown error"));

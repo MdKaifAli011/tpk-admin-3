@@ -14,6 +14,7 @@ import {
   FaNewspaper,
   FaChevronDown,
   FaChevronRight,
+  FaComments,
 } from "react-icons/fa";
 
 const ALL_MENU_ITEMS = [
@@ -42,19 +43,19 @@ const ALL_MENU_ITEMS = [
     name: "Lead Management",
     href: "/admin/lead",
     icon: FaUserTag,
-     adminOnly: true,
+    adminOnly: true,
   },
   {
     name: "Student Management",
     href: "/admin/student",
     icon: FaUserGraduate,
-     adminOnly: true,
+    adminOnly: true,
   },
   {
     name: "Form Management",
     href: "/admin/form",
     icon: FaClipboardList,
-     adminOnly: true,
+    adminOnly: true,
   },
   {
     name: "User Role Management",
@@ -70,6 +71,14 @@ const ALL_MENU_ITEMS = [
       { name: "Blog List", href: "/admin/blog" },
       { name: "Blog Categories", href: "/admin/blog-category" },
       { name: "Blog Comments", href: "/admin/blog-comment" },
+    ],
+  },
+  {
+    name: "Discussion Management",
+    href: "/admin/discussion",
+    icon: FaComments,
+    children: [
+      { name: "Threads", href: "/admin/discussion" },
     ],
   },
   {
@@ -130,14 +139,14 @@ const Sidebar = memo(({ isOpen, onClose }) => {
 
   const isActive = (href) =>
     pathname === href || pathname.startsWith(href + "/");
-  
+
   const toggleMenu = (name) => {
     setExpandedMenus((prev) => ({
       ...prev,
       [name]: !prev[name],
     }));
   };
-  
+
   // Auto-expand menu if current path matches
   useEffect(() => {
     const filteredItems = ALL_MENU_ITEMS.filter((item) => {
@@ -146,7 +155,7 @@ const Sidebar = memo(({ isOpen, onClose }) => {
       }
       return true;
     });
-    
+
     filteredItems.forEach((item) => {
       if (item.children) {
         const hasActiveChild = item.children.some((child) =>
@@ -191,12 +200,12 @@ const Sidebar = memo(({ isOpen, onClose }) => {
 
         {/* Navigation Links */}
         <nav className="flex-1 px-4 pt-2 overflow-y-auto hide-scrollbar">
-        <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1">
             {MENU_ITEMS.map(({ name, href, icon: Icon, children }, index) => {
               const active = isActive(href);
               const isExpanded = expandedMenus[name] || false;
               const hasActiveChild = children?.some((child) => isActive(child.href));
-              
+
               if (children) {
                 return (
                   <div key={name}>
@@ -262,7 +271,7 @@ const Sidebar = memo(({ isOpen, onClose }) => {
                   </div>
                 );
               }
-              
+
               return (
                 <Link
                   href={href}

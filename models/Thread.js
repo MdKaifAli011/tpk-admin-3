@@ -13,7 +13,6 @@ const threadSchema = new mongoose.Schema(
         slug: {
             type: String,
             unique: true,
-            index: true,
         },
         content: {
             type: String,

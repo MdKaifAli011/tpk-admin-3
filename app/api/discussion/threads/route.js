@@ -71,9 +71,9 @@ export async function GET(request) {
         }
 
         // Sorting
-        let sortOption = { createdAt: -1 }; // Default new
+        let sortOption = { isPinned: -1, createdAt: -1 }; // Default new
         if (sort === "hot") {
-            sortOption = { views: -1, replyCount: -1 };
+            sortOption = { isPinned: -1, views: -1, replyCount: -1 };
         }
 
         // Pagination
