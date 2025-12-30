@@ -8,6 +8,9 @@ import {
   checkUnitCongratulationsShown,
   markUnitCongratulationsShown,
 } from "@/lib/congratulations";
+// Base path - should match next.config.mjs basePath
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
+
 
 const UnitProgressClient = ({ unitId, unitName, initialProgress = 0 }) => {
   const [progress, setProgress] = useState(initialProgress);
@@ -64,7 +67,7 @@ const UnitProgressClient = ({ unitId, unitName, initialProgress = 0 }) => {
         const token = localStorage.getItem("student_token");
         if (!token) return null;
 
-        const response = await fetch(`/api/student/progress?unitId=${unitId}`, {
+        const response = await fetch(`${basePath}/api/student/progress?unitId=${unitId}`, {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",

@@ -14,7 +14,7 @@ export const config = {
   mongoDbName: process.env.MONGO_DB_NAME,
 
   // API
-  baseUrl: process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api",
+  baseUrl: process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/self-study/api",
 
   // JWT / Session
   jwtSecret: process.env.JWT_SECRET,

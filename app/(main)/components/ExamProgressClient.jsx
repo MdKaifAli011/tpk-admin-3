@@ -9,6 +9,8 @@ import ProgressBar from "./ProgressBar";
  * Exam progress = Average of all subject progress for that exam
  * Fetches from database (not localStorage) for accurate progress tracking
  */
+// Base path - should match next.config.mjs basePath
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
 const ExamProgressClient = ({ examId, initialProgress = 0 }) => {
   const [progress, setProgress] = useState(initialProgress);
   const [isLoading, setIsLoading] = useState(true);
@@ -47,7 +49,7 @@ const ExamProgressClient = ({ examId, initialProgress = 0 }) => {
           return;
         }
 
-        const response = await fetch(`/api/student/progress/exam?examId=${examId}`, {
+        const response = await fetch(`${basePath}/api/student/progress/exam?examId=${examId}`, {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
