@@ -6,24 +6,31 @@ import Student from "@/models/Student";
 import { verifyToken } from "@/lib/auth"; // For admin
 import { verifyStudentToken } from "@/lib/studentAuth"; // For student
 
-// Helper to get user from request (either Student or Admin)
+// Helper to get user from request (either Student, Admin, or Guest)
 async function getUser(request) {
-    // Try student first
+    // 1. Try Admin first (Crucial for moderation logic)
+    const authHeader = request.headers.get("authorization");
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+        const token = authHeader.substring(7);
+        try {
+            const decoded = verifyToken(token);
+            if (decoded) {
+                return { id: decoded.userId || decoded.id, type: "User" };
+            }
+        } catch (e) { /* ignore admin token error */ }
+    }
+
+    // 2. Try student
     const studentAuth = await verifyStudentToken(request);
     if (!studentAuth.error) {
         return { id: studentAuth.studentId, type: "Student" };
     }
 
-    // Try admin
-    const authHeader = request.headers.get("authorization");
-    if (authHeader && authHeader.startsWith("Bearer ")) {
-        const token = authHeader.substring(7);
-        const decoded = verifyToken(token); // Verify admin token
-        if (decoded) {
-            // Since the Auth logic puts ID in decoded.id or similar, adapt as needed.
-            // Assuming standard admin auth logic here
-            return { id: decoded.userId || decoded.id, type: "User" };
-        }
+    // 3. Try Guest
+    const guestId = request.headers.get("x-guest-id");
+    const guestName = request.headers.get("x-guest-name");
+    if (guestId) {
+        return { id: guestId, name: guestName || "Guest", type: "Guest" };
     }
 
     return null;
@@ -57,6 +64,20 @@ export async function GET(request) {
         if (topicId) query.topicId = topicId;
         if (subTopicId) query.subTopicId = subTopicId;
 
+        // Moderation filter
+        const user = await getUser(request);
+        const isAdmin = user?.type === "User";
+        const status = searchParams.get("status"); // 'all', 'approved', 'pending'
+
+        if (!isAdmin) {
+            // For students/guests, show approved content OR content where isApproved is not false (for legacy)
+            query.isApproved = { $ne: false };
+        } else if (status === "pending") {
+            query.isApproved = false;
+        } else if (status === "approved") {
+            query.isApproved = true;
+        } // if status='all' or not provided for admin, show all
+
         // Text Search
         if (search) {
             query.$or = [
@@ -85,7 +106,13 @@ export async function GET(request) {
             .sort(sortOption)
             .skip(skip)
             .limit(limit)
-            .populate("author", "firstName lastName avatar email role") // Populate author details
+            .populate("author", "firstName lastName avatar email role")
+            .populate("examId", "name slug")
+            .populate("subjectId", "name slug")
+            .populate("unitId", "name slug")
+            .populate("chapterId", "name slug")
+            .populate("topicId", "name slug")
+            .populate("subTopicId", "name slug")
             .lean();
 
         const total = await Thread.countDocuments(query);
@@ -135,9 +162,11 @@ export async function POST(request) {
 
         const newThread = await Thread.create({
             ...body,
-            author: user.id,
+            author: user.type === "Guest" ? null : user.id,
             authorType: user.type,
+            guestName: user.type === "Guest" ? user.name : undefined,
             tags: body.tags || ["General"],
+            isApproved: user.type !== "Guest", // Guest threads need approval
         });
 
         return NextResponse.json({

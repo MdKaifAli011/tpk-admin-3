@@ -1,5 +1,6 @@
 
 import mongoose from "mongoose";
+import "./Guest"; // Ensure Guest model is registered for population
 
 const replySchema = new mongoose.Schema(
     {
@@ -15,14 +16,16 @@ const replySchema = new mongoose.Schema(
         },
         author: {
             type: mongoose.Schema.Types.ObjectId,
-            // Could be Student or User (Admin)
-            required: true,
             refPath: 'authorType'
         },
         authorType: {
             type: String,
             required: true,
-            enum: ["Student", "User"],
+            enum: ["Student", "User", "Guest"],
+        },
+        guestName: {
+            type: String,
+            trim: true,
         },
         parentReplyId: {
             type: mongoose.Schema.Types.ObjectId,
@@ -31,11 +34,25 @@ const replySchema = new mongoose.Schema(
             index: true,
         },
         upvotes: [{
-            type: mongoose.Schema.Types.ObjectId,
+            type: String,
+            index: true,
+        }],
+        downvotes: [{
+            type: String,
+            index: true,
         }],
         isAccepted: {
             type: Boolean,
             default: false,
+        },
+        reports: [{
+            reporterId: { type: String, required: true },
+            reason: { type: String },
+            createdAt: { type: Date, default: Date.now }
+        }],
+        isApproved: {
+            type: Boolean,
+            default: true,
         },
     },
     { timestamps: true }

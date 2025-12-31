@@ -13,6 +13,12 @@ export async function GET(request, { params }) {
         // 1. Fetch Thread
         const thread = await Thread.findOne({ slug })
             .populate("author", "firstName lastName avatar role")
+            .populate("examId", "name slug")
+            .populate("subjectId", "name slug")
+            .populate("unitId", "name slug")
+            .populate("chapterId", "name slug")
+            .populate("topicId", "name slug")
+            .populate("subTopicId", "name slug")
             .lean();
 
         if (!thread) {
@@ -27,26 +33,46 @@ export async function GET(request, { params }) {
         Thread.updateOne({ _id: thread._id }, { $inc: { views: 1 } }).exec();
 
         // 2. Fetch Replies (Hierarchy)
-        const replies = await Reply.find({ threadId: thread._id })
-            .sort({ isAccepted: -1, upvotes: -1, createdAt: 1 })
+        const { searchParams } = new URL(request.url);
+        const sort = searchParams.get("sort") || "top";
+
+        let replySort = { isAccepted: -1, upvotes: -1, createdAt: 1 };
+        if (sort === "new") {
+            replySort = { createdAt: -1 };
+        }
+
+        const user = await getUser(request);
+        const isAdmin = user?.type === "User";
+
+        const replyQuery = { threadId: thread._id };
+        if (!isAdmin) {
+            replyQuery.isApproved = { $ne: false };
+        }
+
+        const replies = await Reply.find(replyQuery)
+            .sort(replySort)
             .populate("author", "firstName lastName avatar role")
             .lean();
 
-        // 3. User Context (for isLiked)
-        const user = await getUser(request);
+        // 3. User Context (for isLiked/isDisliked/isSubscribed)
         const upvotes = thread.upvotes || [];
-        const isLiked = (user && user.id) ? upvotes.some(id => id && id.toString() === user.id.toString()) : false;
+        const downvotes = thread.downvotes || [];
+        const subscribers = thread.subscribers || [];
+        const userId = user?.id?.toString();
 
-        // Add isLiked to thread object (safe since it's lean)
-        thread.isLiked = isLiked;
+        thread.score = upvotes.length - downvotes.length;
+        thread.isLiked = userId ? upvotes.includes(userId) : false;
+        thread.isDisliked = userId ? downvotes.includes(userId) : false;
+        thread.isSubscribed = userId ? subscribers.includes(userId) : false;
 
-        // Add isLiked to replies
-        if (user && user.id) {
-            replies.forEach(reply => {
-                const rUpvotes = reply.upvotes || [];
-                reply.isLiked = rUpvotes.some(id => id && id.toString() === user.id.toString());
-            });
-        }
+        // Add metadata to replies
+        replies.forEach(reply => {
+            const rUp = reply.upvotes || [];
+            const rDown = reply.downvotes || [];
+            reply.score = rUp.length - rDown.length;
+            reply.isLiked = userId ? rUp.includes(userId) : false;
+            reply.isDisliked = userId ? rDown.includes(userId) : false;
+        });
 
         return NextResponse.json({
             success: true,
@@ -67,24 +93,29 @@ export async function GET(request, { params }) {
 
 // Helper to get user from request
 async function getUser(request) {
-    // Try admin first (stronger permission)
+    // 1. Try admin first (Crucial for moderation)
     const authHeader = request.headers.get("authorization");
     if (authHeader && authHeader.startsWith("Bearer ")) {
         try {
             const token = authHeader.substring(7);
-            // Import dynamically to avoid top-level optional import issues if unused
             const { verifyToken } = await import("@/lib/auth");
             const decoded = verifyToken(token);
             if (decoded) return { id: decoded.userId || decoded.id, role: decoded.role, type: "User" };
         } catch (e) { /* ignore */ }
     }
 
-    // Try student
+    // 2. Try student
     const { verifyStudentToken } = await import("@/lib/studentAuth");
     const studentAuth = await verifyStudentToken(request);
     if (!studentAuth.error) {
         return { id: studentAuth.studentId, type: "Student" };
     }
+
+    // 3. Try Guest
+    const guestId = request.headers.get("x-guest-id");
+    const guestName = request.headers.get("x-guest-name");
+    if (guestId) return { id: guestId, name: guestName, type: "Guest" };
+
     return null;
 }
 
@@ -105,7 +136,8 @@ export async function DELETE(request, { params }) {
 
         // Allow deletion if Admin or Author
         const isAdmin = user.type === "User";
-        const isAuthor = thread.author.toString() === user.id;
+        const isAuthor = (thread.author && thread.author.toString() === user.id) ||
+            (thread.authorType === "Guest" && user.type === "Guest" && thread.guestName === user.name);
 
         if (!isAdmin && !isAuthor) {
             return NextResponse.json({ success: false, message: "Forbidden" }, { status: 403 });
@@ -139,12 +171,18 @@ export async function PATCH(request, { params }) {
 
         const body = await request.json();
         const isAdmin = user.type === "User";
-        const isAuthor = thread.author.toString() === user.id;
+        const isAuthor = (thread.author && thread.author.toString() === user.id) ||
+            (thread.authorType === "Guest" && user.type === "Guest" && thread.guestName === user.name);
 
         // Admin actions: Pin
         if (body.isPinned !== undefined) {
             if (!isAdmin) return NextResponse.json({ success: false, message: "Only admins can pin threads" }, { status: 403 });
             thread.isPinned = body.isPinned;
+        }
+
+        if (body.isApproved !== undefined) {
+            if (!isAdmin) return NextResponse.json({ success: false, message: "Only admins can approve threads" }, { status: 403 });
+            thread.isApproved = body.isApproved;
         }
 
         // Author/Admin actions: Edit Content, Mark Solved

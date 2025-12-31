@@ -1,6 +1,7 @@
 
 import mongoose from "mongoose";
 import slugify from "slugify";
+import "./Guest"; // Ensure Guest model is registered for population
 
 const threadSchema = new mongoose.Schema(
     {
@@ -20,13 +21,16 @@ const threadSchema = new mongoose.Schema(
         },
         author: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "Student", // Primarily students, but admins could post too. Ideally a polymorphic ref or just check ID.
-            required: true,
+            refPath: "authorType",
         },
         authorType: {
             type: String,
-            enum: ["Student", "User"], // Student or Admin (User)
+            enum: ["Student", "User", "Guest"], // Student, Admin (User), or Anonymous Guest
             default: "Student",
+        },
+        guestName: {
+            type: String,
+            trim: true,
         },
         tags: {
             type: [String],
@@ -47,10 +51,18 @@ const threadSchema = new mongoose.Schema(
             default: 0,
         },
         upvotes: [{
-            type: mongoose.Schema.Types.ObjectId,
-            // Store IDs of users/students who upvoted
+            type: String,
+            index: true,
+        }],
+        downvotes: [{
+            type: String,
+            index: true,
         }],
         isPinned: {
+            type: Boolean,
+            default: false,
+        },
+        isLocked: {
             type: Boolean,
             default: false,
         },
@@ -62,9 +74,28 @@ const threadSchema = new mongoose.Schema(
             type: Number,
             default: 0,
         },
+        attachments: [{
+            name: { type: String, required: true },
+            size: { type: String },
+            url: { type: String, required: true },
+            type: { type: String, default: "Resource File" }
+        }],
+        subscribers: [{
+            type: String, // userId or guestId
+            index: true,
+        }],
+        reports: [{
+            reporterId: { type: String, required: true },
+            reason: { type: String },
+            createdAt: { type: Date, default: Date.now }
+        }],
         lastActivityAt: {
             type: Date,
             default: Date.now,
+        },
+        isApproved: {
+            type: Boolean,
+            default: true,
         }
     },
     { timestamps: true }

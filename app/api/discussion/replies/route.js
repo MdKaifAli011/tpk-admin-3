@@ -7,11 +7,27 @@ import { verifyStudentToken } from "@/lib/studentAuth";
 
 // Helper to get user
 async function getUser(request) {
-    // Try student first (Primary users)
-    const studentAuth = await verifyStudentToken(request);
-    if (!studentAuth.error) {
-        return { id: studentAuth.studentId, type: "Student" };
+    // 1. Try Admin first
+    const authHeader = request.headers.get("authorization");
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+        const token = authHeader.substring(7);
+        const { verifyToken } = await import("@/lib/auth");
+        try {
+            const decoded = verifyToken(token);
+            if (decoded) return { id: decoded.userId || decoded.id, type: "User" };
+        } catch (e) { /* ignore */ }
     }
+
+    // 2. Try student
+    const { verifyStudentToken } = await import("@/lib/studentAuth");
+    const studentAuth = await verifyStudentToken(request);
+    if (!studentAuth.error) return { id: studentAuth.studentId, type: "Student" };
+
+    // 3. Try Guest
+    const guestId = request.headers.get("x-guest-id");
+    const guestName = request.headers.get("x-guest-name");
+    if (guestId) return { id: guestId, name: guestName || "Guest", type: "Guest" };
+
     return null;
 }
 
@@ -34,8 +50,10 @@ export async function POST(request) {
             threadId,
             content,
             parentReplyId: parentReplyId || null,
-            author: user.id,
+            author: user.type === "Guest" ? null : user.id,
             authorType: user.type,
+            guestName: user.type === "Guest" ? user.name : undefined,
+            isApproved: user.type !== "Guest", // Guest replies need approval
         });
 
         return NextResponse.json({

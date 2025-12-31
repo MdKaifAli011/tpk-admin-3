@@ -25,6 +25,7 @@ const RichTextEditor = ({
   topicId = null,
   subtopicId = null,
   definitionId = null,
+  hideAdminTools = false,
 }) => {
   const titleCasePreserveAcronyms = (text) => {
     if (!text) return "";
@@ -438,10 +439,10 @@ const RichTextEditor = ({
       const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
       return result
         ? {
-            r: parseInt(result[1], 16),
-            g: parseInt(result[2], 16),
-            b: parseInt(result[3], 16),
-          }
+          r: parseInt(result[1], 16),
+          g: parseInt(result[2], 16),
+          b: parseInt(result[3], 16),
+        }
         : { r: 37, g: 99, b: 235 }; // Default blue
     };
 
@@ -610,8 +611,8 @@ const RichTextEditor = ({
       console.error("Image upload error:", error);
       setImageError(
         error.response?.data?.message ||
-          error.message ||
-          "Failed to upload image. Please try again."
+        error.message ||
+        "Failed to upload image. Please try again."
       );
     } finally {
       setUploadingImage(false);
@@ -621,12 +622,11 @@ const RichTextEditor = ({
   return (
     <>
       <div
-        className={`rounded-lg border border-gray-200 bg-white shadow-sm ${
-          disabled ? "opacity-90" : ""
-        } ${className}`}
+        className={`rounded-lg border border-gray-200 bg-white shadow-sm ${disabled ? "opacity-90" : ""
+          } ${className}`}
       >
         {/* Insert Form, Button, and Image */}
-        {isReady && !disabled && (
+        {isReady && !disabled && !hideAdminTools && (
           <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50 flex items-center justify-end gap-2">
             <button
               onClick={() => setShowImageModal(true)}
@@ -759,11 +759,10 @@ const RichTextEditor = ({
                         <li key={form._id}>
                           <button
                             onClick={() => handleFormSelect(form)}
-                            className={`w-full text-left p-2 transition-colors ${
-                              selectedForm?._id === form._id
-                                ? "bg-blue-50 border-l-2 border-blue-600"
-                                : "hover:bg-gray-50"
-                            }`}
+                            className={`w-full text-left p-2 transition-colors ${selectedForm?._id === form._id
+                              ? "bg-blue-50 border-l-2 border-blue-600"
+                              : "hover:bg-gray-50"
+                              }`}
                           >
                             <div className="flex items-start justify-between gap-2">
                               <h3 className="text-sm font-semibold text-gray-900">
@@ -860,11 +859,11 @@ const RichTextEditor = ({
                           {/* Description Badge - shown first */}
                           {(insertOptions.description ||
                             selectedForm.description) && (
-                            <div className="bg-blue-600 text-white text-xs font-medium px-2 py-1 rounded inline-block mb-2">
-                              {insertOptions.description ||
-                                selectedForm.description}
-                            </div>
-                          )}
+                              <div className="bg-blue-600 text-white text-xs font-medium px-2 py-1 rounded inline-block mb-2">
+                                {insertOptions.description ||
+                                  selectedForm.description}
+                              </div>
+                            )}
                           {/* Title - shown second */}
                           <h4 className="text-sm font-semibold text-gray-900">
                             {insertOptions.title || selectedForm.formId}
@@ -1176,11 +1175,10 @@ const RichTextEditor = ({
                           className="inline-block w-full px-4 py-2.5 text-center text-white rounded-lg font-medium transition-all"
                           style={{
                             backgroundColor: buttonOptions.color,
-                            boxShadow: `0 2px 4px rgba(${
-                              buttonOptions.color === "#2563eb"
-                                ? "37, 99, 235"
-                                : "0, 0, 0"
-                            }, 0.2)`,
+                            boxShadow: `0 2px 4px rgba(${buttonOptions.color === "#2563eb"
+                              ? "37, 99, 235"
+                              : "0, 0, 0"
+                              }, 0.2)`,
                           }}
                           onClick={(e) => e.preventDefault()}
                         >
@@ -1192,11 +1190,10 @@ const RichTextEditor = ({
                           className="inline-block w-full px-4 py-2.5 text-center text-white rounded-lg font-medium transition-all cursor-default"
                           style={{
                             backgroundColor: buttonOptions.color,
-                            boxShadow: `0 2px 4px rgba(${
-                              buttonOptions.color === "#2563eb"
-                                ? "37, 99, 235"
-                                : "0, 0, 0"
-                            }, 0.2)`,
+                            boxShadow: `0 2px 4px rgba(${buttonOptions.color === "#2563eb"
+                              ? "37, 99, 235"
+                              : "0, 0, 0"
+                              }, 0.2)`,
                           }}
                           disabled
                         >

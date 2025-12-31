@@ -220,7 +220,7 @@ const PerformanceTab = ({
   const accuracyRate =
     stats.totalQuestions > 0
       ? Math.round((stats.correctAnswers / stats.totalQuestions) * 100 * 100) /
-        100
+      100
       : 0;
 
   // Not authenticated state
@@ -438,23 +438,21 @@ const PerformanceTab = ({
 
         {/* Improvement */}
         <div
-          className={`bg-gradient-to-br rounded-xl p-4 border shadow-sm ${
-            stats.improvement > 0
+          className={`bg-gradient-to-br rounded-xl p-4 border shadow-sm ${stats.improvement > 0
               ? "from-emerald-50 to-emerald-100 border-emerald-200"
               : stats.improvement < 0
-              ? "from-red-50 to-red-100 border-red-200"
-              : "from-gray-50 to-gray-100 border-gray-200"
-          }`}
+                ? "from-red-50 to-red-100 border-red-200"
+                : "from-gray-50 to-gray-100 border-gray-200"
+            }`}
         >
           <div className="flex items-center justify-between mb-2">
             <div
-              className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                stats.improvement > 0
+              className={`w-10 h-10 rounded-lg flex items-center justify-center ${stats.improvement > 0
                   ? "bg-emerald-500"
                   : stats.improvement < 0
-                  ? "bg-red-500"
-                  : "bg-gray-500"
-              }`}
+                    ? "bg-red-500"
+                    : "bg-gray-500"
+                }`}
             >
               {stats.improvement > 0 ? (
                 <FaArrowUp className="text-white text-lg" />
@@ -465,13 +463,12 @@ const PerformanceTab = ({
               )}
             </div>
             <span
-              className={`text-2xl font-bold ${
-                stats.improvement > 0
+              className={`text-2xl font-bold ${stats.improvement > 0
                   ? "text-emerald-600"
                   : stats.improvement < 0
-                  ? "text-red-600"
-                  : "text-gray-600"
-              }`}
+                    ? "text-red-600"
+                    : "text-gray-600"
+                }`}
             >
               {stats.improvement > 0 ? "+" : ""}
               {stats.improvement.toFixed(1)}%
@@ -602,13 +599,11 @@ const PerformanceTab = ({
                 points={chartData
                   .map(
                     (d, i) =>
-                      `${
-                        40 +
-                        (i * (chartWidth - 60)) / (chartData.length - 1 || 1)
-                      },${
-                        chartHeight -
-                        (d.percentage / maxPercentage) * (chartHeight - 40) -
-                        20
+                      `${40 +
+                      (i * (chartWidth - 60)) / (chartData.length - 1 || 1)
+                      },${chartHeight -
+                      (d.percentage / maxPercentage) * (chartHeight - 40) -
+                      20
                       }`
                   )
                   .join(" ")}
@@ -717,10 +712,10 @@ const PerformanceTab = ({
                 const resultAccuracy =
                   result.totalQuestions > 0
                     ? Math.round(
-                        ((result.correctCount || 0) / result.totalQuestions) *
-                          100 *
-                          100
-                      ) / 100
+                      ((result.correctCount || 0) / result.totalQuestions) *
+                      100 *
+                      100
+                    ) / 100
                     : 0;
 
                 // Get test name from populated testId
@@ -728,8 +723,8 @@ const PerformanceTab = ({
                 // If not populated, testId is just the ObjectId string
                 const testName =
                   result.testId &&
-                  typeof result.testId === "object" &&
-                  result.testId.name
+                    typeof result.testId === "object" &&
+                    result.testId.name
                     ? result.testId.name
                     : "Test";
 
@@ -772,15 +767,14 @@ const PerformanceTab = ({
                       <div className="flex items-center gap-2">
                         <div className="w-16 h-1.5 bg-gray-200 rounded-full overflow-hidden">
                           <div
-                            className={`h-full ${
-                              resultAccuracy >= 80
+                            className={`h-full ${resultAccuracy >= 80
                                 ? "bg-green-500"
                                 : resultAccuracy >= 60
-                                ? "bg-blue-500"
-                                : resultAccuracy >= 40
-                                ? "bg-yellow-500"
-                                : "bg-red-500"
-                            }`}
+                                  ? "bg-blue-500"
+                                  : resultAccuracy >= 40
+                                    ? "bg-yellow-500"
+                                    : "bg-red-500"
+                              }`}
                             style={{ width: `${resultAccuracy}%` }}
                           />
                         </div>

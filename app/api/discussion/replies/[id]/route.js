@@ -57,3 +57,33 @@ export async function DELETE(request, { params }) {
         return NextResponse.json({ success: false, message: "Failed to delete reply" }, { status: 500 });
     }
 }
+
+export async function PATCH(request, { params }) {
+    try {
+        await connectDB();
+        const { id } = await params;
+        const user = await getUser(request);
+
+        if (!user || user.type !== "User") {
+            return NextResponse.json({ success: false, message: "Unauthorized. Admin only." }, { status: 401 });
+        }
+
+        const body = await request.json();
+        const { isApproved } = body;
+
+        const updatedReply = await Reply.findByIdAndUpdate(id, { isApproved }, { new: true });
+
+        if (!updatedReply) {
+            return NextResponse.json({ success: false, message: "Reply not found" }, { status: 404 });
+        }
+
+        return NextResponse.json({
+            success: true,
+            data: updatedReply,
+            message: `Reply ${isApproved ? 'approved' : 'unapproved'}`
+        });
+    } catch (error) {
+        console.error("Patch reply error:", error);
+        return NextResponse.json({ success: false, message: "Failed to update reply" }, { status: 500 });
+    }
+}

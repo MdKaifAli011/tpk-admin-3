@@ -1056,7 +1056,7 @@ const PracticeTestList = ({
                   </Button>
 
                   {/* Back */}
-                    <Button variant="ghost" size="sm" onClick={handleBackToList}>
+                  <Button variant="ghost" size="sm" onClick={handleBackToList}>
                     Go Back
                   </Button>
                 </div>
@@ -1157,11 +1157,10 @@ const PracticeTestList = ({
                           <FaTimesCircle className="text-red-600 text-xl" />
                         )}
                         <span
-                          className={`px-3 py-1 rounded-full text-sm font-medium ${
-                            result.isCorrect
+                          className={`px-3 py-1 rounded-full text-sm font-medium ${result.isCorrect
                               ? "bg-green-100 text-green-800"
                               : "bg-red-100 text-red-800"
-                          }`}
+                            }`}
                         >
                           {result.marks > 0
                             ? `+${result.marks.toFixed(2)}`
@@ -1181,23 +1180,21 @@ const PracticeTestList = ({
                         return (
                           <div
                             key={option}
-                            className={`p-3 rounded-lg border ${
-                              isCorrectAnswer
+                            className={`p-3 rounded-lg border ${isCorrectAnswer
                                 ? "bg-green-50 border-green-200"
                                 : isUserAnswer && !isCorrectAnswer
-                                ? "bg-red-50 border-red-200"
-                                : "bg-white border-gray-200"
-                            }`}
+                                  ? "bg-red-50 border-red-200"
+                                  : "bg-white border-gray-200"
+                              }`}
                           >
                             <div className="flex items-center gap-3">
                               <span
-                                className={`w-8 h-8 rounded-full flex items-center justify-center font-medium text-sm ${
-                                  isCorrectAnswer
+                                className={`w-8 h-8 rounded-full flex items-center justify-center font-medium text-sm ${isCorrectAnswer
                                     ? "bg-green-600 text-white"
                                     : isUserAnswer && !isCorrectAnswer
-                                    ? "bg-red-600 text-white"
-                                    : "bg-gray-200 text-gray-700"
-                                }`}
+                                      ? "bg-red-600 text-white"
+                                      : "bg-gray-200 text-gray-700"
+                                  }`}
                               >
                                 {option}
                               </span>
@@ -1282,7 +1279,7 @@ const PracticeTestList = ({
               {test.name}
             </h1>
             <p className="text-sm text-gray-500">
-              Let&apos;s boost your preparation today 
+              Let&apos;s boost your preparation today
             </p>
           </div>
 
@@ -1324,17 +1321,17 @@ const PracticeTestList = ({
                 {(test.description?.trim()
                   ? test.description.split("\n").map((line) => line.trim())
                   : [
-                      "Read each question carefully.",
-                      "You may navigate between questions anytime.",
-                      'Use "Mark for Review" for doubtful questions.',
-                      test.duration
-                        ? `Complete the test within ${test.duration}.`
-                        : "No time limit.",
-                      test.negativeMarks > 0
-                        ? `Each incorrect answer deducts ${test.negativeMarks} marks.`
-                        : "No negative marking.",
-                      "Review answers before final submission.",
-                    ]
+                    "Read each question carefully.",
+                    "You may navigate between questions anytime.",
+                    'Use "Mark for Review" for doubtful questions.',
+                    test.duration
+                      ? `Complete the test within ${test.duration}.`
+                      : "No time limit.",
+                    test.negativeMarks > 0
+                      ? `Each incorrect answer deducts ${test.negativeMarks} marks.`
+                      : "No negative marking.",
+                    "Review answers before final submission.",
+                  ]
                 ).map((line, index) => (
                   <li key={index} className="flex gap-2">
                     <span className="mt-0.5 text-gray-400">•</span>
@@ -1477,21 +1474,18 @@ const PracticeTestList = ({
 
             {timeRemaining !== null && (
               <div
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg border ${
-                  timeRemaining < 300
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg border ${timeRemaining < 300
                     ? "bg-red-50 border-red-200"
                     : "bg-gray-50 border-gray-200"
-                }`}
+                  }`}
               >
                 <FaClock
-                  className={`text-sm ${
-                    timeRemaining < 300 ? "text-red-600" : "text-gray-600"
-                  }`}
+                  className={`text-sm ${timeRemaining < 300 ? "text-red-600" : "text-gray-600"
+                    }`}
                 />
                 <span
-                  className={`text-sm font-semibold ${
-                    timeRemaining < 300 ? "text-red-600" : "text-gray-900"
-                  }`}
+                  className={`text-sm font-semibold ${timeRemaining < 300 ? "text-red-600" : "text-gray-900"
+                    }`}
                 >
                   {formatTime(timeRemaining)}
                 </span>
@@ -1526,10 +1520,9 @@ const PracticeTestList = ({
                     key={opt}
                     className={`
                       flex items-start gap-3 p-4 rounded-lg cursor-pointer border transition-all
-                      ${
-                        selected
-                          ? "border-blue-500 bg-blue-50"
-                          : "border-gray-300 bg-white hover:bg-gray-50"
+                      ${selected
+                        ? "border-blue-500 bg-blue-50"
+                        : "border-gray-300 bg-white hover:bg-gray-50"
                       }
                     `}
                   >
@@ -1537,10 +1530,9 @@ const PracticeTestList = ({
                     <div
                       className={`
                         w-5 h-5 rounded-full flex items-center justify-center border shrink-0 mt-0.5
-                        ${
-                          selected
-                            ? "bg-blue-600 border-blue-700"
-                            : "border-gray-400"
+                        ${selected
+                          ? "bg-blue-600 border-blue-700"
+                          : "border-gray-400"
                         }
                       `}
                     >
@@ -1588,18 +1580,16 @@ const PracticeTestList = ({
                 type="button"
                 onClick={() => handleToggleMarked(currentQuestion._id)}
                 className={`inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition-colors
-                  ${
-                    markedForReview.has(currentQuestion._id)
-                      ? "border-yellow-400 bg-yellow-50 text-yellow-800 hover:bg-yellow-100"
-                      : "border-gray-300 bg-gray-50 text-gray-700 hover:bg-gray-100"
+                  ${markedForReview.has(currentQuestion._id)
+                    ? "border-yellow-400 bg-yellow-50 text-yellow-800 hover:bg-yellow-100"
+                    : "border-gray-300 bg-gray-50 text-gray-700 hover:bg-gray-100"
                   }`}
               >
                 <FaFlag
-                  className={`text-xs ${
-                    markedForReview.has(currentQuestion._id)
+                  className={`text-xs ${markedForReview.has(currentQuestion._id)
                       ? "text-yellow-500"
                       : "text-gray-500"
-                  }`}
+                    }`}
                 />
                 {markedForReview.has(currentQuestion._id)
                   ? "Marked for Review"
@@ -1659,9 +1649,8 @@ const PracticeTestList = ({
                       onClick={() => goToQuestion(idx)}
                       className={cls}
                       aria-current={cur ? "page" : undefined}
-                      aria-label={`Question ${idx + 1}${
-                        mark ? " marked for review" : ""
-                      }${ans ? " answered" : ""}`}
+                      aria-label={`Question ${idx + 1}${mark ? " marked for review" : ""
+                        }${ans ? " answered" : ""}`}
                     >
                       {idx + 1}
                     </button>
