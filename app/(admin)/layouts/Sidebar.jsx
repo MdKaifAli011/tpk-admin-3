@@ -33,7 +33,12 @@ const ALL_MENU_ITEMS = [
     href: "/admin/definitions",
     icon: FaRegFolderOpen,
   },
-
+  {
+    name: "Bulk Import",
+    href: "/admin/bulk-import",
+    icon: FaLayerGroup, // Using a distinct icon if available, or FaLayerGroup for now
+    adminOnly: true,
+  },
   {
     name: "Practice Test Management",
     href: "/admin/practice",
