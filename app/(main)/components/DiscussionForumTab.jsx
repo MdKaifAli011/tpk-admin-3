@@ -204,6 +204,119 @@ const ThreadCard = ({ thread, onClick }) => {
   );
 };
 
+/* ---------- Pagination Component ---------- */
+const Pagination = ({ currentPage, totalPages, onPageChange }) => {
+  if (totalPages <= 1) return null;
+
+  return (
+    <div className="pt-10 flex items-center justify-center gap-3">
+      <button
+        disabled={currentPage === 1}
+        onClick={() => onPageChange(currentPage - 1)}
+        className="flex items-center gap-2 h-10 px-4 rounded-xl border border-gray-200 bg-white text-gray-500 hover:border-blue-500 hover:text-blue-600 disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm font-bold text-[11px] uppercase tracking-wider"
+      >
+        <FaArrowLeft size={10} />
+        <span className="hidden sm:inline">Prev</span>
+      </button>
+
+      <div className="flex items-center gap-1.5">
+        {[...Array(totalPages)].map((_, i) => {
+          const p = i + 1;
+          const isEdges = p === 1 || p === totalPages;
+          const isNear = Math.abs(p - currentPage) <= 1;
+
+          if (isEdges || isNear) {
+            return (
+              <button
+                key={p}
+                onClick={() => onPageChange(p)}
+                className={`w-10 h-10 rounded-xl text-[11px] font-extrabold transition-all shadow-sm flex items-center justify-center ${currentPage === p ? 'bg-blue-600 text-white border-blue-600 shadow-blue-200' : 'bg-white text-gray-500 border-gray-200 hover:border-blue-500 hover:text-blue-600'}`}
+              >
+                {p}
+              </button>
+            );
+          }
+          if (p === 2 || p === totalPages - 1) {
+            return <span key={p} className="px-1 text-gray-300 font-bold">...</span>;
+          }
+          return null;
+        })}
+      </div>
+
+      <button
+        disabled={currentPage === totalPages}
+        onClick={() => onPageChange(currentPage + 1)}
+        className="flex items-center gap-2 h-10 px-4 rounded-xl border border-gray-200 bg-white text-gray-500 hover:border-blue-500 hover:text-blue-600 disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm font-bold text-[11px] uppercase tracking-wider"
+      >
+        <span className="hidden sm:inline">Next</span>
+        <FaArrowLeft size={10} className="rotate-180" />
+      </button>
+    </div>
+  );
+};
+
+/* ---------- Success Modal Component ---------- */
+const SuccessModal = ({ isOpen, onClose, title, message }) => {
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+          />
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+            className="relative bg-white rounded-3xl shadow-2xl shadow-blue-900/20 max-w-sm w-full overflow-hidden border border-blue-100"
+          >
+            <div className="absolute top-0 right-0 p-4">
+              <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-900 transition-colors">
+                <FaTimes size={14} />
+              </button>
+            </div>
+
+            <div className="px-8 pt-10 pb-8 text-center">
+              <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-white shadow-lg shadow-emerald-200">
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+                >
+                  <FaCheckCircle className="text-emerald-500" size={40} />
+                </motion.div>
+              </div>
+
+              <h3 className="text-xl font-extrabold text-gray-900 mb-2 leading-tight">
+                {title}
+              </h3>
+              <p className="text-sm text-gray-500 font-medium leading-relaxed mb-8">
+                {message}
+              </p>
+
+              <Button
+                onClick={onClose}
+                variant="primary"
+                size="md"
+                className="w-full py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-700 shadow-xl shadow-blue-200 font-bold text-sm tracking-wide"
+              >
+                Got it, thanks!
+              </Button>
+            </div>
+
+            {/* Decorative element */}
+            <div className="h-1.5 w-full bg-gradient-to-r from-emerald-400 via-blue-500 to-indigo-600" />
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
+  );
+};
+
 /* ---------- Thread Detail View ---------- */
 const ThreadDetail = ({ slug, onBack, guestIdentity }) => {
   const [thread, setThread] = useState(null);
@@ -211,28 +324,44 @@ const ThreadDetail = ({ slug, onBack, guestIdentity }) => {
   const [loading, setLoading] = useState(true);
   const [sortState, setSortState] = useState("Most Upvoted");
   const [replyContent, setReplyContent] = useState("");
+  const [replySearch, setReplySearch] = useState("");
+  const [replyPage, setReplyPage] = useState(1);
+  const [replyPagination, setReplyPagination] = useState({ pages: 1, total: 0 });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successContent, setSuccessContent] = useState({ title: "", message: "" });
   const editorRef = useRef(null);
+  const repliesRef = useRef(null);
+  const searchTimeout = useRef(null);
 
   const scrollToEditor = () => {
     editorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   };
 
+  const scrollToReplies = () => {
+    repliesRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
   const fetchDetail = useCallback(async () => {
     try {
+      setLoading(true);
       const headers = { "x-guest-id": guestIdentity.id, "x-guest-name": guestIdentity.name };
       const sortParam = sortState === "Most Upvoted" ? "top" : "new";
-      const res = await api.get(`/discussion/threads/${slug}?sort=${sortParam}`, { headers });
+      const url = `/discussion/threads/${slug}?sort=${sortParam}&replyPage=${replyPage}&replySearch=${replySearch}`;
+      const res = await api.get(url, { headers });
       if (res.data.success) {
         setThread(res.data.data.thread);
         setReplies(res.data.data.replies);
+        if (res.data.data.pagination) {
+          setReplyPagination(res.data.data.pagination);
+        }
       }
     } catch (error) {
       console.error("Failed to fetch thread", error);
     } finally {
       setLoading(false);
     }
-  }, [slug, guestIdentity, sortState]);
+  }, [slug, guestIdentity, sortState, replyPage, replySearch]);
 
   useEffect(() => {
     fetchDetail();
@@ -295,12 +424,27 @@ const ThreadDetail = ({ slug, onBack, guestIdentity }) => {
     setIsSubmitting(true);
     try {
       const headers = { "x-guest-id": guestIdentity.id, "x-guest-name": guestIdentity.name };
-      await api.post("/discussion/replies", {
+      const res = await api.post("/discussion/replies", {
         threadId: thread._id,
         content: finalContent,
         parentReplyId: parentId
       }, { headers });
       setReplyContent("");
+
+      const isApproved = res.data.data.isApproved;
+      if (isApproved === false || (guestIdentity.id && isApproved === undefined)) {
+        setSuccessContent({
+          title: "Waiting for Approval",
+          message: "thread is not aproved please wait for aproved by modrate teams or admin teams"
+        });
+      } else {
+        setSuccessContent({
+          title: "Reply Posted!",
+          message: "Your contribution has been successfully shared with the community. Thank you for helping others learn!"
+        });
+      }
+
+      setShowSuccessModal(true);
       fetchDetail();
     } catch (error) {
       console.error("Error posting reply", error);
@@ -313,18 +457,28 @@ const ThreadDetail = ({ slug, onBack, guestIdentity }) => {
     const map = {};
     const roots = [];
     replies.forEach(r => {
-      r.children = [];
-      map[r._id] = r;
+      const copy = { ...r, children: [] };
+      map[r._id] = copy;
     });
     replies.forEach(r => {
       if (r.parentReplyId && map[r.parentReplyId]) {
-        map[r.parentReplyId].children.push(r);
-      } else {
-        roots.push(r);
+        map[r.parentReplyId].children.push(map[r._id]);
+      } else if (!r.parentReplyId || !map[r.parentReplyId]) {
+        // If it's a root OR the parent isn't in this result set (common in search)
+        roots.push(map[r._id]);
       }
     });
     return roots;
   }, [replies]);
+
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    if (searchTimeout.current) clearTimeout(searchTimeout.current);
+    searchTimeout.current = setTimeout(() => {
+      setReplySearch(value);
+      setReplyPage(1);
+    }, 500);
+  };
 
   if (loading) return <div className="flex justify-center p-20"><FaEye className="animate-pulse text-indigo-400" size={30} /></div>;
   if (!thread) return <div className="text-center p-20">Thread not found. <button onClick={onBack} className="text-indigo-600 underline">Go Back</button></div>;
@@ -480,36 +634,88 @@ const ThreadDetail = ({ slug, onBack, guestIdentity }) => {
           </Card>
 
           {/* Replies Section */}
-          <div className="space-y-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-extrabold text-gray-900 uppercase tracking-wider">
-                {replies.length} Answers
+          <div className="space-y-6" ref={repliesRef}>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 border-b border-gray-100 pb-4">
+              <h2 className="text-sm font-extrabold text-gray-900 uppercase tracking-widest flex items-center gap-2">
+                <FaComment className="text-blue-600" size={14} />
+                {replyPagination.total || replies.filter(r => !r.parentReplyId).length} Answers
               </h2>
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Sort by:</span>
-                <select
-                  className="bg-white border border-gray-200 px-3 py-1 text-[10px] font-bold text-gray-700 rounded-lg outline-none cursor-pointer focus:border-blue-500 transition-all"
-                  value={sortState}
-                  onChange={(e) => setSortState(e.target.value)}
-                >
-                  <option>Most Upvoted</option>
-                  <option>Latest</option>
-                </select>
+
+              <div className="flex flex-wrap items-center gap-3">
+                {/* Search Replies Input */}
+                <div className="relative">
+                  <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={10} />
+                  <input
+                    type="text"
+                    placeholder="Search in replies..."
+                    defaultValue={replySearch}
+                    onChange={handleSearchChange}
+                    className="pl-9 pr-4 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-[10px] font-bold focus:bg-white focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 transition-all w-full sm:w-44 outline-none"
+                  />
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Sort:</span>
+                  <select
+                    className="bg-white border border-gray-200 px-3 py-1 text-[10px] font-bold text-gray-700 rounded-lg outline-none cursor-pointer focus:border-blue-500 transition-all"
+                    value={sortState}
+                    onChange={(e) => { setSortState(e.target.value); setReplyPage(1); }}
+                  >
+                    <option>Most Upvoted</option>
+                    <option>Latest</option>
+                  </select>
+                </div>
               </div>
             </div>
 
-            <div className="space-y-6">
-              {nestedReplies.map(reply => (
-                <CommentItem
-                  key={reply._id}
-                  reply={reply}
-                  onVote={(id, type) => handleVote('reply', id, type)}
-                  onReply={handlePostReply}
-                  onReport={(id) => handleReport('reply', id)}
-                  onShare={handleShare}
-                  depth={0}
-                />
-              ))}
+            {replySearch && (
+              <div className="mb-6 flex items-center justify-between text-[11px] text-gray-500 bg-blue-50/50 p-4 rounded-xl border border-blue-100/50 shadow-sm animate-in fade-in duration-300">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+                    <FaFilter size={10} />
+                  </div>
+                  <span>Showing results for "<span className="font-extrabold text-blue-700">{replySearch}</span>"</span>
+                </div>
+                <button
+                  onClick={() => { setReplySearch(""); setReplyPage(1); }}
+                  className="text-[10px] font-extrabold text-blue-600 uppercase tracking-wider hover:bg-blue-100 px-3 py-1 rounded-lg transition-colors"
+                >
+                  Clear
+                </button>
+              </div>
+            )}
+
+            <div className="space-y-8">
+              {nestedReplies.length > 0 ? (
+                <>
+                  {nestedReplies.map(reply => (
+                    <CommentItem
+                      key={reply._id}
+                      reply={reply}
+                      onVote={(id, type) => handleVote('reply', id, type)}
+                      onReply={handlePostReply}
+                      onReport={(id) => handleReport('reply', id)}
+                      onShare={handleShare}
+                      depth={0}
+                    />
+                  ))}
+
+                  {/* Reply Pagination Controls */}
+                  <Pagination
+                    currentPage={replyPage}
+                    totalPages={replyPagination.pages}
+                    onPageChange={(p) => { setReplyPage(p); scrollToReplies(); }}
+                  />
+                </>
+              ) : (
+                <div className="text-center py-24 bg-gray-50/50 rounded-3xl border border-dashed border-gray-200 animate-in fade-in duration-500">
+                  <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-sm border border-gray-100 text-gray-200">
+                    <FaComment size={24} />
+                  </div>
+                  <h4 className="text-sm font-extrabold text-gray-800">No replies found</h4>
+                  <p className="text-[11px] text-gray-400 mt-2 uppercase tracking-widest font-bold">Try adjusting your search or be the first to reply!</p>
+                </div>
+              )}
             </div>
 
             {/* Reply Editor */}
@@ -591,6 +797,13 @@ const ThreadDetail = ({ slug, onBack, guestIdentity }) => {
           </div>
         </div>
       </div>
+
+      <SuccessModal
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        title={successContent.title}
+        message={successContent.message}
+      />
     </div>
   );
 };
@@ -808,8 +1021,11 @@ const DiscussionForumTab = ({ entityName, entityType, examId, subjectId, unitId,
   const [threads, setThreads] = useState([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
+  const [listPage, setListPage] = useState(1);
+  const [listPagination, setListPagination] = useState({ pages: 1, total: 0 });
   const [filter, setFilter] = useState("All");
   const [selectedTag, setSelectedTag] = useState("All Categories");
+  const threadSearchTimeout = useRef(null);
   const isCreateView = searchParams.get("action") === "create";
   const view = currentThreadSlug ? "DETAIL" : (isCreateView ? "CREATE" : "LIST");
 
@@ -817,6 +1033,8 @@ const DiscussionForumTab = ({ entityName, entityType, examId, subjectId, unitId,
   const [newContent, setNewContent] = useState("");
   const [newTag, setNewTag] = useState("General");
   const [isCreating, setIsCreating] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successContent, setSuccessContent] = useState({ title: "", message: "" });
 
   const fetchThreads = useCallback(async () => {
     setLoading(true);
@@ -833,15 +1051,20 @@ const DiscussionForumTab = ({ entityName, entityType, examId, subjectId, unitId,
       if (filter === "New") params.append("sort", "new");
       if (filter === "Hot") params.append("sort", "hot");
       if (selectedTag !== "All Categories") params.append("tag", selectedTag);
+      params.append("page", listPage);
+      params.append("limit", 10);
 
       const res = await api.get(`/discussion/threads?${params.toString()}`);
-      if (res.data.success) setThreads(res.data.data);
+      if (res.data.success) {
+        setThreads(res.data.data);
+        if (res.data.pagination) setListPagination(res.data.pagination);
+      }
     } catch (error) {
       console.error("Error fetching threads", error);
     } finally {
       setLoading(false);
     }
-  }, [examId, subjectId, unitId, chapterId, topicId, subTopicId, search, filter, selectedTag]);
+  }, [examId, subjectId, unitId, chapterId, topicId, subTopicId, search, filter, selectedTag, listPage]);
 
   useEffect(() => {
     if (isListView) fetchThreads();
@@ -873,16 +1096,32 @@ const DiscussionForumTab = ({ entityName, entityType, examId, subjectId, unitId,
     setIsCreating(true);
     try {
       const headers = { "x-guest-id": guestIdentity.id, "x-guest-name": guestIdentity.name };
+      const hierarchyParams = { examId, subjectId, unitId, chapterId, topicId, subTopicId };
       const res = await api.post("/discussion/threads", {
         title: newTitle,
         content: newContent,
         tags: [newTag],
-        examId, subjectId, unitId, chapterId, topicId, subTopicId,
+        ...hierarchyParams
       }, { headers });
       setNewTitle("");
       setNewContent("");
+
+      const isApproved = res.data.data.isApproved;
+      if (isApproved === false || (guestIdentity.id && isApproved === undefined)) {
+        setSuccessContent({
+          title: "Waiting for Approval",
+          message: "thread is not aproved please wait for aproved by modrate teams or admin teams"
+        });
+      } else {
+        setSuccessContent({
+          title: "Discussion Published!",
+          message: "Your thread is now live! The community can now view, upvote, and reply to your discussion."
+        });
+      }
+      setShowSuccessModal(true);
+
       const slug = res.data?.data?.slug;
-      if (slug) handleThreadClick(slug);
+      if (slug) setTimeout(() => handleThreadClick(slug), 1500); // Small delay to let user see success
       else fetchThreads();
     } catch (error) {
       console.error("Failed to create thread", error);
@@ -1059,14 +1298,21 @@ const DiscussionForumTab = ({ entityName, entityType, examId, subjectId, unitId,
                   <input
                     type="text" placeholder="Search discussions, topics, or peers..."
                     className="w-full pl-11 pr-5 py-3 rounded-lg border border-gray-200 bg-white text-sm font-semibold text-gray-800 placeholder-gray-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-50 transition-all outline-none shadow-sm"
-                    value={search} onChange={(e) => setSearch(e.target.value)}
+                    defaultValue={search}
+                    onChange={(e) => {
+                      if (threadSearchTimeout.current) clearTimeout(threadSearchTimeout.current);
+                      threadSearchTimeout.current = setTimeout(() => {
+                        setSearch(e.target.value);
+                        setListPage(1);
+                      }, 500);
+                    }}
                   />
                 </div>
 
                 <div className="flex items-center gap-3 w-full lg:w-auto">
                   <div className="flex items-center bg-gray-100 p-1 rounded-lg border border-gray-200">
                     {["All", "New", "Hot"].map(t => (
-                      <button key={t} onClick={() => setFilter(t)}
+                      <button key={t} onClick={() => { setFilter(t); setListPage(1); }}
                         className={`px-4 py-1.5 rounded-md text-xs font-bold flex items-center gap-1.5 transition-all ${filter === t ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-900"}`}>
                         {t === "Hot" && <FaFire className="text-orange-500" />} {t}
                       </button>
@@ -1077,7 +1323,7 @@ const DiscussionForumTab = ({ entityName, entityType, examId, subjectId, unitId,
                     <select
                       className="appearance-none bg-white border border-gray-200 rounded-lg px-4 py-2 text-xs font-bold text-gray-700 outline-none focus:border-blue-500 transition shadow-sm cursor-pointer pr-10"
                       value={selectedTag}
-                      onChange={(e) => setSelectedTag(e.target.value)}
+                      onChange={(e) => { setSelectedTag(e.target.value); setListPage(1); }}
                     >
                       {["All Categories", "General", "Question", "Notes", "Urgent", "Exam"].map(tag => (
                         <option key={tag} value={tag}>{tag}</option>
@@ -1097,6 +1343,23 @@ const DiscussionForumTab = ({ entityName, entityType, examId, subjectId, unitId,
                 </div>
               </div>
             </div>
+
+            {search && (
+              <div className="flex items-center justify-between text-[11px] text-gray-500 bg-blue-50/50 p-4 rounded-xl border border-blue-100/50 shadow-sm animate-in fade-in duration-300">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+                    <FaSearch size={10} />
+                  </div>
+                  <span>Showing results for "<span className="font-extrabold text-blue-700">{search}</span>"</span>
+                </div>
+                <button
+                  onClick={() => { setSearch(""); setListPage(1); }}
+                  className="text-[10px] font-extrabold text-blue-600 uppercase tracking-wider hover:bg-blue-100 px-3 py-1 rounded-lg transition-colors"
+                >
+                  Clear Search
+                </button>
+              </div>
+            )}
 
             {/* Guidelines Banner */}
             <Card variant="standard" className="p-4 flex flex-col md:flex-row items-center gap-4 overflow-hidden group">
@@ -1126,10 +1389,23 @@ const DiscussionForumTab = ({ entityName, entityType, examId, subjectId, unitId,
               {loading ? (
                 [1, 2, 3].map(i => <div key={i} className="h-32 rounded-lg bg-gray-50 border border-gray-100 animate-pulse" />)
               ) : threads.length > 0 ? (
-                threads.map(thread => <ThreadCard key={thread._id} thread={thread} onClick={handleThreadClick} />)
+                <>
+                  {threads.map(thread => <ThreadCard key={thread._id} thread={thread} onClick={handleThreadClick} />)}
+
+                  {/* List Pagination */}
+                  <Pagination
+                    currentPage={listPage}
+                    totalPages={listPagination.pages}
+                    onPageChange={(p) => { setListPage(p); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                  />
+                </>
               ) : (
-                <div className="text-center py-16 bg-white rounded-lg border border-dashed border-gray-200 text-gray-400 font-bold italic text-sm">
-                  No discussions found for this topic yet.
+                <div className="text-center py-24 bg-white rounded-2xl border border-dashed border-gray-200 animate-in fade-in duration-500">
+                  <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-sm border border-gray-100 text-gray-200">
+                    <FaComment size={24} />
+                  </div>
+                  <h4 className="text-sm font-extrabold text-gray-800">No discussions found</h4>
+                  <p className="text-[11px] text-gray-400 mt-2 uppercase tracking-widest font-bold">Try adjusting your filters or be the first to start a topic!</p>
                 </div>
               )}
             </div>
@@ -1161,7 +1437,14 @@ const DiscussionForumTab = ({ entityName, entityType, examId, subjectId, unitId,
           </motion.div>
         )
       }
-    </div >
+
+      <SuccessModal
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        title={successContent.title}
+        message={successContent.message}
+      />
+    </div>
   );
 };
 

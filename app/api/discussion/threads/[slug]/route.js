@@ -32,9 +32,11 @@ export async function GET(request, { params }) {
         // We don't await this to speed up response, or use findOneAndUpdate
         Thread.updateOne({ _id: thread._id }, { $inc: { views: 1 } }).exec();
 
-        // 2. Fetch Replies (Hierarchy)
         const { searchParams } = new URL(request.url);
         const sort = searchParams.get("sort") || "top";
+        const replyPage = parseInt(searchParams.get("replyPage") || "1");
+        const replyLimit = parseInt(searchParams.get("replyLimit") || "10");
+        const replySearch = searchParams.get("replySearch");
 
         let replySort = { isAccepted: -1, upvotes: -1, createdAt: 1 };
         if (sort === "new") {
@@ -49,10 +51,45 @@ export async function GET(request, { params }) {
             replyQuery.isApproved = { $ne: false };
         }
 
-        const replies = await Reply.find(replyQuery)
-            .sort(replySort)
-            .populate("author", "firstName lastName avatar role")
-            .lean();
+        let replies = [];
+        let totalReplies = 0;
+        let totalPages = 0;
+
+        if (replySearch) {
+            // Flattened search view
+            replyQuery.content = { $regex: replySearch, $options: "i" };
+            totalReplies = await Reply.countDocuments(replyQuery);
+            totalPages = Math.ceil(totalReplies / replyLimit);
+
+            replies = await Reply.find(replyQuery)
+                .sort(replySort)
+                .skip((replyPage - 1) * replyLimit)
+                .limit(replyLimit)
+                .populate("author", "firstName lastName avatar role")
+                .lean();
+        } else {
+            // Paginated roots view (Nested)
+            const rootQuery = { ...replyQuery, parentReplyId: null };
+            const totalRoots = await Reply.countDocuments(rootQuery);
+            totalPages = Math.ceil(totalRoots / replyLimit);
+
+            const roots = await Reply.find(rootQuery)
+                .sort(replySort)
+                .skip((replyPage - 1) * replyLimit)
+                .limit(replyLimit)
+                .populate("author", "firstName lastName avatar role")
+                .lean();
+
+            // Fetch ALL other replies for this thread to find children
+            // (In large scale, use rootId in schema)
+            const children = await Reply.find({ ...replyQuery, parentReplyId: { $ne: null } })
+                .sort({ createdAt: 1 })
+                .populate("author", "firstName lastName avatar role")
+                .lean();
+
+            replies = [...roots, ...children];
+            totalReplies = totalRoots;
+        }
 
         // 3. User Context (for isLiked/isDisliked/isSubscribed)
         const upvotes = thread.upvotes || [];
@@ -78,7 +115,13 @@ export async function GET(request, { params }) {
             success: true,
             data: {
                 thread,
-                replies
+                replies,
+                pagination: {
+                    total: totalReplies,
+                    page: replyPage,
+                    limit: replyLimit,
+                    pages: totalPages
+                }
             }
         });
 
