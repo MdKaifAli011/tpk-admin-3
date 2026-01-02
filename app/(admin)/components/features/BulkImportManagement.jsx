@@ -454,12 +454,6 @@ const BulkImportManagement = () => {
                                 Single Level
                             </button>
                             <button
-                                onClick={() => { setImportMode("hierarchical"); setFile(null); setParsedData([]); setResults({ success: 0, failed: 0, errors: [] }); setImportStatus("idle"); }}
-                                className={`px-3 py-2 text-xs font-medium rounded-md transition-all ${importMode === "hierarchical" ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
-                            >
-                                Deep Hierarchy
-                            </button>
-                            <button
                                 onClick={() => { setImportMode("context-locked"); setFile(null); setParsedData([]); setResults({ success: 0, failed: 0, errors: [] }); setImportStatus("idle"); }}
                                 className={`px-3 py-2 text-xs font-medium rounded-md transition-all ${importMode === "context-locked" ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
                             >
@@ -468,11 +462,11 @@ const BulkImportManagement = () => {
                         </div>
                     </div>
 
-                    {/* Import Type / Start Level */}
-                    {importMode !== "context-locked" && (
+                    {/* Import Type - Only for Single Level Mode */}
+                    {importMode === "single" && (
                         <div className="mb-6">
                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                                {importMode === "hierarchical" ? "Data Starts From Level" : "What are you importing?"}
+                                What are you importing?
                             </label>
                             <select
                                 value={importType}
@@ -486,11 +480,6 @@ const BulkImportManagement = () => {
                                     <option key={t.value} value={t.value}>{t.label}</option>
                                 ))}
                             </select>
-                            {importMode === "hierarchical" && (
-                                <p className="text-xs text-blue-600 mt-1">
-                                    * CSV should contain columns for {importType} and all levels below it.
-                                </p>
-                            )}
                         </div>
                     )}
 

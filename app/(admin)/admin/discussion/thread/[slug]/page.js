@@ -6,6 +6,7 @@ import * as FaIcons from "react-icons/fa";
 import { ToastContainer, useToast } from "../../../../components/ui/Toast";
 import { LoadingSpinner } from "../../../../components/ui/SkeletonLoader";
 import Link from "next/link";
+import { usePermissions, getDiscussionPermissions, getDiscussionPermissionMessage } from "../../../../hooks/usePermissions";
 
 const timeAgo = (date) => {
     const seconds = Math.floor((new Date() - new Date(date)) / 1000);
@@ -33,6 +34,10 @@ const ThreadDetailModeration = () => {
     const [replyPagination, setReplyPagination] = useState({ page: 1, limit: 10, total: 0, pages: 1 });
     const { toasts, removeToast, success, error: showError } = useToast();
     const searchTimeout = React.useRef(null);
+
+    // Permissions
+    const { role } = usePermissions();
+    const discussionPerms = getDiscussionPermissions(role);
 
     const fetchDetail = async (page = 1, search = "") => {
         try {
@@ -77,6 +82,10 @@ const ThreadDetailModeration = () => {
     };
 
     const handleToggleThreadApproval = async () => {
+        if (!discussionPerms.canApproveThreads) {
+            showError(getDiscussionPermissionMessage("approveThreads", role));
+            return;
+        }
         try {
             const newStatus = !thread.isApproved;
             const res = await api.patch(`/discussion/threads/${slug}`, {
@@ -92,6 +101,10 @@ const ThreadDetailModeration = () => {
     };
 
     const handleToggleReplyApproval = async (replyId, currentStatus) => {
+        if (!discussionPerms.canApproveReplies) {
+            showError("Permission denied: Cannot approve/restrict replies");
+            return;
+        }
         try {
             const newStatus = !currentStatus;
             const res = await api.patch(`/discussion/replies/${replyId}`, {
@@ -107,6 +120,10 @@ const ThreadDetailModeration = () => {
     };
 
     const handleDeleteReply = async (replyId) => {
+        if (!discussionPerms.canDeleteReplies) {
+            showError(getDiscussionPermissionMessage("deleteReplies", role));
+            return;
+        }
         if (!confirm("Are you sure you want to delete this reply?")) return;
         try {
             const res = await api.delete(`/discussion/replies/${replyId}`);
@@ -211,14 +228,25 @@ const ThreadDetailModeration = () => {
                         >
                             <FaIcons.FaExternalLinkAlt size={12} /> Live View
                         </Link>
-                        <button
-                            onClick={handleToggleThreadApproval}
-                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 shadow-sm ${thread.isApproved
-                                ? 'bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100'
-                                : 'bg-green-600 text-white hover:bg-green-700'}`}
-                        >
-                            {thread.isApproved ? <><FaIcons.FaTimes size={12} /> Restrict Post</> : <><FaIcons.FaCheck size={12} /> Approve Post</>}
-                        </button>
+                        {discussionPerms.canApproveThreads && (
+                            <button
+                                onClick={handleToggleThreadApproval}
+                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 shadow-sm ${thread.isApproved
+                                    ? 'bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100'
+                                    : 'bg-green-600 text-white hover:bg-green-700'}`}
+                            >
+                                {thread.isApproved ? <><FaIcons.FaTimes size={12} /> Restrict Post</> : <><FaIcons.FaCheck size={12} /> Approve Post</>}
+                            </button>
+                        )}
+                        {!discussionPerms.canApproveThreads && (
+                            <button
+                                disabled
+                                title={getDiscussionPermissionMessage("approveThreads", role)}
+                                className="px-4 py-2 bg-gray-100 text-gray-400 border border-gray-200 rounded-lg text-sm font-medium cursor-not-allowed flex items-center gap-2 shadow-sm"
+                            >
+                                <FaIcons.FaLock size={12} /> {thread.isApproved ? "Restricted" : "Approval Locked"}
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>
@@ -308,6 +336,7 @@ const ThreadDetailModeration = () => {
                                             reply={reply}
                                             handleToggleReplyApproval={handleToggleReplyApproval}
                                             handleDeleteReply={handleDeleteReply}
+                                            discussionPerms={discussionPerms}
                                             depth={replySearch ? 0 : 0} // Flatten when searching
                                         />
                                     ))}
@@ -419,7 +448,7 @@ const ThreadDetailModeration = () => {
     );
 };
 
-const ReplyItem = ({ reply, handleToggleReplyApproval, handleDeleteReply, depth = 0 }) => {
+const ReplyItem = ({ reply, handleToggleReplyApproval, handleDeleteReply, discussionPerms, depth = 0 }) => {
     return (
         <div className={`space-y-4 ${depth > 0 ? 'ml-6 sm:ml-10' : ''}`}>
             <div className={`p-5 bg-white rounded-lg border transition-all duration-300 relative group shadow-sm ${!reply.isApproved ? 'bg-amber-50/30 border-amber-100' : 'border-gray-200'}`}>
@@ -451,20 +480,24 @@ const ReplyItem = ({ reply, handleToggleReplyApproval, handleDeleteReply, depth 
                     </div>
 
                     <div className="flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button
-                            onClick={() => handleToggleReplyApproval(reply._id, reply.isApproved)}
-                            className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all border shadow-sm ${reply.isApproved ? 'bg-amber-50 text-amber-600 border-amber-100 hover:bg-amber-100' : 'bg-green-50 text-green-600 border-green-100 hover:bg-green-100'}`}
-                            title={reply.isApproved ? "Revoke Approval" : "Approve Content"}
-                        >
-                            {reply.isApproved ? <FaIcons.FaTimes size={12} /> : <FaIcons.FaCheck size={12} />}
-                        </button>
-                        <button
-                            onClick={() => handleDeleteReply(reply._id)}
-                            className="w-8 h-8 flex items-center justify-center bg-red-50 text-red-500 border border-red-100 rounded-lg shadow-sm hover:bg-red-100 hover:text-red-600 transition-all"
-                            title="Delete Response"
-                        >
-                            <FaIcons.FaTrashAlt size={12} />
-                        </button>
+                        {discussionPerms.canApproveReplies && (
+                            <button
+                                onClick={() => handleToggleReplyApproval(reply._id, reply.isApproved)}
+                                className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all border shadow-sm ${reply.isApproved ? 'bg-amber-50 text-amber-600 border-amber-100 hover:bg-amber-100' : 'bg-green-50 text-green-600 border-green-100 hover:bg-green-100'}`}
+                                title={reply.isApproved ? "Revoke Approval" : "Approve Content"}
+                            >
+                                {reply.isApproved ? <FaIcons.FaTimes size={12} /> : <FaIcons.FaCheck size={12} />}
+                            </button>
+                        )}
+                        {discussionPerms.canDeleteReplies && (
+                            <button
+                                onClick={() => handleDeleteReply(reply._id)}
+                                className="w-8 h-8 flex items-center justify-center bg-red-50 text-red-500 border border-red-100 rounded-lg shadow-sm hover:bg-red-100 hover:text-red-600 transition-all"
+                                title="Delete Response"
+                            >
+                                <FaIcons.FaTrashAlt size={12} />
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>
@@ -476,6 +509,7 @@ const ReplyItem = ({ reply, handleToggleReplyApproval, handleDeleteReply, depth 
                             reply={child}
                             handleToggleReplyApproval={handleToggleReplyApproval}
                             handleDeleteReply={handleDeleteReply}
+                            discussionPerms={discussionPerms}
                             depth={depth + 1}
                         />
                     ))}

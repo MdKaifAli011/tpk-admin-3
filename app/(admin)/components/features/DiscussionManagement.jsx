@@ -9,6 +9,7 @@ import {
     LoadingWrapper
 } from "../ui/SkeletonLoader";
 import DiscussionTable from "../table/DiscussionTable";
+import { usePermissions, getDiscussionPermissions, getDiscussionPermissionMessage } from "../../hooks/usePermissions";
 
 const DiscussionManagement = () => {
     const [threads, setThreads] = useState([]);
@@ -45,6 +46,10 @@ const DiscussionManagement = () => {
     const { toasts, removeToast, success, error: showError } = useToast();
     const isFetchingRef = useRef(false);
 
+    // Permissions
+    const { role } = usePermissions();
+    const discussionPerms = getDiscussionPermissions(role);
+
     // Fetch Functions for Hierarchy
     const fetchExams = useCallback(async () => {
         try {
@@ -52,6 +57,7 @@ const DiscussionManagement = () => {
             if (res.data.success) setExams(res.data.data || []);
         } catch (err) { console.error("Error fetching exams:", err); }
     }, []);
+
 
     const fetchSubjects = useCallback(async () => {
         try {
@@ -211,6 +217,10 @@ const DiscussionManagement = () => {
     }, [page, search, statusFilter, filterExam, filterSubject, filterUnit, filterChapter, filterTopic, filterSubTopic, filterDefinition]);
 
     const handleToggleApproval = async (thread) => {
+        if (!discussionPerms.canApproveThreads) {
+            showError(getDiscussionPermissionMessage("approveThreads", role));
+            return;
+        }
         try {
             const newStatus = !thread.isApproved;
             const res = await api.patch(`/discussion/threads/${thread.slug}`, {
@@ -232,6 +242,10 @@ const DiscussionManagement = () => {
     };
 
     const handleDelete = async (thread) => {
+        if (!discussionPerms.canDeleteThreads) {
+            showError(getDiscussionPermissionMessage("deleteThreads", role));
+            return;
+        }
         if (!confirm(`Permanently remove discussion: "${thread.title}"?`)) return;
 
         try {
@@ -246,6 +260,10 @@ const DiscussionManagement = () => {
     };
 
     const handleTogglePin = async (thread) => {
+        if (!discussionPerms.canPinThreads) {
+            showError(getDiscussionPermissionMessage("pinThreads", role));
+            return;
+        }
         try {
             const newStatus = !thread.isPinned;
             const res = await api.patch(`/discussion/threads/${thread.slug}`, {

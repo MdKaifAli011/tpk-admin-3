@@ -18,12 +18,18 @@ const timeAgo = (date) => {
     return Math.floor(seconds) + "s ago";
 };
 
+import { usePermissions, getDiscussionPermissions, getDiscussionPermissionMessage } from "../../hooks/usePermissions";
+
 const DiscussionTable = ({
     threads,
     onToggleApproval,
     onDelete,
     onTogglePin
 }) => {
+    // Permissions
+    const { role } = usePermissions();
+    const discussionPerms = getDiscussionPermissions(role);
+
     if (!threads || threads.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center py-20 text-center">
@@ -120,7 +126,7 @@ const DiscussionTable = ({
                                     <th className="px-3 py-3 text-center text-[10px] font-bold text-gray-400 uppercase tracking-wider w-32">Engagement</th>
                                     <th className="px-3 py-3 text-center text-[10px] font-bold text-gray-400 uppercase tracking-wider w-32">Context</th>
                                     <th className="px-3 py-3 text-center text-[10px] font-bold text-gray-400 uppercase tracking-wider w-24">Status</th>
-                                    <th className="px-4 py-3 text-right text-[10px] font-bold text-gray-400 uppercase tracking-wider w-32">Actions</th>
+                                    <th className="px-4 py-3 text-right text-[10px] font-bold text-gray-400 uppercase tracking-wider w-40">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50">
@@ -222,13 +228,19 @@ const DiscussionTable = ({
                                         {/* Actions */}
                                         <td className="px-4 py-4 whitespace-nowrap text-right">
                                             <div className="flex items-center justify-end gap-1.5">
-                                                <button
-                                                    onClick={() => onToggleApproval(thread)}
-                                                    className={`p-1.5 rounded-lg transition-colors border shadow-sm ${thread.isApproved ? 'bg-amber-50 text-amber-600 border-amber-100 hover:bg-amber-100' : 'bg-green-50 text-green-600 border-green-100 hover:bg-green-100'}`}
-                                                    title={thread.isApproved ? "Revoke Approval" : "Approve Topic"}
-                                                >
-                                                    {thread.isApproved ? <FaIcons.FaTimes size={12} /> : <FaIcons.FaCheck size={12} />}
-                                                </button>
+                                                {discussionPerms.canApproveThreads ? (
+                                                    <button
+                                                        onClick={() => onToggleApproval(thread)}
+                                                        className={`p-1.5 rounded-lg transition-colors border shadow-sm ${thread.isApproved ? 'bg-amber-50 text-amber-600 border-amber-100 hover:bg-amber-100' : 'bg-green-50 text-green-600 border-green-100 hover:bg-green-100'}`}
+                                                        title={thread.isApproved ? "Revoke Approval" : "Approve Topic"}
+                                                    >
+                                                        {thread.isApproved ? <FaIcons.FaTimes size={12} /> : <FaIcons.FaCheck size={12} />}
+                                                    </button>
+                                                ) : (
+                                                    <button disabled className="p-1.5 rounded-lg bg-gray-100 text-gray-300 border border-gray-200 cursor-not-allowed">
+                                                        <FaIcons.FaLock size={12} />
+                                                    </button>
+                                                )}
 
                                                 <Link
                                                     href={`/admin/discussion/thread/${thread.slug}`}
@@ -238,13 +250,29 @@ const DiscussionTable = ({
                                                     <FaIcons.FaShieldAlt size={12} />
                                                 </Link>
 
-                                                <button
-                                                    onClick={() => onDelete(thread)}
-                                                    className="p-1.5 bg-red-50 text-red-600 border border-red-100 rounded-lg shadow-sm hover:bg-red-100 transition-colors"
-                                                    title="Delete Permanently"
-                                                >
-                                                    <FaIcons.FaTrash size={12} />
-                                                </button>
+                                                {discussionPerms.canPinThreads && (
+                                                    <button
+                                                        onClick={() => onTogglePin(thread)}
+                                                        className={`p-1.5 rounded-lg transition-colors border shadow-sm ${thread.isPinned ? 'bg-orange-50 text-orange-600 border-orange-100 hover:bg-orange-100' : 'bg-gray-50 text-gray-400 border-gray-100 hover:text-orange-500 hover:border-orange-100'}`}
+                                                        title={thread.isPinned ? "Unpin Topic" : "Pin Topic"}
+                                                    >
+                                                        <FaIcons.FaThumbtack size={12} />
+                                                    </button>
+                                                )}
+
+                                                {discussionPerms.canDeleteThreads ? (
+                                                    <button
+                                                        onClick={() => onDelete(thread)}
+                                                        className="p-1.5 bg-red-50 text-red-600 border border-red-100 rounded-lg shadow-sm hover:bg-red-100 transition-colors"
+                                                        title="Delete Permanently"
+                                                    >
+                                                        <FaIcons.FaTrash size={12} />
+                                                    </button>
+                                                ) : (
+                                                    <button disabled className="p-1.5 rounded-lg bg-gray-100 text-gray-300 border border-gray-200 cursor-not-allowed">
+                                                        <FaIcons.FaTrash size={12} />
+                                                    </button>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>

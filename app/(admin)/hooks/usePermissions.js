@@ -172,4 +172,134 @@ export function getPermissionMessage(action, role) {
   return messages[action]?.[role] || "";
 }
 
+/**
+ * Get discussion-specific permissions based on role
+ * @param {string} role - User role
+ * @returns {object} - Discussion permissions
+ */
+export function getDiscussionPermissions(role) {
+  const normalizedRole = String(role || "viewer")
+    .toLowerCase()
+    .replace(/\s+/g, "_")
+    .replace(/[^a-z0-9_]/g, "");
+
+  const permissions = {
+    viewer: {
+      canViewThreads: true,
+      canApproveThreads: false,
+      canDeleteThreads: false,
+      canPinThreads: false,
+      canLockThreads: false,
+      canApproveReplies: false,
+      canDeleteReplies: false,
+      canMarkSolved: false,
+      canViewReports: false,
+      canManageReports: false,
+    },
+    editor: {
+      canViewThreads: true,
+      canApproveThreads: false,
+      canDeleteThreads: false,
+      canPinThreads: false,
+      canLockThreads: false,
+      canApproveReplies: false,
+      canDeleteReplies: false,
+      canMarkSolved: true,
+      canViewReports: false,
+      canManageReports: false,
+    },
+    moderator: {
+      canViewThreads: true,
+      canApproveThreads: true,
+      canDeleteThreads: false,
+      canPinThreads: true,
+      canLockThreads: true,
+      canApproveReplies: true,
+      canDeleteReplies: false,
+      canMarkSolved: true,
+      canViewReports: true,
+      canManageReports: false,
+    },
+    super_moderator: {
+      canViewThreads: true,
+      canApproveThreads: true,
+      canDeleteThreads: true,
+      canPinThreads: true,
+      canLockThreads: true,
+      canApproveReplies: true,
+      canDeleteReplies: true,
+      canMarkSolved: true,
+      canViewReports: true,
+      canManageReports: true,
+    },
+    admin: {
+      canViewThreads: true,
+      canApproveThreads: true,
+      canDeleteThreads: true,
+      canPinThreads: true,
+      canLockThreads: true,
+      canApproveReplies: true,
+      canDeleteReplies: true,
+      canMarkSolved: true,
+      canViewReports: true,
+      canManageReports: true,
+    },
+  };
+
+  return permissions[normalizedRole] || permissions.viewer;
+}
+
+/**
+ * Get discussion permission message
+ * @param {string} action - Action name
+ * @param {string} role - User role
+ * @returns {string} - Permission message
+ */
+export function getDiscussionPermissionMessage(action, role) {
+  const messages = {
+    approveThreads: {
+      viewer: "You don't have permission to approve threads. Contact a moderator.",
+      editor: "You don't have permission to approve threads. Contact a moderator.",
+      moderator: "",
+      super_moderator: "",
+      admin: "",
+    },
+    deleteThreads: {
+      viewer: "You don't have permission to delete threads. Contact an admin.",
+      editor: "You don't have permission to delete threads. Contact an admin.",
+      moderator: "You don't have permission to delete threads. Contact a super moderator or admin.",
+      super_moderator: "",
+      admin: "",
+    },
+    pinThreads: {
+      viewer: "You don't have permission to pin threads. Contact a moderator.",
+      editor: "You don't have permission to pin threads. Contact a moderator.",
+      moderator: "",
+      super_moderator: "",
+      admin: "",
+    },
+    lockThreads: {
+      viewer: "You don't have permission to lock threads. Contact a moderator.",
+      editor: "You don't have permission to lock threads. Contact a moderator.",
+      moderator: "",
+      super_moderator: "",
+      admin: "",
+    },
+    deleteReplies: {
+      viewer: "You don't have permission to delete replies. Contact a super moderator.",
+      editor: "You don't have permission to delete replies. Contact a super moderator.",
+      moderator: "You don't have permission to delete replies. Contact a super moderator or admin.",
+      super_moderator: "",
+      admin: "",
+    },
+  };
+
+  const normalizedRole = String(role || "viewer")
+    .toLowerCase()
+    .replace(/\s+/g, "_")
+    .replace(/[^a-z0-9_]/g, "");
+
+  return messages[action]?.[normalizedRole] || "";
+}
+
 
