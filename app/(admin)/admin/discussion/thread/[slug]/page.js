@@ -28,15 +28,25 @@ const ThreadDetailModeration = () => {
     const [thread, setThread] = useState(null);
     const [replies, setReplies] = useState([]);
     const [isDataLoading, setIsDataLoading] = useState(true);
+    const [replyPage, setReplyPage] = useState(1);
+    const [replySearch, setReplySearch] = useState("");
+    const [replyPagination, setReplyPagination] = useState({ page: 1, limit: 10, total: 0, pages: 1 });
     const { toasts, removeToast, success, error: showError } = useToast();
+    const searchTimeout = React.useRef(null);
 
-    const fetchDetail = async () => {
+    const fetchDetail = async (page = 1, search = "") => {
         try {
             setIsDataLoading(true);
-            const res = await api.get(`/discussion/threads/${slug}`);
+            const params = new URLSearchParams();
+            params.append('replyPage', page);
+            params.append('replyLimit', 10);
+            if (search) params.append('replySearch', search);
+
+            const res = await api.get(`/discussion/threads/${slug}?${params.toString()}`);
             if (res.data.success) {
                 setThread(res.data.data.thread);
                 setReplies(res.data.data.replies);
+                if (res.data.data.pagination) setReplyPagination(res.data.data.pagination);
             }
         } catch (err) {
             console.error(err);
@@ -47,8 +57,24 @@ const ThreadDetailModeration = () => {
     };
 
     useEffect(() => {
-        if (slug) fetchDetail();
-    }, [slug]);
+        if (slug) fetchDetail(replyPage, replySearch);
+    }, [slug, replyPage]); // Intentionally exclude replySearch to handle via debounce
+
+    const handleSearchChange = (e) => {
+        const value = e.target.value;
+        setReplySearch(value);
+        if (searchTimeout.current) clearTimeout(searchTimeout.current);
+        searchTimeout.current = setTimeout(() => {
+            setReplyPage(1); // Reset to page 1 on search
+            fetchDetail(1, value);
+        }, 500);
+    };
+
+    const handlePageChange = (newPage) => {
+        if (newPage >= 1 && newPage <= replyPagination.pages) {
+            setReplyPage(newPage);
+        }
+    };
 
     const handleToggleThreadApproval = async () => {
         try {
@@ -111,6 +137,8 @@ const ThreadDetailModeration = () => {
 
     // Organize replies into a tree structure
     const organizedReplies = useMemo(() => {
+        if (replySearch) return replies; // Return flat list on search
+
         const map = {};
         const roots = [];
 
@@ -123,22 +151,24 @@ const ThreadDetailModeration = () => {
         replies.forEach(r => {
             if (r.parentReplyId && map[r.parentReplyId]) {
                 map[r.parentReplyId].children.push(map[r._id]);
-            } else {
+            } else if (!r.parentReplyId) {
                 roots.push(map[r._id]);
             }
+            // Note: If parent isn't in this page/batch, it might be a root in this view or an orphan.
+            // But since current API returns Roots for page + All Children, this logic holds for rendering the page's roots + their full subtrees.
         });
 
         return roots;
-    }, [replies]);
+    }, [replies, replySearch]);
 
-    if (isDataLoading) return (
+    if (!thread && isDataLoading) return (
         <div className="min-h-[400px] flex flex-col items-center justify-center gap-4">
             <LoadingSpinner size="large" />
             <p className="text-sm text-gray-500 animate-pulse font-medium">Loading discussion details...</p>
         </div>
     );
 
-    if (!thread) return (
+    if (!thread && !isDataLoading) return (
         <div className="p-20 text-center">
             <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-100">
                 <FaIcons.FaExclamationTriangle size={24} />
@@ -247,28 +277,66 @@ const ThreadDetailModeration = () => {
 
                     {/* Replies Section */}
                     <div className="space-y-4">
-                        <div className="flex items-center justify-between px-1">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-1">
                             <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
                                 <FaIcons.FaCommentDots className="text-blue-500" />
-                                Community Responses ({replies.length})
+                                Community Responses ({replyPagination.total})
                             </h3>
+                            <div className="relative">
+                                <FaIcons.FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={12} />
+                                <input
+                                    type="text"
+                                    placeholder="Search replies..."
+                                    defaultValue={replySearch}
+                                    onChange={handleSearchChange}
+                                    className="pl-9 pr-4 py-1.5 text-xs font-medium border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 transition-all w-full sm:w-64"
+                                />
+                            </div>
                         </div>
 
                         <div className="space-y-4">
                             {organizedReplies.length === 0 ? (
                                 <div className="py-12 text-center bg-gray-50 rounded-lg border border-dashed border-gray-200">
                                     <FaIcons.FaReply size={32} className="text-gray-200 mx-auto mb-3" />
-                                    <p className="text-sm text-gray-400 font-medium uppercase tracking-wider">No replies yet</p>
+                                    <p className="text-sm text-gray-400 font-medium uppercase tracking-wider">No replies found</p>
                                 </div>
                             ) : (
-                                organizedReplies.map(reply => (
-                                    <ReplyItem
-                                        key={reply._id}
-                                        reply={reply}
-                                        handleToggleReplyApproval={handleToggleReplyApproval}
-                                        handleDeleteReply={handleDeleteReply}
-                                    />
-                                ))
+                                <>
+                                    {organizedReplies.map(reply => (
+                                        <ReplyItem
+                                            key={reply._id}
+                                            reply={reply}
+                                            handleToggleReplyApproval={handleToggleReplyApproval}
+                                            handleDeleteReply={handleDeleteReply}
+                                            depth={replySearch ? 0 : 0} // Flatten when searching
+                                        />
+                                    ))}
+
+                                    {/* Pagination Controls */}
+                                    {replyPagination.pages > 1 && (
+                                        <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                                                Page {replyPage} of {replyPagination.pages}
+                                            </p>
+                                            <div className="flex gap-2">
+                                                <button
+                                                    onClick={() => handlePageChange(replyPage - 1)}
+                                                    disabled={replyPage === 1}
+                                                    className="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-bold text-gray-600 disabled:opacity-50 hover:bg-gray-50 transition-all"
+                                                >
+                                                    Previous
+                                                </button>
+                                                <button
+                                                    onClick={() => handlePageChange(replyPage + 1)}
+                                                    disabled={replyPage === replyPagination.pages}
+                                                    className="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-bold text-gray-600 disabled:opacity-50 hover:bg-gray-50 transition-all"
+                                                >
+                                                    Next
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </>
                             )}
                         </div>
                     </div>

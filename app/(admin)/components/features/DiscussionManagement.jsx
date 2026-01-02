@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import * as FaIcons from "react-icons/fa";
 import { ToastContainer, useToast } from "../ui/Toast";
 import api from "@/lib/api";
@@ -23,14 +23,166 @@ const DiscussionManagement = () => {
         approved: 0,
     });
 
+    // Hierarchy States
+    const [exams, setExams] = useState([]);
+    const [subjects, setSubjects] = useState([]);
+    const [units, setUnits] = useState([]);
+    const [chapters, setChapters] = useState([]);
+    const [topics, setTopics] = useState([]);
+    const [subTopics, setSubTopics] = useState([]);
+    const [definitions, setDefinitions] = useState([]);
+
+    // Filter States
+    const [showFilters, setShowFilters] = useState(false);
+    const [filterExam, setFilterExam] = useState("");
+    const [filterSubject, setFilterSubject] = useState("");
+    const [filterUnit, setFilterUnit] = useState("");
+    const [filterChapter, setFilterChapter] = useState("");
+    const [filterTopic, setFilterTopic] = useState("");
+    const [filterSubTopic, setFilterSubTopic] = useState("");
+    const [filterDefinition, setFilterDefinition] = useState("");
+
     const { toasts, removeToast, success, error: showError } = useToast();
     const isFetchingRef = useRef(false);
+
+    // Fetch Functions for Hierarchy
+    const fetchExams = useCallback(async () => {
+        try {
+            const res = await api.get("/exam?status=all");
+            if (res.data.success) setExams(res.data.data || []);
+        } catch (err) { console.error("Error fetching exams:", err); }
+    }, []);
+
+    const fetchSubjects = useCallback(async () => {
+        try {
+            const res = await api.get("/subject?status=all");
+            if (res.data.success) setSubjects(res.data.data || []);
+        } catch (err) { console.error("Error fetching subjects:", err); }
+    }, []);
+
+    const fetchUnits = useCallback(async (examId, subjectId) => {
+        if (!examId || !subjectId) { setUnits([]); return; }
+        try {
+            const res = await api.get(`/unit?examId=${examId}&subjectId=${subjectId}&status=all&limit=1000`);
+            if (res.data.success) setUnits(res.data.data || []);
+        } catch (err) { console.error("Error fetching units:", err); }
+    }, []);
+
+    const fetchChapters = useCallback(async (unitId) => {
+        if (!unitId) { setChapters([]); return; }
+        try {
+            const res = await api.get(`/chapter?unitId=${unitId}&status=all&limit=1000`);
+            if (res.data.success) setChapters(res.data.data || []);
+        } catch (err) { console.error("Error fetching chapters:", err); }
+    }, []);
+
+    const fetchTopics = useCallback(async (chapterId) => {
+        if (!chapterId) { setTopics([]); return; }
+        try {
+            const res = await api.get(`/topic?chapterId=${chapterId}&status=all&limit=1000`);
+            if (res.data.success) setTopics(res.data.data || []);
+        } catch (err) { console.error("Error fetching topics:", err); }
+    }, []);
+
+    const fetchSubTopics = useCallback(async (topicId) => {
+        if (!topicId) { setSubTopics([]); return; }
+        try {
+            const res = await api.get(`/subtopic?topicId=${topicId}&status=all&limit=1000`);
+            if (res.data.success) setSubTopics(res.data.data || []);
+        } catch (err) { console.error("Error fetching subtopics:", err); }
+    }, []);
+
+    const fetchDefinitions = useCallback(async (subTopicId) => {
+        if (!subTopicId) { setDefinitions([]); return; }
+        try {
+            const res = await api.get(`/definition?subTopicId=${subTopicId}&status=all&limit=1000`);
+            if (res.data.success) setDefinitions(res.data.data || []);
+        } catch (err) { console.error("Error fetching definitions:", err); }
+    }, []);
+
+    useEffect(() => {
+        fetchExams();
+        fetchSubjects();
+    }, [fetchExams, fetchSubjects]);
+
+    // Cascading Effects
+    useEffect(() => {
+        if (filterExam && filterSubject) fetchUnits(filterExam, filterSubject);
+        else setUnits([]);
+    }, [filterExam, filterSubject, fetchUnits]);
+
+    useEffect(() => {
+        if (filterUnit) fetchChapters(filterUnit);
+        else setChapters([]);
+    }, [filterUnit, fetchChapters]);
+
+    useEffect(() => {
+        if (filterChapter) fetchTopics(filterChapter);
+        else setTopics([]);
+    }, [filterChapter, fetchTopics]);
+
+    useEffect(() => {
+        if (filterTopic) fetchSubTopics(filterTopic);
+        else setSubTopics([]);
+    }, [filterTopic, fetchSubTopics]);
+
+    useEffect(() => {
+        if (filterSubTopic) fetchDefinitions(filterSubTopic);
+        else setDefinitions([]);
+    }, [filterSubTopic, fetchDefinitions]);
+
+    // Reset dependents when parent changes
+    const handleExamChange = (val) => {
+        setFilterExam(val); setFilterSubject(""); setFilterUnit(""); setFilterChapter(""); setFilterTopic(""); setFilterSubTopic(""); setFilterDefinition("");
+    };
+    const handleSubjectChange = (val) => {
+        setFilterSubject(val); setFilterUnit(""); setFilterChapter(""); setFilterTopic(""); setFilterSubTopic(""); setFilterDefinition("");
+    };
+    const handleUnitChange = (val) => {
+        setFilterUnit(val); setFilterChapter(""); setFilterTopic(""); setFilterSubTopic(""); setFilterDefinition("");
+    };
+    const handleChapterChange = (val) => {
+        setFilterChapter(val); setFilterTopic(""); setFilterSubTopic(""); setFilterDefinition("");
+    };
+    const handleTopicChange = (val) => {
+        setFilterTopic(val); setFilterSubTopic(""); setFilterDefinition("");
+    };
+    const handleSubTopicChange = (val) => {
+        setFilterSubTopic(val); setFilterDefinition("");
+    };
+
+    // Filtered Lists
+    const filteredSubjects = useMemo(() => {
+        if (!filterExam) return [];
+        return subjects.filter(s => s.examId?._id === filterExam || s.examId === filterExam);
+    }, [subjects, filterExam]);
+
+    const activeFilterCount = [filterExam, filterSubject, filterUnit, filterChapter, filterTopic, filterSubTopic, filterDefinition].filter(Boolean).length;
+
+    const clearFilters = () => {
+        setFilterExam(""); setFilterSubject(""); setFilterUnit(""); setFilterChapter(""); setFilterTopic(""); setFilterSubTopic(""); setFilterDefinition("");
+    };
 
     const fetchThreads = async () => {
         isFetchingRef.current = true;
         try {
             setIsDataLoading(true);
-            const res = await api.get(`/discussion/threads?page=${page}&limit=10&search=${search}&sort=new&status=${statusFilter}`);
+            const queryParams = new URLSearchParams({
+                page,
+                limit: "10",
+                search,
+                sort: "new",
+                status: statusFilter
+            });
+            if (filterExam) queryParams.set("examId", filterExam);
+            if (filterSubject) queryParams.set("subjectId", filterSubject);
+            if (filterUnit) queryParams.set("unitId", filterUnit);
+            if (filterChapter) queryParams.set("chapterId", filterChapter);
+            if (filterTopic) queryParams.set("topicId", filterTopic);
+            if (filterSubTopic) queryParams.set("subTopicId", filterSubTopic);
+            if (filterDefinition) queryParams.set("definitionId", filterDefinition);
+
+            const res = await api.get(`/discussion/threads?${queryParams.toString()}`);
             if (res.data.success) {
                 setThreads(res.data.data);
                 setTotalPages(res.data.pagination?.pages || 1);
@@ -56,7 +208,7 @@ const DiscussionManagement = () => {
 
     useEffect(() => {
         fetchThreads();
-    }, [page, search, statusFilter]);
+    }, [page, search, statusFilter, filterExam, filterSubject, filterUnit, filterChapter, filterTopic, filterSubTopic, filterDefinition]);
 
     const handleToggleApproval = async (thread) => {
         try {
@@ -143,9 +295,138 @@ const DiscussionManagement = () => {
                     </div>
                 </div>
 
+                {/* Filter Controls */}
+                <div className="flex flex-col gap-3">
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => setShowFilters(!showFilters)}
+                            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-bold transition-all ${showFilters || activeFilterCount > 0 ? "bg-blue-50 border-blue-200 text-blue-600" : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"}`}
+                        >
+                            <FaIcons.FaFilter size={10} />
+                            Filters
+                            {activeFilterCount > 0 && (
+                                <span className="bg-blue-600 text-white text-[9px] px-1.5 py-0.5 rounded-full">
+                                    {activeFilterCount}
+                                </span>
+                            )}
+                        </button>
+
+                        {activeFilterCount > 0 && (
+                            <button
+                                onClick={clearFilters}
+                                className="flex items-center gap-1 text-xs text-red-500 font-medium hover:text-red-700 hover:underline"
+                            >
+                                <FaIcons.FaTimes size={10} /> Clear
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Extended Filters Panel */}
+                    {showFilters && (
+                        <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-3 animate-in fade-in slide-in-from-top-2 duration-200">
+                            {/* Exam Filter */}
+                            <div className="space-y-1">
+                                <label className="text-[10px] font-bold text-gray-500 uppercase">Exam</label>
+                                <select
+                                    value={filterExam}
+                                    onChange={(e) => handleExamChange(e.target.value)}
+                                    className="w-full text-xs p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-100 outline-none"
+                                >
+                                    <option value="">All Exams</option>
+                                    {exams.map(e => <option key={e._id} value={e._id}>{e.name}</option>)}
+                                </select>
+                            </div>
+
+                            {/* Subject Filter */}
+                            <div className="space-y-1">
+                                <label className="text-[10px] font-bold text-gray-500 uppercase">Subject</label>
+                                <select
+                                    value={filterSubject}
+                                    onChange={(e) => handleSubjectChange(e.target.value)}
+                                    disabled={!filterExam}
+                                    className="w-full text-xs p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-100 outline-none disabled:bg-gray-50 disabled:text-gray-400"
+                                >
+                                    <option value="">All Subjects</option>
+                                    {filteredSubjects.map(s => <option key={s._id} value={s._id}>{s.name}</option>)}
+                                </select>
+                            </div>
+
+                            {/* Unit Filter */}
+                            <div className="space-y-1">
+                                <label className="text-[10px] font-bold text-gray-500 uppercase">Unit</label>
+                                <select
+                                    value={filterUnit}
+                                    onChange={(e) => handleUnitChange(e.target.value)}
+                                    disabled={!filterSubject}
+                                    className="w-full text-xs p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-100 outline-none disabled:bg-gray-50 disabled:text-gray-400"
+                                >
+                                    <option value="">All Units</option>
+                                    {units.map(u => <option key={u._id} value={u._id}>{u.name}</option>)}
+                                </select>
+                            </div>
+
+                            {/* Chapter Filter */}
+                            <div className="space-y-1">
+                                <label className="text-[10px] font-bold text-gray-500 uppercase">Chapter</label>
+                                <select
+                                    value={filterChapter}
+                                    onChange={(e) => handleChapterChange(e.target.value)}
+                                    disabled={!filterUnit}
+                                    className="w-full text-xs p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-100 outline-none disabled:bg-gray-50 disabled:text-gray-400"
+                                >
+                                    <option value="">All Chapters</option>
+                                    {chapters.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
+                                </select>
+                            </div>
+
+                            {/* Topic Filter */}
+                            <div className="space-y-1">
+                                <label className="text-[10px] font-bold text-gray-500 uppercase">Topic</label>
+                                <select
+                                    value={filterTopic}
+                                    onChange={(e) => handleTopicChange(e.target.value)}
+                                    disabled={!filterChapter}
+                                    className="w-full text-xs p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-100 outline-none disabled:bg-gray-50 disabled:text-gray-400"
+                                >
+                                    <option value="">All Topics</option>
+                                    {topics.map(t => <option key={t._id} value={t._id}>{t.name}</option>)}
+                                </select>
+                            </div>
+
+                            {/* SubTopic Filter */}
+                            <div className="space-y-1">
+                                <label className="text-[10px] font-bold text-gray-500 uppercase">SubTopic</label>
+                                <select
+                                    value={filterSubTopic}
+                                    onChange={(e) => handleSubTopicChange(e.target.value)}
+                                    disabled={!filterTopic}
+                                    className="w-full text-xs p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-100 outline-none disabled:bg-gray-50 disabled:text-gray-400"
+                                >
+                                    <option value="">All SubTopics</option>
+                                    {subTopics.map(st => <option key={st._id} value={st._id}>{st.name}</option>)}
+                                </select>
+                            </div>
+
+                            {/* Definition Filter */}
+                            <div className="space-y-1">
+                                <label className="text-[10px] font-bold text-gray-500 uppercase">Definition</label>
+                                <select
+                                    value={filterDefinition}
+                                    onChange={(e) => setFilterDefinition(e.target.value)}
+                                    disabled={!filterSubTopic}
+                                    className="w-full text-xs p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-100 outline-none disabled:bg-gray-50 disabled:text-gray-400"
+                                >
+                                    <option value="">All Definitions</option>
+                                    {definitions.map(d => <option key={d._id} value={d._id}>{d.name}</option>)}
+                                </select>
+                            </div>
+                        </div>
+                    )}
+                </div>
+
                 {/* Filters & Control Bar */}
                 <div className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
-                    <div className="flex items-center gap-1 bg-gray-50 p-1 rounded-lg border border-gray-100">
+                    <div className="flex items-center gap-1 bg-gray-50 p-1 rounded-lg border border-gray-100 w-full md:w-auto">
                         {[
                             { id: "all", label: "All Posts", icon: <FaIcons.FaClipboardList size={10} /> },
                             { id: "pending", label: "Pending", icon: <FaIcons.FaHistory size={10} /> },
@@ -154,7 +435,7 @@ const DiscussionManagement = () => {
                             <button
                                 key={tab.id}
                                 onClick={() => { setStatusFilter(tab.id); setPage(1); }}
-                                className={`flex items-center gap-2 px-4 py-1.5 rounded-md text-[11px] font-bold uppercase tracking-wider transition-all ${statusFilter === tab.id ? "bg-white text-blue-600 shadow-sm border border-gray-100" : "text-gray-500 hover:text-gray-900 hover:bg-gray-100/50"}`}
+                                className={`flex items-center gap-2 px-4 py-1.5 rounded-md text-[11px] font-bold uppercase tracking-wider transition-all flex-1 md:flex-none ${statusFilter === tab.id ? "bg-white text-blue-600 shadow-sm border border-gray-100" : "text-gray-500 hover:text-gray-900 hover:bg-gray-100/50"}`}
                             >
                                 {tab.icon} {tab.label}
                             </button>
