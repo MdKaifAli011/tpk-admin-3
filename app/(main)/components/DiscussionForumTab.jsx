@@ -15,6 +15,7 @@ import DOMPurify from "dompurify";
 import RichTextEditor from "@/app/(admin)/components/ui/RichTextEditor";
 import Card from "./Card";
 import Button from "./Button";
+import DiscussionMetadata from "./DiscussionMetadata";
 
 /* ---------- Persistent Guest Logic ---------- */
 const getGuestIdentity = () => {
@@ -1130,8 +1131,23 @@ const DiscussionForumTab = ({ entityName, entityType, examId, subjectId, unitId,
     }
   };
 
+  // Prepare entity data for metadata
+  const entityData = {
+    name: entityName || "Discussion Forum",
+    type: entityType,
+    examId,
+    subjectId,
+    unitId,
+    chapterId,
+    topicId,
+    subTopicId,
+  };
+
   return (
     <div className="space-y-6 px-3 sm:px-4 py-3 sm:py-4">
+      {/* SEO Metadata Updater for Thread Details */}
+      {view === "DETAIL" && <DiscussionMetadata entityData={entityData} />}
+      
       {/* Header Section */}
       {view === "LIST" && (
         <div className="mb-6">
@@ -1276,7 +1292,7 @@ const DiscussionForumTab = ({ entityName, entityType, examId, subjectId, unitId,
                         <img src={`https://i.pravatar.cc/100?u=${i + 20}`} alt="user" className="w-full h-full object-cover" />
                       </div>
                     ))}
-                    <div className="w-7 h-7 rounded-full border-2 border-white bg-blue-600 flex items-center justify-center text-[9px] font-bold text-white z-50 shadow-md">
+                    <div className="w-7 h-7 rounded-full border-2 border-white bg-blue-600 flex items-center justify-center text-[9px] font-bold text-white z-30 shadow-md">
                       +124
                     </div>
                   </div>
