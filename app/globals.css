@@ -129,11 +129,11 @@
 }
 
 .rich-text-content code {
-  background: #f3f4f6;
+  /* background: #f3f4f6; */
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
   font-family: "Courier New", monospace;
-  font-size: 0.875em;
+  font-size: 1.5em;
 }
 
 .rich-text-content pre code {

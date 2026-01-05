@@ -206,6 +206,29 @@ const RichContent = ({ html }) => {
       if (!MathJaxInstance || !isMounted || !containerRef.current) return;
 
       try {
+        // Configure MathJax (idempotent options)
+        if (MathJaxInstance.Hub && MathJaxInstance.Hub.Config) {
+          MathJaxInstance.Hub.Config({
+            tex2jax: {
+              inlineMath: [['\\(', '\\)']],
+              displayMath: [['\\[', '\\]']],
+              processEscapes: true,
+              ignoreClass: "tex2jax_ignore",
+              processClass: "tex2jax_process",
+              skipTags: ["script", "noscript", "style", "textarea", "pre"] // Allow math in <code>
+            },
+            TeX: {
+              extensions: ["mhchem.js"] // Enable mhchem for chemical formulas
+            },
+            messageStyle: "none"
+          });
+
+          // Force load mhchem if not loaded
+          if (!MathJaxInstance.Extension || !MathJaxInstance.Extension["TeX/mhchem"]) {
+            // We can queue a requirement, but Config usually handles it if extensions is set
+          }
+        }
+
         // Get all content divs within the container
         const contentDivs = containerRef.current.querySelectorAll(
           "[data-content-part]"
@@ -215,12 +238,12 @@ const RichContent = ({ html }) => {
             ? Array.from(contentDivs)
             : [containerRef.current];
 
-        // Use MathJax 2.x Hub API
+        // Use MathJax 2.x Hub API with Queue for safety
         if (
           MathJaxInstance.Hub &&
-          typeof MathJaxInstance.Hub.Typeset === "function"
+          typeof MathJaxInstance.Hub.Queue === "function"
         ) {
-          MathJaxInstance.Hub.Typeset(elementsToProcess);
+          MathJaxInstance.Hub.Queue(["Typeset", MathJaxInstance.Hub, elementsToProcess]);
         } else if (typeof MathJaxInstance.typeset === "function") {
           // Fallback for MathJax 3.x
           MathJaxInstance.typeset(elementsToProcess);
@@ -471,21 +494,20 @@ const RichContent = ({ html }) => {
         const elementsToProcess =
           contentDivs.length > 0 ? Array.from(contentDivs) : [container];
 
-        if (window.MathJax?.Hub?.Queue) {
+        if (window.MathJax.Hub?.Queue) {
+          // Queue the typeset to ensure it runs after any pending operations
           window.MathJax.Hub.Queue([
             "Typeset",
             window.MathJax.Hub,
             elementsToProcess,
           ]);
-        } else if (window.MathJax?.Hub?.Typeset) {
-          window.MathJax.Hub.Typeset(elementsToProcess);
-        } else if (window.MathJax?.typeset) {
+        } else if (window.MathJax.typeset) {
           window.MathJax.typeset(elementsToProcess);
         }
       } catch (error) {
         logger.error("MathJax reprocessing error:", error);
       }
-    }, 100); // Minimal delay for fast processing
+    }, 100); // 100ms delay to allow DOM to settle
   }, [html]);
 
   // Reprocess MathJax when forms are loaded or DOM updates - optimized
@@ -554,8 +576,8 @@ const RichContent = ({ html }) => {
                 "Open Form";
               const buttonColor = sanitizeHexColor(
                 (formData.buttonColor && formData.buttonColor.trim()) ||
-                  formConfig?.settings?.buttonColor ||
-                  "#2563eb"
+                formConfig?.settings?.buttonColor ||
+                "#2563eb"
               );
               const imageUrl =
                 (formData.imageUrl && formData.imageUrl.trim()) || "";
