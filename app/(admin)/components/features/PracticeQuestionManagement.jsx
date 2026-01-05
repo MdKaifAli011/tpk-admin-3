@@ -1,4 +1,5 @@
 "use client";
+import { useRouter } from "next/navigation";
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   FaPlus,
@@ -12,6 +13,7 @@ import {
   FaCheckCircle,
   FaFilter,
   FaExclamationTriangle,
+  FaArrowLeft,
 } from "react-icons/fa";
 import { ToastContainer, useToast } from "../ui/Toast";
 import api from "@/lib/api";
@@ -23,6 +25,29 @@ import { LoadingWrapper, SkeletonPageContent } from "../ui/SkeletonLoader";
 import Pagination from "@/components/shared/Pagination";
 import { FaDownload, FaUpload } from "react-icons/fa";
 import { parseCSV, validateCSVData, downloadCSV } from "@/utils/csvParser";
+import RichTextEditor from "../ui/RichTextEditor";
+import loadMathJax from "@/app/(main)/lib/utils/mathJaxLoader";
+
+// Helper function to Title-Case text while preserving ALL-CAPS tokens (e.g., "NEET").
+const titleCasePreserveAcronyms = (text) => {
+  if (!text) return "";
+  return String(text)
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((token) => {
+      const m = token.match(/^([^A-Za-z0-9]*)([A-Za-z0-9]+)([^A-Za-z0-9]*)$/);
+      if (!m) return token;
+      const [, prefix, core, suffix] = m;
+      const hasLetter = /[A-Za-z]/.test(core);
+      const isAllCaps =
+        hasLetter && core === core.toUpperCase() && core !== core.toLowerCase();
+      const nextCore = isAllCaps
+        ? core
+        : core.charAt(0).toUpperCase() + core.slice(1).toLowerCase();
+      return `${prefix}${nextCore}${suffix}`;
+    })
+    .join(" ");
+};
 
 // Helper function to validate ObjectId format
 const isValidObjectId = (id) => {
@@ -31,8 +56,9 @@ const isValidObjectId = (id) => {
 };
 
 const PracticeQuestionManagement = ({ subCategoryId }) => {
+  const router = useRouter();
   const { canCreate, canEdit, canDelete, canReorder, role } = usePermissions();
-  
+
   // Check if user can import data (only admin and super_moderator)
   const canImport = role === "admin" || role === "super_moderator";
   const [showAddForm, setShowAddForm] = useState(false);
@@ -80,6 +106,17 @@ const PracticeQuestionManagement = ({ subCategoryId }) => {
   useEffect(() => {
     showErrorRef.current = showError;
   }, [showError]);
+
+  // Handle MathJax typesetting when questions change
+  useEffect(() => {
+    if (typeof window !== "undefined" && !isQuestionsLoading && questions.length > 0) {
+      loadMathJax().then((MathJaxInstance) => {
+        if (MathJaxInstance && MathJaxInstance.Hub) {
+          MathJaxInstance.Hub.Queue(["Typeset", MathJaxInstance.Hub, questionsListRef.current]);
+        }
+      }).catch(err => console.error("MathJax load error:", err));
+    }
+  }, [questions, isQuestionsLoading]);
 
   // ✅ Fetch Current SubCategory Details
   const fetchCurrentSubCategory = useCallback(async () => {
@@ -415,7 +452,7 @@ const PracticeQuestionManagement = ({ subCategoryId }) => {
       );
       return;
     }
-    
+
     if (!subCategoryId) {
       showErrorRef.current(
         "SubCategory ID is required for downloading template"
@@ -424,8 +461,8 @@ const PracticeQuestionManagement = ({ subCategoryId }) => {
     }
 
     const template = `question,optionA,optionB,optionC,optionD,answer,videoLink,detailsExplanation,orderNumber,status
-What is 2+2?,2,3,4,5,C,https://example.com/video1,The answer is 4 because 2+2 equals 4,1,active
-What is the capital of India?,Mumbai,Delhi,Kolkata,Chennai,B,https://example.com/video2,Delhi is the capital of India,2,active`;
+"What is 2+2?","2","3","4","5","C","https://example.com/video1","<p>The answer is <strong>4</strong> because 2+2 equals 4</p>","1","active"
+"What is the capital of India?","Mumbai","Delhi","Kolkata","Chennai","B","https://example.com/video2","<p>Delhi is the <em>capital</em> of India</p>","2","active"`;
 
     // Generate meaningful filename with subcategory name
     const subCategoryName = currentSubCategory?.name || "Paper";
@@ -452,7 +489,7 @@ What is the capital of India?,Mumbai,Delhi,Kolkata,Chennai,B,https://example.com
       );
       return;
     }
-    
+
     setIsImporting(true);
     setImportError(null);
 
@@ -504,7 +541,7 @@ What is the capital of India?,Mumbai,Delhi,Kolkata,Chennai,B,https://example.com
         } catch (err) {
           // Handle permission errors (403) - stop import immediately
           if (err?.response?.status === 403) {
-            const permissionError = err?.response?.data?.message || 
+            const permissionError = err?.response?.data?.message ||
               "You don't have permission to create practice questions";
             setImportError(permissionError);
             showErrorRef.current(permissionError);
@@ -516,10 +553,9 @@ What is the capital of India?,Mumbai,Delhi,Kolkata,Chennai,B,https://example.com
             }
             return; // Stop processing remaining rows
           }
-          
+
           errors.push(
-            `Row ${rowNum}: ${
-              err?.response?.data?.message || err?.message || "Unknown error"
+            `Row ${rowNum}: ${err?.response?.data?.message || err?.message || "Unknown error"
             }`
           );
           errorCount++;
@@ -546,7 +582,7 @@ What is the capital of India?,Mumbai,Delhi,Kolkata,Chennai,B,https://example.com
     } catch (err) {
       // Handle permission errors (403) with user-friendly message
       if (err?.response?.status === 403) {
-        const permissionError = err?.response?.data?.message || 
+        const permissionError = err?.response?.data?.message ||
           "You don't have permission to create practice questions. Only administrators and super moderators can import questions.";
         setImportError(permissionError);
         showErrorRef.current(permissionError);
@@ -574,7 +610,7 @@ What is the capital of India?,Mumbai,Delhi,Kolkata,Chennai,B,https://example.com
       }
       return;
     }
-    
+
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -613,9 +649,8 @@ What is the capital of India?,Mumbai,Delhi,Kolkata,Chennai,B,https://example.com
       const totalQuestions = parsedData.length;
 
       // Show confirmation dialog
-      const confirmMessage = `You are about to import ${totalQuestions} question(s) from the CSV file.\n\nSubCategory: ${
-        currentSubCategory?.name || "N/A"
-      }\n\nDo you want to proceed with the import?`;
+      const confirmMessage = `You are about to import ${totalQuestions} question(s) from the CSV file.\n\nSubCategory: ${currentSubCategory?.name || "N/A"
+        }\n\nDo you want to proceed with the import?`;
 
       if (window.confirm(confirmMessage)) {
         // User confirmed, proceed with import
@@ -637,6 +672,15 @@ What is the capital of India?,Mumbai,Delhi,Kolkata,Chennai,B,https://example.com
       }
     }
   };
+
+  // Handle rich text changes
+  const handleQuestionChange = useCallback((content) => {
+    setFormData((prev) => ({ ...prev, question: content }));
+  }, []);
+
+  const handleExplanationChange = useCallback((content) => {
+    setFormData((prev) => ({ ...prev, detailsExplanation: content }));
+  }, []);
 
   // ✅ Handle Form Submit
   const handleSubmit = async (e) => {
@@ -721,7 +765,7 @@ What is the capital of India?,Mumbai,Delhi,Kolkata,Chennai,B,https://example.com
     } catch (err) {
       // Handle permission errors (403) with user-friendly message
       if (err?.response?.status === 403) {
-        const permissionError = err?.response?.data?.message || 
+        const permissionError = err?.response?.data?.message ||
           "You don't have permission to create practice questions. Only administrators and super moderators can create questions.";
         setFormError(permissionError);
         showError(permissionError);
@@ -798,15 +842,24 @@ What is the capital of India?,Mumbai,Delhi,Kolkata,Chennai,B,https://example.com
         {/* Header Section */}
         <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div>
-              <h1 className="text-xl font-semibold text-gray-900 mb-1">
-                {currentSubCategory?.name || "Practice Question Management"}
-              </h1>
-              <p className="text-xs text-gray-600">
-                {currentSubCategory
-                  ? `Manage questions for ${currentSubCategory.name}. Add, edit, and organize practice questions for this paper.`
-                  : "Manage and organize your practice questions, create new questions, and track question performance across your educational platform."}
-              </p>
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => router.back()}
+                className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
+                title="Go Back"
+              >
+                <FaArrowLeft className="w-5 h-5" />
+              </button>
+              <div>
+                <h1 className="text-xl font-semibold text-gray-900 mb-1">
+                  {currentSubCategory?.name ? titleCasePreserveAcronyms(currentSubCategory.name) : "Practice Question Management"}
+                </h1>
+                <p className="text-xs text-gray-600">
+                  {currentSubCategory
+                    ? `Manage questions for ${currentSubCategory.name}. Add, edit, and organize practice questions for this paper.`
+                    : "Manage and organize your practice questions, create new questions, and track question performance across your educational platform."}
+                </p>
+              </div>
             </div>
             <div className="flex items-center gap-2">
               {/* Import/Export buttons - Only for admin and super_moderator */}
@@ -912,16 +965,14 @@ What is the capital of India?,Mumbai,Delhi,Kolkata,Chennai,B,https://example.com
                 >
                   Question <span className="text-red-500">*</span>
                 </label>
-                <textarea
-                  id="question"
-                  name="question"
-                  value={formData.question}
-                  onChange={handleFormChange}
-                  rows={4}
-                  required
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm placeholder-gray-400 transition-all"
-                  placeholder="Enter the question here..."
-                />
+                <div className="prose-sm max-w-none">
+                  <RichTextEditor
+                    value={formData.question}
+                    onChange={handleQuestionChange}
+                    required
+                    placeholder="Enter the question here..."
+                  />
+                </div>
               </div>
 
               {/* Options Grid */}
@@ -1079,15 +1130,13 @@ What is the capital of India?,Mumbai,Delhi,Kolkata,Chennai,B,https://example.com
                 >
                   Details Explanation
                 </label>
-                <textarea
-                  id="detailsExplanation"
-                  name="detailsExplanation"
-                  value={formData.detailsExplanation}
-                  onChange={handleFormChange}
-                  rows={6}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm placeholder-gray-400 transition-all"
-                  placeholder="Enter detailed explanation for the answer..."
-                />
+                <div className="prose-sm max-w-none">
+                  <RichTextEditor
+                    value={formData.detailsExplanation}
+                    onChange={handleExplanationChange}
+                    placeholder="Enter detailed explanation for the answer..."
+                  />
+                </div>
               </div>
 
               {/* Form Actions */}
@@ -1376,11 +1425,10 @@ What is the capital of India?,Mumbai,Delhi,Kolkata,Chennai,B,https://example.com
                   return (
                     <div
                       key={question._id || index}
-                      className={`bg-white border rounded-lg p-6 shadow-sm hover:shadow-md transition-all ${
-                        isSelected
-                          ? "border-blue-500 bg-blue-50"
-                          : "border-gray-200"
-                      }`}
+                      className={`bg-white border rounded-lg p-6 shadow-sm hover:shadow-md transition-all ${isSelected
+                        ? "border-blue-500 bg-blue-50"
+                        : "border-gray-200"
+                        }`}
                     >
                       {/* Question Header */}
                       <div className="flex items-start justify-between mb-6">
@@ -1401,9 +1449,10 @@ What is the capital of India?,Mumbai,Delhi,Kolkata,Chennai,B,https://example.com
                             <span className="flex items-center justify-center w-10 h-10 bg-gray-100 text-gray-700 rounded-full font-semibold text-base">
                               {questionNumber}
                             </span>
-                            <h3 className="text-lg font-semibold text-gray-900">
-                              {question.question}
-                            </h3>
+                            <div
+                              className="text-lg font-semibold text-gray-900 rich-text-content flex-1 min-w-0"
+                              dangerouslySetInnerHTML={{ __html: question.question }}
+                            />
                           </div>
                         </div>
                         <div className="flex items-center gap-2 ml-4 shrink-0">
@@ -1437,31 +1486,27 @@ What is the capital of India?,Mumbai,Delhi,Kolkata,Chennai,B,https://example.com
                           return (
                             <div
                               key={option}
-                              className={`flex items-center gap-3 p-4 rounded-lg border-2 transition-all cursor-default ${
-                                isCorrect
-                                  ? "bg-green-50 border-green-300"
-                                  : "bg-white border-gray-200 hover:border-gray-300"
-                              }`}
+                              className={`flex items-center gap-3 p-4 rounded-lg border-2 transition-all cursor-default ${isCorrect
+                                ? "bg-green-50 border-green-300"
+                                : "bg-white border-gray-200 hover:border-gray-300"
+                                }`}
                             >
                               <div
-                                className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center font-semibold text-sm ${
-                                  isCorrect
-                                    ? "bg-green-500 text-white"
-                                    : "bg-gray-300 text-gray-700"
-                                }`}
+                                className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center font-semibold text-sm ${isCorrect
+                                  ? "bg-green-500 text-white"
+                                  : "bg-gray-300 text-gray-700"
+                                  }`}
                               >
                                 {option}
                               </div>
                               <div className="flex-1 flex items-center gap-2 min-w-0">
-                                <span
-                                  className={`text-sm font-medium flex-1 ${
-                                    isCorrect
-                                      ? "text-gray-800"
-                                      : "text-gray-700"
-                                  }`}
-                                >
-                                  {optionText}
-                                </span>
+                                <div
+                                  className={`text-sm font-medium flex-1 rich-text-content min-w-0 ${isCorrect
+                                    ? "text-gray-800"
+                                    : "text-gray-700"
+                                    }`}
+                                  dangerouslySetInnerHTML={{ __html: optionText }}
+                                />
                                 {isCorrect && (
                                   <FaCheckCircle className="text-green-500 shrink-0 text-lg" />
                                 )}
@@ -1504,9 +1549,10 @@ What is the capital of India?,Mumbai,Delhi,Kolkata,Chennai,B,https://example.com
                             <h4 className="text-sm font-semibold text-gray-900 mb-2">
                               Explanation:
                             </h4>
-                            <p className="text-sm text-gray-600 leading-relaxed">
-                              {question.detailsExplanation}
-                            </p>
+                            <div
+                              className="text-sm text-gray-600 leading-relaxed rich-text-content"
+                              dangerouslySetInnerHTML={{ __html: question.detailsExplanation }}
+                            />
                           </div>
                         )}
                       </div>

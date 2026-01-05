@@ -1,7 +1,8 @@
 "use client";
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import {
+  FaArrowLeft,
   FaPlus,
   FaTimes,
   FaSave,
@@ -22,8 +23,31 @@ import {
   LoadingSpinner,
 } from "../ui/SkeletonLoader";
 import PracticeSubCategoryTable from "../table/PracticeSubCategoryTable";
+import RichTextEditor from "../ui/RichTextEditor";
+
+// Helper function to Title-Case text while preserving ALL-CAPS tokens (e.g., "NEET").
+const titleCasePreserveAcronyms = (text) => {
+  if (!text) return "";
+  return String(text)
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((token) => {
+      const m = token.match(/^([^A-Za-z0-9]*)([A-Za-z0-9]+)([^A-Za-z0-9]*)$/);
+      if (!m) return token;
+      const [, prefix, core, suffix] = m;
+      const hasLetter = /[A-Za-z]/.test(core);
+      const isAllCaps =
+        hasLetter && core === core.toUpperCase() && core !== core.toLowerCase();
+      const nextCore = isAllCaps
+        ? core
+        : core.charAt(0).toUpperCase() + core.slice(1).toLowerCase();
+      return `${prefix}${nextCore}${suffix}`;
+    })
+    .join(" ");
+};
 
 const PracticeSubCategoryManagement = ({ categoryId: propCategoryId }) => {
+  const router = useRouter();
   const params = useParams();
   const categoryId = propCategoryId || params?.categoryId;
   const { canCreate, canEdit, canDelete, canReorder, role } = usePermissions();
@@ -229,8 +253,8 @@ const PracticeSubCategoryManagement = ({ categoryId: propCategoryId }) => {
       const maxOrder =
         subCategoriesInCategory.length > 0
           ? Math.max(
-              ...subCategoriesInCategory.map((sc) => sc.orderNumber || 0)
-            )
+            ...subCategoriesInCategory.map((sc) => sc.orderNumber || 0)
+          )
           : 0;
       setFormData((prev) => ({
         ...prev,
@@ -384,6 +408,11 @@ const PracticeSubCategoryManagement = ({ categoryId: propCategoryId }) => {
     setFormError(null);
   };
 
+  // Handle rich text changes
+  const handleDescriptionChange = useCallback((content) => {
+    setFormData((prev) => ({ ...prev, description: content }));
+  }, []);
+
   // ✅ Handle Add SubCategory using Axios
   const handleAddSubCategory = async (e) => {
     e.preventDefault();
@@ -443,8 +472,7 @@ const PracticeSubCategoryManagement = ({ categoryId: propCategoryId }) => {
       if (response.data?.success) {
         await fetchSubCategories();
         success(
-          `SubCategory "${formData.name}" ${
-            editingSubCategory ? "updated" : "created"
+          `SubCategory "${formData.name}" ${editingSubCategory ? "updated" : "created"
           } successfully!`
         );
         handleCancelForm();
@@ -513,7 +541,7 @@ const PracticeSubCategoryManagement = ({ categoryId: propCategoryId }) => {
                         ) {
                           fetchDefinitions(
                             subCategory.subTopicId?._id ||
-                              subCategory.subTopicId
+                            subCategory.subTopicId
                           );
                         }
                       });
@@ -622,17 +650,25 @@ const PracticeSubCategoryManagement = ({ categoryId: propCategoryId }) => {
         {/* Header Section */}
         <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div>
-              <h1 className="text-xl font-semibold text-gray-900 mb-1">
-                {currentCategory?.name || "Practice SubCategory Management"}
-              </h1>
-              <p className="text-xs text-gray-600">
-                {currentCategory
-                  ? `${currentCategory.examId?.name || "Exam name"} → ${
-                      currentCategory.subjectId?.name || "Subject name"
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => router.back()}
+                className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
+                title="Go Back"
+              >
+                <FaArrowLeft className="w-5 h-5" />
+              </button>
+              <div>
+                <h1 className="text-xl font-semibold text-gray-900 mb-1">
+                  {currentCategory?.name ? titleCasePreserveAcronyms(currentCategory.name) : "Practice SubCategory Management"}
+                </h1>
+                <p className="text-xs text-gray-600">
+                  {currentCategory
+                    ? `${currentCategory.examId?.name || "Exam name"} → ${currentCategory.subjectId?.name || "Subject name"
                     }`
-                  : "Manage and organize your practice papers, create new papers, and track paper performance across your educational platform."}
-              </p>
+                    : "Manage and organize your practice papers, create new papers, and track paper performance across your educational platform."}
+                </p>
+              </div>
             </div>
             <div className="flex items-center gap-2">
               {canCreate ? (
@@ -948,7 +984,6 @@ const PracticeSubCategoryManagement = ({ categoryId: propCategoryId }) => {
                 </div>
               </div>
 
-              {/* Description */}
               <div className="space-y-1.5">
                 <label
                   htmlFor="description"
@@ -956,16 +991,14 @@ const PracticeSubCategoryManagement = ({ categoryId: propCategoryId }) => {
                 >
                   Description
                 </label>
-                <textarea
-                  id="description"
-                  name="description"
-                  value={formData.description}
-                  onChange={handleFormChange}
-                  placeholder="Enter description (optional)"
-                  rows={3}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm placeholder-gray-400 transition-all resize-none"
-                  disabled={isFormLoading}
-                />
+                <div className="prose-sm">
+                  <RichTextEditor
+                    value={formData.description}
+                    onChange={handleDescriptionChange}
+                    placeholder="Enter description (optional)"
+                    disabled={isFormLoading}
+                  />
+                </div>
               </div>
 
               {/* Form Actions */}

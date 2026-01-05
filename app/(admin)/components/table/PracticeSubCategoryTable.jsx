@@ -7,6 +7,27 @@ import {
   getPermissionMessage,
 } from "../../hooks/usePermissions";
 
+// Helper function to Title-Case text while preserving ALL-CAPS tokens (e.g., "NEET").
+const titleCasePreserveAcronyms = (text) => {
+  if (!text) return "";
+  return String(text)
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((token) => {
+      const m = token.match(/^([^A-Za-z0-9]*)([A-Za-z0-9]+)([^A-Za-z0-9]*)$/);
+      if (!m) return token;
+      const [, prefix, core, suffix] = m;
+      const hasLetter = /[A-Za-z]/.test(core);
+      const isAllCaps =
+        hasLetter && core === core.toUpperCase() && core !== core.toLowerCase();
+      const nextCore = isAllCaps
+        ? core
+        : core.charAt(0).toUpperCase() + core.slice(1).toLowerCase();
+      return `${prefix}${nextCore}${suffix}`;
+    })
+    .join(" ");
+};
+
 const PracticeSubCategoryTable = ({
   subCategories,
   onEdit,
@@ -73,9 +94,8 @@ const PracticeSubCategoryTable = ({
             {subCategories.map((subCategory, index) => (
               <tr
                 key={subCategory._id || index}
-                className={`hover:bg-gray-50 transition-colors ${
-                  subCategory.status === "inactive" ? "opacity-60" : ""
-                }`}
+                className={`hover:bg-gray-50 transition-colors ${subCategory.status === "inactive" ? "opacity-60" : ""
+                  }`}
               >
                 <td className="px-2 py-1 whitespace-nowrap">
                   <div
@@ -85,7 +105,7 @@ const PracticeSubCategoryTable = ({
                     {subCategory.orderNumber
                       ? `${subCategory.orderNumber}. `
                       : ""}
-                    {subCategory.name}
+                    {titleCasePreserveAcronyms(subCategory.name)}
                   </div>
                 </td>
                 <td className="px-2 py-1 w-40">
@@ -160,11 +180,10 @@ const PracticeSubCategoryTable = ({
                 </td>
                 <td className="px-2 py-1 whitespace-nowrap text-center w-24">
                   <span
-                    className={`px-2 py-0.5 rounded-full text-sm font-medium ${
-                      subCategory.status === "active"
+                    className={`px-2 py-0.5 rounded-full text-sm font-medium ${subCategory.status === "active"
                         ? "bg-green-100 text-green-800"
                         : "bg-red-100 text-red-800"
-                    }`}
+                      }`}
                   >
                     {subCategory.status === "active" ? "Active" : "Inactive"}
                   </span>
@@ -251,19 +270,17 @@ const PracticeSubCategoryTable = ({
         {subCategories.map((subCategory, index) => (
           <div
             key={subCategory._id || index}
-            className={`p-1.5 hover:bg-gray-50 transition-colors ${
-              subCategory.status === "inactive" ? "opacity-60" : ""
-            }`}
+            className={`p-1.5 hover:bg-gray-50 transition-colors ${subCategory.status === "inactive" ? "opacity-60" : ""
+              }`}
           >
             <div className="flex items-start justify-between gap-2">
               <div className="flex-1 min-w-0">
                 <h3
                   onClick={() => handlePaperClick(subCategory)}
-                  className={`text-sm font-semibold mb-1 cursor-pointer transition-colors ${
-                    subCategory.status === "inactive"
+                  className={`text-sm font-semibold mb-1 cursor-pointer transition-colors ${subCategory.status === "inactive"
                       ? "text-gray-500 line-through"
                       : "text-blue-600 hover:text-blue-800"
-                  }`}
+                    }`}
                 >
                   {subCategory.orderNumber
                     ? `${subCategory.orderNumber}. `
@@ -339,11 +356,10 @@ const PracticeSubCategoryTable = ({
                   </div>
                   <div className="col-span-2">
                     <span
-                      className={`px-2 py-0.5 rounded-full text-sm font-medium inline-block ${
-                        subCategory.status === "active"
+                      className={`px-2 py-0.5 rounded-full text-sm font-medium inline-block ${subCategory.status === "active"
                           ? "bg-green-100 text-green-800"
                           : "bg-red-100 text-red-800"
-                      }`}
+                        }`}
                     >
                       {subCategory.status === "active" ? "Active" : "Inactive"}
                     </span>
