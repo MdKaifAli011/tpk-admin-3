@@ -16,16 +16,12 @@ import { STATUS, ERROR_MESSAGES } from "@/constants";
 import { requireAuth, requireAction } from "@/middleware/authMiddleware";
 import cacheManager from "@/utils/cacheManager";
 import { updateSubCategoryQuestionCount } from "@/utils/apiRouteHelpers";
+import { createSlug } from "@/utils/slug";
 
 // ---------- GET ALL PRACTICE SUBCATEGORIES (optimized) ----------
 export async function GET(request) {
   try {
-    // Check authentication (all authenticated users can view)
-    const authCheck = await requireAuth(request);
-    if (authCheck.error) {
-      return NextResponse.json(authCheck, { status: authCheck.status || 401 });
-    }
-
+    // Connect to database
     await connectDB();
     const { searchParams } = new URL(request.url);
 
@@ -250,6 +246,8 @@ export async function POST(request) {
       orderNumber,
       status,
       description,
+      seoData,
+      slug,
     } = body;
 
     // Validate required fields
@@ -322,9 +320,19 @@ export async function POST(request) {
       finalOrderNumber = maxOrderDoc ? (maxOrderDoc.orderNumber || 0) + 1 : 1;
     }
 
+    // Generate Slug
+    let finalSlug = slug || createSlug(subCategoryName);
+
+    // Check if slug is unique, if not append random string
+    const slugExists = await PracticeSubCategory.findOne({ slug: finalSlug });
+    if (slugExists) {
+      finalSlug = `${finalSlug}-${Math.random().toString(36).substring(2, 7)}`;
+    }
+
     // Create new subcategory (numberOfQuestions will be auto-calculated)
     const subCategory = await PracticeSubCategory.create({
       name: subCategoryName,
+      slug: finalSlug,
       categoryId,
       unitId: unitId || null,
       chapterId: chapterId || null,
@@ -337,6 +345,11 @@ export async function POST(request) {
       orderNumber: finalOrderNumber,
       status: status || STATUS.ACTIVE,
       description: description || "",
+      seoData: seoData || {
+        metaTitle: "",
+        metaDescription: "",
+        metaKeywords: "",
+      },
     });
 
     // Auto-calculate numberOfQuestions (should be 0 for new subcategory)

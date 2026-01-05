@@ -8,7 +8,7 @@ const uploadCounterSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-uploadCounterSchema.index({ path: 1 }, { unique: true });
+
 
 const UploadCounter = mongoose.models.UploadCounter || mongoose.model("UploadCounter", uploadCounterSchema);
 

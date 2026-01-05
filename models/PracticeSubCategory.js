@@ -71,6 +71,19 @@ const practiceSubCategorySchema = new mongoose.Schema(
       trim: true,
       default: "",
     },
+    // URL-friendly slug
+    slug: {
+      type: String,
+      trim: true,
+      unique: true,
+      sparse: true, // Allow nulls while still being unique
+    },
+    // SEO Data
+    seoData: {
+      metaTitle: { type: String, trim: true },
+      metaDescription: { type: String, trim: true },
+      metaKeywords: { type: String, trim: true },
+    },
   },
   { timestamps: true }
 );
@@ -78,6 +91,7 @@ const practiceSubCategorySchema = new mongoose.Schema(
 // Ensure unique subcategory name per category
 practiceSubCategorySchema.index({ categoryId: 1, name: 1 }, { unique: true });
 
+// Index for better query performance
 // Index for better query performance
 practiceSubCategorySchema.index({ categoryId: 1, status: 1 });
 practiceSubCategorySchema.index({ unitId: 1, status: 1 });

@@ -21,20 +21,20 @@ export function toTitleCase(text) {
 
   // Split by spaces and process each word
   const words = trimmed.split(/\s+/);
-  
+
   return words
     .map((word, index) => {
       // Always capitalize first word
       if (index === 0) {
         return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
       }
-      
+
       // Check if word (case-insensitive) is in the lowercase words list
       const wordLower = word.toLowerCase();
       if (LOWERCASE_WORDS.includes(wordLower)) {
         return wordLower; // Keep it lowercase
       }
-      
+
       // Capitalize other words
       return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
     })

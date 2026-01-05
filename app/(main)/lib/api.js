@@ -1416,9 +1416,9 @@ export const fetchPracticeCategories = async (filters = {}) => {
   }
 };
 
-// Fetch practice test (subcategory) by ID
-export const fetchPracticeTestById = async (testId) => {
-  if (!testId) return null;
+// Fetch practice test (subcategory) by ID or slug
+export const fetchPracticeTestById = async (identifier) => {
+  if (!identifier) return null;
 
   const isServer = typeof window === "undefined";
   const baseUrl = getBaseUrl();
@@ -1426,32 +1426,29 @@ export const fetchPracticeTestById = async (testId) => {
   try {
     if (isServer) {
       const response = await fetch(
-        `${baseUrl}/api/practice/subcategory/${testId}`,
+        `${baseUrl}/api/practice/subcategory/${identifier}`,
         {
           next: { revalidate: 60 },
         }
       );
 
-      if (!response.ok) {
-        return null;
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.data) {
+          return data.data;
+        }
       }
-
-      const data = await response.json();
-      if (data.success && data.data) {
-        return data.data;
-      }
-      return null;
     } else {
-      const response = await api.get(`/practice/subcategory/${testId}`);
+      const response = await api.get(`/practice/subcategory/${identifier}`);
       if (response.data.success && response.data.data) {
         return response.data.data;
       }
-      return null;
     }
   } catch (error) {
-    logger.error("Error fetching practice test:", error);
-    return null;
+    logger.error(`Error fetching practice test by ID/Slug ${identifier}:`, error);
   }
+
+  return null;
 };
 
 // Fetch all questions for a practice test (no pagination - get all questions)

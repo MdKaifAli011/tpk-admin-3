@@ -11,24 +11,19 @@ import cacheManager from "@/utils/cacheManager";
 // ---------- GET ALL PRACTICE CATEGORIES (optimized) ----------
 export async function GET(request) {
   try {
-    // Check authentication (all authenticated users can view)
-    const authCheck = await requireAuth(request);
-    if (authCheck.error) {
-      return NextResponse.json(authCheck, { status: authCheck.status || 401 });
-    }
-
+    // Connect to database
     await connectDB();
     const { searchParams } = new URL(request.url);
-    
+
     // Parse pagination
     const { page, limit, skip } = parsePagination(searchParams);
-    
+
     // Get filters (normalize status to lowercase for case-insensitive matching)
     const examId = searchParams.get("examId");
     const subjectId = searchParams.get("subjectId");
     const statusFilterParam = searchParams.get("status") || STATUS.ACTIVE;
     const statusFilter = statusFilterParam.toLowerCase();
-    
+
     // Build query with case-insensitive status matching
     const query = {};
     if (examId && mongoose.Types.ObjectId.isValid(examId)) {
@@ -40,7 +35,7 @@ export async function GET(request) {
     if (statusFilter !== "all") {
       query.status = { $regex: new RegExp(`^${statusFilter}$`, "i") };
     }
-    
+
     // Create cache key
     const cacheKey = `practice-categories-${JSON.stringify(query)}-${page}-${limit}`;
 

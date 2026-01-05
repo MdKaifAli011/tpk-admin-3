@@ -6,27 +6,10 @@ import {
   usePermissions,
   getPermissionMessage,
 } from "../../hooks/usePermissions";
+import { toTitleCase } from "../../../../utils/titleCase";
 
 // Helper function to Title-Case text while preserving ALL-CAPS tokens (e.g., "NEET").
-const titleCasePreserveAcronyms = (text) => {
-  if (!text) return "";
-  return String(text)
-    .split(/\s+/)
-    .filter(Boolean)
-    .map((token) => {
-      const m = token.match(/^([^A-Za-z0-9]*)([A-Za-z0-9]+)([^A-Za-z0-9]*)$/);
-      if (!m) return token;
-      const [, prefix, core, suffix] = m;
-      const hasLetter = /[A-Za-z]/.test(core);
-      const isAllCaps =
-        hasLetter && core === core.toUpperCase() && core !== core.toLowerCase();
-      const nextCore = isAllCaps
-        ? core
-        : core.charAt(0).toUpperCase() + core.slice(1).toLowerCase();
-      return `${prefix}${nextCore}${suffix}`;
-    })
-    .join(" ");
-};
+
 
 const PracticeSubCategoryTable = ({
   subCategories,
@@ -67,6 +50,9 @@ const PracticeSubCategoryTable = ({
               <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Paper Name
               </th>
+              <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
+                URL Slug
+              </th>
               <th className="px-2 py-1 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-40">
                 Hierarchy Path
               </th>
@@ -100,17 +86,27 @@ const PracticeSubCategoryTable = ({
                 <td className="px-2 py-1 whitespace-nowrap">
                   <div
                     onClick={() => handlePaperClick(subCategory)}
-                    className="text-sm font-medium text-blue-600 hover:text-blue-800 cursor-pointer transition-colors"
+                    className="text-sm font-medium text-blue-600 hover:text-blue-800 cursor-pointer transition-colors flex items-center"
                   >
                     {subCategory.orderNumber
                       ? `${subCategory.orderNumber}. `
                       : ""}
-                    {titleCasePreserveAcronyms(subCategory.name)}
+                    <span
+                      dangerouslySetInnerHTML={{
+                        __html: (/<[a-z][\s\S]*>/i.test(subCategory.name))
+                          ? subCategory.name
+                          : toTitleCase(subCategory.name)
+                      }}
+                    />
                   </div>
+                </td>
+                <td className="px-2 py-1 whitespace-nowrap overflow-hidden text-ellipsis w-32">
+                  <code className="text-[10px] bg-gray-100 px-1 py-0.5 rounded text-gray-600">
+                    {subCategory.slug || "-"}
+                  </code>
                 </td>
                 <td className="px-2 py-1 w-40">
                   <div className="flex items-center justify-center gap-1 flex-wrap">
-                    {/* Show only the last (deepest) assigned level with label */}
                     {subCategory.subTopicId?.name ? (
                       <span className="text-sm text-gray-700">
                         <span className="font-medium">Subtopic:</span>{" "}
@@ -160,12 +156,17 @@ const PracticeSubCategoryTable = ({
                 </td>
                 <td className="px-2 py-1 whitespace-nowrap text-center w-28">
                   <span className="text-sm text-gray-600">
-                    {subCategory.duration || "N/A"}
+                    {(() => {
+                      if (subCategory.duration) return subCategory.duration;
+                      const qCount = subCategory.numberOfQuestions || 0;
+                      if (qCount === 0) return "N/A";
+                      return `${Math.ceil((qCount * 30) / 60)} Min`;
+                    })()}
                   </span>
                 </td>
                 <td className="px-2 py-1 whitespace-nowrap text-center w-24">
                   <span className="text-sm font-medium text-gray-900">
-                    {subCategory.maximumMarks || 0}
+                    {subCategory.maximumMarks || (subCategory.numberOfQuestions * 4) || 0}
                   </span>
                 </td>
                 <td className="px-2 py-1 whitespace-nowrap text-center w-24">
@@ -175,14 +176,14 @@ const PracticeSubCategoryTable = ({
                 </td>
                 <td className="px-2 py-1 whitespace-nowrap text-center w-28">
                   <span className="text-sm text-gray-600">
-                    {subCategory.negativeMarks || 0}
+                    {subCategory.negativeMarks || (subCategory.numberOfQuestions > 0 ? 1 : 0)}
                   </span>
                 </td>
                 <td className="px-2 py-1 whitespace-nowrap text-center w-24">
                   <span
                     className={`px-2 py-0.5 rounded-full text-sm font-medium ${subCategory.status === "active"
-                        ? "bg-green-100 text-green-800"
-                        : "bg-red-100 text-red-800"
+                      ? "bg-green-100 text-green-800"
+                      : "bg-red-100 text-red-800"
                       }`}
                   >
                     {subCategory.status === "active" ? "Active" : "Inactive"}
@@ -277,17 +278,29 @@ const PracticeSubCategoryTable = ({
               <div className="flex-1 min-w-0">
                 <h3
                   onClick={() => handlePaperClick(subCategory)}
-                  className={`text-sm font-semibold mb-1 cursor-pointer transition-colors ${subCategory.status === "inactive"
-                      ? "text-gray-500 line-through"
-                      : "text-blue-600 hover:text-blue-800"
+                  className={`text-sm font-semibold mb-1 cursor-pointer transition-colors flex items-center ${subCategory.status === "inactive"
+                    ? "text-gray-500 line-through"
+                    : "text-blue-600 hover:text-blue-800"
                     }`}
                 >
                   {subCategory.orderNumber
                     ? `${subCategory.orderNumber}. `
                     : ""}
-                  {subCategory.name}
+                  <span
+                    dangerouslySetInnerHTML={{
+                      __html: (/<[a-z][\s\S]*>/i.test(subCategory.name))
+                        ? subCategory.name
+                        : toTitleCase(subCategory.name)
+                    }}
+                  />
                 </h3>
-                {/* Hierarchy Path - Show only last assigned level with label */}
+                {subCategory.slug && (
+                  <div className="mb-1">
+                    <code className="text-[10px] bg-gray-100 px-1 py-0.5 rounded text-gray-600">
+                      /{subCategory.slug}
+                    </code>
+                  </div>
+                )}
                 <div className="mb-1">
                   <div className="flex items-center gap-1 flex-wrap">
                     {subCategory.subTopicId?.name ? (
@@ -340,11 +353,16 @@ const PracticeSubCategoryTable = ({
                 <div className="grid grid-cols-2 gap-1 text-sm text-gray-600">
                   <div>
                     <span className="font-medium">Duration:</span>{" "}
-                    {subCategory.duration || "N/A"}
+                    {(() => {
+                      if (subCategory.duration) return subCategory.duration;
+                      const qCount = subCategory.numberOfQuestions || 0;
+                      if (qCount === 0) return "N/A";
+                      return `${Math.ceil((qCount * 30) / 60)} Min`;
+                    })()}
                   </div>
                   <div>
                     <span className="font-medium">Max Marks:</span>{" "}
-                    {subCategory.maximumMarks || 0}
+                    {subCategory.maximumMarks || (subCategory.numberOfQuestions * 4) || 0}
                   </div>
                   <div>
                     <span className="font-medium">Questions:</span>{" "}
@@ -352,13 +370,13 @@ const PracticeSubCategoryTable = ({
                   </div>
                   <div>
                     <span className="font-medium">Negative Marks:</span>{" "}
-                    {subCategory.negativeMarks || 0}
+                    {subCategory.negativeMarks || (subCategory.numberOfQuestions > 0 ? 1 : 0)}
                   </div>
                   <div className="col-span-2">
                     <span
                       className={`px-2 py-0.5 rounded-full text-sm font-medium inline-block ${subCategory.status === "active"
-                          ? "bg-green-100 text-green-800"
-                          : "bg-red-100 text-red-800"
+                        ? "bg-green-100 text-green-800"
+                        : "bg-red-100 text-red-800"
                         }`}
                     >
                       {subCategory.status === "active" ? "Active" : "Inactive"}

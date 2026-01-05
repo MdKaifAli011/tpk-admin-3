@@ -33,8 +33,14 @@ export async function GET(request) {
     if (statusFilter !== "all") {
       query.status = { $regex: new RegExp(`^${statusFilter}$`, "i") };
     }
-    if (subCategoryId && mongoose.Types.ObjectId.isValid(subCategoryId)) {
-      query.subCategoryId = subCategoryId;
+    if (subCategoryId) {
+      if (mongoose.Types.ObjectId.isValid(subCategoryId)) {
+        query.subCategoryId = subCategoryId;
+      } else {
+        // If subCategoryId is provided but not a valid ObjectId, 
+        // return zero results instead of ignoring the filter.
+        return NextResponse.json(createPaginationResponse([], 0, page, limit));
+      }
     }
 
     // Create cache key

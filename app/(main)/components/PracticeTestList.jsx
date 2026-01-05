@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import {
   FaClock,
   FaFileAlt,
@@ -24,11 +25,18 @@ import {
   saveTestResult,
   fetchStudentTestResults,
 } from "../lib/api";
+import loadMathJax from "../lib/utils/mathJaxLoader";
 import LoadingState from "./LoadingState";
 import TestSubmissionRegistrationModal from "./TestSubmissionRegistrationModal";
 import Card from "./Card";
 import Button from "./Button";
+import { toTitleCase } from "../../../utils/titleCase";
 import { logger } from "@/utils/logger";
+
+// Default test settings if not provided by admin
+const DEFAULT_MARKS_PER_QUESTION = 4;
+const DEFAULT_NEGATIVE_MARKS = 1;
+const DEFAULT_SECONDS_PER_QUESTION = 30;
 
 const PracticeTestList = ({
   examId,
@@ -38,6 +46,9 @@ const PracticeTestList = ({
   topicId,
   subTopicId,
 }) => {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
   const [practiceTests, setPracticeTests] = useState([]);
   const [practiceCategories, setPracticeCategories] = useState([]);
   const [groupedData, setGroupedData] = useState([]);
@@ -66,6 +77,7 @@ const PracticeTestList = ({
 
   const timerIntervalRef = useRef(null);
   const startTimeRef = useRef(null);
+  const contentRef = useRef(null); // Ref for MathJax typesetting
 
   // Check authentication status
   useEffect(() => {
@@ -154,6 +166,83 @@ const PracticeTestList = ({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, practiceTests.length]);
+
+  // Sync selectedTest with URL param
+  useEffect(() => {
+    const testSlug = searchParams.get("test");
+    if (testSlug && testSlug !== selectedTest) {
+      setSelectedTest(testSlug);
+    } else if (!testSlug && selectedTest) {
+      // Only clear if we were not already in the middle of a test
+      // or if the user explicitly navigated away
+      setSelectedTest(null);
+      setTest(null);
+      setQuestions([]);
+      setIsTestStarted(false);
+      setIsTestSubmitted(false);
+    }
+  }, [searchParams, selectedTest]);
+
+  const handleOpenTest = (testItem) => {
+    const currentSlug = testItem.slug || String(testItem._id || testItem.id);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("test", currentSlug);
+    router.push(`${pathname}?${params.toString()}`, { scroll: false });
+    // setSelectedTest will be updated by the useEffect above
+  };
+
+  // Helper to render names (handles HTML from editor + Title Case for plain text)
+  const renderFormattedName = (name) => {
+    if (!name) return "";
+    // If it contains HTML tags, render as is (dangerouslySetInnerHTML will be used)
+    if (/<[a-z][\s\S]*>/i.test(name)) {
+      return name;
+    }
+    // Otherwise apply title case
+    return toTitleCase(name);
+  };
+
+  // Handle SEO Meta Data when test is open
+  useEffect(() => {
+    if (test) {
+      // Update Title
+      const originalTitle = document.title;
+      // Use SEO Title if available, otherwise use paper name
+      const seoTitle = test.seoData?.metaTitle || test.name;
+      document.title = `${seoTitle} - Practice Test`;
+
+      // Update Description if available
+      let metaDesc = document.querySelector('meta[name="description"]');
+      const originalDesc = metaDesc ? metaDesc.getAttribute("content") : "";
+
+      if (test.seoData?.metaDescription) {
+        if (!metaDesc) {
+          metaDesc = document.createElement('meta');
+          metaDesc.setAttribute("name", "description");
+          document.head.appendChild(metaDesc);
+        }
+        metaDesc.setAttribute("content", test.seoData.metaDescription);
+      }
+
+      return () => {
+        document.title = originalTitle;
+        if (metaDesc && originalDesc) {
+          metaDesc.setAttribute("content", originalDesc);
+        }
+      };
+    }
+  }, [test]);
+
+  // Handle MathJax typesetting when content changes
+  useEffect(() => {
+    if (typeof window !== "undefined" && (isTestStarted || isTestSubmitted) && contentRef.current) {
+      loadMathJax().then((MathJaxInstance) => {
+        if (MathJaxInstance && MathJaxInstance.Hub) {
+          MathJaxInstance.Hub.Queue(["Typeset", MathJaxInstance.Hub, contentRef.current]);
+        }
+      }).catch(err => console.error("MathJax load error:", err));
+    }
+  }, [currentQuestionIndex, isTestStarted, isTestSubmitted, results, questions]);
 
   // Close registration modal and save pending results if user logs in from another tab
   useEffect(() => {
@@ -419,39 +508,46 @@ const PracticeTestList = ({
         const grouped = categories
           .map((category) => {
             const categoryId = category._id || category.id;
-            const categoryTests = tests.filter((test) => {
-              // Handle different categoryId formats
-              // API populates categoryId as: { _id: "...", name: "...", ... }
-              // Or it might be just a string ID
-              let testCategoryId = null;
+            const categoryTests = tests
+              .filter((test) => {
+                // Handle different categoryId formats
+                let testCategoryId = null;
 
-              if (test.categoryId) {
-                if (typeof test.categoryId === "object") {
-                  // Populated object
-                  testCategoryId = test.categoryId._id || test.categoryId.id;
-                } else {
-                  // String ID
-                  testCategoryId = test.categoryId;
+                if (test.categoryId) {
+                  if (typeof test.categoryId === "object") {
+                    testCategoryId = test.categoryId._id || test.categoryId.id;
+                  } else {
+                    testCategoryId = test.categoryId;
+                  }
                 }
-              }
 
-              // Also check alternative field names
-              if (!testCategoryId && test.category) {
-                if (typeof test.category === "object") {
-                  testCategoryId = test.category._id || test.category.id;
-                } else {
-                  testCategoryId = test.category;
+                // Also check alternative field names
+                if (!testCategoryId && test.category) {
+                  if (typeof test.category === "object") {
+                    testCategoryId = test.category._id || test.category.id;
+                  } else {
+                    testCategoryId = test.category;
+                  }
                 }
-              }
 
-              // Compare as strings to handle ObjectId vs string mismatches
-              const matches =
-                testCategoryId &&
-                categoryId &&
-                String(testCategoryId).trim() === String(categoryId).trim();
+                // Compare as strings to handle ObjectId vs string mismatches
+                const matches =
+                  testCategoryId &&
+                  categoryId &&
+                  String(testCategoryId).trim() === String(categoryId).trim();
 
-              return matches;
-            });
+                return matches;
+              })
+              .map((test) => {
+                const qCount = test.numberOfQuestions || 0;
+                return {
+                  ...test,
+                  maximumMarks: test.maximumMarks || (qCount * DEFAULT_MARKS_PER_QUESTION),
+                  negativeMarks: test.negativeMarks || DEFAULT_NEGATIVE_MARKS,
+                  duration: test.duration || (qCount > 0 ? `${Math.ceil((qCount * DEFAULT_SECONDS_PER_QUESTION) / 60)} Min` : "0 Min")
+                };
+              });
+
             return {
               category,
               tests: categoryTests,
@@ -513,10 +609,7 @@ const PracticeTestList = ({
         setIsLoadingTest(true);
         setError(null);
 
-        const [testData, questionsData] = await Promise.all([
-          fetchPracticeTestById(selectedTest),
-          fetchPracticeTestQuestions(selectedTest),
-        ]);
+        const testData = await fetchPracticeTestById(selectedTest);
 
         if (!testData) {
           setError("Practice test not found");
@@ -524,7 +617,32 @@ const PracticeTestList = ({
           return;
         }
 
-        setTest(testData);
+        // Fetch questions using the actual ID from testData, not the slug/identifier
+        // This prevents the backend from falling back to "all questions" if the slug isn't a valid ObjectId
+        const questionsData = await fetchPracticeTestQuestions(testData._id || testData.id);
+
+        // Calculate and set metrics with defaults if needed
+        const qCount = questionsData.length;
+
+        // Duration: 1q/30sec if not provided
+        let durationSeconds = parseDuration(testData.duration);
+        if (!durationSeconds && qCount > 0) {
+          durationSeconds = qCount * DEFAULT_SECONDS_PER_QUESTION;
+        }
+
+        if (durationSeconds) {
+          setTimeRemaining(durationSeconds);
+        }
+
+        // Apply defaults to test data for display consistency
+        const enrichedTest = {
+          ...testData,
+          maximumMarks: testData.maximumMarks || (qCount * DEFAULT_MARKS_PER_QUESTION),
+          negativeMarks: testData.negativeMarks || DEFAULT_NEGATIVE_MARKS,
+          duration: testData.duration || (qCount > 0 ? `${Math.ceil((qCount * DEFAULT_SECONDS_PER_QUESTION) / 60)} Min` : "0 Min")
+        };
+
+        setTest(enrichedTest);
         setQuestions(questionsData);
 
         const initialAnswers = {};
@@ -532,11 +650,6 @@ const PracticeTestList = ({
           initialAnswers[q._id] = null;
         });
         setAnswers(initialAnswers);
-
-        const durationSeconds = parseDuration(testData.duration);
-        if (durationSeconds) {
-          setTimeRemaining(durationSeconds);
-        }
       } catch (err) {
         logger.error("Error loading practice test:", err);
         setError("Failed to load practice test. Please try again.");
@@ -560,6 +673,12 @@ const PracticeTestList = ({
   const handleStartTest = () => {
     setIsTestStarted(true);
     startTimeRef.current = Date.now();
+
+    // Update URL to include test slug
+    const currentSlug = test.slug || String(test._id);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("test", currentSlug);
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   };
 
   // Handle answer selection
@@ -587,6 +706,10 @@ const PracticeTestList = ({
   const goToQuestion = (index) => {
     if (index >= 0 && index < questions.length) {
       setCurrentQuestionIndex(index);
+      // Scroll to top of question content
+      if (typeof window !== "undefined") {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
     }
   };
 
@@ -597,9 +720,13 @@ const PracticeTestList = ({
     let unansweredCount = 0;
     let totalMarks = 0;
     const questionResults = [];
+    const qCount = questions.length;
+    const testToUse = test || {};
 
-    const marksPerQuestion = test.maximumMarks / questions.length;
-    const negativeMarks = test.negativeMarks || 0;
+    // Use enriched metrics for calculation
+    const effectiveMaxMarks = testToUse.maximumMarks || (qCount * DEFAULT_MARKS_PER_QUESTION);
+    const marksPerQuestion = qCount > 0 ? effectiveMaxMarks / qCount : 0;
+    const negativeMarks = testToUse.negativeMarks || DEFAULT_NEGATIVE_MARKS;
 
     questions.forEach((question) => {
       const userAnswer = answers[question._id];
@@ -641,7 +768,7 @@ const PracticeTestList = ({
       }
     });
 
-    const percentage = (totalMarks / test.maximumMarks) * 100;
+    const percentage = effectiveMaxMarks > 0 ? (totalMarks / effectiveMaxMarks) * 100 : 0;
 
     return {
       totalQuestions: questions.length,
@@ -859,6 +986,11 @@ const PracticeTestList = ({
       clearInterval(timerIntervalRef.current);
     }
 
+    // Update URL to remove test slug
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("test");
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+
     // Refresh scores when going back to list
     if (isAuthenticated && practiceTests.length > 0) {
       setTimeout(() => {
@@ -1075,7 +1207,10 @@ const PracticeTestList = ({
               <h1 className="text-2xl font-semibold text-gray-900 mb-2">
                 Test Results
               </h1>
-              <p className="text-sm text-gray-600">{test.name}</p>
+              <p
+                className="text-sm text-gray-600"
+                dangerouslySetInnerHTML={{ __html: renderFormattedName(test.name) }}
+              />
             </div>
           </Card>
 
@@ -1131,7 +1266,10 @@ const PracticeTestList = ({
             <h2 className="text-xl font-semibold text-gray-900 mb-6">
               Question-wise Results
             </h2>
-            <div className="space-y-6">
+            <div
+              ref={contentRef}
+              className="space-y-6"
+            >
               {results.questionResults.map((result, index) => {
                 const question = questions.find(
                   (q) => q._id === result.questionId
@@ -1146,9 +1284,10 @@ const PracticeTestList = ({
                         <span className="flex items-center justify-center w-8 h-8 rounded-full font-medium bg-white text-gray-900 border border-gray-300 text-xs">
                           {index + 1}
                         </span>
-                        <h3 className="text-base font-semibold text-gray-900">
-                          {result.question}
-                        </h3>
+                        <h3
+                          className="text-base font-semibold text-gray-900 rich-text-content"
+                          dangerouslySetInnerHTML={{ __html: result.question }}
+                        />
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
                         {result.isCorrect ? (
@@ -1158,8 +1297,8 @@ const PracticeTestList = ({
                         )}
                         <span
                           className={`px-3 py-1 rounded-full text-sm font-medium ${result.isCorrect
-                              ? "bg-green-100 text-green-800"
-                              : "bg-red-100 text-red-800"
+                            ? "bg-green-100 text-green-800"
+                            : "bg-red-100 text-red-800"
                             }`}
                         >
                           {result.marks > 0
@@ -1181,26 +1320,27 @@ const PracticeTestList = ({
                           <div
                             key={option}
                             className={`p-3 rounded-lg border ${isCorrectAnswer
-                                ? "bg-green-50 border-green-200"
-                                : isUserAnswer && !isCorrectAnswer
-                                  ? "bg-red-50 border-red-200"
-                                  : "bg-white border-gray-200"
+                              ? "bg-green-50 border-green-200"
+                              : isUserAnswer && !isCorrectAnswer
+                                ? "bg-red-50 border-red-200"
+                                : "bg-white border-gray-200"
                               }`}
                           >
                             <div className="flex items-center gap-3">
                               <span
                                 className={`w-8 h-8 rounded-full flex items-center justify-center font-medium text-sm ${isCorrectAnswer
-                                    ? "bg-green-600 text-white"
-                                    : isUserAnswer && !isCorrectAnswer
-                                      ? "bg-red-600 text-white"
-                                      : "bg-gray-200 text-gray-700"
+                                  ? "bg-green-600 text-white"
+                                  : isUserAnswer && !isCorrectAnswer
+                                    ? "bg-red-600 text-white"
+                                    : "bg-gray-200 text-gray-700"
                                   }`}
                               >
                                 {option}
                               </span>
-                              <span className="text-sm font-medium text-gray-900 flex-1">
-                                {optionText}
-                              </span>
+                              <span
+                                className="text-sm font-medium text-gray-900 flex-1 rich-text-content"
+                                dangerouslySetInnerHTML={{ __html: optionText }}
+                              />
                               {isCorrectAnswer && (
                                 <FaCheckCircle className="text-green-600 text-sm" />
                               )}
@@ -1218,9 +1358,10 @@ const PracticeTestList = ({
                         <h4 className="text-sm font-semibold text-gray-900 mb-2">
                           Explanation:
                         </h4>
-                        <p className="text-sm text-gray-600 leading-relaxed">
-                          {question.detailsExplanation}
-                        </p>
+                        <p
+                          className="text-sm text-gray-600 leading-relaxed rich-text-content"
+                          dangerouslySetInnerHTML={{ __html: question.detailsExplanation }}
+                        />
                       </div>
                     )}
 
@@ -1275,9 +1416,10 @@ const PracticeTestList = ({
         <Card variant="none" hover={false} className="overflow-hidden">
           {/* TITLE */}
           <div className="p-6 text-center border-b border-gray-200">
-            <h1 className="text-xl font-bold text-gray-900 mb-2">
-              {test.name}
-            </h1>
+            <h1
+              className="text-xl font-bold text-gray-900 mb-2"
+              dangerouslySetInnerHTML={{ __html: renderFormattedName(test.name) }}
+            />
             <p className="text-sm text-gray-500">
               Let&apos;s boost your preparation today
             </p>
@@ -1334,8 +1476,11 @@ const PracticeTestList = ({
                   ]
                 ).map((line, index) => (
                   <li key={index} className="flex gap-2">
-                    <span className="mt-0.5 text-gray-400">•</span>
-                    <span>{line}</span>
+
+                    <span
+                      className="rich-text-content"
+                      dangerouslySetInnerHTML={{ __html: line }}
+                    />
                   </li>
                 ))}
               </ul>
@@ -1475,8 +1620,8 @@ const PracticeTestList = ({
             {timeRemaining !== null && (
               <div
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg border ${timeRemaining < 300
-                    ? "bg-red-50 border-red-200"
-                    : "bg-gray-50 border-gray-200"
+                  ? "bg-red-50 border-red-200"
+                  : "bg-gray-50 border-gray-200"
                   }`}
               >
                 <FaClock
@@ -1497,69 +1642,73 @@ const PracticeTestList = ({
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* LEFT: QUESTION PANEL */}
           <Card variant="none" hover={false} className="lg:col-span-3 p-6">
-            {/* QUESTION HEADER */}
-            <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
-              <h2 className="text-base font-semibold text-gray-900">
-                Question {currentQuestionIndex + 1} of {questions.length}
-              </h2>
-            </div>
+            <div ref={contentRef}>
+              {/* QUESTION HEADER */}
+              <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
+                <h2 className="text-base font-semibold text-gray-900">
+                  Question {currentQuestionIndex + 1} of {questions.length}
+                </h2>
+              </div>
 
-            {/* QUESTION TEXT */}
-            <div className="text-base text-gray-900 leading-relaxed mb-6">
-              {currentQuestion.question}
-            </div>
+              {/* QUESTION TEXT */}
+              <div
+                className="text-base text-gray-900 leading-relaxed mb-6 rich-text-content"
+                dangerouslySetInnerHTML={{ __html: currentQuestion.question }}
+              />
 
-            {/* OPTIONS */}
-            <div className="space-y-3">
-              {["A", "B", "C", "D"].map((opt) => {
-                const key = `option${opt}`;
-                const selected = answers[currentQuestion._id] === opt;
+              {/* OPTIONS */}
+              <div className="space-y-3">
+                {["A", "B", "C", "D"].map((opt) => {
+                  const key = `option${opt}`;
+                  const selected = answers[currentQuestion._id] === opt;
 
-                return (
-                  <label
-                    key={opt}
-                    className={`
+                  return (
+                    <label
+                      key={opt}
+                      className={`
                       flex items-start gap-3 p-4 rounded-lg cursor-pointer border transition-all
                       ${selected
-                        ? "border-blue-500 bg-blue-50"
-                        : "border-gray-300 bg-white hover:bg-gray-50"
-                      }
+                          ? "border-blue-500 bg-blue-50"
+                          : "border-gray-300 bg-white hover:bg-gray-50"
+                        }
                     `}
-                  >
-                    {/* Radio Circle */}
-                    <div
-                      className={`
+                    >
+                      {/* Radio Circle */}
+                      <div
+                        className={`
                         w-5 h-5 rounded-full flex items-center justify-center border shrink-0 mt-0.5
                         ${selected
-                          ? "bg-blue-600 border-blue-700"
-                          : "border-gray-400"
-                        }
+                            ? "bg-blue-600 border-blue-700"
+                            : "border-gray-400"
+                          }
                       `}
-                    >
-                      {selected && <FaCheck className="text-white text-xs" />}
-                    </div>
+                      >
+                        {selected && <FaCheck className="text-white text-xs" />}
+                      </div>
 
-                    {/* Option Text */}
-                    <span className="text-sm text-gray-900 flex-1 leading-relaxed">
-                      {currentQuestion[key]}
-                    </span>
+                      {/* Option Text */}
+                      <span
+                        className="text-sm text-gray-900 flex-1 leading-relaxed rich-text-content"
+                        dangerouslySetInnerHTML={{ __html: currentQuestion[key] }}
+                      />
 
-                    {/* Option Letter */}
-                    <span className="text-xs text-gray-500 font-medium shrink-0">
-                      {opt}
-                    </span>
+                      {/* Option Letter */}
+                      <span className="text-xs text-gray-500 font-medium shrink-0">
+                        {opt}
+                      </span>
 
-                    <input
-                      type="radio"
-                      checked={selected}
-                      onChange={() =>
-                        handleAnswerSelect(currentQuestion._id, opt)
-                      }
-                      className="hidden"
-                    />
-                  </label>
-                );
-              })}
+                      <input
+                        type="radio"
+                        checked={selected}
+                        onChange={() =>
+                          handleAnswerSelect(currentQuestion._id, opt)
+                        }
+                        className="hidden"
+                      />
+                    </label>
+                  );
+                })}
+              </div>
             </div>
 
             {/* BOTTOM BUTTONS */}
@@ -1587,8 +1736,8 @@ const PracticeTestList = ({
               >
                 <FaFlag
                   className={`text-xs ${markedForReview.has(currentQuestion._id)
-                      ? "text-yellow-500"
-                      : "text-gray-500"
+                    ? "text-yellow-500"
+                    : "text-gray-500"
                     }`}
                 />
                 {markedForReview.has(currentQuestion._id)
@@ -1697,9 +1846,9 @@ const PracticeTestList = ({
             >
               Submit Test
             </Button>
-          </div>
-        </div>
-      </div>
+          </div >
+        </div >
+      </div >
     );
   }
 
@@ -1736,9 +1885,10 @@ const PracticeTestList = ({
               <thead className="bg-blue-50 border-b border-gray-200">
                 <tr className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
                   {/* Column 1 */}
-                  <th className="px-4 py-3 text-left w-[28%] text-sm text-blue-900">
-                    {group.category.name}
-                  </th>
+                  <th
+                    className="px-4 py-3 text-left w-[28%] text-sm text-blue-900"
+                    dangerouslySetInnerHTML={{ __html: renderFormattedName(group.category.name) }}
+                  />
 
                   {/* Column 2 */}
                   <th className="px-3 py-3 text-center w-[10%]">Questions</th>
@@ -1766,9 +1916,9 @@ const PracticeTestList = ({
                   <tr key={i} className="hover:bg-gray-50 transition-all">
                     {/* Col 1 */}
                     <td className="px-4 py-3 w-[28%]">
-                      <div className="text-sm font-medium text-gray-900">
+                      <div className="text-sm font-medium text-gray-900 flex items-center">
                         <span className="mr-1">{test.orderNumber}.</span>
-                        {test.name}
+                        <span dangerouslySetInnerHTML={{ __html: renderFormattedName(test.name) }} />
                       </div>
                     </td>
 
@@ -1809,7 +1959,7 @@ const PracticeTestList = ({
                           <Button
                             variant="primary"
                             size="sm"
-                            onClick={() => setSelectedTest(test._id)}
+                            onClick={() => handleOpenTest(test)}
                             className={
                               hasScore
                                 ? "bg-emerald-600 hover:bg-emerald-700"
@@ -1866,15 +2016,16 @@ const PracticeTestList = ({
               <div key={i} className="px-4 py-4">
                 {/* Show category name ONLY for the first test */}
                 {i === 0 && (
-                  <div className="text-sm font-bold text-blue-900 mb-3">
-                    {group.category.name}
-                  </div>
+                  <div
+                    className="text-sm font-bold text-blue-900 mb-3"
+                    dangerouslySetInnerHTML={{ __html: renderFormattedName(group.category.name) }}
+                  />
                 )}
 
                 {/* Paper Name */}
-                <div className="text-sm font-semibold text-gray-900 mb-3">
+                <div className="text-sm font-semibold text-gray-900 mb-3 flex items-center">
                   <span className="mr-1">{test.orderNumber}.</span>
-                  {test.name}
+                  <span dangerouslySetInnerHTML={{ __html: renderFormattedName(test.name) }} />
                 </div>
 
                 {/* Details */}
@@ -1902,7 +2053,7 @@ const PracticeTestList = ({
                       <Button
                         variant="primary"
                         size="sm"
-                        onClick={() => setSelectedTest(test._id)}
+                        onClick={() => handleOpenTest(test)}
                         className={
                           hasScore ? "bg-emerald-600 hover:bg-emerald-700" : ""
                         }

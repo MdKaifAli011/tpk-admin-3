@@ -72,6 +72,12 @@ const PracticeSubCategoryManagement = ({ categoryId: propCategoryId }) => {
     maximumMarks: "",
     negativeMarks: "",
     description: "",
+    slug: "",
+    seoData: {
+      metaTitle: "",
+      metaDescription: "",
+      metaKeywords: "",
+    },
   });
   const [units, setUnits] = useState([]);
   const [chapters, setChapters] = useState([]);
@@ -382,6 +388,18 @@ const PracticeSubCategoryManagement = ({ categoryId: propCategoryId }) => {
     setFormError(null);
   };
 
+  // Handle SEO field changes
+  const handleSeoChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      seoData: {
+        ...prev.seoData,
+        [name]: value,
+      },
+    }));
+  };
+
   // Handle cancel form
   const handleCancelForm = () => {
     setShowAddForm(false);
@@ -399,6 +417,12 @@ const PracticeSubCategoryManagement = ({ categoryId: propCategoryId }) => {
       maximumMarks: "",
       negativeMarks: "",
       description: "",
+      slug: "",
+      seoData: {
+        metaTitle: "",
+        metaDescription: "",
+        metaKeywords: "",
+      },
     });
     setUnits([]);
     setChapters([]);
@@ -450,6 +474,8 @@ const PracticeSubCategoryManagement = ({ categoryId: propCategoryId }) => {
         maximumMarks: parseFloat(formData.maximumMarks) || 0,
         negativeMarks: parseFloat(formData.negativeMarks) || 0,
         description: formData.description.trim() || "",
+        slug: formData.slug.trim() || null,
+        seoData: formData.seoData,
       };
 
       // Add orderNumber if provided
@@ -517,6 +543,12 @@ const PracticeSubCategoryManagement = ({ categoryId: propCategoryId }) => {
       maximumMarks: subCategory.maximumMarks || "",
       negativeMarks: subCategory.negativeMarks || "",
       description: subCategory.description || "",
+      slug: subCategory.slug || "",
+      seoData: {
+        metaTitle: subCategory.seoData?.metaTitle || "",
+        metaDescription: subCategory.seoData?.metaDescription || "",
+        metaKeywords: subCategory.seoData?.metaKeywords || "",
+      },
     });
 
     // Fetch hierarchical data for editing
@@ -935,10 +967,15 @@ const PracticeSubCategoryManagement = ({ categoryId: propCategoryId }) => {
                     name="duration"
                     value={formData.duration}
                     onChange={handleFormChange}
-                    placeholder="e.g., 60 Min"
+                    placeholder="e.g., 60 Min - Leave blank for Auto (1q/30s)"
                     className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm placeholder-gray-400 transition-all"
                     disabled={isFormLoading}
                   />
+                  {!formData.duration && editingSubCategory?.numberOfQuestions > 0 && (
+                    <p className="text-[10px] text-blue-600 mt-1">
+                      Auto: {Math.ceil((editingSubCategory.numberOfQuestions * 30) / 60)} Min ({editingSubCategory.numberOfQuestions} questions)
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-1.5">
@@ -954,12 +991,17 @@ const PracticeSubCategoryManagement = ({ categoryId: propCategoryId }) => {
                     name="maximumMarks"
                     value={formData.maximumMarks}
                     onChange={handleFormChange}
-                    placeholder="e.g., 100"
+                    placeholder="e.g., 100 - Leave at 0 for Auto (4/q)"
                     min="0"
                     step="0.01"
                     className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm placeholder-gray-400 transition-all"
                     disabled={isFormLoading}
                   />
+                  {!formData.maximumMarks && editingSubCategory?.numberOfQuestions > 0 && (
+                    <p className="text-[10px] text-blue-600 mt-1">
+                      Auto: {editingSubCategory.numberOfQuestions * 4} Marks
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-1.5">
@@ -975,12 +1017,17 @@ const PracticeSubCategoryManagement = ({ categoryId: propCategoryId }) => {
                     name="negativeMarks"
                     value={formData.negativeMarks}
                     onChange={handleFormChange}
-                    placeholder="e.g., 0.25"
+                    placeholder="e.g., 1 - Leave at 0 for Auto (-1/q)"
                     min="0"
                     step="0.01"
                     className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm placeholder-gray-400 transition-all"
                     disabled={isFormLoading}
                   />
+                  {!formData.negativeMarks && editingSubCategory?.numberOfQuestions > 0 && (
+                    <p className="text-[10px] text-blue-600 mt-1">
+                      Auto: 1 Mark deduction per question
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -998,6 +1045,93 @@ const PracticeSubCategoryManagement = ({ categoryId: propCategoryId }) => {
                     placeholder="Enter description (optional)"
                     disabled={isFormLoading}
                   />
+                </div>
+              </div>
+
+              {/* SEO Section */}
+              <div className="pt-6 border-t border-gray-200">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">
+                  SEO & URL Settings
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label
+                      htmlFor="slug"
+                      className="block text-sm font-medium text-gray-700"
+                    >
+                      Custom Slug (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      id="slug"
+                      name="slug"
+                      value={formData.slug}
+                      onChange={handleFormChange}
+                      placeholder="e.g., neet-2025-physics-paper"
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm placeholder-gray-400 transition-all"
+                      disabled={isFormLoading}
+                    />
+                    <p className="text-[10px] text-gray-500">
+                      Leave blank to auto-generate from name.
+                    </p>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label
+                      htmlFor="metaTitle"
+                      className="block text-sm font-medium text-gray-700"
+                    >
+                      Meta Title
+                    </label>
+                    <input
+                      type="text"
+                      id="metaTitle"
+                      name="metaTitle"
+                      value={formData.seoData.metaTitle}
+                      onChange={handleSeoChange}
+                      placeholder="SEO Title"
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm placeholder-gray-400 transition-all"
+                      disabled={isFormLoading}
+                    />
+                  </div>
+
+                  <div className="space-y-1.5 md:col-span-2">
+                    <label
+                      htmlFor="metaDescription"
+                      className="block text-sm font-medium text-gray-700"
+                    >
+                      Meta Description
+                    </label>
+                    <textarea
+                      id="metaDescription"
+                      name="metaDescription"
+                      value={formData.seoData.metaDescription}
+                      onChange={handleSeoChange}
+                      rows="2"
+                      placeholder="Write a compelling meta description for this test..."
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm placeholder-gray-400 transition-all"
+                      disabled={isFormLoading}
+                    ></textarea>
+                  </div>
+
+                  <div className="space-y-1.5 md:col-span-2">
+                    <label
+                      htmlFor="metaKeywords"
+                      className="block text-sm font-medium text-gray-700"
+                    >
+                      Meta Keywords
+                    </label>
+                    <input
+                      type="text"
+                      id="metaKeywords"
+                      name="metaKeywords"
+                      value={formData.seoData.metaKeywords}
+                      onChange={handleSeoChange}
+                      placeholder="e.g., NEET, Physics, Mock Test, 2025 (separated by commas)"
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm placeholder-gray-400 transition-all"
+                      disabled={isFormLoading}
+                    />
+                  </div>
                 </div>
               </div>
 

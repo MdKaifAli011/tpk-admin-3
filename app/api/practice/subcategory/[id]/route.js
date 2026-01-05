@@ -15,30 +15,34 @@ import { ERROR_MESSAGES, STATUS } from "@/constants";
 import { requireAuth, requireAction } from "@/middleware/authMiddleware";
 import cacheManager from "@/utils/cacheManager";
 import { updateSubCategoryQuestionCount } from "@/utils/apiRouteHelpers";
+import { createSlug } from "@/utils/slug";
 
 // ---------- GET SINGLE PRACTICE SUBCATEGORY ----------
 export async function GET(_request, { params }) {
   try {
-    // Check authentication (all authenticated users can view)
-    const authCheck = await requireAuth(_request);
-    if (authCheck.error) {
-      return NextResponse.json(authCheck, { status: authCheck.status || 401 });
-    }
-
+    // Connect to database
     await connectDB();
     const { id } = await params;
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return errorResponse("Invalid subcategory ID", 400);
+    // Try finding by ID or Slug
+    let subCategory;
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      subCategory = await PracticeSubCategory.findById(id)
+        .populate("categoryId", "name status examId subjectId")
+        .populate("unitId", "name status")
+        .populate("chapterId", "name status")
+        .populate("topicId", "name status")
+        .populate("subTopicId", "name status")
+        .lean();
+    } else {
+      subCategory = await PracticeSubCategory.findOne({ slug: id })
+        .populate("categoryId", "name status examId subjectId")
+        .populate("unitId", "name status")
+        .populate("chapterId", "name status")
+        .populate("topicId", "name status")
+        .populate("subTopicId", "name status")
+        .lean();
     }
-
-    const subCategory = await PracticeSubCategory.findById(id)
-      .populate("categoryId", "name status examId subjectId")
-      .populate("unitId", "name status")
-      .populate("chapterId", "name status")
-      .populate("topicId", "name status")
-      .populate("subTopicId", "name status")
-      .lean();
 
     if (!subCategory) {
       return notFoundResponse("Practice subcategory not found");
@@ -75,21 +79,25 @@ export async function PUT(request, { params }) {
       orderNumber,
       status,
       description,
+      seoData,
+      slug,
     } = body;
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return errorResponse("Invalid subcategory ID", 400);
+    // Find subcategory by ID or Slug
+    let existingSubCategory;
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      existingSubCategory = await PracticeSubCategory.findById(id);
+    } else {
+      existingSubCategory = await PracticeSubCategory.findOne({ slug: id });
+    }
+
+    if (!existingSubCategory) {
+      return notFoundResponse("Practice subcategory not found");
     }
 
     // Validate required fields
     if (!name || name.trim() === "") {
       return errorResponse("SubCategory name is required", 400);
-    }
-
-    // Check if subcategory exists
-    const existingSubCategory = await PracticeSubCategory.findById(id);
-    if (!existingSubCategory) {
-      return notFoundResponse("Practice subcategory not found");
     }
 
     // Capitalize first letter of each word in subcategory name (excluding And, Of, Or, In)
@@ -100,7 +108,7 @@ export async function PUT(request, { params }) {
     const duplicate = await PracticeSubCategory.findOne({
       name: subCategoryName,
       categoryId: categoryId || existingSubCategory.categoryId,
-      _id: { $ne: id },
+      _id: { $ne: existingSubCategory._id },
     });
     if (duplicate) {
       return errorResponse(
@@ -134,11 +142,37 @@ export async function PUT(request, { params }) {
       return errorResponse("Negative marks must be a non-negative number", 400);
     }
 
-    // Prepare update data
     const updateData = {
       name: subCategoryName,
       description: description || "",
+      seoData: seoData || {
+        metaTitle: "",
+        metaDescription: "",
+        metaKeywords: "",
+      },
     };
+
+    // Handle Slug Update
+    if (slug) {
+      // If custom slug provided, check uniqueness
+      const slugExists = await PracticeSubCategory.findOne({
+        slug,
+        _id: { $ne: existingSubCategory._id },
+      });
+      updateData.slug = slugExists
+        ? `${slug}-${Math.random().toString(36).substring(2, 7)}`
+        : slug;
+    } else if (subCategoryName !== existingSubCategory.name) {
+      // If name changed and no custom slug, regenerate
+      const newSlugBase = createSlug(subCategoryName);
+      const slugExists = await PracticeSubCategory.findOne({
+        slug: newSlugBase,
+        _id: { $ne: existingSubCategory._id },
+      });
+      updateData.slug = slugExists
+        ? `${newSlugBase}-${Math.random().toString(36).substring(2, 7)}`
+        : newSlugBase;
+    }
 
     if (categoryId) {
       if (!mongoose.Types.ObjectId.isValid(categoryId)) {
@@ -157,14 +191,13 @@ export async function PUT(request, { params }) {
     if (subTopicId !== undefined) updateData.subTopicId = subTopicId || null;
     if (duration !== undefined) updateData.duration = duration?.trim() || "";
     if (maximumMarks !== undefined) updateData.maximumMarks = maximumMarks || 0;
-    // numberOfQuestions is auto-calculated, don't allow manual updates
     if (negativeMarks !== undefined)
       updateData.negativeMarks = negativeMarks || 0;
     if (orderNumber !== undefined) updateData.orderNumber = orderNumber;
     if (status) updateData.status = status;
 
     const updated = await PracticeSubCategory.findByIdAndUpdate(
-      id,
+      existingSubCategory._id,
       { $set: updateData },
       {
         new: true,
@@ -183,10 +216,10 @@ export async function PUT(request, { params }) {
     }
 
     // Auto-calculate numberOfQuestions
-    await updateSubCategoryQuestionCount(id);
+    await updateSubCategoryQuestionCount(existingSubCategory._id);
 
     // Refresh the updated document to get the latest numberOfQuestions
-    const refreshed = await PracticeSubCategory.findById(id)
+    const refreshed = await PracticeSubCategory.findById(existingSubCategory._id)
       .populate("categoryId", "name status examId subjectId")
       .populate("unitId", "name status")
       .populate("chapterId", "name status")
@@ -219,11 +252,14 @@ export async function PATCH(request, { params }) {
     const { id } = await params;
     const body = await request.json();
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return errorResponse("Invalid subcategory ID", 400);
+    // Find subcategory by ID or Slug
+    let existingSubCategory;
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      existingSubCategory = await PracticeSubCategory.findById(id);
+    } else {
+      existingSubCategory = await PracticeSubCategory.findOne({ slug: id });
     }
 
-    const existingSubCategory = await PracticeSubCategory.findById(id);
     if (!existingSubCategory) {
       return notFoundResponse("Practice subcategory not found");
     }
@@ -238,7 +274,7 @@ export async function PATCH(request, { params }) {
       const duplicate = await PracticeSubCategory.findOne({
         name: subCategoryName,
         categoryId: body.categoryId || existingSubCategory.categoryId,
-        _id: { $ne: id },
+        _id: { $ne: existingSubCategory._id },
       });
       if (duplicate) {
         return errorResponse(
@@ -293,7 +329,6 @@ export async function PATCH(request, { params }) {
       }
       updateData.maximumMarks = body.maximumMarks || 0;
     }
-    // numberOfQuestions is auto-calculated, don't allow manual updates
     if (body.negativeMarks !== undefined) {
       if (isNaN(body.negativeMarks) || body.negativeMarks < 0) {
         return errorResponse("Negative marks must be a non-negative number", 400);
@@ -303,13 +338,35 @@ export async function PATCH(request, { params }) {
     if (body.orderNumber !== undefined)
       updateData.orderNumber = body.orderNumber;
     if (body.status !== undefined) updateData.status = body.status;
+    if (body.seoData !== undefined) updateData.seoData = body.seoData;
+
+    // Handle Slug in PATCH
+    if (body.slug !== undefined) {
+      const customSlug = body.slug;
+      const slugExists = await PracticeSubCategory.findOne({
+        slug: customSlug,
+        _id: { $ne: existingSubCategory._id },
+      });
+      updateData.slug = slugExists
+        ? `${customSlug}-${Math.random().toString(36).substring(2, 7)}`
+        : customSlug;
+    } else if (body.name !== undefined) {
+      const newSlugBase = createSlug(updateData.name || existingSubCategory.name);
+      const slugExists = await PracticeSubCategory.findOne({
+        slug: newSlugBase,
+        _id: { $ne: existingSubCategory._id },
+      });
+      updateData.slug = slugExists
+        ? `${newSlugBase}-${Math.random().toString(36).substring(2, 7)}`
+        : newSlugBase;
+    }
 
     if (Object.keys(updateData).length === 0) {
       return errorResponse("No valid update fields provided", 400);
     }
 
     const updated = await PracticeSubCategory.findByIdAndUpdate(
-      id,
+      existingSubCategory._id,
       { $set: updateData },
       {
         new: true,
@@ -328,10 +385,10 @@ export async function PATCH(request, { params }) {
     }
 
     // Auto-calculate numberOfQuestions
-    await updateSubCategoryQuestionCount(id);
+    await updateSubCategoryQuestionCount(existingSubCategory._id);
 
     // Refresh the updated document to get the latest numberOfQuestions
-    const refreshed = await PracticeSubCategory.findById(id)
+    const refreshed = await PracticeSubCategory.findById(existingSubCategory._id)
       .populate("categoryId", "name status examId subjectId")
       .populate("unitId", "name status")
       .populate("chapterId", "name status")
@@ -363,11 +420,19 @@ export async function DELETE(_request, { params }) {
     await connectDB();
     const { id } = await params;
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return errorResponse("Invalid subcategory ID", 400);
+    // Find subcategory by ID or Slug
+    let existingSubCategory;
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      existingSubCategory = await PracticeSubCategory.findById(id);
+    } else {
+      existingSubCategory = await PracticeSubCategory.findOne({ slug: id });
     }
 
-    const deleted = await PracticeSubCategory.findByIdAndDelete(id);
+    if (!existingSubCategory) {
+      return notFoundResponse("Practice subcategory not found");
+    }
+
+    const deleted = await PracticeSubCategory.findByIdAndDelete(existingSubCategory._id);
     if (!deleted) {
       return notFoundResponse("Practice subcategory not found");
     }
@@ -383,4 +448,3 @@ export async function DELETE(_request, { params }) {
     return handleApiError(error, ERROR_MESSAGES.DELETE_FAILED);
   }
 }
-
