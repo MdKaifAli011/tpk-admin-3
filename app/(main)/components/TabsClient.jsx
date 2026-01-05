@@ -1,16 +1,25 @@
 "use client";
 
-import React, { useState, lazy, Suspense, useEffect } from "react";
+import React, { useState, lazy, Suspense, useEffect, useMemo, useCallback } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { FaChartLine } from "react-icons/fa";
+import { FaChartLine, FaSpinner } from "react-icons/fa";
 import { ExamCardSkeleton } from "./SkeletonLoader";
 import Card from "./Card";
 
-// Lazy load tabs for code splitting - only load when needed
-const OverviewTab = lazy(() => import("./OverviewTab"));
-const DiscussionForumTab = lazy(() => import("./DiscussionForumTab"));
-const PracticeTestTab = lazy(() => import("./PracticeTestTab"));
-const PerformanceTab = lazy(() => import("./PerformanceTab"));
+// Lazy load tabs for code splitting - only load when clicked (true lazy loading)
+// Using dynamic imports with no preloading to ensure components load only when needed
+const OverviewTab = lazy(() => 
+  import("./OverviewTab").catch(() => ({ default: () => <div>Failed to load Overview</div> }))
+);
+const DiscussionForumTab = lazy(() => 
+  import("./DiscussionForumTab").catch(() => ({ default: () => <div>Failed to load Discussion Forum</div> }))
+);
+const PracticeTestTab = lazy(() => 
+  import("./PracticeTestTab").catch(() => ({ default: () => <div>Failed to load Practice Test</div> }))
+);
+const PerformanceTab = lazy(() => 
+  import("./PerformanceTab").catch(() => ({ default: () => <div>Failed to load Performance</div> }))
+);
 
 const TABS = ["Overview", "Discussion Forum", "Practice Test", "Performance"];
 
@@ -82,17 +91,47 @@ const TabsClient = ({
   // Initialize activeTab from URL, default to existing logic (Overview)
   const currentTabParam = searchParams.get("tab");
   const [activeTab, setActiveTab] = useState(() => fromUrlParam(currentTabParam));
+  const [loadingTab, setLoadingTab] = useState(null);
+  const [loadedTabs, setLoadedTabs] = useState(new Set([fromUrlParam(currentTabParam)])); // Track loaded tabs
 
   // Sync state with URL changes (handling back/forward button)
   useEffect(() => {
     const tabFromUrl = fromUrlParam(searchParams.get("tab"));
     if (tabFromUrl !== activeTab) {
       setActiveTab(tabFromUrl);
+      setLoadedTabs(prev => new Set([...prev, tabFromUrl])); // Mark as loaded
     }
-  }, [searchParams]);
+  }, [searchParams, activeTab]);
 
-  const handleTabChange = (tab) => {
+  // Prefetch tab on hover for better UX (optional optimization)
+  const handleTabHover = useCallback((tab) => {
+    if (!loadedTabs.has(tab)) {
+      // Prefetch the tab component on hover (doesn't render, just loads the chunk)
+      switch (tab) {
+        case "Overview":
+          import("./OverviewTab");
+          break;
+        case "Discussion Forum":
+          import("./DiscussionForumTab");
+          break;
+        case "Practice Test":
+          import("./PracticeTestTab");
+          break;
+        case "Performance":
+          import("./PerformanceTab");
+          break;
+      }
+    }
+  }, [loadedTabs]);
+
+  const handleTabChange = useCallback((tab) => {
+    // Only set loading if tab hasn't been loaded before
+    if (!loadedTabs.has(tab)) {
+      setLoadingTab(tab);
+    }
+    
     setActiveTab(tab); // Optimistic UI update
+    setLoadedTabs(prev => new Set([...prev, tab])); // Mark as loaded
 
     // Create new params to preserve existing query params if any (though usually clean for tabs)
     const params = new URLSearchParams(searchParams.toString());
@@ -100,97 +139,128 @@ const TabsClient = ({
 
     // Replace URL without page reload/scroll reset
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-  };
+    
+    // Clear loading state after a short delay (component will handle its own loading)
+    setTimeout(() => setLoadingTab(null), 100);
+  }, [loadedTabs, searchParams, pathname, router]);
 
-  const renderTabContent = () => {
-    const tabContent = (() => {
-      switch (activeTab) {
-        case "Overview":
-          return (
-            <OverviewTab
-              content={content}
-              entityType={entityType}
-              entityName={entityName}
-              unitName={unitName}
-              unitsCount={unitsCount}
-              definitions={definitions}
-              subtopics={subtopics}
-              chapters={chapters}
-              topics={topics}
-              units={units}
-              subjectsWithUnits={subjectsWithUnits}
-              examSlug={examSlug}
-              subjectSlug={subjectSlug}
-              unitSlug={unitSlug}
-              chapterSlug={chapterSlug}
-              topicSlug={topicSlug}
-              subTopicSlug={subTopicSlug}
-              activeTab={activeTab}
-            />
-          );
+  // Memoize tab content to prevent unnecessary re-renders
+  const tabContent = useMemo(() => {
+    switch (activeTab) {
+      case "Overview":
+        return (
+          <OverviewTab
+            content={content}
+            entityType={entityType}
+            entityName={entityName}
+            unitName={unitName}
+            unitsCount={unitsCount}
+            definitions={definitions}
+            subtopics={subtopics}
+            chapters={chapters}
+            topics={topics}
+            units={units}
+            subjectsWithUnits={subjectsWithUnits}
+            examSlug={examSlug}
+            subjectSlug={subjectSlug}
+            unitSlug={unitSlug}
+            chapterSlug={chapterSlug}
+            topicSlug={topicSlug}
+            subTopicSlug={subTopicSlug}
+            activeTab={activeTab}
+          />
+        );
 
-        case "Discussion Forum":
-          return (
-            <DiscussionForumTab
-              entityType={entityType}
-              entityName={entityName}
-              examId={examId}
-              subjectId={subjectId}
-              unitId={unitId}
-              chapterId={chapterId}
-              topicId={topicId}
-              subTopicId={subTopicId}
-              definitions={definitions}
-              currentDefinitionId={currentDefinitionId}
-            />
-          );
+      case "Discussion Forum":
+        return (
+          <DiscussionForumTab
+            entityType={entityType}
+            entityName={entityName}
+            examId={examId}
+            subjectId={subjectId}
+            unitId={unitId}
+            chapterId={chapterId}
+            topicId={topicId}
+            subTopicId={subTopicId}
+            definitions={definitions}
+            currentDefinitionId={currentDefinitionId}
+          />
+        );
 
-        case "Practice Test":
-          return (
-            <PracticeTestTab
-              examId={examId}
-              subjectId={subjectId}
-              unitId={unitId}
-              chapterId={chapterId}
-              topicId={topicId}
-              subTopicId={subTopicId}
-            />
-          );
+      case "Practice Test":
+        return (
+          <PracticeTestTab
+            examId={examId}
+            subjectId={subjectId}
+            unitId={unitId}
+            chapterId={chapterId}
+            topicId={topicId}
+            subTopicId={subTopicId}
+          />
+        );
 
-        case "Performance":
-          return (
-            <PerformanceTab
-              entityType={entityType}
-              entityName={entityName}
-              examId={examId}
-              subjectId={subjectId}
-              unitId={unitId}
-              chapterId={chapterId}
-              topicId={topicId}
-              subTopicId={subTopicId}
-            />
-          );
+      case "Performance":
+        return (
+          <PerformanceTab
+            entityType={entityType}
+            entityName={entityName}
+            examId={examId}
+            subjectId={subjectId}
+            unitId={unitId}
+            chapterId={chapterId}
+            topicId={topicId}
+            subTopicId={subTopicId}
+          />
+        );
 
-        default:
-          return null;
-      }
-    })();
+      default:
+        return null;
+    }
+  }, [
+    activeTab,
+    content,
+    entityType,
+    entityName,
+    unitName,
+    unitsCount,
+    definitions,
+    subtopics,
+    chapters,
+    topics,
+    units,
+    subjectsWithUnits,
+    examSlug,
+    subjectSlug,
+    unitSlug,
+    chapterSlug,
+    topicSlug,
+    subTopicSlug,
+    examId,
+    subjectId,
+    unitId,
+    chapterId,
+    topicId,
+    subTopicId,
+    currentDefinitionId,
+  ]);
 
-    return (
-      <Suspense
-        fallback={
-          <div className="flex items-center justify-center py-8">
-            <div className="text-center">
-              <div className="inline-block animate-spin rounded-full h-6 w-6 border-3 border-blue-600 border-t-transparent mb-3"></div>
-              <p className="text-xs text-gray-600">Loading...</p>
-            </div>
-          </div>
-        }
-      >
-        {tabContent}
-      </Suspense>
-    );
-  };
+  // Enhanced loading fallback with better UX
+  const LoadingFallback = ({ tabName }) => (
+    <div className="flex flex-col items-center justify-center py-16 px-4 animate-in fade-in duration-300">
+      <div className="relative">
+        <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <FaSpinner className="text-indigo-600 animate-spin" size={20} />
+        </div>
+      </div>
+      <p className="text-sm font-semibold text-gray-700 mt-4">
+        Loading {tabName}...
+      </p>
+      <p className="text-xs text-gray-500 mt-1">
+        Please wait while we prepare the content
+      </p>
+    </div>
+  );
 
   return (
     <Card variant="standard" hover={false} className="overflow-hidden">
@@ -205,7 +275,9 @@ const TabsClient = ({
               <button
                 key={tab}
                 onClick={() => handleTabChange(tab)}
-                className={`relative px-2.5 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-2.5 text-[10px] sm:text-xs md:text-sm font-semibold whitespace-nowrap transition-all duration-300 border-b-2 group overflow-hidden shrink-0 ${isActive
+                onMouseEnter={() => handleTabHover(tab)}
+                disabled={loadingTab === tab}
+                className={`relative px-2.5 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-2.5 text-[10px] sm:text-xs md:text-sm font-semibold whitespace-nowrap transition-all duration-300 border-b-2 group overflow-hidden shrink-0 disabled:opacity-60 disabled:cursor-wait ${isActive
                     ? isPerformanceTab
                       ? "text-emerald-700 border-emerald-600 bg-gradient-to-b from-emerald-50 via-white to-white shadow-sm"
                       : "text-indigo-600 border-indigo-600 bg-white"
@@ -248,9 +320,11 @@ const TabsClient = ({
         </div>
       </nav>
 
-      {/* Tab Content */}
-      <div className="text-gray-700 text-sm sm:text-base">
-        {renderTabContent()}
+      {/* Tab Content with Lazy Loading */}
+      <div className="text-gray-700 text-sm sm:text-base min-h-[400px]">
+        <Suspense fallback={<LoadingFallback tabName={activeTab} />}>
+          {tabContent}
+        </Suspense>
       </div>
 
       {/* Custom scrollbar styling for mobile */}
