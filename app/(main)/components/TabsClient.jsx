@@ -8,16 +8,16 @@ import Card from "./Card";
 
 // Lazy load tabs for code splitting - only load when clicked (true lazy loading)
 // Using dynamic imports with no preloading to ensure components load only when needed
-const OverviewTab = lazy(() => 
+const OverviewTab = lazy(() =>
   import("./OverviewTab").catch(() => ({ default: () => <div>Failed to load Overview</div> }))
 );
-const DiscussionForumTab = lazy(() => 
+const DiscussionForumTab = lazy(() =>
   import("./DiscussionForumTab").catch(() => ({ default: () => <div>Failed to load Discussion Forum</div> }))
 );
-const PracticeTestTab = lazy(() => 
+const PracticeTestTab = lazy(() =>
   import("./PracticeTestTab").catch(() => ({ default: () => <div>Failed to load Practice Test</div> }))
 );
-const PerformanceTab = lazy(() => 
+const PerformanceTab = lazy(() =>
   import("./PerformanceTab").catch(() => ({ default: () => <div>Failed to load Performance</div> }))
 );
 
@@ -129,17 +129,28 @@ const TabsClient = ({
     if (!loadedTabs.has(tab)) {
       setLoadingTab(tab);
     }
-    
+
     setActiveTab(tab); // Optimistic UI update
     setLoadedTabs(prev => new Set([...prev, tab])); // Mark as loaded
 
-    // Create new params to preserve existing query params if any (though usually clean for tabs)
+    // Create new params to preserve existing query params if any
     const params = new URLSearchParams(searchParams.toString());
-    params.set("tab", toUrlParam(tab));
+    const newTabParam = toUrlParam(tab);
+    params.set("tab", newTabParam);
+
+    // Clear tab-specific parameters when switching tabs to avoid URL clutter
+    // This ensures that 'test=slug' or 'thread=slug' don't persist when moving to other tabs
+    if (newTabParam !== "practice") {
+      params.delete("test");
+    }
+    if (newTabParam !== "discussion") {
+      params.delete("thread");
+      params.delete("action");
+    }
 
     // Replace URL without page reload/scroll reset
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-    
+
     // Clear loading state after a short delay (component will handle its own loading)
     setTimeout(() => setLoadingTab(null), 100);
   }, [loadedTabs, searchParams, pathname, router]);
@@ -278,12 +289,12 @@ const TabsClient = ({
                 onMouseEnter={() => handleTabHover(tab)}
                 disabled={loadingTab === tab}
                 className={`relative px-2.5 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-2.5 text-[10px] sm:text-xs md:text-sm font-semibold whitespace-nowrap transition-all duration-300 border-b-2 group overflow-hidden shrink-0 disabled:opacity-60 disabled:cursor-wait ${isActive
-                    ? isPerformanceTab
-                      ? "text-emerald-700 border-emerald-600 bg-gradient-to-b from-emerald-50 via-white to-white shadow-sm"
-                      : "text-indigo-600 border-indigo-600 bg-white"
-                    : isPerformanceTab
-                      ? "text-emerald-600 hover:text-emerald-700 border-transparent bg-emerald-50/30 hover:bg-emerald-50/50"
-                      : "text-gray-500 hover:text-gray-700 border-transparent"
+                  ? isPerformanceTab
+                    ? "text-emerald-700 border-emerald-600 bg-gradient-to-b from-emerald-50 via-white to-white shadow-sm"
+                    : "text-indigo-600 border-indigo-600 bg-white"
+                  : isPerformanceTab
+                    ? "text-emerald-600 hover:text-emerald-700 border-transparent bg-emerald-50/30 hover:bg-emerald-50/50"
+                    : "text-gray-500 hover:text-gray-700 border-transparent"
                   }`}
               >
                 {/* Background glow effect for Performance tab when active */}
@@ -301,8 +312,8 @@ const TabsClient = ({
                   {isPerformanceTab && (
                     <FaChartLine
                       className={`text-xs sm:text-sm transition-all duration-300 ${isActive
-                          ? "text-emerald-600 animate-pulse"
-                          : "text-emerald-500 group-hover:scale-110 group-hover:rotate-[-5deg]"
+                        ? "text-emerald-600 animate-pulse"
+                        : "text-emerald-500 group-hover:scale-110 group-hover:rotate-[-5deg]"
                         }`}
                     />
                   )}
