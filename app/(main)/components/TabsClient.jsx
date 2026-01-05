@@ -321,7 +321,7 @@ const TabsClient = ({
       </nav>
 
       {/* Tab Content with Lazy Loading */}
-      <div className="text-gray-700 text-sm sm:text-base min-h-[400px]">
+      <div className="text-gray-700 text-sm sm:text-base ">
         <Suspense fallback={<LoadingFallback tabName={activeTab} />}>
           {tabContent}
         </Suspense>
