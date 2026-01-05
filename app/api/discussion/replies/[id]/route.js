@@ -64,23 +64,41 @@ export async function PATCH(request, { params }) {
         const { id } = await params;
         const user = await getUser(request);
 
-        if (!user || user.type !== "User") {
-            return NextResponse.json({ success: false, message: "Unauthorized. Admin only." }, { status: 401 });
+        if (!user) {
+            return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
         }
 
-        const body = await request.json();
-        const { isApproved } = body;
-
-        const updatedReply = await Reply.findByIdAndUpdate(id, { isApproved }, { new: true });
-
-        if (!updatedReply) {
+        const reply = await Reply.findById(id);
+        if (!reply) {
             return NextResponse.json({ success: false, message: "Reply not found" }, { status: 404 });
         }
 
+        const body = await request.json();
+        const isAdmin = user.type === "User";
+        const isAuthor = reply.author && reply.author.toString() === user.id;
+
+        // Admin actions: Approve/Unapprove
+        if (body.isApproved !== undefined) {
+            if (!isAdmin) {
+                return NextResponse.json({ success: false, message: "Only admins can approve replies" }, { status: 403 });
+            }
+            reply.isApproved = body.isApproved;
+        }
+
+        // Admin/Author actions: Edit Content
+        if (body.content !== undefined) {
+            if (!isAdmin && !isAuthor) {
+                return NextResponse.json({ success: false, message: "Only admins and authors can edit replies" }, { status: 403 });
+            }
+            reply.content = body.content;
+        }
+
+        await reply.save();
+
         return NextResponse.json({
             success: true,
-            data: updatedReply,
-            message: `Reply ${isApproved ? 'approved' : 'unapproved'}`
+            data: reply,
+            message: body.content !== undefined ? "Reply updated successfully" : `Reply ${body.isApproved ? 'approved' : 'unapproved'}`
         });
     } catch (error) {
         console.error("Patch reply error:", error);

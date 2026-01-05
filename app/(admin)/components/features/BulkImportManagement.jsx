@@ -8,9 +8,11 @@ import {
     FaExclamationCircle,
     FaSpinner,
     FaTimes,
+    FaFileExport,
 } from "react-icons/fa";
 import api from "@/lib/api";
 import { useToast, ToastContainer } from "../ui/Toast";
+import { usePermissions, getBulkImportPermissions, getBulkImportPermissionMessage } from "../../hooks/usePermissions";
 
 // Helper to parse CSV (handling quotes)
 const parseCSV = (text) => {
@@ -93,6 +95,10 @@ const IMPORT_TYPES = [
 
 const BulkImportManagement = () => {
     const { success, error: showError, toasts, removeToast } = useToast();
+
+    // Permissions
+    const { role } = usePermissions();
+    const importPerms = getBulkImportPermissions(role);
 
     // State
     const [importType, setImportType] = useState("exam");
@@ -274,8 +280,52 @@ const BulkImportManagement = () => {
         document.body.removeChild(link);
     };
 
+    // --- Export Logic ---
+    const handleExport = async () => {
+        if (!parents.examId || !parents.subjectId) {
+            showError("Please select both Exam and Subject to export data.");
+            return;
+        }
+
+        try {
+            success("Export started...");
+            const res = await api.post("/bulk-export", {
+                examId: parents.examId,
+                subjectId: parents.subjectId
+            });
+
+            if (res.data.success) {
+                const csvContent = res.data.data;
+                const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement("a");
+                link.setAttribute("href", url);
+
+                // Filename: export_ExamName_SubjectName_Date.csv
+                const examName = dropdownOptions.exams.find(e => e._id === parents.examId)?.name || "Exam";
+                const subjectName = dropdownOptions.subjects.find(s => s._id === parents.subjectId)?.name || "Subject";
+                const date = new Date().toISOString().split('T')[0];
+
+                link.setAttribute("download", `Export_${examName}_${subjectName}_${date}.csv`);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                success(`Export complete! (${res.data.count} items)`);
+            }
+        } catch (err) {
+            console.error(err);
+            showError(err.response?.data?.message || "Export failed. Ensure data exists for this selection.");
+        }
+    };
+
     // --- Import Logic ---
     const handleImport = async () => {
+        // Permission Check
+        if (!importPerms.canImport) {
+            showError(getBulkImportPermissionMessage(role));
+            return;
+        }
+
         // Validate Context based on mode
         if (importMode === "context-locked") {
             // Context-Locked requires Exam and Subject
@@ -600,6 +650,21 @@ const BulkImportManagement = () => {
                                 </select>
                             </div>
                         )}
+                        {/* Export Action */}
+                        {parents.examId && parents.subjectId && (
+                            <div className="mt-6 pt-6 border-t border-gray-100 flex items-center justify-between">
+                                <div>
+                                    <h3 className="text-sm font-medium text-gray-900">Export Options</h3>
+                                    <p className="text-xs text-gray-500 mt-1">Download existing data for the selected Exam and Subject.</p>
+                                </div>
+                                <button
+                                    onClick={handleExport}
+                                    className="px-4 py-2 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+                                >
+                                    <FaFileExport /> Export Data
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -665,14 +730,15 @@ const BulkImportManagement = () => {
 
                             <button
                                 onClick={handleImport}
-                                disabled={!parsedData.length || importStatus === 'processing'}
+                                disabled={!parsedData.length || importStatus === 'processing' || !importPerms.canImport}
+                                title={!importPerms.canImport ? getBulkImportPermissionMessage(role) : "Start Import"}
                                 className={`w-full py-3 px-4 rounded-lg font-medium text-sm text-white transition-all flex justify-center items-center gap-2
-                                    ${!parsedData.length || importStatus === 'processing'
+                                    ${!parsedData.length || importStatus === 'processing' || !importPerms.canImport
                                         ? "bg-gray-400 cursor-not-allowed"
                                         : "bg-[#0056FF] hover:bg-[#0044CC] shadow-sm hover:shadow-md"}`}
                             >
-                                {importStatus === 'processing' ? <FaSpinner className="animate-spin" /> : <FaCloudUploadAlt />}
-                                {importStatus === 'processing' ? "Importing..." : "Start Import"}
+                                {importStatus === 'processing' ? <FaSpinner className="animate-spin" /> : (!importPerms.canImport ? <FaTimes /> : <FaCloudUploadAlt />)}
+                                {importStatus === 'processing' ? "Importing..." : (!importPerms.canImport ? "Import Restricted" : "Start Import")}
                             </button>
                         </div>
                     )}

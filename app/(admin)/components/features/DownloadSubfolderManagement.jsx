@@ -39,7 +39,7 @@ const StatusBadge = ({ status, onClick }) => {
   );
 };
 
-const SubfolderList = ({ subfolders, onEdit, onDelete, onToggleStatus }) => {
+const SubfolderList = ({ subfolders, onEdit, onDelete, onToggleStatus, role }) => {
   if (!subfolders || subfolders.length === 0) {
     return (
       <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
@@ -609,6 +609,7 @@ const DownloadSubfolderManagement = () => {
                   onEdit={handleEdit}
                   onDelete={handleDeleteSubfolder}
                   onToggleStatus={handleToggleStatus}
+                  role={role}
                 />
               )}
             </div>

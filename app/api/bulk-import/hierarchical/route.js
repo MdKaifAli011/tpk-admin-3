@@ -102,10 +102,28 @@ export async function POST(request) {
                         const query = { name: { $regex: new RegExp(`^${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, "i") } };
                         if (parentId) query[parentField] = parentId;
 
-                        let doc = await model.findOne(query).select("_id orderNumber");
+                        let doc = await model.findOne(query);
+
+                        // Prepare Update/Create Payload Basics
+                        const payloadBase = {
+                            name,
+                            status: "active",
+                            ...currentChain
+                        };
+
+                        // Special fields for Chapter
+                        if (level === 'chapter') {
+                            const weightageKey = Object.keys(row).find(k => normalizeKey(k) === 'weightage');
+                            const timeKey = Object.keys(row).find(k => normalizeKey(k) === 'time');
+                            const questionsKey = Object.keys(row).find(k => normalizeKey(k) === 'questions');
+
+                            if (weightageKey && row[weightageKey]) payloadBase.weightage = parseInt(row[weightageKey]) || 0;
+                            if (timeKey && row[timeKey]) payloadBase.time = parseInt(row[timeKey]) || 0;
+                            if (questionsKey && row[questionsKey]) payloadBase.questions = parseInt(row[questionsKey]) || 0;
+                        }
 
                         if (!doc) {
-                            // CREATE NEW ENTITY
+                            // --- CREATE NEW ENTITY ---
                             const orderKey = `${level}:${parentId || 'root'}`;
                             if (!orderCounters.has(orderKey)) {
                                 const maxDoc = await model.findOne(parentId ? { [parentField]: parentId } : {})
@@ -117,51 +135,43 @@ export async function POST(request) {
                             const nextOrder = orderCounters.get(orderKey) + 1;
                             orderCounters.set(orderKey, nextOrder);
 
-                            // Construct Payload
-                            const payload = {
-                                name,
-                                orderNumber: nextOrder,
-                                status: "active",
-                                ...currentChain
-                            };
+                            doc = await model.create({
+                                ...payloadBase,
+                                orderNumber: nextOrder
+                            });
 
-                            // Special fields for Chapter
-                            if (level === 'chapter') {
-                                const weightageKey = Object.keys(row).find(k => normalizeKey(k) === 'weightage');
-                                const timeKey = Object.keys(row).find(k => normalizeKey(k) === 'time');
-                                const questionsKey = Object.keys(row).find(k => normalizeKey(k) === 'questions');
+                        } else {
+                            // --- UPDATE EXISTING ENTITY ---
+                            // We update fields but PRESERVE orderNumber
+                            doc = await model.findByIdAndUpdate(
+                                doc._id,
+                                { $set: payloadBase },
+                                { new: true }
+                            );
+                        }
 
-                                if (weightageKey && row[weightageKey]) payload.weightage = parseInt(row[weightageKey]) || 0;
-                                if (timeKey && row[timeKey]) payload.time = parseInt(row[timeKey]) || 0;
-                                if (questionsKey && row[questionsKey]) payload.questions = parseInt(row[questionsKey]) || 0;
-                            }
-
-                            // Create entity
-                            doc = await model.create(payload);
-
-                            // Handle Definition Content
-                            if (level === 'definition') {
-                                const contentKey = Object.keys(row).find(k => normalizeKey(k) === 'content' || normalizeKey(k) === 'definitioncontent');
-                                const content = row[contentKey];
-                                if (content && content.trim()) {
-                                    try {
-                                        await DefinitionDetails.findOneAndUpdate(
-                                            { definitionId: doc._id },
-                                            {
-                                                definitionId: doc._id,
-                                                content: content.trim(),
-                                                examId: currentChain.examId,
-                                                subjectId: currentChain.subjectId,
-                                                unitId: currentChain.unitId,
-                                                chapterId: currentChain.chapterId,
-                                                topicId: currentChain.topicId,
-                                                subTopicId: currentChain.subTopicId
-                                            },
-                                            { upsert: true, new: true }
-                                        );
-                                    } catch (detailErr) {
-                                        console.error(`Failed to create DefinitionDetails for ${name}:`, detailErr);
-                                    }
+                        // Handle Definition Content (For both Create and Update)
+                        if (level === 'definition') {
+                            const contentKey = Object.keys(row).find(k => normalizeKey(k) === 'content' || normalizeKey(k) === 'definitioncontent');
+                            const content = row[contentKey];
+                            if (content && content.trim()) {
+                                try {
+                                    await DefinitionDetails.findOneAndUpdate(
+                                        { definitionId: doc._id },
+                                        {
+                                            definitionId: doc._id,
+                                            content: content.trim(),
+                                            examId: currentChain.examId,
+                                            subjectId: currentChain.subjectId,
+                                            unitId: currentChain.unitId,
+                                            chapterId: currentChain.chapterId,
+                                            topicId: currentChain.topicId,
+                                            subTopicId: currentChain.subTopicId
+                                        },
+                                        { upsert: true, new: true }
+                                    );
+                                } catch (detailErr) {
+                                    console.error(`Failed to update/create DefinitionDetails for ${name}:`, detailErr);
                                 }
                             }
                         }

@@ -303,3 +303,46 @@ export function getDiscussionPermissionMessage(action, role) {
 }
 
 
+/**
+ * Get bulk import permissions based on role
+ * @param {string} role - User role
+ * @returns {object} - Bulk import permissions
+ */
+export function getBulkImportPermissions(role) {
+  const normalizedRole = String(role || "viewer")
+    .toLowerCase()
+    .replace(/\s+/g, "_")
+    .replace(/[^a-z0-9_]/g, "");
+
+  const permissions = {
+    viewer: { canImport: false },
+    editor: { canImport: false },
+    moderator: { canImport: false }, // Moderators manage content, not structure
+    super_moderator: { canImport: true }, // Trusted to manage structure
+    admin: { canImport: true },
+  };
+
+  return permissions[normalizedRole] || permissions.viewer;
+}
+
+/**
+ * Get bulk import permission message
+ * @param {string} role - User role
+ * @returns {string} - Permission message
+ */
+export function getBulkImportPermissionMessage(role) {
+  const messages = {
+    viewer: "You don't have permission to perform bulk imports.",
+    editor: "You don't have permission to perform bulk imports.",
+    moderator: "You don't have permission to perform bulk imports. Contact an admin.",
+    super_moderator: "",
+    admin: "",
+  };
+
+  const normalizedRole = String(role || "viewer")
+    .toLowerCase()
+    .replace(/\s+/g, "_")
+    .replace(/[^a-z0-9_]/g, "");
+
+  return messages[normalizedRole] || "";
+}

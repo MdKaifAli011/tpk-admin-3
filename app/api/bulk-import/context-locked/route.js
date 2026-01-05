@@ -79,6 +79,8 @@ const findOrCreateUnit = async (name, subjectId, examId, existingSlugs) => {
             orderNumber: (maxOrder?.orderNumber || 0) + 1,
             status: 'active'
         });
+    } else {
+        unit = await Unit.findByIdAndUpdate(unit._id, { name: normalizedName }, { new: true });
     }
 
     return unit;
@@ -115,6 +117,13 @@ const findOrCreateChapter = async (name, unitId, subjectId, examId, rowData, exi
             questions: rowData.questions ? parseInt(rowData.questions) : 0,
             status: 'active'
         });
+    } else {
+        const updatePayload = { name: normalizedName };
+        if (rowData.weightage) updatePayload.weightage = parseInt(rowData.weightage);
+        if (rowData.time) updatePayload.time = parseInt(rowData.time);
+        if (rowData.questions) updatePayload.questions = parseInt(rowData.questions);
+
+        chapter = await Chapter.findByIdAndUpdate(chapter._id, updatePayload, { new: true });
     }
 
     return chapter;
@@ -150,6 +159,8 @@ const findOrCreateTopic = async (name, chapterId, unitId, subjectId, examId, exi
             orderNumber: (maxOrder?.orderNumber || 0) + 1,
             status: 'active'
         });
+    } else {
+        topic = await Topic.findByIdAndUpdate(topic._id, { name: normalizedName }, { new: true });
     }
 
     return topic;
@@ -187,6 +198,8 @@ const findOrCreateSubTopic = async (name, topicId, chapterId, unitId, subjectId,
             orderNumber: (maxOrder?.orderNumber || 0) + 1,
             status: 'active'
         });
+    } else {
+        subTopic = await SubTopic.findByIdAndUpdate(subTopic._id, { name: normalizedName }, { new: true });
     }
 
     return subTopic;
@@ -208,7 +221,7 @@ const createDefinition = async (name, subTopicId, topicId, chapterId, unitId, su
     });
 
     if (existing) {
-        throw new Error(`Duplicate definition: "${normalizedName}" already exists in this subtopic`);
+        return await Definition.findByIdAndUpdate(existing._id, { name: normalizedName }, { new: true });
     }
 
     // Get Order Number based on CHAPTER (to match the chapterId_1_orderNumber_1 index)

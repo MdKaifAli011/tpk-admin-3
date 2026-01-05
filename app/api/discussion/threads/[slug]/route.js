@@ -3,7 +3,14 @@ import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import Thread from "@/models/Thread";
 import Reply from "@/models/Reply";
-import Student from "@/models/Student"; // Populate 
+import Student from "@/models/Student";
+// Import models needed for populate
+import Exam from "@/models/Exam";
+import Subject from "@/models/Subject";
+import Unit from "@/models/Unit";
+import Chapter from "@/models/Chapter";
+import Topic from "@/models/Topic";
+import SubTopic from "@/models/SubTopic"; 
 
 export async function GET(request, { params }) {
     try {

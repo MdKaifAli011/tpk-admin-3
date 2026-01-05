@@ -5,6 +5,7 @@ import api from "@/lib/api";
 import * as FaIcons from "react-icons/fa";
 import { ToastContainer, useToast } from "../../../../components/ui/Toast";
 import { LoadingSpinner } from "../../../../components/ui/SkeletonLoader";
+import RichTextEditor from "../../../../components/ui/RichTextEditor";
 import Link from "next/link";
 import { usePermissions, getDiscussionPermissions, getDiscussionPermissionMessage } from "../../../../hooks/usePermissions";
 
@@ -34,6 +35,13 @@ const ThreadDetailModeration = () => {
     const [replyPagination, setReplyPagination] = useState({ page: 1, limit: 10, total: 0, pages: 1 });
     const { toasts, removeToast, success, error: showError } = useToast();
     const searchTimeout = React.useRef(null);
+
+    // Edit State Management
+    const [editingThread, setEditingThread] = useState(false);
+    const [editingReplyId, setEditingReplyId] = useState(null);
+    const [editContent, setEditContent] = useState("");
+    const [originalContent, setOriginalContent] = useState("");
+    const [isSaving, setIsSaving] = useState(false);
 
     // Permissions
     const { role } = usePermissions();
@@ -136,6 +144,80 @@ const ThreadDetailModeration = () => {
         }
     };
 
+    // Edit Thread Content
+    const handleEditThread = () => {
+        setOriginalContent(thread.content);
+        setEditContent(thread.content);
+        setEditingThread(true);
+    };
+
+    const handleCancelEditThread = () => {
+        setEditContent("");
+        setOriginalContent("");
+        setEditingThread(false);
+    };
+
+    const handleSaveThread = async () => {
+        if (!editContent.trim()) {
+            showError("Content cannot be empty");
+            return;
+        }
+        try {
+            setIsSaving(true);
+            const res = await api.patch(`/discussion/threads/${slug}`, {
+                content: editContent
+            });
+            if (res.data.success) {
+                success("Thread content updated successfully");
+                setThread({ ...thread, content: editContent });
+                setEditingThread(false);
+                setEditContent("");
+                setOriginalContent("");
+            }
+        } catch (err) {
+            showError("Failed to update thread content");
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    // Edit Reply Content
+    const handleEditReply = (replyId, currentContent) => {
+        setOriginalContent(currentContent);
+        setEditContent(currentContent);
+        setEditingReplyId(replyId);
+    };
+
+    const handleCancelEditReply = () => {
+        setEditContent("");
+        setOriginalContent("");
+        setEditingReplyId(null);
+    };
+
+    const handleSaveReply = async (replyId) => {
+        if (!editContent.trim()) {
+            showError("Content cannot be empty");
+            return;
+        }
+        try {
+            setIsSaving(true);
+            const res = await api.patch(`/discussion/replies/${replyId}`, {
+                content: editContent
+            });
+            if (res.data.success) {
+                success("Reply updated successfully");
+                setReplies(replies.map(r => r._id === replyId ? { ...r, content: editContent } : r));
+                setEditingReplyId(null);
+                setEditContent("");
+                setOriginalContent("");
+            }
+        } catch (err) {
+            showError("Failed to update reply content");
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
     const getLiveUrl = () => {
         if (!thread) return "/";
         let path = "";
@@ -228,6 +310,13 @@ const ThreadDetailModeration = () => {
                         >
                             <FaIcons.FaExternalLinkAlt size={12} /> Live View
                         </Link>
+                        <button
+                            onClick={handleEditThread}
+                            className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors flex items-center gap-2 shadow-sm"
+                        >
+                            <FaIcons.FaEdit size={12} />
+                            Edit Content
+                        </button>
                         {discussionPerms.canApproveThreads && (
                             <button
                                 onClick={handleToggleThreadApproval}
@@ -275,10 +364,54 @@ const ThreadDetailModeration = () => {
                         </div>
 
                         <div className="p-8 prose prose-slate max-w-none">
-                            <div
-                                className="text-base text-gray-800 font-normal leading-relaxed thread-content-renderer"
-                                dangerouslySetInnerHTML={{ __html: thread.content }}
-                            />
+                            {editingThread ? (
+                                <div className="space-y-4">
+                                    <RichTextEditor
+                                        value={editContent}
+                                        onChange={setEditContent}
+                                        placeholder="Edit thread content..."
+                                        examId={thread.examId?._id}
+                                        subjectId={thread.subjectId?._id}
+                                        unitId={thread.unitId?._id}
+                                        chapterId={thread.chapterId?._id}
+                                        topicId={thread.topicId?._id}
+                                        subtopicId={thread.subTopicId?._id}
+                                        definitionId={thread.definitionId?._id}
+                                    />
+                                    <div className="flex items-center gap-2 pt-2 border-t border-gray-200">
+                                        <button
+                                            onClick={handleSaveThread}
+                                            disabled={isSaving}
+                                            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                                        >
+                                            {isSaving ? (
+                                                <>
+                                                    <FaIcons.FaSpinner className="animate-spin" size={12} />
+                                                    Saving...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <FaIcons.FaSave size={12} />
+                                                    Save Changes
+                                                </>
+                                            )}
+                                        </button>
+                                        <button
+                                            onClick={handleCancelEditThread}
+                                            disabled={isSaving}
+                                            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                                        >
+                                            <FaIcons.FaTimes size={12} />
+                                            Cancel
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div
+                                    className="text-base text-gray-800 font-normal leading-relaxed thread-content-renderer"
+                                    dangerouslySetInnerHTML={{ __html: thread.content }}
+                                />
+                            )}
                         </div>
 
                         {thread.attachments?.length > 0 && (
@@ -336,7 +469,15 @@ const ThreadDetailModeration = () => {
                                             reply={reply}
                                             handleToggleReplyApproval={handleToggleReplyApproval}
                                             handleDeleteReply={handleDeleteReply}
+                                            handleEditReply={handleEditReply}
+                                            handleSaveReply={handleSaveReply}
+                                            handleCancelEditReply={handleCancelEditReply}
+                                            editingReplyId={editingReplyId}
+                                            editContent={editContent}
+                                            setEditContent={setEditContent}
+                                            isSaving={isSaving}
                                             discussionPerms={discussionPerms}
+                                            thread={thread}
                                             depth={replySearch ? 0 : 0} // Flatten when searching
                                         />
                                     ))}
@@ -448,7 +589,9 @@ const ThreadDetailModeration = () => {
     );
 };
 
-const ReplyItem = ({ reply, handleToggleReplyApproval, handleDeleteReply, discussionPerms, depth = 0 }) => {
+const ReplyItem = ({ reply, handleToggleReplyApproval, handleDeleteReply, handleEditReply, handleSaveReply, handleCancelEditReply, editingReplyId, editContent, setEditContent, isSaving, discussionPerms, thread, depth = 0 }) => {
+    const isEditing = editingReplyId === reply._id;
+
     return (
         <div className={`space-y-4 ${depth > 0 ? 'ml-6 sm:ml-10' : ''}`}>
             <div className={`p-5 bg-white rounded-lg border transition-all duration-300 relative group shadow-sm ${!reply.isApproved ? 'bg-amber-50/30 border-amber-100' : 'border-gray-200'}`}>
@@ -473,32 +616,85 @@ const ReplyItem = ({ reply, handleToggleReplyApproval, handleDeleteReply, discus
                                 <span className="ml-2 px-1.5 py-0.5 bg-amber-500 text-white text-[8px] font-bold uppercase tracking-wider rounded">Pending</span>
                             )}
                         </div>
-                        <div
-                            className="text-sm text-gray-700 leading-relaxed font-normal reply-content-renderer"
-                            dangerouslySetInnerHTML={{ __html: reply.content }}
-                        />
+                        {isEditing ? (
+                            <div className="space-y-4">
+                                <RichTextEditor
+                                    value={editContent}
+                                    onChange={setEditContent}
+                                    placeholder="Edit reply content..."
+                                    examId={thread?.examId?._id}
+                                    subjectId={thread?.subjectId?._id}
+                                    unitId={thread?.unitId?._id}
+                                    chapterId={thread?.chapterId?._id}
+                                    topicId={thread?.topicId?._id}
+                                    subtopicId={thread?.subTopicId?._id}
+                                    definitionId={thread?.definitionId?._id}
+                                />
+                                <div className="flex items-center gap-2 pt-2 border-t border-gray-200">
+                                    <button
+                                        onClick={() => handleSaveReply(reply._id)}
+                                        disabled={isSaving}
+                                        className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                                    >
+                                        {isSaving ? (
+                                            <>
+                                                <FaIcons.FaSpinner className="animate-spin" size={10} />
+                                                Saving...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <FaIcons.FaSave size={10} />
+                                                Save
+                                            </>
+                                        )}
+                                    </button>
+                                    <button
+                                        onClick={handleCancelEditReply}
+                                        disabled={isSaving}
+                                        className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-xs font-medium hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                                    >
+                                        <FaIcons.FaTimes size={10} />
+                                        Cancel
+                                    </button>
+                                </div>
+                            </div>
+                        ) : (
+                            <div
+                                className="text-sm text-gray-700 leading-relaxed font-normal reply-content-renderer"
+                                dangerouslySetInnerHTML={{ __html: reply.content }}
+                            />
+                        )}
                     </div>
 
-                    <div className="flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                        {discussionPerms.canApproveReplies && (
+                    {!isEditing && (
+                        <div className="flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
                             <button
-                                onClick={() => handleToggleReplyApproval(reply._id, reply.isApproved)}
-                                className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all border shadow-sm ${reply.isApproved ? 'bg-amber-50 text-amber-600 border-amber-100 hover:bg-amber-100' : 'bg-green-50 text-green-600 border-green-100 hover:bg-green-100'}`}
-                                title={reply.isApproved ? "Revoke Approval" : "Approve Content"}
+                                onClick={() => handleEditReply(reply._id, reply.content)}
+                                className="w-8 h-8 rounded-lg flex items-center justify-center bg-indigo-50 text-indigo-600 border border-indigo-100 hover:bg-indigo-100 transition-all shadow-sm"
+                                title="Edit Reply"
                             >
-                                {reply.isApproved ? <FaIcons.FaTimes size={12} /> : <FaIcons.FaCheck size={12} />}
+                                <FaIcons.FaEdit size={12} />
                             </button>
-                        )}
-                        {discussionPerms.canDeleteReplies && (
-                            <button
-                                onClick={() => handleDeleteReply(reply._id)}
-                                className="w-8 h-8 flex items-center justify-center bg-red-50 text-red-500 border border-red-100 rounded-lg shadow-sm hover:bg-red-100 hover:text-red-600 transition-all"
-                                title="Delete Response"
-                            >
-                                <FaIcons.FaTrashAlt size={12} />
-                            </button>
-                        )}
-                    </div>
+                            {discussionPerms.canApproveReplies && (
+                                <button
+                                    onClick={() => handleToggleReplyApproval(reply._id, reply.isApproved)}
+                                    className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all border shadow-sm ${reply.isApproved ? 'bg-amber-50 text-amber-600 border-amber-100 hover:bg-amber-100' : 'bg-green-50 text-green-600 border-green-100 hover:bg-green-100'}`}
+                                    title={reply.isApproved ? "Revoke Approval" : "Approve Content"}
+                                >
+                                    {reply.isApproved ? <FaIcons.FaTimes size={12} /> : <FaIcons.FaCheck size={12} />}
+                                </button>
+                            )}
+                            {discussionPerms.canDeleteReplies && (
+                                <button
+                                    onClick={() => handleDeleteReply(reply._id)}
+                                    className="w-8 h-8 flex items-center justify-center bg-red-50 text-red-500 border border-red-100 rounded-lg shadow-sm hover:bg-red-100 hover:text-red-600 transition-all"
+                                    title="Delete Response"
+                                >
+                                    <FaIcons.FaTrashAlt size={12} />
+                                </button>
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
             {reply.children?.length > 0 && (
@@ -509,7 +705,15 @@ const ReplyItem = ({ reply, handleToggleReplyApproval, handleDeleteReply, discus
                             reply={child}
                             handleToggleReplyApproval={handleToggleReplyApproval}
                             handleDeleteReply={handleDeleteReply}
+                            handleEditReply={handleEditReply}
+                            handleSaveReply={handleSaveReply}
+                            handleCancelEditReply={handleCancelEditReply}
+                            editingReplyId={editingReplyId}
+                            editContent={editContent}
+                            setEditContent={setEditContent}
+                            isSaving={isSaving}
                             discussionPerms={discussionPerms}
+                            thread={thread}
                             depth={depth + 1}
                         />
                     ))}
