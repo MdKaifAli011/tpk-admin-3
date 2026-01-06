@@ -359,26 +359,9 @@ const RegisterPage = () => {
             {/* Right: Form Card */}
             <div className="mx-auto w-full max-w-md">
               <div className="text-center mb-5">
-                <Link
-                  href="/"
-                  className="inline-block mb-2 transform hover:scale-105 transition-transform duration-300"
-                >
-                  <div className="relative inline-block">
-                    <Image
-                      src={`${basePath}/logo.png`}
-                      alt="TestPrepKart Logo"
-                      width={84}
-                      height={84}
-                      className="rounded-full"
-                      priority
-                    />
-                    <div className="absolute -top-0.5 -right-0.5">
-                      <FaStar className="text-yellow-400 text-base animate-pulse" />
-                    </div>
-                  </div>
-                </Link>
+                
                 <h1 className="text-2xl font-bold text-gray-900 mb-1 bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                  Create Your Account
+                  Access Your Exam Dashboard
                 </h1>
                 <p className="text-sm text-gray-600 font-medium">
                   Join thousands of students preparing for success

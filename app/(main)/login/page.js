@@ -145,15 +145,7 @@ const LoginPage = () => {
             <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl p-7 border border-white/40 w-full max-w-md mx-auto">
               {/* Logo */}
               <div className="text-center mb-6">
-                <Image
-                  src={`${basePath}/logo.png`}
-                  alt="Logo"
-                  width={85}
-                  height={85}
-                  className="mx-auto drop-shadow-md rounded-full"
-                  priority
-                />
-
+              
                 <h1 className="text-3xl font-bold mt-3 bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
                   Welcome Back
                 </h1>
