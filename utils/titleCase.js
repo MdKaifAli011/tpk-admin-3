@@ -1,17 +1,16 @@
 // ============================================
-// Title Case Utility Functions
+// Smart Title Case Utility Functions
 // ============================================
 
-/**
- * Words that should remain lowercase in title case (unless they're the first word)
- */
 const LOWERCASE_WORDS = ["and", "of", "or", "in"];
 
 /**
- * Convert string to title case, excluding certain words
- * First word is always capitalized, but "And", "Of", "Or", "In" remain lowercase elsewhere
- * @param {String} text - Text to convert to title case
- * @returns {String} Title cased string
+ * Smart title case formatter
+ * Rules:
+ * 1. ALL CAPS words remain ALL CAPS (SAT, NEET, JEE)
+ * 2. Mixed-case words remain unchanged (NEET_Biology)
+ * 3. Fully lowercase words are title-cased
+ * 4. Connector words stay lowercase unless first word
  */
 export function toTitleCase(text) {
   if (!text || typeof text !== "string") return "";
@@ -19,25 +18,29 @@ export function toTitleCase(text) {
   const trimmed = text.trim();
   if (!trimmed) return "";
 
-  // Split by spaces and process each word
   const words = trimmed.split(/\s+/);
 
   return words
     .map((word, index) => {
-      // Always capitalize first word
-      if (index === 0) {
-        return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+      // 🔒 Keep ALL CAPS words unchanged (SAT, NEET)
+      if (word === word.toUpperCase() && /[A-Z]/.test(word)) {
+        return word;
       }
 
-      // Check if word (case-insensitive) is in the lowercase words list
-      const wordLower = word.toLowerCase();
-      if (LOWERCASE_WORDS.includes(wordLower)) {
-        return wordLower; // Keep it lowercase
+      // 🔒 Keep mixed-case words unchanged (NEET_Biology)
+      if (/[A-Z]/.test(word) && /[a-z]/.test(word)) {
+        return word;
       }
 
-      // Capitalize other words
-      return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+      const lower = word.toLowerCase();
+
+      // Keep connector words lowercase unless first word
+      if (index !== 0 && LOWERCASE_WORDS.includes(lower)) {
+        return lower;
+      }
+
+      // Capitalize fully lowercase words
+      return lower.charAt(0).toUpperCase() + lower.slice(1);
     })
     .join(" ");
 }
-
