@@ -180,6 +180,20 @@ const ContactPage = () => {
             </div>
           </div>
         </section>
+         {/* Contact Form Section */}
+        <section>
+          <div className="text-center mb-6">
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">
+              Send Us a Message
+            </h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              Fill out the form below and our team will get back to you within
+              24 hours. We're here to help with any questions about our
+              courses, admissions, or support services.
+            </p>
+          </div>
+      <ContactForm />
+        </section>
 
         {/* Contact Information Cards */}
         <section>
@@ -220,209 +234,88 @@ const ContactPage = () => {
           </div>
         </section>
 
-        {/* Office Hours */}
-        <section className="bg-white rounded-xl p-6 md:p-8 shadow-md border border-gray-100">
-          <div className="flex items-start gap-4 mb-6">
-            <div className="bg-indigo-50 text-indigo-600 w-12 h-12 rounded-lg flex items-center justify-center shrink-0">
-              <FaClock className="text-xl" />
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                Office Hours
-              </h2>
-              <p className="text-gray-600">
-                Our team is available during these hours to assist you
-              </p>
-            </div>
-          </div>
-          <div className="space-y-3">
-            {officeHours.map((schedule, index) => (
-              <div
-                key={index}
-                className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-100"
-              >
-                <span className="font-medium text-gray-900">
-                  {schedule.day}
-                </span>
-                <span className="text-gray-600">{schedule.time}</span>
-              </div>
-            ))}
-          </div>
-        </section>
+    
 
-        {/* Coaching Inquiry Section */}
-        <section className="bg-white rounded-xl p-6 md:p-8 shadow-md border border-gray-100">
-          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6 text-center">
-            Coaching Inquiry
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {coachingInquiry.map((item, index) => {
-              const Icon = item.icon;
-              return (
-                <div
-                  key={index}
-                  className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-6 border border-gray-200 hover:shadow-lg transition-all cursor-pointer group"
-                >
-                  <div
-                    className={`${item.color} w-14 h-14 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}
-                  >
-                    <Icon className="text-white text-xl" />
-                  </div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                    {item.title}
-                  </h3>
-                  <p className="text-gray-600 text-sm">{item.description}</p>
-                </div>
-              );
-            })}
-          </div>
-        </section>
+       {/* Social Media Section */}
+<section className="bg-gray-50 rounded-xl p-6 md:p-8 border border-gray-200">
+  <div className="text-center">
+    <h2 className="text-2xl font-bold text-gray-900 mb-4">
+      Follow Us on Social Media
+    </h2>
+    <p className="text-gray-600 mb-6">
+      Stay connected with us for updates, tips, and educational content
+    </p>
 
-        {/* Counseling Help Section */}
-        <section className="bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 rounded-xl p-6 md:p-8 border border-indigo-100">
-          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6 text-center">
-            Counseling Help
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {counselingHelp.map((item, index) => {
-              const Icon = item.icon;
-              return (
-                <div
-                  key={index}
-                  className="bg-white rounded-xl p-6 shadow-md border border-gray-200 hover:shadow-xl transition-all cursor-pointer group"
-                >
-                  <div
-                    className={`${item.color} w-14 h-14 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}
-                  >
-                    <Icon className="text-white text-xl" />
-                  </div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                    {item.title}
-                  </h3>
-                  <p className="text-gray-600 text-sm">{item.description}</p>
-                </div>
-              );
-            })}
-          </div>
-        </section>
+    <div className="flex items-center justify-center gap-4 flex-wrap">
+      {/* Facebook */}
+      <a
+        href="https://www.facebook.com/testprepkart"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors shadow-md hover:shadow-lg"
+        aria-label="Facebook"
+      >
+        <FaFacebook className="text-xl" />
+      </a>
 
-        {/* Contact Form Section */}
-        <section>
-          <div className="text-center mb-6">
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">
-              Send Us a Message
-            </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              Fill out the form below and our team will get back to you within
-              24 hours. We're here to help with any questions about our
-              courses, admissions, or support services.
-            </p>
-          </div>
-      <ContactForm />
-        </section>
+      {/* Instagram */}
+      <a
+        href="https://www.instagram.com/testprepkartonline"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="w-12 h-12 bg-pink-600 text-white rounded-full flex items-center justify-center hover:bg-pink-700 transition-colors shadow-md hover:shadow-lg"
+        aria-label="Instagram"
+      >
+        <FaInstagram className="text-xl" />
+      </a>
 
-        {/* Why Contact Us */}
-        <section className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 md:p-8 border border-blue-100">
-          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6 text-center">
-            Why Contact Us?
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {whyContactUs.map((item, index) => {
-              const Icon = item.icon;
-              return (
-                <div
-                  key={index}
-                  className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 text-center"
-                >
-                  <div className="bg-blue-100 text-blue-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Icon className="text-2xl" />
-                  </div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                    {item.title}
-                  </h3>
-                  <p className="text-gray-600">{item.description}</p>
-                </div>
-              );
-            })}
-          </div>
-        </section>
+      {/* Twitter / X */}
+      <a
+        href="https://twitter.com/testprepkart"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="w-12 h-12 bg-blue-400 text-white rounded-full flex items-center justify-center hover:bg-blue-500 transition-colors shadow-md hover:shadow-lg"
+        aria-label="Twitter"
+      >
+        <FaTwitter className="text-xl" />
+      </a>
 
-        {/* FAQ Section */}
-        <section className="bg-white rounded-xl p-6 md:p-8 shadow-md border border-gray-100">
-          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6 text-center">
-            Frequently Asked Questions
-          </h2>
-          <div className="space-y-4 max-w-3xl mx-auto">
-            {faqs.map((faq, index) => (
-              <div
-                key={index}
-                className="border border-gray-200 rounded-lg p-5 hover:border-blue-300 transition-colors"
-              >
-                <h3 className="text-lg font-semibold text-gray-900 mb-2 flex items-start gap-2">
-                  <FaQuestionCircle className="text-blue-500 shrink-0 mt-1" />
-                  {faq.question}
-                </h3>
-                <p className="text-gray-600 ml-7">{faq.answer}</p>
-              </div>
-            ))}
-          </div>
-        </section>
+      {/* LinkedIn */}
+      <a
+        href="https://www.linkedin.com/company/testprepkart"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="w-12 h-12 bg-blue-700 text-white rounded-full flex items-center justify-center hover:bg-blue-800 transition-colors shadow-md hover:shadow-lg"
+        aria-label="LinkedIn"
+      >
+        <FaLinkedin className="text-xl" />
+      </a>
 
-        {/* Social Media Section */}
-        <section className="bg-gray-50 rounded-xl p-6 md:p-8 border border-gray-200">
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">
-              Follow Us on Social Media
-            </h2>
-            <p className="text-gray-600 mb-6">
-              Stay connected with us for updates, tips, and educational content
-            </p>
-            <div className="flex items-center justify-center gap-4 flex-wrap">
-              <a
-                href="#"
-                className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors shadow-md hover:shadow-lg"
-                aria-label="Facebook"
-              >
-                <FaFacebook className="text-xl" />
-              </a>
-              <a
-                href="#"
-                className="w-12 h-12 bg-pink-600 text-white rounded-full flex items-center justify-center hover:bg-pink-700 transition-colors shadow-md hover:shadow-lg"
-                aria-label="Instagram"
-              >
-                <FaInstagram className="text-xl" />
-              </a>
-              <a
-                href="#"
-                className="w-12 h-12 bg-blue-400 text-white rounded-full flex items-center justify-center hover:bg-blue-500 transition-colors shadow-md hover:shadow-lg"
-                aria-label="Twitter"
-              >
-                <FaTwitter className="text-xl" />
-              </a>
-              <a
-                href="#"
-                className="w-12 h-12 bg-blue-700 text-white rounded-full flex items-center justify-center hover:bg-blue-800 transition-colors shadow-md hover:shadow-lg"
-                aria-label="LinkedIn"
-              >
-                <FaLinkedin className="text-xl" />
-              </a>
-              <a
-                href="#"
-                className="w-12 h-12 bg-red-600 text-white rounded-full flex items-center justify-center hover:bg-red-700 transition-colors shadow-md hover:shadow-lg"
-                aria-label="YouTube"
-              >
-                <FaYoutube className="text-xl" />
-              </a>
-              <a
-                href="#"
-                className="w-12 h-12 bg-green-500 text-white rounded-full flex items-center justify-center hover:bg-green-600 transition-colors shadow-md hover:shadow-lg"
-                aria-label="WhatsApp"
-              >
-                <FaWhatsapp className="text-xl" />
-              </a>
-            </div>
-          </div>
-        </section>
+      {/* YouTube */}
+      <a
+        href="https://www.youtube.com/@TestprepKart"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="w-12 h-12 bg-red-600 text-white rounded-full flex items-center justify-center hover:bg-red-700 transition-colors shadow-md hover:shadow-lg"
+        aria-label="YouTube"
+      >
+        <FaYoutube className="text-xl" />
+      </a>
+
+      {/* WhatsApp (optional – remove if not needed) */}
+      <a
+        href="https://api.whatsapp.com/send?phone=15107069331"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="w-12 h-12 bg-green-500 text-white rounded-full flex items-center justify-center hover:bg-green-600 transition-colors shadow-md hover:shadow-lg"
+        aria-label="WhatsApp"
+      >
+        <FaWhatsapp className="text-xl" />
+      </a>
+    </div>
+  </div>
+</section>
+
       </div>
   );
 };
