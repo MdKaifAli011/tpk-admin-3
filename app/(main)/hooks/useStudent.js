@@ -92,6 +92,30 @@ export const useStudent = () => {
     fetchStudent();
   }, [fetchStudent]);
 
+  // Listen for student-login event to refresh student data immediately
+  useEffect(() => {
+    const handleStudentLogin = () => {
+      // Small delay to ensure token is stored in localStorage
+      setTimeout(() => {
+        fetchStudent();
+      }, 100);
+    };
+
+    window.addEventListener("student-login", handleStudentLogin);
+    // Also listen for storage changes (for cross-tab login)
+    const handleStorageChange = (e) => {
+      if (e.key === "student_token") {
+        fetchStudent();
+      }
+    };
+    window.addEventListener("storage", handleStorageChange);
+
+    return () => {
+      window.removeEventListener("student-login", handleStudentLogin);
+      window.removeEventListener("storage", handleStorageChange);
+    };
+  }, [fetchStudent]);
+
   return {
     student,
     isLoading,

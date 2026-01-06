@@ -42,6 +42,7 @@ const TestSubmissionRegistrationModal = ({
   onClose,
   onRegistrationSuccess,
   testName,
+  formId = "registration-practice", // Default form ID for practice test registration
 }) => {
   const [formData, setFormData] = useState({
     firstName: "",
@@ -65,6 +66,7 @@ const TestSubmissionRegistrationModal = ({
   const [errors, setErrors] = useState({});
   const [submitStatus, setSubmitStatus] = useState(null);
   const [submitMessage, setSubmitMessage] = useState("");
+  const registrationSuccessCalledRef = React.useRef(false); // Prevent calling callback multiple times
 
   const {
     verificationQuestion,
@@ -292,6 +294,7 @@ const TestSubmissionRegistrationModal = ({
         prepared: formData.prepared || null,
         country: formData.country || null,
         source: sourcePath, // Send the URL path where student registered from
+        formId: formId, // Send form ID to track registration source
       });
 
       if (response.data?.success) {
@@ -314,9 +317,19 @@ const TestSubmissionRegistrationModal = ({
           "Account created successfully! Your test results are being saved..."
         );
 
+        // Prevent calling callback multiple times
+        if (registrationSuccessCalledRef.current) {
+          logger.info("Registration success callback already called, skipping duplicate");
+          setLoading(false);
+          return;
+        }
+        registrationSuccessCalledRef.current = true;
+
         // Wait a moment for state to update, then call success callback
         setTimeout(() => {
-          onRegistrationSuccess(response.data.data.token);
+          if (onRegistrationSuccess) {
+            onRegistrationSuccess(response.data.data.token);
+          }
         }, 100);
       } else {
         setSubmitStatus("error");
@@ -339,9 +352,18 @@ const TestSubmissionRegistrationModal = ({
 
   const handleClose = () => {
     if (!loading) {
+      // Reset the ref when modal closes
+      registrationSuccessCalledRef.current = false;
       onClose();
     }
   };
+
+  // Reset ref when modal opens
+  React.useEffect(() => {
+    if (isOpen) {
+      registrationSuccessCalledRef.current = false;
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 

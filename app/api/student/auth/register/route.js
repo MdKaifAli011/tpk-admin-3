@@ -24,6 +24,7 @@ export async function POST(request) {
       prepared,
       country,
       source, // URL path where student registered from (e.g., /neet)
+      formId, // Form ID to track registration source (e.g., "registration-practice")
     } = body;
 
     // Validate required fields
@@ -95,7 +96,7 @@ export async function POST(request) {
         country: country?.trim() || null,
         status: "updated",
         updateCount: (existingLead.updateCount || 0) + 1,
-        form_id: "student-registration", // Set form_id for student registration
+        form_id: formId || "student-registration", // Use provided form_id or default
       };
       
       // Update source if provided (URL path where student registered from)
@@ -120,7 +121,7 @@ export async function POST(request) {
         status: "new",
         updateCount: 0,
         source: source?.trim() || "/register", // Use provided source URL path or default to /register
-        form_id: "student-registration", // Set form_id for student registration
+        form_id: formId || "student-registration", // Use provided form_id or default
       });
     }
 

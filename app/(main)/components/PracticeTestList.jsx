@@ -78,6 +78,9 @@ const PracticeTestList = ({
   const timerIntervalRef = useRef(null);
   const startTimeRef = useRef(null);
   const contentRef = useRef(null); // Ref for MathJax typesetting
+  const isSavingTestResultRef = useRef(false); // Prevent duplicate saves
+  const savedTestResultIdsRef = useRef(new Set()); // Track saved test result IDs to prevent duplicates
+  const isSubmittingTestRef = useRef(false); // Prevent duplicate test submissions
 
   // Check authentication status
   useEffect(() => {
@@ -244,38 +247,13 @@ const PracticeTestList = ({
     }
   }, [currentQuestionIndex, isTestStarted, isTestSubmitted, results, questions]);
 
-  // Close registration modal and save pending results if user logs in from another tab
+  // Close registration modal if user logs in from another tab
   useEffect(() => {
     if (isAuthenticated && showRegistrationModal) {
       setShowRegistrationModal(false);
     }
-
-    // If student logs in and there are pending results, save them
-    if (isAuthenticated && pendingTestResults) {
-      const savePendingResults = async () => {
-        try {
-          const saveResult = await saveTestResult(pendingTestResults);
-          if (saveResult.success && saveResult.data) {
-            const testIdStr = String(pendingTestResults.testId);
-            // Update score with saved data
-            setStudentScores((prev) => ({
-              ...prev,
-              [testIdStr]: {
-                totalMarks: saveResult.data.totalMarks,
-                maximumMarks: saveResult.data.maximumMarks,
-                percentage: saveResult.data.percentage,
-              },
-            }));
-          }
-          // Clear pending results after saving
-          setPendingTestResults(null);
-        } catch (error) {
-          logger.error("Error saving pending test results:", error);
-        }
-      };
-      savePendingResults();
-    }
-  }, [isAuthenticated, showRegistrationModal, pendingTestResults]);
+    // NOTE: Test results saving is handled in handleRegistrationSuccess to prevent duplicates
+  }, [isAuthenticated, showRegistrationModal]);
 
   useEffect(() => {
     const loadPracticeData = async () => {
@@ -723,6 +701,15 @@ const PracticeTestList = ({
   // Submit test (called after confirmation) and calculate results
   const handleSubmitTest = React.useCallback(
     async (autoSubmit = false) => {
+      // Prevent duplicate submissions - check if already submitting
+      if (isSubmittingTestRef.current && !autoSubmit) {
+        logger.info("Test submission already in progress, skipping duplicate");
+        return;
+      }
+
+      // Mark as submitting immediately to prevent duplicates
+      isSubmittingTestRef.current = true;
+
       if (timerIntervalRef.current) {
         clearInterval(timerIntervalRef.current);
       }
@@ -765,7 +752,18 @@ const PracticeTestList = ({
       }
 
       // Save results to database if student is authenticated
-      if (isAuthenticated && test && selectedTest) {
+      // Only save if not already saving and not already saved
+      if (isAuthenticated && test && selectedTest && !isSavingTestResultRef.current) {
+        // Create a unique key for this test submission
+        const saveKey = `${testIdStr}_${startTimeRef.current || Date.now()}`;
+        
+        // Check if we've already saved this exact test result
+        if (savedTestResultIdsRef.current.has(saveKey)) {
+          logger.info("Test result already saved, skipping duplicate save");
+          return;
+        }
+
+        isSavingTestResultRef.current = true;
         try {
           const resultData = {
             testId: testIdStr,
@@ -792,6 +790,9 @@ const PracticeTestList = ({
 
           const saveResult = await saveTestResult(resultData);
           if (saveResult.success && saveResult.data) {
+            // Mark as saved to prevent duplicates
+            savedTestResultIdsRef.current.add(saveKey);
+            
             // Update score immediately with saved data
             setStudentScores((prev) => ({
               ...prev,
@@ -804,8 +805,13 @@ const PracticeTestList = ({
           }
         } catch (error) {
           logger.error("Error saving test result:", error);
+        } finally {
+          isSavingTestResultRef.current = false;
         }
       }
+
+      // Reset submission ref after processing
+      isSubmittingTestRef.current = false;
     },
     [
       calculateResults,
@@ -823,6 +829,13 @@ const PracticeTestList = ({
     ]
   );
 
+  // Reset submission ref when test starts
+  useEffect(() => {
+    if (isTestStarted) {
+      isSubmittingTestRef.current = false;
+    }
+  }, [isTestStarted]);
+
   // Handle registration success - save results and show them
   const handleRegistrationSuccess = React.useCallback(
     async (token) => {
@@ -835,46 +848,91 @@ const PracticeTestList = ({
         }
       }
 
-      // Results are already set, just ensure they're displayed
-      if (pendingTestResults) {
-        setResults({
-          totalQuestions: pendingTestResults.totalQuestions,
-          correctCount: pendingTestResults.correctCount,
-          incorrectCount: pendingTestResults.incorrectCount,
-          unansweredCount: pendingTestResults.unansweredCount,
-          totalMarks: pendingTestResults.totalMarks,
-          maximumMarks: pendingTestResults.maximumMarks,
-          percentage: pendingTestResults.percentage,
-          questionResults: pendingTestResults.questionResults,
-          timeTaken: pendingTestResults.timeTaken,
-        });
-        setIsTestSubmitted(true);
-        setIsTestStarted(false);
-      }
+      // Get current pending results and clear immediately to prevent duplicate saves
+      setPendingTestResults((currentPending) => {
+        if (!currentPending) return null;
 
-      // Save pending test results to database
-      if (pendingTestResults) {
-        try {
-          const saveResult = await saveTestResult(pendingTestResults);
-          if (saveResult.success && saveResult.data) {
-            const testIdStr = String(pendingTestResults.testId);
-            // Update score with saved data
-            setStudentScores((prev) => ({
-              ...prev,
-              [testIdStr]: {
-                totalMarks: saveResult.data.totalMarks,
-                maximumMarks: saveResult.data.maximumMarks,
-                percentage: saveResult.data.percentage,
-              },
-            }));
-          }
-        } catch (error) {
-          // Silently fail
+        // Prevent duplicate saves - check if already saving
+        if (isSavingTestResultRef.current) {
+          logger.info("Test result save already in progress, skipping duplicate");
+          return currentPending; // Don't clear if already saving
         }
-        setPendingTestResults(null);
-      }
+
+        // Create a unique key for this test submission
+        const testIdStr = String(currentPending.testId);
+        const saveKey = `${testIdStr}_${currentPending.startedAt || Date.now()}`;
+        
+        // Check if we've already saved this exact test result
+        if (savedTestResultIdsRef.current.has(saveKey)) {
+          logger.info("Test result already saved after registration, skipping duplicate");
+          return null; // Clear pending since already saved
+        }
+
+        // Store a copy before clearing to prevent race conditions
+        const resultsToSave = { ...currentPending };
+        
+        // Mark as saving to prevent duplicate saves
+        isSavingTestResultRef.current = true;
+
+        // Save test results asynchronously
+        (async () => {
+          try {
+            const saveResult = await saveTestResult(resultsToSave);
+            if (saveResult.success && saveResult.data) {
+              // Mark as saved to prevent duplicates
+              savedTestResultIdsRef.current.add(saveKey);
+              
+              // Update score with saved data
+              setStudentScores((prev) => ({
+                ...prev,
+                [testIdStr]: {
+                  totalMarks: saveResult.data.totalMarks,
+                  maximumMarks: saveResult.data.maximumMarks,
+                  percentage: saveResult.data.percentage,
+                },
+              }));
+            }
+
+            // Display results after successful save
+            setResults({
+              totalQuestions: resultsToSave.totalQuestions,
+              correctCount: resultsToSave.correctCount,
+              incorrectCount: resultsToSave.incorrectCount,
+              unansweredCount: resultsToSave.unansweredCount,
+              totalMarks: resultsToSave.totalMarks,
+              maximumMarks: resultsToSave.maximumMarks,
+              percentage: resultsToSave.percentage,
+              questionResults: resultsToSave.questionResults,
+              timeTaken: resultsToSave.timeTaken,
+            });
+            setIsTestSubmitted(true);
+            setIsTestStarted(false);
+          } catch (error) {
+            logger.error("Error saving test results after registration:", error);
+            // Even if save fails, show results to user
+            setResults({
+              totalQuestions: resultsToSave.totalQuestions,
+              correctCount: resultsToSave.correctCount,
+              incorrectCount: resultsToSave.incorrectCount,
+              unansweredCount: resultsToSave.unansweredCount,
+              totalMarks: resultsToSave.totalMarks,
+              maximumMarks: resultsToSave.maximumMarks,
+              percentage: resultsToSave.percentage,
+              questionResults: resultsToSave.questionResults,
+              timeTaken: resultsToSave.timeTaken,
+            });
+            setIsTestSubmitted(true);
+            setIsTestStarted(false);
+          } finally {
+            isSavingTestResultRef.current = false;
+          }
+        })();
+
+        // Clear pending results immediately
+        return null;
+      });
     },
-    [pendingTestResults]
+    [] // Empty dependency array - we use functional setState to access current value
   );
 
   // Timer effect to submit test automatically if time is up
@@ -1054,6 +1112,7 @@ const PracticeTestList = ({
               }}
               onRegistrationSuccess={handleRegistrationSuccess}
               testName={test?.name}
+              formId="registration-practice"
             />
 
             {/* Login / Register Prompt Page */}
@@ -1455,6 +1514,7 @@ const PracticeTestList = ({
             }}
             onRegistrationSuccess={handleRegistrationSuccess}
             testName={test?.name}
+            formId="registration-practice"
           />
         )}
 

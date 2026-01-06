@@ -132,15 +132,12 @@ export async function POST(request) {
     const validatedPercentage = Math.max(0, Math.min(100, percentage));
     const validatedTotalMarks = Math.max(0, totalMarks);
 
-    // Update existing test result or create new one (upsert)
+    // Always create a new test result record for each attempt
+    // This allows tracking all attempts separately (one test = one entry, multiple tests = multiple entries)
     try {
-      // Find existing result for this student and test
-      const existingResult = await StudentTestResult.findOne({
+      const testResult = await StudentTestResult.create({
         studentId: authCheck.studentId,
         testId: testIdObjectId,
-      });
-
-      const updateData = {
         examId: examIdObjectId,
         subjectId: subjectIdObjectId,
         unitId: unitIdObjectId,
@@ -157,41 +154,13 @@ export async function POST(request) {
         timeTaken,
         answers: answersMap,
         questionResults: processedQuestionResults,
+        startedAt: startedAt ? new Date(startedAt) : new Date(),
         submittedAt: new Date(),
-      };
-
-      let testResult;
-      if (existingResult) {
-        // Update existing result - preserve startedAt if it exists
-        if (startedAt) {
-          updateData.startedAt = new Date(startedAt);
-        }
-
-        testResult = await StudentTestResult.findOneAndUpdate(
-          {
-            studentId: authCheck.studentId,
-            testId: testIdObjectId,
-          },
-          updateData,
-          {
-            new: true,
-            runValidators: true,
-          }
-        );
-      } else {
-        testResult = await StudentTestResult.create({
-          studentId: authCheck.studentId,
-          testId: testIdObjectId,
-          ...updateData,
-          startedAt: startedAt ? new Date(startedAt) : new Date(),
-        });
-      }
+      });
 
       return successResponse(
         testResult.toObject(),
-        existingResult
-          ? "Test result updated successfully"
-          : "Test result saved successfully"
+        "Test result saved successfully"
       );
     } catch (createError) {
       throw createError;
