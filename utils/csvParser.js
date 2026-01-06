@@ -32,9 +32,9 @@ export function parseCSV(csvText, options = {}) {
     throw new Error("CSV file is empty");
   }
 
-  // Parse header
+  // Parse header using the same parser to handle quoted headers correctly
   const headerLine = lines[0];
-  const headers = headerLine.split(delimiter).map((h) => {
+  const headers = parseCSVLine(headerLine, delimiter).map((h) => {
     let header = h.trim();
     // Remove quotes if present
     if ((header.startsWith('"') && header.endsWith('"')) ||
@@ -47,16 +47,25 @@ export function parseCSV(csvText, options = {}) {
   // Parse data rows
   const data = [];
   for (let i = 1; i < lines.length; i++) {
-    const line = lines[i].trim();
-    if (!line) continue;
+    const line = lines[i];
+    const trimmedLine = line.trim();
+    if (!trimmedLine) continue;
 
-    // Simple CSV parsing (handles quoted values)
-    const values = parseCSVLine(line, delimiter);
+    // Parse CSV line (handles quoted values and empty fields)
+    const values = parseCSVLine(trimmedLine, delimiter);
     
-    if (values.length !== headers.length) {
-      throw new Error(
-        `Row ${i + 1}: Expected ${headers.length} columns, got ${values.length}`
+    // Normalize values: ensure we have the correct number of fields
+    // If we have fewer values than headers, pad with empty strings
+    // If we have more values than headers, truncate (shouldn't happen but handle it)
+    while (values.length < headers.length) {
+      values.push("");
+    }
+    if (values.length > headers.length) {
+      // Log warning but don't fail - just truncate
+      console.warn(
+        `Row ${i + 1}: Found ${values.length} columns, expected ${headers.length}. Truncating extra columns.`
       );
+      values.splice(headers.length);
     }
 
     const row = {};
@@ -65,11 +74,13 @@ export function parseCSV(csvText, options = {}) {
       if (trimValues) {
         value = value.trim();
       }
-      // Remove quotes if present
+      // Remove quotes if present (handle both single and double quotes)
       if ((value.startsWith('"') && value.endsWith('"')) ||
           (value.startsWith("'") && value.endsWith("'"))) {
         value = value.slice(1, -1);
       }
+      // Unescape double quotes ("" -> ")
+      value = value.replace(/""/g, '"');
       row[header] = value;
     });
 
@@ -94,32 +105,67 @@ function parseCSVLine(line, delimiter) {
   for (let i = 0; i < line.length; i++) {
     const char = line[i];
     const nextChar = line[i + 1];
+    const isLastChar = i === line.length - 1;
 
+    // Handle quote start
     if ((char === '"' || char === "'") && !inQuotes) {
       inQuotes = true;
       quoteChar = char;
-    } else if (char === quoteChar && inQuotes) {
+      // Don't add quote to current value
+      continue;
+    }
+
+    // Handle quote end or escaped quote
+    if (char === quoteChar && inQuotes) {
       if (nextChar === quoteChar) {
-        // Escaped quote
+        // Escaped quote (double quote) - add single quote to value
         current += char;
         i++; // Skip next quote
-      } else if (nextChar === delimiter || nextChar === undefined || nextChar === "\n" || nextChar === "\r") {
+      } else if (nextChar === delimiter || nextChar === undefined || nextChar === "\n" || nextChar === "\r" || isLastChar) {
         // End of quoted field
         inQuotes = false;
         quoteChar = null;
+        // Don't add quote to current value
+        continue;
       } else {
+        // Quote inside quoted field (shouldn't happen in valid CSV, but handle it)
         current += char;
       }
     } else if (char === delimiter && !inQuotes) {
+      // Field delimiter found outside quotes - push current field
       values.push(current);
       current = "";
     } else {
+      // Regular character
       current += char;
     }
   }
 
-  // Push last value
+  // Push last value (even if empty)
+  // This handles both cases: line ending with delimiter and line not ending with delimiter
   values.push(current);
+
+  // Handle trailing delimiters: if line ends with delimiter(s), add empty field(s)
+  // Count consecutive delimiters at the end (ignoring whitespace)
+  const trimmedLine = line.trim();
+  if (trimmedLine.endsWith(delimiter)) {
+    // Count how many consecutive delimiters are at the end
+    let trailingDelimiters = 0;
+    for (let j = trimmedLine.length - 1; j >= 0; j--) {
+      if (trimmedLine[j] === delimiter) {
+        trailingDelimiters++;
+      } else {
+        break;
+      }
+    }
+    
+    // When we encounter a delimiter, we push current and reset
+    // So if line ends with N delimiters, we've already pushed one empty field
+    // We need to add (N-1) more empty fields
+    for (let k = 0; k < trailingDelimiters - 1; k++) {
+      values.push("");
+    }
+  }
 
   return values;
 }
