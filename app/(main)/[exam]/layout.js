@@ -1,14 +1,28 @@
 import { generateMetadata as generateSEO } from "@/utils/seo";
 import { createSlug } from "@/utils/slug";
 import { logger } from "@/utils/logger";
+import { generateTabAwareMetadata, extractSearchParams } from "@/utils/tabSeo";
 
 // Force dynamic rendering to ensure fresh metadata
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-// Generate metadata for exam pages from admin SEO data
-export async function generateMetadata({ params }) {
+/**
+ * Generate metadata for exam pages with tab awareness
+ * 
+ * IMPORTANT SEO NOTES:
+ * - View-source shows INITIAL SSR metadata (this is CORRECT and SEO-safe)
+ * - Client-side metadata updates enhance UX but don't affect view-source
+ * - Google crawls the INITIAL HTML (view-source), which is why SSR metadata is critical
+ * - Tabs are handled via searchParams: ?tab=overview|discussion|practice|performance
+ * - Performance tab is NON-indexable (user-specific analytics)
+ */
+export async function generateMetadata({ params, searchParams }) {
   const { exam: examSlug } = await params;
+  
+  // In Next.js 16, searchParams in layouts is a Promise - await it directly
+  // This ensures metadata is generated correctly for view-source
+  const resolvedSearchParams = await extractSearchParams(searchParams);
 
   try {
     // Try to fetch exam data and details, but don't fail if it doesn't work
@@ -31,29 +45,24 @@ export async function generateMetadata({ params }) {
       return generateSEO({}, { type: "exam", name: examSlug || "Exam" });
     }
 
-    // Use SEO fields from Details: title, metaDescription, keywords
-    // Prioritize admin-provided meta data over auto-generated
-    const adminTitle = examDetails?.title?.trim();
-    const adminMetaDescription = examDetails?.metaDescription?.trim();
-    const adminKeywords = examDetails?.keywords?.trim();
-    
-    const seoData = {
-      title: (adminTitle && adminTitle.length > 0) 
-        ? adminTitle 
-        : `${exam.name} Exam Preparation - Study Materials & Practice Tests`,
-      metaDescription: (adminMetaDescription && adminMetaDescription.length > 0)
-        ? adminMetaDescription
-        : `Prepare for ${exam.name} exam with comprehensive resources, study materials, practice tests, and expert guidance. Access free exam preparation content and track your progress.`,
-      keywords: (adminKeywords && adminKeywords.length > 0)
-        ? adminKeywords
-        : `${exam.name}, ${exam.name} exam, ${exam.name} preparation, ${exam.name} study materials, ${exam.name} practice tests, exam preparation`,
-    };
+    // Build path for canonical URL
+    const path = `/${createSlug(exam.name)}`;
 
-    return generateSEO(seoData, {
-      type: "exam",
-      name: exam.name,
-      path: `/${createSlug(exam.name)}`,
-    });
+    // Generate tab-aware metadata
+    return await generateTabAwareMetadata(
+      {
+        name: exam.name,
+        type: "exam",
+      },
+      examDetails,
+      resolvedSearchParams,
+      {
+        path,
+        hierarchy: {
+          exam: exam.name,
+        },
+      }
+    );
   } catch (error) {
     // Always return valid metadata even on error
     logger.warn("Error generating metadata:", error.message);

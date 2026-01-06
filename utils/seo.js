@@ -93,8 +93,9 @@ export function generateMetadata(data, options = {}) {
     keywords = [name, ...SEO_DEFAULTS.KEYWORDS].slice(0, 10);
   }
 
-  // Build canonical URL
-  const canonicalUrl = `${APP_CONFIG.url}${path || ""}`;
+  // Build canonical URL with base path
+  const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
+  const canonicalUrl = `${APP_CONFIG.url}${basePath}${path || ""}`;
 
   return {
     title: optimizedTitle,

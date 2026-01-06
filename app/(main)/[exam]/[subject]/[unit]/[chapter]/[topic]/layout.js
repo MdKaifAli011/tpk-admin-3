@@ -1,13 +1,28 @@
 import { generateMetadata as generateSEO } from "@/utils/seo";
 import { createSlug } from "@/utils/slug";
 import { logger } from "@/utils/logger";
+import { generateTabAwareMetadata, extractSearchParams } from "@/utils/tabSeo";
 
 // Force dynamic rendering to ensure fresh metadata
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-export async function generateMetadata({ params }) {
+/**
+ * Generate metadata for topic pages with tab awareness
+ * 
+ * IMPORTANT SEO NOTES:
+ * - View-source shows INITIAL SSR metadata (this is CORRECT and SEO-safe)
+ * - Client-side metadata updates enhance UX but don't affect view-source
+ * - Google crawls the INITIAL HTML (view-source), which is why SSR metadata is critical
+ * - Tabs are handled via searchParams: ?tab=overview|discussion|practice|performance
+ * - Performance tab is NON-indexable (user-specific analytics)
+ */
+export async function generateMetadata({ params, searchParams }) {
   const { exam: examSlug, subject: subjectSlug, unit: unitSlug, chapter: chapterSlug, topic: topicSlug } = await params;
+  
+  // In Next.js 16, searchParams in layouts is a Promise - await it directly
+  // This ensures metadata is generated correctly for view-source
+  const resolvedSearchParams = await extractSearchParams(searchParams);
 
   try {
     // Try to fetch data, but don't fail if it doesn't work
@@ -85,35 +100,28 @@ export async function generateMetadata({ params }) {
       return generateSEO({}, { type: "topic", name: topicSlug || "Topic" });
     }
 
-    // Use SEO fields from Details: title, metaDescription, keywords
-    // Prioritize admin-provided meta data over auto-generated
-    const adminTitle = topicDetails?.title?.trim();
-    const adminMetaDescription = topicDetails?.metaDescription?.trim();
-    const adminKeywords = topicDetails?.keywords?.trim();
-    
-    const seoData = {
-      title: (adminTitle && adminTitle.length > 0)
-        ? adminTitle
-        : (topic.name && subject?.name && exam?.name 
-          ? `${topic.name} - ${subject.name} - ${exam.name} | Detailed Study Guide & Practice Problems`
-          : `${topic.name || "Topic"} - Exam Preparation`),
-      metaDescription: (adminMetaDescription && adminMetaDescription.length > 0)
-        ? adminMetaDescription
-        : (topic.name && subject?.name && exam?.name
-          ? `Master ${topic.name} in ${subject.name} for ${exam.name} exam. Study with detailed explanations, step-by-step examples, practice problems, and expert tips. Access free ${topic.name} study materials and improve your understanding.`
-          : `Master ${topic.name || "Topic"} with detailed explanations, examples, and practice problems.`),
-      keywords: (adminKeywords && adminKeywords.length > 0)
-        ? adminKeywords
-        : (topic.name && subject?.name && exam?.name 
-          ? `${topic.name}, ${subject.name}, ${exam.name}, ${topic.name} ${subject.name}, ${topic.name} explanation, ${exam.name} ${topic.name} practice problems`
-          : `${topic.name || "Topic"}, ${topic.name || "Topic"} preparation, study guide`),
-    };
+    // Build path for canonical URL
+    const path = `/${createSlug(exam?.name || "")}/${createSlug(subject?.name || "")}/${createSlug(unit?.name || "")}/${createSlug(chapter?.name || "")}/${createSlug(topic.name)}`;
 
-    return generateSEO(seoData, {
-      type: "topic",
-      name: topic.name,
-      path: `/${createSlug(exam?.name || "")}/${createSlug(subject?.name || "")}/${createSlug(unit?.name || "")}/${createSlug(chapter?.name || "")}/${createSlug(topic.name)}`,
-    });
+    // Generate tab-aware metadata
+    return await generateTabAwareMetadata(
+      {
+        name: topic.name,
+        type: "topic",
+      },
+      topicDetails,
+      resolvedSearchParams,
+      {
+        path,
+        hierarchy: {
+          exam: exam?.name,
+          subject: subject?.name,
+          unit: unit?.name,
+          chapter: chapter?.name,
+          topic: topic.name,
+        },
+      }
+    );
   } catch (error) {
     // Always return valid metadata even on error
     logger.warn("Error generating metadata:", error.message);

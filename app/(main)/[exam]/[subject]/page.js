@@ -19,9 +19,60 @@ import {
   getNextSubject,
   getPreviousSubject,
 } from "../../lib/hierarchicalNavigation";
+import { generateTabAwareMetadata, extractSearchParams } from "@/utils/tabSeo";
+import { logger } from "@/utils/logger";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
+
+/**
+ * Generate metadata for subject pages with tab awareness
+ * NOTE: Pages receive searchParams, layouts don't in Next.js App Router
+ * This metadata will override layout metadata when searchParams are present
+ */
+export async function generateMetadata({ params, searchParams }) {
+  const { exam: examSlug, subject: subjectSlug } = await params;
+  
+  // Pages receive searchParams correctly in Next.js App Router
+  const resolvedSearchParams = await extractSearchParams(searchParams);
+  
+  if (process.env.NODE_ENV === "development") {
+    logger.debug("Subject Page - searchParams:", searchParams);
+    logger.debug("Subject Page - Resolved searchParams:", resolvedSearchParams);
+  }
+
+  try {
+    const { fetchExamById, fetchSubjectById, fetchSubjectDetailsById, fetchSubjectsByExam, findByIdOrSlug, createSlug } = await import("../../lib/api");
+    
+    const exam = await fetchExamById(examSlug).catch(() => null);
+    if (!exam) return { title: `${subjectSlug || "Subject"} | TestPrepKart` };
+
+    const subjects = await fetchSubjectsByExam(exam._id).catch(() => []);
+    const subject = findByIdOrSlug(subjects, subjectSlug);
+    if (!subject) return { title: `${subjectSlug || "Subject"} | TestPrepKart` };
+
+    const fullSubjectData = await fetchSubjectById(subject._id).catch(() => null);
+    const finalSubject = fullSubjectData || subject;
+    const subjectDetails = await fetchSubjectDetailsById(finalSubject._id).catch(() => null);
+    const path = `/${createSlug(exam.name)}/${createSlug(finalSubject.name)}`;
+
+    return await generateTabAwareMetadata(
+      { name: finalSubject.name, type: "subject" },
+      subjectDetails,
+      resolvedSearchParams,
+      {
+        path,
+        hierarchy: {
+          exam: exam.name,
+          subject: finalSubject.name,
+        },
+      }
+    );
+  } catch (error) {
+    logger.warn("Error generating subject page metadata:", error);
+    return { title: `${subjectSlug || "Subject"} | TestPrepKart` };
+  }
+}
 
 const SubjectPage = async ({ params }) => {
   const { exam: examId, subject: subjectSlug } = await params;

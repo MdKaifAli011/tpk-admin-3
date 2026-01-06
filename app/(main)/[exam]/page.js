@@ -17,9 +17,52 @@ import { ERROR_MESSAGES, PLACEHOLDERS } from "@/constants";
 import { getNextExam, getPreviousExam } from "../lib/hierarchicalNavigation";
 import Link from "next/link";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import { generateTabAwareMetadata, extractSearchParams } from "@/utils/tabSeo";
+import { logger } from "@/utils/logger";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
+
+/**
+ * Generate metadata for exam pages with tab awareness
+ * NOTE: Pages receive searchParams, layouts don't in Next.js App Router
+ * This metadata will override layout metadata when searchParams are present
+ */
+export async function generateMetadata({ params, searchParams }) {
+  const { exam: examSlug } = await params;
+  
+  // Pages receive searchParams correctly in Next.js App Router
+  const resolvedSearchParams = await extractSearchParams(searchParams);
+  
+  if (process.env.NODE_ENV === "development") {
+    logger.debug("Exam Page - searchParams:", searchParams);
+    logger.debug("Exam Page - Resolved searchParams:", resolvedSearchParams);
+  }
+
+  try {
+    const { fetchExamById, fetchExamDetailsById, createSlug } = await import("../lib/api");
+    const exam = await fetchExamById(examSlug).catch(() => null);
+    if (!exam) return { title: `${examSlug || "Exam"} | TestPrepKart` };
+
+    const examDetails = await fetchExamDetailsById(exam._id).catch(() => null);
+    const path = `/${createSlug(exam.name)}`;
+
+    return await generateTabAwareMetadata(
+      { name: exam.name, type: "exam" },
+      examDetails,
+      resolvedSearchParams,
+      {
+        path,
+        hierarchy: {
+          exam: exam.name,
+        },
+      }
+    );
+  } catch (error) {
+    logger.warn("Error generating exam page metadata:", error);
+    return { title: `${examSlug || "Exam"} | TestPrepKart` };
+  }
+}
 
 const ExamPage = async ({ params }) => {
   const { exam: examId } = await params;

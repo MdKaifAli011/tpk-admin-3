@@ -7,8 +7,15 @@ import { APP_CONFIG } from "@/constants";
 
 /**
  * Client-side component to update metadata for discussion threads
- * Since Next.js App Router metadata can't access searchParams in generateMetadata,
- * we use this component to update metadata dynamically for thread detail pages
+ * 
+ * NOTE: Next.js 16+ supports searchParams in layout generateMetadata (SSR),
+ * but this client-side component provides:
+ * 1. Real-time metadata updates on client navigation (better UX)
+ * 2. Fallback if SSR metadata generation fails
+ * 3. Dynamic thread-specific metadata that may not be available server-side
+ * 
+ * View-source shows INITIAL SSR metadata (from layout generateMetadata)
+ * This component enhances metadata for browser history and social sharing
  */
 export default function DiscussionMetadata({ entityData = {} }) {
   const searchParams = useSearchParams();

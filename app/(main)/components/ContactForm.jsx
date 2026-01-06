@@ -125,10 +125,9 @@ const ContactForm = () => {
 
         if (isUpdated && responseMessage) {
           setSubmitMessage(
-            `Thank you! Your information has been updated successfully. ${
-              responseMessage.includes("Status")
-                ? responseMessage.split(".")[0] + "."
-                : ""
+            `Thank you! Your information has been updated successfully. ${responseMessage.includes("Status")
+              ? responseMessage.split(".")[0] + "."
+              : ""
             } We'll get back to you soon.`
           );
         } else {
@@ -154,15 +153,15 @@ const ContactForm = () => {
         setSubmitStatus("error");
         setSubmitMessage(
           response.data?.message ||
-            "Failed to submit your inquiry. Please try again."
+          "Failed to submit your inquiry. Please try again."
         );
       }
     } catch (error) {
       setSubmitStatus("error");
       setSubmitMessage(
         error?.response?.data?.message ||
-          error?.message ||
-          "Failed to submit your inquiry. Please check your connection and try again."
+        error?.message ||
+        "Failed to submit your inquiry. Please check your connection and try again."
       );
     } finally {
       setIsSubmitting(false);
@@ -171,22 +170,25 @@ const ContactForm = () => {
 
   return (
     <div className="">
-      <div className="max-w-6xl mx-auto px-4">
+      <div className="max-w-6xl mx-auto px-4 ">
         <Card variant="premium" className="overflow-hidden">
           <div className="grid grid-cols-1 lg:grid-cols-2">
-            <div className="hidden lg:block relative bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500">
-              <div className="absolute inset-0 flex items-center justify-center p-4">
-                <div className="relative w-full h-full flex items-center justify-center">
-                  <div className="w-48 h-64 bg-white/10 rounded-lg backdrop-blur-sm flex items-center justify-center">
-                    <div className="text-white/30 text-center">
-                      <FaUser className="text-6xl mx-auto mb-2" />
-                      <p className="text-xs">Image Placeholder</p>
-                    </div>
-                  </div>
-                  <div className="absolute top-1/4 right-1/4 w-48 h-48 bg-white/5 rounded-full blur-3xl"></div>
-                </div>
-              </div>
+
+            <div className="hidden lg:block relative h-full overflow-hidden">
+              {/* Background gradient */}
+              <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500" />
+
+              {/* Image */}
+              <img
+                src="images/contact-illustration.png"
+                alt="Contact us"
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+
+              {/* Optional overlay */}
+              <div className="absolute inset-0 bg-black/10" />
             </div>
+
 
             <div className="bg-white p-4 lg:p-5">
               <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-semibold px-3 py-1.5 rounded-full inline-block mb-3 shadow-sm">
@@ -200,11 +202,10 @@ const ContactForm = () => {
               <form onSubmit={handleSubmit} className="space-y-3">
                 {submitStatus && (
                   <div
-                    className={`p-3 rounded-lg flex items-start gap-2 border ${
-                      submitStatus === "success"
-                        ? "bg-emerald-50 border-emerald-200 text-emerald-800"
-                        : "bg-red-50 border-red-200 text-red-800"
-                    }`}
+                    className={`p-3 rounded-lg flex items-start gap-2 border ${submitStatus === "success"
+                      ? "bg-emerald-50 border-emerald-200 text-emerald-800"
+                      : "bg-red-50 border-red-200 text-red-800"
+                      }`}
                   >
                     {submitStatus === "success" ? (
                       <FaCheckCircle className="text-emerald-600 text-sm shrink-0 mt-0.5" />
@@ -226,11 +227,10 @@ const ContactForm = () => {
                       name="name"
                       value={formData.name}
                       onChange={handleChange}
-                      className={`w-full pl-8 pr-3 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-sm ${
-                        errors.name
-                          ? "border-red-300 bg-red-50"
-                          : "border-gray-300 bg-white"
-                      }`}
+                      className={`w-full pl-8 pr-3 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-sm ${errors.name
+                        ? "border-red-300 bg-red-50"
+                        : "border-gray-300 bg-white"
+                        }`}
                       placeholder="Name"
                     />
                   </div>
@@ -250,11 +250,10 @@ const ContactForm = () => {
                       name="email"
                       value={formData.email}
                       onChange={handleChange}
-                      className={`w-full pl-8 pr-3 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-sm ${
-                        errors.email
-                          ? "border-red-300 bg-red-50"
-                          : "border-gray-300 bg-white"
-                      }`}
+                      className={`w-full pl-8 pr-3 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-sm ${errors.email
+                        ? "border-red-300 bg-red-50"
+                        : "border-gray-300 bg-white"
+                        }`}
                       placeholder="Email Address"
                     />
                   </div>
@@ -275,11 +274,10 @@ const ContactForm = () => {
                       name="country"
                       value={formData.country}
                       onChange={handleChange}
-                      className={`w-full pl-8 pr-3 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all appearance-none bg-white text-sm ${
-                        errors.country
-                          ? "border-red-300 bg-red-50"
-                          : "border-gray-300"
-                      }`}
+                      className={`w-full pl-8 pr-3 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all appearance-none bg-white text-sm ${errors.country
+                        ? "border-red-300 bg-red-50"
+                        : "border-gray-300"
+                        }`}
                     >
                       <option value="">-- Select Country --</option>
                       {countriesWithCodesSorted.map((country) => (
@@ -306,11 +304,10 @@ const ContactForm = () => {
                       name="className"
                       value={formData.className}
                       onChange={handleChange}
-                      className={`w-full pl-8 pr-3 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all appearance-none bg-white text-sm ${
-                        errors.className
-                          ? "border-red-300 bg-red-50"
-                          : "border-gray-300"
-                      }`}
+                      className={`w-full pl-8 pr-3 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all appearance-none bg-white text-sm ${errors.className
+                        ? "border-red-300 bg-red-50"
+                        : "border-gray-300"
+                        }`}
                     >
                       <option value="">Select Class</option>
                       {classOptions.map((className) => (
@@ -351,11 +348,10 @@ const ContactForm = () => {
                         name="phoneNumber"
                         value={formData.phoneNumber}
                         onChange={handleChange}
-                        className={`w-full pl-8 pr-3 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-sm ${
-                          errors.phoneNumber
-                            ? "border-red-300 bg-red-50"
-                            : "border-gray-300 bg-white"
-                        }`}
+                        className={`w-full pl-8 pr-3 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-sm ${errors.phoneNumber
+                          ? "border-red-300 bg-red-50"
+                          : "border-gray-300 bg-white"
+                          }`}
                         placeholder="Contact No"
                       />
                     </div>
@@ -369,13 +365,12 @@ const ContactForm = () => {
 
                 <div>
                   <div
-                    className={`flex items-center gap-2 p-2 border-2 rounded-lg transition-all ${
-                      errors.verification
-                        ? "border-red-300 bg-red-50"
-                        : isVerified
+                    className={`flex items-center gap-2 p-2 border-2 rounded-lg transition-all ${errors.verification
+                      ? "border-red-300 bg-red-50"
+                      : isVerified
                         ? "border-emerald-500 bg-emerald-50"
                         : "border-gray-300 bg-white"
-                    }`}
+                      }`}
                   >
                     <div className="shrink-0">
                       {isVerified ? (
@@ -428,13 +423,12 @@ const ContactForm = () => {
                           placeholder={
                             verificationQuestion.includes("=") ? "Ans" : "Code"
                           }
-                          className={`w-full px-2 py-1.5 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-center font-semibold text-sm ${
-                            errors.verification
-                              ? "border-red-300 bg-red-50"
-                              : isVerified
+                          className={`w-full px-2 py-1.5 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-center font-semibold text-sm ${errors.verification
+                            ? "border-red-300 bg-red-50"
+                            : isVerified
                               ? "border-emerald-500 bg-emerald-50"
                               : "border-gray-300 bg-white"
-                          }`}
+                            }`}
                           autoComplete="off"
                         />
                       </div>

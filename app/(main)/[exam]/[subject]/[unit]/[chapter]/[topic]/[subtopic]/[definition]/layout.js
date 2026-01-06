@@ -1,14 +1,28 @@
 import { generateMetadata as generateSEO } from "@/utils/seo";
 import { createSlug } from "@/utils/slug";
 import { logger } from "@/utils/logger";
+import { generateTabAwareMetadata, extractSearchParams } from "@/utils/tabSeo";
 
 // Force dynamic rendering to ensure fresh metadata
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-// Generate metadata for definition pages from admin SEO data
-export async function generateMetadata({ params }) {
+/**
+ * Generate metadata for definition pages with tab awareness
+ * 
+ * IMPORTANT SEO NOTES:
+ * - View-source shows INITIAL SSR metadata (this is CORRECT and SEO-safe)
+ * - Client-side metadata updates enhance UX but don't affect view-source
+ * - Google crawls the INITIAL HTML (view-source), which is why SSR metadata is critical
+ * - Tabs are handled via searchParams: ?tab=overview|discussion|practice|performance
+ * - Performance tab is NON-indexable (user-specific analytics)
+ */
+export async function generateMetadata({ params, searchParams }) {
   const { definition: definitionSlug } = await params;
+  
+  // In Next.js 16, searchParams in layouts is a Promise - await it directly
+  // This ensures metadata is generated correctly for view-source
+  const resolvedSearchParams = await extractSearchParams(searchParams);
 
   try {
     // Try to fetch definition data and details, but don't fail if it doesn't work
@@ -122,27 +136,7 @@ export async function generateMetadata({ params }) {
       );
     }
 
-    // Use SEO fields from Details: title, metaDescription, keywords
-    // Prioritize admin-provided meta data over auto-generated
-    const adminTitle = definitionDetails?.title?.trim();
-    const adminMetaDescription = definitionDetails?.metaDescription?.trim();
-    const adminKeywords = definitionDetails?.keywords?.trim();
-
-    const seoData = {
-      title:
-        adminTitle && adminTitle.length > 0
-          ? adminTitle
-          : `${definition.name} - Definition & Explanation`,
-      metaDescription:
-        adminMetaDescription && adminMetaDescription.length > 0
-          ? adminMetaDescription
-          : `Learn about ${definition.name}. Comprehensive definition, explanation, and study materials for exam preparation.`,
-      keywords:
-        adminKeywords && adminKeywords.length > 0
-          ? adminKeywords
-          : `${definition.name}, definition, explanation, study material, exam preparation`,
-    };
-
+    // Build path for canonical URL
     const examSlug = createSlug(definition.examId?.name || "");
     const subjectSlug = createSlug(definition.subjectId?.name || "");
     const unitSlug = createSlug(definition.unitId?.name || "");
@@ -150,12 +144,28 @@ export async function generateMetadata({ params }) {
     const topicSlug = createSlug(definition.topicId?.name || "");
     const subtopicSlug = createSlug(definition.subTopicId?.name || "");
     const definitionSlugValue = createSlug(definition.name);
+    const path = `/${examSlug}/${subjectSlug}/${unitSlug}/${chapterSlug}/${topicSlug}/${subtopicSlug}/${definitionSlugValue}`;
 
-    return generateSEO(seoData, {
-      type: "definition",
-      name: definition.name,
-      path: `/${examSlug}/${subjectSlug}/${unitSlug}/${chapterSlug}/${topicSlug}/${subtopicSlug}/${definitionSlugValue}`,
-    });
+    // Generate tab-aware metadata
+    return await generateTabAwareMetadata(
+      {
+        name: definition.name,
+        type: "definition",
+      },
+      definitionDetails,
+      resolvedSearchParams,
+      {
+        path,
+        hierarchy: {
+          exam: definition.examId?.name,
+          subject: definition.subjectId?.name,
+          unit: definition.unitId?.name,
+          chapter: definition.chapterId?.name,
+          topic: definition.topicId?.name,
+          subtopic: definition.subTopicId?.name,
+        },
+      }
+    );
   } catch (error) {
     // Always return valid metadata even on error
     logger.warn("Error generating metadata:", error.message);

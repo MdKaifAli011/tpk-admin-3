@@ -1,14 +1,39 @@
 import { generateMetadata as generateSEO } from "@/utils/seo";
 import { createSlug } from "@/utils/slug";
 import { logger } from "@/utils/logger";
-import { generateDiscussionForumMetadata } from "@/utils/discussionSeo";
+import { generateTabAwareMetadata, extractSearchParams } from "@/utils/tabSeo";
 
 // Force dynamic rendering to ensure fresh metadata
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-export async function generateMetadata({ params }) {
+/**
+ * Generate metadata for chapter pages with tab awareness
+ * 
+ * IMPORTANT SEO NOTES:
+ * - View-source shows INITIAL SSR metadata (this is CORRECT and SEO-safe)
+ * - Client-side metadata updates enhance UX but don't affect view-source
+ * - Google crawls the INITIAL HTML (view-source), which is why SSR metadata is critical
+ * - Tabs are handled via searchParams: ?tab=overview|discussion|practice|performance
+ * - Performance tab is NON-indexable (user-specific analytics)
+ */
+export async function generateMetadata({ params, searchParams }) {
   const { exam: examSlug, subject: subjectSlug, unit: unitSlug, chapter: chapterSlug } = await params;
+  
+  // In Next.js 16, searchParams in layouts might be undefined or a Promise
+  // Try to extract searchParams, with fallback to empty object
+  let resolvedSearchParams = {};
+  
+  if (searchParams !== undefined && searchParams !== null) {
+    resolvedSearchParams = await extractSearchParams(searchParams);
+  }
+  
+  // Debug logging (only in development)
+  if (process.env.NODE_ENV === "development") {
+    logger.debug("Chapter Layout - Raw searchParams:", searchParams);
+    logger.debug("Chapter Layout - Resolved searchParams:", resolvedSearchParams);
+    logger.debug("Chapter Layout - Tab from searchParams:", resolvedSearchParams?.tab);
+  }
 
   try {
     // Try to fetch data, but don't fail if it doesn't work
@@ -73,35 +98,27 @@ export async function generateMetadata({ params }) {
       return generateSEO({}, { type: "chapter", name: chapterSlug || "Chapter" });
     }
 
-    // Use SEO fields from Details: title, metaDescription, keywords
-    // Prioritize admin-provided meta data over auto-generated
-    const adminTitle = chapterDetails?.title?.trim();
-    const adminMetaDescription = chapterDetails?.metaDescription?.trim();
-    const adminKeywords = chapterDetails?.keywords?.trim();
-    
-    const seoData = {
-      title: (adminTitle && adminTitle.length > 0)
-        ? adminTitle
-        : (chapter.name && subject?.name && exam?.name 
-          ? `${chapter.name} - ${subject.name} - ${exam.name} | Study Notes & Practice Questions`
-          : `${chapter.name || "Chapter"} - Exam Preparation`),
-      metaDescription: (adminMetaDescription && adminMetaDescription.length > 0)
-        ? adminMetaDescription
-        : (chapter.name && subject?.name && exam?.name
-          ? `Learn ${chapter.name} in ${subject.name} for ${exam.name} exam. Access detailed notes, solved examples, practice questions, and expert explanations. Master ${chapter.name} concepts with comprehensive study materials.`
-          : `Learn ${chapter.name || "Chapter"} with detailed study materials, solved examples, and practice questions.`),
-      keywords: (adminKeywords && adminKeywords.length > 0)
-        ? adminKeywords
-        : (chapter.name && subject?.name && exam?.name 
-          ? `${chapter.name}, ${subject.name}, ${exam.name}, ${chapter.name} ${subject.name}, ${chapter.name} notes, ${exam.name} ${chapter.name} practice questions`
-          : `${chapter.name || "Chapter"}, ${chapter.name || "Chapter"} preparation, study notes`),
-    };
+    // Build path for canonical URL
+    const path = `/${createSlug(exam?.name || "")}/${createSlug(subject?.name || "")}/${createSlug(unit?.name || "")}/${createSlug(chapter.name)}`;
 
-    return generateSEO(seoData, {
-      type: "chapter",
-      name: chapter.name,
-      path: `/${createSlug(exam?.name || "")}/${createSlug(subject?.name || "")}/${createSlug(unit?.name || "")}/${createSlug(chapter.name)}`,
-    });
+    // Generate tab-aware metadata
+    return await generateTabAwareMetadata(
+      {
+        name: chapter.name,
+        type: "chapter",
+      },
+      chapterDetails,
+      resolvedSearchParams,
+      {
+        path,
+        hierarchy: {
+          exam: exam?.name,
+          subject: subject?.name,
+          unit: unit?.name,
+          chapter: chapter.name,
+        },
+      }
+    );
   } catch (error) {
     // Always return valid metadata even on error
     logger.warn("Error generating metadata:", error.message);

@@ -28,9 +28,84 @@ import {
   getNextDefinition,
   getPreviousDefinition,
 } from "../../../../../../../lib/hierarchicalNavigation";
+import { generateTabAwareMetadata, extractSearchParams } from "@/utils/tabSeo";
+import { logger } from "@/utils/logger";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
+
+/**
+ * Generate metadata for definition pages with tab awareness
+ * NOTE: Pages receive searchParams, layouts don't in Next.js App Router
+ * This metadata will override layout metadata when searchParams are present
+ */
+export async function generateMetadata({ params, searchParams }) {
+  const { exam: examSlug, subject: subjectSlug, unit: unitSlug, chapter: chapterSlug, topic: topicSlug, subtopic: subtopicSlug, definition: definitionSlug } = await params;
+  
+  // Pages receive searchParams correctly in Next.js App Router
+  const resolvedSearchParams = await extractSearchParams(searchParams);
+  
+  if (process.env.NODE_ENV === "development") {
+    logger.debug("Definition Page - searchParams:", searchParams);
+    logger.debug("Definition Page - Resolved searchParams:", resolvedSearchParams);
+  }
+
+  try {
+    const { fetchExamById, fetchSubjectById, fetchUnitById, fetchChapterById, fetchTopicById, fetchSubTopicById, fetchDefinitionById, fetchDefinitionDetailsById, fetchSubjectsByExam, fetchUnitsBySubject, fetchChaptersByUnit, fetchTopicsByChapter, fetchSubTopicsByTopic, fetchDefinitionsBySubTopic, findByIdOrSlug, createSlug } = await import("../../../../../../../lib/api");
+    
+    const exam = await fetchExamById(examSlug).catch(() => null);
+    if (!exam) return { title: `${definitionSlug || "Definition"} | TestPrepKart` };
+
+    const subjects = await fetchSubjectsByExam(exam._id).catch(() => []);
+    const subject = findByIdOrSlug(subjects, subjectSlug);
+    if (!subject) return { title: `${definitionSlug || "Definition"} | TestPrepKart` };
+
+    const units = await fetchUnitsBySubject(subject._id, exam._id).catch(() => []);
+    const unit = findByIdOrSlug(units, unitSlug);
+    if (!unit) return { title: `${definitionSlug || "Definition"} | TestPrepKart` };
+
+    const chapters = await fetchChaptersByUnit(unit._id).catch(() => []);
+    const chapter = findByIdOrSlug(chapters, chapterSlug);
+    if (!chapter) return { title: `${definitionSlug || "Definition"} | TestPrepKart` };
+
+    const topics = await fetchTopicsByChapter(chapter._id).catch(() => []);
+    const topic = findByIdOrSlug(topics, topicSlug);
+    if (!topic) return { title: `${definitionSlug || "Definition"} | TestPrepKart` };
+
+    const subtopics = await fetchSubTopicsByTopic(topic._id).catch(() => []);
+    const subtopic = findByIdOrSlug(subtopics, subtopicSlug);
+    if (!subtopic) return { title: `${definitionSlug || "Definition"} | TestPrepKart` };
+
+    const definitions = await fetchDefinitionsBySubTopic(subtopic._id).catch(() => []);
+    const definition = findByIdOrSlug(definitions, definitionSlug);
+    if (!definition) return { title: `${definitionSlug || "Definition"} | TestPrepKart` };
+
+    const fullDefinitionData = await fetchDefinitionById(definition._id).catch(() => null);
+    const finalDefinition = fullDefinitionData || definition;
+    const definitionDetails = await fetchDefinitionDetailsById(finalDefinition._id).catch(() => null);
+    const path = `/${createSlug(exam.name)}/${createSlug(subject.name)}/${createSlug(unit.name)}/${createSlug(chapter.name)}/${createSlug(topic.name)}/${createSlug(subtopic.name)}/${createSlug(finalDefinition.name)}`;
+
+    return await generateTabAwareMetadata(
+      { name: finalDefinition.name, type: "definition" },
+      definitionDetails,
+      resolvedSearchParams,
+      {
+        path,
+        hierarchy: {
+          exam: exam.name,
+          subject: subject.name,
+          unit: unit.name,
+          chapter: chapter.name,
+          topic: topic.name,
+          subtopic: subtopic.name,
+        },
+      }
+    );
+  } catch (error) {
+    logger.warn("Error generating definition page metadata:", error);
+    return { title: `${definitionSlug || "Definition"} | TestPrepKart` };
+  }
+}
 
 const DefinitionPage = async ({ params }) => {
   const {

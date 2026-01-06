@@ -27,9 +27,75 @@ import {
   getNextTopic,
   getPreviousTopic,
 } from "../../../../../lib/hierarchicalNavigation";
+import { generateTabAwareMetadata, extractSearchParams } from "@/utils/tabSeo";
+import { logger } from "@/utils/logger";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
+
+/**
+ * Generate metadata for topic pages with tab awareness
+ * NOTE: Pages receive searchParams, layouts don't in Next.js App Router
+ * This metadata will override layout metadata when searchParams are present
+ */
+export async function generateMetadata({ params, searchParams }) {
+  const { exam: examSlug, subject: subjectSlug, unit: unitSlug, chapter: chapterSlug, topic: topicSlug } = await params;
+  
+  // Pages receive searchParams correctly in Next.js App Router
+  const resolvedSearchParams = await extractSearchParams(searchParams);
+  
+  if (process.env.NODE_ENV === "development") {
+    logger.debug("Topic Page - searchParams:", searchParams);
+    logger.debug("Topic Page - Resolved searchParams:", resolvedSearchParams);
+  }
+
+  try {
+    const { fetchExamById, fetchSubjectById, fetchUnitById, fetchChapterById, fetchTopicById, fetchTopicDetailsById, fetchSubjectsByExam, fetchUnitsBySubject, fetchChaptersByUnit, fetchTopicsByChapter, findByIdOrSlug, createSlug } = await import("../../../../../lib/api");
+    
+    const exam = await fetchExamById(examSlug).catch(() => null);
+    if (!exam) return { title: `${topicSlug || "Topic"} | TestPrepKart` };
+
+    const subjects = await fetchSubjectsByExam(exam._id).catch(() => []);
+    const subject = findByIdOrSlug(subjects, subjectSlug);
+    if (!subject) return { title: `${topicSlug || "Topic"} | TestPrepKart` };
+
+    const units = await fetchUnitsBySubject(subject._id, exam._id).catch(() => []);
+    const unit = findByIdOrSlug(units, unitSlug);
+    if (!unit) return { title: `${topicSlug || "Topic"} | TestPrepKart` };
+
+    const chapters = await fetchChaptersByUnit(unit._id).catch(() => []);
+    const chapter = findByIdOrSlug(chapters, chapterSlug);
+    if (!chapter) return { title: `${topicSlug || "Topic"} | TestPrepKart` };
+
+    const topics = await fetchTopicsByChapter(chapter._id).catch(() => []);
+    const topic = findByIdOrSlug(topics, topicSlug);
+    if (!topic) return { title: `${topicSlug || "Topic"} | TestPrepKart` };
+
+    const fullTopicData = await fetchTopicById(topic._id).catch(() => null);
+    const finalTopic = fullTopicData || topic;
+    const topicDetails = await fetchTopicDetailsById(finalTopic._id).catch(() => null);
+    const path = `/${createSlug(exam.name)}/${createSlug(subject.name)}/${createSlug(unit.name)}/${createSlug(chapter.name)}/${createSlug(finalTopic.name)}`;
+
+    return await generateTabAwareMetadata(
+      { name: finalTopic.name, type: "topic" },
+      topicDetails,
+      resolvedSearchParams,
+      {
+        path,
+        hierarchy: {
+          exam: exam.name,
+          subject: subject.name,
+          unit: unit.name,
+          chapter: chapter.name,
+          topic: finalTopic.name,
+        },
+      }
+    );
+  } catch (error) {
+    logger.warn("Error generating topic page metadata:", error);
+    return { title: `${topicSlug || "Topic"} | TestPrepKart` };
+  }
+}
 
 const TopicPage = async ({ params }) => {
   const {

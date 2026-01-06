@@ -1,13 +1,28 @@
 import { generateMetadata as generateSEO } from "@/utils/seo";
 import { createSlug } from "@/utils/slug";
 import { logger } from "@/utils/logger";
+import { generateTabAwareMetadata, extractSearchParams } from "@/utils/tabSeo";
 
 // Force dynamic rendering to ensure fresh metadata
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-export async function generateMetadata({ params }) {
+/**
+ * Generate metadata for unit pages with tab awareness
+ * 
+ * IMPORTANT SEO NOTES:
+ * - View-source shows INITIAL SSR metadata (this is CORRECT and SEO-safe)
+ * - Client-side metadata updates enhance UX but don't affect view-source
+ * - Google crawls the INITIAL HTML (view-source), which is why SSR metadata is critical
+ * - Tabs are handled via searchParams: ?tab=overview|discussion|practice|performance
+ * - Performance tab is NON-indexable (user-specific analytics)
+ */
+export async function generateMetadata({ params, searchParams }) {
   const { exam: examSlug, subject: subjectSlug, unit: unitSlug } = await params;
+  
+  // In Next.js 16, searchParams in layouts is a Promise - await it directly
+  // This ensures metadata is generated correctly for view-source
+  const resolvedSearchParams = await extractSearchParams(searchParams);
 
     try {
       // Try to fetch data, but don't fail if it doesn't work
@@ -112,52 +127,26 @@ export async function generateMetadata({ params }) {
       return generateSEO({}, { type: "unit", name: unitSlug || "Unit" });
     }
 
-    // Use SEO fields from Details: title, metaDescription, keywords
-    // Prioritize admin-provided meta data over auto-generated
-    // Check if title exists and has content after trimming
-    const adminTitle = unitDetails?.title?.trim();
-    const adminMetaDescription = unitDetails?.metaDescription?.trim();
-    const adminKeywords = unitDetails?.keywords?.trim();
-    
-    const seoData = {
-      title: (adminTitle && adminTitle.length > 0) 
-        ? adminTitle 
-        : (unit.name && subject?.name && exam?.name 
-          ? `${unit.name} - ${subject.name} - ${exam.name} | Study Materials & Practice Tests`
-          : `${unit.name || "Unit"} - Exam Preparation`),
-      metaDescription: (adminMetaDescription && adminMetaDescription.length > 0)
-        ? adminMetaDescription
-        : (unit.name && subject?.name && exam?.name
-          ? `Study ${unit.name} in ${subject.name} for ${exam.name} exam. Get comprehensive notes, practice questions, solved examples, and expert guidance. Access free ${unit.name} study materials and track your progress.`
-          : `Study ${unit.name || "Unit"} with comprehensive study materials, practice questions, and expert guidance.`),
-      keywords: (adminKeywords && adminKeywords.length > 0)
-        ? adminKeywords
-        : (unit.name && subject?.name && exam?.name 
-          ? `${unit.name}, ${subject.name}, ${exam.name}, ${unit.name} ${subject.name}, ${unit.name} study materials, ${exam.name} ${unit.name} practice tests`
-          : `${unit.name || "Unit"}, ${unit.name || "Unit"} preparation, study materials`),
-    };
+    // Build path for canonical URL
+    const path = `/${createSlug(exam?.name || "")}/${createSlug(subject?.name || "")}/${createSlug(unit.name)}`;
 
-    // Log metadata generation (only in development)
-    if (process.env.NODE_ENV === "development") {
-      logger.info(`Generating metadata for unit ${unit._id}:`, {
-        adminTitle: adminTitle,
-        adminTitleLength: adminTitle?.length || 0,
-        finalTitle: seoData.title,
-        finalDescription: seoData.metaDescription?.substring(0, 50) + '...',
-        finalKeywords: seoData.keywords,
-        usingAdminTitle: (adminTitle && adminTitle.length > 0),
-        usingAdminMetaDescription: (adminMetaDescription && adminMetaDescription.length > 0),
-        usingAdminKeywords: (adminKeywords && adminKeywords.length > 0),
-      });
-    }
-
-    const metadata = generateSEO(seoData, {
-      type: "unit",
-      name: unit.name,
-      path: `/${createSlug(exam?.name || "")}/${createSlug(subject?.name || "")}/${createSlug(unit.name)}`,
-    });
-
-    return metadata;
+    // Generate tab-aware metadata
+    return await generateTabAwareMetadata(
+      {
+        name: unit.name,
+        type: "unit",
+      },
+      unitDetails,
+      resolvedSearchParams,
+      {
+        path,
+        hierarchy: {
+          exam: exam?.name,
+          subject: subject?.name,
+          unit: unit.name,
+        },
+      }
+    );
   } catch (error) {
     // Always return valid metadata even on error
     logger.warn("Error generating metadata:", error.message);

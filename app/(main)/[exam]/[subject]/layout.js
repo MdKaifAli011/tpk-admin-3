@@ -1,13 +1,28 @@
 import { generateMetadata as generateSEO } from "@/utils/seo";
 import { createSlug } from "@/utils/slug";
 import { logger } from "@/utils/logger";
+import { generateTabAwareMetadata, extractSearchParams } from "@/utils/tabSeo";
 
 // Force dynamic rendering to ensure fresh metadata
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-export async function generateMetadata({ params }) {
+/**
+ * Generate metadata for subject pages with tab awareness
+ * 
+ * IMPORTANT SEO NOTES:
+ * - View-source shows INITIAL SSR metadata (this is CORRECT and SEO-safe)
+ * - Client-side metadata updates enhance UX but don't affect view-source
+ * - Google crawls the INITIAL HTML (view-source), which is why SSR metadata is critical
+ * - Tabs are handled via searchParams: ?tab=overview|discussion|practice|performance
+ * - Performance tab is NON-indexable (user-specific analytics)
+ */
+export async function generateMetadata({ params, searchParams }) {
   const { exam: examSlug, subject: subjectSlug } = await params;
+  
+  // In Next.js 16, searchParams in layouts is a Promise - await it directly
+  // This ensures metadata is generated correctly for view-source
+  const resolvedSearchParams = await extractSearchParams(searchParams);
 
   try {
     // Try to fetch data, but don't fail if it doesn't work
@@ -54,35 +69,25 @@ export async function generateMetadata({ params }) {
       );
     }
 
-    // Use SEO fields from Details: title, metaDescription, keywords
-    // Prioritize admin-provided meta data over auto-generated
-    const adminTitle = subjectDetails?.title?.trim();
-    const adminMetaDescription = subjectDetails?.metaDescription?.trim();
-    const adminKeywords = subjectDetails?.keywords?.trim();
-    
-    const seoData = {
-      title: (adminTitle && adminTitle.length > 0)
-        ? adminTitle
-        : (subject.name && exam?.name
-          ? `${subject.name} - ${exam.name} Exam Preparation | Study Materials & Practice Tests`
-          : `${subject.name || "Subject"} - Exam Preparation`),
-      metaDescription: (adminMetaDescription && adminMetaDescription.length > 0)
-        ? adminMetaDescription
-        : (subject.name && exam?.name
-          ? `Prepare for ${subject.name} in ${exam.name} exam with comprehensive study materials, practice tests, and expert guidance. Access free ${subject.name} preparation resources and track your progress.`
-          : `Prepare for ${subject.name || "Subject"} with comprehensive study materials, practice tests, and expert guidance.`),
-      keywords: (adminKeywords && adminKeywords.length > 0)
-        ? adminKeywords
-        : (subject.name && exam?.name
-          ? `${subject.name}, ${exam.name}, ${subject.name} ${exam.name}, ${subject.name} preparation, ${subject.name} study materials, ${exam.name} ${subject.name} practice tests`
-          : `${subject.name || "Subject"}, ${subject.name || "Subject"} preparation, study materials`),
-    };
+    // Build path for canonical URL
+    const path = `/${createSlug(exam?.name || "")}/${createSlug(subject.name)}`;
 
-    return generateSEO(seoData, {
-      type: "subject",
-      name: subject.name,
-      path: `/${createSlug(exam?.name || "")}/${createSlug(subject.name)}`,
-    });
+    // Generate tab-aware metadata
+    return await generateTabAwareMetadata(
+      {
+        name: subject.name,
+        type: "subject",
+      },
+      subjectDetails,
+      resolvedSearchParams,
+      {
+        path,
+        hierarchy: {
+          exam: exam?.name,
+          subject: subject.name,
+        },
+      }
+    );
   } catch (error) {
     // Always return valid metadata even on error
     logger.warn("Error generating metadata:", error.message);
