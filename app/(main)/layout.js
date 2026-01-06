@@ -5,11 +5,11 @@ import MainLayoutClient from "./layout/MainLayoutClient";
 // Export metadata for the main layout (homepage and general pages)
 export const metadata = generateSEO(
   {
-    title: "TestPrepKart - Entrance Exam Preparation for NRI Students Worldwide",
+    title: "Free NEET Topic Wise Notes, Papers & Study Material",
     metaDescription:
-      "Prepare for JEE, NEET, SAT, and IB exams with comprehensive study materials, practice tests, and expert guidance. Highest NRI selections from USA & Middle East. Get free exam preparation resources and track your progress.",
+      "NEET, JEE, SAT & AP (Advanced Placement) examination online preparation portal for NRI students worldwide. Practice at your own pace and get all study resources at one place. Your own dashboard for exam preparation.",
     keywords:
-      "JEE preparation, NEET preparation, SAT preparation, IB preparation, NRI students, exam preparation, study materials, practice tests, online coaching, entrance exam",
+      "NEET Practice Papers Online, NEET Study Resources, NEET Topic Wise Notes, NEET eBooks, PYQ Solutions Downloads",
   },
   {
     type: "homepage",

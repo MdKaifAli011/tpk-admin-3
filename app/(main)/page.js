@@ -204,8 +204,7 @@ function HomepageContent() {
       ======================================================= */}
       <section className="relative overflow-hidden">
         {/* Animated Background Gradient */}
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 opacity-60"></div>
-
+        
         {/* Subtle Pattern Overlay */}
         <div
           className="absolute inset-0 opacity-[0.03] pointer-events-none"
@@ -223,7 +222,7 @@ function HomepageContent() {
                 <FaRocket className="text-white text-sm" />
               </div>
               <span className="text-gray-900">
-                Trusted by 50,000+ Students Worldwide
+               Trusted by 50,000+ NRI and Indian Students Worldwide
               </span>
               <div className="flex items-center gap-1">
                 {[...Array(5)].map((_, i) => (
@@ -234,19 +233,17 @@ function HomepageContent() {
 
             {/* Main Headline - Value Proposition */}
             <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold leading-[1.1] text-gray-900">
-              Crack Your{" "}
+              Your{" "}
               <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 bg-clip-text text-transparent">
-                Dream Exam
+                Exam
               </span>
               <br />
-              with Confidence
+              Preparation Dashboard
             </h1>
 
             {/* Subheadline - Benefit-Focused */}
             <p className="text-xl sm:text-2xl text-gray-700 max-w-4xl mx-auto leading-relaxed font-medium">
-              Master concepts, track progress, and ace competitive exams with
-              our comprehensive preparation platform designed for serious
-              students.
+              Master concepts, track progress, and ace competitive exams with our self paced preparation platform designed for students.
             </p>
 
             {/* Primary CTA Section */}
@@ -259,13 +256,7 @@ function HomepageContent() {
                 <FaArrowRight className="text-sm group-hover:translate-x-1 transition-transform" />
               </Link>
 
-              <Link
-                href="/contact"
-                className="inline-flex items-center justify-center gap-3 px-6 sm:px-8 py-3 sm:py-4 bg-white border-2 border-gray-300 text-gray-900 rounded-xl font-semibold text-sm sm:text-base shadow-lg hover:shadow-xl hover:border-indigo-500 transition-all"
-              >
-                <FaPlayCircle className="text-indigo-600 text-sm" />
-                Watch Demo
-              </Link>
+             
             </div>
 
             {/* Social Proof - Stats */}

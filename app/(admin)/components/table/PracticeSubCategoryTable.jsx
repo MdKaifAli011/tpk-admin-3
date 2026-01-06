@@ -50,9 +50,9 @@ const PracticeSubCategoryTable = ({
               <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Paper Name
               </th>
-              <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
+              {/* <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
                 URL Slug
-              </th>
+              </th> */}
               <th className="px-2 py-1 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-40">
                 Hierarchy Path
               </th>
@@ -100,11 +100,7 @@ const PracticeSubCategoryTable = ({
                     />
                   </div>
                 </td>
-                <td className="px-2 py-1 whitespace-nowrap overflow-hidden text-ellipsis w-32">
-                  <code className="text-[10px] bg-gray-100 px-1 py-0.5 rounded text-gray-600">
-                    {subCategory.slug || "-"}
-                  </code>
-                </td>
+               
                 <td className="px-2 py-1 w-40">
                   <div className="flex items-center justify-center gap-1 flex-wrap">
                     {subCategory.subTopicId?.name ? (
