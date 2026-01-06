@@ -649,18 +649,70 @@ const LeadManagement = () => {
 
           <div>
             <label className="text-sm font-medium text-gray-600">
-              Date Submitted
+              {selectedLead.updatedAt && (selectedLead.status === "updated" || selectedLead.updateCount > 0)
+                ? "Last Updated"
+                : "Date Submitted"}
             </label>
             <p className="mt-1 text-sm text-gray-900 font-semibold">
-              {new Date(selectedLead.createdAt).toLocaleString("en-US", {
-                year: "numeric",
-                month: "short",
-                day: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
+              {selectedLead.updatedAt && (selectedLead.status === "updated" || selectedLead.updateCount > 0)
+                ? new Date(selectedLead.updatedAt).toLocaleString("en-US", {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })
+                : new Date(selectedLead.createdAt).toLocaleString("en-US", {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
             </p>
+            {selectedLead.updatedAt && (selectedLead.status === "updated" || selectedLead.updateCount > 0) && (
+              <p className="mt-1 text-xs text-gray-500">
+                Originally submitted: {new Date(selectedLead.createdAt).toLocaleString("en-US", {
+                  year: "numeric",
+                  month: "short",
+                  day: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </p>
+            )}
           </div>
+
+          {selectedLead.form_id && (
+            <div>
+              <label className="text-sm font-medium text-gray-600">
+                Form ID
+              </label>
+              <p className="mt-1 text-sm text-gray-900 font-semibold">
+                <code className="bg-gray-100 px-2 py-1 rounded text-xs">
+                  {selectedLead.form_id}
+                </code>
+              </p>
+            </div>
+          )}
+
+          {selectedLead.source && (
+            <div className="sm:col-span-2">
+              <label className="text-sm font-medium text-gray-600">
+                Source URL
+              </label>
+              <p className="mt-1 text-sm text-gray-900 font-semibold break-all">
+                <code className="bg-gray-100 px-2 py-1 rounded text-xs">
+                  {selectedLead.source}
+                </code>
+              </p>
+              <p className="mt-1 text-xs text-gray-500">
+                {selectedLead.status === "updated"
+                  ? "Latest submission location"
+                  : "Submission location"}
+              </p>
+            </div>
+          )}
         </div>
       </div>
 

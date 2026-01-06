@@ -62,8 +62,18 @@ export async function GET(request) {
     }
 
     const total = await Lead.countDocuments(query);
+    
+    // Sort leads to show updated leads at the top:
+    // 1. Sort by updatedAt descending first (leads with updatedAt appear at top, nulls go to end)
+    // 2. Then sort by createdAt descending (for leads without updatedAt, sort by creation time)
+    // This ensures:
+    // - Leads with updates appear first, sorted by their latest update time (newest first)
+    // - Leads without updates appear below, sorted by creation time (newest first)
     const leads = await Lead.find(query)
-      .sort({ createdAt: -1 })
+      .sort({ 
+        updatedAt: -1,  // Updated leads first (sorted by updatedAt), nulls go to end
+        createdAt: -1   // Then by createdAt for all leads
+      })
       .skip(skip)
       .limit(limit)
       .lean();
@@ -118,25 +128,23 @@ export async function POST(request) {
       previousStatus = existingLead.status;
       const newUpdateCount = (existingLead.updateCount || 0) + 1;
 
-      const updateData = {
-        name: body.name.trim(),
-        country: body.country.trim(),
-        className: body.className.trim(),
-        phoneNumber: body.phoneNumber.trim(),
-        status: "updated",
-        updateCount: newUpdateCount,
-      };
+      // Update the existing lead document directly - this ensures timestamps are updated correctly
+      existingLead.name = body.name.trim();
+      existingLead.country = body.country.trim();
+      existingLead.className = body.className.trim();
+      existingLead.phoneNumber = body.phoneNumber.trim();
+      existingLead.status = "updated";
+      existingLead.updateCount = newUpdateCount;
+      // Mongoose will automatically update updatedAt when we call save()
 
-      // Add new fields if provided
-      if (body.form_name) updateData.form_name = body.form_name.trim();
-      if (body.form_id) updateData.form_id = body.form_id.trim();
-      if (body.source) updateData.source = body.source.trim();
-      if (body.prepared) updateData.prepared = body.prepared.trim();
+      // Add new fields if provided - always update source to track latest submission location
+      if (body.form_name) existingLead.form_name = body.form_name.trim();
+      if (body.form_id) existingLead.form_id = body.form_id.trim();
+      if (body.source) existingLead.source = body.source.trim(); // Update source with latest URL
+      if (body.prepared) existingLead.prepared = body.prepared.trim();
 
-      lead = await Lead.findOneAndUpdate({ email }, updateData, {
-        new: true,
-        runValidators: true,
-      });
+      // Save the document - Mongoose will automatically update updatedAt timestamp when timestamps: true
+      lead = await existingLead.save();
 
       message = `Lead updated successfully. This is update #${newUpdateCount}.`;
       isUpdated = true;

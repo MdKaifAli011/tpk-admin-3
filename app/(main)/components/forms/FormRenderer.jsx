@@ -198,19 +198,21 @@ const FormRenderer = ({
         }
       };
 
-      // Get the pathname (e.g., /neet) instead of full URL
-      const sourcePath =
-        typeof window !== "undefined" ? window.location.pathname : "";
-      const sourceUrl =
+      // Get the full URL including query parameters (e.g., /neet/biology?tab=practice&test=6929927c76c02d5a5e862de7)
+      const fullUrl =
         typeof window !== "undefined" ? window.location.href : "";
-      const extractedExamName = extractExamName(sourceUrl);
+      const pathnameWithQuery =
+        typeof window !== "undefined"
+          ? window.location.pathname + window.location.search
+          : "";
+      const extractedExamName = extractExamName(fullUrl);
 
       // Prepare submission data
       const submissionData = {
         ...formData,
         form_name: formId, // Use formId as form_name
         form_id: formId,
-        source: sourcePath, // Store pathname (e.g., /neet) instead of full URL
+        source: pathnameWithQuery, // Store full pathname with query parameters (e.g., /neet/biology?tab=practice&test=...)
         prepared: extractedExamName || prepared || "",
       };
 

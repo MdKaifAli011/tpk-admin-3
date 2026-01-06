@@ -876,22 +876,22 @@ const PracticeTestList = ({
 
         // Save test results asynchronously
         (async () => {
-          try {
+        try {
             const saveResult = await saveTestResult(resultsToSave);
-            if (saveResult.success && saveResult.data) {
+          if (saveResult.success && saveResult.data) {
               // Mark as saved to prevent duplicates
               savedTestResultIdsRef.current.add(saveKey);
               
-              // Update score with saved data
-              setStudentScores((prev) => ({
-                ...prev,
-                [testIdStr]: {
-                  totalMarks: saveResult.data.totalMarks,
-                  maximumMarks: saveResult.data.maximumMarks,
-                  percentage: saveResult.data.percentage,
-                },
-              }));
-            }
+            // Update score with saved data
+            setStudentScores((prev) => ({
+              ...prev,
+              [testIdStr]: {
+                totalMarks: saveResult.data.totalMarks,
+                maximumMarks: saveResult.data.maximumMarks,
+                percentage: saveResult.data.percentage,
+              },
+            }));
+          }
 
             // Display results after successful save
             setResults({
@@ -907,7 +907,7 @@ const PracticeTestList = ({
             });
             setIsTestSubmitted(true);
             setIsTestStarted(false);
-          } catch (error) {
+        } catch (error) {
             logger.error("Error saving test results after registration:", error);
             // Even if save fails, show results to user
             setResults({

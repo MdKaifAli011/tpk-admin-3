@@ -35,19 +35,25 @@ const getFullUrl = (source) => {
 const getSourceDisplayText = (source) => {
   if (!source) return "N/A";
   
-  // If it's a path, show the path
+  // If it's a path with query parameters, show the full path with query
   if (source.startsWith("/")) {
-    return source;
+    // Show full path including query parameters (e.g., /neet/biology?tab=practice&test=...)
+    return source.length > 50
+      ? source.substring(0, 50) + "..."
+      : source;
   }
   
-  // If it's a full URL, try to extract pathname
+  // If it's a full URL, try to extract pathname with query
   try {
     const url = new URL(source);
-    return url.pathname || url.hostname || source;
+    const pathWithQuery = url.pathname + url.search;
+    return pathWithQuery.length > 50
+      ? pathWithQuery.substring(0, 50) + "..."
+      : pathWithQuery;
   } catch {
     // If URL parsing fails, show original (truncated if too long)
-    return source.length > 30
-      ? source.substring(0, 30) + "..."
+    return source.length > 50
+      ? source.substring(0, 50) + "..."
       : source;
   }
 };
@@ -55,6 +61,15 @@ const getSourceDisplayText = (source) => {
 const LeadTable = ({ leads, onView, onDelete }) => {
   const { canDelete, role } = usePermissions();
   const [selectedLeads, setSelectedLeads] = useState(new Set());
+
+  // Helper function to get the display date (updatedAt if updated, otherwise createdAt)
+  const getDisplayDate = (lead) => {
+    // If lead has been updated, show updatedAt, otherwise show createdAt
+    if (lead.updatedAt && (lead.status === "updated" || lead.updateCount > 0)) {
+      return lead.updatedAt;
+    }
+    return lead.createdAt;
+  };
 
   // Helper function to format date
   const formatDate = (dateString) => {
@@ -109,8 +124,10 @@ const LeadTable = ({ leads, onView, onDelete }) => {
 
     // Convert leads to CSV rows
     const csvRows = selectedLeadData.map((lead) => {
-      const date = lead.createdAt
-        ? new Date(lead.createdAt).toLocaleDateString("en-US", {
+      // Use updatedAt if lead has been updated, otherwise use createdAt
+      const displayDate = getDisplayDate(lead);
+      const date = displayDate
+        ? new Date(displayDate).toLocaleDateString("en-US", {
             year: "numeric",
             month: "short",
             day: "numeric",
@@ -373,9 +390,14 @@ const LeadTable = ({ leads, onView, onDelete }) => {
                   <td className="px-2 py-2 whitespace-nowrap">
                     <time
                       className="text-sm text-gray-500"
-                      dateTime={lead.createdAt}
+                      dateTime={getDisplayDate(lead)}
+                      title={
+                        lead.updatedAt && (lead.status === "updated" || lead.updateCount > 0)
+                          ? `Last updated: ${formatDate(lead.updatedAt)}`
+                          : `Created: ${formatDate(lead.createdAt)}`
+                      }
                     >
-                      {formatDate(lead.createdAt)}
+                      {formatDate(getDisplayDate(lead))}
                     </time>
                   </td>
                   <td className="px-2 py-2 whitespace-nowrap">
@@ -535,12 +557,21 @@ const LeadTable = ({ leads, onView, onDelete }) => {
               {/* Details Grid */}
               <div className="grid grid-cols-2 gap-2 mb-3">
                 <div>
-                  <div className="text-xs text-gray-500">Date</div>
+                  <div className="text-xs text-gray-500">
+                    {lead.updatedAt && (lead.status === "updated" || lead.updateCount > 0)
+                      ? "Last Updated"
+                      : "Date"}
+                  </div>
                   <time
                     className="text-sm font-medium text-gray-900"
-                    dateTime={lead.createdAt}
+                    dateTime={getDisplayDate(lead)}
+                    title={
+                      lead.updatedAt && (lead.status === "updated" || lead.updateCount > 0)
+                        ? `Last updated: ${formatDate(lead.updatedAt)}`
+                        : `Created: ${formatDate(lead.createdAt)}`
+                    }
                   >
-                    {formatDateShort(lead.createdAt)}
+                    {formatDateShort(getDisplayDate(lead))}
                   </time>
                 </div>
                 <div>
