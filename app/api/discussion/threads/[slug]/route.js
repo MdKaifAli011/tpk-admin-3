@@ -10,15 +10,23 @@ import Subject from "@/models/Subject";
 import Unit from "@/models/Unit";
 import Chapter from "@/models/Chapter";
 import Topic from "@/models/Topic";
-import SubTopic from "@/models/SubTopic"; 
+import SubTopic from "@/models/SubTopic";
 
 export async function GET(request, { params }) {
     try {
         await connectDB();
         const { slug } = await params;
+        const user = await getUser(request);
+        const isAdmin = user?.type === "User";
+
+        // Query to fetch the thread - for non-admins, must be approved
+        const threadQuery = { slug };
+        if (!isAdmin) {
+            threadQuery.isApproved = true;
+        }
 
         // 1. Fetch Thread
-        const thread = await Thread.findOne({ slug })
+        const thread = await Thread.findOne(threadQuery)
             .populate("author", "firstName lastName avatar role")
             .populate("examId", "name slug")
             .populate("subjectId", "name slug")
@@ -30,13 +38,12 @@ export async function GET(request, { params }) {
 
         if (!thread) {
             return NextResponse.json(
-                { success: false, message: "Thread not found" },
+                { success: false, message: "Thread not found or pending approval" },
                 { status: 404 }
             );
         }
 
         // Increment views (Non-blocking)
-        // We don't await this to speed up response, or use findOneAndUpdate
         Thread.updateOne({ _id: thread._id }, { $inc: { views: 1 } }).exec();
 
         const { searchParams } = new URL(request.url);
@@ -50,12 +57,9 @@ export async function GET(request, { params }) {
             replySort = { createdAt: -1 };
         }
 
-        const user = await getUser(request);
-        const isAdmin = user?.type === "User";
-
         const replyQuery = { threadId: thread._id };
         if (!isAdmin) {
-            replyQuery.isApproved = { $ne: false };
+            replyQuery.isApproved = true;
         }
 
         let replies = [];

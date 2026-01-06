@@ -70,8 +70,8 @@ export async function GET(request) {
         const status = searchParams.get("status"); // 'all', 'approved', 'pending'
 
         if (!isAdmin) {
-            // For students/guests, show approved content OR content where isApproved is not false (for legacy)
-            query.isApproved = { $ne: false };
+            // For students/guests, show ONLY approved content
+            query.isApproved = true;
         } else if (status === "pending") {
             query.isApproved = false;
         } else if (status === "approved") {

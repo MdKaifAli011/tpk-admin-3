@@ -128,11 +128,6 @@ const ThreadCard = ({ thread, onClick }) => {
                     <FaThumbtack size={8} /> Pinned
                   </span>
                 )}
-                {!thread.isApproved && (
-                  <span className="bg-amber-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider flex items-center gap-1 shadow-sm">
-                    <FaShieldAlt size={8} /> Pending Approval
-                  </span>
-                )}
               </div>
               <h3 className="text-lg font-bold text-gray-900 mb-2 leading-snug group-hover:text-blue-600 transition-colors">
                 {thread.title}
@@ -1147,7 +1142,7 @@ const DiscussionForumTab = ({ entityName, entityType, examId, subjectId, unitId,
     <div className="space-y-6 px-3 sm:px-4 py-3 sm:py-4">
       {/* SEO Metadata Updater for Thread Details */}
       {view === "DETAIL" && <DiscussionMetadata entityData={entityData} />}
-      
+
       {/* Header Section */}
       {view === "LIST" && (
         <div className="mb-6">

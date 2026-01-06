@@ -322,181 +322,103 @@ const PracticeTestList = ({
           return cleaned;
         };
 
-        // Determine page level and implement cascading logic
-        if (subTopicId) {
-          // Subtopic page: Show tests for that subtopic only (no children)
-          const filters = cleanFilters({
-            examId,
-            subjectId,
-            unitId,
-            chapterId,
-            topicId,
-            subTopicId,
-            status: "active",
-          });
-          tests = await fetchPracticeTests(filters);
-        } else if (topicId) {
-          // Topic page: Try topic first, then children (subtopics)
-          // Step 1: Try current level (topic) - tests directly linked to this topic
-          const currentFilters = cleanFilters({
-            examId,
-            subjectId,
-            unitId,
-            chapterId,
-            topicId,
-            status: "active",
-          });
-          tests = await fetchPracticeTests(currentFilters);
-
-          // Step 2: If no tests, try children (subtopics under this topic)
-          // Fetch by categoryId to bypass hierarchical filtering, then filter client-side
-          if (!tests || tests.length === 0) {
-            const allCategoryTests = [];
-            for (const category of categories) {
-              const categoryId = category._id || category.id;
-              if (categoryId) {
-                const categoryFilters = cleanFilters({
-                  categoryId,
-                  status: "active",
-                });
-                const categoryTests = await fetchPracticeTests(categoryFilters);
-                if (categoryTests && categoryTests.length > 0) {
-                  allCategoryTests.push(...categoryTests);
-                }
-              }
-            }
-            // Filter to only include tests that are children of this topic (have topicId and subTopicId)
-            tests = allCategoryTests.filter((test) => {
-              const testTopicId = test.topicId?._id || test.topicId;
-              const testSubTopicId = test.subTopicId?._id || test.subTopicId;
-              return (
-                testTopicId &&
-                String(testTopicId) === String(topicId) &&
-                testSubTopicId // Must have subTopicId to be a child
-              );
+        // NEW LOGIC: Fetch all tests for the categories and implement "Smart Priority"
+        // This ensures the student sees everything related, but with perfect sorting.
+        const allTests = [];
+        for (const category of categories) {
+          const categoryId = category._id || category.id;
+          if (categoryId) {
+            const categoryFilters = cleanFilters({
+              categoryId,
+              status: "active",
             });
-          }
-        } else if (chapterId) {
-          // Chapter page: Try chapter first, then children (topics, subtopics)
-          // Step 1: Try current level (chapter) - tests directly linked to this chapter
-          const currentFilters = cleanFilters({
-            examId,
-            subjectId,
-            unitId,
-            chapterId,
-            status: "active",
-          });
-          tests = await fetchPracticeTests(currentFilters);
-
-          // Step 2: If no tests, try children (topics and subtopics under this chapter)
-          // Fetch by categoryId to bypass hierarchical filtering, then filter client-side
-          if (!tests || tests.length === 0) {
-            const allCategoryTests = [];
-            for (const category of categories) {
-              const categoryId = category._id || category.id;
-              if (categoryId) {
-                const categoryFilters = cleanFilters({
-                  categoryId,
-                  status: "active",
-                });
-                const categoryTests = await fetchPracticeTests(categoryFilters);
-                if (categoryTests && categoryTests.length > 0) {
-                  allCategoryTests.push(...categoryTests);
-                }
-              }
-            }
-            // Filter to only include tests that are children of this chapter
-            // (have chapterId and either topicId or subTopicId)
-            tests = allCategoryTests.filter((test) => {
-              const testChapterId = test.chapterId?._id || test.chapterId;
-              const testTopicId = test.topicId?._id || test.topicId;
-              const testSubTopicId = test.subTopicId?._id || test.subTopicId;
-              return (
-                testChapterId &&
-                String(testChapterId) === String(chapterId) &&
-                (testTopicId || testSubTopicId) // Must have topicId or subTopicId to be a child
-              );
-            });
-          }
-        } else if (unitId) {
-          // Unit page: Try unit first, then children (chapters, topics, subtopics)
-          // Step 1: Try current level (unit) - tests directly linked to this unit
-          const currentFilters = cleanFilters({
-            examId,
-            subjectId,
-            unitId,
-            status: "active",
-          });
-          tests = await fetchPracticeTests(currentFilters);
-
-          // Step 2: If no tests, try children (chapters, topics, subtopics under this unit)
-          // Fetch by categoryId to bypass hierarchical filtering, then filter client-side
-          if (!tests || tests.length === 0) {
-            const allCategoryTests = [];
-            for (const category of categories) {
-              const categoryId = category._id || category.id;
-              if (categoryId) {
-                const categoryFilters = cleanFilters({
-                  categoryId,
-                  status: "active",
-                });
-                const categoryTests = await fetchPracticeTests(categoryFilters);
-                if (categoryTests && categoryTests.length > 0) {
-                  allCategoryTests.push(...categoryTests);
-                }
-              }
-            }
-            // Filter to only include tests that are children of this unit
-            // (have unitId and at least one of chapterId/topicId/subTopicId)
-            tests = allCategoryTests.filter((test) => {
-              const testUnitId = test.unitId?._id || test.unitId;
-              const testChapterId = test.chapterId?._id || test.chapterId;
-              const testTopicId = test.topicId?._id || test.topicId;
-              const testSubTopicId = test.subTopicId?._id || test.subTopicId;
-              return (
-                testUnitId &&
-                String(testUnitId) === String(unitId) &&
-                (testChapterId || testTopicId || testSubTopicId) // Must have at least one child level
-              );
-            });
-          }
-        } else if (subjectId) {
-          // Subject page: Show all test categories and papers for that subject
-          // Fetch tests by categoryId to get ALL tests for each category, regardless of hierarchy
-          // First, we already have categories fetched above
-          // Now fetch tests for each category
-          const allTests = [];
-          for (const category of categories) {
-            const categoryId = category._id || category.id;
-            if (categoryId) {
-              const categoryFilters = cleanFilters({
-                categoryId, // Fetch by categoryId directly to bypass hierarchical filtering
-                status: "active",
-              });
-              const categoryTests = await fetchPracticeTests(categoryFilters);
-              if (categoryTests && categoryTests.length > 0) {
-                allTests.push(...categoryTests);
-              }
+            // Fetch by CategoryId ONLY to get all papers in this category across all levels
+            const categoryTests = await fetchPracticeTests(categoryFilters);
+            if (categoryTests && categoryTests.length > 0) {
+              allTests.push(...categoryTests);
             }
           }
-          tests = allTests;
-        } else if (examId) {
-          // Exam page: Show all tests for this exam
-          const filters = cleanFilters({
-            examId,
-            status: "active",
-          });
-          tests = await fetchPracticeTests(filters);
         }
 
-        setPracticeTests(tests);
+        // Calculate relevance priority for each test
+        const getPriority = (test) => {
+          const tUnitId = test.unitId?._id || test.unitId;
+          const tChapterId = test.chapterId?._id || test.chapterId;
+          const tTopicId = test.topicId?._id || test.topicId;
+          const tSubTopicId = test.subTopicId?._id || test.subTopicId;
+
+          const sUnitId = unitId ? String(unitId) : null;
+          const sChapterId = chapterId ? String(chapterId) : null;
+          const sTopicId = topicId ? String(topicId) : null;
+          const sSubTopicId = subTopicId ? String(subTopicId) : null;
+
+          // 1. Specific Sub-topic Page
+          if (sSubTopicId) {
+            if (String(tSubTopicId) === sSubTopicId) return 1; // Direct Subtopic
+            if (String(tTopicId) === sTopicId && !tSubTopicId) return 2; // Parent Topic
+            if (String(tChapterId) === sChapterId && !tTopicId) return 3; // Parent Chapter
+            if (String(tUnitId) === sUnitId && !tChapterId) return 4; // Parent Unit
+            if (String(tUnitId) === sUnitId) return 5; // Related in same Unit subtree
+            return 10; // Other
+          }
+
+          // 2. Topic Page
+          if (sTopicId) {
+            if (String(tTopicId) === sTopicId && !tSubTopicId) return 1; // Direct Topic
+            if (String(tTopicId) === sTopicId && tSubTopicId) return 2; // Child Subtopic
+            if (String(tChapterId) === sChapterId && !tTopicId) return 3; // Parent Chapter
+            if (String(tUnitId) === sUnitId && !tChapterId) return 4; // Parent Unit
+            if (String(tChapterId) === sChapterId) return 5; // Related in same Chapter subtree
+            return 10;
+          }
+
+          // 3. Chapter Page
+          if (sChapterId) {
+            if (String(tChapterId) === sChapterId && !tTopicId && !tSubTopicId) return 1; // Direct Chapter
+            if (String(tChapterId) === sChapterId && (tTopicId || tSubTopicId)) return 2; // Child Topic/Subtopic
+            if (String(tUnitId) === sUnitId && !tChapterId) return 3; // Parent Unit
+            if (String(tUnitId) === sUnitId) return 5; // Related in same Unit
+            return 10;
+          }
+
+          // 4. Unit Page
+          if (sUnitId) {
+            if (String(tUnitId) === sUnitId && !tChapterId && !tTopicId && !tSubTopicId) return 1; // Direct Unit
+            if (String(tUnitId) === sUnitId && (tChapterId || tTopicId || tSubTopicId)) return 2; // Child levels
+            return 5; // Other units in same subject
+          }
+
+          // 5. Subject Page
+          if (subjectId) {
+            if (!tUnitId && !tChapterId && !tTopicId && !tSubTopicId) return 1; // Direct Subject
+            return 2; // Everything else in this subject (Units/Chapters/etc)
+          }
+
+          // 6. Exam Page
+          if (examId) {
+            const tSubjectId = test.subjectId?._id || test.subjectId;
+            if (!tSubjectId) return 1; // Direct Exam paper
+            return 2; // Subject papers
+          }
+
+          return 10;
+        };
+
+        const processedTests = allTests.map((t) => {
+          const priority = getPriority(t);
+          return {
+            ...t,
+            priority,
+            isDirect: priority === 1
+          };
+        });
+
+        setPracticeTests(processedTests);
 
         // Fetch scores after tests are loaded (if authenticated)
-        // This ensures scores are fetched after practiceTests state is updated
         if (typeof window !== "undefined") {
           const token = localStorage.getItem("student_token");
-          if (token && tests.length > 0) {
-            // Use setTimeout to ensure state is updated before fetching
+          if (token && processedTests.length > 0) {
             setTimeout(() => {
               fetchStudentScores();
             }, 100);
@@ -508,7 +430,7 @@ const PracticeTestList = ({
         const grouped = categories
           .map((category) => {
             const categoryId = category._id || category.id;
-            const categoryTests = tests
+            const categoryTests = processedTests
               .filter((test) => {
                 // Handle different categoryId formats
                 let testCategoryId = null;
@@ -546,6 +468,14 @@ const PracticeTestList = ({
                   negativeMarks: test.negativeMarks || DEFAULT_NEGATIVE_MARKS,
                   duration: test.duration || (qCount > 0 ? `${Math.ceil((qCount * DEFAULT_SECONDS_PER_QUESTION) / 60)} Min` : "0 Min")
                 };
+              })
+              .sort((a, b) => {
+                // Primary sort: Priority (Direct match 1, then children 2, others higher)
+                if (a.priority !== b.priority) {
+                  return a.priority - b.priority;
+                }
+                // Secondary sort: Order Number
+                return (a.orderNumber || 999) - (b.orderNumber || 999);
               });
 
             return {
