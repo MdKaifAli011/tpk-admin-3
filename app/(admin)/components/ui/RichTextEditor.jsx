@@ -277,6 +277,39 @@ const RichTextEditor = ({
           editor.setReadOnly(true);
         }
         editor.fire("change");
+
+        // Add click listener to handle editing existing forms/buttons
+        const doc = editor.document;
+        if (doc) {
+          doc.on("click", (evt) => {
+            const element = evt.data.getTarget();
+            const formEmbed = element.getAscendant("span", true);
+
+            if (formEmbed && formEmbed.hasClass("form-embed-inline")) {
+              const formId = formEmbed.getAttribute("data-form-id");
+              const title = formEmbed.getAttribute("data-title");
+              const description = formEmbed.getAttribute("data-description");
+              const buttonText = formEmbed.getAttribute("data-button-text");
+              const buttonColor = formEmbed.getAttribute("data-button-color");
+              const buttonLink = formEmbed.getAttribute("data-button-link");
+              const imageUrl = formEmbed.getAttribute("data-image-url");
+
+              if (formId) {
+                // Populate options from the clicked element
+                setSelectedForm({ formId, settings: { title, description, buttonText, buttonColor, imageUrl, redirectLink: buttonLink } });
+                setInsertOptions({
+                  title: title || "",
+                  description: description || "",
+                  buttonText: buttonText || "Open Form",
+                  buttonColor: buttonColor || "#2563eb",
+                  buttonLink: buttonLink || "",
+                  imageUrl: imageUrl || "",
+                });
+                setShowFormModal(true);
+              }
+            }
+          });
+        }
       });
 
       editor.on("change", () => {
@@ -346,9 +379,9 @@ const RichTextEditor = ({
       title: form.settings?.title || form.formId || "",
       description: form.settings?.description || "",
       buttonText: form.settings?.buttonText || "Open Form",
-      buttonColor: "#2563eb",
-      buttonLink: "",
-      imageUrl: "",
+      buttonColor: form.settings?.buttonColor || "#2563eb",
+      buttonLink: form.settings?.redirectLink || "",
+      imageUrl: form.settings?.imageUrl || "",
     });
   };
 
@@ -374,6 +407,20 @@ const RichTextEditor = ({
 
     const safeButtonColor = sanitizeHexColor(buttonColor);
 
+    const hexToRgb = (hex) => {
+      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+      return result
+        ? {
+          r: parseInt(result[1], 16),
+          g: parseInt(result[2], 16),
+          b: parseInt(result[3], 16),
+        }
+        : { r: 37, g: 99, b: 235 };
+    };
+
+    const rgb = hexToRgb(safeButtonColor);
+    const rgbString = `${rgb.r}, ${rgb.g}, ${rgb.b}`;
+
     const escapeHtml = (str) => {
       if (!str) return "";
       return str
@@ -384,10 +431,40 @@ const RichTextEditor = ({
         .replace(/'/g, "&#39;");
     };
 
-    const buttonStyle = `display: inline-block; padding: 8px 16px; background-color: ${safeButtonColor}; color: #ffffff; border: none; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; vertical-align: middle; font-family: inherit; transition: opacity 0.2s; line-height: normal; margin: 0;`;
-    const buttonHtml = `<button type="button" style="${buttonStyle}" contenteditable="false" readonly disabled>${escapeHtml(
-      buttonText
-    )}</button>`;
+    // Use same style as insertButtonCode
+    const buttonStyle = `
+      display: inline-block;
+      padding: 8px 16px;
+      background-color: ${safeButtonColor};
+      color: #ffffff;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+      text-align: center;
+      transition: all 0.2s ease;
+      font-family: inherit;
+      line-height: 1.5;
+      margin: 2px 4px;
+      box-shadow: 0 2px 4px rgba(${rgbString}, 0.2);
+      vertical-align: middle;
+      white-space: nowrap;
+    `;
+
+    const contentHtml = `
+      <button 
+        type="button"
+        style="${buttonStyle}" 
+        contenteditable="false" 
+        title="Form: ${escapeHtml(title)} (Click to configure)"
+        onmouseover="this.style.backgroundColor='rgba(${rgbString}, 0.9)'; this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 6px rgba(${rgbString}, 0.3)'"
+        onmouseout="this.style.backgroundColor='${safeButtonColor}'; this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(${rgbString}, 0.2)'"
+      >
+         ${escapeHtml(buttonText)}
+      </button>
+    `;
 
     const formCode = `<span class="form-embed-inline" data-form-id="${formId}" data-title="${escapeHtml(
       title
@@ -401,7 +478,7 @@ const RichTextEditor = ({
       buttonLink
     )}" data-image-url="${escapeHtml(
       imageUrl
-    )}" style="display: inline-block; vertical-align: middle; margin: 0 4px; line-height: 1.5;" contenteditable="false">${buttonHtml}</span>`;
+    )}" style="display: inline-block; vertical-align: middle;" contenteditable="false">${contentHtml}</span>`;
 
     editor.insertHtml(formCode);
     setShowFormModal(false);

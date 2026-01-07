@@ -249,12 +249,13 @@ const FormRenderer = ({
         generateVerification();
 
         // Handle redirect or auto-close
-        const delay = buttonLink && buttonLink.trim() ? 1500 : 2000;
+        const redirectUrl = formConfig.settings.redirectLink || buttonLink;
+        const delay = redirectUrl && redirectUrl.trim() ? 1500 : 2000;
         setTimeout(() => {
-          if (buttonLink && buttonLink.trim()) {
+          if (redirectUrl && redirectUrl.trim()) {
             try {
               // Validate URL before redirecting
-              const url = buttonLink.trim();
+              const url = redirectUrl.trim();
               const basePath =
                 process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
               if (url.startsWith("http://") || url.startsWith("https://")) {
@@ -262,7 +263,8 @@ const FormRenderer = ({
                 window.location.href = url;
               } else if (url.startsWith("/")) {
                 // Relative URL starting with / - include basePath
-                window.location.href = `${basePath}${url}`;
+                const finalUrl = url.startsWith(basePath) ? url : `${basePath}${url}`;
+                window.location.href = finalUrl;
               } else {
                 // If no protocol, assume it's a relative URL or add https://
                 window.location.href = url.startsWith("/")
@@ -430,8 +432,12 @@ const FormRenderer = ({
           <div className="hidden lg:block relative bg-gradient-to-br from-purple-500 via-purple-600 to-purple-700 overflow-hidden">
             {/* Use standard img tag to manually handle base path resolution */}
             <img
-              src={resolveImagePath(imageUrl && !imageError ? imageUrl : DEFAULT_FORM_IMAGE)}
-              alt={title || formConfig?.formId || "Form"}
+              src={resolveImagePath(
+                (formConfig.settings.imageUrl || imageUrl) && !imageError
+                  ? formConfig.settings.imageUrl || imageUrl
+                  : DEFAULT_FORM_IMAGE
+              )}
+              alt={title || formConfig.settings.title || formConfig?.formId || "Form"}
               className="absolute inset-0 w-full h-full object-cover object-center"
               style={{
                 margin: "0",
@@ -501,7 +507,20 @@ const FormRenderer = ({
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full sm:flex-1 px-3 py-2 sm:px-4 sm:py-2.5 md:px-5 md:py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold rounded-md sm:rounded-lg text-xs sm:text-sm md:text-base transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transform active:scale-95"
+                    className="w-full sm:flex-1 px-3 py-2 sm:px-4 sm:py-2.5 md:px-5 md:py-3 text-white font-semibold rounded-md sm:rounded-lg text-xs sm:text-sm md:text-base transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transform active:scale-95"
+                    style={{
+                      backgroundColor: formConfig.settings.buttonColor || "#2563eb",
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isSubmitting) {
+                        e.currentTarget.style.filter = "brightness(1.1)";
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isSubmitting) {
+                        e.currentTarget.style.filter = "brightness(1)";
+                      }
+                    }}
                     aria-label={
                       isSubmitting ? "Submitting form" : "Submit form"
                     }

@@ -15,7 +15,10 @@ const FormBuilder = ({ form, onClose }) => {
     settings: {
       title: "",
       description: "",
+      imageUrl: "",
       buttonText: "Submit",
+      buttonColor: "#2563eb",
+      redirectLink: "",
       successMessage:
         "Thank you! Your request has been submitted successfully.",
       modal: true,
@@ -36,7 +39,10 @@ const FormBuilder = ({ form, onClose }) => {
         settings: {
           title: form.settings?.title || form.formId || "",
           description: form.settings?.description || "",
+          imageUrl: form.settings?.imageUrl || "",
           buttonText: form.settings?.buttonText || "Submit",
+          buttonColor: form.settings?.buttonColor || "#2563eb",
+          redirectLink: form.settings?.redirectLink || "",
           successMessage:
             form.settings?.successMessage ||
             "Thank you! Your request has been submitted successfully.",
@@ -58,7 +64,10 @@ const FormBuilder = ({ form, onClose }) => {
         settings: {
           title: "",
           description: "",
+          imageUrl: "",
           buttonText: "Submit",
+          buttonColor: "#2563eb",
+          redirectLink: "",
           successMessage:
             "Thank you! Your request has been submitted successfully.",
           modal: true,
@@ -257,9 +266,8 @@ const FormBuilder = ({ form, onClose }) => {
                   setFormData({ ...formData, formId: e.target.value })
                 }
                 placeholder="e.g., download-form, contact-form"
-                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm ${
-                  errors.formId ? "border-red-300 bg-red-50" : "border-gray-300"
-                }`}
+                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm ${errors.formId ? "border-red-300 bg-red-50" : "border-gray-300"
+                  }`}
                 disabled={!!form}
               />
               {errors.formId && (
@@ -381,6 +389,27 @@ const FormBuilder = ({ form, onClose }) => {
                 />
               </div>
 
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Image URL
+                </label>
+                <input
+                  type="text"
+                  value={formData.settings.imageUrl}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      settings: {
+                        ...formData.settings,
+                        imageUrl: e.target.value,
+                      },
+                    })
+                  }
+                  placeholder="Illustration or image URL for the form"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                />
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -398,6 +427,66 @@ const FormBuilder = ({ form, onClose }) => {
                         },
                       })
                     }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Button Color
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="color"
+                      value={formData.settings.buttonColor}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          settings: {
+                            ...formData.settings,
+                            buttonColor: e.target.value,
+                          },
+                        })
+                      }
+                      className="h-9 w-12 border border-gray-300 rounded cursor-pointer"
+                    />
+                    <input
+                      type="text"
+                      value={formData.settings.buttonColor}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          settings: {
+                            ...formData.settings,
+                            buttonColor: e.target.value,
+                          },
+                        })
+                      }
+                      placeholder="#2563eb"
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Redirect Link
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.settings.redirectLink}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        settings: {
+                          ...formData.settings,
+                          redirectLink: e.target.value,
+                        },
+                      })
+                    }
+                    placeholder="URL to redirect after submission (e.g., /thank-you)"
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                   />
                 </div>

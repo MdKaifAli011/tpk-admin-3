@@ -80,8 +80,12 @@ export async function PUT(request, { params }) {
         title: body.settings.title?.trim() || form.formId || form.settings.title,
         description:
           body.settings.description?.trim() || form.settings.description,
+        imageUrl: body.settings.imageUrl?.trim() || form.settings.imageUrl,
         buttonText:
           body.settings.buttonText?.trim() || form.settings.buttonText,
+        buttonColor: body.settings.buttonColor || form.settings.buttonColor,
+        redirectLink:
+          body.settings.redirectLink?.trim() || form.settings.redirectLink,
         successMessage:
           body.settings.successMessage?.trim() || form.settings.successMessage,
       };

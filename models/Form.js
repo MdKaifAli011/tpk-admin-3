@@ -74,9 +74,21 @@ const formSchema = new mongoose.Schema(
         type: String,
         trim: true,
       },
+      imageUrl: {
+        type: String,
+        trim: true,
+      },
       buttonText: {
         type: String,
         default: "Submit",
+        trim: true,
+      },
+      buttonColor: {
+        type: String,
+        default: "#2563eb", // blue-600
+      },
+      redirectLink: {
+        type: String,
         trim: true,
       },
       successMessage: {

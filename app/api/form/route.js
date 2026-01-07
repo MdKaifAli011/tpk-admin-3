@@ -83,7 +83,10 @@ export async function POST(request) {
       settings: {
         title: body.settings?.title?.trim() || body.formId.trim().toLowerCase(),
         description: body.settings?.description?.trim() || "",
+        imageUrl: body.settings?.imageUrl?.trim() || "",
         buttonText: body.settings?.buttonText?.trim() || "Submit",
+        buttonColor: body.settings?.buttonColor || "#2563eb",
+        redirectLink: body.settings?.redirectLink?.trim() || "",
         successMessage:
           body.settings?.successMessage?.trim() ||
           "Thank you! Your request has been submitted successfully.",
