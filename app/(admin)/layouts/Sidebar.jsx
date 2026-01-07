@@ -18,84 +18,64 @@ import {
 } from "react-icons/fa";
 
 const ALL_MENU_ITEMS = [
-  { name: "Exam Management", href: "/admin/exam", icon: FaClipboardList },
-  { name: "Subject Management", href: "/admin/subject", icon: FaBook },
-  { name: "Unit Management", href: "/admin/unit", icon: FaLayerGroup },
-  { name: "Chapter Management", href: "/admin/chapter", icon: FaRegFolderOpen },
-  { name: "Topic Management", href: "/admin/topic", icon: FaRegFolderOpen },
   {
-    name: "Sub Topic Management",
-    href: "/admin/sub-topic",
-    icon: FaRegFolderOpen,
+    name: "Self Study",
+    icon: FaBook,
+    children: [
+      { name: "Exams", href: "/admin/exam" },
+      { name: "Subjects", href: "/admin/subject" },
+      { name: "Units", href: "/admin/unit" },
+      { name: "Chapters", href: "/admin/chapter" },
+      { name: "Topics", href: "/admin/topic" },
+      { name: "Sub Topics", href: "/admin/sub-topic" },
+      { name: "Definitions", href: "/admin/definitions" },
+    ],
   },
   {
-    name: "Definitions Management",
-    href: "/admin/definitions",
-    icon: FaRegFolderOpen,
-  },
- 
-  {
-    name: "Practice Test Management",
-    href: "/admin/practice",
-    icon: FaRegFolderOpen,
-  },
-  {
-    name: "Lead Management",
-    href: "/admin/lead",
-    icon: FaUserTag,
-    adminOnly: true,
-  },
-  {
-    name: "Student Management",
-    href: "/admin/student",
-    icon: FaUserGraduate,
-    adminOnly: true,
-  },
-  {
-    name: "Form Management",
-    href: "/admin/form",
+    name: "Test Papers",
     icon: FaClipboardList,
-    adminOnly: true,
-  },
-  {
-    name: "User Role Management",
-    href: "/admin/user-role",
-    icon: FaUserTag,
-    adminOnly: true,
-  },
-  {
-    name: "Blog Management",
-    href: "/admin/blog",
-    icon: FaNewspaper,
     children: [
-      { name: "Blog List", href: "/admin/blog" },
-      { name: "Blog Categories", href: "/admin/blog-category" },
-      { name: "Blog Comments", href: "/admin/blog-comment" },
+      { name: "Exams", href: "/admin/practice" },
     ],
   },
   {
-    name: "Discussion Management",
-    href: "/admin/discussion",
-    icon: FaComments,
-    children: [
-      { name: "Threads", href: "/admin/discussion" },
-    ],
-  },
-  {
-    name: "Download Management",
-    href: "/admin/download",
+    name: "Download",
     icon: FaRegFolderOpen,
     children: [
-      { name: "Folders", href: "/admin/download" },
-      { name: "Subfolders", href: "/admin/download/subfolder" },
+      { name: "Folder", href: "/admin/download" },
+      { name: "Sub Folder", href: "/admin/download/subfolder" },
       { name: "Files", href: "/admin/download/file" },
     ],
   },
-   {
-    name: "Miscellaneous",
-    href: "/admin/bulk-import",
-    icon: FaLayerGroup, // Using a distinct icon if available, or FaLayerGroup for now
+  {
+    name: "Blog",
+    icon: FaNewspaper,
+    children: [
+      { name: "Folder", href: "/admin/blog" },
+      { name: "Sub Folder", href: "/admin/blog-category" },
+      { name: "Files", href: "/admin/blog-comment" },
+    ],
+  },
+  {
+    name: "Discussion",
+    icon: FaComments,
+    children: [
+      { name: "Folder", href: "/admin/discussion" },
+      { name: "Sub Folder", href: "/admin/discussion/subfolder" },
+      { name: "Files", href: "/admin/discussion/file" },
+    ],
+  },
+  {
+    name: "Admin",
+    icon: FaUser,
     adminOnly: true,
+    children: [
+      { name: "Lead Management", href: "/admin/lead" },
+      { name: "Students", href: "/admin/student" },
+      { name: "Forms", href: "/admin/form" },
+      { name: "Role Management", href: "/admin/user-role" },
+      { name: "Import Self Study Data", href: "/admin/bulk-import" },
+    ],
   },
 ];
 
