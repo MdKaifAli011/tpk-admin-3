@@ -209,7 +209,7 @@ const ChapterPage = async ({ params }) => {
         unitId={unit._id}
       />
       <div className="space-y-4">
-    {/* Premium Educational Header */}
+{/* Premium Educational Header */}
 <section
   className="
     rounded-xl
@@ -219,21 +219,21 @@ const ChapterPage = async ({ params }) => {
     shadow-[0_2px_12px_rgba(120,90,200,0.08)]
   "
 >
-  <div className="flex items-start sm:items-center justify-between w-full gap-3 sm:gap-4">
+  <div className="flex items-start sm:items-center justify-between w-full gap-3 sm:gap-4 min-w-0">
 
     {/* LEFT — Unit Title + Breadcrumb */}
-    <div className="flex flex-col min-w-0 leading-tight flex-1">
+    <div className="flex flex-col min-w-0 flex-1 leading-tight">
 
       {/* Unit Name */}
       <h1
         className="
           text-base sm:text-lg md:text-xl font-bold text-indigo-900
           truncate
-          max-w-[180px] sm:max-w-[260px] md:max-w-[320px]
+          w-full
         "
-        title={unit.name}
+        title={chapter.name}
       >
-        {unit.name}
+        {chapter.name}
       </h1>
 
       {/* Breadcrumb */}
@@ -241,9 +241,9 @@ const ChapterPage = async ({ params }) => {
         className="
           text-[10px] sm:text-xs text-gray-600 mt-0.5
           truncate
-          max-w-[160px] sm:max-w-[260px] md:max-w-[350px]
+          w-full
         "
-        title={`${fetchedExam.name} > {subject.name} > ${unit.name}`}
+        title={`${fetchedExam.name} > ${subject.name} > ${unit.name}`}
       >
         {fetchedExam.name} &gt; {subject.name} &gt; {unit.name}
       </p>
@@ -257,8 +257,10 @@ const ChapterPage = async ({ params }) => {
         initialProgress={0}
       />
     </div>
+
   </div>
 </section>
+
 
 
 
