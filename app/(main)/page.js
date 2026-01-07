@@ -203,22 +203,14 @@ function HomepageContent() {
           HERO SECTION (PREMIUM & CONVERSION-FOCUSED)
       ======================================================= */}
       <section className="relative overflow-hidden">
-        {/* Animated Background Gradient */}
+      
         
-        {/* Subtle Pattern Overlay */}
-        <div
-          className="absolute inset-0 opacity-[0.03] pointer-events-none"
-          style={{
-            backgroundImage: `radial-gradient(circle at 1px 1px, rgba(0,0,0,0.25) 1px, transparent 0)`,
-            backgroundSize: "18px 18px",
-          }}
-        />
-
-        <div className="relative container mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-28">
+        
+        <div className="relative container mx-auto px-1 sm:px-2 lg:px-2 pt-3 ">
           <div className="text-center max-w-5xl mx-auto space-y-8">
             {/* Trust Badge */}
-            <div className="inline-flex items-center gap-3 bg-white/90 backdrop-blur-sm shadow-lg border border-gray-200 px-6 py-3 rounded-full font-semibold text-sm">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-indigo-600 to-pink-500 flex items-center justify-center">
+            <div className="inline-flex items-center gap-3 bg-white/90 backdrop-blur-sm shadow-sm border border-gray-200 px-3 py-2 rounded-full font-normal text-xs">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-r from-indigo-600 to-pink-500 flex items-center justify-center">
                 <FaRocket className="text-white text-sm" />
               </div>
               <span className="text-gray-900">
@@ -232,7 +224,7 @@ function HomepageContent() {
             </div>
 
             {/* Main Headline - Value Proposition */}
-            <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold leading-[1.1] text-gray-900">
+            <h1 className="text-xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold leading-[1.1] text-gray-900">
               Your{" "}
               <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 bg-clip-text text-transparent">
                 Exam
@@ -242,7 +234,7 @@ function HomepageContent() {
             </h1>
 
             {/* Subheadline - Benefit-Focused */}
-            <p className="text-xl sm:text-2xl text-gray-700 max-w-4xl mx-auto leading-relaxed font-medium">
+            <p className="text-lg sm:text-xl text-gray-700 max-w-4xl mx-auto leading-relaxed font-medium">
               Master concepts, track progress, and ace competitive exams with our self paced preparation platform designed for students.
             </p>
 
@@ -250,10 +242,10 @@ function HomepageContent() {
             <div className="flex flex-col sm:flex-row justify-center gap-4 pt-4">
               <Link
                 href="#exams"
-                className="group inline-flex items-center justify-center gap-3 px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 text-white rounded-xl font-semibold text-sm sm:text-base shadow-xl hover:shadow-2xl hover:scale-105 transition-all"
+                className="group inline-flex items-center justify-center gap-3 px-2 sm:px-4 py-2 sm:py-3 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 text-white rounded-xl font-semibold text-sm sm:text-base shadow-md hover:shadow-lg hover:scale-105 transition-all"
               >
                 Start Free Learning Journey
-                <FaArrowRight className="text-sm group-hover:translate-x-1 transition-transform" />
+                <FaArrowRight className="text-xs group-hover:translate-x-1 transition-transform" />
               </Link>
 
              
