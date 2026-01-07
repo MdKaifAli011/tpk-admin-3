@@ -288,12 +288,7 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen }) => {
                 {navLinks.map((link) => (
                   <div
                     key={link.key}
-                    // Extend hover hit-area below the button so the cursor can travel
-                    // into the absolutely-positioned mega menu without triggering onMouseLeave.
-                    // We also add an invisible "hover bridge" (pseudo-element) that sits
-                    // between the button (top-full) and the dropdown (which uses mt-2/mt-3),
-                    // preventing accidental onMouseLeave when crossing the gap.
-                    className="relative mega-menu-container pb-4 after:content-[''] after:absolute after:left-0 after:right-0 after:top-full after:h-4 shrink-0"
+                    className="relative mega-menu-container  after:content-[''] after:absolute after:left-0 after:right-0 after:top-full after:h-4 shrink-0"
                     onMouseEnter={() => handleMegaMenuHover(link.key)}
                     onMouseLeave={handleMegaMenuLeave}
                   >
@@ -304,7 +299,7 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen }) => {
                           activeMegaMenu === link.key ? null : link.key
                         )
                       }
-                      className="flex items-center justify-center gap-1 px-2 xl:px-3 py-2 text-xs xl:text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors group whitespace-nowrap"
+                      className="flex items-center justify-center gap-1 px-2 xl:px-3 py-2 rounded-lg text-xs xl:text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors group whitespace-nowrap"
                     >
                       <span className="truncate">{link.name}</span>
                       <FaChevronDown className="text-xs text-gray-400 group-hover:text-blue-600 transition-colors shrink-0" />
