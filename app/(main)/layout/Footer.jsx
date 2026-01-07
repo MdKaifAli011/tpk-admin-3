@@ -69,7 +69,7 @@ const Footer = () => {
               href="https://www.testprepkart.com/contact"
               className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 text-white rounded-lg hover:from-indigo-700 hover:via-purple-700 hover:to-pink-600 transition-all shadow-md hover:shadow-lg"
             >
-              <span>Contact With Us</span>
+              <span>Contact Us</span>
               <FaArrowRight className="text-sm" />
             </Link>
           </div>
