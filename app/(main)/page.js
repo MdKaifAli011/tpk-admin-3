@@ -203,9 +203,9 @@ function HomepageContent() {
           HERO SECTION (PREMIUM & CONVERSION-FOCUSED)
       ======================================================= */}
       <section className="relative overflow-hidden">
-      
-        
-        
+
+
+
         <div className="relative container mx-auto px-1 sm:px-2 lg:px-2 pt-3 ">
           <div className="text-center max-w-5xl mx-auto space-y-8">
             {/* Trust Badge */}
@@ -214,7 +214,7 @@ function HomepageContent() {
                 <FaRocket className="text-white text-sm" />
               </div>
               <span className="text-gray-900">
-               Trusted by 50,000+ NRI and Indian Students Worldwide
+                Trusted by 50,000+ NRI and Indian Students Worldwide
               </span>
               <div className="flex items-center gap-1">
                 {[...Array(5)].map((_, i) => (
@@ -248,11 +248,11 @@ function HomepageContent() {
                 <FaArrowRight className="text-xs group-hover:translate-x-1 transition-transform" />
               </Link>
 
-             
+
             </div>
 
             {/* Social Proof - Stats */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 pt-12 max-w-4xl mx-auto">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-6  max-w-4xl mx-auto">
               <Stat
                 number="50K+"
                 label="Active Students"
@@ -340,14 +340,14 @@ function HomepageContent() {
       ======================================================= */}
       <section
         id="exams"
-        className="relative bg-gradient-to-b from-gray-50 to-white py-24"
+        className="relative "
       >
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="">
           <div className="text-center mb-16">
             <div className="inline-block px-4 py-2 bg-purple-100 text-purple-700 rounded-full text-sm font-semibold mb-4">
               Get Started Today
             </div>
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+            <h2 className="text-xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-4">
               Choose Your Exam Path
             </h2>
             <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
@@ -356,7 +356,7 @@ function HomepageContent() {
             </p>
           </div>
 
-          <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 p-10 md:p-12">
+          <div className="">
             {loading ? (
               <div className="flex flex-wrap justify-center items-start gap-4 sm:gap-6 lg:gap-8">
                 {[...Array(4)].map((_, i) => (
@@ -368,11 +368,20 @@ function HomepageContent() {
             ) : exams.length > 0 ? (
               <div className="flex flex-wrap justify-center items-start gap-4 sm:gap-6 lg:gap-8">
                 {exams.slice(0, 8).map((exam) => (
-                  <div key={exam._id} className="w-full sm:w-[calc(50%-0.5rem)] md:w-[calc(50%-0.75rem)] lg:w-[calc(33.333%-1.33rem)] xl:w-[calc(25%-1.5rem)] max-w-[280px]">
+                  <div
+                    key={exam._id}
+                    className="
+        w-full
+        sm:w-[calc(50%-0.75rem)]
+        lg:w-[calc(33.333%-1rem)]
+        max-w-[280px]
+      "
+                  >
                     <ExamCard exam={exam} />
                   </div>
                 ))}
               </div>
+
             ) : (
               <p className="text-center text-sm sm:text-base text-gray-500 py-12">
                 {PLACEHOLDERS.NO_DATA}

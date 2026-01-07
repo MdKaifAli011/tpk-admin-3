@@ -65,7 +65,13 @@ const ExamTable = ({ exams, onEdit, onDelete, onView, onToggleStatus }) => {
               <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Exam Details
               </th>
-              <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-40">
+              <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
+                Preview
+              </th>
+              <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
+                Details
+              </th>
+              <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
                 Content
               </th>
               <th className="px-2 py-1 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
@@ -77,45 +83,60 @@ const ExamTable = ({ exams, onEdit, onDelete, onView, onToggleStatus }) => {
             {exams.map((exam, index) => (
               <tr
                 key={exam._id || exam.id || index}
-                className={`hover:bg-gray-50 transition-colors ${
-                  exam.status === "inactive" ? "opacity-60" : ""
-                }`}
+                className={`hover:bg-gray-50 transition-colors ${exam.status === "inactive" ? "opacity-60" : ""
+                  }`}
               >
                 <td className="px-3 py-2 whitespace-nowrap">
                   <div className="flex items-center gap-2">
                     <span
                       onClick={() => handleExamClick(exam)}
-                      className={`text-sm font-medium truncate cursor-pointer hover:text-blue-600 transition-colors ${
-                        exam.status === "inactive"
-                          ? "text-gray-500 line-through"
-                          : "text-gray-900"
-                      }`}
+                      className={`text-sm font-medium truncate cursor-pointer hover:text-blue-600 transition-colors ${exam.status === "inactive"
+                        ? "text-gray-500 line-through"
+                        : "text-gray-900"
+                        }`}
                     >
                       {exam.name}
                     </span>
                     <span
-                      className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                        exam.status === "active"
-                          ? "bg-green-100 text-green-800"
-                          : exam.status === "inactive"
+                      className={`px-2 py-0.5 rounded-full text-xs font-medium ${exam.status === "active"
+                        ? "bg-green-100 text-green-800"
+                        : exam.status === "inactive"
                           ? "bg-red-100 text-red-800"
                           : exam.status === "draft"
-                          ? "bg-yellow-100 text-yellow-800"
-                          : "bg-gray-100 text-gray-800"
-                      }`}
+                            ? "bg-yellow-100 text-yellow-800"
+                            : "bg-gray-100 text-gray-800"
+                        }`}
                     >
                       {(exam.status || "active").charAt(0).toUpperCase() +
                         (exam.status || "active").slice(1)}
                     </span>
                   </div>
                 </td>
-                <td className="px-2 py-1 whitespace-nowrap w-40">
+                <td className="px-2 py-1 whitespace-nowrap w-24">
+                  {exam.image ? (
+                    <div className="w-8 h-8 rounded border border-gray-200 overflow-hidden bg-gray-50 shadow-sm">
+                      <img
+                        src={exam.image}
+                        alt=""
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <span className="text-[10px] text-gray-400">No Image</span>
+                  )}
+                </td>
+                <td className="px-2 py-1 whitespace-nowrap w-24">
+                  <span className={`text-xs ${exam.description?.length > 0 ? "text-indigo-600 font-medium" : "text-gray-400"
+                    }`}>
+                    {exam.description?.length || 0} items
+                  </span>
+                </td>
+                <td className="px-2 py-1 whitespace-nowrap w-32">
                   <span
-                    className={`text-sm ${
-                      exam.contentInfo?.hasContent
-                        ? "text-gray-700"
-                        : "text-gray-400 italic"
-                    }`}
+                    className={`text-sm ${exam.contentInfo?.hasContent
+                      ? "text-gray-700"
+                      : "text-gray-400 italic"
+                      }`}
                   >
                     {formatContentDate(exam.contentInfo)}
                   </span>
@@ -200,43 +221,47 @@ const ExamTable = ({ exams, onEdit, onDelete, onView, onToggleStatus }) => {
         {exams.map((exam, index) => (
           <div
             key={exam._id || exam.id || index}
-            className={`p-1.5 hover:bg-gray-50 transition-colors ${
-              exam.status === "inactive" ? "opacity-60" : ""
-            }`}
+            className={`p-1.5 hover:bg-gray-50 transition-colors ${exam.status === "inactive" ? "opacity-60" : ""
+              }`}
           >
             <div className="flex items-start justify-between">
               <div className="flex-1 min-w-0">
-                <h3
-                  onClick={() => handleExamClick(exam)}
-                  className={`text-sm font-semibold mb-1 cursor-pointer hover:text-blue-600 transition-colors ${
-                    exam.status === "inactive"
-                      ? "text-gray-500 line-through"
-                      : "text-gray-900"
-                  }`}
-                >
-                  {exam.name}
-                </h3>
+                <div className="flex items-center gap-3 mb-2">
+                  {exam.image && (
+                    <div className="w-12 h-12 rounded border border-gray-200 overflow-hidden bg-gray-50 flex-shrink-0 shadow-sm">
+                      <img src={exam.image} alt="" className="w-full h-full object-cover" />
+                    </div>
+                  )}
+                  <div>
+                    <h3
+                      onClick={() => handleExamClick(exam)}
+                      className={`text-sm font-semibold cursor-pointer hover:text-blue-600 transition-colors ${exam.status === "inactive" ? "text-gray-500 line-through" : "text-gray-900"
+                        }`}
+                    >
+                      {exam.name}
+                    </h3>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className={`text-[10px] ${exam.description?.length > 0 ? "text-indigo-600 font-medium" : "text-gray-400"
+                        }`}>
+                        {exam.description?.length || 0} highlights
+                      </span>
+                    </div>
+                  </div>
+                </div>
                 <div className="flex items-center gap-1.5 flex-wrap">
                   <span
-                    className={`px-2 py-0.5 rounded-full text-sm font-medium ${
-                      exam.status === "active"
+                    className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${exam.status === "active"
                         ? "bg-green-100 text-green-800"
                         : exam.status === "inactive"
-                        ? "bg-red-100 text-red-800"
-                        : exam.status === "draft"
-                        ? "bg-yellow-100 text-yellow-800"
-                        : "bg-gray-100 text-gray-800"
-                    }`}
+                          ? "bg-red-100 text-red-800"
+                          : "bg-gray-100 text-gray-800"
+                      }`}
                   >
-                    {(exam.status || "active").charAt(0).toUpperCase() +
-                      (exam.status || "active").slice(1)}
+                    {(exam.status || "active").toUpperCase()}
                   </span>
                   <span
-                    className={`text-sm ${
-                      exam.contentInfo?.hasContent
-                        ? "text-gray-600"
-                        : "text-gray-400 italic"
-                    }`}
+                    className={`text-[10px] ${exam.contentInfo?.hasContent ? "text-gray-600" : "text-gray-400 italic"
+                      }`}
                   >
                     Content: {formatContentDate(exam.contentInfo)}
                   </span>

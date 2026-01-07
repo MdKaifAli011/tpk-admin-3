@@ -19,27 +19,37 @@ const examSchema = new mongoose.Schema(
       type: Number,
       required: true,
       min: 1,
+      index: true,
     },
     status: {
       type: String,
       enum: ["active", "inactive", "draft"],
       default: "active",
     },
+    image: {
+      type: String, // URL to the image
+      trim: true,
+    },
+    description: {
+      type: [String], // Array of up to 4 description items
+      validate: [
+        (val) => val.length <= 4,
+        "{PATH} exceeds the limit of 4 items",
+      ],
+      default: [],
+    },
   },
   { timestamps: true }
 );
 
-// Index for slug
-examSchema.index({ slug: 1 });
-
-// Index for orderNumber (for sorting)
-examSchema.index({ orderNumber: 1 });
+// No explicit index for slug needed as unique: true already creates one
+// orderNumber index is handled inline above
 
 // Pre-save hook to auto-generate slug
 examSchema.pre("save", async function (next) {
   if (this.isModified("name") || this.isNew) {
     const baseSlug = createSlug(this.name);
-    
+
     // Check if slug exists (excluding current document for updates)
     const checkExists = async (slug, excludeId) => {
       const query = { slug };
@@ -49,7 +59,7 @@ examSchema.pre("save", async function (next) {
       const existing = await mongoose.models.Exam.findOne(query);
       return !!existing;
     };
-    
+
     this.slug = await generateUniqueSlug(
       baseSlug,
       checkExists,
@@ -97,10 +107,10 @@ examSchema.pre("findOneAndDelete", async function () {
       // Step 2: Find practice subcategories (depends on practiceCategoryIds)
       const practiceSubCategories = practiceCategoryIds.length > 0
         ? await PracticeSubCategory.find({
-        categoryId: { $in: practiceCategoryIds },
-          })
-            .select("_id")
-            .lean()
+          categoryId: { $in: practiceCategoryIds },
+        })
+          .select("_id")
+          .lean()
         : [];
       const practiceSubCategoryIds = practiceSubCategories.map((sc) => sc._id);
 

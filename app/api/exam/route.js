@@ -22,7 +22,7 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const statusFilterParam = searchParams.get("status") || STATUS.ACTIVE;
     const statusFilter = statusFilterParam.toLowerCase();
-    
+
     // Allow public access for active exams only (for student registration)
     // Require authentication for inactive/all exams (admin access)
     if (statusFilter !== STATUS.ACTIVE) {
@@ -65,7 +65,7 @@ export async function GET(request) {
         .sort({ orderNumber: 1, createdAt: -1 })
         .skip(skip)
         .limit(limit)
-        .select("name slug status orderNumber createdAt")
+        .select("name slug status orderNumber image description createdAt")
         .lean()
         .exec(),
     ]);
@@ -168,12 +168,24 @@ export async function POST(request) {
       orderNumber = maxOrderExam?.orderNumber ? maxOrderExam.orderNumber + 1 : 1;
     }
 
+    // Debug logging
+    console.log("Creating Exam with payload:", {
+      name: examName,
+      status: body.status,
+      image: body.image,
+      description: body.description
+    });
+
     // Create new exam
     const newExam = await Exam.create({
       name: examName,
       status: body.status || STATUS.ACTIVE,
       orderNumber: orderNumber,
+      image: body.image || "",
+      description: body.description || [],
     });
+
+    console.log("Exam created in DB:", newExam);
 
     // Clear cache when new exam is created
     cacheManager.clear("exams-");
