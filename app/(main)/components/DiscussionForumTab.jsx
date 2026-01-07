@@ -431,7 +431,7 @@ const ThreadDetail = ({ slug, onBack, guestIdentity }) => {
       if (isApproved === false || (guestIdentity.id && isApproved === undefined)) {
         setSuccessContent({
           title: "Waiting for Approval",
-          message: "thread is not aproved please wait for aproved by modrate teams or admin teams"
+          message: "Your post will be submitted for approval to the moderator. Once it is active, it will be shown in the thread"
         });
       } else {
         setSuccessContent({
