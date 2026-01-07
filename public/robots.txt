@@ -1,11 +1,9 @@
 User-agent: *
-Allow: /
+Allow: /self-study/
+
+# Block internal / sensitive routes
+Disallow: /self-study/admin/
+Disallow: /self-study/api/
 
 # Sitemap
-Sitemap: https://yourdomain.com/sitemap.xml
-
-# Disallow admin routes
-User-agent: *
-Disallow: /admin/
-Disallow: /api/
-
+Sitemap: https://yourdomain.com/self-study/sitemap.xml
