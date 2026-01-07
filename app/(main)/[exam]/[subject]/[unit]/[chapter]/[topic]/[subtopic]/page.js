@@ -42,10 +42,10 @@ export const revalidate = 0;
  */
 export async function generateMetadata({ params, searchParams }) {
   const { exam: examSlug, subject: subjectSlug, unit: unitSlug, chapter: chapterSlug, topic: topicSlug, subtopic: subtopicSlug } = await params;
-  
+
   // Pages receive searchParams correctly in Next.js App Router
   const resolvedSearchParams = await extractSearchParams(searchParams);
-  
+
   if (process.env.NODE_ENV === "development") {
     logger.debug("Subtopic Page - searchParams:", searchParams);
     logger.debug("Subtopic Page - Resolved searchParams:", resolvedSearchParams);
@@ -53,7 +53,7 @@ export async function generateMetadata({ params, searchParams }) {
 
   try {
     const { fetchExamById, fetchSubjectById, fetchUnitById, fetchChapterById, fetchTopicById, fetchSubTopicById, fetchSubTopicDetailsById, fetchSubjectsByExam, fetchUnitsBySubject, fetchChaptersByUnit, fetchTopicsByChapter, fetchSubTopicsByTopic, findByIdOrSlug, createSlug } = await import("../../../../../../lib/api");
-    
+
     const exam = await fetchExamById(examSlug).catch(() => null);
     if (!exam) return { title: `${subtopicSlug || "Subtopic"} | TestPrepKart` };
 
@@ -267,8 +267,8 @@ const SubTopicPage = async ({ params }) => {
         itemId={subTopic._id}
       />
       <div className="space-y-4">
-      {/* Premium Educational Header */}
-<section
+        {/* Premium Educational Header */}
+    <section
   className="
     rounded-xl
     p-3 sm:p-4
@@ -277,17 +277,17 @@ const SubTopicPage = async ({ params }) => {
     shadow-[0_2px_12px_rgba(120,90,200,0.08)]
   "
 >
-  <div className="flex items-start sm:items-center justify-between w-full gap-3 sm:gap-4">
+  <div className="flex items-start sm:items-center justify-between w-full gap-3 sm:gap-4 min-w-0">
 
     {/* LEFT — Subtopic Title + Breadcrumb */}
-    <div className="flex flex-col min-w-0 leading-tight flex-1">
+    <div className="flex flex-col min-w-0 flex-1 leading-tight">
 
       {/* Subtopic Name */}
       <h1
         className="
           text-base sm:text-lg md:text-xl font-bold text-indigo-900
           truncate
-          max-w-[180px] sm:max-w-[260px] md:max-w-[320px]
+          w-full
         "
         title={subTopic.name}
       >
@@ -299,7 +299,7 @@ const SubTopicPage = async ({ params }) => {
         className="
           text-[10px] sm:text-xs text-gray-600 mt-0.5
           truncate
-          max-w-[160px] sm:max-w-[260px] md:max-w-[360px]
+          w-full
         "
         title={`${fetchedExam.name} > ${subject.name} > ${unit.name} > ${chapter.name} > ${topic.name} > ${subTopic.name}`}
       >
@@ -307,7 +307,7 @@ const SubTopicPage = async ({ params }) => {
       </p>
     </div>
 
-    {/* RIGHT — UNIT Progress */}
+    {/* RIGHT — Unit Progress */}
     <div className="shrink-0 ml-auto">
       <UnitProgressClient
         unitId={unit._id}
@@ -315,8 +315,10 @@ const SubTopicPage = async ({ params }) => {
         initialProgress={0}
       />
     </div>
+
   </div>
 </section>
+
 
 
         {/* Tabs */}

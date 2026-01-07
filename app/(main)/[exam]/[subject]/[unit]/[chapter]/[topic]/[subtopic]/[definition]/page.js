@@ -286,17 +286,17 @@ const DefinitionPage = async ({ params }) => {
     shadow-[0_2px_12px_rgba(120,90,200,0.08)]
   "
 >
-  <div className="flex items-start md:items-center justify-between w-full gap-3 sm:gap-4">
+  <div className="flex items-start md:items-center justify-between w-full gap-3 sm:gap-4 min-w-0">
 
     {/* LEFT — Definition Title + Breadcrumb */}
-    <div className="flex flex-col min-w-0 leading-tight flex-1">
+    <div className="flex flex-col min-w-0 flex-1 leading-tight">
 
       {/* Definition Name */}
       <h1
         className="
           text-base sm:text-lg md:text-xl font-bold text-indigo-900
           truncate
-          max-w-[180px] sm:max-w-[260px] md:max-w-[320px]
+          w-full
         "
         title={definition.name}
       >
@@ -308,7 +308,7 @@ const DefinitionPage = async ({ params }) => {
         className="
           text-[10px] sm:text-xs text-gray-600 mt-0.5
           truncate
-          max-w-[160px] sm:max-w-[260px] md:max-w-[380px]
+          w-full
         "
         title={`${fetchedExam.name} > ${subject.name} > ${unit.name} > ${chapter.name} > ${topic.name} > ${subTopic.name} > ${definition.name}`}
       >
@@ -316,7 +316,7 @@ const DefinitionPage = async ({ params }) => {
       </p>
     </div>
 
-    {/* RIGHT — UNIT Progress */}
+    {/* RIGHT — Unit Progress */}
     <div className="shrink-0 ml-auto">
       <UnitProgressClient
         unitId={unit._id}

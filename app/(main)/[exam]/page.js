@@ -120,7 +120,7 @@ const ExamPage = async ({ params }) => {
   return (
     <div className="space-y-4">
       
-      <section
+<section
   className="
     rounded-xl
     p-3 sm:p-4
@@ -129,15 +129,16 @@ const ExamPage = async ({ params }) => {
     shadow-[0_2px_12px_rgba(120,90,200,0.08)]
   "
 >
-  <div className="flex items-start md:items-center justify-between w-full gap-3 sm:gap-4">
+  <div className="flex items-start md:items-center justify-between w-full gap-3 sm:gap-4 min-w-0">
 
     {/* LEFT — Exam Title + Description */}
-    <div className="flex flex-col min-w-0 leading-tight flex-1">
+    <div className="flex flex-col min-w-0 flex-1 leading-tight">
+
       <h1
         className="
           text-lg sm:text-xl font-bold text-indigo-900
           truncate
-          max-w-[180px] sm:max-w-[250px] md:max-w-[320px]
+          w-full
         "
         title={`${exam.name} Preparation`}
       >
@@ -148,7 +149,7 @@ const ExamPage = async ({ params }) => {
         className="
           text-[10px] sm:text-xs text-gray-600 mt-0.5
           truncate
-          max-w-[160px] sm:max-w-[230px] md:max-w-[300px]
+          w-full
         "
         title={`Smart study tools for your ${exam.name} exam.`}
       >

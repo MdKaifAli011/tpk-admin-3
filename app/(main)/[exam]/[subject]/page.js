@@ -151,15 +151,16 @@ const SubjectPage = async ({ params }) => {
     shadow-[0_2px_12px_rgba(100,70,200,0.08)]
   "
 >
-  <div className="flex items-start sm:items-center justify-between w-full gap-3 sm:gap-4">
+  <div className="flex items-start sm:items-center justify-between w-full gap-3 sm:gap-4 min-w-0">
 
     {/* LEFT — Title + Breadcrumb */}
     <div className="flex flex-col min-w-0 flex-1">
+
       <h1
         className="
           text-base sm:text-lg md:text-xl font-bold text-indigo-900
           truncate
-          max-w-[180px] sm:max-w-[260px] md:max-w-[320px]
+          w-full
         "
         title={subject.name}
       >
@@ -170,7 +171,7 @@ const SubjectPage = async ({ params }) => {
         className="
           text-[10px] sm:text-xs text-gray-600 mt-0.5
           truncate
-          max-w-[160px] sm:max-w-[220px]
+          w-full
         "
         title={`${fetchedExam.name} > ${subject.name}`}
       >
@@ -178,7 +179,7 @@ const SubjectPage = async ({ params }) => {
       </p>
     </div>
 
-    {/* RIGHT — Progress Block (SubjectProgressClient) */}
+    {/* RIGHT — Progress Block */}
     <div className="shrink-0 ml-auto">
       <SubjectProgressClient
         subjectId={subject._id}
@@ -187,6 +188,7 @@ const SubjectPage = async ({ params }) => {
         initialProgress={0}
       />
     </div>
+
   </div>
 </section>
 

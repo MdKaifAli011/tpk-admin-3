@@ -40,10 +40,10 @@ export const revalidate = 0;
  */
 export async function generateMetadata({ params, searchParams }) {
   const { exam: examSlug, subject: subjectSlug, unit: unitSlug, chapter: chapterSlug, topic: topicSlug } = await params;
-  
+
   // Pages receive searchParams correctly in Next.js App Router
   const resolvedSearchParams = await extractSearchParams(searchParams);
-  
+
   if (process.env.NODE_ENV === "development") {
     logger.debug("Topic Page - searchParams:", searchParams);
     logger.debug("Topic Page - Resolved searchParams:", resolvedSearchParams);
@@ -51,7 +51,7 @@ export async function generateMetadata({ params, searchParams }) {
 
   try {
     const { fetchExamById, fetchSubjectById, fetchUnitById, fetchChapterById, fetchTopicById, fetchTopicDetailsById, fetchSubjectsByExam, fetchUnitsBySubject, fetchChaptersByUnit, fetchTopicsByChapter, findByIdOrSlug, createSlug } = await import("../../../../../lib/api");
-    
+
     const exam = await fetchExamById(examSlug).catch(() => null);
     if (!exam) return { title: `${topicSlug || "Topic"} | TestPrepKart` };
 
@@ -240,56 +240,57 @@ const TopicPage = async ({ params }) => {
         itemId={topic._id}
       />
       <div className="space-y-4">
-      {/* Premium Educational Header */}
-<section
-  className="
+        {/* Premium Educational Header */}
+        <section
+          className="
     rounded-xl
     p-3 sm:p-4
     bg-gradient-to-br from-indigo-50 via-white to-purple-50
     border border-indigo-100/60
     shadow-[0_2px_12px_rgba(120,90,200,0.08)]
   "
->
-  <div className="flex items-start sm:items-center justify-between w-full gap-3 sm:gap-4">
+        >
+          <div className="flex items-start sm:items-center justify-between w-full gap-3 sm:gap-4 min-w-0">
 
-    {/* LEFT — Topic Title + Breadcrumb */}
-    <div className="flex flex-col min-w-0 leading-tight flex-1">
+            {/* LEFT — Topic Title + Breadcrumb */}
+            <div className="flex flex-col min-w-0 flex-1 leading-tight">
 
-      {/* Topic Name */}
-      <h1
-        className="
+              {/* Topic Name */}
+              <h1
+                className="
           text-base sm:text-lg md:text-xl font-bold text-indigo-900
           truncate
-          max-w-[180px] sm:max-w-[260px] md:max-w-[320px]
+          w-full
         "
-        title={topic.name}
-      >
-        {topic.name}
-      </h1>
+                title={topic.name}
+              >
+                {topic.name}
+              </h1>
 
-      {/* Breadcrumb */}
-      <p
-        className="
+              {/* Breadcrumb */}
+              <p
+                className="
           text-[10px] sm:text-xs text-gray-600 mt-0.5
           truncate
-          max-w-[160px] sm:max-w-[260px] md:max-w-[350px]
+          w-full
         "
-        title={`${fetchedExam.name} > ${subject.name} > ${unit.name} > ${chapter.name} > ${topic.name}`}
-      >
-        {fetchedExam.name} &gt; {subject.name} &gt; {unit.name} &gt; {chapter.name} &gt; {topic.name}
-      </p>
-    </div>
+                title={`${fetchedExam.name} > ${subject.name} > ${unit.name} > ${chapter.name} > ${topic.name}`}
+              >
+                {fetchedExam.name} &gt; {subject.name} &gt; {unit.name} &gt; {chapter.name} &gt; {topic.name}
+              </p>
+            </div>
 
-    {/* RIGHT — UNIT Progress */}
-    <div className="shrink-0 ml-auto">
-      <UnitProgressClient
-        unitId={unit._id}
-        unitName={unit.name}
-        initialProgress={0}
-      />
-    </div>
-  </div>
-</section>
+            {/* RIGHT — Unit Progress */}
+            <div className="shrink-0 ml-auto">
+              <UnitProgressClient
+                unitId={unit._id}
+                unitName={unit.name}
+                initialProgress={0}
+              />
+            </div>
+
+          </div>
+        </section>
 
 
 

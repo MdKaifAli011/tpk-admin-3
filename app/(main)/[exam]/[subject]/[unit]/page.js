@@ -35,10 +35,10 @@ export const revalidate = 0;
  */
 export async function generateMetadata({ params, searchParams }) {
   const { exam: examSlug, subject: subjectSlug, unit: unitSlug } = await params;
-  
+
   // Pages receive searchParams correctly in Next.js App Router
   const resolvedSearchParams = await extractSearchParams(searchParams);
-  
+
   if (process.env.NODE_ENV === "development") {
     logger.debug("Unit Page - searchParams:", searchParams);
     logger.debug("Unit Page - Resolved searchParams:", resolvedSearchParams);
@@ -46,7 +46,7 @@ export async function generateMetadata({ params, searchParams }) {
 
   try {
     const { fetchExamById, fetchSubjectById, fetchUnitById, fetchUnitDetailsById, fetchUnitsBySubject, fetchSubjectsByExam, findByIdOrSlug, createSlug } = await import("../../../lib/api");
-    
+
     const exam = await fetchExamById(examSlug).catch(() => null);
     if (!exam) return { title: `${unitSlug || "Unit"} | TestPrepKart` };
 
@@ -168,92 +168,94 @@ const UnitPage = async ({ params }) => {
   return (
     <div className="space-y-4">
       {/* Premium Educational Header */}
-<section
-  className="
+      <section
+        className="
     rounded-xl
     p-3 sm:p-4
     bg-gradient-to-br from-indigo-50 via-white to-purple-50
     border border-indigo-100/60
     shadow-[0_2px_12px_rgba(120,90,200,0.08)]
   "
->
-  <div className="flex items-start sm:items-center justify-between w-full gap-3 sm:gap-4">
+      >
+        <div className="flex items-start sm:items-center justify-between w-full gap-3 sm:gap-4 min-w-0">
 
-    {/* LEFT — Title + Breadcrumb */}
-    <div className="flex flex-col min-w-0 leading-tight flex-1">
-      <h1
-        className="
+          {/* LEFT — Title + Breadcrumb */}
+          <div className="flex flex-col min-w-0 flex-1 leading-tight">
+
+            <h1
+              className="
           text-base sm:text-lg md:text-xl font-bold text-indigo-900
           truncate
-          max-w-[180px] sm:max-w-[260px] md:max-w-[320px]
+          w-full
         "
-        title={unit.name}
-      >
-        {unit.name}
-      </h1>
+              title={unit.name}
+            >
+              {unit.name}
+            </h1>
 
-      <p
-        className="
+            <p
+              className="
           text-[10px] sm:text-xs text-gray-600 mt-0.5
           truncate
-          max-w-[160px] sm:max-w-[240px] md:max-w-[300px]
+          w-full
         "
-        title={`${fetchedExam.name} > ${subject.name} > ${unit.name}`}
-      >
-        {fetchedExam.name} &gt; {subject.name} &gt; {unit.name}
-      </p>
-    </div>
+              title={`${fetchedExam.name} > ${subject.name} > ${unit.name}`}
+            >
+              {fetchedExam.name} &gt; {subject.name} &gt; {unit.name}
+            </p>
+          </div>
 
-    {/* RIGHT — Unit Progress */}
-    <div className="shrink-0 ml-auto">
-      <UnitProgressClient
+          {/* RIGHT — Unit Progress */}
+          <div className="shrink-0 ml-auto">
+            <UnitProgressClient
+              unitId={unit._id}
+              unitName={unit.name}
+              initialProgress={0}
+            />
+          </div>
+
+        </div>
+      </section>
+
+
+      {/* Tabs */}
+      <TabsClient
+        content={unitDetails?.content}
+        examId={fetchedExam._id}
+        subjectId={subject._id}
         unitId={unit._id}
+        entityName={unit.name}
+        entityType="unit"
+        chapters={fetchedChapters}
+        examSlug={examSlug}
+        subjectSlug={subjectSlugValue}
+        unitSlug={unitSlugValue}
         unitName={unit.name}
-        initialProgress={0}
       />
+
+      {/* Chapters Section */}
+      <ChaptersSectionClient
+        chapters={fetchedChapters}
+        unitId={unit._id}
+        examSlug={examSlug}
+        subjectSlug={subjectSlugValue}
+        unitSlug={unitSlugValue}
+        examName={fetchedExam.name}
+        subjectName={subject.name}
+        unitName={unit.name}
+      />
+
+      {/* Navigation */}
+      <NavigationClient
+        backUrl={`/${examSlug}/${subjectSlugValue}`}
+        backLabel={`Back to ${subject.name}`}
+        prevNav={prevNav}
+        nextNav={nextNav}
+      />
+
+      {/* Unit Completion Tracker */}
+      <UnitCompletionTracker unitId={unit._id} unitName={unit.name} />
     </div>
-  </div>
-</section>
-
-
-        {/* Tabs */}
-        <TabsClient
-          content={unitDetails?.content}
-          examId={fetchedExam._id}
-          subjectId={subject._id}
-          unitId={unit._id}
-          entityName={unit.name}
-          entityType="unit"
-          chapters={fetchedChapters}
-          examSlug={examSlug}
-          subjectSlug={subjectSlugValue}
-          unitSlug={unitSlugValue}
-          unitName={unit.name}
-        />
-
-        {/* Chapters Section */}
-        <ChaptersSectionClient
-          chapters={fetchedChapters}
-          unitId={unit._id}
-          examSlug={examSlug}
-          subjectSlug={subjectSlugValue}
-          unitSlug={unitSlugValue}
-          examName={fetchedExam.name}
-          subjectName={subject.name}
-          unitName={unit.name}
-        />
-
-        {/* Navigation */}
-        <NavigationClient
-          backUrl={`/${examSlug}/${subjectSlugValue}`}
-          backLabel={`Back to ${subject.name}`}
-          prevNav={prevNav}
-          nextNav={nextNav}
-        />
-
-        {/* Unit Completion Tracker */}
-        <UnitCompletionTracker unitId={unit._id} unitName={unit.name} />
-      </div>
   );
 };
 
