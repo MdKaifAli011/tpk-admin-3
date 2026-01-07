@@ -16,8 +16,19 @@ import {
   countryCodeMap,
   classOptions,
 } from "./constants/formConstants";
+
+// Base path - should match next.config.mjs basePath
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
+
 import { useVerification } from "./hooks/useVerification";
-import { validateForm as validateFormUtil } from "./utils/formValidation";
+import {
+  validateForm as validateFormUtil,
+  validateName,
+  validateEmail,
+  validatePhoneNumber,
+  validateCountry,
+  validateClassName,
+} from "./utils/formValidation";
 import Button from "./Button";
 import Card from "./Card";
 
@@ -108,13 +119,22 @@ const ContactForm = () => {
     setSubmitMessage("");
 
     try {
+      // Capture full URL with query parameters for source tracking
+      const sourcePath =
+        typeof window !== "undefined"
+          ? window.location.pathname + window.location.search
+          : "";
+
       const response = await api.post("/lead", {
         name: formData.name.trim(),
         email: formData.email.trim(),
         country: formData.country.trim(),
         className: formData.className.trim(),
         phoneNumber: formData.countryCode + formData.phoneNumber.trim(),
-        source: typeof window !== "undefined" ? window.location.pathname : "", // Current path (e.g., /neet)
+        form_name: "contact-form", // Form identifier
+        form_id: "contact-form", // Form ID to track registration source
+        source: sourcePath, // Full URL with query parameters
+        prepared: "",
       });
 
       if (response.data?.success) {
@@ -180,7 +200,7 @@ const ContactForm = () => {
 
               {/* Image */}
               <img
-                src="images/contact-illustration.png"
+                src={`${basePath}/images/contact-illustration.png`}
                 alt="Contact us"
                 className="absolute inset-0 w-full h-full object-cover"
               />

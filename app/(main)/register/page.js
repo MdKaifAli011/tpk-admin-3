@@ -108,6 +108,7 @@ const RegisterPage = () => {
   const [step, setStep] = useState(1);
   const [stepTransition, setStepTransition] = useState(false);
 
+
   // form state
   const [formData, setFormData] = useState({
     firstName: "",
@@ -211,16 +212,29 @@ const RegisterPage = () => {
 
   const validateStep2 = () => {
     const newErrors = {};
-    if (!formData.email.trim()) newErrors.email = "Email is required";
+
+    if (!formData.email.trim())
+      newErrors.email = "Email is required";
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email))
       newErrors.email = "Please enter a valid email";
-    if (!formData.phoneNumber.trim())
-      newErrors.phoneNumber = "Phone number is required";
-    if (!formData.password) newErrors.password = "Password is required";
+
+    const phone = formData.phoneNumber.trim();
+    if (!phone) {
+      newErrors.phoneNumber = "Mobile number is required";
+    } else if (!/^\d+$/.test(phone)) {
+      newErrors.phoneNumber = "Mobile number must contain only digits";
+    } else if (phone.length < 6 || phone.length > 14) {
+      newErrors.phoneNumber = "Mobile number must be between 6 and 14 digits";
+    }
+
+    if (!formData.password)
+      newErrors.password = "Password is required";
     else if (formData.password.length < 6)
       newErrors.password = "Password must be at least 6 characters";
+
     if (formData.password !== formData.confirmPassword)
       newErrors.confirmPassword = "Passwords do not match";
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -255,9 +269,12 @@ const RegisterPage = () => {
       const fullPhoneNumber =
         formData.countryCode + formData.phoneNumber.trim().replace(/^\+/, "");
 
-      // Get the source URL pathname (e.g., /neet) where student is registering from
+      // Get the source URL pathname (e.g., /register) where student is registering from
+      // Include query parameters if present
       const sourcePath =
-        typeof window !== "undefined" ? window.location.pathname : "";
+        typeof window !== "undefined"
+          ? window.location.pathname + window.location.search
+          : "";
 
       const response = await api.post("/student/auth/register", {
         firstName: formData.firstName.trim(),
@@ -269,6 +286,7 @@ const RegisterPage = () => {
         prepared: formData.prepared || null,
         country: formData.country || null,
         source: sourcePath, // Send the URL path where student registered from
+        formId: "student-registration", // Explicitly set formId for main registration page
       });
 
       if (response.data.success) {
@@ -311,7 +329,7 @@ const RegisterPage = () => {
       console.error("Registration error:", err);
       setError(
         err.response?.data?.message ||
-          "Registration failed. Please check your information and try again."
+        "Registration failed. Please check your information and try again."
       );
     } finally {
       setLoading(false);
@@ -359,7 +377,7 @@ const RegisterPage = () => {
             {/* Right: Form Card */}
             <div className="mx-auto w-full max-w-md">
               <div className="text-center mb-5">
-                
+
                 <h1 className="text-2xl font-bold text-gray-900 mb-1 bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
                   Access Your Exam Dashboard
                 </h1>
@@ -385,14 +403,14 @@ const RegisterPage = () => {
                           step >= 1
                             ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg"
                             : "bg-gray-200 text-gray-500"
-                        }`}
+                          }`}
                       >
                         {step > 1 ? <FaCheckCircle /> : <span>1</span>}
                       </div>
                       <span
                         className={`text-[11px] mt-1 ${
                           step >= 1 ? "text-indigo-600" : "text-gray-400"
-                        }`}
+                          }`}
                       >
                         Basic
                       </span>
@@ -402,7 +420,7 @@ const RegisterPage = () => {
                         step >= 2
                           ? "bg-gradient-to-r from-indigo-600 to-purple-600"
                           : "bg-gray-200"
-                      }`}
+                        }`}
                     ></div>
                     <div className="flex flex-col items-center">
                       <div
@@ -410,14 +428,14 @@ const RegisterPage = () => {
                           step >= 2
                             ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg"
                             : "bg-gray-200 text-gray-500"
-                        }`}
+                          }`}
                       >
                         {step > 2 ? <FaCheckCircle /> : <span>2</span>}
                       </div>
                       <span
                         className={`text-[11px] mt-1 ${
                           step >= 2 ? "text-indigo-600" : "text-gray-400"
-                        }`}
+                          }`}
                       >
                         Account
                       </span>
@@ -431,7 +449,7 @@ const RegisterPage = () => {
                     stepTransition
                       ? "opacity-0 translate-x-4"
                       : "opacity-100 translate-x-0"
-                  }`}
+                    }`}
                 >
                   {step === 1 ? (
                     <form
@@ -462,7 +480,7 @@ const RegisterPage = () => {
                                   formData.firstName
                                     ? "text-indigo-600"
                                     : "text-gray-400"
-                                }`}
+                                  }`}
                               />
                             </div>
                             <input
@@ -474,7 +492,7 @@ const RegisterPage = () => {
                                 errors.firstName
                                   ? "border-red-300 bg-red-50"
                                   : "border-gray-200 bg-gray-50"
-                              }`}
+                                }`}
                             />
                           </div>
                           {errors.firstName && (
@@ -496,7 +514,7 @@ const RegisterPage = () => {
                                   formData.lastName
                                     ? "text-indigo-600"
                                     : "text-gray-400"
-                                }`}
+                                  }`}
                               />
                             </div>
                             <input
@@ -508,7 +526,7 @@ const RegisterPage = () => {
                                 errors.lastName
                                   ? "border-red-300 bg-red-50"
                                   : "border-gray-200 bg-gray-50"
-                              }`}
+                                }`}
                             />
                           </div>
                           {errors.lastName && (
@@ -531,9 +549,9 @@ const RegisterPage = () => {
                                 errors.className
                                   ? "border-red-300 bg-red-50"
                                   : formData.className
-                                  ? "border-indigo-500 bg-white"
-                                  : "border-gray-200 bg-gray-50"
-                              }`}
+                                    ? "border-indigo-500 bg-white"
+                                    : "border-gray-200 bg-gray-50"
+                                }`}
                             >
                               <div className="flex items-center gap-2">
                                 <FaGraduationCap
@@ -541,14 +559,14 @@ const RegisterPage = () => {
                                     formData.className
                                       ? "text-indigo-600"
                                       : "text-gray-400"
-                                  }`}
+                                    }`}
                                 />
                                 <span
                                   className={`${
                                     formData.className
                                       ? "text-gray-900"
                                       : "text-gray-400"
-                                  }`}
+                                    }`}
                                 >
                                   {formData.className || "Select Class"}
                                 </span>
@@ -558,7 +576,7 @@ const RegisterPage = () => {
                                   showClassDropdown
                                     ? "rotate-180 transform"
                                     : ""
-                                }`}
+                                  }`}
                               />
                             </button>
 
@@ -573,7 +591,7 @@ const RegisterPage = () => {
                                       formData.className === c
                                         ? "bg-gray-100 text-indigo-600 font-semibold"
                                         : "text-gray-700 hover:bg-gray-50"
-                                    }`}
+                                      }`}
                                   >
                                     {c}
                                   </button>
@@ -630,7 +648,7 @@ const RegisterPage = () => {
                                   formData.email
                                     ? "text-indigo-600"
                                     : "text-gray-400"
-                                }`}
+                                  }`}
                               />
                             </div>
                             <input
@@ -643,7 +661,7 @@ const RegisterPage = () => {
                                 errors.email
                                   ? "border-red-300 bg-red-50"
                                   : "border-gray-200 bg-gray-50"
-                              }`}
+                                }`}
                             />
                           </div>
                           {errors.email && (
@@ -672,7 +690,7 @@ const RegisterPage = () => {
                                   formData.country
                                     ? "border-indigo-500 bg-white"
                                     : "border-gray-200 bg-gray-50"
-                                }`}
+                                  }`}
                               >
                                 <div className="flex items-center gap-2 min-w-0">
                                   <FaGlobe
@@ -680,14 +698,14 @@ const RegisterPage = () => {
                                       formData.country
                                         ? "text-indigo-600"
                                         : "text-gray-400"
-                                    }`}
+                                      }`}
                                   />
                                   <span
                                     className={`${
                                       formData.country
                                         ? "text-gray-900 truncate"
                                         : "text-gray-400"
-                                    }`}
+                                      }`}
                                   >
                                     {formData.country || "Select country"}
                                   </span>
@@ -697,7 +715,7 @@ const RegisterPage = () => {
                                     showCountryDropdown
                                       ? "rotate-180 transform"
                                       : ""
-                                  }`}
+                                    }`}
                                 />
                               </button>
 
@@ -712,7 +730,7 @@ const RegisterPage = () => {
                                         formData.country === c.name
                                           ? "bg-gray-100 text-indigo-600 font-semibold"
                                           : "text-gray-700 hover:bg-gray-50"
-                                      }`}
+                                        }`}
                                     >
                                       <span className="text-base">
                                         {c.flag}
@@ -743,7 +761,7 @@ const RegisterPage = () => {
                               </div>
                               <input
                                 name="phoneNumber"
-                                type="tel"
+                                type="number"
                                 value={formData.phoneNumber}
                                 onChange={handleChange}
                                 placeholder="1234567890"
@@ -751,7 +769,7 @@ const RegisterPage = () => {
                                   errors.phoneNumber
                                     ? "border-red-300 bg-red-50"
                                     : "border-gray-200 bg-gray-50"
-                                }`}
+                                  }`}
                               />
                               <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                                 <FaPhone className="text-xs text-gray-400" />
@@ -777,7 +795,7 @@ const RegisterPage = () => {
                                   formData.password
                                     ? "text-indigo-600"
                                     : "text-gray-400"
-                                }`}
+                                  }`}
                               />
                             </div>
                             <input
@@ -790,7 +808,7 @@ const RegisterPage = () => {
                                 errors.password
                                   ? "border-red-300 bg-red-50"
                                   : "border-gray-200 bg-gray-50"
-                              }`}
+                                }`}
                             />
                             <button
                               type="button"
@@ -824,7 +842,7 @@ const RegisterPage = () => {
                                   formData.confirmPassword
                                     ? "text-indigo-600"
                                     : "text-gray-400"
-                                }`}
+                                  }`}
                               />
                             </div>
                             <input
@@ -837,7 +855,7 @@ const RegisterPage = () => {
                                 errors.confirmPassword
                                   ? "border-red-300 bg-red-50"
                                   : "border-gray-200 bg-gray-50"
-                              }`}
+                                }`}
                             />
                             <button
                               type="button"
@@ -873,7 +891,7 @@ const RegisterPage = () => {
                                   formData.prepared
                                     ? "text-indigo-600"
                                     : "text-gray-400"
-                                }`}
+                                  }`}
                               />
                             </div>
                             <select

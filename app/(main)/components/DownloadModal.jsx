@@ -17,6 +17,10 @@ import {
   countryCodeMap,
   classOptions,
 } from "./constants/formConstants";
+
+// Base path - should match next.config.mjs basePath
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
+
 import { useVerification } from "./hooks/useVerification";
 import {
   validateForm as validateFormUtil,
@@ -135,10 +139,9 @@ const DownloadModal = ({ isOpen, onClose, onSuccess }) => {
 
         if (isUpdated && responseMessage) {
           setSubmitMessage(
-            `Thank you! Your information has been updated successfully. ${
-              responseMessage.includes("Status")
-                ? responseMessage.split(".")[0] + "."
-                : ""
+            `Thank you! Your information has been updated successfully. ${responseMessage.includes("Status")
+              ? responseMessage.split(".")[0] + "."
+              : ""
             } We'll get back to you soon.`
           );
         } else {
@@ -187,15 +190,15 @@ const DownloadModal = ({ isOpen, onClose, onSuccess }) => {
         setSubmitStatus("error");
         setSubmitMessage(
           response.data?.message ||
-            "Failed to submit your request. Please try again."
+          "Failed to submit your request. Please try again."
         );
       }
     } catch (error) {
       setSubmitStatus("error");
       setSubmitMessage(
         error?.response?.data?.message ||
-          error?.message ||
-          "Failed to submit your request. Please check your connection and try again."
+        error?.message ||
+        "Failed to submit your request. Please check your connection and try again."
       );
     } finally {
       setIsSubmitting(false);
@@ -253,18 +256,19 @@ const DownloadModal = ({ isOpen, onClose, onSuccess }) => {
         </button>
 
         <div className=" grid grid-cols-1 lg:grid-cols-2 flex-1 overflow-hidden">
-          <div className="hidden lg:block relative bg-gradient-to-br from-purple-500 via-purple-600 to-purple-700">
-            <div className="absolute inset-0 flex items-center justify-center p-4">
-              <div className="relative w-full h-full flex items-center justify-center">
-                <div className="w-48 h-64 bg-white/10 rounded-lg backdrop-blur-sm flex items-center justify-center">
-                  <div className="text-white/30 text-center">
-                    <FaUser className="text-6xl mx-auto mb-2" />
-                    <p className="text-xs">Image Placeholder</p>
-                  </div>
-                </div>
-                <div className="absolute top-1/4 right-1/4 w-48 h-48 bg-white/5 rounded-full blur-3xl"></div>
-              </div>
-            </div>
+          <div className="hidden lg:block relative h-full overflow-hidden">
+            {/* Background gradient */}
+            <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500" />
+
+            {/* Image */}
+            <img
+              src={`${basePath}/images/form-placeholder.png`}
+              alt="Download illustration"
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+
+            {/* Optional overlay */}
+            <div className="absolute inset-0 bg-black/10" />
           </div>
 
           <div className="flex-1 overflow-y-auto">
@@ -280,11 +284,10 @@ const DownloadModal = ({ isOpen, onClose, onSuccess }) => {
               <form onSubmit={handleSubmit} className="space-y-2.5">
                 {submitStatus && (
                   <div
-                    className={`p-3 rounded-lg flex items-start gap-2 ${
-                      submitStatus === "success"
+                    className={`p-3 rounded-lg flex items-start gap-2 ${submitStatus === "success"
                         ? "bg-green-50 border border-green-200 text-green-800"
                         : "bg-red-50 border border-red-200 text-red-800"
-                    }`}
+                      }`}
                   >
                     {submitStatus === "success" ? (
                       <FaCheckCircle className="text-green-600 text-sm shrink-0 mt-0.5" />
@@ -306,11 +309,10 @@ const DownloadModal = ({ isOpen, onClose, onSuccess }) => {
                       name="name"
                       value={formData.name}
                       onChange={handleChange}
-                      className={`w-full pl-8 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm ${
-                        errors.name
+                      className={`w-full pl-8 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm ${errors.name
                           ? "border-red-300 bg-red-50"
                           : "border-gray-300 bg-white"
-                      }`}
+                        }`}
                       placeholder="Name"
                       disabled={isSubmitting}
                     />
@@ -331,11 +333,10 @@ const DownloadModal = ({ isOpen, onClose, onSuccess }) => {
                       name="email"
                       value={formData.email}
                       onChange={handleChange}
-                      className={`w-full pl-8 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm ${
-                        errors.email
+                      className={`w-full pl-8 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm ${errors.email
                           ? "border-red-300 bg-red-50"
                           : "border-gray-300 bg-white"
-                      }`}
+                        }`}
                       placeholder="Email Address"
                       disabled={isSubmitting}
                     />
@@ -357,11 +358,10 @@ const DownloadModal = ({ isOpen, onClose, onSuccess }) => {
                       name="country"
                       value={formData.country}
                       onChange={handleChange}
-                      className={`w-full pl-8 pr-3 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all appearance-none bg-white text-base ${
-                        errors.country
+                      className={`w-full pl-8 pr-3 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all appearance-none bg-white text-base ${errors.country
                           ? "border-red-300 bg-red-50"
                           : "border-gray-300"
-                      }`}
+                        }`}
                       disabled={isSubmitting}
                     >
                       <option value="">-- Select Country --</option>
@@ -389,11 +389,10 @@ const DownloadModal = ({ isOpen, onClose, onSuccess }) => {
                       name="className"
                       value={formData.className}
                       onChange={handleChange}
-                      className={`w-full pl-8 pr-3 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all appearance-none bg-white text-base ${
-                        errors.className
+                      className={`w-full pl-8 pr-3 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all appearance-none bg-white text-base ${errors.className
                           ? "border-red-300 bg-red-50"
                           : "border-gray-300"
-                      }`}
+                        }`}
                       disabled={isSubmitting}
                     >
                       <option value="">Select Class</option>
@@ -436,11 +435,10 @@ const DownloadModal = ({ isOpen, onClose, onSuccess }) => {
                         name="phoneNumber"
                         value={formData.phoneNumber}
                         onChange={handleChange}
-                        className={`w-full pl-8 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm ${
-                          errors.phoneNumber
+                        className={`w-full pl-8 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm ${errors.phoneNumber
                             ? "border-red-300 bg-red-50"
                             : "border-gray-300 bg-white"
-                        }`}
+                          }`}
                         placeholder="Contact No"
                         disabled={isSubmitting}
                       />
@@ -455,13 +453,12 @@ const DownloadModal = ({ isOpen, onClose, onSuccess }) => {
 
                 <div>
                   <div
-                    className={`flex items-center gap-2 p-2 border-2 rounded-lg transition-all ${
-                      errors.verification
+                    className={`flex items-center gap-2 p-2 border-2 rounded-lg transition-all ${errors.verification
                         ? "border-red-300 bg-red-50"
                         : isVerified
-                        ? "border-green-500 bg-green-50"
-                        : "border-gray-300 bg-white"
-                    }`}
+                          ? "border-green-500 bg-green-50"
+                          : "border-gray-300 bg-white"
+                      }`}
                   >
                     <div className="shrink-0">
                       {isVerified ? (
@@ -514,13 +511,12 @@ const DownloadModal = ({ isOpen, onClose, onSuccess }) => {
                           placeholder={
                             verificationQuestion.includes("=") ? "Ans" : "Code"
                           }
-                          className={`w-full px-2 py-1.5 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-center font-semibold text-sm ${
-                            errors.verification
+                          className={`w-full px-2 py-1.5 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-center font-semibold text-sm ${errors.verification
                               ? "border-red-300 bg-red-50"
                               : isVerified
-                              ? "border-green-500 bg-green-50"
-                              : "border-gray-300 bg-white"
-                          }`}
+                                ? "border-green-500 bg-green-50"
+                                : "border-gray-300 bg-white"
+                            }`}
                           autoComplete="off"
                           disabled={isSubmitting}
                         />

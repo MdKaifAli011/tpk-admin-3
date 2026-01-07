@@ -87,28 +87,23 @@ export async function POST(request) {
 
     let lead;
     if (existingLead) {
-      // Update existing lead
-      const updateData = {
-        name: leadName,
-        phoneNumber: phoneNumber.trim(),
-        className: className.trim(),
-        prepared: prepared?.trim() || null,
-        country: country?.trim() || null,
-        status: "updated",
-        updateCount: (existingLead.updateCount || 0) + 1,
-        form_id: formId || "student-registration", // Use provided form_id or default
-      };
+      // Update existing lead - use .save() to ensure updatedAt timestamp is updated correctly
+      existingLead.name = leadName;
+      existingLead.phoneNumber = phoneNumber.trim();
+      existingLead.className = className.trim();
+      existingLead.prepared = prepared?.trim() || null;
+      existingLead.country = country?.trim() || null;
+      existingLead.status = "updated";
+      existingLead.updateCount = (existingLead.updateCount || 0) + 1;
+      existingLead.form_id = formId || "student-registration"; // Use provided form_id or default
       
       // Update source if provided (URL path where student registered from)
       if (source?.trim()) {
-        updateData.source = source.trim();
+        existingLead.source = source.trim();
       }
       
-      lead = await Lead.findOneAndUpdate(
-        { email: normalizedEmail },
-        updateData,
-        { new: true }
-      );
+      // Save the document - Mongoose will automatically update updatedAt timestamp when timestamps: true
+      lead = await existingLead.save();
     } else {
       // Create new lead
       lead = await Lead.create({

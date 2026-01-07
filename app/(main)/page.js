@@ -366,15 +366,19 @@ function HomepageContent() {
 
           <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 p-10 md:p-12">
             {loading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+              <div className="flex flex-wrap justify-center items-start gap-4 sm:gap-6 lg:gap-8">
                 {[...Array(4)].map((_, i) => (
-                  <ExamCardSkeleton key={i} />
+                  <div key={i} className="w-full sm:w-[calc(50%-0.5rem)] md:w-[calc(50%-0.75rem)] lg:w-[calc(33.333%-1.33rem)] xl:w-[calc(25%-1.5rem)] max-w-[280px]">
+                    <ExamCardSkeleton />
+                  </div>
                 ))}
               </div>
             ) : exams.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+              <div className="flex flex-wrap justify-center items-start gap-4 sm:gap-6 lg:gap-8">
                 {exams.slice(0, 8).map((exam) => (
-                  <ExamCard key={exam._id} exam={exam} />
+                  <div key={exam._id} className="w-full sm:w-[calc(50%-0.5rem)] md:w-[calc(50%-0.75rem)] lg:w-[calc(33.333%-1.33rem)] xl:w-[calc(25%-1.5rem)] max-w-[280px]">
+                    <ExamCard exam={exam} />
+                  </div>
                 ))}
               </div>
             ) : (

@@ -138,10 +138,10 @@ export async function POST(request) {
       // Mongoose will automatically update updatedAt when we call save()
 
       // Add new fields if provided - always update source to track latest submission location
-      if (body.form_name) existingLead.form_name = body.form_name.trim();
-      if (body.form_id) existingLead.form_id = body.form_id.trim();
-      if (body.source) existingLead.source = body.source.trim(); // Update source with latest URL
-      if (body.prepared) existingLead.prepared = body.prepared.trim();
+      if (body.form_name !== undefined) existingLead.form_name = body.form_name?.trim() || "";
+      if (body.form_id !== undefined) existingLead.form_id = body.form_id?.trim() || "";
+      if (body.source !== undefined) existingLead.source = body.source?.trim() || ""; // Update source with latest URL
+      if (body.prepared !== undefined) existingLead.prepared = body.prepared?.trim() || "";
 
       // Save the document - Mongoose will automatically update updatedAt timestamp when timestamps: true
       lead = await existingLead.save();
@@ -159,11 +159,11 @@ export async function POST(request) {
         updateCount: 0,
       };
 
-      // Add new fields if provided
-      if (body.form_name) createData.form_name = body.form_name.trim();
-      if (body.form_id) createData.form_id = body.form_id.trim();
-      if (body.source) createData.source = body.source.trim();
-      if (body.prepared) createData.prepared = body.prepared.trim();
+      // Add new fields if provided - always include form_id and form_name if sent
+      if (body.form_name !== undefined) createData.form_name = body.form_name?.trim() || "";
+      if (body.form_id !== undefined) createData.form_id = body.form_id?.trim() || "";
+      if (body.source !== undefined) createData.source = body.source?.trim() || "";
+      if (body.prepared !== undefined) createData.prepared = body.prepared?.trim() || "";
 
       lead = await Lead.create(createData);
       message = "Lead submitted successfully";

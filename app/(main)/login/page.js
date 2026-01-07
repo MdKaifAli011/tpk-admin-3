@@ -145,7 +145,7 @@ const LoginPage = () => {
             <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl p-7 border border-white/40 w-full max-w-md mx-auto">
               {/* Logo */}
               <div className="text-center mb-6">
-              
+
                 <h1 className="text-3xl font-bold mt-3 bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
                   Welcome Back
                 </h1>
@@ -174,7 +174,7 @@ const LoginPage = () => {
                         focusedField === "email" || formData.email
                           ? "text-indigo-600"
                           : "text-gray-400"
-                      }`}
+                        }`}
                     />
 
                     <input
@@ -203,7 +203,7 @@ const LoginPage = () => {
                         focusedField === "password" || formData.password
                           ? "text-indigo-600"
                           : "text-gray-400"
-                      }`}
+                        }`}
                     />
 
                     <input
