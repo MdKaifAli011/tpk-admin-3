@@ -405,7 +405,7 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen }) => {
 
               {/* Enroll Now Button */}
               <Link
-                href="/coaching-inquiry"
+                href="/contact"
                 className="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-white bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 rounded-lg hover:from-indigo-700 hover:via-purple-700 hover:to-pink-600 active:from-indigo-800 active:via-purple-800 active:to-pink-700 transition-all shadow-md hover:shadow-lg whitespace-nowrap touch-manipulation flex items-center justify-center min-h-[44px]"
               >
                 <span className="hidden sm:inline">Enroll Now</span>
