@@ -9,8 +9,7 @@ import Card from "./Card";
 import { createSlug } from "../lib/api";
 import { truncateHtmlContent, hasMoreContent } from "../lib/utils/contentUtils";
 
-// Lazy load DownloadButton - only needed for unit pages
-const DownloadButton = lazy(() => import("./DownloadButton"));
+
 // Lazy load DefinitionPreviewClient - only needed for subtopic pages
 const DefinitionPreviewClient = lazy(() => import("./DefinitionPreviewClient"));
 
@@ -125,18 +124,7 @@ const OverviewTab = ({
 }) => {
   return (
     <div className="space-y-2 px-3 sm:px-4 py-3 sm:py-4">
-      {/* Download Button - only for unit type */}
-      {entityType === "unit" && unitName && (
-        <div className="flex justify-end mb-2">
-          <Suspense
-            fallback={
-              <div className="h-10 w-32 bg-gray-200 animate-pulse rounded-lg" />
-            }
-          >
-            <DownloadButton unitName={unitName} />
-          </Suspense>
-        </div>
-      )}
+     
 
       <div className="prose prose-sm sm:prose max-w-none prose-headings:text-gray-900 prose-headings:font-bold prose-p:text-gray-700 prose-p:leading-normal prose-a:text-indigo-600 prose-a:no-underline hover:prose-a:underline prose-strong:text-gray-900 prose-code:text-indigo-700 prose-pre:bg-gray-50">
         {content ? (
