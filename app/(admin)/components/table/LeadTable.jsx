@@ -336,10 +336,10 @@ const LeadTable = ({ leads, onView, onDelete }) => {
                 Date
               </th>
               <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Country
+                Name
               </th>
               <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Name
+                Country
               </th>
               <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Email
@@ -401,15 +401,16 @@ const LeadTable = ({ leads, onView, onDelete }) => {
                     </time>
                   </td>
                   <td className="px-2 py-2 whitespace-nowrap">
-                    <span className="text-sm text-gray-600">
-                      {lead.country}
-                    </span>
-                  </td>
-                  <td className="px-2 py-2 whitespace-nowrap">
                     <span className="text-sm font-medium text-gray-900">
                       {lead.name}
                     </span>
                   </td>
+                  <td className="px-2 py-2 whitespace-nowrap">
+                    <span className="text-sm text-gray-600">
+                      {lead.country}
+                    </span>
+                  </td>
+                  
                   <td className="px-2 py-2 whitespace-nowrap">
                     <a
                       href={`mailto:${lead.email}`}
