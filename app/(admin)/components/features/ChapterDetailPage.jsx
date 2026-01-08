@@ -243,7 +243,7 @@ const ChapterDetailPage = () => {
           </button>
           <div>
             <h1 className="text-xl font-semibold text-gray-900">
-              {isEditing ? "Edit Chapter" : chapter.name}
+              {isEditing ? "Edit " + chapter.name : chapter.name}
             </h1>
             <p className="text-sm text-gray-600 mt-1">
               Order:{" "}

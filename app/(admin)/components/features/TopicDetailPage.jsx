@@ -260,7 +260,7 @@ const TopicDetailPage = ({ topicId }) => {
           </button>
           <div>
             <h1 className="text-xl font-semibold text-gray-900">
-              {isEditing ? "Edit Topic" : topic.name}
+              {isEditing ? "Edit " + topic.name : topic.name}
             </h1>
             <p className="text-sm text-gray-600 mt-1">
               <span className="font-medium text-indigo-600">Exam:</span>{" "}

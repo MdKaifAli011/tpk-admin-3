@@ -239,7 +239,7 @@ const UnitDetailPage = ({ unitId }) => {
           </button>
           <div>
             <h1 className="text-xl font-semibold text-gray-900">
-              {isEditing ? "Edit Unit" : unit.name}
+              {isEditing ? "Edit" + unit.name : unit.name}
             </h1>
             <p className="text-sm text-gray-600 mt-1">
               Order:{" "}

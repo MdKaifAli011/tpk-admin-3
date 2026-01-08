@@ -255,7 +255,7 @@ const SubTopicDetailPage = ({ subTopicId }) => {
           </button>
           <div>
             <h1 className="text-xl font-semibold text-gray-900">
-              {isEditing ? "Edit SubTopic" : subTopic.name}
+              {isEditing ? "Edit " + subTopic.name : subTopic.name}
             </h1>
             <p className="text-sm text-gray-600 mt-1">
               <span className="font-medium text-indigo-600">Exam:</span>{" "}
