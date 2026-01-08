@@ -35,6 +35,7 @@ import { logger } from "@/utils/logger";
 import { marked } from "marked";
 import DOMPurify from "dompurify";
 import RichContent from "./RichContent";
+import { useStudent } from "../hooks/useStudent";
 
 // Default test settings if not provided by admin
 const DEFAULT_MARKS_PER_QUESTION = 4;
@@ -72,7 +73,8 @@ const PracticeTestList = ({
   const [isLoadingTest, setIsLoadingTest] = useState(false);
   const [showSubmitModal, setShowSubmitModal] = useState(false);
 
-  // Authentication and registration state
+  // Authentication and registration state - use useStudent hook for consistent auth handling
+  const { isAuthenticated: isAuthFromHook } = useStudent();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showRegistrationModal, setShowRegistrationModal] = useState(false);
   const [pendingTestResults, setPendingTestResults] = useState(null);
@@ -85,28 +87,43 @@ const PracticeTestList = ({
   const savedTestResultIdsRef = useRef(new Set()); // Track saved test result IDs to prevent duplicates
   const isSubmittingTestRef = useRef(false); // Prevent duplicate test submissions
 
-  // Check authentication status
+  // Sync authentication state from useStudent hook
   useEffect(() => {
-    const checkAuth = () => {
-      if (typeof window === "undefined") return false;
-      const token = localStorage.getItem("student_token");
-      const nowAuthenticated = !!token;
-      setIsAuthenticated(nowAuthenticated);
-      return nowAuthenticated;
-    };
+    setIsAuthenticated(isAuthFromHook);
+  }, [isAuthFromHook]);
 
-    checkAuth();
-
-    // Listen for storage changes (login/logout)
+  // Listen for storage changes and login events to refresh scores
+  useEffect(() => {
     const handleStorageChange = (e) => {
       if (e.key === "student_token") {
-        checkAuth();
+        // Check if user just logged in
+        const token = localStorage.getItem("student_token");
+        if (token && !isAuthenticated) {
+          setIsAuthenticated(true);
+          // Refresh scores after a short delay to ensure token is set
+          if (practiceTests.length > 0) {
+            setTimeout(() => {
+              fetchStudentScores();
+            }, 300);
+          }
+        } else if (!token && isAuthenticated) {
+          setIsAuthenticated(false);
+          setStudentScores({});
+        }
       }
     };
 
-    // Listen for custom login event
     const handleLoginEvent = () => {
-      checkAuth();
+      const token = localStorage.getItem("student_token");
+      if (token) {
+        setIsAuthenticated(true);
+        // Refresh scores after login
+        if (practiceTests.length > 0) {
+          setTimeout(() => {
+            fetchStudentScores();
+          }, 300);
+        }
+      }
     };
 
     window.addEventListener("storage", handleStorageChange);
@@ -116,7 +133,7 @@ const PracticeTestList = ({
       window.removeEventListener("storage", handleStorageChange);
       window.removeEventListener("student-login", handleLoginEvent);
     };
-  }, []);
+  }, [isAuthenticated, practiceTests.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fetch student scores when authenticated and tests are loaded
   const fetchStudentScores = React.useCallback(async () => {
@@ -166,10 +183,45 @@ const PracticeTestList = ({
   // Fetch scores when authenticated and tests change
   useEffect(() => {
     if (isAuthenticated && practiceTests.length > 0) {
-      fetchStudentScores();
+      // Add a small delay to ensure component is ready
+      const timer = setTimeout(() => {
+        fetchStudentScores();
+      }, 200);
+      return () => clearTimeout(timer);
     } else {
       setStudentScores({});
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, practiceTests.length]);
+
+  // Refresh scores when tab becomes active (detected via URL param)
+  useEffect(() => {
+    const tabParam = searchParams.get("tab");
+    if (tabParam === "practice" && isAuthenticated && practiceTests.length > 0) {
+      // User switched to practice tab, refresh scores
+      const timer = setTimeout(() => {
+        fetchStudentScores();
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, isAuthenticated, practiceTests.length]);
+
+  // Refresh scores when page becomes visible (user switches back to tab)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible" && isAuthenticated && practiceTests.length > 0) {
+        // Small delay to ensure component is ready
+        setTimeout(() => {
+          fetchStudentScores();
+        }, 300);
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, practiceTests.length]);
 
@@ -922,6 +974,11 @@ const PracticeTestList = ({
                 percentage: saveResult.data.percentage,
               },
             }));
+            
+            // Refresh all scores to ensure consistency
+            setTimeout(() => {
+              fetchStudentScores();
+            }, 500);
           } else {
             logger.warn("Failed to save test result", {
               success: saveResult?.success,
@@ -1027,6 +1084,11 @@ const PracticeTestList = ({
                 percentage: saveResult.data.percentage,
               },
             }));
+            
+            // Refresh all scores to ensure consistency
+            setTimeout(() => {
+              fetchStudentScores();
+            }, 500);
           }
 
             // Display results after successful save
