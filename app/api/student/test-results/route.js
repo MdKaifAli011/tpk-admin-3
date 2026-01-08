@@ -61,14 +61,15 @@ export async function POST(request) {
       return errorResponse("All result fields are required", 400);
     }
 
-    // Convert answers object to Map
+    // Convert answers object to Map or plain object
+    // Mongoose Map works better when initialized as empty Map, then populated
     const answersMap = new Map();
     if (answers && typeof answers === "object") {
       Object.keys(answers).forEach((questionId) => {
         const answerValue = answers[questionId];
         // Only set non-null answers in the map
         if (answerValue !== null && answerValue !== undefined) {
-          answersMap.set(questionId, answerValue);
+          answersMap.set(String(questionId), String(answerValue));
         }
       });
     }
@@ -76,16 +77,34 @@ export async function POST(request) {
     // Convert IDs to ObjectId if they're valid MongoDB ObjectId strings
     const mongoose = await import("mongoose");
 
-    // Helper function to convert to ObjectId if valid
+    // Helper function to convert to ObjectId if valid, returns null if invalid
     const toObjectId = (id) => {
       if (!id) return null;
       if (mongoose.default.Types.ObjectId.isValid(id)) {
         return new mongoose.default.Types.ObjectId(id);
       }
-      return id;
+      return null; // Return null if not valid ObjectId
     };
 
-    let testIdObjectId = toObjectId(testId);
+    // Validate testId - it MUST be a valid ObjectId (testId is required and must be ObjectId)
+    if (!testId) {
+      console.error("testId is missing");
+      return errorResponse("Test ID is required", 400);
+    }
+
+    // Check if testId is a valid MongoDB ObjectId format
+    if (!mongoose.default.Types.ObjectId.isValid(testId)) {
+      console.error("Invalid testId format (not a valid ObjectId):", testId);
+      return errorResponse(
+        `Invalid test ID format. Expected a valid MongoDB ObjectId (24 hex characters), received: ${testId}`,
+        400
+      );
+    }
+
+    // Convert testId to ObjectId (guaranteed to work since we validated above)
+    const testIdObjectId = new mongoose.default.Types.ObjectId(testId);
+    
+    // Convert optional IDs to ObjectId if they're valid
     const examIdObjectId = toObjectId(examId);
     const subjectIdObjectId = toObjectId(subjectId);
     const unitIdObjectId = toObjectId(unitId);
@@ -95,38 +114,52 @@ export async function POST(request) {
 
     // Process questionResults - convert questionId to ObjectId and validate userAnswer
     const processedQuestionResults = (questionResults || []).map((qr) => {
+      // Validate required fields for each question result
+      if (!qr.questionId || !qr.question || !qr.correctAnswer) {
+        console.warn("Invalid question result skipped:", qr);
+        return null;
+      }
+
       const processed = {
         questionId: toObjectId(qr.questionId),
-        question: qr.question,
-        correctAnswer: qr.correctAnswer,
-        isCorrect: qr.isCorrect,
-        marks: qr.marks,
+        question: String(qr.question).trim(),
+        correctAnswer: String(qr.correctAnswer).toUpperCase(),
+        isCorrect: Boolean(qr.isCorrect),
+        marks: Number(qr.marks) || 0,
       };
+
+      // Validate questionId was converted properly
+      if (!processed.questionId || !mongoose.default.Types.ObjectId.isValid(processed.questionId)) {
+        console.warn("Invalid questionId in question result:", qr.questionId);
+        return null;
+      }
+
+      // Validate correctAnswer is valid enum
+      if (!["A", "B", "C", "D"].includes(processed.correctAnswer)) {
+        console.warn("Invalid correctAnswer in question result:", processed.correctAnswer);
+        return null;
+      }
 
       // Handle userAnswer - only set if it's a valid enum value
       if (
         qr.userAnswer &&
-        ["A", "B", "C", "D"].includes(qr.userAnswer.toUpperCase())
+        ["A", "B", "C", "D"].includes(String(qr.userAnswer).toUpperCase())
       ) {
-        processed.userAnswer = qr.userAnswer.toUpperCase();
+        processed.userAnswer = String(qr.userAnswer).toUpperCase();
       }
 
       return processed;
-    });
+    }).filter(qr => qr !== null); // Remove null entries
 
-    // Validate all required fields before creating
+    // testId is already validated and converted above, so we can skip this check
+    // But we'll keep it for safety
     if (!testIdObjectId) {
-      return errorResponse("Invalid test ID", 400);
+      console.error("testIdObjectId is null after conversion");
+      return errorResponse("Invalid test ID format", 400);
     }
 
-    // Filter invalid questionResults
-    if (processedQuestionResults && processedQuestionResults.length > 0) {
-      const validResults = processedQuestionResults.filter(
-        (qr) => qr.questionId && qr.question && qr.correctAnswer
-      );
-      processedQuestionResults.length = 0;
-      processedQuestionResults.push(...validResults);
-    }
+    // Ensure processedQuestionResults is an array (not undefined) - this shouldn't happen after filter, but just in case
+    const finalQuestionResults = Array.isArray(processedQuestionResults) ? processedQuestionResults : [];
 
     // Ensure percentage is within valid range
     const validatedPercentage = Math.max(0, Math.min(100, percentage));
@@ -135,7 +168,8 @@ export async function POST(request) {
     // Always create a new test result record for each attempt
     // This allows tracking all attempts separately (one test = one entry, multiple tests = multiple entries)
     try {
-      const testResult = await StudentTestResult.create({
+      // Create the test result document
+      const testResultData = {
         studentId: authCheck.studentId,
         testId: testIdObjectId,
         examId: examIdObjectId,
@@ -152,20 +186,48 @@ export async function POST(request) {
         maximumMarks,
         percentage: validatedPercentage,
         timeTaken,
-        answers: answersMap,
-        questionResults: processedQuestionResults,
+        answers: answersMap.size > 0 ? answersMap : new Map(),
+        questionResults: finalQuestionResults.length > 0 ? finalQuestionResults : [],
         startedAt: startedAt ? new Date(startedAt) : new Date(),
         submittedAt: new Date(),
+      };
+
+      // Log for debugging (can be removed in production)
+      console.log("Creating test result with data:", {
+        studentId: testResultData.studentId,
+        testId: testResultData.testId,
+        totalQuestions: testResultData.totalQuestions,
+        percentage: testResultData.percentage,
+        questionResultsCount: testResultData.questionResults.length,
+        answersCount: testResultData.answers.size,
       });
+
+      const testResult = await StudentTestResult.create(testResultData);
+
+      console.log("Test result saved successfully:", testResult._id);
 
       return successResponse(
         testResult.toObject(),
         "Test result saved successfully"
       );
     } catch (createError) {
+      // Log detailed error for debugging
+      console.error("Error creating test result:", {
+        message: createError.message,
+        name: createError.name,
+        errors: createError.errors,
+        stack: createError.stack,
+      });
       throw createError;
     }
   } catch (error) {
+    // Enhanced error logging
+    console.error("Error in POST /api/student/test-results:", {
+      message: error.message,
+      name: error.name,
+      validationErrors: error.errors,
+      stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
+    });
     return handleApiError(error, "Failed to save test result");
   }
 }

@@ -543,12 +543,23 @@ const PracticeTestList = ({
         }
 
         // Apply defaults to test data for display consistency
+        // IMPORTANT: Preserve _id and id fields from testData
         const enrichedTest = {
           ...testData,
+          _id: testData._id || testData.id, // Ensure _id is preserved
+          id: testData.id || testData._id, // Ensure id is preserved as fallback
           maximumMarks: testData.maximumMarks || (qCount * DEFAULT_MARKS_PER_QUESTION),
           negativeMarks: testData.negativeMarks || DEFAULT_NEGATIVE_MARKS,
           duration: testData.duration || (qCount > 0 ? `${Math.ceil((qCount * DEFAULT_SECONDS_PER_QUESTION) / 60)} Min` : "0 Min")
         };
+
+        // Log for debugging
+        if (!enrichedTest._id) {
+          logger.warn("Warning: testData does not have _id field", {
+            testData,
+            enrichedTest,
+          });
+        }
 
         setTest(enrichedTest);
         setQuestions(questionsData);
@@ -716,7 +727,43 @@ const PracticeTestList = ({
 
       setShowSubmitModal(false);
       const calculatedResults = calculateResults();
-      const testIdStr = String(selectedTest);
+      
+      // CRITICAL: Use test._id (the actual MongoDB ObjectId) instead of selectedTest (which is a slug/identifier)
+      // The test object should have _id after being loaded from fetchPracticeTestById
+      if (!test) {
+        logger.error("Cannot save test result: test object is missing");
+        alert("Error: Test information is missing. Please reload the test and try again.");
+        return;
+      }
+      
+      // Try to get _id from test object - it should always be present after loading from API
+      const actualTestId = test._id || test.id;
+      if (!actualTestId) {
+        logger.error("Cannot save test result: test._id is missing. test object:", {
+          test,
+          selectedTest,
+          hasId: !!test.id,
+          has_id: !!test._id,
+        });
+        alert("Error: Test ID is missing. Please reload the test and try again.");
+        return;
+      }
+      
+      const testIdStr = String(actualTestId);
+      
+      // Validate testId is a valid MongoDB ObjectId format (24 hex characters)
+      // This prevents sending slugs like "test-paper" instead of ObjectIds
+      const objectIdRegex = /^[0-9a-fA-F]{24}$/;
+      if (!objectIdRegex.test(testIdStr)) {
+        logger.error("Invalid testId format - must be a valid MongoDB ObjectId", {
+          testIdStr,
+          testId: actualTestId,
+          testObject: test,
+          selectedTest,
+        });
+        alert(`Error: Invalid test ID format. Expected MongoDB ObjectId (24 hex characters), but received: "${testIdStr}". Please reload the test and try again.`);
+        return;
+      }
 
       // Always set results and mark as submitted (for display)
       setResults(calculatedResults);
@@ -724,7 +771,7 @@ const PracticeTestList = ({
       setIsTestStarted(false);
 
       // If student is NOT logged in, show registration modal AND results page with prompt
-      if (!isAuthenticated && test && selectedTest) {
+      if (!isAuthenticated && test && testIdStr) {
         setPendingTestResults({
           testId: testIdStr,
           examId: examId || null,
@@ -763,8 +810,20 @@ const PracticeTestList = ({
           return;
         }
 
+        logger.info("Attempting to save test result", {
+          testId: testIdStr,
+          isAuthenticated,
+          hasTest: !!test,
+          hasSelectedTest: !!selectedTest,
+        });
+
         isSavingTestResultRef.current = true;
         try {
+          // Prepare startedAt date - convert to ISO string if Date object
+          const startedAtDate = startTimeRef.current
+            ? (startTimeRef.current instanceof Date ? startTimeRef.current.toISOString() : new Date(startTimeRef.current).toISOString())
+            : new Date().toISOString();
+
           const resultData = {
             testId: testIdStr,
             examId: examId || null,
@@ -781,17 +840,47 @@ const PracticeTestList = ({
             maximumMarks: calculatedResults.maximumMarks,
             percentage: calculatedResults.percentage,
             timeTaken: calculatedResults.timeTaken,
-            answers: answers,
-            questionResults: calculatedResults.questionResults,
-            startedAt: startTimeRef.current
-              ? new Date(startTimeRef.current)
-              : new Date(),
+            answers: answers || {},
+            questionResults: calculatedResults.questionResults || [],
+            startedAt: startedAtDate,
           };
 
+          // Validate required fields before sending
+          if (!resultData.testId) {
+            logger.error("Cannot save test result: testId is missing");
+            return;
+          }
+          if (resultData.totalQuestions === undefined || resultData.percentage === undefined) {
+            logger.error("Cannot save test result: required fields missing", {
+              hasTotalQuestions: resultData.totalQuestions !== undefined,
+              hasPercentage: resultData.percentage !== undefined,
+            });
+            return;
+          }
+
+          logger.info("Calling saveTestResult with data", {
+            testId: resultData.testId,
+            totalQuestions: resultData.totalQuestions,
+            percentage: resultData.percentage,
+            questionResultsLength: resultData.questionResults?.length || 0,
+          });
+
           const saveResult = await saveTestResult(resultData);
-          if (saveResult.success && saveResult.data) {
+          
+          logger.info("saveTestResult response", {
+            success: saveResult?.success,
+            message: saveResult?.message,
+            hasData: !!saveResult?.data,
+          });
+
+          if (saveResult && saveResult.success && saveResult.data) {
             // Mark as saved to prevent duplicates
             savedTestResultIdsRef.current.add(saveKey);
+            
+            logger.info("Test result saved successfully", {
+              testId: testIdStr,
+              resultId: saveResult.data._id,
+            });
             
             // Update score immediately with saved data
             setStudentScores((prev) => ({
@@ -802,12 +891,28 @@ const PracticeTestList = ({
                 percentage: saveResult.data.percentage,
               },
             }));
+          } else {
+            logger.warn("Failed to save test result", {
+              success: saveResult?.success,
+              message: saveResult?.message,
+            });
           }
         } catch (error) {
-          logger.error("Error saving test result:", error);
+          logger.error("Error saving test result:", {
+            error: error.message,
+            stack: error.stack,
+            response: error.response?.data,
+          });
         } finally {
           isSavingTestResultRef.current = false;
         }
+      } else {
+        logger.warn("Skipping save test result", {
+          isAuthenticated,
+          hasTest: !!test,
+          hasSelectedTest: !!selectedTest,
+          isSaving: isSavingTestResultRef.current,
+        });
       }
 
       // Reset submission ref after processing

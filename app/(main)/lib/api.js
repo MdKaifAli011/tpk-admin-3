@@ -1704,14 +1704,23 @@ export async function saveTestResult(resultData) {
   const isServer = typeof window === "undefined";
 
   if (isServer) {
+    console.warn("saveTestResult called on server side, returning null");
     return null;
   }
 
   try {
     const token = localStorage.getItem("student_token");
     if (!token) {
+      console.error("saveTestResult: No student token found");
       return { success: false, message: "Not authenticated" };
     }
+
+    console.log("saveTestResult: Attempting to save test result", {
+      testId: resultData.testId,
+      totalQuestions: resultData.totalQuestions,
+      percentage: resultData.percentage,
+      questionResultsCount: resultData.questionResults?.length || 0,
+    });
 
     const response = await api.post("/student/test-results", resultData, {
       headers: {
@@ -1720,11 +1729,25 @@ export async function saveTestResult(resultData) {
       },
     });
 
+    console.log("saveTestResult: Response received", {
+      success: response.data.success,
+      message: response.data.message,
+      hasData: !!response.data.data,
+    });
+
     if (response.data.success) {
+      console.log("saveTestResult: Successfully saved test result", response.data.data?._id);
       return { success: true, data: response.data.data };
     }
+    console.warn("saveTestResult: Response indicates failure", response.data.message);
     return { success: false, message: response.data.message };
   } catch (error) {
+    console.error("saveTestResult: Error occurred", {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status,
+      stack: error.stack,
+    });
     return {
       success: false,
       message:
