@@ -16,14 +16,50 @@ export async function GET(request, { params }) {
     try {
         await connectDB();
         const { slug } = await params;
+        
+        // Validate slug exists
+        if (!slug) {
+            console.error("GET /api/discussion/threads/[slug]: Slug is missing", { params });
+            return NextResponse.json(
+                { success: false, message: "Thread slug is required" },
+                { status: 400 }
+            );
+        }
+        
+        console.log("GET /api/discussion/threads/[slug]: Fetching thread", { slug });
+        
         const user = await getUser(request);
         const isAdmin = user?.type === "User";
 
-        // Query to fetch the thread - for non-admins, must be approved
+        // Query to fetch the thread
+        // - Admins: can see all threads (approved and unapproved)
+        // - Non-admins: can see approved threads OR their own unapproved threads (for preview)
         const threadQuery = { slug };
+        
         if (!isAdmin) {
-            threadQuery.isApproved = true;
+            // First, fetch the thread to check if user is the author
+            const threadCheck = await Thread.findOne({ slug })
+                .select("author authorType guestName isApproved")
+                .lean();
+            
+            if (threadCheck) {
+                const isAuthor = 
+                    (threadCheck.author && user?.id && threadCheck.author.toString() === user.id.toString()) ||
+                    (threadCheck.authorType === "Guest" && user?.type === "Guest" && threadCheck.guestName === user.name);
+                
+                // If user is the author, they can see their own thread even if unapproved
+                // Otherwise, only show approved threads
+                if (!isAuthor) {
+                    threadQuery.isApproved = true;
+                }
+                // If isAuthor is true, don't add isApproved filter - allow unapproved threads for authors
+            } else {
+                // Thread doesn't exist, but we'll let the query below handle the 404
+                threadQuery.isApproved = true;
+            }
         }
+
+        console.log("GET /api/discussion/threads/[slug]: Query", { threadQuery, isAdmin, userId: user?.id });
 
         // 1. Fetch Thread
         const thread = await Thread.findOne(threadQuery)
@@ -37,11 +73,18 @@ export async function GET(request, { params }) {
             .lean();
 
         if (!thread) {
+            console.warn("GET /api/discussion/threads/[slug]: Thread not found", {
+                slug,
+                threadQuery,
+                isAdmin,
+            });
             return NextResponse.json(
                 { success: false, message: "Thread not found or pending approval" },
                 { status: 404 }
             );
         }
+        
+        console.log("GET /api/discussion/threads/[slug]: Thread found", { threadId: thread._id, title: thread.title });
 
         // Increment views (Non-blocking)
         Thread.updateOne({ _id: thread._id }, { $inc: { views: 1 } }).exec();
@@ -137,9 +180,14 @@ export async function GET(request, { params }) {
         });
 
     } catch (error) {
-        console.error("Error fetching thread detail:", error);
+        const { slug: errorSlug } = await params;
+        console.error("Error fetching thread detail:", {
+            message: error.message,
+            stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
+            slug: errorSlug,
+        });
         return NextResponse.json(
-            { success: false, message: "Failed to fetch thread" },
+            { success: false, message: error.message || "Failed to fetch thread" },
             { status: 500 }
         );
     }

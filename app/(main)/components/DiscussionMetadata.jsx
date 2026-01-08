@@ -27,9 +27,21 @@ export default function DiscussionMetadata({ entityData = {} }) {
 
     // Fetch thread data and update metadata
     const updateMetadata = async () => {
+      if (!threadSlug) {
+        console.warn("DiscussionMetadata: No thread slug provided");
+        return;
+      }
+      
       try {
         const response = await api.get(`/discussion/threads/${threadSlug}`);
-        if (!response.data?.success || !response.data?.data?.thread) return;
+        if (!response.data?.success || !response.data?.data?.thread) {
+          console.warn("DiscussionMetadata: Thread not found or not approved", {
+            threadSlug,
+            success: response.data?.success,
+            hasThread: !!response.data?.data?.thread,
+          });
+          return;
+        }
 
         const thread = response.data.data.thread;
         const entityName = entityData?.name || thread.chapterId?.name || thread.subjectId?.name || thread.examId?.name || "";
@@ -121,7 +133,14 @@ export default function DiscussionMetadata({ entityData = {} }) {
         }
         canonicalLink.setAttribute("href", canonicalUrl);
       } catch (error) {
-        console.error("Error updating discussion metadata:", error);
+        // Only log error if it's not a 404 (thread might not exist or be approved yet)
+        if (error.response?.status !== 404) {
+          console.error("Error updating discussion metadata:", {
+            message: error.message,
+            status: error.response?.status,
+            threadSlug,
+          });
+        }
       }
     };
 

@@ -13,6 +13,7 @@ import api from "@/lib/api";
 import { marked } from "marked";
 import DOMPurify from "dompurify";
 import RichTextEditor from "@/app/(admin)/components/ui/RichTextEditor";
+import RichContent from "./RichContent";
 import Card from "./Card";
 import Button from "./Button";
 import DiscussionMetadata from "./DiscussionMetadata";
@@ -35,8 +36,25 @@ const getGuestIdentity = () => {
 };
 
 /* ---------- Helpers ---------- */
+// Check if content is HTML (from RichTextEditor) or markdown
+const isHTML = (text = "") => {
+  if (!text) return false;
+  // Check if text contains HTML tags
+  const htmlTagRegex = /<[^>]+>/;
+  return htmlTagRegex.test(text);
+};
+
+// Render content - handles both HTML (from RichTextEditor) and markdown
 const renderContent = (text = "") => {
-  const html = marked.parse(text || "");
+  if (!text) return "";
+  
+  // If content is already HTML (from RichTextEditor), sanitize and return
+  if (isHTML(text)) {
+    return DOMPurify.sanitize(text);
+  }
+  
+  // Otherwise, treat as markdown and parse
+  const html = marked.parse(text);
   return DOMPurify.sanitize(html);
 };
 
@@ -341,11 +359,17 @@ const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal }) => {
   };
 
   const fetchDetail = useCallback(async () => {
+    if (!slug) {
+      console.warn("ThreadDetail: No slug provided");
+      setLoading(false);
+      return;
+    }
+    
     try {
       setLoading(true);
       const headers = { "x-guest-id": guestIdentity.id, "x-guest-name": guestIdentity.name };
       const sortParam = sortState === "Most Upvoted" ? "top" : "new";
-      const url = `/discussion/threads/${slug}?sort=${sortParam}&replyPage=${replyPage}&replySearch=${replySearch}`;
+      const url = `/discussion/threads/${slug}?sort=${sortParam}&replyPage=${replyPage}&replySearch=${encodeURIComponent(replySearch || "")}`;
       const res = await api.get(url, { headers });
       if (res.data.success) {
         setThread(res.data.data.thread);
@@ -353,9 +377,23 @@ const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal }) => {
         if (res.data.data.pagination) {
           setReplyPagination(res.data.data.pagination);
         }
+      } else {
+        console.warn("ThreadDetail: Failed to fetch thread", {
+          slug,
+          message: res.data?.message,
+        });
       }
     } catch (error) {
-      console.error("Failed to fetch thread", error);
+      // Only log error if it's not a 404 (thread might not exist or be approved yet)
+      if (error.response?.status !== 404) {
+        console.error("Failed to fetch thread", {
+          message: error.message,
+          status: error.response?.status,
+          slug,
+        });
+      } else {
+        console.warn("Thread not found or pending approval", { slug });
+      }
     } finally {
       setLoading(false);
     }
@@ -505,7 +543,25 @@ const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal }) => {
   };
 
   if (loading) return <div className="flex justify-center p-20"><FaEye className="animate-pulse text-indigo-400" size={30} /></div>;
-  if (!thread) return <div className="text-center p-20">Thread not found. <button onClick={onBack} className="text-indigo-600 underline">Go Back</button></div>;
+  if (!thread) {
+    return (
+      <div className="text-center p-20">
+        <div className="mb-4">
+          <FaComment className="mx-auto text-gray-300 mb-4" size={48} />
+          <h3 className="text-lg font-bold text-gray-900 mb-2">Thread Not Found</h3>
+          <p className="text-sm text-gray-600 mb-4">
+            The discussion thread you're looking for doesn't exist or is pending approval.
+          </p>
+        </div>
+        <button 
+          onClick={onBack} 
+          className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+        >
+          <FaArrowLeft size={14} /> Go Back to Forum
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="pb-10 animate-in fade-in slide-in-from-right-4 duration-300">
@@ -621,9 +677,9 @@ const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal }) => {
                     </div>
                   </div>
 
-                  <div className="prose prose-sm prose-slate max-w-none text-gray-600 leading-relaxed text-[13px] mb-8"
-                    dangerouslySetInnerHTML={{ __html: renderContent(thread.content) }}
-                  />
+                  <div className="prose prose-sm prose-slate max-w-none text-gray-600 leading-relaxed text-[13px] mb-8">
+                    <RichContent html={renderContent(thread.content)} />
+                  </div>
 
                   {thread.attachments?.length > 0 && (
                     <div className="flex items-center gap-3 p-3 bg-white rounded-xl border border-gray-100 max-w-sm mb-8 transition-all hover:border-gray-200 group shadow-sm">
@@ -884,7 +940,9 @@ const CommentItem = ({ reply, onVote, onReply, onReport, onShare, depth = 0, onS
           <span className="text-[10px] text-gray-400 font-medium">{timeAgo(reply.createdAt)}</span>
         </div>
 
-        <div className="text-[12px] text-gray-600 leading-relaxed pl-1" dangerouslySetInnerHTML={{ __html: renderContent(reply.content) }} />
+        <div className="text-[12px] text-gray-600 leading-relaxed pl-1">
+          <RichContent html={renderContent(reply.content)} />
+        </div>
 
         <div className="flex items-center gap-4 mt-2.5 pl-1">
           <div className="flex items-center gap-1.5 group cursor-pointer" onClick={() => onVote(reply._id, 'upvote')}>
@@ -989,9 +1047,9 @@ const CommentItem = ({ reply, onVote, onReply, onReport, onShare, depth = 0, onS
             </div>
           </div>
 
-          <div className="prose prose-sm prose-slate max-w-none text-gray-700 leading-relaxed text-[13px] mb-6"
-            dangerouslySetInnerHTML={{ __html: renderContent(reply.content) }}
-          />
+          <div className="prose prose-sm prose-slate max-w-none text-gray-700 leading-relaxed text-[13px] mb-6">
+            <RichContent html={renderContent(reply.content)} />
+          </div>
 
           <div className="flex items-center gap-5 pt-3 border-t border-gray-50">
             <button onClick={handleReplyClick} className="text-[10px] font-bold text-gray-400 hover:text-blue-600 transition-all flex items-center gap-1.5 uppercase tracking-wider">
