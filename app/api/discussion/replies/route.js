@@ -53,7 +53,7 @@ export async function POST(request) {
             author: user.type === "Guest" ? null : user.id,
             authorType: user.type,
             guestName: user.type === "Guest" ? user.name : undefined,
-            isApproved: user.type !== "Guest", // Guest replies need approval
+            isApproved: user.type === "User", // Only Admin/User replies are auto-approved, Students and Guests need approval
         });
 
         return NextResponse.json({

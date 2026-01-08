@@ -16,6 +16,8 @@ import RichTextEditor from "@/app/(admin)/components/ui/RichTextEditor";
 import Card from "./Card";
 import Button from "./Button";
 import DiscussionMetadata from "./DiscussionMetadata";
+import DiscussionFormModal from "./DiscussionFormModal";
+import { useStudent } from "../hooks/useStudent";
 
 /* ---------- Persistent Guest Logic ---------- */
 const getGuestIdentity = () => {
@@ -314,7 +316,7 @@ const SuccessModal = ({ isOpen, onClose, title, message }) => {
 };
 
 /* ---------- Thread Detail View ---------- */
-const ThreadDetail = ({ slug, onBack, guestIdentity }) => {
+const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal }) => {
   const [thread, setThread] = useState(null);
   const [replies, setReplies] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -415,6 +417,32 @@ const ThreadDetail = ({ slug, onBack, guestIdentity }) => {
   };
 
   const handlePostReply = async (parentId = null, content = null) => {
+    const finalContent = content || replyContent;
+    if (!finalContent.trim() || !thread?._id) return;
+    
+    // Check if user needs to authenticate - always check if not logged in
+    if (typeof window !== "undefined") {
+      const token = localStorage.getItem("student_token");
+      if (!token) {
+        // Show modal to collect user information before posting
+        if (onShowAuthModal) {
+          onShowAuthModal(parentId ? "Discussion-forum-reply" : "Discussion-forum-comment", () => {
+            // After successful form submission, proceed with posting
+            handlePostReplyInternal(parentId, finalContent);
+          });
+        } else {
+          // Fallback: show alert if onShowAuthModal is not available
+          alert("Please log in to post a reply.");
+        }
+        return;
+      }
+    }
+    
+    // User is authenticated, proceed with posting
+    await handlePostReplyInternal(parentId, finalContent);
+  };
+
+  const handlePostReplyInternal = async (parentId = null, content = null) => {
     const finalContent = content || replyContent;
     if (!finalContent.trim() || !thread?._id) return;
     setIsSubmitting(true);
@@ -693,6 +721,7 @@ const ThreadDetail = ({ slug, onBack, guestIdentity }) => {
                       onReport={(id) => handleReport('reply', id)}
                       onShare={handleShare}
                       depth={0}
+                      onShowAuthModal={onShowAuthModal}
                     />
                   ))}
 
@@ -805,10 +834,31 @@ const ThreadDetail = ({ slug, onBack, guestIdentity }) => {
 };
 
 /* ---------- Recursive Comment Item ---------- */
-const CommentItem = ({ reply, onVote, onReply, onReport, onShare, depth = 0 }) => {
+const CommentItem = ({ reply, onVote, onReply, onReport, onShare, depth = 0, onShowAuthModal }) => {
   const [showReplyForm, setShowReplyForm] = useState(false);
   const [subReplyContent, setSubReplyContent] = useState("");
   const isAccepted = reply.isAccepted;
+
+  const handleReplyClick = () => {
+    // Check if user needs to authenticate - always check if not logged in
+    if (typeof window !== "undefined") {
+      const token = localStorage.getItem("student_token");
+      if (!token) {
+        // Show modal to collect user information before showing reply form
+        if (onShowAuthModal) {
+          onShowAuthModal("Discussion-forum-reply", () => {
+            setShowReplyForm(true);
+          });
+        } else {
+          // Fallback: show alert if onShowAuthModal is not available
+          alert("Please log in to reply.");
+        }
+        return;
+      }
+    }
+    // User is authenticated, show reply form
+    setShowReplyForm(true);
+  };
 
   // Render for nested items (depth > 0)
   if (depth > 0) {
@@ -841,7 +891,7 @@ const CommentItem = ({ reply, onVote, onReply, onReport, onShare, depth = 0 }) =
             <FaThumbsUp size={11} className={`transition-all ${reply.isLiked ? 'text-blue-600' : 'text-gray-300 group-hover:text-blue-500'}`} />
             <span className="text-[11px] font-bold text-gray-400 group-hover:text-gray-900">{reply.score || 0}</span>
           </div>
-          <button onClick={() => setShowReplyForm(!showReplyForm)} className="text-[10px] font-bold text-gray-400 hover:text-blue-600 transition-all uppercase tracking-wider">
+          <button onClick={handleReplyClick} className="text-[10px] font-bold text-gray-400 hover:text-blue-600 transition-all uppercase tracking-wider">
             Reply
           </button>
         </div>
@@ -878,7 +928,7 @@ const CommentItem = ({ reply, onVote, onReply, onReport, onShare, depth = 0 }) =
         {reply.children?.length > 0 && (
           <div className="space-y-3">
             {reply.children.map(child => (
-              <CommentItem key={child._id} reply={child} onVote={onVote} onReply={onReply} onReport={onReport} onShare={onShare} depth={depth + 1} />
+              <CommentItem key={child._id} reply={child} onVote={onVote} onReply={onReply} onReport={onReport} onShare={onShare} depth={depth + 1} onShowAuthModal={onShowAuthModal} />
             ))}
           </div>
         )}
@@ -944,7 +994,7 @@ const CommentItem = ({ reply, onVote, onReply, onReport, onShare, depth = 0 }) =
           />
 
           <div className="flex items-center gap-5 pt-3 border-t border-gray-50">
-            <button onClick={() => setShowReplyForm(!showReplyForm)} className="text-[10px] font-bold text-gray-400 hover:text-blue-600 transition-all flex items-center gap-1.5 uppercase tracking-wider">
+            <button onClick={handleReplyClick} className="text-[10px] font-bold text-gray-400 hover:text-blue-600 transition-all flex items-center gap-1.5 uppercase tracking-wider">
               <FaComment size={10} /> Reply
             </button>
             <button onClick={onShare} className="text-[10px] font-bold text-gray-400 hover:text-blue-600 transition-all flex items-center gap-1.5 uppercase tracking-wider">
@@ -984,17 +1034,18 @@ const CommentItem = ({ reply, onVote, onReply, onReport, onShare, depth = 0 }) =
           {/* Recursive Rendering INSIDE the same Card Container */}
           {reply.children?.length > 0 && (
             <div className="mt-4 space-y-4">
-              {reply.children.map(child => (
-                <CommentItem
-                  key={child._id}
-                  reply={child}
-                  onVote={onVote}
-                  onReply={onReply}
-                  onReport={onReport}
-                  onShare={onShare}
-                  depth={depth + 1}
-                />
-              ))}
+            {reply.children.map(child => (
+              <CommentItem
+                key={child._id}
+                reply={child}
+                onVote={onVote}
+                onReply={onReply}
+                onReport={onReport}
+                onShare={onShare}
+                depth={depth + 1}
+                onShowAuthModal={onShowAuthModal}
+              />
+            ))}
             </div>
           )}
         </div>
@@ -1009,6 +1060,7 @@ const DiscussionForumTab = ({ entityName, entityType, examId, subjectId, unitId,
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
+  const { isAuthenticated } = useStudent();
 
   const guestIdentity = useMemo(() => getGuestIdentity(), []);
   const currentThreadSlug = searchParams.get("thread");
@@ -1031,6 +1083,8 @@ const DiscussionForumTab = ({ entityName, entityType, examId, subjectId, unitId,
   const [isCreating, setIsCreating] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successContent, setSuccessContent] = useState({ title: "", message: "" });
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [pendingAction, setPendingAction] = useState(null);
 
   const fetchThreads = useCallback(async () => {
     setLoading(true);
@@ -1074,6 +1128,8 @@ const DiscussionForumTab = ({ entityName, entityType, examId, subjectId, unitId,
   };
 
   const handleStartCreate = () => {
+    // Allow users to start creating without authentication check
+    // Authentication will be checked when they click "Publish Discussion"
     const params = new URLSearchParams(searchParams);
     params.set("action", "create");
     params.delete("thread");
@@ -1088,6 +1144,30 @@ const DiscussionForumTab = ({ entityName, entityType, examId, subjectId, unitId,
   };
 
   const handleCreateThread = async () => {
+    if (!newTitle.trim() || !newContent.trim()) return;
+    
+    // Check if user needs to authenticate before publishing
+    if (typeof window !== "undefined") {
+      const token = localStorage.getItem("student_token");
+      if (!token) {
+        // Show modal to collect user information before publishing
+        setPendingAction({ 
+          formId: "Discussion-forum-post", 
+          onSuccess: () => {
+            // After successful form submission, proceed with publishing
+            handleCreateThreadInternal();
+          }
+        });
+        setShowAuthModal(true);
+        return;
+      }
+    }
+    
+    // User is authenticated, proceed with publishing
+    await handleCreateThreadInternal();
+  };
+
+  const handleCreateThreadInternal = async () => {
     if (!newTitle.trim() || !newContent.trim()) return;
     setIsCreating(true);
     try {
@@ -1106,7 +1186,7 @@ const DiscussionForumTab = ({ entityName, entityType, examId, subjectId, unitId,
       if (isApproved === false || (guestIdentity.id && isApproved === undefined)) {
         setSuccessContent({
           title: "Waiting for Approval",
-          message: "thread is not aproved please wait for aproved by modrate teams or admin teams"
+          message: "Your discussion thread has been submitted and is pending approval by our moderation team. Once approved, it will be visible to the community."
         });
       } else {
         setSuccessContent({
@@ -1262,7 +1342,15 @@ const DiscussionForumTab = ({ entityName, entityType, examId, subjectId, unitId,
 
       {
         view === "DETAIL" && (
-          <ThreadDetail slug={currentThreadSlug} onBack={handleBack} guestIdentity={guestIdentity} />
+          <ThreadDetail 
+            slug={currentThreadSlug} 
+            onBack={handleBack} 
+            guestIdentity={guestIdentity}
+            onShowAuthModal={(formId, onSuccess) => {
+              setPendingAction({ formId, onSuccess });
+              setShowAuthModal(true);
+            }}
+          />
         )
       }
       {
@@ -1454,6 +1542,22 @@ const DiscussionForumTab = ({ entityName, entityType, examId, subjectId, unitId,
         onClose={() => setShowSuccessModal(false)}
         title={successContent.title}
         message={successContent.message}
+      />
+
+      <DiscussionFormModal
+        isOpen={showAuthModal}
+        onClose={() => {
+          setShowAuthModal(false);
+          setPendingAction(null);
+        }}
+        onSuccess={() => {
+          if (pendingAction?.onSuccess) {
+            pendingAction.onSuccess();
+          }
+          setShowAuthModal(false);
+          setPendingAction(null);
+        }}
+        formId={pendingAction?.formId || "Discussion-forum-post"}
       />
     </div>
   );

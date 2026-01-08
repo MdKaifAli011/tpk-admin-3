@@ -166,7 +166,7 @@ export async function POST(request) {
             authorType: user.type,
             guestName: user.type === "Guest" ? user.name : undefined,
             tags: body.tags || ["General"],
-            isApproved: user.type !== "Guest", // Guest threads need approval
+            isApproved: user.type === "User", // Only Admin/User posts are auto-approved, Students and Guests need approval
         });
 
         return NextResponse.json({
