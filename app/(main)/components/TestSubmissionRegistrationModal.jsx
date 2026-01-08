@@ -408,7 +408,7 @@ const TestSubmissionRegistrationModal = ({
               </div>
 
               <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">
-                Let&apos;s Connect With You Soon
+              Set up your exam dashboard
               </h2>
 
               <form onSubmit={handleSubmit} className="space-y-2">

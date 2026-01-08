@@ -32,6 +32,9 @@ import Card from "./Card";
 import Button from "./Button";
 import { toTitleCase } from "../../../utils/titleCase";
 import { logger } from "@/utils/logger";
+import { marked } from "marked";
+import DOMPurify from "dompurify";
+import RichContent from "./RichContent";
 
 // Default test settings if not provided by admin
 const DEFAULT_MARKS_PER_QUESTION = 4;
@@ -194,6 +197,28 @@ const PracticeTestList = ({
     // setSelectedTest will be updated by the useEffect above
   };
 
+  // Check if content is HTML (from RichTextEditor) or markdown
+  const isHTML = (text = "") => {
+    if (!text) return false;
+    // Check if text contains HTML tags
+    const htmlTagRegex = /<[^>]+>/;
+    return htmlTagRegex.test(text);
+  };
+
+  // Render content - handles both HTML (from RichTextEditor) and markdown
+  const renderContent = (text = "") => {
+    if (!text) return "";
+    
+    // If content is already HTML (from RichTextEditor), sanitize and return
+    if (isHTML(text)) {
+      return DOMPurify.sanitize(text);
+    }
+    
+    // Otherwise, treat as markdown and parse
+    const html = marked.parse(text);
+    return DOMPurify.sanitize(html);
+  };
+
   // Helper to render names (handles HTML from editor + Title Case for plain text)
   const renderFormattedName = (name) => {
     if (!name) return "";
@@ -246,6 +271,16 @@ const PracticeTestList = ({
       }).catch(err => console.error("MathJax load error:", err));
     }
   }, [currentQuestionIndex, isTestStarted, isTestSubmitted, results, questions]);
+
+  // Scroll to top when test starts
+  useEffect(() => {
+    if (isTestStarted && questions.length > 0) {
+      // Small delay to ensure DOM is updated
+      setTimeout(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }, 150);
+    }
+  }, [isTestStarted, questions.length]);
 
   // Close registration modal if user logs in from another tab
   useEffect(() => {
@@ -319,76 +354,73 @@ const PracticeTestList = ({
         }
 
         // Calculate relevance priority for each test
+        // Priority system: Current level → Nearest parent with tests → All others
         const getPriority = (test) => {
           const tUnitId = test.unitId?._id || test.unitId;
           const tChapterId = test.chapterId?._id || test.chapterId;
           const tTopicId = test.topicId?._id || test.topicId;
           const tSubTopicId = test.subTopicId?._id || test.subTopicId;
+          const tSubjectId = test.subjectId?._id || test.subjectId;
 
           const sUnitId = unitId ? String(unitId) : null;
           const sChapterId = chapterId ? String(chapterId) : null;
           const sTopicId = topicId ? String(topicId) : null;
           const sSubTopicId = subTopicId ? String(subTopicId) : null;
+          const sSubjectId = subjectId ? String(subjectId) : null;
+          const sExamId = examId ? String(examId) : null;
 
-          // 1. Specific Sub-topic Page
-          if (sSubTopicId) {
-            if (String(tSubTopicId) === sSubTopicId) return 1; // Direct Subtopic
-            if (String(tTopicId) === sTopicId && !tSubTopicId) return 2; // Parent Topic
-            if (String(tChapterId) === sChapterId && !tTopicId) return 3; // Parent Chapter
-            if (String(tUnitId) === sUnitId && !tChapterId) return 4; // Parent Unit
-            if (String(tUnitId) === sUnitId) return 5; // Related in same Unit subtree
-            return 10; // Other
+          // Check if test is assigned to current page level
+          // A test is "assigned" to a level if it has that level's ID set
+          // It doesn't matter if it also has child level IDs
+          let matchesCurrentLevel = false;
+          
+          if (sSubTopicId && String(tSubTopicId) === sSubTopicId) {
+            matchesCurrentLevel = true;
+          } else if (sTopicId && !sSubTopicId && String(tTopicId) === sTopicId) {
+            matchesCurrentLevel = true;
+          } else if (sChapterId && !sTopicId && !sSubTopicId && String(tChapterId) === sChapterId) {
+            matchesCurrentLevel = true;
+          } else if (sUnitId && !sChapterId && !sTopicId && !sSubTopicId && String(tUnitId) === sUnitId) {
+            matchesCurrentLevel = true;
+          } else if (sSubjectId && !sUnitId && !sChapterId && !sTopicId && !sSubTopicId && String(tSubjectId) === sSubjectId) {
+            matchesCurrentLevel = true;
+          } else if (sExamId && !sSubjectId && !sUnitId && !sChapterId && !sTopicId && !sSubTopicId) {
+            const testExamId = String(test.examId?._id || test.examId);
+            if (testExamId === sExamId) {
+              matchesCurrentLevel = true;
+            }
           }
 
-          // 2. Topic Page
-          if (sTopicId) {
-            if (String(tTopicId) === sTopicId && !tSubTopicId) return 1; // Direct Topic
-            if (String(tTopicId) === sTopicId && tSubTopicId) return 2; // Child Subtopic
-            if (String(tChapterId) === sChapterId && !tTopicId) return 3; // Parent Chapter
-            if (String(tUnitId) === sUnitId && !tChapterId) return 4; // Parent Unit
-            if (String(tChapterId) === sChapterId) return 5; // Related in same Chapter subtree
-            return 10;
+          // Priority 1: Tests assigned to current page level (always at top)
+          if (matchesCurrentLevel) {
+            return 1;
           }
 
-          // 3. Chapter Page
-          if (sChapterId) {
-            if (String(tChapterId) === sChapterId && !tTopicId && !tSubTopicId) return 1; // Direct Chapter
-            if (String(tChapterId) === sChapterId && (tTopicId || tSubTopicId)) return 2; // Child Topic/Subtopic
-            if (String(tUnitId) === sUnitId && !tChapterId) return 3; // Parent Unit
-            if (String(tUnitId) === sUnitId) return 5; // Related in same Unit
-            return 10;
-          }
-
-          // 4. Unit Page
-          if (sUnitId) {
-            if (String(tUnitId) === sUnitId && !tChapterId && !tTopicId && !tSubTopicId) return 1; // Direct Unit
-            if (String(tUnitId) === sUnitId && (tChapterId || tTopicId || tSubTopicId)) return 2; // Child levels
-            return 5; // Other units in same subject
-          }
-
-          // 5. Subject Page
-          if (subjectId) {
-            if (!tUnitId && !tChapterId && !tTopicId && !tSubTopicId) return 1; // Direct Subject
-            return 2; // Everything else in this subject (Units/Chapters/etc)
-          }
-
-          // 6. Exam Page
-          if (examId) {
-            const tSubjectId = test.subjectId?._id || test.subjectId;
-            if (!tSubjectId) return 1; // Direct Exam paper
-            return 2; // Subject papers
-          }
-
+          // Priority 10: All other tests (parent levels and unrelated tests)
+          // Show all tests below current level tests
           return 10;
         };
 
+        // Process tests with priority
         const processedTests = allTests.map((t) => {
           const priority = getPriority(t);
           return {
             ...t,
             priority,
-            isDirect: priority === 1
+            isDirect: priority === 1, // Assigned to current level
+            isOther: priority === 10 // All other tests
           };
+        });
+
+        // Sort: Priority 1 (current level assigned) → Priority 10 (all others)
+        // Within same priority, sort by orderNumber
+        processedTests.sort((a, b) => {
+          // Primary sort: Priority (1 = current level at top, 10 = others below)
+          if (a.priority !== b.priority) {
+            return a.priority - b.priority;
+          }
+          // Secondary sort: Order Number
+          return (a.orderNumber || 999) - (b.orderNumber || 999);
         });
 
         setPracticeTests(processedTests);
@@ -446,15 +478,9 @@ const PracticeTestList = ({
                   negativeMarks: test.negativeMarks || DEFAULT_NEGATIVE_MARKS,
                   duration: test.duration || (qCount > 0 ? `${Math.ceil((qCount * DEFAULT_SECONDS_PER_QUESTION) / 60)} Min` : "0 Min")
                 };
-              })
-              .sort((a, b) => {
-                // Primary sort: Priority (Direct match 1, then children 2, others higher)
-                if (a.priority !== b.priority) {
-                  return a.priority - b.priority;
-                }
-                // Secondary sort: Order Number
-                return (a.orderNumber || 999) - (b.orderNumber || 999);
               });
+              // Note: Tests are already sorted by priority in processedTests above
+              // Priority order: Current level (1) → Parent levels (2-6) → Others (10+)
 
             return {
               category,
@@ -598,6 +624,11 @@ const PracticeTestList = ({
     const params = new URLSearchParams(searchParams.toString());
     params.set("test", currentSlug);
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    
+    // Scroll to top of the page to show the question screen
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 100);
   };
 
   // Handle answer selection
@@ -1301,10 +1332,9 @@ const PracticeTestList = ({
               <h1 className="text-2xl font-semibold text-gray-900 mb-2">
                 Test Results
               </h1>
-              <p
-                className="text-sm text-gray-600"
-                dangerouslySetInnerHTML={{ __html: renderFormattedName(test.name) }}
-              />
+              <div className="text-sm text-gray-600">
+                <RichContent html={renderContent(renderFormattedName(test.name))} />
+              </div>
             </div>
           </Card>
 
@@ -1378,10 +1408,9 @@ const PracticeTestList = ({
                         <span className="flex items-center justify-center w-8 h-8 rounded-full font-medium bg-white text-gray-900 border border-gray-300 text-xs">
                           {index + 1}
                         </span>
-                        <h3
-                          className="text-base font-semibold text-gray-900 rich-text-content"
-                          dangerouslySetInnerHTML={{ __html: result.question }}
-                        />
+                        <div className="text-base font-semibold text-gray-900 rich-text-content">
+                          <RichContent html={renderContent(result.question)} />
+                        </div>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
                         {result.isCorrect ? (
@@ -1431,10 +1460,9 @@ const PracticeTestList = ({
                               >
                                 {option}
                               </span>
-                              <span
-                                className="text-sm font-medium text-gray-900 flex-1 rich-text-content"
-                                dangerouslySetInnerHTML={{ __html: optionText }}
-                              />
+                              <div className="text-sm font-medium text-gray-900 flex-1 rich-text-content">
+                                <RichContent html={renderContent(optionText)} />
+                              </div>
                               {isCorrectAnswer && (
                                 <FaCheckCircle className="text-green-600 text-sm" />
                               )}
@@ -1452,10 +1480,9 @@ const PracticeTestList = ({
                         <h4 className="text-sm font-semibold text-gray-900 mb-2">
                           Explanation:
                         </h4>
-                        <p
-                          className="text-sm text-gray-600 leading-relaxed rich-text-content"
-                          dangerouslySetInnerHTML={{ __html: question.detailsExplanation }}
-                        />
+                        <div className="text-sm text-gray-600 leading-relaxed rich-text-content">
+                          <RichContent html={renderContent(question.detailsExplanation)} />
+                        </div>
                       </div>
                     )}
 
@@ -1510,10 +1537,9 @@ const PracticeTestList = ({
         <Card variant="none" hover={false} className="overflow-hidden">
           {/* TITLE */}
           <div className="p-6 text-center border-b border-gray-200">
-            <h1
-              className="text-xl font-bold text-gray-900 mb-2"
-              dangerouslySetInnerHTML={{ __html: renderFormattedName(test.name) }}
-            />
+            <h1 className="text-xl font-bold text-gray-900 mb-2">
+              <RichContent html={renderContent(renderFormattedName(test.name))} />
+            </h1>
             <p className="text-sm text-gray-500">
               Let&apos;s boost your preparation today
             </p>
@@ -1553,10 +1579,33 @@ const PracticeTestList = ({
               <h3 className="text-base font-semibold text-gray-900 mb-4">
                 Important Instructions
               </h3>
-              <ul className="text-sm text-gray-700 space-y-2 leading-relaxed">
-                {(test.description?.trim()
-                  ? test.description.split("\n").map((line) => line.trim())
-                  : [
+              {test.description?.trim() ? (
+                // If description exists, check if it's HTML
+                isHTML(test.description) ? (
+                  // If HTML, render directly with RichContent (preserves lists, formatting, etc.)
+                  <div className="text-sm text-gray-700 leading-relaxed rich-text-content">
+                    <RichContent html={renderContent(test.description)} />
+                  </div>
+                ) : (
+                  // If plain text, split by newlines and render as list
+                  <ul className="text-sm text-gray-700 space-y-2 leading-relaxed">
+                    {test.description.split("\n").map((line, index) => {
+                      const trimmedLine = line.trim();
+                      if (!trimmedLine) return null;
+                      return (
+                        <li key={index} className="flex gap-2">
+                          <div className="rich-text-content">
+                            <RichContent html={renderContent(trimmedLine)} />
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )
+              ) : (
+                // Default instructions if no description
+                <ul className="text-sm text-gray-700 space-y-2 leading-relaxed">
+                  {[
                     "Read each question carefully.",
                     "You may navigate between questions anytime.",
                     'Use "Mark for Review" for doubtful questions.',
@@ -1567,17 +1616,15 @@ const PracticeTestList = ({
                       ? `Each incorrect answer deducts ${test.negativeMarks} marks.`
                       : "No negative marking.",
                     "Review answers before final submission.",
-                  ]
-                ).map((line, index) => (
-                  <li key={index} className="flex gap-2">
-
-                    <span
-                      className="rich-text-content"
-                      dangerouslySetInnerHTML={{ __html: line }}
-                    />
-                  </li>
-                ))}
-              </ul>
+                  ].map((line, index) => (
+                    <li key={index} className="flex gap-2">
+                      <div className="rich-text-content">
+                        <RichContent html={renderContent(line)} />
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </Card>
           </div>
 
@@ -1746,10 +1793,9 @@ const PracticeTestList = ({
               </div>
 
               {/* QUESTION TEXT */}
-              <div
-                className="text-base text-gray-900 leading-relaxed mb-6 rich-text-content"
-                dangerouslySetInnerHTML={{ __html: currentQuestion.question }}
-              />
+              <div className="text-base text-gray-900 leading-relaxed mb-6 rich-text-content">
+                <RichContent html={renderContent(currentQuestion.question)} />
+              </div>
 
               {/* OPTIONS */}
               <div className="space-y-3">
@@ -2013,7 +2059,7 @@ const PracticeTestList = ({
                     <td className="px-4 py-3 w-[28%]">
                       <div className="text-sm font-medium text-gray-900 flex items-center">
                         <span className="mr-1">{test.orderNumber}.</span>
-                        <span dangerouslySetInnerHTML={{ __html: renderFormattedName(test.name) }} />
+                      {test.name}
                       </div>
                     </td>
 
@@ -2032,9 +2078,23 @@ const PracticeTestList = ({
                       {test.duration || "N/A"}
                     </td>
 
-                    {/* Col 5 */}
-                    <td className="px-3 py-3 text-center text-sm text-gray-500 w-[12%]">
-                      –
+                    {/* Col 5 - Attempted */}
+                    <td className="px-3 py-3 text-center text-sm w-[12%]">
+                      {(() => {
+                        const testId = String(test._id || test.id);
+                        const score = studentScores[testId];
+                        const hasAttempted = 
+                          score &&
+                          score.totalMarks !== undefined &&
+                          score.totalMarks !== null &&
+                          !isNaN(score.totalMarks);
+                        
+                        return hasAttempted ? (
+                          <span className="text-green-600 font-medium">Attempted</span>
+                        ) : (
+                          <span className="text-gray-500">–</span>
+                        );
+                      })()}
                     </td>
 
                     {/* Col 6 */}
@@ -2128,7 +2188,23 @@ const PracticeTestList = ({
                   <div>Questions: {test.numberOfQuestions || 0}</div>
                   <div>Marks: {test.maximumMarks || 0}</div>
                   <div>Duration: {test.duration || "N/A"}</div>
-                  <div>Attempted: –</div>
+                  <div>
+                    Attempted: {(() => {
+                      const testId = String(test._id || test.id);
+                      const score = studentScores[testId];
+                      const hasAttempted = 
+                        score &&
+                        score.totalMarks !== undefined &&
+                        score.totalMarks !== null &&
+                        !isNaN(score.totalMarks);
+                      
+                      return hasAttempted ? (
+                        <span className="text-green-600 font-medium">Attempted</span>
+                      ) : (
+                        <span className="text-gray-500">–</span>
+                      );
+                    })()}
+                  </div>
                 </div>
 
                 {/* Button + Score */}
