@@ -51,9 +51,9 @@ const ALL_MENU_ITEMS = [
     name: "Blog",
     icon: FaNewspaper,
     children: [
-      { name: "Folder", href: "/admin/blog" },
-      { name: "Sub Folder", href: "/admin/blog-category" },
-      { name: "Files", href: "/admin/blog-comment" },
+      { name: "Posts", href: "/admin/blog" },
+      { name: "Categories", href: "/admin/blog-category" },
+      { name: "Comments", href: "/admin/blog-comment" },
     ],
   },
   {
