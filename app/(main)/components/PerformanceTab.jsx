@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import {
   FaChartLine,
   FaTrophy,
@@ -18,6 +19,7 @@ import {
   FaUser,
   FaUserPlus,
   FaLock,
+  FaEye,
 } from "react-icons/fa";
 import { fetchAllStudentTestResults } from "../lib/api";
 import { useStudent } from "../hooks/useStudent";
@@ -35,9 +37,38 @@ const PerformanceTab = ({
   subTopicId,
 }) => {
   const { isAuthenticated } = useStudent();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
   const [testResults, setTestResults] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Handle viewing test result
+  const handleViewResult = (result) => {
+    if (!result.testId) return;
+    
+    // Get test ID - handle both populated object and string
+    const testId = typeof result.testId === "object" 
+      ? result.testId._id || result.testId.id 
+      : result.testId;
+    
+    if (!testId) return;
+
+    // Navigate to practice tab with test and view=results
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("tab", "practice");
+    params.set("test", String(testId));
+    params.set("view", "results");
+    
+    // Navigate first
+    router.push(`${pathname}?${params.toString()}`, { scroll: false });
+    
+    // Scroll to top after navigation (with delay to ensure page is ready)
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 200);
+  };
 
   // Fetch test results based on entity hierarchy
   // Fetch at exam level to show all test results for that exam (not too strict filtering)
@@ -721,6 +752,9 @@ const PerformanceTab = ({
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700">
                   Trend
                 </th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700">
+                  Action
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
@@ -830,6 +864,17 @@ const PerformanceTab = ({
                           <span className="text-xs">—</span>
                         </div>
                       )}
+                    </td>
+                    <td className="px-4 py-3">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleViewResult(result)}
+                        className="flex items-center gap-1"
+                      >
+                        <FaEye className="text-xs" />
+                        View Result
+                      </Button>
                     </td>
                   </tr>
                 );

@@ -140,14 +140,15 @@ const TabsClient = ({
     params.set("tab", newTabParam);
 
     // Clear tab-specific parameters when switching tabs to avoid URL clutter
-    // This ensures that 'test=slug' or 'thread=slug' don't persist when moving to other tabs
-    if (newTabParam !== "practice") {
-      params.delete("test");
-    }
-    if (newTabParam !== "discussion") {
-      params.delete("thread");
-      params.delete("action");
-    }
+    // This ensures that 'test=slug', 'view=results', 'thread=slug' don't persist when moving to other tabs
+    // Always clear these parameters when switching to any tab (including Performance)
+    params.delete("test");
+    params.delete("view");
+    params.delete("thread");
+    params.delete("replyPage");
+    params.delete("replySearch");
+    params.delete("sort");
+    params.delete("action");
 
     // Replace URL without page reload/scroll reset
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });

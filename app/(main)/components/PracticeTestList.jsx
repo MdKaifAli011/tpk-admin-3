@@ -16,6 +16,8 @@ import {
   FaTimes,
   FaLock,
   FaUser,
+  FaEye,
+  FaQuestionCircle,
 } from "react-icons/fa";
 import {
   fetchPracticeTests,
@@ -225,11 +227,209 @@ const PracticeTestList = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, practiceTests.length]);
 
-  // Sync selectedTest with URL param
+  const handleOpenTest = (testItem) => {
+    const currentSlug = testItem.slug || String(testItem._id || testItem.id);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("test", currentSlug);
+    params.delete("view"); // Remove view param when starting new test
+    router.push(`${pathname}?${params.toString()}`, { scroll: false });
+    // setSelectedTest will be updated by the useEffect above
+  };
+
+  // Handle viewing test results - shows results page directly, not paper page
+  const handleViewResult = React.useCallback(async (testItem) => {
+    if (!isAuthenticated) {
+      alert("Please login to view test results");
+      return;
+    }
+    
+    const currentSlug = testItem.slug || String(testItem._id || testItem.id);
+    const testId = String(testItem._id || testItem.id);
+    
+    try {
+      setIsLoadingTest(true);
+      setError(null);
+
+      // IMPORTANT: Update URL first with view=results parameter
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("test", currentSlug);
+      params.set("view", "results");
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+
+      // IMPORTANT: Set states first to prevent showing paper page
+      setIsTestStarted(false);
+      setIsTestSubmitted(false); // Will be set to true after loading results
+      setResults(null); // Clear any existing results
+
+      // Fetch test data
+      const testData = await fetchPracticeTestById(currentSlug);
+      if (!testData) {
+        setError("Practice test not found");
+        setIsLoadingTest(false);
+        return;
+      }
+
+      // Fetch questions
+      const questionsData = await fetchPracticeTestQuestions(testData._id || testData.id);
+      
+      // Fetch latest test result
+      const testResult = await fetchStudentTestResults(testId);
+      
+      if (!testResult) {
+        setError("Test result not found. Please take the test first.");
+        setIsLoadingTest(false);
+        return;
+      }
+
+      console.log("Loading test result:", {
+        testId,
+        testResult,
+        hasQuestionResults: !!testResult.questionResults,
+        questionResultsLength: testResult.questionResults?.length || 0,
+      });
+
+      // Set test and questions
+      const enrichedTest = {
+        ...testData,
+        _id: testData._id || testData.id,
+        id: testData.id || testData._id,
+        maximumMarks: testData.maximumMarks || (questionsData.length * DEFAULT_MARKS_PER_QUESTION),
+        negativeMarks: testData.negativeMarks || DEFAULT_NEGATIVE_MARKS,
+        duration: testData.duration || (questionsData.length > 0 ? `${Math.ceil((questionsData.length * DEFAULT_SECONDS_PER_QUESTION) / 60)} Min` : "0 Min")
+      };
+
+      setTest(enrichedTest);
+      setQuestions(questionsData);
+
+      // Reconstruct answers from test result
+      // Handle both Map and plain object formats
+      const reconstructedAnswers = {};
+      if (testResult.answers) {
+        if (testResult.answers instanceof Map) {
+          testResult.answers.forEach((value, key) => {
+            reconstructedAnswers[String(key)] = value;
+          });
+        } else if (typeof testResult.answers === 'object') {
+          Object.keys(testResult.answers).forEach((questionId) => {
+            reconstructedAnswers[questionId] = testResult.answers[questionId];
+          });
+        }
+      }
+      setAnswers(reconstructedAnswers);
+
+      // Set results from test result - ensure questionResults is properly formatted
+      const questionResults = Array.isArray(testResult.questionResults) 
+        ? testResult.questionResults 
+        : [];
+
+      console.log("Setting results:", {
+        totalQuestions: testResult.totalQuestions || questionsData.length,
+        correctCount: testResult.correctCount || 0,
+        incorrectCount: testResult.incorrectCount || 0,
+        questionResultsCount: questionResults.length,
+      });
+
+      // CRITICAL: Set results BEFORE setting isTestSubmitted to true
+      setResults({
+        totalQuestions: testResult.totalQuestions || questionsData.length,
+        correctCount: testResult.correctCount || 0,
+        incorrectCount: testResult.incorrectCount || 0,
+        unansweredCount: testResult.unansweredCount || 0,
+        totalMarks: testResult.totalMarks || 0,
+        maximumMarks: testResult.maximumMarks || enrichedTest.maximumMarks,
+        percentage: testResult.percentage || 0,
+        questionResults: questionResults,
+        timeTaken: testResult.timeTaken || 0,
+      });
+
+      // CRITICAL: Set these states LAST to ensure results view shows
+      setIsTestSubmitted(true);
+      setIsTestStarted(false);
+      
+      console.log("Results view should now be displayed");
+      
+      // Scroll to top
+      setTimeout(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }, 200);
+    } catch (err) {
+      logger.error("Error loading test result:", err);
+      console.error("Error details:", err);
+      setError("Failed to load test result. Please try again.");
+    } finally {
+      setIsLoadingTest(false);
+    }
+  }, [isAuthenticated, searchParams, pathname, router]);
+
+  // Sync selectedTest with URL param and handle view=results
   useEffect(() => {
     const testSlug = searchParams.get("test");
+    const viewMode = searchParams.get("view");
+    
     if (testSlug && testSlug !== selectedTest) {
       setSelectedTest(testSlug);
+      
+      // If view=results, trigger result view loading
+      // Check both isAuthenticated and token to handle page refresh cases
+      const token = typeof window !== "undefined" ? localStorage.getItem("student_token") : null;
+      const isAuth = isAuthenticated || !!token;
+      
+      if (viewMode === "results" && isAuth) {
+        const loadTestResult = async () => {
+          try {
+            setIsLoadingTest(true);
+            setError(null);
+            
+            // First, try to find the test item from practiceTests
+            let testItem = practiceTests.find(
+              (t) => String(t._id || t.id) === testSlug || t.slug === testSlug
+            );
+            
+            // If not found in practiceTests, fetch it directly by ID/slug
+            // This handles cases where:
+            // 1. Test is from a different hierarchy level (Performance tab)
+            // 2. Page was refreshed and practiceTests might not be loaded yet
+            // 3. Test is not in the current page's practiceTests list
+            if (!testItem) {
+              console.log("Test not found in practiceTests, fetching directly:", testSlug);
+              const fetchedTest = await fetchPracticeTestById(testSlug);
+              if (fetchedTest) {
+                console.log("Test fetched successfully:", fetchedTest._id || fetchedTest.id);
+                // Create a testItem-like object from fetched test
+                testItem = {
+                  _id: fetchedTest._id || fetchedTest.id,
+                  id: fetchedTest.id || fetchedTest._id,
+                  slug: fetchedTest.slug || String(fetchedTest._id || fetchedTest.id),
+                  ...fetchedTest
+                };
+              } else {
+                console.error("Failed to fetch test:", testSlug);
+                setError("Practice test not found");
+                setIsLoadingTest(false);
+                return;
+              }
+            } else {
+              console.log("Test found in practiceTests:", testItem._id || testItem.id);
+            }
+            
+            // Now call handleViewResult with the testItem (either from practiceTests or fetched)
+            if (testItem) {
+              await handleViewResult(testItem);
+            }
+          } catch (err) {
+            logger.error("Error loading test result from URL:", err);
+            console.error("Error details:", err);
+            setError("Failed to load test result. Please try again.");
+            setIsLoadingTest(false);
+          }
+        };
+        
+        // Small delay to ensure component is ready and practiceTests might be loading
+        // But don't wait too long - if practiceTests is empty, fetch directly
+        setTimeout(() => {
+          loadTestResult();
+        }, practiceTests.length === 0 ? 100 : 200);
+      }
     } else if (!testSlug && selectedTest) {
       // Only clear if we were not already in the middle of a test
       // or if the user explicitly navigated away
@@ -238,16 +438,9 @@ const PracticeTestList = ({
       setQuestions([]);
       setIsTestStarted(false);
       setIsTestSubmitted(false);
+      setResults(null);
     }
-  }, [searchParams, selectedTest]);
-
-  const handleOpenTest = (testItem) => {
-    const currentSlug = testItem.slug || String(testItem._id || testItem.id);
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("test", currentSlug);
-    router.push(`${pathname}?${params.toString()}`, { scroll: false });
-    // setSelectedTest will be updated by the useEffect above
-  };
+  }, [searchParams, selectedTest, isAuthenticated, practiceTests, handleViewResult]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Check if content is HTML (from RichTextEditor) or markdown
   const isHTML = (text = "") => {
@@ -596,6 +789,13 @@ const PracticeTestList = ({
     const loadTest = async () => {
       if (!selectedTest) return;
 
+      const viewMode = searchParams.get("view");
+      
+      // If view=results, don't load here - let handleViewResult handle it
+      if (viewMode === "results") {
+        return;
+      }
+
       try {
         setIsLoadingTest(true);
         setError(null);
@@ -661,7 +861,7 @@ const PracticeTestList = ({
     };
 
     loadTest();
-  }, [selectedTest]);
+  }, [selectedTest, searchParams]);
 
   // Format time as MM:SS
   const formatTime = (seconds) => {
@@ -1461,11 +1661,21 @@ const PracticeTestList = ({
               ref={contentRef}
               className="space-y-6"
             >
-              {results.questionResults.map((result, index) => {
-                const question = questions.find(
-                  (q) => q._id === result.questionId
-                );
-                return (
+              {results.questionResults && results.questionResults.length > 0 ? (
+                results.questionResults.map((result, index) => {
+                  const question = questions.find(
+                    (q) => q._id === result.questionId || String(q._id) === String(result.questionId)
+                  );
+                  
+                  // If question not found in questionResults, try to find by index
+                  const questionByIndex = question || questions[index];
+                  
+                  if (!questionByIndex) {
+                    console.warn("Question not found for result:", result);
+                    return null;
+                  }
+                  
+                  return (
                   <div
                     key={result.questionId}
                     className="p-4 bg-gray-50 rounded-lg border border-gray-200"
@@ -1502,7 +1712,7 @@ const PracticeTestList = ({
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
                       {["A", "B", "C", "D"].map((option) => {
                         const optionKey = `option${option}`;
-                        const optionText = question[optionKey];
+                        const optionText = questionByIndex[optionKey];
                         const isUserAnswer = result.userAnswer === option;
                         const isCorrectAnswer = result.correctAnswer === option;
 
@@ -1542,21 +1752,21 @@ const PracticeTestList = ({
                       })}
                     </div>
 
-                    {question.detailsExplanation && (
+                    {questionByIndex.detailsExplanation && (
                       <div className="mt-4 p-4 bg-white border border-gray-200 rounded-lg">
                         <h4 className="text-sm font-semibold text-gray-900 mb-2">
                           Explanation:
                         </h4>
                         <div className="text-sm text-gray-600 leading-relaxed rich-text-content">
-                          <RichContent html={renderContent(question.detailsExplanation)} />
+                          <RichContent html={renderContent(questionByIndex.detailsExplanation)} />
                         </div>
                       </div>
                     )}
 
-                    {question.videoLink && (
+                    {questionByIndex.videoLink && (
                       <div className="mt-4">
                         <a
-                          href={question.videoLink}
+                          href={questionByIndex.videoLink}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-sm text-blue-600 hover:text-blue-800 hover:underline font-medium"
@@ -1566,8 +1776,123 @@ const PracticeTestList = ({
                       </div>
                     )}
                   </div>
-                );
-              })}
+                  );
+                })
+              ) : (
+                // Fallback: Show questions from questions array if questionResults is empty
+                questions.map((question, index) => {
+                  const userAnswer = answers[question._id];
+                  const correctAnswer = question.answer;
+                  const isCorrect = userAnswer && userAnswer.toUpperCase() === correctAnswer.toUpperCase();
+                  
+                  return (
+                    <div
+                      key={question._id}
+                      className="p-4 bg-gray-50 rounded-lg border border-gray-200"
+                    >
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-center gap-3 flex-1">
+                          <span className="flex items-center justify-center w-8 h-8 rounded-full font-medium bg-white text-gray-900 border border-gray-300 text-xs">
+                            {index + 1}
+                          </span>
+                          <div className="text-base font-semibold text-gray-900 rich-text-content">
+                            <RichContent html={renderContent(question.question)} />
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          {isCorrect ? (
+                            <FaCheckCircle className="text-green-600 text-xl" />
+                          ) : userAnswer ? (
+                            <FaTimesCircle className="text-red-600 text-xl" />
+                          ) : (
+                            <FaQuestionCircle className="text-gray-400 text-xl" />
+                          )}
+                          <span
+                            className={`px-3 py-1 rounded-full text-sm font-medium ${
+                              isCorrect
+                                ? "bg-green-100 text-green-800"
+                                : userAnswer
+                                  ? "bg-red-100 text-red-800"
+                                  : "bg-gray-100 text-gray-800"
+                            }`}
+                          >
+                            {isCorrect ? "+" : userAnswer ? "-" : "0"} marks
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                        {["A", "B", "C", "D"].map((option) => {
+                          const optionKey = `option${option}`;
+                          const optionText = question[optionKey];
+                          const isUserAnswer = userAnswer === option;
+                          const isCorrectAnswer = correctAnswer === option;
+
+                          return (
+                            <div
+                              key={option}
+                              className={`p-3 rounded-lg border ${
+                                isCorrectAnswer
+                                  ? "bg-green-50 border-green-200"
+                                  : isUserAnswer && !isCorrectAnswer
+                                    ? "bg-red-50 border-red-200"
+                                    : "bg-white border-gray-200"
+                              }`}
+                            >
+                              <div className="flex items-center gap-3">
+                                <span
+                                  className={`w-8 h-8 rounded-full flex items-center justify-center font-medium text-sm ${
+                                    isCorrectAnswer
+                                      ? "bg-green-600 text-white"
+                                      : isUserAnswer && !isCorrectAnswer
+                                        ? "bg-red-600 text-white"
+                                        : "bg-gray-200 text-gray-700"
+                                  }`}
+                                >
+                                  {option}
+                                </span>
+                                <div className="text-sm font-medium text-gray-900 flex-1 rich-text-content">
+                                  <RichContent html={renderContent(optionText)} />
+                                </div>
+                                {isCorrectAnswer && (
+                                  <FaCheckCircle className="text-green-600 text-sm" />
+                                )}
+                                {isUserAnswer && !isCorrectAnswer && (
+                                  <FaTimesCircle className="text-red-600 text-sm" />
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {question.detailsExplanation && (
+                        <div className="mt-4 p-4 bg-white border border-gray-200 rounded-lg">
+                          <h4 className="text-sm font-semibold text-gray-900 mb-2">
+                            Explanation:
+                          </h4>
+                          <div className="text-sm text-gray-600 leading-relaxed rich-text-content">
+                            <RichContent html={renderContent(question.detailsExplanation)} />
+                          </div>
+                        </div>
+                      )}
+
+                      {question.videoLink && (
+                        <div className="mt-4">
+                          <a
+                            href={question.videoLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-blue-600 hover:text-blue-800 hover:underline font-medium"
+                          >
+                            Watch Video Explanation →
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+              )}
             </div>
           </Card>
 
@@ -2179,18 +2504,31 @@ const PracticeTestList = ({
                           score.maximumMarks !== null;
 
                         return (
-                          <Button
-                            variant="primary"
-                            size="sm"
-                            onClick={() => handleOpenTest(test)}
-                            className={
-                              hasScore
-                                ? "bg-emerald-600 hover:bg-emerald-700"
-                                : ""
-                            }
-                          >
-                            {hasScore ? "Retake" : "Start"}
-                          </Button>
+                          <div className="flex items-center justify-end gap-2">
+                            {hasScore && isAuthenticated && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleViewResult(test)}
+                                className="flex items-center gap-1"
+                              >
+                                
+                                View
+                              </Button>
+                            )}
+                            <Button
+                              variant="primary"
+                              size="sm"
+                              onClick={() => handleOpenTest(test)}
+                              className={
+                                hasScore
+                                  ? "bg-emerald-600 hover:bg-emerald-700"
+                                  : ""
+                              }
+                            >
+                              {hasScore ? "Retake" : "Start"}
+                            </Button>
+                          </div>
                         );
                       })()}
                     </td>
@@ -2276,31 +2614,41 @@ const PracticeTestList = ({
                 </div>
 
                 {/* Button + Score */}
-                <div className="flex items-center justify-between">
-                  {(() => {
-                    const testId = String(test._id || test.id);
-                    const score = studentScores[testId];
-                    const hasScore =
-                      score &&
-                      score.totalMarks !== undefined &&
-                      score.totalMarks !== null &&
-                      !isNaN(score.totalMarks) &&
-                      score.maximumMarks !== undefined &&
-                      score.maximumMarks !== null;
-
-                    return (
-                      <Button
-                        variant="primary"
-                        size="sm"
-                        onClick={() => handleOpenTest(test)}
-                        className={
-                          hasScore ? "bg-emerald-600 hover:bg-emerald-700" : ""
-                        }
-                      >
-                        {hasScore ? "Retake" : "Start"}
-                      </Button>
-                    );
-                  })()}
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={() => handleOpenTest(test)}
+                      className={
+                        (() => {
+                          const testId = String(test._id || test.id);
+                          const score = studentScores[testId];
+                          const hasScore =
+                            score &&
+                            score.totalMarks !== undefined &&
+                            score.totalMarks !== null &&
+                            !isNaN(score.totalMarks) &&
+                            score.maximumMarks !== undefined &&
+                            score.maximumMarks !== null;
+                          return hasScore ? "bg-emerald-600 hover:bg-emerald-700" : "";
+                        })()
+                      }
+                    >
+                      {(() => {
+                        const testId = String(test._id || test.id);
+                        const score = studentScores[testId];
+                        const hasScore =
+                          score &&
+                          score.totalMarks !== undefined &&
+                          score.totalMarks !== null &&
+                          !isNaN(score.totalMarks) &&
+                          score.maximumMarks !== undefined &&
+                          score.maximumMarks !== null;
+                        return hasScore ? "Retake" : "Start";
+                      })()}
+                    </Button>
+                  </div>
 
                   {(() => {
                     const testId = String(test._id || test.id);
@@ -2315,14 +2663,27 @@ const PracticeTestList = ({
                       score.maximumMarks !== null
                     ) {
                       return (
-                        <div className="text-right">
-                          <div className="text-sm font-semibold text-indigo-600">
-                            {parseFloat(score.totalMarks).toFixed(1)}/
-                            {score.maximumMarks}
+                        <div className="flex flex-col items-end gap-2">
+                          <div className="text-right">
+                            <div className="text-sm font-semibold text-indigo-600">
+                              {parseFloat(score.totalMarks).toFixed(1)}/
+                              {score.maximumMarks}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {parseFloat(score.percentage || 0).toFixed(1)}%
+                            </div>
                           </div>
-                          <div className="text-xs text-gray-500">
-                            {parseFloat(score.percentage || 0).toFixed(1)}%
-                          </div>
+                          {isAuthenticated && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleViewResult(test)}
+                              className="flex items-center gap-1.5 text-xs px-2 py-1 border-indigo-200 text-indigo-700 hover:bg-indigo-50 hover:border-indigo-300"
+                            >
+                              <FaEye className="text-xs" />
+                              View Result
+                            </Button>
+                          )}
                         </div>
                       );
                     }
