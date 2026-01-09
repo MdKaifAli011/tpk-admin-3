@@ -845,7 +845,7 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
                           setIsDownloadMenuOpen((prev) => !prev);
                           setIsBlogMenuOpen(false);
                         }}
-                        className={`w-full flex items-center justify-between px-3 py-2 font-medium text-[14px] rounded-lg cursor-pointer transition-all duration-200 ${
+                        className={`w-full flex items-center justify-between px-3 py-2 font-semibold rounded-lg cursor-pointer transition-all duration-200 ${
                           pathname.includes("/download")
                             ? "text-indigo-600 bg-indigo-50"
                             : "text-black hover:text-indigo-600 hover:bg-gray-50"
@@ -918,7 +918,7 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
                   <li>
                     <Link
                       href={`/${activeExamSlug}/course`}
-                      className={`block px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg cursor-pointer transition-all duration-200 ${
+                      className={`block px-3 py-2  font-semibold rounded-lg cursor-pointer transition-all duration-200 ${
                         pathname === `/${activeExamSlug}/course` ||
                         pathname.startsWith(`/${activeExamSlug}/course/`)
                           ? "text-indigo-600 bg-indigo-50"

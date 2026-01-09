@@ -238,14 +238,19 @@ const PracticeTestList = ({
 
   // Handle viewing test results - shows results page directly, not paper page
   const handleViewResult = React.useCallback(async (testItem) => {
-    if (!isAuthenticated) {
+    // Check both isAuthenticated state and token to handle cases where state might not be synced yet
+    // This is especially important when coming from PerformanceTab where user is clearly logged in
+    const token = typeof window !== "undefined" ? localStorage.getItem("student_token") : null;
+    const isAuth = isAuthenticated || !!token;
+
+    if (!isAuth) {
       alert("Please login to view test results");
       return;
     }
-    
+
     const currentSlug = testItem.slug || String(testItem._id || testItem.id);
     const testId = String(testItem._id || testItem.id);
-    
+
     try {
       setIsLoadingTest(true);
       setError(null);
@@ -271,10 +276,10 @@ const PracticeTestList = ({
 
       // Fetch questions
       const questionsData = await fetchPracticeTestQuestions(testData._id || testData.id);
-      
+
       // Fetch latest test result
       const testResult = await fetchStudentTestResults(testId);
-      
+
       if (!testResult) {
         setError("Test result not found. Please take the test first.");
         setIsLoadingTest(false);
@@ -318,8 +323,8 @@ const PracticeTestList = ({
       setAnswers(reconstructedAnswers);
 
       // Set results from test result - ensure questionResults is properly formatted
-      const questionResults = Array.isArray(testResult.questionResults) 
-        ? testResult.questionResults 
+      const questionResults = Array.isArray(testResult.questionResults)
+        ? testResult.questionResults
         : [];
 
       console.log("Setting results:", {
@@ -345,9 +350,9 @@ const PracticeTestList = ({
       // CRITICAL: Set these states LAST to ensure results view shows
       setIsTestSubmitted(true);
       setIsTestStarted(false);
-      
+
       console.log("Results view should now be displayed");
-      
+
       // Scroll to top
       setTimeout(() => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -365,26 +370,26 @@ const PracticeTestList = ({
   useEffect(() => {
     const testSlug = searchParams.get("test");
     const viewMode = searchParams.get("view");
-    
+
     if (testSlug && testSlug !== selectedTest) {
       setSelectedTest(testSlug);
-      
+
       // If view=results, trigger result view loading
       // Check both isAuthenticated and token to handle page refresh cases
       const token = typeof window !== "undefined" ? localStorage.getItem("student_token") : null;
       const isAuth = isAuthenticated || !!token;
-      
+
       if (viewMode === "results" && isAuth) {
         const loadTestResult = async () => {
           try {
             setIsLoadingTest(true);
             setError(null);
-            
+
             // First, try to find the test item from practiceTests
             let testItem = practiceTests.find(
               (t) => String(t._id || t.id) === testSlug || t.slug === testSlug
             );
-            
+
             // If not found in practiceTests, fetch it directly by ID/slug
             // This handles cases where:
             // 1. Test is from a different hierarchy level (Performance tab)
@@ -411,7 +416,7 @@ const PracticeTestList = ({
             } else {
               console.log("Test found in practiceTests:", testItem._id || testItem.id);
             }
-            
+
             // Now call handleViewResult with the testItem (either from practiceTests or fetched)
             if (testItem) {
               await handleViewResult(testItem);
@@ -423,7 +428,7 @@ const PracticeTestList = ({
             setIsLoadingTest(false);
           }
         };
-        
+
         // Small delay to ensure component is ready and practiceTests might be loading
         // But don't wait too long - if practiceTests is empty, fetch directly
         setTimeout(() => {
@@ -453,12 +458,12 @@ const PracticeTestList = ({
   // Render content - handles both HTML (from RichTextEditor) and markdown
   const renderContent = (text = "") => {
     if (!text) return "";
-    
+
     // If content is already HTML (from RichTextEditor), sanitize and return
     if (isHTML(text)) {
       return DOMPurify.sanitize(text);
     }
-    
+
     // Otherwise, treat as markdown and parse
     const html = marked.parse(text);
     return DOMPurify.sanitize(html);
@@ -618,7 +623,7 @@ const PracticeTestList = ({
           // A test is "assigned" to a level if it has that level's ID set
           // It doesn't matter if it also has child level IDs
           let matchesCurrentLevel = false;
-          
+
           if (sSubTopicId && String(tSubTopicId) === sSubTopicId) {
             matchesCurrentLevel = true;
           } else if (sTopicId && !sSubTopicId && String(tTopicId) === sTopicId) {
@@ -729,8 +734,8 @@ const PracticeTestList = ({
                   duration: test.duration || (qCount > 0 ? `${Math.ceil((qCount * DEFAULT_SECONDS_PER_QUESTION) / 60)} Min` : "0 Min")
                 };
               });
-              // Note: Tests are already sorted by priority in processedTests above
-              // Priority order: Current level (1) → Parent levels (2-6) → Others (10+)
+            // Note: Tests are already sorted by priority in processedTests above
+            // Priority order: Current level (1) → Parent levels (2-6) → Others (10+)
 
             return {
               category,
@@ -790,7 +795,7 @@ const PracticeTestList = ({
       if (!selectedTest) return;
 
       const viewMode = searchParams.get("view");
-      
+
       // If view=results, don't load here - let handleViewResult handle it
       if (viewMode === "results") {
         return;
@@ -881,7 +886,7 @@ const PracticeTestList = ({
     const params = new URLSearchParams(searchParams.toString());
     params.set("test", currentSlug);
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-    
+
     // Scroll to top of the page to show the question screen
     setTimeout(() => {
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1015,7 +1020,7 @@ const PracticeTestList = ({
 
       setShowSubmitModal(false);
       const calculatedResults = calculateResults();
-      
+
       // CRITICAL: Use test._id (the actual MongoDB ObjectId) instead of selectedTest (which is a slug/identifier)
       // The test object should have _id after being loaded from fetchPracticeTestById
       if (!test) {
@@ -1023,7 +1028,7 @@ const PracticeTestList = ({
         alert("Error: Test information is missing. Please reload the test and try again.");
         return;
       }
-      
+
       // Try to get _id from test object - it should always be present after loading from API
       const actualTestId = test._id || test.id;
       if (!actualTestId) {
@@ -1036,9 +1041,9 @@ const PracticeTestList = ({
         alert("Error: Test ID is missing. Please reload the test and try again.");
         return;
       }
-      
+
       const testIdStr = String(actualTestId);
-      
+
       // Validate testId is a valid MongoDB ObjectId format (24 hex characters)
       // This prevents sending slugs like "test-paper" instead of ObjectIds
       const objectIdRegex = /^[0-9a-fA-F]{24}$/;
@@ -1091,7 +1096,7 @@ const PracticeTestList = ({
       if (isAuthenticated && test && selectedTest && !isSavingTestResultRef.current) {
         // Create a unique key for this test submission
         const saveKey = `${testIdStr}_${startTimeRef.current || Date.now()}`;
-        
+
         // Check if we've already saved this exact test result
         if (savedTestResultIdsRef.current.has(saveKey)) {
           logger.info("Test result already saved, skipping duplicate save");
@@ -1154,7 +1159,7 @@ const PracticeTestList = ({
           });
 
           const saveResult = await saveTestResult(resultData);
-          
+
           logger.info("saveTestResult response", {
             success: saveResult?.success,
             message: saveResult?.message,
@@ -1164,12 +1169,12 @@ const PracticeTestList = ({
           if (saveResult && saveResult.success && saveResult.data) {
             // Mark as saved to prevent duplicates
             savedTestResultIdsRef.current.add(saveKey);
-            
+
             logger.info("Test result saved successfully", {
               testId: testIdStr,
               resultId: saveResult.data._id,
             });
-            
+
             // Update score immediately with saved data
             setStudentScores((prev) => ({
               ...prev,
@@ -1179,7 +1184,7 @@ const PracticeTestList = ({
                 percentage: saveResult.data.percentage,
               },
             }));
-            
+
             // Refresh all scores to ensure consistency
             setTimeout(() => {
               fetchStudentScores();
@@ -1259,7 +1264,7 @@ const PracticeTestList = ({
         // Create a unique key for this test submission
         const testIdStr = String(currentPending.testId);
         const saveKey = `${testIdStr}_${currentPending.startedAt || Date.now()}`;
-        
+
         // Check if we've already saved this exact test result
         if (savedTestResultIdsRef.current.has(saveKey)) {
           logger.info("Test result already saved after registration, skipping duplicate");
@@ -1268,33 +1273,33 @@ const PracticeTestList = ({
 
         // Store a copy before clearing to prevent race conditions
         const resultsToSave = { ...currentPending };
-        
+
         // Mark as saving to prevent duplicate saves
         isSavingTestResultRef.current = true;
 
         // Save test results asynchronously
         (async () => {
-        try {
+          try {
             const saveResult = await saveTestResult(resultsToSave);
-          if (saveResult.success && saveResult.data) {
+            if (saveResult.success && saveResult.data) {
               // Mark as saved to prevent duplicates
               savedTestResultIdsRef.current.add(saveKey);
-              
-            // Update score with saved data
-            setStudentScores((prev) => ({
-              ...prev,
-              [testIdStr]: {
-                totalMarks: saveResult.data.totalMarks,
-                maximumMarks: saveResult.data.maximumMarks,
-                percentage: saveResult.data.percentage,
-              },
-            }));
-            
-            // Refresh all scores to ensure consistency
-            setTimeout(() => {
-              fetchStudentScores();
-            }, 500);
-          }
+
+              // Update score with saved data
+              setStudentScores((prev) => ({
+                ...prev,
+                [testIdStr]: {
+                  totalMarks: saveResult.data.totalMarks,
+                  maximumMarks: saveResult.data.maximumMarks,
+                  percentage: saveResult.data.percentage,
+                },
+              }));
+
+              // Refresh all scores to ensure consistency
+              setTimeout(() => {
+                fetchStudentScores();
+              }, 500);
+            }
 
             // Display results after successful save
             setResults({
@@ -1310,7 +1315,7 @@ const PracticeTestList = ({
             });
             setIsTestSubmitted(true);
             setIsTestStarted(false);
-        } catch (error) {
+          } catch (error) {
             logger.error("Error saving test results after registration:", error);
             // Even if save fails, show results to user
             setResults({
@@ -1666,116 +1671,116 @@ const PracticeTestList = ({
                   const question = questions.find(
                     (q) => q._id === result.questionId || String(q._id) === String(result.questionId)
                   );
-                  
+
                   // If question not found in questionResults, try to find by index
                   const questionByIndex = question || questions[index];
-                  
+
                   if (!questionByIndex) {
                     console.warn("Question not found for result:", result);
                     return null;
                   }
-                  
+
                   return (
-                  <div
-                    key={result.questionId}
-                    className="p-4 bg-gray-50 rounded-lg border border-gray-200"
-                  >
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex items-center gap-3 flex-1">
-                        <span className="flex items-center justify-center w-8 h-8 rounded-full font-medium bg-white text-gray-900 border border-gray-300 text-xs">
-                          {index + 1}
-                        </span>
-                        <div className="text-base font-semibold text-gray-900 rich-text-content">
-                          <RichContent html={renderContent(result.question)} />
+                    <div
+                      key={result.questionId}
+                      className="p-4 bg-gray-50 rounded-lg border border-gray-200"
+                    >
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-center gap-3 flex-1">
+                          <span className="flex items-center justify-center w-8 h-8 rounded-full font-medium bg-white text-gray-900 border border-gray-300 text-xs">
+                            {index + 1}
+                          </span>
+                          <div className="text-base font-semibold text-gray-900 rich-text-content">
+                            <RichContent html={renderContent(result.question)} />
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        {result.isCorrect ? (
-                          <FaCheckCircle className="text-green-600 text-xl" />
-                        ) : (
-                          <FaTimesCircle className="text-red-600 text-xl" />
-                        )}
-                        <span
-                          className={`px-3 py-1 rounded-full text-sm font-medium ${result.isCorrect
-                            ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
-                            }`}
-                        >
-                          {result.marks > 0
-                            ? `+${result.marks.toFixed(2)}`
-                            : result.marks.toFixed(2)}{" "}
-                          marks
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
-                      {["A", "B", "C", "D"].map((option) => {
-                        const optionKey = `option${option}`;
-                        const optionText = questionByIndex[optionKey];
-                        const isUserAnswer = result.userAnswer === option;
-                        const isCorrectAnswer = result.correctAnswer === option;
-
-                        return (
-                          <div
-                            key={option}
-                            className={`p-3 rounded-lg border ${isCorrectAnswer
-                              ? "bg-green-50 border-green-200"
-                              : isUserAnswer && !isCorrectAnswer
-                                ? "bg-red-50 border-red-200"
-                                : "bg-white border-gray-200"
+                        <div className="flex items-center gap-2 shrink-0">
+                          {result.isCorrect ? (
+                            <FaCheckCircle className="text-green-600 text-xl" />
+                          ) : (
+                            <FaTimesCircle className="text-red-600 text-xl" />
+                          )}
+                          <span
+                            className={`px-3 py-1 rounded-full text-sm font-medium ${result.isCorrect
+                              ? "bg-green-100 text-green-800"
+                              : "bg-red-100 text-red-800"
                               }`}
                           >
-                            <div className="flex items-center gap-3">
-                              <span
-                                className={`w-8 h-8 rounded-full flex items-center justify-center font-medium text-sm ${isCorrectAnswer
-                                  ? "bg-green-600 text-white"
-                                  : isUserAnswer && !isCorrectAnswer
-                                    ? "bg-red-600 text-white"
-                                    : "bg-gray-200 text-gray-700"
-                                  }`}
-                              >
-                                {option}
-                              </span>
-                              <div className="text-sm font-medium text-gray-900 flex-1 rich-text-content">
-                                <RichContent html={renderContent(optionText)} />
-                              </div>
-                              {isCorrectAnswer && (
-                                <FaCheckCircle className="text-green-600 text-sm" />
-                              )}
-                              {isUserAnswer && !isCorrectAnswer && (
-                                <FaTimesCircle className="text-red-600 text-sm" />
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-
-                    {questionByIndex.detailsExplanation && (
-                      <div className="mt-4 p-4 bg-white border border-gray-200 rounded-lg">
-                        <h4 className="text-sm font-semibold text-gray-900 mb-2">
-                          Explanation:
-                        </h4>
-                        <div className="text-sm text-gray-600 leading-relaxed rich-text-content">
-                          <RichContent html={renderContent(questionByIndex.detailsExplanation)} />
+                            {result.marks > 0
+                              ? `+${result.marks.toFixed(2)}`
+                              : result.marks.toFixed(2)}{" "}
+                            marks
+                          </span>
                         </div>
                       </div>
-                    )}
 
-                    {questionByIndex.videoLink && (
-                      <div className="mt-4">
-                        <a
-                          href={questionByIndex.videoLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm text-blue-600 hover:text-blue-800 hover:underline font-medium"
-                        >
-                          Watch Video Explanation →
-                        </a>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                        {["A", "B", "C", "D"].map((option) => {
+                          const optionKey = `option${option}`;
+                          const optionText = questionByIndex[optionKey];
+                          const isUserAnswer = result.userAnswer === option;
+                          const isCorrectAnswer = result.correctAnswer === option;
+
+                          return (
+                            <div
+                              key={option}
+                              className={`p-3 rounded-lg border ${isCorrectAnswer
+                                ? "bg-green-50 border-green-200"
+                                : isUserAnswer && !isCorrectAnswer
+                                  ? "bg-red-50 border-red-200"
+                                  : "bg-white border-gray-200"
+                                }`}
+                            >
+                              <div className="flex items-center gap-3">
+                                <span
+                                  className={`w-8 h-8 rounded-full flex items-center justify-center font-medium text-sm ${isCorrectAnswer
+                                    ? "bg-green-600 text-white"
+                                    : isUserAnswer && !isCorrectAnswer
+                                      ? "bg-red-600 text-white"
+                                      : "bg-gray-200 text-gray-700"
+                                    }`}
+                                >
+                                  {option}
+                                </span>
+                                <div className="text-sm font-medium text-gray-900 flex-1 rich-text-content">
+                                  <RichContent html={renderContent(optionText)} />
+                                </div>
+                                {isCorrectAnswer && (
+                                  <FaCheckCircle className="text-green-600 text-sm" />
+                                )}
+                                {isUserAnswer && !isCorrectAnswer && (
+                                  <FaTimesCircle className="text-red-600 text-sm" />
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
-                    )}
-                  </div>
+
+                      {questionByIndex.detailsExplanation && (
+                        <div className="mt-4 p-4 bg-white border border-gray-200 rounded-lg">
+                          <h4 className="text-sm font-semibold text-gray-900 mb-2">
+                            Explanation:
+                          </h4>
+                          <div className="text-sm text-gray-600 leading-relaxed rich-text-content">
+                            <RichContent html={renderContent(questionByIndex.detailsExplanation)} />
+                          </div>
+                        </div>
+                      )}
+
+                      {questionByIndex.videoLink && (
+                        <div className="mt-4">
+                          <a
+                            href={questionByIndex.videoLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-blue-600 hover:text-blue-800 hover:underline font-medium"
+                          >
+                            Watch Video Explanation →
+                          </a>
+                        </div>
+                      )}
+                    </div>
                   );
                 })
               ) : (
@@ -1784,7 +1789,7 @@ const PracticeTestList = ({
                   const userAnswer = answers[question._id];
                   const correctAnswer = question.answer;
                   const isCorrect = userAnswer && userAnswer.toUpperCase() === correctAnswer.toUpperCase();
-                  
+
                   return (
                     <div
                       key={question._id}
@@ -1808,13 +1813,12 @@ const PracticeTestList = ({
                             <FaQuestionCircle className="text-gray-400 text-xl" />
                           )}
                           <span
-                            className={`px-3 py-1 rounded-full text-sm font-medium ${
-                              isCorrect
-                                ? "bg-green-100 text-green-800"
-                                : userAnswer
-                                  ? "bg-red-100 text-red-800"
-                                  : "bg-gray-100 text-gray-800"
-                            }`}
+                            className={`px-3 py-1 rounded-full text-sm font-medium ${isCorrect
+                              ? "bg-green-100 text-green-800"
+                              : userAnswer
+                                ? "bg-red-100 text-red-800"
+                                : "bg-gray-100 text-gray-800"
+                              }`}
                           >
                             {isCorrect ? "+" : userAnswer ? "-" : "0"} marks
                           </span>
@@ -1831,23 +1835,21 @@ const PracticeTestList = ({
                           return (
                             <div
                               key={option}
-                              className={`p-3 rounded-lg border ${
-                                isCorrectAnswer
-                                  ? "bg-green-50 border-green-200"
-                                  : isUserAnswer && !isCorrectAnswer
-                                    ? "bg-red-50 border-red-200"
-                                    : "bg-white border-gray-200"
-                              }`}
+                              className={`p-3 rounded-lg border ${isCorrectAnswer
+                                ? "bg-green-50 border-green-200"
+                                : isUserAnswer && !isCorrectAnswer
+                                  ? "bg-red-50 border-red-200"
+                                  : "bg-white border-gray-200"
+                                }`}
                             >
                               <div className="flex items-center gap-3">
                                 <span
-                                  className={`w-8 h-8 rounded-full flex items-center justify-center font-medium text-sm ${
-                                    isCorrectAnswer
-                                      ? "bg-green-600 text-white"
-                                      : isUserAnswer && !isCorrectAnswer
-                                        ? "bg-red-600 text-white"
-                                        : "bg-gray-200 text-gray-700"
-                                  }`}
+                                  className={`w-8 h-8 rounded-full flex items-center justify-center font-medium text-sm ${isCorrectAnswer
+                                    ? "bg-green-600 text-white"
+                                    : isUserAnswer && !isCorrectAnswer
+                                      ? "bg-red-600 text-white"
+                                      : "bg-gray-200 text-gray-700"
+                                    }`}
                                 >
                                   {option}
                                 </span>
@@ -2420,9 +2422,9 @@ const PracticeTestList = ({
                   {/* Column 1 */}
                   <th
                     className="px-4 py-3 text-left w-[28%] text-sm text-blue-900"
-                    >
-                      {group.category.name}
-                    </th>
+                  >
+                    {group.category.name}
+                  </th>
 
                   {/* Column 2 */}
                   <th className="px-3 py-3 text-center w-[10%]">Questions</th>
@@ -2452,7 +2454,7 @@ const PracticeTestList = ({
                     <td className="px-4 py-3 w-[28%]">
                       <div className="text-sm font-medium text-gray-900 flex ">
                         <span className="mr-1">{test.orderNumber}.</span>
-                      {test.name}
+                        {test.name}
                       </div>
                     </td>
 
@@ -2476,12 +2478,12 @@ const PracticeTestList = ({
                       {(() => {
                         const testId = String(test._id || test.id);
                         const score = studentScores[testId];
-                        const hasAttempted = 
+                        const hasAttempted =
                           score &&
                           score.totalMarks !== undefined &&
                           score.totalMarks !== null &&
                           !isNaN(score.totalMarks);
-                        
+
                         return hasAttempted ? (
                           <span className="text-green-600 font-medium">Attempted</span>
                         ) : (
@@ -2512,7 +2514,7 @@ const PracticeTestList = ({
                                 onClick={() => handleViewResult(test)}
                                 className="flex items-center gap-1"
                               >
-                                
+
                                 View
                               </Button>
                             )}
@@ -2598,12 +2600,12 @@ const PracticeTestList = ({
                     Attempted: {(() => {
                       const testId = String(test._id || test.id);
                       const score = studentScores[testId];
-                      const hasAttempted = 
+                      const hasAttempted =
                         score &&
                         score.totalMarks !== undefined &&
                         score.totalMarks !== null &&
                         !isNaN(score.totalMarks);
-                      
+
                       return hasAttempted ? (
                         <span className="text-green-600 font-medium">Attempted</span>
                       ) : (

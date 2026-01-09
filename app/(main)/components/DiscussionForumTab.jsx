@@ -875,6 +875,7 @@ const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal }) => {
             <p className="text-[11px] text-gray-400 leading-relaxed font-medium">
               Maintain academic honesty and keep discussions respectful. Constructive dialogue empowers everyone.
             </p>
+            
           </div>
         </div>
       </div>

@@ -127,7 +127,7 @@ const TabsClient = ({
 
   const handleTabChange = useCallback((tab) => {
     if (tab === activeTab) return; // Prevent unnecessary re-renders
-    
+
     // Use startTransition for smooth tab switching (non-blocking update)
     startTransition(() => {
       setActiveTab(tab);
@@ -322,7 +322,7 @@ const TabsClient = ({
       {/* Render only active tab to prevent double loading animations */}
       {/* Key prop ensures complete remount when switching tabs, preventing double rendering */}
       {/* Only wrap in Suspense if tab hasn't been loaded before to prevent flickering */}
-      <div 
+      <div
         className="text-gray-700 text-sm sm:text-base"
         key={`tab-wrapper-${activeTab}`}
       >
