@@ -2090,8 +2090,9 @@ const PracticeTestList = ({
                   {/* Column 1 */}
                   <th
                     className="px-4 py-3 text-left w-[28%] text-sm text-blue-900"
-                    dangerouslySetInnerHTML={{ __html: renderFormattedName(group.category.name) }}
-                  />
+                    >
+                      {group.category.name}
+                    </th>
 
                   {/* Column 2 */}
                   <th className="px-3 py-3 text-center w-[10%]">Questions</th>
@@ -2119,7 +2120,7 @@ const PracticeTestList = ({
                   <tr key={i} className="hover:bg-gray-50 transition-all">
                     {/* Col 1 */}
                     <td className="px-4 py-3 w-[28%]">
-                      <div className="text-sm font-medium text-gray-900 flex items-center">
+                      <div className="text-sm font-medium text-gray-900 flex ">
                         <span className="mr-1">{test.orderNumber}.</span>
                       {test.name}
                       </div>

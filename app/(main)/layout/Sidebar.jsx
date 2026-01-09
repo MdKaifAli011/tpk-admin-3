@@ -209,11 +209,29 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
 
   /* -------------------- transform tree -------------------- */
   const transformTreeData = useCallback((treeData) => {
-    if (!treeData || treeData.length === 0) return [];
+    if (!treeData || treeData.length === 0) {
+      logger.warn("transformTreeData: Empty treeData received");
+      return [];
+    }
+    
     const exam = treeData[0];
-    if (!exam || !exam.subjects) return [];
+    if (!exam) {
+      logger.warn("transformTreeData: No exam found in treeData", { treeDataLength: treeData.length });
+      return [];
+    }
+    
+    if (!exam.subjects || !Array.isArray(exam.subjects) || exam.subjects.length === 0) {
+      logger.warn("transformTreeData: No subjects found in exam", { 
+        examId: exam._id || exam.id, 
+        examName: exam.name,
+        hasSubjects: !!exam.subjects,
+        subjectsType: typeof exam.subjects,
+        subjectsLength: exam.subjects?.length || 0
+      });
+      return [];
+    }
 
-    return exam.subjects.map((subject) => ({
+    const transformed = exam.subjects.map((subject) => ({
       ...buildNode(subject),
       units: (subject.units || []).map((unit) => ({
         ...buildNode(unit),
@@ -223,11 +241,18 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
         })),
       })),
     }));
+
+    logger.info("transformTreeData: Successfully transformed", {
+      examId: exam._id || exam.id,
+      subjectsCount: transformed.length
+    });
+
+    return transformed;
   }, []);
 
   /* -------------------- load tree with dedupe & cache -------------------- */
   const loadTree = useCallback(
-    async (examId) => {
+    async (examId, forceRefresh = false) => {
       if (!examId) {
         setTree([]);
         setTreeLoading(false);
@@ -235,39 +260,67 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
         return;
       }
 
-      if (treeCacheRef.current.has(examId)) {
-        setTree(treeCacheRef.current.get(examId));
+      // If already loading this specific exam, wait for it (but allow force refresh)
+      if (!forceRefresh && treeLoadingRef.current.has(examId)) {
+        // Wait for existing request to complete
+        const key = `tree-${examId}`;
+        if (pendingApiRequestsRef.current.has(key)) {
+          try {
+            await pendingApiRequestsRef.current.get(key);
+            if (treeCacheRef.current.has(examId)) {
+              setTree(treeCacheRef.current.get(examId));
+              setTreeLoading(false);
+              setError("");
+              return;
+            }
+          } catch (err) {
+            // If existing request failed, continue with new request
+            logger.warn("Previous tree request failed, retrying:", err);
+          }
+        }
+      }
+
+      // Clear cache if force refresh
+      if (forceRefresh) {
+        treeCacheRef.current.delete(examId);
+        pendingApiRequestsRef.current.delete(`tree-${examId}`);
+      }
+
+      // Check cache only if not forcing refresh
+      if (!forceRefresh && treeCacheRef.current.has(examId)) {
+        const cachedTree = treeCacheRef.current.get(examId);
+        setTree(cachedTree);
         setTreeLoading(false);
         setError("");
         return;
       }
 
-      if (treeLoadingRef.current.has(examId)) return;
-
+      // Mark as loading
       treeLoadingRef.current.add(examId);
       setTreeLoading(true);
       setError("");
 
       try {
         const key = `tree-${examId}`;
+        
+        // Cancel any existing pending request for this exam
         if (pendingApiRequestsRef.current.has(key)) {
-          const existing = pendingApiRequestsRef.current.get(key);
-          try {
-            await existing;
-          } catch {}
-          if (treeCacheRef.current.has(examId)) {
-            setTree(treeCacheRef.current.get(examId));
-            setTreeLoading(false);
-            setError("");
-            treeLoadingRef.current.delete(examId);
-            return;
-          }
+          pendingApiRequestsRef.current.delete(key);
         }
 
+        // Make fresh API call
         const promise = fetchTree({ examId, status: "active" });
         pendingApiRequestsRef.current.set(key, promise);
 
         const treeData = await promise;
+        
+        // Check if this request is still relevant (exam hasn't changed)
+        if (!treeLoadingRef.current.has(examId)) {
+          // Exam changed while request was in flight, ignore result
+          pendingApiRequestsRef.current.delete(key);
+          return;
+        }
+
         pendingApiRequestsRef.current.delete(key);
 
         if (!treeData || treeData.length === 0) {
@@ -282,27 +335,38 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
         if (transformed.length === 0) {
           setError("No subjects found for this exam.");
           setTree([]);
-        } else {
+          setTreeLoading(false);
+          treeLoadingRef.current.delete(examId);
+          return;
+        }
+
+        // Only update if still loading this exam (hasn't changed)
+        if (treeLoadingRef.current.has(examId)) {
           treeCacheRef.current.set(examId, transformed);
           setTree(transformed);
           setError("");
+          setTreeLoading(false);
         }
       } catch (err) {
-        const errorMessage = err?.message || err?.toString() || "Unknown error";
-        const errorStack = err?.stack || "No stack trace available";
+        // Only handle error if still loading this exam
+        if (treeLoadingRef.current.has(examId)) {
+          const errorMessage = err?.message || err?.toString() || "Unknown error";
+          const errorStack = err?.stack || "No stack trace available";
 
-        logger.error("loadTree error", {
-          message: errorMessage,
-          stack: errorStack,
-          examId,
-          error: err ? String(err) : "Error object is empty",
-        });
+          logger.error("loadTree error", {
+            message: errorMessage,
+            stack: errorStack,
+            examId,
+            error: err ? String(err) : "Error object is empty",
+          });
 
+          setError("Unable to load sidebar content.");
+          setTree([]);
+          setTreeLoading(false);
+        }
+        
         pendingApiRequestsRef.current.delete(`tree-${examId}`);
-        setError("Unable to load sidebar content.");
-        setTree([]);
       } finally {
-        setTreeLoading(false);
         treeLoadingRef.current.delete(examId);
       }
     },
@@ -334,6 +398,9 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
 
   // load tree when activeExamId changes
   useEffect(() => {
+    // Store previous examId to clean up
+    let previousExamId = activeExamId;
+    
     if (!activeExamId) {
       setTree([]);
       setTreeLoading(false);
@@ -342,13 +409,49 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
       setOpenUnitId(null);
       setOpenChapterId(null);
       setBlogCategories([]);
+      setDownloadFolders([]);
       return;
     }
 
+    // Clear UI state immediately when exam changes
     setOpenSubjectId(null);
     setOpenUnitId(null);
     setOpenChapterId(null);
+    setError(""); // Clear any previous errors
+    
+    // Clear tree immediately to show loading state
+    setTree([]);
+    setTreeLoading(true);
 
+    // Clean up any pending requests for previous exam
+    const cleanupPreviousExam = () => {
+      // Cancel any pending requests that aren't for the current exam
+      const currentKey = `tree-${activeExamId}`;
+      const keysToDelete = [];
+      pendingApiRequestsRef.current.forEach((_, key) => {
+        if (key !== currentKey) {
+          keysToDelete.push(key);
+        }
+      });
+      keysToDelete.forEach(key => {
+        pendingApiRequestsRef.current.delete(key);
+      });
+
+      // Clear loading state for exams that aren't the current one
+      const loadingExamsToDelete = [];
+      treeLoadingRef.current.forEach((examId) => {
+        if (examId !== activeExamId) {
+          loadingExamsToDelete.push(examId);
+        }
+      });
+      loadingExamsToDelete.forEach(examId => {
+        treeLoadingRef.current.delete(examId);
+      });
+    };
+
+    cleanupPreviousExam();
+
+    // Load tree for new exam (force fresh load on exam switch)
     loadTree(activeExamId);
 
     // Load blog categories for this exam
@@ -381,6 +484,16 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
       }
     };
     loadDownloadFolders();
+
+    // Cleanup function
+    return () => {
+      // If exam changed, clean up previous exam's state
+      if (previousExamId && previousExamId !== activeExamId) {
+        const prevKey = `tree-${previousExamId}`;
+        pendingApiRequestsRef.current.delete(prevKey);
+        treeLoadingRef.current.delete(previousExamId);
+      }
+    };
   }, [activeExamId, loadTree]);
 
   // Auto-expand blog menu if we're on a blog or category page
@@ -575,6 +688,17 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
               exams={exams}
               activeExamId={activeExamId}
               onSelect={(exam) => {
+                // Clear cache and loading state for previous exam
+                if (activeExamId && activeExamId !== exam._id) {
+                  const prevKey = `tree-${activeExamId}`;
+                  pendingApiRequestsRef.current.delete(prevKey);
+                  treeLoadingRef.current.delete(activeExamId);
+                  // Clear tree immediately to show loading state
+                  setTree([]);
+                  setTreeLoading(true);
+                  setError("");
+                }
+                
                 setActiveExamId(exam._id);
                 const slug = exam.slug || createSlug(exam.name);
                 router.push(`/${slug}`);

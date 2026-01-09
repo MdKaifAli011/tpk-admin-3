@@ -60,9 +60,8 @@ const ALL_MENU_ITEMS = [
     name: "Discussion",
     icon: FaComments,
     children: [
-      { name: "Folder", href: "/admin/discussion" },
-      { name: "Sub Folder", href: "/admin/discussion/subfolder" },
-      { name: "Files", href: "/admin/discussion/file" },
+      { name: "Threads", href: "/admin/discussion" },
+
     ],
   },
   {
