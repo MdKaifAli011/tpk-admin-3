@@ -33,6 +33,7 @@ const ThreadDetailModeration = () => {
     const [isDataLoading, setIsDataLoading] = useState(true);
     const [replyPage, setReplyPage] = useState(1);
     const [replySearch, setReplySearch] = useState("");
+    const [replyFilter, setReplyFilter] = useState("all"); // "all", "pending", "approved"
     const [replyPagination, setReplyPagination] = useState({ page: 1, limit: 10, total: 0, pages: 1 });
     const { toasts, removeToast, success, error: showError } = useToast();
     const searchTimeout = React.useRef(null);
@@ -235,20 +236,31 @@ const ThreadDetailModeration = () => {
         return `${path}?tab=discussion&thread=${thread.slug}`;
     };
 
+    // Filter replies by approval status
+    const filteredReplies = useMemo(() => {
+        if (replyFilter === "all") return replies;
+        if (replyFilter === "pending") return replies.filter(r => !r.isApproved);
+        if (replyFilter === "approved") return replies.filter(r => r.isApproved);
+        return replies;
+    }, [replies, replyFilter]);
+
     // Organize replies into a tree structure
     const organizedReplies = useMemo(() => {
-        if (replySearch) return replies; // Return flat list on search
+        // Apply filter first
+        const repliesToOrganize = filteredReplies;
+        
+        if (replySearch) return repliesToOrganize; // Return flat list on search
 
         const map = {};
         const roots = [];
 
         // Initialize map
-        replies.forEach(r => {
+        repliesToOrganize.forEach(r => {
             map[r._id] = { ...r, children: [] };
         });
 
         // Build tree
-        replies.forEach(r => {
+        repliesToOrganize.forEach(r => {
             if (r.parentReplyId && map[r.parentReplyId]) {
                 map[r.parentReplyId].children.push(map[r._id]);
             } else if (!r.parentReplyId) {
@@ -259,7 +271,7 @@ const ThreadDetailModeration = () => {
         });
 
         return roots;
-    }, [replies, replySearch]);
+    }, [filteredReplies, replySearch]);
 
     if (!thread && isDataLoading) return (
         <div className="min-h-[400px] flex flex-col items-center justify-center gap-4">
@@ -441,15 +453,50 @@ const ThreadDetailModeration = () => {
                                 <FaIcons.FaCommentDots className="text-blue-500" />
                                 Community Responses ({replyPagination.total})
                             </h3>
-                            <div className="relative">
-                                <FaIcons.FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={12} />
-                                <input
-                                    type="text"
-                                    placeholder="Search replies..."
-                                    defaultValue={replySearch}
-                                    onChange={handleSearchChange}
-                                    className="pl-9 pr-4 py-1.5 text-xs font-medium border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 transition-all w-full sm:w-64"
-                                />
+                            <div className="flex items-center gap-3">
+                                {/* Approval Status Filter */}
+                                <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1 border border-gray-200">
+                                    <button
+                                        onClick={() => setReplyFilter("all")}
+                                        className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all ${
+                                            replyFilter === "all"
+                                                ? "bg-white text-gray-900 shadow-sm border border-gray-200"
+                                                : "text-gray-600 hover:text-gray-900"
+                                        }`}
+                                    >
+                                        All
+                                    </button>
+                                    <button
+                                        onClick={() => setReplyFilter("pending")}
+                                        className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all ${
+                                            replyFilter === "pending"
+                                                ? "bg-amber-100 text-amber-700 shadow-sm border border-amber-200"
+                                                : "text-gray-600 hover:text-gray-900"
+                                        }`}
+                                    >
+                                        Pending
+                                    </button>
+                                    <button
+                                        onClick={() => setReplyFilter("approved")}
+                                        className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all ${
+                                            replyFilter === "approved"
+                                                ? "bg-green-100 text-green-700 shadow-sm border border-green-200"
+                                                : "text-gray-600 hover:text-gray-900"
+                                        }`}
+                                    >
+                                        Approved
+                                    </button>
+                                </div>
+                                <div className="relative">
+                                    <FaIcons.FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={12} />
+                                    <input
+                                        type="text"
+                                        placeholder="Search replies..."
+                                        defaultValue={replySearch}
+                                        onChange={handleSearchChange}
+                                        className="pl-9 pr-4 py-1.5 text-xs font-medium border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 transition-all w-full sm:w-64"
+                                    />
+                                </div>
                             </div>
                         </div>
 
