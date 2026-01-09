@@ -5,6 +5,7 @@ import api from "@/lib/api";
 import * as FaIcons from "react-icons/fa";
 import { ToastContainer, useToast } from "../../../../components/ui/Toast";
 import { LoadingSpinner } from "../../../../components/ui/SkeletonLoader";
+import RichContent from "../../../../../(main)/components/RichContent";
 import RichTextEditor from "../../../../components/ui/RichTextEditor";
 import Link from "next/link";
 import { usePermissions, getDiscussionPermissions, getDiscussionPermissionMessage } from "../../../../hooks/usePermissions";
@@ -407,10 +408,7 @@ const ThreadDetailModeration = () => {
                                     </div>
                                 </div>
                             ) : (
-                                <div
-                                    className="text-base text-gray-800 font-normal leading-relaxed thread-content-renderer"
-                                    dangerouslySetInnerHTML={{ __html: thread.content }}
-                                />
+                                <RichContent html={thread.content} />
                             )}
                         </div>
 
@@ -659,10 +657,7 @@ const ReplyItem = ({ reply, handleToggleReplyApproval, handleDeleteReply, handle
                                 </div>
                             </div>
                         ) : (
-                            <div
-                                className="text-sm text-gray-700 leading-relaxed font-normal reply-content-renderer"
-                                dangerouslySetInnerHTML={{ __html: reply.content }}
-                            />
+                            <RichContent html={reply.content} />
                         )}
                     </div>
 
