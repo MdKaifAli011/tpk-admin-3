@@ -522,6 +522,11 @@ const PracticeTestList = ({
 
                 return matches;
               })
+              .filter((test) => {
+                // Filter out tests with no questions (0, null, or undefined)
+                const qCount = test.numberOfQuestions;
+                return qCount !== null && qCount !== undefined && qCount > 0;
+              })
               .map((test) => {
                 const qCount = test.numberOfQuestions || 0;
                 return {
