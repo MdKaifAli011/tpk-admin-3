@@ -280,9 +280,12 @@ const TestSubmissionRegistrationModal = ({
       const fullPhoneNumber =
         formData.countryCode + formData.phoneNumber.trim().replace(/^\+/, "");
 
-      // Get the source URL pathname (e.g., /neet) where student is registering from
-      const sourcePath =
-        typeof window !== "undefined" ? window.location.pathname : "";
+      // Get the full source URL (pathname + query parameters) where student is registering from
+      // This includes test parameters like ?tab=practice&test=... so we can track the exact test URL
+      const sourceUrl =
+        typeof window !== "undefined"
+          ? window.location.pathname + window.location.search
+          : "";
 
       const response = await api.post("/student/auth/register", {
         firstName: formData.firstName.trim(),
@@ -293,7 +296,7 @@ const TestSubmissionRegistrationModal = ({
         className: formData.className.trim(),
         prepared: formData.prepared || null,
         country: formData.country || null,
-        source: sourcePath, // Send the URL path where student registered from
+        source: sourceUrl, // Send the full URL (pathname + query params) where student registered from
         formId: formId, // Send form ID to track registration source
       });
 
@@ -408,15 +411,15 @@ const TestSubmissionRegistrationModal = ({
               </div>
 
               <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">
-              Set up your exam dashboard
+                Set up your exam dashboard
               </h2>
 
               <form onSubmit={handleSubmit} className="space-y-2">
                 {submitStatus && (
                   <div
                     className={`p-2 rounded-lg flex items-start gap-2 border ${submitStatus === "success"
-                        ? "bg-emerald-50 border-emerald-200 text-emerald-800"
-                        : "bg-red-50 border-red-200 text-red-800"
+                      ? "bg-emerald-50 border-emerald-200 text-emerald-800"
+                      : "bg-red-50 border-red-200 text-red-800"
                       }`}
                   >
                     {submitStatus === "success" ? (
@@ -440,8 +443,8 @@ const TestSubmissionRegistrationModal = ({
                         value={formData.firstName}
                         onChange={handleChange}
                         className={`w-full pl-8 pr-3 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-sm ${errors.firstName
-                            ? "border-red-300 bg-red-50"
-                            : "border-gray-300 bg-white"
+                          ? "border-red-300 bg-red-50"
+                          : "border-gray-300 bg-white"
                           }`}
                         placeholder="First Name"
                         disabled={loading}
@@ -466,8 +469,8 @@ const TestSubmissionRegistrationModal = ({
                         value={formData.lastName}
                         onChange={handleChange}
                         className={`w-full pl-8 pr-3 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-sm ${errors.lastName
-                            ? "border-red-300 bg-red-50"
-                            : "border-gray-300 bg-white"
+                          ? "border-red-300 bg-red-50"
+                          : "border-gray-300 bg-white"
                           }`}
                         placeholder="Last Name"
                         disabled={loading}
@@ -495,8 +498,8 @@ const TestSubmissionRegistrationModal = ({
                           handleClassSelect(e.target.value);
                         }}
                         className={`w-full pl-8 pr-3 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all appearance-none bg-white text-sm ${errors.className
-                            ? "border-red-300 bg-red-50"
-                            : "border-gray-300"
+                          ? "border-red-300 bg-red-50"
+                          : "border-gray-300"
                           }`}
                         disabled={loading}
                       >
@@ -526,8 +529,8 @@ const TestSubmissionRegistrationModal = ({
                         value={formData.country}
                         onChange={handleChange}
                         className={`w-full pl-8 pr-3 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all appearance-none bg-white text-sm ${errors.country
-                            ? "border-red-300 bg-red-50"
-                            : "border-gray-300"
+                          ? "border-red-300 bg-red-50"
+                          : "border-gray-300"
                           }`}
                         disabled={loading}
                       >
@@ -559,8 +562,8 @@ const TestSubmissionRegistrationModal = ({
                       value={formData.email}
                       onChange={handleChange}
                       className={`w-full pl-8 pr-3 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-sm ${errors.email
-                          ? "border-red-300 bg-red-50"
-                          : "border-gray-300 bg-white"
+                        ? "border-red-300 bg-red-50"
+                        : "border-gray-300 bg-white"
                         }`}
                       placeholder="Email Address"
                       disabled={loading}
@@ -597,8 +600,8 @@ const TestSubmissionRegistrationModal = ({
                         value={formData.phoneNumber}
                         onChange={handleChange}
                         className={`w-full pl-8 pr-3 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-sm ${errors.phoneNumber
-                            ? "border-red-300 bg-red-50"
-                            : "border-gray-300 bg-white"
+                          ? "border-red-300 bg-red-50"
+                          : "border-gray-300 bg-white"
                           }`}
                         placeholder="Contact No"
                         disabled={loading}
@@ -624,8 +627,8 @@ const TestSubmissionRegistrationModal = ({
                       value={formData.password}
                       onChange={handleChange}
                       className={`w-full pl-8 pr-10 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-sm ${errors.password
-                          ? "border-red-300 bg-red-50"
-                          : "border-gray-300 bg-white"
+                        ? "border-red-300 bg-red-50"
+                        : "border-gray-300 bg-white"
                         }`}
                       placeholder="Password (min 6 characters)"
                       disabled={loading}
@@ -662,8 +665,8 @@ const TestSubmissionRegistrationModal = ({
                       value={formData.confirmPassword}
                       onChange={handleChange}
                       className={`w-full pl-8 pr-10 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-sm ${errors.confirmPassword
-                          ? "border-red-300 bg-red-50"
-                          : "border-gray-300 bg-white"
+                        ? "border-red-300 bg-red-50"
+                        : "border-gray-300 bg-white"
                         }`}
                       placeholder="Confirm Password"
                       disabled={loading}
@@ -716,10 +719,10 @@ const TestSubmissionRegistrationModal = ({
                 <div>
                   <div
                     className={`flex items-center gap-2 p-2 border-2 rounded-lg transition-all ${errors.verification
-                        ? "border-red-300 bg-red-50"
-                        : isVerified
-                          ? "border-emerald-500 bg-emerald-50"
-                          : "border-gray-300 bg-white"
+                      ? "border-red-300 bg-red-50"
+                      : isVerified
+                        ? "border-emerald-500 bg-emerald-50"
+                        : "border-gray-300 bg-white"
                       }`}
                   >
                     <div className="shrink-0">
@@ -774,10 +777,10 @@ const TestSubmissionRegistrationModal = ({
                             verificationQuestion.includes("=") ? "Ans" : "Code"
                           }
                           className={`w-full px-2 py-1.5 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-center font-semibold text-sm ${errors.verification
-                              ? "border-red-300 bg-red-50"
-                              : isVerified
-                                ? "border-emerald-500 bg-emerald-50"
-                                : "border-gray-300 bg-white"
+                            ? "border-red-300 bg-red-50"
+                            : isVerified
+                              ? "border-emerald-500 bg-emerald-50"
+                              : "border-gray-300 bg-white"
                             }`}
                           autoComplete="off"
                           disabled={loading}
