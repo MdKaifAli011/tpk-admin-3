@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 
 const UtilitiesMegaMenu = ({ onClose }) => {
   return (
@@ -243,41 +244,79 @@ const UtilitiesMegaMenu = ({ onClose }) => {
 
           {/* Category Items */}
           <div>
-            <div className="space-y-3">
-              <div className="border border-gray-200 rounded-lg p-3 hover:border-indigo-300 transition-colors">
-                <div className="w-full h-24 bg-gray-100 rounded mb-2"></div>
-                <Link
-                  href="https://www.testprepkart.com/trial-session"
-                  onClick={onClose}
-                  className="text-sm font-medium text-gray-900 hover:text-indigo-600 transition-colors flex items-center justify-between"
-                >
-                  <span>Check Exam Preparedness</span>
-                  <span>→</span>
-                </Link>
+            <div className="space-y-2">
+              {/* Check Exam Preparedness */}
+              <div className="relative bg-gray-100 rounded-t-lg overflow-hidden hover:bg-gray-200 transition-colors group cursor-pointer">
+                <div className="flex items-center justify-between p-4">
+                  <Link
+                    href="https://www.testprepkart.com/trial-session"
+                    onClick={onClose}
+                    className="text-sm font-bold text-gray-900 flex items-center gap-2 z-10 relative"
+                  >
+                    <span>Check Exam Preparedness</span>
+                    <span className="text-gray-900">→</span>
+                  </Link>
+                  <div className="absolute right-0 top-0 bottom-0 w-32 opacity-60 group-hover:opacity-80 transition-opacity">
+                    <Image
+                      src="https://www.testprepkart.com/public/assets/images/tpk_home_page/tpk%20menu%20image%201.png"
+                      alt="Exam Preparedness"
+                      width={128}
+                      height={80}
+                      className="w-full h-full object-cover object-right"
+                    />
+                  </div>
+                </div>
               </div>
-              <div className="border border-gray-200 rounded-lg p-3 hover:border-indigo-300 transition-colors">
-                <div className="w-full h-24 bg-gray-100 rounded mb-2"></div>
-                <a
-                  href="https://www.youtube.com/@TestprepKart"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm font-medium text-gray-900 hover:text-indigo-600 transition-colors flex items-center justify-between"
-                >
-                  <span>Watch Us On Youtube</span>
-                  <span>→</span>
-                </a>
+
+              {/* Watch Us On Youtube */}
+              <div className="relative bg-gray-100 rounded-lg overflow-hidden hover:bg-gray-200 transition-colors group cursor-pointer">
+                <div className="flex items-center justify-between p-4">
+                  <a
+                    href="https://www.youtube.com/@TestprepKart"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={onClose}
+                    className="text-sm font-bold text-gray-900 flex items-center gap-2 z-10 relative"
+                  >
+                    <span>Watch Us On Youtube</span>
+                    <span className="text-gray-900">→</span>
+                  </a>
+                  <div className="absolute right-0 top-0 bottom-0 w-32 opacity-60 group-hover:opacity-80 transition-opacity">
+                    <Image
+                      src="https://www.testprepkart.com/public/assets/images/tpk_home_page/tpk%20menu%20image%202.png"
+                      alt="Watch Us On Youtube"
+                      width={128}
+                      height={80}
+                      className="w-full h-full object-cover object-right"
+                    />
+                  </div>
+                </div>
               </div>
-              <div className="border border-gray-200 rounded-lg p-3 hover:border-indigo-300 transition-colors">
-                <div className="w-full h-24 bg-gray-100 rounded mb-2"></div>
-                <Link
-                  href="#"
-                  onClick={onClose}
-                  className="text-sm font-medium text-gray-900 hover:text-indigo-600 transition-colors flex items-center justify-between"
-                >
-                  <span>University Status</span>
-                  <span>→</span>
-                </Link>
+
+              {/* University Status */}
+              <div className="relative bg-gray-100 rounded-lg overflow-hidden hover:bg-gray-200 transition-colors group cursor-pointer">
+                <div className="flex items-center justify-between p-4">
+                  <Link
+                    href="#"
+                    onClick={onClose}
+                    className="text-sm font-bold text-gray-900 flex items-center gap-2 z-10 relative"
+                  >
+                    <span>University Status</span>
+                    <span className="text-gray-900">→</span>
+                  </Link>
+                  <div className="absolute right-0 top-0 bottom-0 w-32 opacity-60 group-hover:opacity-80 transition-opacity">
+                    <Image
+                      src="https://www.testprepkart.com/public/assets/images/tpk_home_page/tpk%20menu%20image%203.png"
+                      alt="University Status"
+                      width={128}
+                      height={80}
+                      className="w-full h-full object-cover object-right"
+                    />
+                  </div>
+                </div>
               </div>
+
+             
             </div>
           </div>
         </div>

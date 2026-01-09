@@ -3,18 +3,20 @@ import Link from "next/link";
 
 const CoursesMegaMenu = ({ onClose }) => {
   return (
-    <div className="absolute left-1/2 transform -translate-x-1/2 top-full mt-2 w-[90vw] max-w-5xl bg-white rounded-lg shadow-2xl border border-gray-200 py-6 z-50">
-      <div className="px-6">
-        <div className="mb-6 pb-4 border-b border-gray-200">
-          <h4 className="text-lg font-semibold text-gray-900">
-            Preparation Courses
-          </h4>
-          <p className="text-sm text-gray-600 mt-1">
-            Start building fast, core aptitude, problem solving skills and more.
-          </p>
+    <div className="absolute left-1/2 transform -translate-x-1/2 top-full mt-2 w-[90vw] max-w-5xl bg-white rounded-lg shadow-2xl border border-gray-200 z-50">
+      <div className="">
+        <div style={{ backgroundImage: "url('https://www.testprepkart.com/public/assets/images/course/category-10.png')", backgroundSize: "cover", backgroundPosition: "center" }} className="mb-6 pb-4 border-b border-gray-200">
+          <div className="px-6 py-6">
+            <h4 className="text-lg font-semibold text-white">
+              Preparation Courses
+            </h4>
+            <p className="text-sm text-white mt-1">
+              Start building fast, core aptitude, problem solving skills and more.
+            </p>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="px-6 grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Engineering & Medical Prep Courses */}
           <div>
             <h3 className="text-sm font-semibold text-gray-900 mb-4">
@@ -182,7 +184,7 @@ const CoursesMegaMenu = ({ onClose }) => {
         </div>
 
         {/* Quick Access Links */}
-        <div className="mt-6 pt-6 border-t border-gray-200">
+        <div className="px-6 mt-6 py-6 border-t border-gray-200">
           <ul className="flex flex-wrap gap-4">
             <li>
               <Link
