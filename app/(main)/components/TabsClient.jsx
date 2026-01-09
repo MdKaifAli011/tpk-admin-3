@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, lazy, Suspense, useEffect, useMemo, useCallback } from "react";
+import React, { useState, lazy, Suspense, useEffect, useMemo, useCallback, startTransition } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { FaChartLine, FaSpinner } from "react-icons/fa";
+import { FaChartLine } from "react-icons/fa";
 import { ExamCardSkeleton } from "./SkeletonLoader";
 import Card from "./Card";
 
@@ -91,15 +91,16 @@ const TabsClient = ({
   // Initialize activeTab from URL, default to existing logic (Overview)
   const currentTabParam = searchParams.get("tab");
   const [activeTab, setActiveTab] = useState(() => fromUrlParam(currentTabParam));
-  const [loadingTab, setLoadingTab] = useState(null);
   const [loadedTabs, setLoadedTabs] = useState(new Set([fromUrlParam(currentTabParam)])); // Track loaded tabs
 
   // Sync state with URL changes (handling back/forward button)
   useEffect(() => {
     const tabFromUrl = fromUrlParam(searchParams.get("tab"));
     if (tabFromUrl !== activeTab) {
-      setActiveTab(tabFromUrl);
-      setLoadedTabs(prev => new Set([...prev, tabFromUrl])); // Mark as loaded
+      startTransition(() => {
+        setActiveTab(tabFromUrl);
+        setLoadedTabs(prev => new Set([...prev, tabFromUrl])); // Mark as loaded
+      });
     }
   }, [searchParams, activeTab]);
 
@@ -125,13 +126,13 @@ const TabsClient = ({
   }, [loadedTabs]);
 
   const handleTabChange = useCallback((tab) => {
-    // Only set loading if tab hasn't been loaded before
-    if (!loadedTabs.has(tab)) {
-      setLoadingTab(tab);
-    }
-
-    setActiveTab(tab); // Optimistic UI update
-    setLoadedTabs(prev => new Set([...prev, tab])); // Mark as loaded
+    if (tab === activeTab) return; // Prevent unnecessary re-renders
+    
+    // Use startTransition for smooth tab switching (non-blocking update)
+    startTransition(() => {
+      setActiveTab(tab);
+      setLoadedTabs(prev => new Set([...prev, tab])); // Mark as loaded
+    });
 
     // Create new params to preserve existing query params if any
     const params = new URLSearchParams(searchParams.toString());
@@ -150,17 +151,17 @@ const TabsClient = ({
 
     // Replace URL without page reload/scroll reset
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  }, [activeTab, searchParams, pathname, router]);
 
-    // Clear loading state after a short delay (component will handle its own loading)
-    setTimeout(() => setLoadingTab(null), 100);
-  }, [loadedTabs, searchParams, pathname, router]);
-
-  // Memoize tab content to prevent unnecessary re-renders
+  // Render only the active tab to prevent double loading animations
+  // Use key prop based on activeTab to force complete remount when switching tabs
+  // Memoize to prevent unnecessary re-renders
   const tabContent = useMemo(() => {
     switch (activeTab) {
       case "Overview":
         return (
           <OverviewTab
+            key={`overview-tab-${activeTab}`}
             content={content}
             entityType={entityType}
             entityName={entityName}
@@ -185,6 +186,7 @@ const TabsClient = ({
       case "Discussion Forum":
         return (
           <DiscussionForumTab
+            key={`discussion-tab-${activeTab}`}
             entityType={entityType}
             entityName={entityName}
             examId={examId}
@@ -201,6 +203,7 @@ const TabsClient = ({
       case "Practice Test":
         return (
           <PracticeTestTab
+            key={`practice-tab-${activeTab}`}
             examId={examId}
             subjectId={subjectId}
             unitId={unitId}
@@ -213,6 +216,7 @@ const TabsClient = ({
       case "Performance":
         return (
           <PerformanceTab
+            key={`performance-tab-${activeTab}`}
             entityType={entityType}
             entityName={entityName}
             examId={examId}
@@ -255,23 +259,6 @@ const TabsClient = ({
     currentDefinitionId,
   ]);
 
-  // Enhanced loading fallback with better UX
-  const LoadingFallback = ({ tabName }) => (
-    <div className="flex flex-col items-center justify-center py-16 px-4 animate-in fade-in duration-300">
-      <div className="relative">
-        <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <FaSpinner className="text-indigo-600 animate-spin" size={20} />
-        </div>
-      </div>
-      <p className="text-sm font-semibold text-gray-700 mt-4">
-        Loading {tabName}...
-      </p>
-      <p className="text-xs text-gray-500 mt-1">
-        Please wait while we prepare the content
-      </p>
-    </div>
-  );
 
   return (
     <Card variant="standard" hover={false} className="overflow-hidden">
@@ -287,8 +274,7 @@ const TabsClient = ({
                 key={tab}
                 onClick={() => handleTabChange(tab)}
                 onMouseEnter={() => handleTabHover(tab)}
-                disabled={loadingTab === tab}
-                className={`relative px-2.5 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-2.5 text-[10px] sm:text-xs md:text-sm font-semibold whitespace-nowrap transition-all duration-300 border-b-2 group overflow-hidden shrink-0 disabled:opacity-60 disabled:cursor-wait ${isActive
+                className={`relative px-2.5 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-2.5 text-[10px] sm:text-xs md:text-sm font-semibold whitespace-nowrap transition-all duration-300 border-b-2 group overflow-hidden shrink-0 ${isActive
                   ? isPerformanceTab
                     ? "text-emerald-700 border-emerald-600 bg-gradient-to-b from-emerald-50 via-white to-white shadow-sm"
                     : "text-indigo-600 border-indigo-600 bg-white"
@@ -332,10 +318,22 @@ const TabsClient = ({
       </nav>
 
       {/* Tab Content with Lazy Loading */}
-      <div className="text-gray-700 text-sm sm:text-base ">
-        <Suspense fallback={<LoadingFallback tabName={activeTab} />}>
-          {tabContent}
-        </Suspense>
+      {/* Render only active tab to prevent double loading animations */}
+      {/* Key prop ensures complete remount when switching tabs, preventing double rendering */}
+      {/* Only wrap in Suspense if tab hasn't been loaded before to prevent flickering */}
+      <div 
+        className="text-gray-700 text-sm sm:text-base"
+        key={`tab-wrapper-${activeTab}`}
+      >
+        {loadedTabs.has(activeTab) ? (
+          // Tab already loaded - render directly without Suspense to prevent flickering
+          tabContent
+        ) : (
+          // Tab not loaded yet - use Suspense for lazy loading
+          <Suspense fallback={null}>
+            {tabContent}
+          </Suspense>
+        )}
       </div>
 
       {/* Custom scrollbar styling for mobile */}

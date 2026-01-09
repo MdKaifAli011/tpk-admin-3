@@ -40,10 +40,14 @@ const PerformanceTab = ({
   const [error, setError] = useState(null);
 
   // Fetch test results based on entity hierarchy
+  // Fetch at exam level to show all test results for that exam (not too strict filtering)
   useEffect(() => {
     const loadTestResults = async () => {
-      if (!isAuthenticated) {
+      // Double-check authentication with token
+      const token = typeof window !== "undefined" ? localStorage.getItem("student_token") : null;
+      if (!isAuthenticated && !token) {
         setLoading(false);
+        setTestResults([]);
         return;
       }
 
@@ -51,33 +55,50 @@ const PerformanceTab = ({
         setLoading(true);
         setError(null);
 
+        // Build filters - Use examId as primary filter to show all results for the exam
+        // This ensures users see all their test results, not just ones matching exact hierarchy
         const filters = {};
-        if (examId) filters.examId = examId;
-        if (subjectId) filters.subjectId = subjectId;
-        if (unitId) filters.unitId = unitId;
-        if (chapterId) filters.chapterId = chapterId;
-        if (topicId) filters.topicId = topicId;
-        if (subTopicId) filters.subTopicId = subTopicId;
+        
+        // Always filter by examId if available (shows all results for that exam)
+        // This is the most important filter - shows all test results for the current exam
+        if (examId) {
+          filters.examId = String(examId);
+        }
+        
+        // Don't filter by deeper levels (unit, chapter, topic, subtopic) as it's too restrictive
+        // Users want to see all their test results for the exam, regardless of which unit/chapter they took the test from
+
+        console.log("PerformanceTab: Fetching test results with filters:", filters);
+        console.log("PerformanceTab: Authentication status:", { isAuthenticated, hasToken: !!token });
 
         const results = await fetchAllStudentTestResults(filters);
+        
+        console.log("PerformanceTab: Received test results:", {
+          count: results?.length || 0,
+          results: results?.slice(0, 3), // Log first 3 for debugging
+          allResults: results, // Log all for debugging
+        });
+
         setTestResults(results || []);
       } catch (err) {
-        console.error("Error loading test results:", err);
+        console.error("PerformanceTab: Error loading test results:", err);
         setError("Failed to load performance data");
+        setTestResults([]);
       } finally {
         setLoading(false);
       }
     };
 
-    loadTestResults();
+    // Small delay to ensure component is mounted and ready
+    const timer = setTimeout(() => {
+      loadTestResults();
+    }, 150);
+
+    return () => clearTimeout(timer);
   }, [
     isAuthenticated,
     examId,
-    subjectId,
-    unitId,
-    chapterId,
-    topicId,
-    subTopicId,
+    // Only depend on examId - show all results for the exam
   ]);
 
   // Calculate statistics
