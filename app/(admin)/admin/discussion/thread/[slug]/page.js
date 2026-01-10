@@ -31,10 +31,8 @@ const ThreadDetailModeration = () => {
     const [thread, setThread] = useState(null);
     const [replies, setReplies] = useState([]);
     const [isDataLoading, setIsDataLoading] = useState(true);
-    const [replyPage, setReplyPage] = useState(1);
     const [replySearch, setReplySearch] = useState("");
     const [replyFilter, setReplyFilter] = useState("all"); // "all", "pending", "approved"
-    const [replyPagination, setReplyPagination] = useState({ page: 1, limit: 10, total: 0, pages: 1 });
     const { toasts, removeToast, success, error: showError } = useToast();
     const searchTimeout = React.useRef(null);
 
@@ -49,19 +47,18 @@ const ThreadDetailModeration = () => {
     const { role } = usePermissions();
     const discussionPerms = getDiscussionPermissions(role);
 
-    const fetchDetail = async (page = 1, search = "") => {
+    const fetchDetail = async (search = "") => {
         try {
             setIsDataLoading(true);
             const params = new URLSearchParams();
-            params.append('replyPage', page);
-            params.append('replyLimit', 10);
+            // Fetch all replies (use a high limit to get all)
+            params.append('replyLimit', 1000);
             if (search) params.append('replySearch', search);
 
             const res = await api.get(`/discussion/threads/${slug}?${params.toString()}`);
             if (res.data.success) {
                 setThread(res.data.data.thread);
-                setReplies(res.data.data.replies);
-                if (res.data.data.pagination) setReplyPagination(res.data.data.pagination);
+                setReplies(res.data.data.replies || []);
             }
         } catch (err) {
             console.error(err);
@@ -72,23 +69,16 @@ const ThreadDetailModeration = () => {
     };
 
     useEffect(() => {
-        if (slug) fetchDetail(replyPage, replySearch);
-    }, [slug, replyPage]); // Intentionally exclude replySearch to handle via debounce
+        if (slug) fetchDetail(replySearch);
+    }, [slug]); // Intentionally exclude replySearch to handle via debounce
 
     const handleSearchChange = (e) => {
         const value = e.target.value;
         setReplySearch(value);
         if (searchTimeout.current) clearTimeout(searchTimeout.current);
         searchTimeout.current = setTimeout(() => {
-            setReplyPage(1); // Reset to page 1 on search
-            fetchDetail(1, value);
+            fetchDetail(value);
         }, 500);
-    };
-
-    const handlePageChange = (newPage) => {
-        if (newPage >= 1 && newPage <= replyPagination.pages) {
-            setReplyPage(newPage);
-        }
     };
 
     const handleToggleThreadApproval = async () => {
@@ -236,42 +226,113 @@ const ThreadDetailModeration = () => {
         return `${path}?tab=discussion&thread=${thread.slug}`;
     };
 
-    // Filter replies by approval status
-    const filteredReplies = useMemo(() => {
-        if (replyFilter === "all") return replies;
-        if (replyFilter === "pending") return replies.filter(r => !r.isApproved);
-        if (replyFilter === "approved") return replies.filter(r => r.isApproved);
-        return replies;
-    }, [replies, replyFilter]);
-
-    // Organize replies into a tree structure
-    const organizedReplies = useMemo(() => {
-        // Apply filter first
-        const repliesToOrganize = filteredReplies;
+    // Helper function to recursively filter tree while preserving structure
+    const filterTree = (nodes, filterType) => {
+        if (!nodes || nodes.length === 0) return [];
         
-        if (replySearch) return repliesToOrganize; // Return flat list on search
+        return nodes
+            .map(node => {
+                const matchesFilter = 
+                    filterType === "all" ? true :
+                    filterType === "pending" ? !node.isApproved :
+                    filterType === "approved" ? node.isApproved : true;
+                
+                // Recursively filter children first
+                const filteredChildren = node.children ? filterTree(node.children, filterType) : [];
+                
+                // If this node matches OR has matching children, include it
+                if (matchesFilter || filteredChildren.length > 0) {
+                    return {
+                        ...node,
+                        children: filteredChildren
+                    };
+                }
+                return null;
+            })
+            .filter(node => node !== null);
+    };
 
+    // Helper function to count matching replies recursively
+    const countMatchingReplies = (nodes, filterType) => {
+        if (!nodes || nodes.length === 0) return 0;
+        let count = 0;
+        nodes.forEach(node => {
+            const matches = 
+                filterType === "all" ? true :
+                filterType === "pending" ? !node.isApproved :
+                filterType === "approved" ? node.isApproved : false;
+            if (matches) count++;
+            if (node.children) count += countMatchingReplies(node.children, filterType);
+        });
+        return count;
+    };
+
+    // Organize replies into a tree structure first, then apply filter
+    const organizedReplies = useMemo(() => {
+        if (replySearch) {
+            // For search, return flat filtered list
+            if (replyFilter === "all") return replies;
+            if (replyFilter === "pending") return replies.filter(r => !r.isApproved);
+            if (replyFilter === "approved") return replies.filter(r => r.isApproved);
+            return replies;
+        }
+
+        // Build complete tree structure first
         const map = {};
         const roots = [];
 
-        // Initialize map
-        repliesToOrganize.forEach(r => {
+        // Initialize map with all replies
+        replies.forEach(r => {
             map[r._id] = { ...r, children: [] };
         });
 
-        // Build tree
-        repliesToOrganize.forEach(r => {
+        // Build tree structure
+        replies.forEach(r => {
             if (r.parentReplyId && map[r.parentReplyId]) {
                 map[r.parentReplyId].children.push(map[r._id]);
             } else if (!r.parentReplyId) {
                 roots.push(map[r._id]);
             }
-            // Note: If parent isn't in this page/batch, it might be a root in this view or an orphan.
-            // But since current API returns Roots for page + All Children, this logic holds for rendering the page's roots + their full subtrees.
         });
 
-        return roots;
-    }, [filteredReplies, replySearch]);
+        // Now apply filter while preserving tree structure
+        if (replyFilter === "all") {
+            return roots;
+        }
+
+        return filterTree(roots, replyFilter);
+    }, [replies, replyFilter, replySearch]);
+
+    // Calculate filtered reply count
+    const filteredReplyCount = useMemo(() => {
+        if (replySearch) {
+            // For search, count filtered flat list
+            if (replyFilter === "all") return replies.length;
+            if (replyFilter === "pending") return replies.filter(r => !r.isApproved).length;
+            if (replyFilter === "approved") return replies.filter(r => r.isApproved).length;
+            return replies.length;
+        }
+
+        // For tree structure, count recursively
+        const map = {};
+        const roots = [];
+        replies.forEach(r => {
+            map[r._id] = { ...r, children: [] };
+        });
+        replies.forEach(r => {
+            if (r.parentReplyId && map[r.parentReplyId]) {
+                map[r.parentReplyId].children.push(map[r._id]);
+            } else if (!r.parentReplyId) {
+                roots.push(map[r._id]);
+            }
+        });
+
+        if (replyFilter === "all") {
+            return replies.length;
+        }
+
+        return countMatchingReplies(roots, replyFilter);
+    }, [replies, replyFilter, replySearch]);
 
     if (!thread && isDataLoading) return (
         <div className="min-h-[400px] flex flex-col items-center justify-center gap-4">
@@ -451,7 +512,7 @@ const ThreadDetailModeration = () => {
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-1">
                             <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
                                 <FaIcons.FaCommentDots className="text-blue-500" />
-                                Community Responses ({replyPagination.total})
+                                Community Responses ({filteredReplyCount})
                             </h3>
                             <div className="flex items-center gap-3">
                                 {/* Approval Status Filter */}
@@ -526,31 +587,6 @@ const ThreadDetailModeration = () => {
                                             depth={replySearch ? 0 : 0} // Flatten when searching
                                         />
                                     ))}
-
-                                    {/* Pagination Controls */}
-                                    {replyPagination.pages > 1 && (
-                                        <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                                                Page {replyPage} of {replyPagination.pages}
-                                            </p>
-                                            <div className="flex gap-2">
-                                                <button
-                                                    onClick={() => handlePageChange(replyPage - 1)}
-                                                    disabled={replyPage === 1}
-                                                    className="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-bold text-gray-600 disabled:opacity-50 hover:bg-gray-50 transition-all"
-                                                >
-                                                    Previous
-                                                </button>
-                                                <button
-                                                    onClick={() => handlePageChange(replyPage + 1)}
-                                                    disabled={replyPage === replyPagination.pages}
-                                                    className="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-bold text-gray-600 disabled:opacity-50 hover:bg-gray-50 transition-all"
-                                                >
-                                                    Next
-                                                </button>
-                                            </div>
-                                        </div>
-                                    )}
                                 </>
                             )}
                         </div>
