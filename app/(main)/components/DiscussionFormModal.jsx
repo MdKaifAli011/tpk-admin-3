@@ -31,12 +31,12 @@ import {
   validateClassName,
 } from "./utils/formValidation";
 
-const DiscussionFormModal = ({ 
-  isOpen, 
-  onClose, 
-  onSuccess, 
+const DiscussionFormModal = ({
+  isOpen,
+  onClose,
+  onSuccess,
   formId = "Discussion-forum-post",
-  initialData = {} 
+  initialData = {}
 }) => {
   const [formData, setFormData] = useState({
     name: "",
@@ -286,11 +286,15 @@ const DiscussionFormModal = ({
               </div>
 
               <h2 className="text-xl font-bold text-gray-900 mb-3">
-                {formId === "Discussion-forum-post" 
+                {formId === "Discussion-forum-post"
                   ? "Create Your Discussion Post"
                   : formId === "Discussion-forum-comment"
-                  ? "Join the Discussion"
-                  : "Reply to Discussion"}
+                    ? "Join the Discussion"
+                    : formId === "Discussion-forum-reply"
+                      ? "Reply to Discussion"
+                      : formId === "Discussion-forum-thread-image"
+                        ? "View Discussion Forum Image"
+                        : "Join the Discussion"}
               </h2>
               <p className="text-sm text-gray-600 mb-4">
                 Please provide your information to continue with your action.

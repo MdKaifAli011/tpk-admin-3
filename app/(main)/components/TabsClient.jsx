@@ -191,6 +191,7 @@ const TabsClient = ({
             entityType={entityType}
             entityName={entityName}
             examId={examId}
+            examSlug={examSlug}
             subjectId={subjectId}
             unitId={unitId}
             chapterId={chapterId}

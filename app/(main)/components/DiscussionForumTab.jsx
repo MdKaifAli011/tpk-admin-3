@@ -19,6 +19,22 @@ import Button from "./Button";
 import DiscussionMetadata from "./DiscussionMetadata";
 import DiscussionFormModal from "./DiscussionFormModal";
 import { useStudent } from "../hooks/useStudent";
+import Image from "next/image";
+
+/* ---------- Helper Functions ---------- */
+// Helper function to resolve image path with base path
+const resolveImagePath = (path) => {
+  if (!path) return "";
+  if (path.startsWith("http://") || path.startsWith("https://")) {
+    return path;
+  }
+  const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
+  const cleanPath = path.startsWith("/") ? path : `/${path}`;
+  if (cleanPath.startsWith(basePath)) {
+    return cleanPath;
+  }
+  return `${basePath}${cleanPath}`;
+};
 
 /* ---------- Persistent Guest Logic ---------- */
 const getGuestIdentity = () => {
@@ -47,12 +63,12 @@ const isHTML = (text = "") => {
 // Render content - handles both HTML (from RichTextEditor) and markdown
 const renderContent = (text = "") => {
   if (!text) return "";
-  
+
   // If content is already HTML (from RichTextEditor), sanitize and return
   if (isHTML(text)) {
     return DOMPurify.sanitize(text);
   }
-  
+
   // Otherwise, treat as markdown and parse
   const html = marked.parse(text);
   return DOMPurify.sanitize(html);
@@ -334,7 +350,7 @@ const SuccessModal = ({ isOpen, onClose, title, message }) => {
 };
 
 /* ---------- Thread Detail View ---------- */
-const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal }) => {
+const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal, examImage }) => {
   const [thread, setThread] = useState(null);
   const [replies, setReplies] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -364,7 +380,7 @@ const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal }) => {
       setLoading(false);
       return;
     }
-    
+
     try {
       setLoading(true);
       const headers = { "x-guest-id": guestIdentity.id, "x-guest-name": guestIdentity.name };
@@ -457,7 +473,7 @@ const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal }) => {
   const handlePostReply = async (parentId = null, content = null) => {
     const finalContent = content || replyContent;
     if (!finalContent.trim() || !thread?._id) return;
-    
+
     // Check if user needs to authenticate - always check if not logged in
     if (typeof window !== "undefined") {
       const token = localStorage.getItem("student_token");
@@ -475,7 +491,7 @@ const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal }) => {
         return;
       }
     }
-    
+
     // User is authenticated, proceed with posting
     await handlePostReplyInternal(parentId, finalContent);
   };
@@ -553,8 +569,8 @@ const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal }) => {
             The discussion thread you're looking for doesn't exist or is pending approval.
           </p>
         </div>
-        <button 
-          onClick={onBack} 
+        <button
+          onClick={onBack}
           className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
         >
           <FaArrowLeft size={14} /> Go Back to Forum
@@ -865,7 +881,7 @@ const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal }) => {
               View all related discussions
             </button>
           </Card>
-
+          {/*Academic Integrity*/}
           <div className="bg-gradient-to-br from-slate-900 to-indigo-950 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden group">
             <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-white/5 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-1000"></div>
             <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center mb-4 border border-white/10 shadow-inner">
@@ -875,9 +891,42 @@ const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal }) => {
             <p className="text-[11px] text-gray-400 leading-relaxed font-medium">
               Maintain academic honesty and keep discussions respectful. Constructive dialogue empowers everyone.
             </p>
-            
+
+          </div>
+          <div
+            className=" rounded-2xl bg-white p-4 shadow-sm border border-gray-200/60 cursor-pointer hover:shadow-md transition-shadow"
+            onClick={() => {
+              if (onShowAuthModal) {
+                onShowAuthModal("Discussion-forum-thread-image", () => {
+                  // Optional: Add any success callback logic here
+                  console.log("Image form submitted successfully");
+                });
+              }
+            }}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                if (onShowAuthModal) {
+                  onShowAuthModal("Discussion-forum-thread-image", () => {
+                    console.log("Image form submitted successfully");
+                  });
+                }
+              }
+            }}
+          >
+            <Image
+              src={resolveImagePath(examImage || '/images/cbse-preview.jpg')}
+              alt="Academic Integrity"
+              width={100}
+              height={100}
+              className="w-full h-full object-cover rounded-lg"
+              unoptimized={true}
+            />
           </div>
         </div>
+
       </div>
 
       <SuccessModal
@@ -1093,18 +1142,18 @@ const CommentItem = ({ reply, onVote, onReply, onReport, onShare, depth = 0, onS
           {/* Recursive Rendering INSIDE the same Card Container */}
           {reply.children?.length > 0 && (
             <div className="mt-4 space-y-4">
-            {reply.children.map(child => (
-              <CommentItem
-                key={child._id}
-                reply={child}
-                onVote={onVote}
-                onReply={onReply}
-                onReport={onReport}
-                onShare={onShare}
-                depth={depth + 1}
-                onShowAuthModal={onShowAuthModal}
-              />
-            ))}
+              {reply.children.map(child => (
+                <CommentItem
+                  key={child._id}
+                  reply={child}
+                  onVote={onVote}
+                  onReply={onReply}
+                  onReport={onReport}
+                  onShare={onShare}
+                  depth={depth + 1}
+                  onShowAuthModal={onShowAuthModal}
+                />
+              ))}
             </div>
           )}
         </div>
@@ -1115,11 +1164,67 @@ const CommentItem = ({ reply, onVote, onReply, onReport, onShare, depth = 0, onS
 
 /* ---------- Main Discussion Forum Tab ---------- */
 
-const DiscussionForumTab = ({ entityName, entityType, examId, subjectId, unitId, chapterId, topicId, subTopicId }) => {
+const DiscussionForumTab = ({ entityName, entityType, examId, examSlug, subjectId, unitId, chapterId, topicId, subTopicId }) => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const { isAuthenticated } = useStudent();
+
+  // Get exam name and map to image
+  const getExamImage = useMemo(() => {
+    // First try to use examSlug if provided (most reliable)
+    let examSegment = examSlug || null;
+
+    // If no examSlug, extract from pathname
+    if (!examSegment) {
+      const pathSegments = pathname.split('/').filter(Boolean);
+
+      // Remove common non-exam segments
+      const skipSegments = ['self-study', 'blog', 'download', 'course'];
+
+      // Find the first segment that's not in skipSegments (this should be the exam)
+      for (const segment of pathSegments) {
+        if (!skipSegments.includes(segment.toLowerCase())) {
+          examSegment = segment;
+          break;
+        }
+      }
+
+      // If no exam segment found, try first segment
+      if (!examSegment && pathSegments.length > 0) {
+        examSegment = pathSegments[0];
+      }
+    }
+
+    if (!examSegment) {
+      return '/images/cbse-preview.jpg';
+    }
+
+    // Normalize exam name for matching (case-insensitive, remove any query params)
+    const examNameNormalized = examSegment.toLowerCase().split('?')[0].trim();
+
+    // Map exam names to image paths
+    const examImageMap = {
+      'jee': '/images/jee-preview.jpg',
+      'neet': '/images/neet-preview.jpg',
+      'ap': '/images/ap-preview.jpg',
+      'ib': '/images/ib-preview.jpg',
+      'sat': '/images/sat-preview.jpg',
+    };
+
+    // Check if exam name contains any key (case-insensitive)
+    // This handles cases like "neet", "neet-2025", "ap-physics", etc.
+    for (const [key, imagePath] of Object.entries(examImageMap)) {
+      const lowerKey = key.toLowerCase();
+      // Simple check: if exam name starts with the key or equals it
+      if (examNameNormalized === lowerKey || examNameNormalized.startsWith(lowerKey)) {
+        return imagePath;
+      }
+    }
+
+    // Default image if no match
+    return '/images/cbse-preview.jpg';
+  }, [examSlug, pathname]);
 
   const guestIdentity = useMemo(() => getGuestIdentity(), []);
   const currentThreadSlug = searchParams.get("thread");
@@ -1204,14 +1309,14 @@ const DiscussionForumTab = ({ entityName, entityType, examId, subjectId, unitId,
 
   const handleCreateThread = async () => {
     if (!newTitle.trim() || !newContent.trim()) return;
-    
+
     // Check if user needs to authenticate before publishing
     if (typeof window !== "undefined") {
       const token = localStorage.getItem("student_token");
       if (!token) {
         // Show modal to collect user information before publishing
-        setPendingAction({ 
-          formId: "Discussion-forum-post", 
+        setPendingAction({
+          formId: "Discussion-forum-post",
           onSuccess: () => {
             // After successful form submission, proceed with publishing
             handleCreateThreadInternal();
@@ -1221,7 +1326,7 @@ const DiscussionForumTab = ({ entityName, entityType, examId, subjectId, unitId,
         return;
       }
     }
-    
+
     // User is authenticated, proceed with publishing
     await handleCreateThreadInternal();
   };
@@ -1401,14 +1506,15 @@ const DiscussionForumTab = ({ entityName, entityType, examId, subjectId, unitId,
 
       {
         view === "DETAIL" && (
-          <ThreadDetail 
-            slug={currentThreadSlug} 
-            onBack={handleBack} 
+          <ThreadDetail
+            slug={currentThreadSlug}
+            onBack={handleBack}
             guestIdentity={guestIdentity}
             onShowAuthModal={(formId, onSuccess) => {
               setPendingAction({ formId, onSuccess });
               setShowAuthModal(true);
             }}
+            examImage={getExamImage}
           />
         )
       }
