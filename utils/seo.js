@@ -8,7 +8,7 @@ import { logger } from "@/utils/logger";
 /**
  * Generate SEO metadata for pages
  * @param {Object} data - Entity data with title, metaDescription, keywords
- * @param {Object} options - Additional options like type, name
+ * @param {Object} options - Additional options like type, name, path
  * @returns {Object} SEO metadata object
  */
 export function generateMetadata(data, options = {}) {
@@ -50,9 +50,9 @@ export function generateMetadata(data, options = {}) {
     }
   }
 
-  // Ensure title doesn't exceed recommended length
-  const optimizedTitle =
-    title.length > 60 ? `${title.substring(0, 57)}...` : title;
+  // Show full title without truncation for better SEO and user experience
+  // Modern search engines and browsers can handle longer titles
+  const optimizedTitle = title;
 
   // Prioritize admin-provided metaDescription - if it exists and has content, use it as-is
   let description;
@@ -67,10 +67,11 @@ export function generateMetadata(data, options = {}) {
     description = SEO_DEFAULTS.DESCRIPTION;
   }
 
-  // Ensure description doesn't exceed recommended length
+  // Allow longer descriptions for better SEO (max 300 chars instead of 160)
+  // Modern search engines can handle longer meta descriptions
   const optimizedDescription =
-    description.length > 160
-      ? `${description.substring(0, 157)}...`
+    description.length > 300
+      ? `${description.substring(0, 297)}...`
       : description;
 
   // Handle keywords - prioritize admin-provided keywords

@@ -59,7 +59,7 @@ export default function DiscussionMetadata({ entityData = {} }) {
           ? `${thread.author.firstName || ""} ${thread.author.lastName || ""}`.trim()
           : thread.guestName || "Community Member";
 
-        // Generate metadata
+        // Generate metadata - Full title without truncation
         const title = `${threadTitle}${entityName ? ` - ${entityName}` : ""} | Discussion Forum | ${APP_CONFIG.name}`;
         const description = cleanContent
           ? `${cleanContent}... Join the discussion and share your insights.`
@@ -67,17 +67,17 @@ export default function DiscussionMetadata({ entityData = {} }) {
         const keywords = `${threadTitle}, ${entityName ? `${entityName}, ` : ""}discussion thread, forum, ${tags}, student discussion, ${authorName}, Q&A, study help`;
         const canonicalUrl = window.location.href;
 
-        // Update document title
-        document.title = title.length > 60 ? `${threadTitle.substring(0, 40)}... | ${APP_CONFIG.name}` : title;
+        // Update document title - Show full title without truncation
+        document.title = title;
 
-        // Update meta description
+        // Update meta description - Allow longer descriptions for better SEO (max 300 chars)
         let metaDescription = document.querySelector('meta[name="description"]');
         if (!metaDescription) {
           metaDescription = document.createElement("meta");
           metaDescription.setAttribute("name", "description");
           document.head.appendChild(metaDescription);
         }
-        metaDescription.setAttribute("content", description.substring(0, 160));
+        metaDescription.setAttribute("content", description.length > 300 ? description.substring(0, 297) + "..." : description);
 
         // Update meta keywords
         let metaKeywords = document.querySelector('meta[name="keywords"]');
@@ -100,8 +100,8 @@ export default function DiscussionMetadata({ entityData = {} }) {
           ogTag.setAttribute("content", content);
         };
 
-        updateOGTag("og:title", title.length > 60 ? `${threadTitle.substring(0, 40)}... | ${APP_CONFIG.name}` : title);
-        updateOGTag("og:description", description.substring(0, 160));
+        updateOGTag("og:title", title);
+        updateOGTag("og:description", description.length > 300 ? description.substring(0, 297) + "..." : description);
         updateOGTag("og:url", canonicalUrl);
         updateOGTag("og:type", "article");
         if (thread.createdAt) {
@@ -121,8 +121,8 @@ export default function DiscussionMetadata({ entityData = {} }) {
         };
 
         updateTwitterTag("twitter:card", "summary_large_image");
-        updateTwitterTag("twitter:title", title.length > 60 ? `${threadTitle.substring(0, 40)}... | ${APP_CONFIG.name}` : title);
-        updateTwitterTag("twitter:description", description.substring(0, 160));
+        updateTwitterTag("twitter:title", title);
+        updateTwitterTag("twitter:description", description.length > 300 ? description.substring(0, 297) + "..." : description);
 
         // Update canonical URL
         let canonicalLink = document.querySelector('link[rel="canonical"]');

@@ -102,14 +102,10 @@ export function generateThreadMetadata(thread, entityData = {}, options = {}) {
     keywords: `${threadTitle}, ${entityName ? `${entityName}, ` : ""}discussion thread, forum, ${tags}, student discussion, ${authorName}, Q&A, study help`,
   };
 
-  // Ensure title doesn't exceed 60 characters
-  if (seoData.title.length > 60) {
-    seoData.title = `${threadTitle.substring(0, 40)}... | ${APP_CONFIG.name}`;
-  }
-
-  // Ensure description doesn't exceed 160 characters
-  if (seoData.metaDescription.length > 160) {
-    seoData.metaDescription = seoData.metaDescription.substring(0, 157) + "...";
+  // No title truncation - show full title for better SEO and user experience
+  // Keep description reasonable but allow longer descriptions (max 300 chars for better SEO)
+  if (seoData.metaDescription.length > 300) {
+    seoData.metaDescription = seoData.metaDescription.substring(0, 297) + "...";
   }
 
   const metadata = generateSEO(seoData, {
