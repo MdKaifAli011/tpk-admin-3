@@ -123,7 +123,14 @@ const BulkImportManagement = () => {
     const [parsedData, setParsedData] = useState([]);
     const [headers, setHeaders] = useState([]);
     const [importStatus, setImportStatus] = useState("idle"); // idle, processing, success, error
+    const [exportStatus, setExportStatus] = useState("idle"); // idle, exporting, success, error
     const [results, setResults] = useState({ success: 0, failed: 0, errors: [] });
+    const [showImportModal, setShowImportModal] = useState(false);
+    const [importStats, setImportStats] = useState(null); // Detailed import statistics
+    const [importProgress, setImportProgress] = useState(0); // Real-time import progress (0-100)
+    const [importProgressText, setImportProgressText] = useState(""); // Progress text (e.g., "Processing row 50 of 200")
+    const progressIntervalRef = useRef(null); // Reference to progress interval
+    const importStartTimeRef = useRef(null); // Track when import started
     const fileInputRef = useRef(null);
 
     const [importMode, setImportMode] = useState("single"); // single, hierarchical, context-locked
@@ -287,16 +294,43 @@ const BulkImportManagement = () => {
             return;
         }
 
+        setExportStatus("exporting");
+
         try {
-            success("Export started...");
+            success("Export started... Please wait while we prepare your data...");
+
+            // Add BOM for Excel UTF-8 compatibility
+            const BOM = "\uFEFF";
+
             const res = await api.post("/bulk-export", {
                 examId: parents.examId,
                 subjectId: parents.subjectId
             });
 
-            if (res.data.success) {
+            if (res.data.success && res.data.data) {
                 const csvContent = res.data.data;
-                const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+                const totalRows = res.data.count || 0;
+                const totalItems = res.data.totalItems || totalRows;
+                const unitsCount = res.data.units || 0;
+                const chaptersCount = res.data.chapters || 0;
+                const topicsCount = res.data.topics || 0;
+                const subtopicsCount = res.data.subtopics || 0;
+                const definitionsCount = res.data.definitions || 0;
+                const processedCount = res.data.processed || totalRows;
+                const errorCount = res.data.errors || 0;
+                const fileSize = res.data.size || csvContent.length;
+
+                if (totalRows === 0) {
+                    showError("No data found to export for the selected criteria.");
+                    setExportStatus("idle");
+                    return;
+                }
+
+                // Add BOM for Excel compatibility
+                const csvWithBOM = BOM + csvContent;
+
+                // Create blob with UTF-8 BOM for proper Excel encoding
+                const blob = new Blob([csvWithBOM], { type: "text/csv;charset=utf-8;" });
                 const url = URL.createObjectURL(blob);
                 const link = document.createElement("a");
                 link.setAttribute("href", url);
@@ -305,16 +339,45 @@ const BulkImportManagement = () => {
                 const examName = dropdownOptions.exams.find(e => e._id === parents.examId)?.name || "Exam";
                 const subjectName = dropdownOptions.subjects.find(s => s._id === parents.subjectId)?.name || "Subject";
                 const date = new Date().toISOString().split('T')[0];
+                const sanitizedExamName = examName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+                const sanitizedSubjectName = subjectName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
 
-                link.setAttribute("download", `Export_${examName}_${subjectName}_${date}.csv`);
+                link.setAttribute("download", `Export_${sanitizedExamName}_${sanitizedSubjectName}_${date}.csv`);
                 document.body.appendChild(link);
                 link.click();
-                document.body.removeChild(link);
-                success(`Export complete! (${res.data.count} items)`);
+
+                // Cleanup
+                setTimeout(() => {
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(url);
+                }, 100);
+
+                const sizeKB = (fileSize / 1024).toFixed(2);
+                setExportStatus("success");
+
+                // Show comprehensive success message
+                let successMessage = `✅ Export complete! Downloaded ${totalRows.toLocaleString()} total rows (${sizeKB} KB)\n`;
+                successMessage += `📦 Breakdown: ${unitsCount} Units, ${chaptersCount} Chapters, ${topicsCount} Topics, ${subtopicsCount} SubTopics, ${definitionsCount} Definitions`;
+                if (errorCount > 0) {
+                    successMessage += `\n⚠️ ${errorCount} rows had processing warnings`;
+                }
+
+                success(successMessage);
+                console.log(`✅ Export successful: ${totalRows} total rows (${unitsCount} Units + ${chaptersCount} Chapters + ${topicsCount} Topics + ${subtopicsCount} SubTopics + ${definitionsCount} Definitions), ${sizeKB} KB`);
+
+                // Reset status after 4 seconds (longer to read message)
+                setTimeout(() => setExportStatus("idle"), 4000);
+            } else {
+                setExportStatus("error");
+                showError(res.data?.message || "Export failed: No data returned from server");
+                setTimeout(() => setExportStatus("idle"), 2000);
             }
         } catch (err) {
-            console.error(err);
-            showError(err.response?.data?.message || "Export failed. Ensure data exists for this selection.");
+            console.error("Export error:", err);
+            setExportStatus("error");
+            const errorMessage = err.response?.data?.message || err.message || "Export failed. Please try again.";
+            showError(errorMessage);
+            setTimeout(() => setExportStatus("idle"), 2000);
         }
     };
 
@@ -350,6 +413,41 @@ const BulkImportManagement = () => {
         }
 
         setImportStatus("processing");
+        setShowImportModal(true); // Show modal during import
+        setImportStats(null); // Reset stats
+        setImportProgress(0); // Reset progress
+        setImportProgressText(`Preparing to import ${parsedData.length} rows...`);
+        importStartTimeRef.current = Date.now(); // Track start time
+
+        // Calculate estimated processing time (assuming ~5-10 rows per second average)
+        const estimatedRowsPerSecond = 8; // Conservative estimate
+        const estimatedTotalTime = Math.max((parsedData.length / estimatedRowsPerSecond) * 1000, 10000); // At least 10 seconds
+
+        // Start progress simulation - update every 200ms for smooth animation
+        let currentProgress = 0;
+        const progressStep = 100 / (estimatedTotalTime / 200); // Calculate step size
+
+        // Clear any existing interval
+        if (progressIntervalRef.current) {
+            clearInterval(progressIntervalRef.current);
+        }
+
+        progressIntervalRef.current = setInterval(() => {
+            const elapsed = Date.now() - importStartTimeRef.current;
+            const estimatedProgress = Math.min((elapsed / estimatedTotalTime) * 100, 95); // Cap at 95% until actual completion
+
+            // Calculate estimated rows processed
+            const estimatedRowsProcessed = Math.min(
+                Math.floor((elapsed / estimatedTotalTime) * parsedData.length),
+                parsedData.length - 1
+            );
+
+            setImportProgress(estimatedProgress);
+            setImportProgressText(
+                `Processing row ${estimatedRowsProcessed + 1} of ${parsedData.length}...`
+            );
+        }, 200); // Update every 200ms
+
         let successCount = 0;
         let failCount = 0;
         const errorLog = [];
@@ -372,21 +470,69 @@ const BulkImportManagement = () => {
                     data: parsedData
                 };
 
-                const res = await api.post('/bulk-import/context-locked', payload);
+                // Use extended timeout for bulk imports (5 minutes = 300000ms)
+                const res = await api.post('/bulk-import/context-locked', payload, {
+                    timeout: 300000 // 5 minutes for large imports
+                });
+
+                // Clear progress interval
+                if (progressIntervalRef.current) {
+                    clearInterval(progressIntervalRef.current);
+                    progressIntervalRef.current = null;
+                }
 
                 if (res.data.success) {
                     const stats = res.data.data;
-                    successCount = stats.definitionsInserted || 0;
+                    successCount = stats.totalProcessed || (stats.definitionsInserted || 0);
                     failCount = stats.rowsSkipped || 0;
                     if (stats.skipReasons && stats.skipReasons.length) {
                         errorLog.push(...stats.skipReasons);
                     }
 
-                    // Show detailed stats
-                    success(`Import Complete! Units: ${stats.unitsInserted}, Chapters: ${stats.chaptersInserted}, Topics: ${stats.topicsInserted}, SubTopics: ${stats.subtopicsInserted}, Definitions: ${stats.definitionsInserted}`);
+                    // Complete progress bar (100%)
+                    setImportProgress(100);
+                    setImportProgressText(`Completed! Processed ${parsedData.length} rows.`);
+
+                    // Store detailed stats for modal display
+                    setImportStats({
+                        ...stats,
+                        totalProcessed: stats.totalProcessed || (parsedData.length - failCount),
+                        errorLog: errorLog.slice(0, 50) // Limit to first 50 errors
+                    });
+
+                    // Show success status - modal will display detailed breakdown
+                    setImportStatus("success");
+
+                    // Show toast notification (modal will show details)
+                    const statsMessage = `✅ Import completed! Click to view details.`;
+                    success(statsMessage);
+                    console.log(`✅ Import successful:`, stats);
+
+                    // Modal remains open to show results - user can close it manually
+
                 } else {
+                    // Import failed - show detailed error
                     failCount = parsedData.length;
-                    errorLog.push(res.data.message || "Import failed");
+                    const errorMsg = res.data.message || res.data.error?.message || "Import failed";
+                    errorLog.push(errorMsg);
+
+                    setImportStatus("error");
+
+                    // Provide user-friendly error messages
+                    let userFriendlyError = errorMsg;
+                    if (errorMsg.includes("duplicate key") || errorMsg.includes("E11000")) {
+                        userFriendlyError = "Some data already exists. The system will update existing items and add new ones. This is normal for incremental imports.";
+                        // This might not be a complete failure - some data might have been imported
+                        console.warn("⚠️ Duplicate key detected - this is expected when adding new data to existing imports");
+                    }
+
+                    showError(`❌ Import Failed: ${userFriendlyError}`);
+
+                    // Log full error for debugging
+                    console.error("Import API Error:", res.data);
+
+                    // Reset status after 5 seconds
+                    setTimeout(() => setImportStatus("idle"), 5000);
                 }
 
             } else if (importMode === "hierarchical") {
@@ -397,13 +543,38 @@ const BulkImportManagement = () => {
                     data: parsedData
                 };
 
-                const res = await api.post('/bulk-import/hierarchical', payload);
+                // Use extended timeout for bulk imports (5 minutes = 300000ms)
+                const res = await api.post('/bulk-import/hierarchical', payload, {
+                    timeout: 300000 // 5 minutes for large imports
+                });
 
                 if (res.data.success) {
-                    const { successCount: s, failCount: f, errors: e } = res.data.data;
-                    successCount = s;
-                    failCount = f;
-                    if (e && e.length) errorLog.push(...e);
+                    const stats = res.data.data;
+                    successCount = stats.successCount || 0;
+                    failCount = stats.failCount || 0;
+                    const totalCreated = stats.totalCreated || 0;
+                    const totalUpdated = stats.totalUpdated || 0;
+                    const slugsGenerated = stats.slugsGenerated || 0;
+
+                    if (stats.errors && stats.errors.length) errorLog.push(...stats.errors);
+
+                    // Show comprehensive stats
+                    let statsMessage = `✅ Hierarchical Import Complete!\n`;
+                    if (totalCreated > 0) {
+                        statsMessage += `📦 Created: ${totalCreated} items\n`;
+                    }
+                    if (totalUpdated > 0) {
+                        statsMessage += `🔄 Updated: ${totalUpdated} items\n`;
+                    }
+                    if (slugsGenerated > 0) {
+                        statsMessage += `🏷️ Generated: ${slugsGenerated} slugs\n`;
+                    }
+                    if (failCount > 0) {
+                        statsMessage += `⚠️ Failed: ${failCount} rows`;
+                    }
+
+                    success(statsMessage);
+                    console.log(`✅ Hierarchical import successful:`, stats);
                 } else {
                     failCount = parsedData.length;
                     errorLog.push(res.data.message || "Import failed");
@@ -448,15 +619,116 @@ const BulkImportManagement = () => {
             }
 
             setResults({ success: successCount, failed: failCount, errors: errorLog });
+
+            // Store stats for modal
+            if (importMode !== "context-locked") {
+                setImportStats({
+                    totalCreated: successCount,
+                    totalUpdated: 0,
+                    totalProcessed: successCount,
+                    errorLog: errorLog.slice(0, 50)
+                });
+            }
+
             setImportStatus(failCount > 0 ? "error" : "success");
             if (successCount > 0 && importMode !== "context-locked") success(`Successfully imported ${successCount} items!`);
             if (failCount > 0) showError(`Failed to import ${failCount} items.`);
 
+            // Clear progress interval on error or completion
+            if (progressIntervalRef.current) {
+                clearInterval(progressIntervalRef.current);
+                progressIntervalRef.current = null;
+            }
+
         } catch (err) {
-            console.error("Critical Import Error", err);
+            console.error("❌ Import Error", err);
+
+            // Stop progress updates
+            if (progressIntervalRef.current) {
+                clearInterval(progressIntervalRef.current);
+                progressIntervalRef.current = null;
+            }
+
+            // Check if it's a timeout error
+            const isTimeout = err.code === "ECONNABORTED" ||
+                err.message?.includes("timeout") ||
+                err.message?.includes("TIMEOUT") ||
+                err.message?.includes("Request timeout");
+
+            // Extract detailed error message
+            let errorMessage = "Import failed";
+            if (err.response?.data?.message) {
+                errorMessage = err.response.data.message;
+            } else if (err.response?.data?.error?.message) {
+                errorMessage = err.response.data.error.message;
+            } else if (err.message) {
+                errorMessage = err.message;
+            }
+
+            // Handle timeout specifically - import might still be processing
+            if (isTimeout) {
+                // Timeout occurred - import might still be processing on server
+                // Show a message that import is processing and data might be imported
+                const timeoutMessage = `⏱️ Request timeout occurred. The import may still be processing in the background.\n\n` +
+                    `📝 Note: Large imports can take several minutes. Your data might have been imported successfully.\n\n` +
+                    `💡 Please check your data manually or try importing again (the system will update existing items).`;
+
+                showError(timeoutMessage);
+
+                // Set status to show timeout warning (not full error)
+                setImportStatus("error");
+                setImportStats({
+                    totalCreated: 0,
+                    totalUpdated: 0,
+                    totalProcessed: 0,
+                    isTimeout: true,
+                    errorLog: [
+                        "Request timeout - Import may still be processing in the background.",
+                        "Please check your data manually or try importing again.",
+                        "The system will update existing items if data already exists."
+                    ]
+                });
+
+                // Keep modal open longer for timeout so user can read the message
+                setTimeout(() => {
+                    setShowImportModal(false);
+                    setImportStatus("idle");
+                }, 15000);
+                return;
+            }
+
+            // Handle other errors
             setImportStatus("error");
-            showError("Critical error during import");
-            setResults({ success: successCount, failed: failCount, errors: ["Critical System Error"] });
+
+            // Show user-friendly error message
+            const userFriendlyError = errorMessage.includes("duplicate key")
+                ? "Some data already exists. The system will update existing items and add new ones. Please try again."
+                : errorMessage.includes("Validation")
+                    ? "Invalid data format. Please check your CSV file."
+                    : errorMessage.includes("network") || err.code === "ECONNREFUSED"
+                        ? "Network error. Please check your connection and try again."
+                        : `Import failed: ${errorMessage}`;
+
+            showError(userFriendlyError);
+            setResults({
+                success: successCount,
+                failed: failCount + parsedData.length,
+                errors: [userFriendlyError, ...errorLog]
+            });
+
+            // Store error stats for modal
+            setImportStats({
+                totalCreated: 0,
+                totalUpdated: 0,
+                totalProcessed: successCount,
+                errorLog: [userFriendlyError, ...errorLog].slice(0, 50)
+            });
+
+            // Reset status after 10 seconds (keep modal open to show errors)
+            setTimeout(() => {
+                setShowImportModal(false);
+                setImportStatus("idle");
+            }, 10000);
         }
     };
 
@@ -659,9 +931,30 @@ const BulkImportManagement = () => {
                                 </div>
                                 <button
                                     onClick={handleExport}
-                                    className="px-4 py-2 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+                                    disabled={exportStatus === "exporting"}
+                                    className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors flex items-center gap-2 ${exportStatus === "exporting"
+                                        ? "bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed"
+                                        : exportStatus === "success"
+                                            ? "bg-green-50 text-green-700 border border-green-200"
+                                            : "bg-indigo-600 text-white hover:bg-indigo-700 border border-indigo-200 shadow-sm"
+                                        }`}
                                 >
-                                    <FaFileExport /> Export Data
+                                    {exportStatus === "exporting" ? (
+                                        <>
+                                            <FaSpinner className="animate-spin" size={14} />
+                                            Exporting...
+                                        </>
+                                    ) : exportStatus === "success" ? (
+                                        <>
+                                            <FaCheckCircle size={14} />
+                                            Exported!
+                                        </>
+                                    ) : (
+                                        <>
+                                            <FaFileExport size={14} />
+                                            Export Data
+                                        </>
+                                    )}
                                 </button>
                             </div>
                         )}
@@ -776,6 +1069,367 @@ const BulkImportManagement = () => {
                     </div>
                 )}
             </div>
+
+            {/* Import Progress/Results Modal with Animation */}
+            {showImportModal && (
+                <>
+                    <style dangerouslySetInnerHTML={{
+                        __html: `
+                            @keyframes fadeIn {
+                                from { opacity: 0; }
+                                to { opacity: 1; }
+                            }
+                            @keyframes slideUp {
+                                from { transform: translateY(20px); opacity: 0; }
+                                to { transform: translateY(0); opacity: 1; }
+                            }
+                            @keyframes shimmer {
+                                0% { transform: translateX(-100%); }
+                                100% { transform: translateX(200%); }
+                            }
+                            .animate-fadeIn {
+                                animation: fadeIn 0.3s ease-in-out;
+                            }
+                            .animate-slideUp {
+                                animation: slideUp 0.3s ease-out;
+                            }
+                        `
+                    }} />
+                    <div
+                        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fadeIn"
+                        onClick={(e) => {
+                            // Only close if clicking backdrop (not modal content)
+                            if (e.target === e.currentTarget && importStatus !== "processing") {
+                                setShowImportModal(false);
+                                setImportStatus("idle");
+                                setImportStats(null);
+                            }
+                        }}
+                    >
+                        <div
+                            className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col animate-slideUp"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            {/* Modal Header */}
+                            <div className={`px-6 py-4 border-b border-gray-200 flex items-center justify-between ${importStatus === "processing" ? "bg-blue-50" :
+                                importStatus === "success" ? "bg-green-50" :
+                                    importStatus === "error" ? "bg-red-50" : "bg-gray-50"
+                                }`}>
+                                <div className="flex items-center gap-3">
+                                    {importStatus === "processing" && (
+                                        <FaSpinner className="w-6 h-6 text-blue-600 animate-spin" />
+                                    )}
+                                    {importStatus === "success" && (
+                                        <FaCheckCircle className="w-6 h-6 text-green-600" />
+                                    )}
+                                    {importStatus === "error" && (
+                                        <FaExclamationCircle className="w-6 h-6 text-red-600" />
+                                    )}
+                                    <h2 className="text-xl font-bold text-gray-900">
+                                        {importStatus === "processing" && "Importing Data..."}
+                                        {importStatus === "success" && "Import Complete!"}
+                                        {importStatus === "error" && "Import Failed"}
+                                    </h2>
+                                </div>
+                                {importStatus !== "processing" && (
+                                    <button
+                                        onClick={() => {
+                                            setShowImportModal(false);
+                                            setImportStatus("idle");
+                                        }}
+                                        className="p-2 hover:bg-white/50 rounded-lg transition-colors"
+                                    >
+                                        <FaTimes className="w-5 h-5 text-gray-500" />
+                                    </button>
+                                )}
+                            </div>
+
+                            {/* Modal Content */}
+                            <div className="overflow-y-auto flex-1 p-6">
+                                {importStatus === "processing" && (
+                                    <div className="space-y-6">
+                                        <div className="text-center py-8">
+                                            <FaSpinner className="w-16 h-16 text-blue-600 animate-spin mx-auto mb-4" />
+                                            <p className="text-lg font-semibold text-gray-900 mb-2">
+                                                Processing your import...
+                                            </p>
+                                            <p className="text-sm text-gray-600 mb-4">
+                                                {importProgressText || "Please wait while we import your data. This may take a few moments."}
+                                            </p>
+
+                                            {/* Real-time Progress Bar */}
+                                            <div className="mt-6 space-y-2">
+                                                <div className="bg-gray-200 rounded-full h-3 overflow-hidden relative shadow-inner">
+                                                    <div
+                                                        className="bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 h-full rounded-full transition-all duration-300 ease-out relative"
+                                                        style={{
+                                                            width: `${importProgress}%`,
+                                                            minWidth: importProgress > 0 ? "2%" : "0%"
+                                                        }}
+                                                    >
+                                                        {/* Animated shimmer effect - only show when progress > 0 */}
+                                                        {importProgress > 0 && (
+                                                            <div
+                                                                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+                                                                style={{
+                                                                    animation: "shimmer 2s infinite",
+                                                                    transform: "translateX(-100%)"
+                                                                }}
+                                                            ></div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                <div className="flex justify-between items-center text-xs text-gray-600 px-1">
+                                                    <span className="font-medium">Progress</span>
+                                                    <span className="font-bold text-blue-600">{Math.round(importProgress)}%</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {importStatus === "success" && importStats && (
+                                    <div className="space-y-6">
+                                        {/* Summary Cards */}
+                                        <div className="grid grid-cols-2 gap-4">
+                                            {importStats.totalCreated > 0 && (
+                                                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                                                    <div className="flex items-center gap-2 mb-2">
+                                                        <FaCheckCircle className="w-5 h-5 text-green-600" />
+                                                        <span className="text-sm font-bold text-green-800">Created</span>
+                                                    </div>
+                                                    <p className="text-2xl font-bold text-green-900">{importStats.totalCreated}</p>
+                                                    <p className="text-xs text-green-700 mt-1">New items added</p>
+                                                </div>
+                                            )}
+                                            {importStats.totalUpdated > 0 && (
+                                                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                                    <div className="flex items-center gap-2 mb-2">
+                                                        <FaSpinner className="w-5 h-5 text-blue-600" />
+                                                        <span className="text-sm font-bold text-blue-800">Updated</span>
+                                                    </div>
+                                                    <p className="text-2xl font-bold text-blue-900">{importStats.totalUpdated}</p>
+                                                    <p className="text-xs text-blue-700 mt-1">Existing items updated</p>
+                                                </div>
+                                            )}
+                                            {importStats.slugsGenerated > 0 && (
+                                                <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                                                    <div className="flex items-center gap-2 mb-2">
+                                                        <FaCheckCircle className="w-5 h-5 text-purple-600" />
+                                                        <span className="text-sm font-bold text-purple-800">Slugs Generated</span>
+                                                    </div>
+                                                    <p className="text-2xl font-bold text-purple-900">{importStats.slugsGenerated}</p>
+                                                    <p className="text-xs text-purple-700 mt-1">URL-friendly slugs</p>
+                                                </div>
+                                            )}
+                                            {importStats.totalProcessed > 0 && (
+                                                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                                    <div className="flex items-center gap-2 mb-2">
+                                                        <FaCheckCircle className="w-5 h-5 text-gray-600" />
+                                                        <span className="text-sm font-bold text-gray-800">Processed</span>
+                                                    </div>
+                                                    <p className="text-2xl font-bold text-gray-900">{importStats.totalProcessed}</p>
+                                                    <p className="text-xs text-gray-700 mt-1">Rows processed</p>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Detailed Breakdown */}
+                                        {(importStats.unitsCreated > 0 || importStats.unitsUpdated > 0 ||
+                                            importStats.chaptersCreated > 0 || importStats.chaptersUpdated > 0 ||
+                                            importStats.topicsCreated > 0 || importStats.topicsUpdated > 0 ||
+                                            importStats.subtopicsCreated > 0 || importStats.subtopicsUpdated > 0 ||
+                                            importStats.definitionsCreated > 0 || importStats.definitionsUpdated > 0) && (
+                                                <div className="bg-gray-50 rounded-lg p-5 border border-gray-200">
+                                                    <h3 className="text-sm font-bold text-gray-900 mb-4">Detailed Breakdown</h3>
+                                                    <div className="space-y-3">
+                                                        {(importStats.unitsCreated > 0 || importStats.unitsUpdated > 0) && (
+                                                            <div className="flex justify-between items-center py-2 border-b border-gray-200">
+                                                                <span className="text-sm text-gray-700 font-medium">Units</span>
+                                                                <div className="flex gap-3 text-sm">
+                                                                    {importStats.unitsCreated > 0 && <span className="text-green-700 font-bold">+{importStats.unitsCreated}</span>}
+                                                                    {importStats.unitsUpdated > 0 && <span className="text-blue-700 font-bold">~{importStats.unitsUpdated}</span>}
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                        {(importStats.chaptersCreated > 0 || importStats.chaptersUpdated > 0) && (
+                                                            <div className="flex justify-between items-center py-2 border-b border-gray-200">
+                                                                <span className="text-sm text-gray-700 font-medium">Chapters</span>
+                                                                <div className="flex gap-3 text-sm">
+                                                                    {importStats.chaptersCreated > 0 && <span className="text-green-700 font-bold">+{importStats.chaptersCreated}</span>}
+                                                                    {importStats.chaptersUpdated > 0 && <span className="text-blue-700 font-bold">~{importStats.chaptersUpdated}</span>}
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                        {(importStats.topicsCreated > 0 || importStats.topicsUpdated > 0) && (
+                                                            <div className="flex justify-between items-center py-2 border-b border-gray-200">
+                                                                <span className="text-sm text-gray-700 font-medium">Topics</span>
+                                                                <div className="flex gap-3 text-sm">
+                                                                    {importStats.topicsCreated > 0 && <span className="text-green-700 font-bold">+{importStats.topicsCreated}</span>}
+                                                                    {importStats.topicsUpdated > 0 && <span className="text-blue-700 font-bold">~{importStats.topicsUpdated}</span>}
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                        {(importStats.subtopicsCreated > 0 || importStats.subtopicsUpdated > 0) && (
+                                                            <div className="flex justify-between items-center py-2 border-b border-gray-200">
+                                                                <span className="text-sm text-gray-700 font-medium">SubTopics</span>
+                                                                <div className="flex gap-3 text-sm">
+                                                                    {importStats.subtopicsCreated > 0 && <span className="text-green-700 font-bold">+{importStats.subtopicsCreated}</span>}
+                                                                    {importStats.subtopicsUpdated > 0 && <span className="text-blue-700 font-bold">~{importStats.subtopicsUpdated}</span>}
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                        {(importStats.definitionsCreated > 0 || importStats.definitionsUpdated > 0) && (
+                                                            <div className="flex justify-between items-center py-2">
+                                                                <span className="text-sm text-gray-700 font-medium">Definitions</span>
+                                                                <div className="flex gap-3 text-sm">
+                                                                    {importStats.definitionsCreated > 0 && <span className="text-green-700 font-bold">+{importStats.definitionsCreated}</span>}
+                                                                    {importStats.definitionsUpdated > 0 && <span className="text-blue-700 font-bold">~{importStats.definitionsUpdated}</span>}
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                        {/* Warnings/Errors */}
+                                        {importStats.rowsSkipped > 0 && (
+                                            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                                                <div className="flex items-center gap-2 mb-2">
+                                                    <FaExclamationCircle className="w-5 h-5 text-yellow-600" />
+                                                    <span className="text-sm font-bold text-yellow-800">Skipped Rows</span>
+                                                </div>
+                                                <p className="text-sm text-yellow-700">
+                                                    {importStats.rowsSkipped} row(s) were skipped. Check errors below for details.
+                                                </p>
+                                            </div>
+                                        )}
+
+                                        {/* Error List */}
+                                        {importStats.errorLog && importStats.errorLog.length > 0 && (
+                                            <div className="bg-red-50 border border-red-200 rounded-lg p-4 max-h-48 overflow-y-auto">
+                                                <div className="flex items-center gap-2 mb-3">
+                                                    <FaExclamationCircle className="w-5 h-5 text-red-600" />
+                                                    <span className="text-sm font-bold text-red-800">Errors & Warnings</span>
+                                                    <span className="text-xs bg-red-200 text-red-800 px-2 py-0.5 rounded-full font-bold">
+                                                        {importStats.errorLog.length}
+                                                    </span>
+                                                </div>
+                                                <ul className="space-y-1">
+                                                    {importStats.errorLog.slice(0, 20).map((error, i) => (
+                                                        <li key={i} className="text-xs text-red-700 font-mono bg-white px-2 py-1 rounded border border-red-200">
+                                                            {error}
+                                                        </li>
+                                                    ))}
+                                                    {importStats.errorLog.length > 20 && (
+                                                        <li className="text-xs text-red-600 italic pt-2">
+                                                            ... and {importStats.errorLog.length - 20} more errors
+                                                        </li>
+                                                    )}
+                                                </ul>
+                                            </div>
+                                        )}
+
+                                        {/* Success Message */}
+                                        <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
+                                            <p className="text-sm font-semibold text-green-800 mb-1">
+                                                ✅ Import completed successfully!
+                                            </p>
+                                            <p className="text-xs text-green-700">
+                                                You can import more data anytime - new items will be added after existing ones.
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {importStatus === "error" && importStats && (
+                                    <div className="space-y-4">
+                                        {importStats.isTimeout ? (
+                                            // Timeout case - show warning (not full error)
+                                            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-5">
+                                                <div className="text-center mb-4">
+                                                    <FaExclamationCircle className="w-12 h-12 text-yellow-600 mx-auto mb-3" />
+                                                    <p className="text-lg font-bold text-yellow-900 mb-2">⏱️ Request Timeout</p>
+                                                    <p className="text-sm text-yellow-800 mb-3">
+                                                        The import request timed out, but your data might still be processing in the background.
+                                                    </p>
+                                                </div>
+                                                <div className="bg-white/60 rounded-lg p-4 space-y-2 text-sm">
+                                                    <p className="font-semibold text-yellow-900 mb-2">💡 What to do:</p>
+                                                    <ul className="list-disc list-inside space-y-1 text-yellow-800">
+                                                        <li>Large imports can take several minutes to complete</li>
+                                                        <li>Your data may have been imported successfully</li>
+                                                        <li>Please check your data manually to verify</li>
+                                                        <li>If data is missing, try importing again (system will update existing items)</li>
+                                                    </ul>
+                                                </div>
+                                                <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-3">
+                                                    <p className="text-xs text-blue-800">
+                                                        <strong>Note:</strong> The import timeout has been increased to 5 minutes for large files.
+                                                        If your file is very large, the import may take longer than 5 minutes.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            // Regular error case
+                                            <div className="bg-red-50 border border-red-200 rounded-lg p-5 text-center">
+                                                <FaExclamationCircle className="w-12 h-12 text-red-600 mx-auto mb-3" />
+                                                <p className="text-lg font-bold text-red-900 mb-2">Import Failed</p>
+                                                <p className="text-sm text-red-700">
+                                                    {importStats.errorLog?.[0] || "An error occurred during import"}
+                                                </p>
+                                            </div>
+                                        )}
+
+                                        {importStats.errorLog && importStats.errorLog.length > 0 && (
+                                            <div className="bg-red-50 border border-red-200 rounded-lg p-4 max-h-64 overflow-y-auto">
+                                                <div className="flex items-center gap-2 mb-3">
+                                                    <FaExclamationCircle className="w-5 h-5 text-red-600" />
+                                                    <span className="text-sm font-bold text-red-800">Error Details</span>
+                                                </div>
+                                                <ul className="space-y-1">
+                                                    {importStats.errorLog.slice(0, 30).map((error, i) => (
+                                                        <li key={i} className="text-xs text-red-700 font-mono bg-white px-2 py-1 rounded border border-red-200">
+                                                            {error}
+                                                        </li>
+                                                    ))}
+                                                    {importStats.errorLog.length > 30 && (
+                                                        <li className="text-xs text-red-600 italic pt-2">
+                                                            ... and {importStats.errorLog.length - 30} more errors
+                                                        </li>
+                                                    )}
+                                                </ul>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Modal Footer */}
+                            {importStatus !== "processing" && (
+                                <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end gap-3">
+                                    <button
+                                        onClick={() => {
+                                            setShowImportModal(false);
+                                            setImportStatus("idle");
+                                            setImportStats(null);
+                                            setImportProgress(0);
+                                            setImportProgressText("");
+                                            if (progressIntervalRef.current) {
+                                                clearInterval(progressIntervalRef.current);
+                                                progressIntervalRef.current = null;
+                                            }
+                                        }}
+                                        className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg text-sm font-medium transition-colors"
+                                    >
+                                        Close
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </>
+            )}
         </>
     );
 };

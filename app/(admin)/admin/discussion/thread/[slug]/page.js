@@ -32,7 +32,8 @@ const ThreadDetailModeration = () => {
     const [replies, setReplies] = useState([]);
     const [isDataLoading, setIsDataLoading] = useState(true);
     const [replySearch, setReplySearch] = useState("");
-    const [replyFilter, setReplyFilter] = useState("all"); // "all", "pending", "approved"
+    const [replyFilter, setReplyFilter] = useState("all"); // "all", "pending", "approved", "new"
+    const [lastViewedAt, setLastViewedAt] = useState(null);
     const { toasts, removeToast, success, error: showError } = useToast();
     const searchTimeout = React.useRef(null);
 
@@ -68,6 +69,16 @@ const ThreadDetailModeration = () => {
         }
     };
 
+    // Load last viewed timestamp from localStorage
+    useEffect(() => {
+        if (typeof window !== "undefined" && slug) {
+            const stored = localStorage.getItem(`thread_last_viewed_${slug}`);
+            if (stored) {
+                setLastViewedAt(new Date(stored));
+            }
+        }
+    }, [slug]);
+
     useEffect(() => {
         if (slug) fetchDetail(replySearch);
     }, [slug]); // Intentionally exclude replySearch to handle via debounce
@@ -80,6 +91,28 @@ const ThreadDetailModeration = () => {
             fetchDetail(value);
         }, 500);
     };
+
+    // Mark all replies as viewed (update last viewed timestamp)
+    const handleMarkAllAsViewed = () => {
+        const now = new Date();
+        setLastViewedAt(now);
+        if (typeof window !== "undefined" && slug) {
+            localStorage.setItem(`thread_last_viewed_${slug}`, now.toISOString());
+        }
+        success("All replies marked as viewed");
+    };
+
+    // Check if a reply is "new" (created after last view)
+    const isNewReply = (replyCreatedAt) => {
+        if (!lastViewedAt) return true; // If never viewed, all are new
+        return new Date(replyCreatedAt) > lastViewedAt;
+    };
+
+    // Count new replies
+    const newRepliesCount = useMemo(() => {
+        if (!lastViewedAt) return replies.length;
+        return replies.filter(r => isNewReply(r.createdAt)).length;
+    }, [replies, lastViewedAt]);
 
     const handleToggleThreadApproval = async () => {
         if (!discussionPerms.canApproveThreads) {
@@ -235,7 +268,8 @@ const ThreadDetailModeration = () => {
                 const matchesFilter = 
                     filterType === "all" ? true :
                     filterType === "pending" ? !node.isApproved :
-                    filterType === "approved" ? node.isApproved : true;
+                    filterType === "approved" ? node.isApproved :
+                    filterType === "new" ? isNewReply(node.createdAt) : true;
                 
                 // Recursively filter children first
                 const filteredChildren = node.children ? filterTree(node.children, filterType) : [];
@@ -260,7 +294,8 @@ const ThreadDetailModeration = () => {
             const matches = 
                 filterType === "all" ? true :
                 filterType === "pending" ? !node.isApproved :
-                filterType === "approved" ? node.isApproved : false;
+                filterType === "approved" ? node.isApproved :
+                filterType === "new" ? isNewReply(node.createdAt) : false;
             if (matches) count++;
             if (node.children) count += countMatchingReplies(node.children, filterType);
         });
@@ -274,6 +309,7 @@ const ThreadDetailModeration = () => {
             if (replyFilter === "all") return replies;
             if (replyFilter === "pending") return replies.filter(r => !r.isApproved);
             if (replyFilter === "approved") return replies.filter(r => r.isApproved);
+            if (replyFilter === "new") return replies.filter(r => isNewReply(r.createdAt));
             return replies;
         }
 
@@ -301,7 +337,7 @@ const ThreadDetailModeration = () => {
         }
 
         return filterTree(roots, replyFilter);
-    }, [replies, replyFilter, replySearch]);
+    }, [replies, replyFilter, replySearch, lastViewedAt]);
 
     // Calculate filtered reply count
     const filteredReplyCount = useMemo(() => {
@@ -310,6 +346,7 @@ const ThreadDetailModeration = () => {
             if (replyFilter === "all") return replies.length;
             if (replyFilter === "pending") return replies.filter(r => !r.isApproved).length;
             if (replyFilter === "approved") return replies.filter(r => r.isApproved).length;
+            if (replyFilter === "new") return replies.filter(r => isNewReply(r.createdAt)).length;
             return replies.length;
         }
 
@@ -332,7 +369,7 @@ const ThreadDetailModeration = () => {
         }
 
         return countMatchingReplies(roots, replyFilter);
-    }, [replies, replyFilter, replySearch]);
+    }, [replies, replyFilter, replySearch, lastViewedAt]);
 
     if (!thread && isDataLoading) return (
         <div className="min-h-[400px] flex flex-col items-center justify-center gap-4">
@@ -376,17 +413,17 @@ const ThreadDetailModeration = () => {
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                         <Link
                             href={getLiveUrl()}
                             target="_blank"
-                            className="px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors flex items-center gap-2 shadow-sm"
+                            className="px-4 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-lg text-sm font-bold hover:bg-gray-50 transition-colors flex items-center gap-2 shadow-sm"
                         >
                             <FaIcons.FaExternalLinkAlt size={12} /> Live View
                         </Link>
                         <button
                             onClick={handleEditThread}
-                            className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors flex items-center gap-2 shadow-sm"
+                            className="px-4 py-2.5 bg-indigo-600 text-white rounded-lg text-sm font-bold hover:bg-indigo-700 transition-colors flex items-center gap-2 shadow-sm"
                         >
                             <FaIcons.FaEdit size={12} />
                             Edit Content
@@ -394,7 +431,7 @@ const ThreadDetailModeration = () => {
                         {discussionPerms.canApproveThreads && (
                             <button
                                 onClick={handleToggleThreadApproval}
-                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 shadow-sm ${thread.isApproved
+                                className={`px-4 py-2.5 rounded-lg text-sm font-bold transition-colors flex items-center gap-2 shadow-sm ${thread.isApproved
                                     ? 'bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100'
                                     : 'bg-green-600 text-white hover:bg-green-700'}`}
                             >
@@ -405,7 +442,7 @@ const ThreadDetailModeration = () => {
                             <button
                                 disabled
                                 title={getDiscussionPermissionMessage("approveThreads", role)}
-                                className="px-4 py-2 bg-gray-100 text-gray-400 border border-gray-200 rounded-lg text-sm font-medium cursor-not-allowed flex items-center gap-2 shadow-sm"
+                                className="px-4 py-2.5 bg-gray-100 text-gray-400 border border-gray-200 rounded-lg text-sm font-bold cursor-not-allowed flex items-center gap-2 shadow-sm"
                             >
                                 <FaIcons.FaLock size={12} /> {thread.isApproved ? "Restricted" : "Approval Locked"}
                             </button>
@@ -456,7 +493,7 @@ const ThreadDetailModeration = () => {
                                         <button
                                             onClick={handleSaveThread}
                                             disabled={isSaving}
-                                            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                                            className="px-4 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 shadow-sm"
                                         >
                                             {isSaving ? (
                                                 <>
@@ -473,7 +510,7 @@ const ThreadDetailModeration = () => {
                                         <button
                                             onClick={handleCancelEditThread}
                                             disabled={isSaving}
-                                            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                                            className="px-4 py-2.5 bg-gray-100 text-gray-700 rounded-lg text-sm font-bold hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
                                         >
                                             <FaIcons.FaTimes size={12} />
                                             Cancel
@@ -510,16 +547,33 @@ const ThreadDetailModeration = () => {
                     {/* Replies Section */}
                     <div className="space-y-4">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-1">
-                            <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
-                                <FaIcons.FaCommentDots className="text-blue-500" />
-                                Community Responses ({filteredReplyCount})
-                            </h3>
+                            <div className="flex items-center gap-3">
+                                <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                                    <FaIcons.FaCommentDots className="text-blue-500" />
+                                    Community Responses ({filteredReplyCount})
+                                </h3>
+                                {newRepliesCount > 0 && (
+                                    <button
+                                        onClick={handleMarkAllAsViewed}
+                                        className="px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-bold hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-sm"
+                                    >
+                                        <FaIcons.FaCheckCircle size={11} />
+                                        Mark All as Viewed
+                                    </button>
+                                )}
+                                {newRepliesCount > 0 && (
+                                    <div className="px-3 py-2 bg-blue-100 text-blue-700 rounded-lg text-xs font-bold flex items-center gap-2 border border-blue-200">
+                                        <FaIcons.FaBell size={11} className="animate-pulse" />
+                                        {newRepliesCount} New
+                                    </div>
+                                )}
+                            </div>
                             <div className="flex items-center gap-3">
                                 {/* Approval Status Filter */}
                                 <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1 border border-gray-200">
                                     <button
                                         onClick={() => setReplyFilter("all")}
-                                        className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all ${
+                                        className={`px-3 py-2 text-xs font-bold rounded-md transition-all ${
                                             replyFilter === "all"
                                                 ? "bg-white text-gray-900 shadow-sm border border-gray-200"
                                                 : "text-gray-600 hover:text-gray-900"
@@ -528,8 +582,23 @@ const ThreadDetailModeration = () => {
                                         All
                                     </button>
                                     <button
+                                        onClick={() => setReplyFilter("new")}
+                                        className={`px-3 py-2 text-xs font-bold rounded-md transition-all relative ${
+                                            replyFilter === "new"
+                                                ? "bg-blue-100 text-blue-700 shadow-sm border border-blue-200"
+                                                : "text-gray-600 hover:text-gray-900"
+                                        }`}
+                                    >
+                                        New
+                                        {newRepliesCount > 0 && (
+                                            <span className="absolute -top-1 -right-1 w-5 h-5 bg-blue-600 text-white rounded-full text-[9px] font-bold flex items-center justify-center">
+                                                {newRepliesCount > 9 ? '9+' : newRepliesCount}
+                                            </span>
+                                        )}
+                                    </button>
+                                    <button
                                         onClick={() => setReplyFilter("pending")}
-                                        className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all ${
+                                        className={`px-3 py-2 text-xs font-bold rounded-md transition-all ${
                                             replyFilter === "pending"
                                                 ? "bg-amber-100 text-amber-700 shadow-sm border border-amber-200"
                                                 : "text-gray-600 hover:text-gray-900"
@@ -539,7 +608,7 @@ const ThreadDetailModeration = () => {
                                     </button>
                                     <button
                                         onClick={() => setReplyFilter("approved")}
-                                        className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all ${
+                                        className={`px-3 py-2 text-xs font-bold rounded-md transition-all ${
                                             replyFilter === "approved"
                                                 ? "bg-green-100 text-green-700 shadow-sm border border-green-200"
                                                 : "text-gray-600 hover:text-gray-900"
@@ -585,6 +654,7 @@ const ThreadDetailModeration = () => {
                                             discussionPerms={discussionPerms}
                                             thread={thread}
                                             depth={replySearch ? 0 : 0} // Flatten when searching
+                                            isNewReply={isNewReply}
                                         />
                                     ))}
                                 </>
@@ -595,6 +665,40 @@ const ThreadDetailModeration = () => {
 
                 {/* Sidebar */}
                 <div className="lg:col-span-4 space-y-6">
+                    {/* New Replies Alert Section */}
+                    {newRepliesCount > 0 && (
+                        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-6 border-2 border-blue-200 shadow-lg animate-pulse">
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center shadow-md">
+                                    <FaIcons.FaBell className="text-white" size={16} />
+                                </div>
+                                <div>
+                                    <h4 className="text-sm font-bold text-blue-900">New Replies Alert</h4>
+                                    <p className="text-[10px] text-blue-700 font-medium">Unread activity detected</p>
+                                </div>
+                            </div>
+                            <div className="bg-white/80 rounded-lg p-4 border border-blue-100 mb-4">
+                                <div className="flex items-center justify-between mb-2">
+                                    <span className="text-[11px] font-bold text-gray-600 uppercase">New Replies</span>
+                                    <span className="text-2xl font-bold text-blue-600">{newRepliesCount}</span>
+                                </div>
+                                <p className="text-[10px] text-gray-500">
+                                    {lastViewedAt 
+                                        ? `Since ${lastViewedAt.toLocaleDateString()} ${lastViewedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+                                        : 'First time viewing this thread'
+                                    }
+                                </p>
+                            </div>
+                            <button
+                                onClick={handleMarkAllAsViewed}
+                                className="w-full px-4 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 shadow-md"
+                            >
+                                <FaIcons.FaCheckCircle size={13} />
+                                Mark All as Viewed
+                            </button>
+                        </div>
+                    )}
+
                     {/* Activity Stats */}
                     <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
                         <h4 className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-6 flex items-center justify-between">
@@ -670,12 +774,17 @@ const ThreadDetailModeration = () => {
     );
 };
 
-const ReplyItem = ({ reply, handleToggleReplyApproval, handleDeleteReply, handleEditReply, handleSaveReply, handleCancelEditReply, editingReplyId, editContent, setEditContent, isSaving, discussionPerms, thread, depth = 0 }) => {
+const ReplyItem = ({ reply, handleToggleReplyApproval, handleDeleteReply, handleEditReply, handleSaveReply, handleCancelEditReply, editingReplyId, editContent, setEditContent, isSaving, discussionPerms, thread, depth = 0, isNewReply }) => {
     const isEditing = editingReplyId === reply._id;
+    const isNew = isNewReply(reply.createdAt);
 
     return (
         <div className={`space-y-4 ${depth > 0 ? 'ml-6 sm:ml-10' : ''}`}>
-            <div className={`p-5 bg-white rounded-lg border transition-all duration-300 relative group shadow-sm ${!reply.isApproved ? 'bg-amber-50/30 border-amber-100' : 'border-gray-200'}`}>
+            <div className={`p-5 rounded-lg border transition-all duration-300 relative group shadow-sm ${
+                !reply.isApproved ? 'bg-amber-50/30 border-amber-100' : 
+                isNew ? 'bg-blue-50/50 border-blue-200 border-l-4 border-l-blue-500' : 
+                'bg-white border-gray-200'
+            }`}>
                 {depth > 0 && (
                     <div className="absolute -left-6 sm:-left-10 top-8 w-6 sm:w-10 h-px bg-gray-200"></div>
                 )}
@@ -689,13 +798,21 @@ const ReplyItem = ({ reply, handleToggleReplyApproval, handleDeleteReply, handle
                             <div className="w-8 h-8 bg-indigo-50 border border-indigo-100 rounded-lg flex items-center justify-center text-[10px] font-bold text-indigo-700 shadow-sm">
                                 {reply.author?.firstName?.[0] || reply.guestName?.[0] || 'G'}
                             </div>
-                            <div>
-                                <p className="text-xs font-bold text-gray-900">{reply.author?.firstName ? `${reply.author.firstName} ${reply.author.lastName}` : (reply.guestName || "Guest User")}</p>
+                            <div className="flex-1">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                    <p className="text-xs font-bold text-gray-900">{reply.author?.firstName ? `${reply.author.firstName} ${reply.author.lastName}` : (reply.guestName || "Guest User")}</p>
+                                    {isNew && (
+                                        <span className="px-2 py-0.5 bg-blue-600 text-white text-[8px] font-bold uppercase tracking-wider rounded-full flex items-center gap-1 animate-pulse">
+                                            <FaIcons.FaCircle size={6} />
+                                            NEW
+                                        </span>
+                                    )}
+                                    {!reply.isApproved && (
+                                        <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[8px] font-bold uppercase tracking-wider rounded">Pending</span>
+                                    )}
+                                </div>
                                 <p className="text-[10px] text-gray-400 font-medium">{timeAgo(reply.createdAt)}</p>
                             </div>
-                            {!reply.isApproved && (
-                                <span className="ml-2 px-1.5 py-0.5 bg-amber-500 text-white text-[8px] font-bold uppercase tracking-wider rounded">Pending</span>
-                            )}
                         </div>
                         {isEditing ? (
                             <div className="space-y-4">
@@ -715,16 +832,16 @@ const ReplyItem = ({ reply, handleToggleReplyApproval, handleDeleteReply, handle
                                     <button
                                         onClick={() => handleSaveReply(reply._id)}
                                         disabled={isSaving}
-                                        className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                                        className="px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-bold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 shadow-sm"
                                     >
                                         {isSaving ? (
                                             <>
-                                                <FaIcons.FaSpinner className="animate-spin" size={10} />
+                                                <FaIcons.FaSpinner className="animate-spin" size={11} />
                                                 Saving...
                                             </>
                                         ) : (
                                             <>
-                                                <FaIcons.FaSave size={10} />
+                                                <FaIcons.FaSave size={11} />
                                                 Save
                                             </>
                                         )}
@@ -732,9 +849,9 @@ const ReplyItem = ({ reply, handleToggleReplyApproval, handleDeleteReply, handle
                                     <button
                                         onClick={handleCancelEditReply}
                                         disabled={isSaving}
-                                        className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-xs font-medium hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                                        className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-xs font-bold hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
                                     >
-                                        <FaIcons.FaTimes size={10} />
+                                        <FaIcons.FaTimes size={11} />
                                         Cancel
                                     </button>
                                 </div>
@@ -745,30 +862,30 @@ const ReplyItem = ({ reply, handleToggleReplyApproval, handleDeleteReply, handle
                     </div>
 
                     {!isEditing && (
-                        <div className="flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                             <button
                                 onClick={() => handleEditReply(reply._id, reply.content)}
-                                className="w-8 h-8 rounded-lg flex items-center justify-center bg-indigo-50 text-indigo-600 border border-indigo-100 hover:bg-indigo-100 transition-all shadow-sm"
+                                className="w-9 h-9 rounded-lg flex items-center justify-center bg-indigo-50 text-indigo-600 border border-indigo-100 hover:bg-indigo-100 transition-all shadow-sm"
                                 title="Edit Reply"
                             >
-                                <FaIcons.FaEdit size={12} />
+                                <FaIcons.FaEdit size={13} />
                             </button>
                             {discussionPerms.canApproveReplies && (
                                 <button
                                     onClick={() => handleToggleReplyApproval(reply._id, reply.isApproved)}
-                                    className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all border shadow-sm ${reply.isApproved ? 'bg-amber-50 text-amber-600 border-amber-100 hover:bg-amber-100' : 'bg-green-50 text-green-600 border-green-100 hover:bg-green-100'}`}
+                                    className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all border shadow-sm ${reply.isApproved ? 'bg-amber-50 text-amber-600 border-amber-100 hover:bg-amber-100' : 'bg-green-50 text-green-600 border-green-100 hover:bg-green-100'}`}
                                     title={reply.isApproved ? "Revoke Approval" : "Approve Content"}
                                 >
-                                    {reply.isApproved ? <FaIcons.FaTimes size={12} /> : <FaIcons.FaCheck size={12} />}
+                                    {reply.isApproved ? <FaIcons.FaTimes size={13} /> : <FaIcons.FaCheck size={13} />}
                                 </button>
                             )}
                             {discussionPerms.canDeleteReplies && (
                                 <button
                                     onClick={() => handleDeleteReply(reply._id)}
-                                    className="w-8 h-8 flex items-center justify-center bg-red-50 text-red-500 border border-red-100 rounded-lg shadow-sm hover:bg-red-100 hover:text-red-600 transition-all"
+                                    className="w-9 h-9 flex items-center justify-center bg-red-50 text-red-500 border border-red-100 rounded-lg shadow-sm hover:bg-red-100 hover:text-red-600 transition-all"
                                     title="Delete Response"
                                 >
-                                    <FaIcons.FaTrashAlt size={12} />
+                                    <FaIcons.FaTrashAlt size={13} />
                                 </button>
                             )}
                         </div>
@@ -793,6 +910,7 @@ const ReplyItem = ({ reply, handleToggleReplyApproval, handleDeleteReply, handle
                             discussionPerms={discussionPerms}
                             thread={thread}
                             depth={depth + 1}
+                            isNewReply={isNewReply}
                         />
                     ))}
                 </div>
