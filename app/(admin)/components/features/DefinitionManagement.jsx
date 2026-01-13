@@ -1709,6 +1709,11 @@ const DefinitionManagement = () => {
 
                   {/* Add Another SubTopic Button */}
                   {(() => {
+                    // Check if there are any empty subtopic selections (user hasn't selected a subtopic yet)
+                    const hasEmptySelection = selectedSubTopics.some(
+                      (st) => !st.subTopicId || st.subTopicId === ""
+                    );
+                    
                     // Check if there are any unselected subtopics available
                     const selectedSubTopicIds = selectedSubTopics
                       .map((st) => st.subTopicId)
@@ -1716,7 +1721,15 @@ const DefinitionManagement = () => {
                     const availableSubTopics = filteredSubTopics.filter(
                       (st) => !selectedSubTopicIds.includes(st._id)
                     );
-                    const canAddMore = availableSubTopics.length > 0 && formData.topicId;
+                    
+                    // Button should be enabled only if:
+                    // 1. Topic is selected
+                    // 2. No empty subtopic selections exist (all existing selections are filled)
+                    // 3. There are available subtopics to select
+                    const canAddMore = 
+                      formData.topicId && 
+                      !hasEmptySelection && 
+                      availableSubTopics.length > 0;
 
                     return (
                       <button
@@ -1730,9 +1743,11 @@ const DefinitionManagement = () => {
                         title={
                           !formData.topicId
                             ? "Please select a topic first"
-                            : availableSubTopics.length === 0
-                              ? "All available subtopics are already selected"
-                              : "Add another subtopic"
+                            : hasEmptySelection
+                              ? "Please select a subtopic for the current selection first"
+                              : availableSubTopics.length === 0
+                                ? "All available subtopics are already selected"
+                                : "Add another subtopic"
                         }
                       >
                         <FaPlus className="w-3 h-3" />

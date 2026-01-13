@@ -495,8 +495,7 @@ const TopicManagement = () => {
       chapterId: "",
       orderNumber: "",
     });
-    setTopicsText(""); // Clear topics textarea
-    setSelectedChapters([{ chapterId: "", orderNumber: 1 }]); // Reset to single chapter
+    setSelectedChapters([{ chapterId: "", orderNumber: 1, topicsText: "" }]); // Reset to single chapter
     setFormError(null);
     setUnits([]); // Clear units when form is cancelled
     setChapters([]); // Clear chapters when form is cancelled
@@ -528,8 +527,7 @@ const TopicManagement = () => {
       chapterId: "",
       orderNumber: "",
     });
-    setTopicsText(""); // Clear topics textarea
-    setSelectedChapters([{ chapterId: "", orderNumber: 1 }]); // Reset to single chapter
+    setSelectedChapters([{ chapterId: "", orderNumber: 1, topicsText: "" }]); // Reset to single chapter
     setFormError(null);
     setUnits([]); // Clear units when opening new form
     setChapters([]); // Clear chapters when opening new form
@@ -1231,6 +1229,11 @@ const TopicManagement = () => {
 
                   {/* Add Another Chapter Button */}
                   {(() => {
+                    // Check if there are any empty chapter selections (user hasn't selected a chapter yet)
+                    const hasEmptySelection = selectedChapters.some(
+                      (ch) => !ch.chapterId || ch.chapterId === ""
+                    );
+                    
                     // Check if there are any unselected chapters available
                     const selectedChapterIds = selectedChapters
                       .map((ch) => ch.chapterId)
@@ -1238,7 +1241,15 @@ const TopicManagement = () => {
                     const availableChapters = filteredChapters.filter(
                       (ch) => !selectedChapterIds.includes(ch._id)
                     );
-                    const canAddMore = availableChapters.length > 0 && formData.unitId;
+                    
+                    // Button should be enabled only if:
+                    // 1. Unit is selected
+                    // 2. No empty chapter selections exist (all existing selections are filled)
+                    // 3. There are available chapters to select
+                    const canAddMore = 
+                      formData.unitId && 
+                      !hasEmptySelection && 
+                      availableChapters.length > 0;
 
                     return (
                       <button
@@ -1252,9 +1263,11 @@ const TopicManagement = () => {
                         title={
                           !formData.unitId
                             ? "Please select a unit first"
-                            : availableChapters.length === 0
-                              ? "All available chapters are already selected"
-                              : "Add another chapter"
+                            : hasEmptySelection
+                              ? "Please select a chapter for the current selection first"
+                              : availableChapters.length === 0
+                                ? "All available chapters are already selected"
+                                : "Add another chapter"
                         }
                       >
                         <FaPlus className="w-3 h-3" />

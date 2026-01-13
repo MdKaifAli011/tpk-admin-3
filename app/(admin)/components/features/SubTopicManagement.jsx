@@ -1400,6 +1400,11 @@ const SubTopicsManagement = () => {
 
                   {/* Add Another Topic Button */}
                   {(() => {
+                    // Check if there are any empty topic selections (user hasn't selected a topic yet)
+                    const hasEmptySelection = selectedTopics.some(
+                      (t) => !t.topicId || t.topicId === ""
+                    );
+                    
                     // Check if there are any unselected topics available
                     const selectedTopicIds = selectedTopics
                       .map((t) => t.topicId)
@@ -1407,7 +1412,15 @@ const SubTopicsManagement = () => {
                     const availableTopics = filteredTopics.filter(
                       (t) => !selectedTopicIds.includes(t._id)
                     );
-                    const canAddMore = availableTopics.length > 0 && formData.chapterId;
+                    
+                    // Button should be enabled only if:
+                    // 1. Chapter is selected
+                    // 2. No empty topic selections exist (all existing selections are filled)
+                    // 3. There are available topics to select
+                    const canAddMore = 
+                      formData.chapterId && 
+                      !hasEmptySelection && 
+                      availableTopics.length > 0;
                     
                     return (
                       <button
@@ -1422,9 +1435,11 @@ const SubTopicsManagement = () => {
                         title={
                           !formData.chapterId
                             ? "Please select a chapter first"
-                            : availableTopics.length === 0
-                            ? "All available topics are already selected"
-                            : "Add another topic"
+                            : hasEmptySelection
+                              ? "Please select a topic for the current selection first"
+                              : availableTopics.length === 0
+                                ? "All available topics are already selected"
+                                : "Add another topic"
                         }
                       >
                         <FaPlus className="w-3 h-3" />
