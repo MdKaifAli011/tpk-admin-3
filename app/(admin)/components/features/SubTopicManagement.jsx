@@ -47,9 +47,9 @@ const SubTopicsManagement = () => {
     topicId: "",
     orderNumber: "",
   });
-  const [additionalSubTopics, setAdditionalSubTopics] = useState([
-    { name: "", orderNumber: "" },
-  ]);
+  const [selectedTopics, setSelectedTopics] = useState([
+    { topicId: "", orderNumber: 1, subTopicsText: "" },
+  ]); // Array of selected topics with their order numbers and subtopics text
   const [nextOrderNumber, setNextOrderNumber] = useState(1);
   const [formError, setFormError] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
@@ -554,6 +554,8 @@ const SubTopicsManagement = () => {
       // Reset topic when chapter changes and fetch topics for the selected chapter
       if (name === "chapterId" && value !== prev.chapterId) {
         newData.topicId = "";
+        // Reset selected topics when chapter changes
+        setSelectedTopics([{ topicId: "", orderNumber: 1, subTopicsText: "" }]);
         // Fetch topics for the selected chapter
         if (value) {
           fetchTopics(value);
@@ -561,9 +563,6 @@ const SubTopicsManagement = () => {
           setTopics([]);
         }
       }
-      
-      // Note: SubTopic clearing and order number calculation is handled by useEffect
-      // when topicId changes
       
       return newData;
     });
@@ -641,7 +640,7 @@ const SubTopicsManagement = () => {
       topicId: "",
       orderNumber: "",
     });
-    setAdditionalSubTopics([{ name: "", orderNumber: "" }]);
+    setSelectedTopics([{ topicId: "", orderNumber: 1, subTopicsText: "" }]); // Reset to single topic
     setNextOrderNumber(1);
     setFormError(null);
     setUnits([]); // Clear units when form is cancelled
@@ -678,7 +677,7 @@ const SubTopicsManagement = () => {
       topicId: "",
       orderNumber: "",
     });
-    setAdditionalSubTopics([{ name: "", orderNumber: "" }]);
+    setSelectedTopics([{ topicId: "", orderNumber: 1, subTopicsText: "" }]); // Reset to single topic
     setNextOrderNumber(1);
     setFormError(null);
     setUnits([]); // Clear units when opening new form
@@ -686,35 +685,49 @@ const SubTopicsManagement = () => {
     setTopics([]); // Clear topics when opening new form
   };
 
-  const handleAddMoreSubTopics = () => {
-    setAdditionalSubTopics((prev) => {
-      const nextOrder = nextOrderNumber + prev.length;
-      return [...prev, { name: "", orderNumber: nextOrder.toString() }];
-    });
+  // Add another topic selection
+  const handleAddAnotherTopic = () => {
+    setSelectedTopics((prev) => [
+      ...prev,
+      { topicId: "", orderNumber: 1, subTopicsText: "" },
+    ]);
   };
 
-  const handleRemoveSubTopic = (index) => {
-    if (additionalSubTopics.length > 1) {
-      setAdditionalSubTopics((prev) => {
-        const filtered = prev.filter((_, i) => i !== index);
-        // Recalculate order numbers after removal
-        if (nextOrderNumber > 0) {
-          return filtered.map((subTopic, i) => ({
-            ...subTopic,
-            orderNumber: (nextOrderNumber + i).toString(),
-          }));
-        }
-        return filtered;
-      });
+  // Remove a topic selection
+  const handleRemoveTopic = (index) => {
+    if (selectedTopics.length > 1) {
+      setSelectedTopics((prev) => prev.filter((_, i) => i !== index));
     }
   };
 
-  const handleAdditionalSubTopicChange = (index, field, value) => {
-    setAdditionalSubTopics((prev) =>
-      prev.map((subTopic, i) =>
-        i === index ? { ...subTopic, [field]: value } : subTopic
-      )
-    );
+  // Handle topic selection change
+  const handleTopicSelectionChange = async (index, topicId) => {
+    const updatedTopics = [...selectedTopics];
+    updatedTopics[index].topicId = topicId;
+    updatedTopics[index].subTopicsText = ""; // Clear subtopics when topic changes
+    
+    // Get order number for the selected topic
+    if (topicId) {
+      const orderNumber = await getNextOrderNumber(topicId);
+      updatedTopics[index].orderNumber = orderNumber;
+    } else {
+      updatedTopics[index].orderNumber = 1;
+    }
+    
+    setSelectedTopics(updatedTopics);
+    
+    // Also update formData.topicId for backward compatibility (use first selected)
+    setFormData((prev) => ({
+      ...prev,
+      topicId: updatedTopics[0]?.topicId || "",
+    }));
+  };
+
+  // Handle subtopics text change for a specific topic
+  const handleTopicSubTopicsChange = (index, subTopicsText) => {
+    const updatedTopics = [...selectedTopics];
+    updatedTopics[index].subTopicsText = subTopicsText;
+    setSelectedTopics(updatedTopics);
   };
 
   const getNextOrderNumber = useCallback(async (topicId) => {
@@ -735,41 +748,29 @@ const SubTopicsManagement = () => {
     return 1;
   }, []);
 
-  // Update order numbers when topic is selected
+  // Update order numbers when topics are selected
   useEffect(() => {
-    if (formData.topicId && showAddForm) {
-      getNextOrderNumber(formData.topicId).then((orderNumber) => {
-        setNextOrderNumber(orderNumber);
-        setFormData((prev) => ({
-          ...prev,
-          orderNumber: orderNumber.toString(),
-        }));
-        
-        // Always update sub topics - create first one if none exist, or update existing ones
-        setAdditionalSubTopics((prev) => {
-          if (prev.length === 0 || prev.some(st => !st.orderNumber || st.orderNumber === "")) {
-            // Create first sub topic with calculated order number
-            return [
-              {
-                name: "",
-                orderNumber: orderNumber.toString(),
-              },
-            ];
-          } else {
-            // Update order numbers for existing sub topics
-            return prev.map((subTopic, index) => ({
-              ...subTopic,
-              orderNumber: (orderNumber + index).toString(),
-            }));
-          }
-        });
-      });
-    } else if (!formData.topicId && showAddForm) {
-      // Clear sub topics when topic is cleared
-      setAdditionalSubTopics([{ name: "", orderNumber: "" }]);
-      setNextOrderNumber(1);
+    if (showAddForm && formData.chapterId) {
+      // Update order numbers for all selected topics
+      const updateOrderNumbers = async () => {
+        const topicIds = selectedTopics.map((t) => t.topicId).filter(Boolean);
+        if (topicIds.length === 0) return;
+
+        const updatedTopics = await Promise.all(
+          selectedTopics.map(async (topic) => {
+            if (topic.topicId) {
+              const orderNumber = await getNextOrderNumber(topic.topicId);
+              return { ...topic, orderNumber };
+            }
+            return topic;
+          })
+        );
+        setSelectedTopics(updatedTopics);
+      };
+      updateOrderNumbers();
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }
-  }, [formData.topicId, showAddForm, getNextOrderNumber]);
+  }, [selectedTopics.map((t) => t.topicId).join(","), formData.chapterId, showAddForm]);
 
   const handleAddSubTopics = async (e) => {
     e.preventDefault();
@@ -780,24 +781,51 @@ const SubTopicsManagement = () => {
       return;
     }
 
+    // Validate that at least one topic is selected with subtopics
+    const validTopics = selectedTopics.filter(
+      (t) => t.topicId && t.subTopicsText.trim().length > 0
+    );
+    
+    if (validTopics.length === 0) {
+      setFormError("Please select at least one topic and enter subtopics for it.");
+      return;
+    }
+
     setIsFormLoading(true);
     setFormError(null);
 
     try {
-      const subTopicsToCreate = additionalSubTopics
-        .filter((subTopic) => subTopic.name.trim())
-        .map((subTopic, index) => ({
-          name: subTopic.name,
+      // Create subtopics for each topic that has subtopics entered
+      const allSubTopicsToCreate = [];
+      
+      for (const topic of validTopics) {
+        // Parse subtopics from textarea (split by newlines)
+        const subTopicLines = topic.subTopicsText
+          .split("\n")
+          .map((line) => line.trim())
+          .filter((line) => line.length > 0); // Remove empty lines
+
+        if (subTopicLines.length === 0) continue; // Skip if no subtopics
+
+        const subTopicsForTopic = subTopicLines.map((subTopicName, index) => ({
+          name: subTopicName,
           examId: formData.examId,
           subjectId: formData.subjectId,
           unitId: formData.unitId,
           chapterId: formData.chapterId,
-          topicId: formData.topicId,
-          orderNumber:
-            parseInt(subTopic.orderNumber) || nextOrderNumber + index,
+          topicId: topic.topicId,
+          orderNumber: topic.orderNumber + index,
         }));
+        allSubTopicsToCreate.push(...subTopicsForTopic);
+      }
 
-      const response = await api.post("/subtopic", subTopicsToCreate);
+      if (allSubTopicsToCreate.length === 0) {
+        setFormError("Please enter at least one subtopic name.");
+        setIsFormLoading(false);
+        return;
+      }
+
+      const response = await api.post("/subtopic", allSubTopicsToCreate);
 
       if (response.data.success) {
         const newSubTopics = Array.isArray(response.data.data)
@@ -806,7 +834,7 @@ const SubTopicsManagement = () => {
         setSubTopics((prevSubTopics) => [...prevSubTopics, ...newSubTopics]);
         handleCancelForm();
         console.log(
-          `✅ ${newSubTopics.length} sub topic(s) created successfully`
+          `✅ ${newSubTopics.length} sub topic(s) created successfully for ${validTopics.length} topic(s)`
         );
       } else {
         throw new Error(response.data.message || "Failed to create sub topics");
@@ -1155,7 +1183,7 @@ const SubTopicsManagement = () => {
                 <FaPlus className="size-3 text-blue-600" />
               </div>
               <h2 className="text-sm font-bold text-gray-900">
-                Add New Sub Topic{additionalSubTopics.length > 1 ? "s" : ""}
+                Add New Sub Topics
               </h2>
             </div>
 
@@ -1251,103 +1279,199 @@ const SubTopicsManagement = () => {
                   </select>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Topic *
-                  </label>
-                  <select
-                    name="topicId"
-                    value={formData.topicId}
-                    onChange={handleFormChange}
-                    required
-                    disabled={!formData.chapterId}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
-                  >
-                    <option value="">Select Topic</option>
-                    {filteredTopics.map((topic) => (
-                      <option key={topic._id} value={topic._id}>
-                        {topic.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
               </div>
 
-              {/* Sub Topic Names */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-medium text-gray-700">
-                    Sub Topic Names *
+              {/* Multiple Topic Selection with Individual Textareas */}
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-sm font-medium text-gray-700 mb-1">
+                    Select Topic(s) and Enter Sub Topics *
                   </h3>
-                  {additionalSubTopics.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={handleAddMoreSubTopics}
-                      className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center gap-1"
-                    >
-                      <FaPlus className="w-3 h-3" />
-                      Add More
-                    </button>
-                  )}
+                  <p className="text-xs text-gray-500">
+                    Select topics and enter subtopics for each topic separately. Each topic has its own textarea.
+                  </p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {additionalSubTopics.map((subTopic, index) => (
-                    <div key={index} className="flex gap-2">
-                      <div className="flex-1">
-                        <input
-                          type="text"
-                          placeholder={`Sub Topic ${index + 1} name`}
-                          value={subTopic.name}
-                          onChange={(e) =>
-                            handleAdditionalSubTopicChange(
-                              index,
-                              "name",
-                              e.target.value
-                            )
-                          }
-                          required
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        />
+                <div className="space-y-6">
+                  {selectedTopics.map((topic, index) => {
+                    const topicName =
+                      filteredTopics.find((t) => t._id === topic.topicId)
+                        ?.name || "Unselected Topic";
+                    const subTopicCount = topic.subTopicsText
+                      .split("\n")
+                      .filter((line) => line.trim().length > 0).length;
+
+                    return (
+                      <div
+                        key={index}
+                        className="border border-gray-200 rounded-lg p-4 bg-gray-50/50"
+                      >
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-3 flex-1">
+                            <div className="flex-1">
+                              <label className="block text-xs font-medium text-gray-700 mb-1.5">
+                                Topic {index + 1} *
+                              </label>
+                              <select
+                                value={topic.topicId}
+                                onChange={(e) =>
+                                  handleTopicSelectionChange(
+                                    index,
+                                    e.target.value
+                                  )
+                                }
+                                required
+                                disabled={!formData.chapterId}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 text-sm bg-white"
+                              >
+                                <option value="">Select Topic</option>
+                                {filteredTopics
+                                  .filter(
+                                    (t) =>
+                                      !selectedTopics.some(
+                                        (st, i) =>
+                                          i !== index &&
+                                          st.topicId === t._id
+                                      )
+                                  )
+                                  .map((topicOption) => (
+                                    <option
+                                      key={topicOption._id}
+                                      value={topicOption._id}
+                                    >
+                                      {topicOption.name}
+                                    </option>
+                                  ))}
+                              </select>
+                            </div>
+                            {selectedTopics.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveTopic(index)}
+                                className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors mt-6"
+                                title="Remove this topic"
+                              >
+                                <FaTimes className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
+                        {topic.topicId && (
+                          <>
+                            <div className="mb-2">
+                              <div className="flex items-center justify-between mb-1.5">
+                                <label className="block text-xs font-medium text-gray-700">
+                                  Sub Topics for: <span className="text-blue-600 font-semibold">{topicName}</span>
+                                </label>
+                                <span className="text-xs text-gray-500">
+                                  Order starts from: <span className="font-semibold">{topic.orderNumber}</span>
+                                </span>
+                              </div>
+                              <textarea
+                                value={topic.subTopicsText}
+                                onChange={(e) =>
+                                  handleTopicSubTopicsChange(
+                                    index,
+                                    e.target.value
+                                  )
+                                }
+                                placeholder={`Enter subtopics for ${topicName}, one per line:&#10;Sub Topic 1&#10;Sub Topic 2&#10;Sub Topic 3`}
+                                rows={6}
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-y font-mono text-sm bg-white"
+                              />
+                              <div className="mt-1.5 text-xs text-gray-500">
+                                {subTopicCount > 0 ? (
+                                  <span className="text-green-600 font-medium">
+                                    {subTopicCount} subtopic(s) entered for this topic
+                                  </span>
+                                ) : (
+                                  <span className="text-gray-400">
+                                    Enter subtopics, one per line
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </>
+                        )}
                       </div>
-                      <div className="w-20">
-                        <input
-                          type="number"
-                          placeholder="Order"
-                          value={subTopic.orderNumber}
-                          onChange={(e) =>
-                            handleAdditionalSubTopicChange(
-                              index,
-                              "orderNumber",
-                              e.target.value
-                            )
-                          }
-                          min="1"
-                          className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center"
-                        />
-                      </div>
-                      {additionalSubTopics.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveSubTopic(index)}
-                          className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
-                        >
-                          <FaTimes className="w-3 h-3" />
-                        </button>
-                      )}
+                    );
+                  })}
+
+                  {/* Add Another Topic Button */}
+                  {(() => {
+                    // Check if there are any unselected topics available
+                    const selectedTopicIds = selectedTopics
+                      .map((t) => t.topicId)
+                      .filter(Boolean);
+                    const availableTopics = filteredTopics.filter(
+                      (t) => !selectedTopicIds.includes(t._id)
+                    );
+                    const canAddMore = availableTopics.length > 0 && formData.chapterId;
+                    
+                    return (
+                      <button
+                        type="button"
+                        onClick={handleAddAnotherTopic}
+                        disabled={!canAddMore}
+                        className={`text-sm font-medium flex items-center gap-1 px-3 py-1.5 rounded-lg transition-colors ${
+                          canAddMore
+                            ? "text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100"
+                            : "text-gray-400 bg-gray-100 cursor-not-allowed"
+                        }`}
+                        title={
+                          !formData.chapterId
+                            ? "Please select a chapter first"
+                            : availableTopics.length === 0
+                            ? "All available topics are already selected"
+                            : "Add another topic"
+                        }
+                      >
+                        <FaPlus className="w-3 h-3" />
+                        Add Another Topic
+                      </button>
+                    );
+                  })()}
+                </div>
+
+                {/* Summary */}
+                {selectedTopics.some((t) => t.topicId && t.subTopicsText.trim().length > 0) && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                    <div className="text-xs font-medium text-blue-900 mb-1">
+                      Summary:
                     </div>
-                  ))}
-                </div>
-
-                {additionalSubTopics.length === 1 && (
-                  <button
-                    type="button"
-                    onClick={handleAddMoreSubTopics}
-                    className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center gap-1"
-                  >
-                    <FaPlus className="w-3 h-3" />
-                    Add More Sub Topics
-                  </button>
+                    <div className="text-xs text-blue-700 space-y-0.5">
+                      {selectedTopics
+                        .filter((t) => t.topicId && t.subTopicsText.trim().length > 0)
+                        .map((topic, idx) => {
+                          const topicName =
+                            filteredTopics.find((t) => t._id === topic.topicId)
+                              ?.name || "Unknown";
+                          const subTopicCount = topic.subTopicsText
+                            .split("\n")
+                            .filter((line) => line.trim().length > 0).length;
+                          return (
+                            <div key={idx}>
+                              • {topicName}: {subTopicCount} subtopic(s)
+                            </div>
+                          );
+                        })}
+                      <div className="mt-2 pt-2 border-t border-blue-200 font-semibold">
+                        Total:{" "}
+                        {selectedTopics
+                          .filter((t) => t.topicId && t.subTopicsText.trim().length > 0)
+                          .reduce((sum, t) => {
+                            return (
+                              sum +
+                              t.subTopicsText
+                                .split("\n")
+                                .filter((line) => line.trim().length > 0).length
+                            );
+                          }, 0)}{" "}
+                        subtopics will be created
+                      </div>
+                    </div>
+                  </div>
                 )}
               </div>
 
@@ -1372,7 +1496,7 @@ const SubTopicsManagement = () => {
                       Adding...
                     </>
                   ) : (
-                    `Add Sub Topic${additionalSubTopics.length > 1 ? "s" : ""}`
+                    `Add Sub Topics`
                   )}
                 </button>
               </div>

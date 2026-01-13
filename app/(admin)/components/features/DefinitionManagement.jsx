@@ -51,9 +51,9 @@ const DefinitionManagement = () => {
     subTopicId: "",
     orderNumber: "",
   });
-  const [additionalDefinitions, setAdditionalDefinitions] = useState([
-    { name: "", orderNumber: "" },
-  ]);
+  const [selectedSubTopics, setSelectedSubTopics] = useState([
+    { subTopicId: "", orderNumber: 1, definitionsText: "" },
+  ]); // Array of selected subtopics with their order numbers and definitions text
   const [nextOrderNumber, setNextOrderNumber] = useState(1);
   const [formError, setFormError] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
@@ -84,8 +84,8 @@ const DefinitionManagement = () => {
       console.error("❌ Error fetching definitions:", error);
       setError(
         error.response?.data?.message ||
-          error.message ||
-          "Failed to fetch definitions"
+        error.message ||
+        "Failed to fetch definitions"
       );
     } finally {
       setIsDataLoading(false);
@@ -630,7 +630,7 @@ const DefinitionManagement = () => {
     const { name, value } = e.target;
     setFormData((prev) => {
       const newData = { ...prev, [name]: value };
-      
+
       // Reset subject when exam changes
       if (name === "examId" && value !== prev.examId) {
         newData.subjectId = "";
@@ -643,7 +643,7 @@ const DefinitionManagement = () => {
         setTopics([]); // Clear topics when exam changes
         setSubTopics([]); // Clear subtopics when exam changes
       }
-      
+
       // Reset unit when subject changes and fetch units for the selected exam and subject
       if (name === "subjectId" && value !== prev.subjectId) {
         newData.unitId = "";
@@ -660,7 +660,7 @@ const DefinitionManagement = () => {
           setUnits([]);
         }
       }
-      
+
       // Reset chapter when unit changes and fetch chapters for the selected unit
       if (name === "unitId" && value !== prev.unitId) {
         newData.chapterId = "";
@@ -675,7 +675,7 @@ const DefinitionManagement = () => {
           setChapters([]);
         }
       }
-      
+
       // Reset topic when chapter changes and fetch topics for the selected chapter
       if (name === "chapterId" && value !== prev.chapterId) {
         newData.topicId = "";
@@ -688,10 +688,12 @@ const DefinitionManagement = () => {
           setTopics([]);
         }
       }
-      
+
       // Reset subtopic when topic changes and fetch subtopics for the selected topic
       if (name === "topicId" && value !== prev.topicId) {
         newData.subTopicId = "";
+        // Reset selected subtopics when topic changes
+        setSelectedSubTopics([{ subTopicId: "", orderNumber: 1, definitionsText: "" }]);
         // Fetch subtopics for the selected topic
         if (value) {
           fetchSubTopics(value);
@@ -699,10 +701,7 @@ const DefinitionManagement = () => {
           setSubTopics([]);
         }
       }
-      
-      // Note: Definition clearing and order number calculation is handled by useEffect
-      // when subTopicId changes
-      
+
       return newData;
     });
     setFormError(null);
@@ -712,7 +711,7 @@ const DefinitionManagement = () => {
     const { name, value } = e.target;
     setEditFormData((prev) => {
       const newData = { ...prev, [name]: value };
-      
+
       // Reset subject when exam changes
       if (name === "examId" && value !== prev.examId) {
         newData.subjectId = "";
@@ -725,7 +724,7 @@ const DefinitionManagement = () => {
         setTopics([]); // Clear topics when exam changes
         setSubTopics([]); // Clear subtopics when exam changes
       }
-      
+
       // Reset unit when subject changes and fetch units for the selected exam and subject
       if (name === "subjectId" && value !== prev.subjectId) {
         newData.unitId = "";
@@ -742,7 +741,7 @@ const DefinitionManagement = () => {
           setUnits([]);
         }
       }
-      
+
       // Reset chapter when unit changes and fetch chapters for the selected unit
       if (name === "unitId" && value !== prev.unitId) {
         newData.chapterId = "";
@@ -757,7 +756,7 @@ const DefinitionManagement = () => {
           setChapters([]);
         }
       }
-      
+
       // Reset topic when chapter changes and fetch topics for the selected chapter
       if (name === "chapterId" && value !== prev.chapterId) {
         newData.topicId = "";
@@ -770,7 +769,7 @@ const DefinitionManagement = () => {
           setTopics([]);
         }
       }
-      
+
       // Reset subtopic when topic changes and fetch subtopics for the selected topic
       if (name === "topicId" && value !== prev.topicId) {
         newData.subTopicId = "";
@@ -781,7 +780,7 @@ const DefinitionManagement = () => {
           setSubTopics([]);
         }
       }
-      
+
       return newData;
     });
     setFormError(null);
@@ -799,7 +798,7 @@ const DefinitionManagement = () => {
       subTopicId: "",
       orderNumber: "",
     });
-    setAdditionalDefinitions([{ name: "", orderNumber: "" }]);
+    setSelectedSubTopics([{ subTopicId: "", orderNumber: 1, definitionsText: "" }]); // Reset to single subtopic
     setFormError(null);
     setUnits([]); // Clear units when form is cancelled
     setChapters([]); // Clear chapters when form is cancelled
@@ -839,7 +838,7 @@ const DefinitionManagement = () => {
       subTopicId: "",
       orderNumber: "",
     });
-    setAdditionalDefinitions([{ name: "", orderNumber: "" }]);
+    setSelectedSubTopics([{ subTopicId: "", orderNumber: 1, definitionsText: "" }]); // Reset to single subtopic
     setFormError(null);
     setUnits([]); // Clear units when opening new form
     setChapters([]); // Clear chapters when opening new form
@@ -847,25 +846,49 @@ const DefinitionManagement = () => {
     setSubTopics([]); // Clear subtopics when opening new form
   };
 
-  const handleAddMoreDefinitions = () => {
-    setAdditionalDefinitions((prev) => {
-      const nextOrder = nextOrderNumber + prev.length;
-      return [...prev, { name: "", orderNumber: nextOrder.toString() }];
-    });
+  // Add another subtopic selection
+  const handleAddAnotherSubTopic = () => {
+    setSelectedSubTopics((prev) => [
+      ...prev,
+      { subTopicId: "", orderNumber: 1, definitionsText: "" },
+    ]);
   };
 
-  const handleRemoveDefinition = (index) => {
-    if (additionalDefinitions.length > 1) {
-      setAdditionalDefinitions((prev) => prev.filter((_, i) => i !== index));
+  // Remove a subtopic selection
+  const handleRemoveSubTopic = (index) => {
+    if (selectedSubTopics.length > 1) {
+      setSelectedSubTopics((prev) => prev.filter((_, i) => i !== index));
     }
   };
 
-  const handleAdditionalDefinitionChange = (index, field, value) => {
-    setAdditionalDefinitions((prev) =>
-      prev.map((definition, i) =>
-        i === index ? { ...definition, [field]: value } : definition
-      )
-    );
+  // Handle subtopic selection change
+  const handleSubTopicSelectionChange = async (index, subTopicId) => {
+    const updatedSubTopics = [...selectedSubTopics];
+    updatedSubTopics[index].subTopicId = subTopicId;
+    updatedSubTopics[index].definitionsText = ""; // Clear definitions when subtopic changes
+
+    // Get order number for the selected subtopic
+    if (subTopicId) {
+      const orderNumber = await getNextOrderNumber(subTopicId);
+      updatedSubTopics[index].orderNumber = orderNumber;
+    } else {
+      updatedSubTopics[index].orderNumber = 1;
+    }
+
+    setSelectedSubTopics(updatedSubTopics);
+
+    // Also update formData.subTopicId for backward compatibility (use first selected)
+    setFormData((prev) => ({
+      ...prev,
+      subTopicId: updatedSubTopics[0]?.subTopicId || "",
+    }));
+  };
+
+  // Handle definitions text change for a specific subtopic
+  const handleSubTopicDefinitionsChange = (index, definitionsText) => {
+    const updatedSubTopics = [...selectedSubTopics];
+    updatedSubTopics[index].definitionsText = definitionsText;
+    setSelectedSubTopics(updatedSubTopics);
   };
 
   const getNextOrderNumber = useCallback(async (subTopicId) => {
@@ -886,41 +909,29 @@ const DefinitionManagement = () => {
     return 1;
   }, []);
 
-  // Update order numbers when subtopic is selected
+  // Update order numbers when subtopics are selected
   useEffect(() => {
-    if (formData.subTopicId && showAddForm) {
-      getNextOrderNumber(formData.subTopicId).then((orderNumber) => {
-        setNextOrderNumber(orderNumber);
-        setFormData((prev) => ({
-          ...prev,
-          orderNumber: orderNumber.toString(),
-        }));
-        
-        // Always update definitions - create first one if none exist, or update existing ones
-        setAdditionalDefinitions((prev) => {
-          if (prev.length === 0 || prev.some(d => !d.orderNumber || d.orderNumber === "")) {
-            // Create first definition with calculated order number
-            return [
-              {
-                name: "",
-                orderNumber: orderNumber.toString(),
-              },
-            ];
-          } else {
-            // Update order numbers for existing definitions
-            return prev.map((definition, index) => ({
-              ...definition,
-              orderNumber: (orderNumber + index).toString(),
-            }));
-          }
-        });
-      });
-    } else if (!formData.subTopicId && showAddForm) {
-      // Clear definitions when subtopic is cleared
-      setAdditionalDefinitions([{ name: "", orderNumber: "" }]);
-      setNextOrderNumber(1);
+    if (showAddForm && formData.topicId) {
+      // Update order numbers for all selected subtopics
+      const updateOrderNumbers = async () => {
+        const subTopicIds = selectedSubTopics.map((st) => st.subTopicId).filter(Boolean);
+        if (subTopicIds.length === 0) return;
+
+        const updatedSubTopics = await Promise.all(
+          selectedSubTopics.map(async (subTopic) => {
+            if (subTopic.subTopicId) {
+              const orderNumber = await getNextOrderNumber(subTopic.subTopicId);
+              return { ...subTopic, orderNumber };
+            }
+            return subTopic;
+          })
+        );
+        setSelectedSubTopics(updatedSubTopics);
+      };
+      updateOrderNumbers();
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }
-  }, [formData.subTopicId, showAddForm, getNextOrderNumber]);
+  }, [selectedSubTopics.map((st) => st.subTopicId).join(","), formData.topicId, showAddForm]);
 
   const handleAddDefinitions = async (e) => {
     e.preventDefault();
@@ -932,8 +943,19 @@ const DefinitionManagement = () => {
     }
 
     // Validate required fields
-    if (!formData.examId || !formData.subjectId || !formData.unitId || !formData.chapterId || !formData.topicId || !formData.subTopicId) {
-      setFormError("Please select Exam, Subject, Unit, Chapter, Topic, and SubTopic");
+    if (!formData.examId || !formData.subjectId || !formData.unitId || !formData.chapterId || !formData.topicId) {
+      setFormError("Please select Exam, Subject, Unit, Chapter, and Topic");
+      setIsFormLoading(false);
+      return;
+    }
+
+    // Validate that at least one subtopic is selected with definitions
+    const validSubTopics = selectedSubTopics.filter(
+      (st) => st.subTopicId && st.definitionsText.trim().length > 0
+    );
+
+    if (validSubTopics.length === 0) {
+      setFormError("Please select at least one subtopic and enter definitions for it.");
       setIsFormLoading(false);
       return;
     }
@@ -942,20 +964,92 @@ const DefinitionManagement = () => {
     setFormError(null);
 
     try {
-      const definitionsToCreate = additionalDefinitions
-        .filter((definition) => definition.name.trim())
-        .map((definition, index) => ({
-          name: definition.name,
+      // Create definitions for each subtopic that has definitions entered
+      const allDefinitionsToCreate = [];
+
+      for (const subTopic of validSubTopics) {
+        // Parse definitions from textarea (split by newlines)
+        const definitionLines = subTopic.definitionsText
+          .split("\n")
+          .map((line) => line.trim())
+          .filter((line) => line.length > 0); // Remove empty lines
+
+        if (definitionLines.length === 0) continue; // Skip if no definitions
+
+        // Check for duplicate names within the same subtopic (case-insensitive)
+        const nameCounts = new Map();
+        const duplicates = [];
+        definitionLines.forEach((name, index) => {
+          const normalizedName = name.toLowerCase();
+          if (nameCounts.has(normalizedName)) {
+            if (!duplicates.includes(normalizedName)) {
+              duplicates.push(normalizedName);
+            }
+          } else {
+            nameCounts.set(normalizedName, 1);
+          }
+        });
+
+        if (duplicates.length > 0) {
+          const subTopicName = filteredSubTopics.find((st) => st._id === subTopic.subTopicId)?.name || "this subtopic";
+          setFormError(
+            `Duplicate definition names are not allowed in "${subTopicName}". ` +
+            `Please remove duplicates: ${duplicates.map(d => `"${d}"`).join(", ")}`
+          );
+          setIsFormLoading(false);
+          return;
+        }
+
+        // Check for duplicates with existing definitions in the database for this subtopic
+        try {
+          const existingDefinitions = await api.get(`/definition?subTopicId=${subTopic.subTopicId}&status=all&limit=1000`);
+          if (existingDefinitions.data.success && existingDefinitions.data.data) {
+            const existingNames = new Set(
+              existingDefinitions.data.data.map((def) => def.name.toLowerCase())
+            );
+            const conflictingNames = definitionLines.filter((name) =>
+              existingNames.has(name.toLowerCase())
+            );
+
+            if (conflictingNames.length > 0) {
+              const subTopicName = filteredSubTopics.find((st) => st._id === subTopic.subTopicId)?.name || "this subtopic";
+              setFormError(
+                `Definition name(s) already exist in "${subTopicName}": ${conflictingNames.map(n => `"${n}"`).join(", ")}. ` +
+                `Please use unique names.`
+              );
+              setIsFormLoading(false);
+              return;
+            }
+          }
+        } catch (checkError) {
+          console.error("Error checking existing definitions:", checkError);
+          // Continue with creation if check fails - server will validate
+        }
+
+        // Get the starting order number for this specific subtopic
+        // This ensures each subtopic has its own independent order number sequence
+        const startingOrderNumber = await getNextOrderNumber(subTopic.subTopicId);
+
+        const definitionsForSubTopic = definitionLines.map((definitionName, index) => ({
+          name: definitionName,
           examId: formData.examId,
           subjectId: formData.subjectId,
           unitId: formData.unitId,
           chapterId: formData.chapterId, // Ensure chapterId is always sent
           topicId: formData.topicId,
-          subTopicId: formData.subTopicId,
-          orderNumber: parseInt(definition.orderNumber) || nextOrderNumber + index,
+          subTopicId: subTopic.subTopicId,
+          orderNumber: startingOrderNumber + index, // Each subtopic starts from its own calculated order number
         }));
+        allDefinitionsToCreate.push(...definitionsForSubTopic);
+      }
 
-      const response = await api.post("/definition", definitionsToCreate);
+      if (allDefinitionsToCreate.length === 0) {
+        setFormError("Please enter at least one definition name.");
+        setIsFormLoading(false);
+        return;
+      }
+
+      const response = await api.post("/definition", allDefinitionsToCreate);
 
       if (response.data.success) {
         const newDefinitions = Array.isArray(response.data.data)
@@ -963,17 +1057,17 @@ const DefinitionManagement = () => {
           : [response.data.data];
         setDefinitions((prevDefinitions) => [...prevDefinitions, ...newDefinitions]);
         handleCancelForm();
-        console.log(`✅ ${newDefinitions.length} definition(s) created successfully`);
+        console.log(
+          `✅ ${newDefinitions.length} definition(s) created successfully for ${validSubTopics.length} subtopic(s)`
+        );
       } else {
         throw new Error(response.data.message || "Failed to create definitions");
       }
     } catch (error) {
       console.error("❌ Error creating definitions:", error);
-      setFormError(
-        error.response?.data?.message ||
-          error.message ||
-          "Failed to create definitions"
-      );
+
+      const errorMessage = error.response?.data?.message || error.message || "Failed to create definitions";
+      setFormError(errorMessage);
     } finally {
       setIsFormLoading(false);
     }
@@ -1017,7 +1111,7 @@ const DefinitionManagement = () => {
       subTopicId: subTopicId,
       orderNumber: definitionToEdit.orderNumber?.toString() || "",
     });
-    
+
     // Fetch units, chapters, topics, and subtopics for the selected exam, subject, unit, chapter, and topic when editing
     if (examId && subjectId) {
       fetchUnits(examId, subjectId).then(() => {
@@ -1039,20 +1133,20 @@ const DefinitionManagement = () => {
         }
       });
     }
-    
+
     setShowEditForm(true);
   };
 
   const handleUpdateDefinition = async (e) => {
     e.preventDefault();
-    
+
     // Validate required fields
     if (!editFormData.examId || !editFormData.subjectId || !editFormData.unitId || !editFormData.chapterId || !editFormData.topicId || !editFormData.subTopicId) {
       setFormError("Please select Exam, Subject, Unit, Chapter, Topic, and SubTopic");
       setIsFormLoading(false);
       return;
     }
-    
+
     setIsFormLoading(true);
     setFormError(null);
 
@@ -1087,8 +1181,8 @@ const DefinitionManagement = () => {
       console.error("❌ Error updating definition:", error);
       setFormError(
         error.response?.data?.message ||
-          error.message ||
-          "Failed to update definition"
+        error.message ||
+        "Failed to update definition"
       );
     } finally {
       setIsFormLoading(false);
@@ -1128,8 +1222,8 @@ const DefinitionManagement = () => {
       console.error("❌ Error deleting definition:", error);
       setError(
         error.response?.data?.message ||
-          error.message ||
-          "Failed to delete definition"
+        error.message ||
+        "Failed to delete definition"
       );
     } finally {
       setIsFormLoading(false);
@@ -1171,8 +1265,8 @@ const DefinitionManagement = () => {
         console.error(`❌ Error ${action}ing definition:`, error);
         setError(
           error.response?.data?.message ||
-            error.message ||
-            `Failed to ${action} definition`
+          error.message ||
+          `Failed to ${action} definition`
         );
       } finally {
         setIsFormLoading(false);
@@ -1196,7 +1290,7 @@ const DefinitionManagement = () => {
 
     const items = Array.from(definitions);
     const reorderedItem = items[sourceIndex];
-    
+
     // Get the subtopic ID to identify the group
     const subTopicId = reorderedItem.subTopicId?._id || reorderedItem.subTopicId;
 
@@ -1210,11 +1304,11 @@ const DefinitionManagement = () => {
     const groupSourceIndex = groupDefinitions.findIndex(
       (d) => (d._id || d.id) === (reorderedItem._id || reorderedItem.id)
     );
-    
+
     // Create a reordered group array
     const reorderedGroup = Array.from(groupDefinitions);
     const [movedDefinition] = reorderedGroup.splice(groupSourceIndex, 1);
-    
+
     // Calculate destination index within the group
     const groupDestIndex = groupDefinitions.findIndex((definition, idx) => {
       if (idx === groupSourceIndex) return false;
@@ -1267,8 +1361,7 @@ const DefinitionManagement = () => {
       console.log("🔄 Reverting definition order due to API error");
       fetchDefinitions(); // Revert local state
       setError(
-        `Failed to update definition order: ${
-          error.response?.data?.message || error.message
+        `Failed to update definition order: ${error.response?.data?.message || error.message
         }`
       );
     }
@@ -1340,7 +1433,7 @@ const DefinitionManagement = () => {
           <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-semibold text-gray-900">
-                Add New Definition{additionalDefinitions.length > 1 ? "s" : ""}
+                Add New Definitions
               </h2>
               <button
                 onClick={handleCancelForm}
@@ -1469,103 +1562,224 @@ const DefinitionManagement = () => {
                   </select>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    SubTopic *
-                  </label>
-                  <select
-                    name="subTopicId"
-                    value={formData.subTopicId}
-                    onChange={handleFormChange}
-                    required
-                    disabled={!formData.topicId}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
-                  >
-                    <option value="">Select SubTopic</option>
-                    {filteredSubTopics.map((subtopic) => (
-                      <option key={subtopic._id} value={subtopic._id}>
-                        {subtopic.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
               </div>
 
-              {/* Definition Names */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-medium text-gray-700">
-                    Definition Names *
+              {/* Multiple SubTopic Selection with Individual Textareas */}
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-sm font-medium text-gray-700 mb-1">
+                    Select SubTopic(s) and Enter Definitions *
                   </h3>
-                  {additionalDefinitions.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={handleAddMoreDefinitions}
-                      className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center gap-1"
-                    >
-                      <FaPlus className="w-3 h-3" />
-                      Add More
-                    </button>
-                  )}
+                  <p className="text-xs text-gray-500">
+                    Select subtopics and enter definitions for each subtopic separately. Each subtopic has its own textarea.
+                    <span className="text-red-600 font-medium"> Each definition name must be unique within the same subtopic.</span>
+                  </p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {additionalDefinitions.map((definition, index) => (
-                    <div key={index} className="flex gap-2">
-                      <div className="flex-1">
-                        <input
-                          type="text"
-                          placeholder={`Definition ${index + 1} name`}
-                          value={definition.name}
-                          onChange={(e) =>
-                            handleAdditionalDefinitionChange(
-                              index,
-                              "name",
-                              e.target.value
-                            )
-                          }
-                          required
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        />
+                <div className="space-y-6">
+                  {selectedSubTopics.map((subTopic, index) => {
+                    const subTopicName =
+                      filteredSubTopics.find((st) => st._id === subTopic.subTopicId)
+                        ?.name || "Unselected SubTopic";
+                    const definitionCount = subTopic.definitionsText
+                      .split("\n")
+                      .filter((line) => line.trim().length > 0).length;
+
+                    return (
+                      <div
+                        key={index}
+                        className="border border-gray-200 rounded-lg p-4 bg-gray-50/50"
+                      >
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-3 flex-1">
+                            <div className="flex-1">
+                              <label className="block text-xs font-medium text-gray-700 mb-1.5">
+                                SubTopic {index + 1} *
+                              </label>
+                              <select
+                                value={subTopic.subTopicId}
+                                onChange={(e) =>
+                                  handleSubTopicSelectionChange(
+                                    index,
+                                    e.target.value
+                                  )
+                                }
+                                required
+                                disabled={!formData.topicId}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 text-sm bg-white"
+                              >
+                                <option value="">Select SubTopic</option>
+                                {filteredSubTopics
+                                  .filter(
+                                    (st) =>
+                                      !selectedSubTopics.some(
+                                        (sst, i) =>
+                                          i !== index &&
+                                          sst.subTopicId === st._id
+                                      )
+                                  )
+                                  .map((subTopicOption) => (
+                                    <option
+                                      key={subTopicOption._id}
+                                      value={subTopicOption._id}
+                                    >
+                                      {subTopicOption.name}
+                                    </option>
+                                  ))}
+                              </select>
+                            </div>
+                            {selectedSubTopics.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveSubTopic(index)}
+                                className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors mt-6"
+                                title="Remove this subtopic"
+                              >
+                                <FaTimes className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
+                        {subTopic.subTopicId && (
+                          <>
+                            <div className="mb-2">
+                              <div className="flex items-center justify-between mb-1.5">
+                                <label className="block text-xs font-medium text-gray-700">
+                                  Definitions for: <span className="text-blue-600 font-semibold">{subTopicName}</span>
+                                </label>
+                                <span className="text-xs text-gray-500">
+                                  Order starts from: <span className="font-semibold">{subTopic.orderNumber}</span>
+                                </span>
+                              </div>
+                              <textarea
+                                value={subTopic.definitionsText}
+                                onChange={(e) =>
+                                  handleSubTopicDefinitionsChange(
+                                    index,
+                                    e.target.value
+                                  )
+                                }
+                                placeholder={`Enter definitions for ${subTopicName}, one per line (unique names only):&#10;Definition 1&#10;Definition 2&#10;Definition 3`}
+                                rows={6}
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-y font-mono text-sm bg-white"
+                              />
+                              <div className="mt-1.5 text-xs text-gray-500">
+                                {definitionCount > 0 ? (
+                                  <span className="text-green-600 font-medium">
+                                    {definitionCount} definition(s) entered for this subtopic
+                                    {(() => {
+                                      // Check for duplicates in the entered text
+                                      const lines = subTopic.definitionsText
+                                        .split("\n")
+                                        .map((line) => line.trim())
+                                        .filter((line) => line.length > 0);
+                                      const nameCounts = new Map();
+                                      const hasDuplicates = lines.some((name) => {
+                                        const normalized = name.toLowerCase();
+                                        if (nameCounts.has(normalized)) {
+                                          return true;
+                                        }
+                                        nameCounts.set(normalized, 1);
+                                        return false;
+                                      });
+
+                                      if (hasDuplicates) {
+                                        return (
+                                          <span className="text-red-600 ml-1 font-semibold">
+                                            ⚠️ Duplicate names detected! Please remove duplicates.
+                                          </span>
+                                        );
+                                      }
+                                      return null;
+                                    })()}
+                                  </span>
+                                ) : (
+                                  <span className="text-gray-400">
+                                    Enter definitions, one per line. Each name must be unique.
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </>
+                        )}
                       </div>
-                      <div className="w-20">
-                        <input
-                          type="number"
-                          placeholder="Order"
-                          value={definition.orderNumber}
-                          onChange={(e) =>
-                            handleAdditionalDefinitionChange(
-                              index,
-                              "orderNumber",
-                              e.target.value
-                            )
-                          }
-                          min="1"
-                          className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center"
-                        />
-                      </div>
-                      {additionalDefinitions.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveDefinition(index)}
-                          className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
-                        >
-                          <FaTimes className="w-3 h-3" />
-                        </button>
-                      )}
+                    );
+                  })}
+
+                  {/* Add Another SubTopic Button */}
+                  {(() => {
+                    // Check if there are any unselected subtopics available
+                    const selectedSubTopicIds = selectedSubTopics
+                      .map((st) => st.subTopicId)
+                      .filter(Boolean);
+                    const availableSubTopics = filteredSubTopics.filter(
+                      (st) => !selectedSubTopicIds.includes(st._id)
+                    );
+                    const canAddMore = availableSubTopics.length > 0 && formData.topicId;
+
+                    return (
+                      <button
+                        type="button"
+                        onClick={handleAddAnotherSubTopic}
+                        disabled={!canAddMore}
+                        className={`text-sm font-medium flex items-center gap-1 px-3 py-1.5 rounded-lg transition-colors ${canAddMore
+                          ? "text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100"
+                          : "text-gray-400 bg-gray-100 cursor-not-allowed"
+                          }`}
+                        title={
+                          !formData.topicId
+                            ? "Please select a topic first"
+                            : availableSubTopics.length === 0
+                              ? "All available subtopics are already selected"
+                              : "Add another subtopic"
+                        }
+                      >
+                        <FaPlus className="w-3 h-3" />
+                        Add Another SubTopic
+                      </button>
+                    );
+                  })()}
+                </div>
+
+                {/* Summary */}
+                {selectedSubTopics.some((st) => st.subTopicId && st.definitionsText.trim().length > 0) && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                    <div className="text-xs font-medium text-blue-900 mb-1">
+                      Summary:
                     </div>
-                  ))}
-                </div>
-
-                {additionalDefinitions.length === 1 && (
-                  <button
-                    type="button"
-                    onClick={handleAddMoreDefinitions}
-                    className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center gap-1"
-                  >
-                    <FaPlus className="w-3 h-3" />
-                    Add More Definitions
-                  </button>
+                    <div className="text-xs text-blue-700 space-y-0.5">
+                      {selectedSubTopics
+                        .filter((st) => st.subTopicId && st.definitionsText.trim().length > 0)
+                        .map((subTopic, idx) => {
+                          const subTopicName =
+                            filteredSubTopics.find((st) => st._id === subTopic.subTopicId)
+                              ?.name || "Unknown";
+                          const definitionCount = subTopic.definitionsText
+                            .split("\n")
+                            .filter((line) => line.trim().length > 0).length;
+                          return (
+                            <div key={idx}>
+                              • {subTopicName}: {definitionCount} definition(s)
+                            </div>
+                          );
+                        })}
+                      <div className="mt-2 pt-2 border-t border-blue-200 font-semibold">
+                        Total:{" "}
+                        {selectedSubTopics
+                          .filter((st) => st.subTopicId && st.definitionsText.trim().length > 0)
+                          .reduce((sum, st) => {
+                            return (
+                              sum +
+                              st.definitionsText
+                                .split("\n")
+                                .filter((line) => line.trim().length > 0).length
+                            );
+                          }, 0)}{" "}
+                        definitions will be created
+                      </div>
+                    </div>
+                  </div>
                 )}
               </div>
 
@@ -1590,7 +1804,7 @@ const DefinitionManagement = () => {
                       Adding...
                     </>
                   ) : (
-                    `Add Definition${additionalDefinitions.length > 1 ? "s" : ""}`
+                    `Add Definitions`
                   )}
                 </button>
               </div>

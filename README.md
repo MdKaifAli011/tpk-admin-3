@@ -1,36 +1,67 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# NEET Biology Data Import Script
 
-## Getting Started
+## Overview
+This script imports NEET Biology data from `Neet.csv` into the database.
 
-First, run the development server:
+## Prerequisites
+1. Make sure your `.env` file is configured with:
+   - `MONGODB_URI` - MongoDB connection string
+   - `MONGO_DB_NAME` - Database name (optional, uses default from URI if not provided)
 
+2. The CSV file should be located at: `scripts/Neet.csv`
+
+## Usage
+
+### Option 1: Using npm script (Recommended)
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm run import:neet-biology
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Option 2: Direct Node.js execution
+```bash
+node scripts/import-neet-biology-data.js
+```
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+## What the script does:
+1. **Connects to MongoDB** using the connection string from `.env`
+2. **Creates or gets NEET exam** - Creates exam "NEET" if it doesn't exist
+3. **Creates or gets Biology subject** - Creates subject "Biology" if it doesn't exist
+4. **Reads Neet.csv** and parses the data
+5. **Imports hierarchically**:
+   - **Units** - Creates units from CSV (e.g., "Diversity in Living World", "Structural Organisation in Animals and Plants")
+   - **Chapters** - Creates chapters within units (e.g., "The Living World", "Biological Classification")
+   - **Topics** - Creates topics within chapters (e.g., "What is Living?", "Biodiversity")
+   - **SubTopics** - Creates subtopics within topics (e.g., "Characteristics of living organisms", "Difference between living and non-living")
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Features:
+- **Idempotent**: Can be run multiple times safely - will update existing records or create new ones
+- **Duplicate prevention**: Skips duplicate subtopics within the same topic
+- **Order number management**: Automatically manages order numbers for Units, Chapters, Topics, and SubTopics
+- **Hierarchical tracking**: Maintains proper parent-child relationships (Unit → Chapter → Topic → SubTopic)
+- **Progress logging**: Shows detailed progress during import
 
-## Learn More
+## CSV Format Expected:
+The CSV should have the following columns:
+- Column 1: Exam Number
+- Column 2: Subject Name (Biology, Physics, Chemistry)
+- Column 3: Unit Number
+- Column 4: Unit Name
+- Column 5: Chapter Number
+- Column 6: Chapter Name
+- Column 7: Topic Name
+- Column 8: SubTopic Name/Description
 
-To learn more about Next.js, take a look at the following resources:
+## Notes:
+- Currently imports **only Biology** subject (can be modified in the script)
+- Empty rows are skipped
+- The script handles missing values gracefully
+- Order numbers are auto-incremented within their parent context
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Troubleshooting:
+If you encounter module import errors, try:
+1. Make sure `package.json` has `"type": "module"`
+2. Or rename the script to `import-neet-biology-data.mjs`
+3. Check that all required environment variables are set in `.env`
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-## Deploy on Vercel
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.

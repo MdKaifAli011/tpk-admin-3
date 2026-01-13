@@ -255,16 +255,17 @@ export async function POST(request) {
         );
       }
 
-      // Duplicate name within same subtopic check
+      // Check for duplicate name within the same subtopic (case-insensitive)
+      // Duplicate names are NOT allowed - each definition name must be unique per subtopic
       const existingDefinition = await Definition.findOne({
-        name: definitionName,
+        name: { $regex: new RegExp(`^${definitionName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') },
         subTopicId,
       });
       if (existingDefinition) {
         return NextResponse.json(
           {
             success: false,
-            message: "Definition name already exists in this subtopic",
+            message: `Definition name "${definitionName}" already exists in this subtopic. Please use a unique name.`,
           },
           { status: 409 }
         );
@@ -293,7 +294,7 @@ export async function POST(request) {
       }
 
       // Create new definition (content/SEO fields are now in DefinitionDetails)
-      // Attempt create and retry once on duplicate-key error by recomputing order using chapter scope.
+      // Attempt create and retry on duplicate-key error (slug or orderNumber conflicts)
       try {
         const doc = await Definition.create({
           name: definitionName,
@@ -308,31 +309,161 @@ export async function POST(request) {
         });
         createdDefinitions.push(doc._id);
       } catch (err) {
-        // If duplicate key error (possible index on chapterId+orderNumber exists),
-        // recompute orderNumber scoped to chapterId and retry once.
+        // Handle duplicate key errors (E11000) - could be slug, orderNumber, or name conflict
         if (err?.code === 11000) {
+          const errorKeyPattern = err?.keyPattern || {};
+          const isSlugConflict = errorKeyPattern.slug !== undefined;
+          // Order conflict can be from old index (chapterId_1_orderNumber_1) or new index (subTopicId_1_orderNumber_1)
+          const isOrderConflict = errorKeyPattern.orderNumber !== undefined;
+          const isOldChapterIndexConflict = errorKeyPattern.chapterId !== undefined && errorKeyPattern.orderNumber !== undefined;
+          
           try {
-            const lastByChapter = await Definition.findOne({ chapterId: finalChapterId })
-              .sort({ orderNumber: -1 })
-              .select("orderNumber");
-            const altOrder = lastByChapter ? lastByChapter.orderNumber + 1 : 1;
-            const doc2 = await Definition.create({
-              name: definitionName,
-              examId: item.examId,
-              subjectId: item.subjectId,
-              unitId: item.unitId,
-              chapterId: finalChapterId,
-              topicId: item.topicId,
-              subTopicId,
-              orderNumber: altOrder,
-              status: item.status || STATUS.ACTIVE,
-            });
-            createdDefinitions.push(doc2._id);
+            let retryDoc;
+            
+            if (isSlugConflict) {
+              // Slug conflict: This should not happen if scoped to subtopic correctly
+              // But old database index (chapterId_1_slug_1) might cause conflicts
+              // Generate unique slug scoped to subtopic (definitions depend on subtopic, not chapter)
+              const { createSlug, generateUniqueSlug } = await import("@/utils/serverSlug");
+              const baseSlug = createSlug(definitionName);
+              
+              // Check for existing slugs in the same subtopic (correct scope)
+              const checkSlugExists = async (slug, excludeId) => {
+                const query = { subTopicId, slug };
+                if (excludeId) {
+                  query._id = { $ne: excludeId };
+                }
+                const existing = await Definition.findOne(query);
+                return !!existing;
+              };
+              
+              // Generate unique slug per subtopic (definitions are scoped to subtopic)
+              let uniqueSlug = await generateUniqueSlug(
+                baseSlug,
+                checkSlugExists,
+                null
+              );
+              
+              // If old chapterId_1_slug_1 index still exists, add subtopic suffix to ensure uniqueness
+              // Check if slug exists in same chapter (for old index compatibility)
+              const checkChapterSlug = await Definition.findOne({ 
+                chapterId: finalChapterId, 
+                slug: uniqueSlug 
+              });
+              
+              if (checkChapterSlug && checkChapterSlug.subTopicId.toString() !== subTopicId.toString()) {
+                // Old index conflict: Add subtopic-specific suffix to make it unique
+                const subTopicSuffix = subTopicId.toString().slice(-6); // Last 6 chars of ObjectId
+                uniqueSlug = `${uniqueSlug}-st${subTopicSuffix}`;
+              }
+              
+              // Create with temporary unique name, then update with correct name and slug
+              // This bypasses pre-save hook slug generation
+              const tempName = `${definitionName}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+              const tempDoc = await Definition.create({
+                name: tempName,
+                examId: item.examId,
+                subjectId: item.subjectId,
+                unitId: item.unitId,
+                chapterId: finalChapterId,
+                topicId: item.topicId,
+                subTopicId,
+                orderNumber: finalOrderNumber,
+                status: item.status || STATUS.ACTIVE,
+              });
+              
+              // Update with correct name and unique slug (findByIdAndUpdate bypasses pre-save hook)
+              retryDoc = await Definition.findByIdAndUpdate(
+                tempDoc._id,
+                { 
+                  name: definitionName,
+                  slug: uniqueSlug 
+                },
+                { new: true, runValidators: false }
+              );
+            } else if (isOrderConflict || isOldChapterIndexConflict) {
+              // Order conflict: Could be from old index (chapterId_1_orderNumber_1) or new index (subTopicId_1_orderNumber_1)
+              // Always recompute orderNumber scoped to subTopicId (definitions depend on subtopic, not chapter)
+              const lastBySubTopic = await Definition.findOne({ subTopicId })
+                .sort({ orderNumber: -1 })
+                .select("orderNumber");
+              const altOrder = lastBySubTopic ? lastBySubTopic.orderNumber + 1 : 1;
+              
+              console.log(`⚠️ Order conflict detected (old index: ${isOldChapterIndexConflict ? 'chapterId' : 'subTopicId'}). Recalculating order number for subTopic ${subTopicId}: ${altOrder}`);
+              
+              // Try creating with recalculated order number
+              try {
+                retryDoc = await Definition.create({
+                  name: definitionName,
+                  examId: item.examId,
+                  subjectId: item.subjectId,
+                  unitId: item.unitId,
+                  chapterId: finalChapterId,
+                  topicId: item.topicId,
+                  subTopicId,
+                  orderNumber: altOrder,
+                  status: item.status || STATUS.ACTIVE,
+                });
+              } catch (retryErr) {
+                // If still failing due to old chapter index, try with a different order number
+                // Find max order number in the chapter and use that + 1, but ensure it's unique per subtopic
+                if (retryErr?.code === 11000 && retryErr?.keyPattern?.chapterId) {
+                  console.log(`⚠️ Still conflicting with old chapter index. Finding unique order number...`);
+                  // Get all order numbers used in this subtopic
+                  const existingOrders = await Definition.find({ subTopicId })
+                    .select("orderNumber")
+                    .lean();
+                  const usedOrders = new Set(existingOrders.map(d => d.orderNumber));
+                  
+                  // Find first available order number starting from 1
+                  let uniqueOrder = 1;
+                  while (usedOrders.has(uniqueOrder)) {
+                    uniqueOrder++;
+                  }
+                  
+                  console.log(`✅ Using order number ${uniqueOrder} for subTopic ${subTopicId}`);
+                  
+                  retryDoc = await Definition.create({
+                    name: definitionName,
+                    examId: item.examId,
+                    subjectId: item.subjectId,
+                    unitId: item.unitId,
+                    chapterId: finalChapterId,
+                    topicId: item.topicId,
+                    subTopicId,
+                    orderNumber: uniqueOrder,
+                    status: item.status || STATUS.ACTIVE,
+                  });
+                } else {
+                  throw retryErr;
+                }
+              }
+            } else {
+              // Unknown duplicate key error - log details and throw
+              console.error(`❌ Unknown duplicate key error:`, {
+                keyPattern: errorKeyPattern,
+                keyValue: err?.keyValue,
+                message: err?.message
+              });
+              throw err;
+            }
+            
+            createdDefinitions.push(retryDoc._id);
+            console.log(`✅ Retried creation after duplicate key error for definition "${definitionName}"`);
           } catch (err2) {
-            // If still failing, bubble up original error for consistent handling
-            throw err2;
+            // If retry still fails, return detailed error
+            console.error(`❌ Failed to create definition "${definitionName}" after retry:`, err2);
+            return NextResponse.json(
+              {
+                success: false,
+                message: `Failed to create definition "${definitionName}": ${err2.message || "Duplicate key error"}`,
+                error: err2.keyPattern || err2.keyValue || err2.message,
+              },
+              { status: 409 }
+            );
           }
         } else {
+          // Non-duplicate-key error - throw as-is
           throw err;
         }
       }

@@ -65,6 +65,12 @@ definitionSchema.index(
   { unique: true, sparse: true }
 );
 
+// Compound index to ensure unique definition name per subTopic (case-insensitive check is done in API)
+definitionSchema.index(
+  { subTopicId: 1, name: 1 },
+  { unique: true }
+);
+
 // Pre-save hook to auto-populate chapterId from topicId if missing (for backward compatibility)
 definitionSchema.pre("save", async function (next) {
   // If chapterId is missing but topicId exists, populate it from the topic

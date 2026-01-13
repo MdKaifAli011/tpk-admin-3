@@ -43,9 +43,9 @@ const TopicManagement = () => {
     chapterId: "",
     orderNumber: "",
   });
-  const [additionalTopics, setAdditionalTopics] = useState([
-    { name: "", orderNumber: "" },
-  ]);
+  const [selectedChapters, setSelectedChapters] = useState([
+    { chapterId: "", orderNumber: 1, topicsText: "" },
+  ]); // Array of selected chapters with their order numbers and topics text
   const [nextOrderNumber, setNextOrderNumber] = useState(1);
   const [formError, setFormError] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
@@ -74,8 +74,8 @@ const TopicManagement = () => {
       console.error("❌ Error fetching topics:", error);
       setError(
         error.response?.data?.message ||
-          error.message ||
-          "Failed to fetch topics"
+        error.message ||
+        "Failed to fetch topics"
       );
     } finally {
       setIsDataLoading(false);
@@ -401,7 +401,7 @@ const TopicManagement = () => {
     const { name, value } = e.target;
     setFormData((prev) => {
       const newData = { ...prev, [name]: value };
-      
+
       // Reset subject when exam changes
       if (name === "examId" && value !== prev.examId) {
         newData.subjectId = "";
@@ -410,7 +410,7 @@ const TopicManagement = () => {
         setUnits([]); // Clear units when exam changes
         setChapters([]); // Clear chapters when exam changes
       }
-      
+
       // Reset unit when subject changes and fetch units for the selected exam and subject
       if (name === "subjectId" && value !== prev.subjectId) {
         newData.unitId = "";
@@ -423,10 +423,12 @@ const TopicManagement = () => {
           setUnits([]);
         }
       }
-      
+
       // Reset chapter when unit changes and fetch chapters for the selected unit
       if (name === "unitId" && value !== prev.unitId) {
         newData.chapterId = "";
+        // Reset selected chapters when unit changes
+        setSelectedChapters([{ chapterId: "", orderNumber: 1, topicsText: "" }]);
         // Fetch chapters for the selected unit
         if (value) {
           fetchChapters(value);
@@ -434,10 +436,7 @@ const TopicManagement = () => {
           setChapters([]);
         }
       }
-      
-      // Note: Topic clearing and order number calculation is handled by useEffect
-      // when chapterId changes
-      
+
       return newData;
     });
     setFormError(null);
@@ -447,7 +446,7 @@ const TopicManagement = () => {
     const { name, value } = e.target;
     setEditFormData((prev) => {
       const newData = { ...prev, [name]: value };
-      
+
       // Reset subject when exam changes
       if (name === "examId" && value !== prev.examId) {
         newData.subjectId = "";
@@ -456,7 +455,7 @@ const TopicManagement = () => {
         setUnits([]); // Clear units when exam changes
         setChapters([]); // Clear chapters when exam changes
       }
-      
+
       // Reset unit when subject changes and fetch units for the selected exam and subject
       if (name === "subjectId" && value !== prev.subjectId) {
         newData.unitId = "";
@@ -469,7 +468,7 @@ const TopicManagement = () => {
           setUnits([]);
         }
       }
-      
+
       // Reset chapter when unit changes and fetch chapters for the selected unit
       if (name === "unitId" && value !== prev.unitId) {
         newData.chapterId = "";
@@ -480,7 +479,7 @@ const TopicManagement = () => {
           setChapters([]);
         }
       }
-      
+
       return newData;
     });
     setFormError(null);
@@ -496,7 +495,8 @@ const TopicManagement = () => {
       chapterId: "",
       orderNumber: "",
     });
-    setAdditionalTopics([{ name: "", orderNumber: "" }]);
+    setTopicsText(""); // Clear topics textarea
+    setSelectedChapters([{ chapterId: "", orderNumber: 1 }]); // Reset to single chapter
     setFormError(null);
     setUnits([]); // Clear units when form is cancelled
     setChapters([]); // Clear chapters when form is cancelled
@@ -528,32 +528,14 @@ const TopicManagement = () => {
       chapterId: "",
       orderNumber: "",
     });
-    setAdditionalTopics([{ name: "", orderNumber: "" }]);
+    setTopicsText(""); // Clear topics textarea
+    setSelectedChapters([{ chapterId: "", orderNumber: 1 }]); // Reset to single chapter
     setFormError(null);
     setUnits([]); // Clear units when opening new form
     setChapters([]); // Clear chapters when opening new form
   };
 
-  const handleAddMoreTopics = () => {
-    setAdditionalTopics((prev) => {
-      const nextOrder = nextOrderNumber + prev.length;
-      return [...prev, { name: "", orderNumber: nextOrder.toString() }];
-    });
-  };
-
-  const handleRemoveTopic = (index) => {
-    if (additionalTopics.length > 1) {
-      setAdditionalTopics((prev) => prev.filter((_, i) => i !== index));
-    }
-  };
-
-  const handleAdditionalTopicChange = (index, field, value) => {
-    setAdditionalTopics((prev) =>
-      prev.map((topic, i) =>
-        i === index ? { ...topic, [field]: value } : topic
-      )
-    );
-  };
+  // No longer needed - using single textarea instead
 
   const getNextOrderNumber = useCallback(async (chapterId) => {
     if (!chapterId) return 1;
@@ -573,41 +555,74 @@ const TopicManagement = () => {
     return 1;
   }, []);
 
-  // Update order numbers when chapter is selected
+  // Update order numbers when chapters are selected
   useEffect(() => {
-    if (formData.chapterId && showAddForm) {
-      getNextOrderNumber(formData.chapterId).then((orderNumber) => {
-        setNextOrderNumber(orderNumber);
-        setFormData((prev) => ({
-          ...prev,
-          orderNumber: orderNumber.toString(),
-        }));
-        
-        // Always update topics - create first one if none exist, or update existing ones
-        setAdditionalTopics((prev) => {
-          if (prev.length === 0 || prev.some(t => !t.orderNumber || t.orderNumber === "")) {
-            // Create first topic with calculated order number
-            return [
-              {
-                name: "",
-                orderNumber: orderNumber.toString(),
-              },
-            ];
-          } else {
-            // Update order numbers for existing topics
-            return prev.map((topic, index) => ({
-              ...topic,
-              orderNumber: (orderNumber + index).toString(),
-            }));
-          }
-        });
-      });
-    } else if (!formData.chapterId && showAddForm) {
-      // Clear topics when chapter is cleared
-      setAdditionalTopics([{ name: "", orderNumber: "" }]);
-      setNextOrderNumber(1);
+    if (showAddForm && formData.unitId) {
+      // Update order numbers for all selected chapters
+      const updateOrderNumbers = async () => {
+        const chapterIds = selectedChapters.map((c) => c.chapterId).filter(Boolean);
+        if (chapterIds.length === 0) return;
+
+        const updatedChapters = await Promise.all(
+          selectedChapters.map(async (chapter) => {
+            if (chapter.chapterId) {
+              const orderNumber = await getNextOrderNumber(chapter.chapterId);
+              return { ...chapter, orderNumber };
+            }
+            return chapter;
+          })
+        );
+        setSelectedChapters(updatedChapters);
+      };
+      updateOrderNumbers();
     }
-  }, [formData.chapterId, showAddForm, getNextOrderNumber]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedChapters.map((c) => c.chapterId).join(","), formData.unitId, showAddForm]);
+
+  // Add another chapter selection
+  const handleAddAnotherChapter = () => {
+    setSelectedChapters((prev) => [
+      ...prev,
+      { chapterId: "", orderNumber: 1, topicsText: "" },
+    ]);
+  };
+
+  // Remove a chapter selection
+  const handleRemoveChapter = (index) => {
+    if (selectedChapters.length > 1) {
+      setSelectedChapters((prev) => prev.filter((_, i) => i !== index));
+    }
+  };
+
+  // Handle chapter selection change
+  const handleChapterSelectionChange = async (index, chapterId) => {
+    const updatedChapters = [...selectedChapters];
+    updatedChapters[index].chapterId = chapterId;
+    updatedChapters[index].topicsText = ""; // Clear topics when chapter changes
+
+    // Get order number for the selected chapter
+    if (chapterId) {
+      const orderNumber = await getNextOrderNumber(chapterId);
+      updatedChapters[index].orderNumber = orderNumber;
+    } else {
+      updatedChapters[index].orderNumber = 1;
+    }
+
+    setSelectedChapters(updatedChapters);
+
+    // Also update formData.chapterId for backward compatibility (use first selected)
+    setFormData((prev) => ({
+      ...prev,
+      chapterId: updatedChapters[0]?.chapterId || "",
+    }));
+  };
+
+  // Handle topics text change for a specific chapter
+  const handleChapterTopicsChange = (index, topicsText) => {
+    const updatedChapters = [...selectedChapters];
+    updatedChapters[index].topicsText = topicsText;
+    setSelectedChapters(updatedChapters);
+  };
 
   const handleAddTopics = async (e) => {
     e.preventDefault();
@@ -618,22 +633,51 @@ const TopicManagement = () => {
       return;
     }
 
+    // Validate that at least one chapter is selected with topics
+    const validChapters = selectedChapters.filter(
+      (ch) => ch.chapterId && ch.topicsText.trim().length > 0
+    );
+
+    if (validChapters.length === 0) {
+      setFormError("Please select at least one chapter and enter topics for it.");
+      return;
+    }
+
     setIsFormLoading(true);
     setFormError(null);
 
     try {
-      const topicsToCreate = additionalTopics
-        .filter((topic) => topic.name.trim())
-        .map((topic, index) => ({
-          name: topic.name,
+      // Create topics for each chapter that has topics entered
+      const allTopicsToCreate = [];
+
+      for (const chapter of validChapters) {
+        // Parse topics from textarea (split by newlines)
+        const topicLines = chapter.topicsText
+          .split("\n")
+          .map((line) => line.trim())
+          .filter((line) => line.length > 0); // Remove empty lines
+
+        if (topicLines.length === 0) continue; // Skip if no topics
+
+        const topicsForChapter = topicLines.map((topicName, index) => ({
+          name: topicName,
           examId: formData.examId,
           subjectId: formData.subjectId,
           unitId: formData.unitId,
-          chapterId: formData.chapterId,
-          orderNumber: parseInt(topic.orderNumber) || nextOrderNumber + index,
+          chapterId: chapter.chapterId,
+          orderNumber: chapter.orderNumber + index,
         }));
+        allTopicsToCreate.push(...topicsForChapter);
+      }
 
-      const response = await api.post("/topic", topicsToCreate);
+      if (allTopicsToCreate.length === 0) {
+        setFormError("Please enter at least one topic name.");
+        setIsFormLoading(false);
+        return;
+      }
+
+      // Create all topics in batches (API might have limits, but let's try all at once)
+      const response = await api.post("/topic", allTopicsToCreate);
 
       if (response.data.success) {
         const newTopics = Array.isArray(response.data.data)
@@ -641,7 +685,9 @@ const TopicManagement = () => {
           : [response.data.data];
         setTopics((prevTopics) => [...prevTopics, ...newTopics]);
         handleCancelForm();
-        console.log(`✅ ${newTopics.length} topic(s) created successfully`);
+        console.log(
+          `✅ ${newTopics.length} topic(s) created successfully for ${validChapters.length} chapter(s)`
+        );
       } else {
         throw new Error(response.data.message || "Failed to create topics");
       }
@@ -649,8 +695,8 @@ const TopicManagement = () => {
       console.error("❌ Error creating topics:", error);
       setFormError(
         error.response?.data?.message ||
-          error.message ||
-          "Failed to create topics"
+        error.message ||
+        "Failed to create topics"
       );
     } finally {
       setIsFormLoading(false);
@@ -678,7 +724,7 @@ const TopicManagement = () => {
       chapterId: chapterId,
       orderNumber: topicToEdit.orderNumber?.toString() || "",
     });
-    
+
     // Fetch units and chapters for the selected exam, subject, and unit when editing
     if (examId && subjectId) {
       fetchUnits(examId, subjectId).then(() => {
@@ -687,7 +733,7 @@ const TopicManagement = () => {
         }
       });
     }
-    
+
     setShowEditForm(true);
   };
 
@@ -725,8 +771,8 @@ const TopicManagement = () => {
       console.error("❌ Error updating topic:", error);
       setFormError(
         error.response?.data?.message ||
-          error.message ||
-          "Failed to update topic"
+        error.message ||
+        "Failed to update topic"
       );
     } finally {
       setIsFormLoading(false);
@@ -766,8 +812,8 @@ const TopicManagement = () => {
       console.error("❌ Error deleting topic:", error);
       setError(
         error.response?.data?.message ||
-          error.message ||
-          "Failed to delete topic"
+        error.message ||
+        "Failed to delete topic"
       );
     } finally {
       setIsFormLoading(false);
@@ -809,8 +855,8 @@ const TopicManagement = () => {
         console.error(`❌ Error ${action}ing topic:`, error);
         setError(
           error.response?.data?.message ||
-            error.message ||
-            `Failed to ${action} topic`
+          error.message ||
+          `Failed to ${action} topic`
         );
       } finally {
         setIsFormLoading(false);
@@ -834,7 +880,7 @@ const TopicManagement = () => {
 
     const items = Array.from(topics);
     const reorderedItem = items[sourceIndex];
-    
+
     // Get the chapter ID to identify the group
     const chapterId = reorderedItem.chapterId?._id || reorderedItem.chapterId;
 
@@ -848,11 +894,11 @@ const TopicManagement = () => {
     const groupSourceIndex = groupTopics.findIndex(
       (t) => (t._id || t.id) === (reorderedItem._id || reorderedItem.id)
     );
-    
+
     // Create a reordered group array
     const reorderedGroup = Array.from(groupTopics);
     const [movedTopic] = reorderedGroup.splice(groupSourceIndex, 1);
-    
+
     // Calculate destination index within the group
     const groupDestIndex = groupTopics.findIndex((topic, idx) => {
       if (idx === groupSourceIndex) return false;
@@ -905,8 +951,7 @@ const TopicManagement = () => {
       console.log("🔄 Reverting topic order due to API error");
       fetchTopics(); // Revert local state
       setError(
-        `Failed to update topic order: ${
-          error.response?.data?.message || error.message
+        `Failed to update topic order: ${error.response?.data?.message || error.message
         }`
       );
     }
@@ -978,7 +1023,7 @@ const TopicManagement = () => {
           <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-semibold text-gray-900">
-                Add New Topic{additionalTopics.length > 1 ? "s" : ""}
+                Add New Topics
               </h2>
               <button
                 onClick={handleCancelForm}
@@ -1065,103 +1110,198 @@ const TopicManagement = () => {
                   </select>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Chapter *
-                  </label>
-                  <select
-                    name="chapterId"
-                    value={formData.chapterId}
-                    onChange={handleFormChange}
-                    required
-                    disabled={!formData.unitId}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
-                  >
-                    <option value="">Select Chapter</option>
-                    {filteredChapters.map((chapter) => (
-                      <option key={chapter._id} value={chapter._id}>
-                        {chapter.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
               </div>
 
-              {/* Topic Names */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-medium text-gray-700">
-                    Topic Names *
+              {/* Multiple Chapter Selection with Individual Textareas */}
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-sm font-medium text-gray-700 mb-1">
+                    Select Chapter(s) and Enter Topics *
                   </h3>
-                  {additionalTopics.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={handleAddMoreTopics}
-                      className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center gap-1"
-                    >
-                      <FaPlus className="w-3 h-3" />
-                      Add More
-                    </button>
-                  )}
+                  <p className="text-xs text-gray-500">
+                    Select chapters and enter topics for each chapter separately. Each chapter has its own textarea.
+                  </p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {additionalTopics.map((topic, index) => (
-                    <div key={index} className="flex gap-2">
-                      <div className="flex-1">
-                        <input
-                          type="text"
-                          placeholder={`Topic ${index + 1} name`}
-                          value={topic.name}
-                          onChange={(e) =>
-                            handleAdditionalTopicChange(
-                              index,
-                              "name",
-                              e.target.value
-                            )
-                          }
-                          required
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        />
+                <div className="space-y-6">
+                  {selectedChapters.map((chapter, index) => {
+                    const chapterName =
+                      filteredChapters.find((ch) => ch._id === chapter.chapterId)
+                        ?.name || "Unselected Chapter";
+                    const topicCount = chapter.topicsText
+                      .split("\n")
+                      .filter((line) => line.trim().length > 0).length;
+
+                    return (
+                      <div
+                        key={index}
+                        className="border border-gray-200 rounded-lg p-4 bg-gray-50/50"
+                      >
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-3 flex-1">
+                            <div className="flex-1">
+                              <label className="block text-xs font-medium text-gray-700 mb-1.5">
+                                Chapter {index + 1} *
+                              </label>
+                              <select
+                                value={chapter.chapterId}
+                                onChange={(e) =>
+                                  handleChapterSelectionChange(
+                                    index,
+                                    e.target.value
+                                  )
+                                }
+                                required
+                                disabled={!formData.unitId}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 text-sm bg-white"
+                              >
+                                <option value="">Select Chapter</option>
+                                {filteredChapters
+                                  .filter(
+                                    (ch) =>
+                                      !selectedChapters.some(
+                                        (sc, i) =>
+                                          i !== index &&
+                                          sc.chapterId === ch._id
+                                      )
+                                  )
+                                  .map((chapterOption) => (
+                                    <option
+                                      key={chapterOption._id}
+                                      value={chapterOption._id}
+                                    >
+                                      {chapterOption.name}
+                                    </option>
+                                  ))}
+                              </select>
+                            </div>
+                            {selectedChapters.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveChapter(index)}
+                                className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors mt-6"
+                                title="Remove this chapter"
+                              >
+                                <FaTimes className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
+                        {chapter.chapterId && (
+                          <>
+                            <div className="mb-2">
+                              <div className="flex items-center justify-between mb-1.5">
+                                <label className="block text-xs font-medium text-gray-700">
+                                  Topics for: <span className="text-blue-600 font-semibold">{chapterName}</span>
+                                </label>
+                                <span className="text-xs text-gray-500">
+                                  Order starts from: <span className="font-semibold">{chapter.orderNumber}</span>
+                                </span>
+                              </div>
+                              <textarea
+                                value={chapter.topicsText}
+                                onChange={(e) =>
+                                  handleChapterTopicsChange(
+                                    index,
+                                    e.target.value
+                                  )
+                                }
+                                placeholder={`Enter topics for ${chapterName}, one per line:&#10;Topic 1&#10;Topic 2&#10;Topic 3`}
+                                rows={6}
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-y font-mono text-sm bg-white"
+                              />
+                              <div className="mt-1.5 text-xs text-gray-500">
+                                {topicCount > 0 ? (
+                                  <span className="text-green-600 font-medium">
+                                    {topicCount} topic(s) entered for this chapter
+                                  </span>
+                                ) : (
+                                  <span className="text-gray-400">
+                                    Enter topics, one per line
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </>
+                        )}
                       </div>
-                      <div className="w-20">
-                        <input
-                          type="number"
-                          placeholder="Order"
-                          value={topic.orderNumber}
-                          onChange={(e) =>
-                            handleAdditionalTopicChange(
-                              index,
-                              "orderNumber",
-                              e.target.value
-                            )
-                          }
-                          min="1"
-                          className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center"
-                        />
-                      </div>
-                      {additionalTopics.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveTopic(index)}
-                          className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
-                        >
-                          <FaTimes className="w-3 h-3" />
-                        </button>
-                      )}
+                    );
+                  })}
+
+                  {/* Add Another Chapter Button */}
+                  {(() => {
+                    // Check if there are any unselected chapters available
+                    const selectedChapterIds = selectedChapters
+                      .map((ch) => ch.chapterId)
+                      .filter(Boolean);
+                    const availableChapters = filteredChapters.filter(
+                      (ch) => !selectedChapterIds.includes(ch._id)
+                    );
+                    const canAddMore = availableChapters.length > 0 && formData.unitId;
+
+                    return (
+                      <button
+                        type="button"
+                        onClick={handleAddAnotherChapter}
+                        disabled={!canAddMore}
+                        className={`text-sm font-medium flex items-center gap-1 px-3 py-1.5 rounded-lg transition-colors ${canAddMore
+                            ? "text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100"
+                            : "text-gray-400 bg-gray-100 cursor-not-allowed"
+                          }`}
+                        title={
+                          !formData.unitId
+                            ? "Please select a unit first"
+                            : availableChapters.length === 0
+                              ? "All available chapters are already selected"
+                              : "Add another chapter"
+                        }
+                      >
+                        <FaPlus className="w-3 h-3" />
+                        Add Another Chapter
+                      </button>
+                    );
+                  })()}
+                </div>
+
+                {/* Summary */}
+                {selectedChapters.some((ch) => ch.chapterId && ch.topicsText.trim().length > 0) && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                    <div className="text-xs font-medium text-blue-900 mb-1">
+                      Summary:
                     </div>
-                  ))}
-                </div>
-
-                {additionalTopics.length === 1 && (
-                  <button
-                    type="button"
-                    onClick={handleAddMoreTopics}
-                    className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center gap-1"
-                  >
-                    <FaPlus className="w-3 h-3" />
-                    Add More Topics
-                  </button>
+                    <div className="text-xs text-blue-700 space-y-0.5">
+                      {selectedChapters
+                        .filter((ch) => ch.chapterId && ch.topicsText.trim().length > 0)
+                        .map((chapter, idx) => {
+                          const chapterName =
+                            filteredChapters.find((ch) => ch._id === chapter.chapterId)
+                              ?.name || "Unknown";
+                          const topicCount = chapter.topicsText
+                            .split("\n")
+                            .filter((line) => line.trim().length > 0).length;
+                          return (
+                            <div key={idx}>
+                              • {chapterName}: {topicCount} topic(s)
+                            </div>
+                          );
+                        })}
+                      <div className="mt-2 pt-2 border-t border-blue-200 font-semibold">
+                        Total:{" "}
+                        {selectedChapters
+                          .filter((ch) => ch.chapterId && ch.topicsText.trim().length > 0)
+                          .reduce((sum, ch) => {
+                            return (
+                              sum +
+                              ch.topicsText
+                                .split("\n")
+                                .filter((line) => line.trim().length > 0).length
+                            );
+                          }, 0)}{" "}
+                        topics will be created
+                      </div>
+                    </div>
+                  </div>
                 )}
               </div>
 
@@ -1186,7 +1326,7 @@ const TopicManagement = () => {
                       Adding...
                     </>
                   ) : (
-                    `Add Topic${additionalTopics.length > 1 ? "s" : ""}`
+                    `Add Topics`
                   )}
                 </button>
               </div>
