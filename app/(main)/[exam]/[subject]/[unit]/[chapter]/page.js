@@ -7,6 +7,7 @@ import ChaptersSectionClient from "../../../../components/ChaptersSectionClient"
 import UnitProgressClient from "../../../../components/UnitProgressClient";
 import ProgressTracker from "../../../../components/ProgressTracker";
 import ChapterCompletionTracker from "../../../../components/ChapterCompletionTracker";
+import TestListTable from "../../../../components/TestListTable";
 import {
   fetchExamById,
   fetchSubjectsByExam,
@@ -278,6 +279,14 @@ const ChapterPage = async ({ params }) => {
           subjectSlug={subjectSlugValue}
           unitSlug={unitSlugValue}
           chapterSlug={chapterSlugValue}
+        />
+
+        {/* Test List Table */}
+        <TestListTable
+          examId={fetchedExam._id}
+          subjectId={subject._id}
+          unitId={unit._id}
+          chapterId={chapter._id}
         />
 
         {/* Chapters Section */}

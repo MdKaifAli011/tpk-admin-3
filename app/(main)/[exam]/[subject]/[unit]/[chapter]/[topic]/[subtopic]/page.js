@@ -6,6 +6,7 @@ import ChaptersSectionClient from "../../../../../../components/ChaptersSectionC
 import UnitProgressClient from "../../../../../../components/UnitProgressClient";
 import ProgressTracker from "../../../../../../components/ProgressTracker";
 import DefinitionPreviewClient from "../../../../../../components/DefinitionPreviewClient";
+import TestListTable from "../../../../../../components/TestListTable";
 import { ERROR_MESSAGES } from "@/constants";
 import {
   fetchExamById,
@@ -342,6 +343,16 @@ const SubTopicPage = async ({ params }) => {
           chapterSlug={chapterSlugValue}
           topicSlug={topicSlugValue}
           subTopicSlug={subTopicSlugValue}
+        />
+
+        {/* Test List Table */}
+        <TestListTable
+          examId={fetchedExam._id}
+          subjectId={subject._id}
+          unitId={unit._id}
+          chapterId={chapter._id}
+          topicId={topic._id}
+          subTopicId={subTopic._id}
         />
 
         {/* Chapters Section */}

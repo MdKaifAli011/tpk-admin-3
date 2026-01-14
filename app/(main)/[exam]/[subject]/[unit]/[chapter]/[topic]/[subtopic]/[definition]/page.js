@@ -6,6 +6,7 @@ import NavigationClient from "../../../../../../../components/NavigationClient";
 import ChaptersSectionClient from "../../../../../../../components/ChaptersSectionClient";
 import UnitProgressClient from "../../../../../../../components/UnitProgressClient";
 import ProgressTracker from "../../../../../../../components/ProgressTracker";
+import TestListTable from "../../../../../../../components/TestListTable";
 import {
   fetchExamById,
   fetchSubjectsByExam,
@@ -348,6 +349,16 @@ const DefinitionPage = async ({ params }) => {
           chapterSlug={chapterSlugValue}
           topicSlug={topicSlugValue}
           subTopicSlug={subTopicSlugValue}
+        />
+
+        {/* Test List Table */}
+        <TestListTable
+          examId={fetchedExam._id}
+          subjectId={subject._id}
+          unitId={unit._id}
+          chapterId={chapter._id}
+          topicId={topic._id}
+          subTopicId={subTopic._id}
         />
 
         {/* Chapters Section */}

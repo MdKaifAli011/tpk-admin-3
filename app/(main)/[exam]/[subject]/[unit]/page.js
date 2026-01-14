@@ -6,6 +6,7 @@ import NavigationClient from "../../../components/NavigationClient";
 import ChaptersSectionClient from "../../../components/ChaptersSectionClient";
 import UnitProgressClient from "../../../components/UnitProgressClient";
 import UnitCompletionTracker from "../../../components/UnitCompletionTracker";
+import TestListTable from "../../../components/TestListTable";
 import { ERROR_MESSAGES } from "@/constants";
 import {
   fetchExamById,
@@ -231,6 +232,13 @@ const UnitPage = async ({ params }) => {
         subjectSlug={subjectSlugValue}
         unitSlug={unitSlugValue}
         unitName={unit.name}
+      />
+
+      {/* Test List Table */}
+      <TestListTable
+        examId={fetchedExam._id}
+        subjectId={subject._id}
+        unitId={unit._id}
       />
 
       {/* Chapters Section */}

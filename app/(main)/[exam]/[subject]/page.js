@@ -6,6 +6,7 @@ import NavigationClient from "../../components/NavigationClient";
 import UnitsSectionClient from "../../components/UnitsSectionClient";
 import SubjectProgressClient from "../../components/SubjectProgressClient";
 import SubjectCompletionTracker from "../../components/SubjectCompletionTracker";
+import TestListTable from "../../components/TestListTable";
 import {
   fetchExamById,
   fetchSubjectsByExam,
@@ -32,28 +33,40 @@ export const revalidate = 0;
  */
 export async function generateMetadata({ params, searchParams }) {
   const { exam: examSlug, subject: subjectSlug } = await params;
-  
+
   // Pages receive searchParams correctly in Next.js App Router
   const resolvedSearchParams = await extractSearchParams(searchParams);
-  
+
   if (process.env.NODE_ENV === "development") {
     logger.debug("Subject Page - searchParams:", searchParams);
     logger.debug("Subject Page - Resolved searchParams:", resolvedSearchParams);
   }
 
   try {
-    const { fetchExamById, fetchSubjectById, fetchSubjectDetailsById, fetchSubjectsByExam, findByIdOrSlug, createSlug } = await import("../../lib/api");
-    
+    const {
+      fetchExamById,
+      fetchSubjectById,
+      fetchSubjectDetailsById,
+      fetchSubjectsByExam,
+      findByIdOrSlug,
+      createSlug,
+    } = await import("../../lib/api");
+
     const exam = await fetchExamById(examSlug).catch(() => null);
     if (!exam) return { title: `${subjectSlug || "Subject"} | TestPrepKart` };
 
     const subjects = await fetchSubjectsByExam(exam._id).catch(() => []);
     const subject = findByIdOrSlug(subjects, subjectSlug);
-    if (!subject) return { title: `${subjectSlug || "Subject"} | TestPrepKart` };
+    if (!subject)
+      return { title: `${subjectSlug || "Subject"} | TestPrepKart` };
 
-    const fullSubjectData = await fetchSubjectById(subject._id).catch(() => null);
+    const fullSubjectData = await fetchSubjectById(subject._id).catch(
+      () => null
+    );
     const finalSubject = fullSubjectData || subject;
-    const subjectDetails = await fetchSubjectDetailsById(finalSubject._id).catch(() => null);
+    const subjectDetails = await fetchSubjectDetailsById(
+      finalSubject._id
+    ).catch(() => null);
     const path = `/${createSlug(exam.name)}/${createSlug(finalSubject.name)}`;
 
     return await generateTabAwareMetadata(
@@ -141,96 +154,95 @@ const SubjectPage = async ({ params }) => {
 
   return (
     <div className="space-y-4">
-{/* Premium Educational Header */}
-<section
-  className="
+      {/* Premium Educational Header */}
+      <section
+        className="
     rounded-xl
     p-3 sm:p-4
     bg-gradient-to-br from-indigo-50 via-white to-purple-50
     border border-indigo-100/60
     shadow-[0_2px_12px_rgba(100,70,200,0.08)]
   "
->
-  <div className="flex items-start sm:items-center justify-between w-full gap-3 sm:gap-4 min-w-0">
-
-    {/* LEFT — Title + Breadcrumb */}
-    <div className="flex flex-col min-w-0 flex-1">
-
-      <h1
-        className="
+      >
+        <div className="flex items-start sm:items-center justify-between w-full gap-3 sm:gap-4 min-w-0">
+          {/* LEFT — Title + Breadcrumb */}
+          <div className="flex flex-col min-w-0 flex-1">
+            <h1
+              className="
           text-base sm:text-lg md:text-xl font-bold text-indigo-900
           truncate
           w-full
         "
-        title={subject.name}
-      >
-        {subject.name}
-      </h1>
+              title={subject.name}
+            >
+              {subject.name}
+            </h1>
 
-      <p
-        className="
+            <p
+              className="
           text-[10px] sm:text-xs text-gray-600 mt-0.5
           truncate
           w-full
         "
-        title={`${fetchedExam.name} > ${subject.name}`}
-      >
-        {fetchedExam.name} &gt; {subject.name}
-      </p>
-    </div>
+              title={`${fetchedExam.name} > ${subject.name}`}
+            >
+              {fetchedExam.name} &gt; {subject.name}
+            </p>
+          </div>
 
-    {/* RIGHT — Progress Block */}
-    <div className="shrink-0 ml-auto">
-      <SubjectProgressClient
+          {/* RIGHT — Progress Block */}
+          <div className="shrink-0 ml-auto">
+            <SubjectProgressClient
+              subjectId={subject._id}
+              subjectName={subject.name}
+              unitIds={fetchedUnits.map((unit) => unit._id)}
+              initialProgress={0}
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* Tabs */}
+      <TabsClient
+        content={subjectDetails?.content}
+        examId={fetchedExam._id}
+        subjectId={subject._id}
+        entityName={subject.name}
+        entityType="subject"
+        unitsCount={fetchedUnits.length}
+        examSlug={examSlug}
+        subjectSlug={subjectSlugValue}
+        units={fetchedUnits}
+      />
+
+      {/* Test List Table */}
+      <TestListTable examId={fetchedExam._id} subjectId={subject._id} />
+
+      {/* Units Section */}
+      <UnitsSectionClient
+        units={fetchedUnits}
+        subjectId={subject._id}
+        examSlug={examSlug}
+        subjectSlug={subjectSlugValue}
+        examName={fetchedExam.name}
+        subjectName={subject.name}
+      />
+
+      {/* Navigation */}
+      <NavigationClient
+        backUrl={`/${examSlug}`}
+        backLabel={`Back to ${fetchedExam.name}`}
+        prevNav={prevNav}
+        nextNav={nextNav}
+      />
+
+      {/* Subject Completion Tracker */}
+      <SubjectCompletionTracker
         subjectId={subject._id}
         subjectName={subject.name}
         unitIds={fetchedUnits.map((unit) => unit._id)}
-        initialProgress={0}
       />
     </div>
-
-  </div>
-</section>
-
-
-        {/* Tabs */}
-        <TabsClient
-          content={subjectDetails?.content}
-          examId={fetchedExam._id}
-          subjectId={subject._id}
-          entityName={subject.name}
-          entityType="subject"
-          unitsCount={fetchedUnits.length}
-          examSlug={examSlug}
-          subjectSlug={subjectSlugValue}
-          units={fetchedUnits}
-        />
-
-        {/* Units Section */}
-        <UnitsSectionClient
-          units={fetchedUnits}
-          subjectId={subject._id}
-          examSlug={examSlug}
-          subjectSlug={subjectSlugValue}
-          examName={fetchedExam.name}
-          subjectName={subject.name}
-        />
-
-        {/* Navigation */}
-        <NavigationClient
-          backUrl={`/${examSlug}`}
-          backLabel={`Back to ${fetchedExam.name}`}
-          prevNav={prevNav}
-          nextNav={nextNav}
-        />
-
-        {/* Subject Completion Tracker */}
-        <SubjectCompletionTracker
-          subjectId={subject._id}
-          subjectName={subject.name}
-          unitIds={fetchedUnits.map((unit) => unit._id)}
-        />
-      </div>
   );
 };
 
