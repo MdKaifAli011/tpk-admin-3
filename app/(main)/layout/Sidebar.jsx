@@ -914,7 +914,7 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
                 )}
 
                 {/* Course */}
-                {activeExamSlug ? (
+                {/* {activeExamSlug ? (
                   <li>
                     <Link
                       href={`/${activeExamSlug}/course`}
@@ -933,7 +933,7 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
                   <li className="px-3 py-2 text-xs sm:text-sm font-medium text-gray-400">
                     Course
                   </li>
-                )}
+                )} */}
               </ul>
             </div>
           </div>
