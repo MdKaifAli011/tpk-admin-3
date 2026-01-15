@@ -142,8 +142,8 @@ const SubjectTable = ({ subjects, onEdit, onDelete, onToggleStatus }) => {
                   >
                     <td
                       className={`px-2 py-1 whitespace-nowrap text-sm font-medium cursor-pointer hover:text-blue-600 transition-colors ${subject.status === "inactive"
-                          ? "text-gray-500 line-through"
-                          : "text-gray-900"
+                        ? "text-gray-500 line-through"
+                        : "text-gray-900"
                         }`}
                       onClick={() => handleSubjectClick(subject)}
                       title={subject.name}
@@ -153,8 +153,8 @@ const SubjectTable = ({ subjects, onEdit, onDelete, onToggleStatus }) => {
                     <td className="px-2 py-1 whitespace-nowrap w-40">
                       <span
                         className={`text-sm ${subject.contentInfo?.hasContent
-                            ? "text-gray-700"
-                            : "text-gray-400 italic"
+                          ? "text-gray-700"
+                          : "text-gray-400 italic"
                           }`}
                       >
                         {formatContentDate(subject.contentInfo)}
@@ -262,8 +262,8 @@ const SubjectTable = ({ subjects, onEdit, onDelete, onToggleStatus }) => {
                   >
                     <h3
                       className={`text-sm font-semibold mb-1 ${subject.status === "inactive"
-                          ? "text-gray-500 line-through"
-                          : "text-gray-900"
+                        ? "text-gray-500 line-through"
+                        : "text-gray-900"
                         }`}
                       title={subject.name}
                     >
@@ -272,16 +272,16 @@ const SubjectTable = ({ subjects, onEdit, onDelete, onToggleStatus }) => {
                     <div className="flex items-center gap-1 flex-wrap">
                       <span
                         className={`px-2 py-0.5 rounded-full text-sm font-medium ${subject.status === "active"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
                           }`}
                       >
                         {subject.status === "active" ? "Active" : "Inactive"}
                       </span>
                       <span
                         className={`text-sm ${subject.contentInfo?.hasContent
-                            ? "text-gray-600"
-                            : "text-gray-400 italic"
+                          ? "text-gray-600"
+                          : "text-gray-400 italic"
                           }`}
                       >
                         Content: {formatContentDate(subject.contentInfo)}

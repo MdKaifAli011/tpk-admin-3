@@ -15,9 +15,13 @@ import {
   FaUserPlus,
   FaEnvelope,
   FaKey,
+  FaPowerOff,
 } from "react-icons/fa";
 import api from "@/lib/api";
-import { usePermissions, getPermissionMessage } from "../../hooks/usePermissions";
+import {
+  usePermissions,
+  getPermissionMessage,
+} from "../../hooks/usePermissions";
 import { PermissionButton } from "../../components/common/PermissionButton";
 
 const UserRolePage = () => {
@@ -41,6 +45,14 @@ const UserRolePage = () => {
   const [userToDelete, setUserToDelete] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [togglingStatus, setTogglingStatus] = useState(false);
+  const [userToChangePassword, setUserToChangePassword] = useState(null);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [passwordData, setPasswordData] = useState({
+    newPassword: "",
+    confirmPassword: "",
+  });
+  const [changingPassword, setChangingPassword] = useState(false);
 
   // Define roles with color classes
   const roles = [
@@ -117,11 +129,21 @@ const UserRolePage = () => {
         setLoading(true);
         setError(null);
 
-        const response = await api.get("/user");
+        // Fetch all users (active and inactive) with a high limit
+        const response = await api.get("/user?limit=1000");
         if (response.data.success) {
-          setUsers(response.data.data || []);
+          const fetchedUsers = response.data.data || [];
+          // Ensure we have an array
+          if (Array.isArray(fetchedUsers)) {
+            setUsers(fetchedUsers);
+          } else {
+            console.error("❌ Invalid users data format:", fetchedUsers);
+            setError("Invalid data format received from server");
+            setUsers([]);
+          }
         } else {
           setError(response.data.message || "Failed to load users");
+          setUsers([]);
         }
       } catch (err) {
         console.error("Error fetching users:", err);
@@ -185,6 +207,91 @@ const UserRolePage = () => {
       setError(err.response?.data?.message || "Failed to delete user");
     } finally {
       setDeleting(false);
+    }
+  };
+
+  // Handle toggle user status
+  const handleToggleStatus = async (user) => {
+    const currentStatus = user.status || "active";
+    const newStatus = currentStatus === "active" ? "inactive" : "active";
+    const action = newStatus === "inactive" ? "deactivate" : "activate";
+
+    if (!window.confirm(`Are you sure you want to ${action} "${user.name}"?`)) {
+      return;
+    }
+
+    try {
+      setTogglingStatus(true);
+      setError(null);
+
+      const response = await api.put(`/user/${user._id}`, {
+        status: newStatus,
+      });
+
+      if (response.data.success) {
+        // Update local state
+        setUsers((prev) =>
+          prev.map((u) =>
+            u._id === user._id ? { ...u, status: newStatus } : u
+          )
+        );
+        setError(null);
+      } else {
+        setError(response.data.message || `Failed to ${action} user`);
+      }
+    } catch (err) {
+      console.error(`Error ${action}ing user:`, err);
+      setError(err.response?.data?.message || `Failed to ${action} user`);
+    } finally {
+      setTogglingStatus(false);
+    }
+  };
+
+  // Handle change password
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    if (!userToChangePassword) return;
+
+    setChangingPassword(true);
+    setError(null);
+
+    // Validation
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setError("Passwords do not match");
+      setChangingPassword(false);
+      return;
+    }
+
+    if (passwordData.newPassword.length < 6) {
+      setError("Password must be at least 6 characters long");
+      setChangingPassword(false);
+      return;
+    }
+
+    try {
+      const response = await api.put(`/user/${userToChangePassword._id}`, {
+        password: passwordData.newPassword,
+      });
+
+      if (response.data.success) {
+        // Close modal and reset form
+        setShowPasswordModal(false);
+        setUserToChangePassword(null);
+        setPasswordData({
+          newPassword: "",
+          confirmPassword: "",
+        });
+        setError(null);
+        // Show success message (you could use a toast here)
+        alert(`Password changed successfully for ${userToChangePassword.name}`);
+      } else {
+        setError(response.data.message || "Failed to change password");
+      }
+    } catch (err) {
+      console.error("Error changing password:", err);
+      setError(err.response?.data?.message || "Failed to change password");
+    } finally {
+      setChangingPassword(false);
     }
   };
 
@@ -274,717 +381,905 @@ const UserRolePage = () => {
 
   return (
     <div className="space-y-6">
-        {/* Page Header */}
-        <div className="bg-linear-to-r from-blue-50 via-indigo-50 to-purple-50 border border-gray-200 rounded-lg shadow-sm p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
-                <FaUsers className="text-blue-600" />
-                User Role Management
-              </h1>
-              <p className="text-sm text-gray-600 mt-1">
-                Manage user roles and permissions
-              </p>
-            </div>
-            <button
-              onClick={() => setShowPermissionMatrix(!showPermissionMatrix)}
-              className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors shadow-sm"
-            >
-              {showPermissionMatrix ? "Hide" : "Show"} Permission Matrix
-            </button>
+      {/* Page Header */}
+      <div className="bg-linear-to-r from-blue-50 via-indigo-50 to-purple-50 border border-gray-200 rounded-lg shadow-sm p-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+              <FaUsers className="text-blue-600" />
+              User Role Management
+            </h1>
+            <p className="text-sm text-gray-600 mt-1">
+              Manage user roles and permissions
+            </p>
+          </div>
+          <button
+            onClick={() => setShowPermissionMatrix(!showPermissionMatrix)}
+            className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors shadow-sm"
+          >
+            {showPermissionMatrix ? "Hide" : "Show"} Permission Matrix
+          </button>
+        </div>
+      </div>
+
+      {/* Permission Matrix */}
+      {showPermissionMatrix && (
+        <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+          <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
+            <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+              <FaLock className="text-gray-600" />
+              Permission Matrix
+            </h2>
+            <p className="text-sm text-gray-600 mt-1">
+              Overview of permissions for each role
+            </p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                    Action
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                    Description
+                  </th>
+                  {roles.map((role) => (
+                    <th
+                      key={role.value}
+                      className="px-4 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider"
+                    >
+                      <div className="flex flex-col items-center gap-1">
+                        <role.icon className={`${role.colorClass} text-base`} />
+                        <span className="text-[10px]">{role.label}</span>
+                      </div>
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {permissionMatrix.map((item, index) => (
+                  <tr
+                    key={index}
+                    className="hover:bg-gray-50 transition-colors"
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">
+                        {item.action}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm text-gray-600">
+                        {item.description}
+                      </div>
+                    </td>
+                    {roles.map((role) => {
+                      const hasAccess = hasPermission(item.action, role.value);
+                      return (
+                        <td key={role.value} className="px-4 py-4 text-center">
+                          {hasAccess ? (
+                            <div className="flex justify-center">
+                              <div className="p-1.5 bg-green-100 rounded-full">
+                                <FaCheck className="text-green-600 text-xs" />
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="flex justify-center">
+                              <div className="p-1.5 bg-gray-100 rounded-full">
+                                <FaTimes className="text-gray-400 text-xs" />
+                              </div>
+                            </div>
+                          )}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
+      )}
 
-        {/* Permission Matrix */}
-        {showPermissionMatrix && (
-          <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
-            <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                <FaLock className="text-gray-600" />
-                Permission Matrix
-              </h2>
-              <p className="text-sm text-gray-600 mt-1">
-                Overview of permissions for each role
-              </p>
+      {/* Credentials Display Modal */}
+      {showCredentials && createdUser && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center px-4">
+          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6 max-w-md w-full">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">
+                User Created Successfully
+              </h3>
+              <button
+                onClick={() => {
+                  setShowCredentials(false);
+                  setCreatedUser(null);
+                }}
+                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <FaTimes className="text-sm" />
+              </button>
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      Action
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      Description
-                    </th>
-                    {roles.map((role) => (
-                      <th
-                        key={role.value}
-                        className="px-4 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider"
-                      >
-                        <div className="flex flex-col items-center gap-1">
-                          <role.icon
-                            className={`${role.colorClass} text-base`}
-                          />
-                          <span className="text-[10px]">{role.label}</span>
-                        </div>
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {permissionMatrix.map((item, index) => (
-                    <tr
-                      key={index}
-                      className="hover:bg-gray-50 transition-colors"
-                    >
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">
-                          {item.action}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="text-sm text-gray-600">
-                          {item.description}
-                        </div>
-                      </td>
-                      {roles.map((role) => {
-                        const hasAccess = hasPermission(
-                          item.action,
-                          role.value
-                        );
-                        return (
-                          <td
-                            key={role.value}
-                            className="px-4 py-4 text-center"
-                          >
-                            {hasAccess ? (
-                              <div className="flex justify-center">
-                                <div className="p-1.5 bg-green-100 rounded-full">
-                                  <FaCheck className="text-green-600 text-xs" />
-                                </div>
-                              </div>
-                            ) : (
-                              <div className="flex justify-center">
-                                <div className="p-1.5 bg-gray-100 rounded-full">
-                                  <FaTimes className="text-gray-400 text-xs" />
-                                </div>
-                              </div>
-                            )}
-                          </td>
-                        );
-                      })}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
 
-        {/* Credentials Display Modal */}
-        {showCredentials && createdUser && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center px-4">
-            <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6 max-w-md w-full">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">
-                  User Created Successfully
-                </h3>
+            <div className="space-y-4">
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <p className="text-sm font-medium text-yellow-800 mb-2">
+                  ⚠️ Please save these credentials. They will not be shown
+                  again.
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    Name
+                  </label>
+                  <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium text-gray-900">
+                    {createdUser.name}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    Email (User ID)
+                  </label>
+                  <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-mono text-gray-900">
+                    {createdUser.email}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    Password
+                  </label>
+                  <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-mono text-gray-900">
+                    {createdUser.password}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    Role
+                  </label>
+                  <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium text-gray-900">
+                    {roles.find((r) => r.value === createdUser.role)?.label ||
+                      createdUser.role}
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-gray-200">
                 <button
                   onClick={() => {
                     setShowCredentials(false);
                     setCreatedUser(null);
                   }}
-                  className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
                 >
-                  <FaTimes className="text-sm" />
+                  Close
                 </button>
-              </div>
-
-              <div className="space-y-4">
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                  <p className="text-sm font-medium text-yellow-800 mb-2">
-                    ⚠️ Please save these credentials. They will not be shown
-                    again.
-                  </p>
-                </div>
-
-                <div className="space-y-3">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">
-                      Name
-                    </label>
-                    <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium text-gray-900">
-                      {createdUser.name}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">
-                      Email (User ID)
-                    </label>
-                    <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-mono text-gray-900">
-                      {createdUser.email}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">
-                      Password
-                    </label>
-                    <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-mono text-gray-900">
-                      {createdUser.password}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">
-                      Role
-                    </label>
-                    <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium text-gray-900">
-                      {roles.find((r) => r.value === createdUser.role)?.label ||
-                        createdUser.role}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="pt-4 border-t border-gray-200">
-                  <button
-                    onClick={() => {
-                      setShowCredentials(false);
-                      setCreatedUser(null);
-                    }}
-                    className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
-                  >
-                    Close
-                  </button>
-                </div>
               </div>
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Delete Confirmation Modal */}
-        {showDeleteConfirm && userToDelete && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center px-4">
-            <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6 max-w-md w-full">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">
-                  Delete User
-                </h3>
-                <button
-                  onClick={() => {
-                    setShowDeleteConfirm(false);
-                    setUserToDelete(null);
-                  }}
-                  className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                >
-                  <FaTimes className="text-sm" />
-                </button>
-              </div>
-
-              <div className="space-y-4">
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                  <p className="text-sm font-medium text-red-800 mb-2">
-                    ⚠️ This action cannot be undone.
-                  </p>
-                </div>
-
-                <div className="space-y-3">
-                  <p className="text-sm text-gray-700">
-                    Are you sure you want to delete this user?
-                  </p>
-                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-2">
-                    <div>
-                      <span className="text-xs font-medium text-gray-600">
-                        Name:
-                      </span>
-                      <span className="ml-2 text-sm font-medium text-gray-900">
-                        {userToDelete.name}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-xs font-medium text-gray-600">
-                        Email:
-                      </span>
-                      <span className="ml-2 text-sm text-gray-900">
-                        {userToDelete.email}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-xs font-medium text-gray-600">
-                        Role:
-                      </span>
-                      <span className="ml-2 text-sm text-gray-900">
-                        {roles.find((r) => r.value === userToDelete.role)
-                          ?.label || userToDelete.role}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {error && (
-                  <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-                    {error}
-                  </div>
-                )}
-
-                <div className="pt-4 border-t border-gray-200 flex items-center justify-end gap-3">
-                  <button
-                    onClick={() => {
-                      setShowDeleteConfirm(false);
-                      setUserToDelete(null);
-                      setError(null);
-                    }}
-                    disabled={deleting}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Cancel
-                  </button>
-                  <PermissionButton
-                    action="delete"
-                    onClick={handleDeleteUser}
-                    disabled={!canManageUsers || deleting}
-                    className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                    title={getPermissionMessage("delete", currentRole)}
-                  >
-                    {deleting ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
-                        <span>Deleting...</span>
-                      </>
-                    ) : (
-                      <>
-                        <FaTrash className="text-sm" />
-                        <span>Delete User</span>
-                      </>
-                    )}
-                  </PermissionButton>
-                </div>
-              </div>
+      {/* Change Password Modal */}
+      {showPasswordModal && userToChangePassword && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center px-4">
+          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6 max-w-md w-full">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Change Password
+              </h3>
+              <button
+                onClick={() => {
+                  setShowPasswordModal(false);
+                  setUserToChangePassword(null);
+                  setPasswordData({
+                    newPassword: "",
+                    confirmPassword: "",
+                  });
+                  setError(null);
+                }}
+                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <FaTimes className="text-sm" />
+              </button>
             </div>
-          </div>
-        )}
 
-        {/* Create User Form */}
-        {showCreateForm && (
-          <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
-            <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                  <FaUserPlus className="text-blue-600" />
-                  Create New User
-                </h2>
-                <button
-                  onClick={() => {
-                    setShowCreateForm(false);
-                    setCreateFormData({
-                      name: "",
-                      email: "",
-                      password: "",
-                      confirmPassword: "",
-                      role: "viewer",
-                    });
-                    setError(null);
-                  }}
-                  className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                  title="Close"
-                >
-                  <FaTimes className="text-sm" />
-                </button>
+            <form onSubmit={handleChangePassword} className="space-y-4">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p className="text-sm font-medium text-blue-800 mb-2">
+                  Changing password for:{" "}
+                  <strong>{userToChangePassword.name}</strong>
+                </p>
+                <p className="text-xs text-blue-700">
+                  Email: {userToChangePassword.email}
+                </p>
               </div>
-            </div>
-            <form onSubmit={handleCreateUser} className="p-6 space-y-4">
+
               {error && (
                 <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
                   {error}
                 </div>
               )}
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Name */}
-                <div>
-                  <label
-                    htmlFor="create-name"
-                    className="block text-sm font-medium text-gray-700 mb-2"
-                  >
-                    Full Name
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <FaUsers className="text-gray-400 text-sm" />
-                    </div>
-                    <input
-                      type="text"
-                      id="create-name"
-                      name="name"
-                      value={createFormData.name}
-                      onChange={handleCreateFormChange}
-                      required
-                      className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                      placeholder="John Doe"
-                    />
+              <div>
+                <label
+                  htmlFor="new-password"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  New Password
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <FaKey className="text-gray-400 text-sm" />
                   </div>
-                </div>
-
-                {/* Email */}
-                <div>
-                  <label
-                    htmlFor="create-email"
-                    className="block text-sm font-medium text-gray-700 mb-2"
-                  >
-                    Email Address
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <FaEnvelope className="text-gray-400 text-sm" />
-                    </div>
-                    <input
-                      type="email"
-                      id="create-email"
-                      name="email"
-                      value={createFormData.email}
-                      onChange={handleCreateFormChange}
-                      required
-                      className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                      placeholder="user@example.com"
-                    />
-                  </div>
-                </div>
-
-                {/* Password */}
-                <div>
-                  <label
-                    htmlFor="create-password"
-                    className="block text-sm font-medium text-gray-700 mb-2"
-                  >
-                    Password
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <FaKey className="text-gray-400 text-sm" />
-                    </div>
-                    <input
-                      type="password"
-                      id="create-password"
-                      name="password"
-                      value={createFormData.password}
-                      onChange={handleCreateFormChange}
-                      required
-                      minLength={6}
-                      className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                      placeholder="At least 6 characters"
-                    />
-                  </div>
-                </div>
-
-                {/* Confirm Password */}
-                <div>
-                  <label
-                    htmlFor="create-confirm-password"
-                    className="block text-sm font-medium text-gray-700 mb-2"
-                  >
-                    Confirm Password
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <FaKey className="text-gray-400 text-sm" />
-                    </div>
-                    <input
-                      type="password"
-                      id="create-confirm-password"
-                      name="confirmPassword"
-                      value={createFormData.confirmPassword}
-                      onChange={handleCreateFormChange}
-                      required
-                      minLength={6}
-                      className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                      placeholder="Confirm password"
-                    />
-                  </div>
-                </div>
-
-                {/* Role */}
-                <div>
-                  <label
-                    htmlFor="create-role"
-                    className="block text-sm font-medium text-gray-700 mb-2"
-                  >
-                    Role
-                  </label>
-                  <select
-                    id="create-role"
-                    name="role"
-                    value={createFormData.role}
-                    onChange={handleCreateFormChange}
+                  <input
+                    type="password"
+                    id="new-password"
+                    value={passwordData.newPassword}
+                    onChange={(e) =>
+                      setPasswordData({
+                        ...passwordData,
+                        newPassword: e.target.value,
+                      })
+                    }
                     required
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                  >
-                    {roles.map((role) => (
-                      <option key={role.value} value={role.value}>
-                        {role.label}
-                      </option>
-                    ))}
-                  </select>
+                    minLength={6}
+                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                    placeholder="At least 6 characters"
+                  />
                 </div>
               </div>
 
-              {/* Submit Button */}
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
+              <div>
+                <label
+                  htmlFor="confirm-password"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  Confirm Password
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <FaKey className="text-gray-400 text-sm" />
+                  </div>
+                  <input
+                    type="password"
+                    id="confirm-password"
+                    value={passwordData.confirmPassword}
+                    onChange={(e) =>
+                      setPasswordData({
+                        ...passwordData,
+                        confirmPassword: e.target.value,
+                      })
+                    }
+                    required
+                    minLength={6}
+                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                    placeholder="Confirm password"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-gray-200 flex items-center justify-end gap-3">
                 <button
                   type="button"
                   onClick={() => {
-                    setShowCreateForm(false);
-                    setCreateFormData({
-                      name: "",
-                      email: "",
-                      password: "",
+                    setShowPasswordModal(false);
+                    setUserToChangePassword(null);
+                    setPasswordData({
+                      newPassword: "",
                       confirmPassword: "",
-                      role: "viewer",
                     });
                     setError(null);
                   }}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                  disabled={changingPassword}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Cancel
                 </button>
-                <button
+                <PermissionButton
+                  action="edit"
                   type="submit"
-                  disabled={creating}
-                  className="px-4 py-2 text-sm font-medium text-white bg-[#0056FF] rounded-lg hover:bg-[#0044CC] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  disabled={!canManageUsers || changingPassword}
+                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  title={getPermissionMessage("edit", currentRole)}
                 >
-                  {creating ? (
+                  {changingPassword ? (
                     <>
                       <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
-                      <span>Creating...</span>
+                      <span>Changing...</span>
                     </>
                   ) : (
                     <>
-                      <FaUserPlus className="text-sm" />
-                      <span>Create User</span>
+                      <FaKey className="text-sm" />
+                      <span>Change Password</span>
                     </>
                   )}
-                </button>
+                </PermissionButton>
               </div>
             </form>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Users List */}
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && userToDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center px-4">
+          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6 max-w-md w-full">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Delete User
+              </h3>
+              <button
+                onClick={() => {
+                  setShowDeleteConfirm(false);
+                  setUserToDelete(null);
+                }}
+                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <FaTimes className="text-sm" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <p className="text-sm font-medium text-red-800 mb-2">
+                  ⚠️ This action cannot be undone.
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                <p className="text-sm text-gray-700">
+                  Are you sure you want to delete this user?
+                </p>
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-2">
+                  <div>
+                    <span className="text-xs font-medium text-gray-600">
+                      Name:
+                    </span>
+                    <span className="ml-2 text-sm font-medium text-gray-900">
+                      {userToDelete.name}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-xs font-medium text-gray-600">
+                      Email:
+                    </span>
+                    <span className="ml-2 text-sm text-gray-900">
+                      {userToDelete.email}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-xs font-medium text-gray-600">
+                      Role:
+                    </span>
+                    <span className="ml-2 text-sm text-gray-900">
+                      {roles.find((r) => r.value === userToDelete.role)
+                        ?.label || userToDelete.role}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                  {error}
+                </div>
+              )}
+
+              <div className="pt-4 border-t border-gray-200 flex items-center justify-end gap-3">
+                <button
+                  onClick={() => {
+                    setShowDeleteConfirm(false);
+                    setUserToDelete(null);
+                    setError(null);
+                  }}
+                  disabled={deleting}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Cancel
+                </button>
+                <PermissionButton
+                  action="delete"
+                  onClick={handleDeleteUser}
+                  disabled={!canManageUsers || deleting}
+                  className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  title={getPermissionMessage("delete", currentRole)}
+                >
+                  {deleting ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                      <span>Deleting...</span>
+                    </>
+                  ) : (
+                    <>
+                      <FaTrash className="text-sm" />
+                      <span>Delete User</span>
+                    </>
+                  )}
+                </PermissionButton>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create User Form */}
+      {showCreateForm && (
         <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
           <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
             <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                  <FaUsers className="text-gray-600" />
-                  Users ({users.length})
-                </h2>
-                <p className="text-sm text-gray-600 mt-1">
-                  Manage user roles and permissions
-                </p>
-              </div>
-              <PermissionButton
-                action="create"
-                onClick={() => setShowCreateForm(!showCreateForm)}
-                className="px-4 py-2 bg-[#0056FF] text-white rounded-lg text-sm font-medium hover:bg-[#0044CC] transition-colors shadow-sm flex items-center gap-2"
-                title={getPermissionMessage("create", currentRole)}
-                disabled={!canManageUsers}
+              <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <FaUserPlus className="text-blue-600" />
+                Create New User
+              </h2>
+              <button
+                onClick={() => {
+                  setShowCreateForm(false);
+                  setCreateFormData({
+                    name: "",
+                    email: "",
+                    password: "",
+                    confirmPassword: "",
+                    role: "viewer",
+                  });
+                  setError(null);
+                }}
+                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                title="Close"
               >
-                <FaUserPlus className="text-sm" />
-                {showCreateForm ? "Cancel" : "Create User"}
-              </PermissionButton>
+                <FaTimes className="text-sm" />
+              </button>
             </div>
           </div>
+          <form onSubmit={handleCreateUser} className="p-6 space-y-4">
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                {error}
+              </div>
+            )}
 
-          {loading ? (
-            <div className="p-12 text-center">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-600 border-t-transparent"></div>
-              <p className="text-sm text-gray-600 mt-4">Loading users...</p>
-            </div>
-          ) : error ? (
-            <div className="p-12 text-center">
-              <p className="text-sm text-red-600">{error}</p>
-            </div>
-          ) : users.length === 0 ? (
-            <div className="p-12 text-center">
-              <FaUsers className="text-gray-400 text-4xl mx-auto mb-4" />
-              <p className="text-sm text-gray-600">No users found</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      User
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      Email
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      Role
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      Created
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {users.map((user) => {
-                    const roleInfo = getRoleInfo(user.role);
-                    const RoleIcon = roleInfo.icon;
-                    const isEditing = editingUser === user._id;
-
-                    return (
-                      <tr
-                        key={user._id}
-                        className="hover:bg-gray-50 transition-colors"
-                      >
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">
-                            {user.name}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-600">
-                            {user.email}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {isEditing ? (
-                            <select
-                              value={selectedRole || user.role}
-                              onChange={(e) => setSelectedRole(e.target.value)}
-                              className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            >
-                              {roles.map((role) => (
-                                <option key={role.value} value={role.value}>
-                                  {role.label}
-                                </option>
-                              ))}
-                            </select>
-                          ) : (
-                            <div className="flex items-center gap-2">
-                              <RoleIcon
-                                className={`${roleInfo.colorClass} text-base`}
-                              />
-                              <span className="text-sm font-medium text-gray-900">
-                                {roleInfo.label}
-                              </span>
-                            </div>
-                          )}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-600">
-                            {new Date(user.createdAt).toLocaleDateString()}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          {isEditing ? (
-                            <div className="flex items-center justify-end gap-2">
-                              <PermissionButton
-                                action="edit"
-                                onClick={() => {
-                                  handleRoleUpdate(
-                                    user._id,
-                                    selectedRole || user.role
-                                  );
-                                }}
-                                className="p-2 bg-green-50 text-green-600 rounded-lg transition-colors hover:bg-green-100"
-                                title={getPermissionMessage("edit", currentRole)}
-                                disabled={!canManageUsers}
-                              >
-                                <FaCheck className="text-sm" />
-                              </PermissionButton>
-                              <button
-                                onClick={() => {
-                                  setEditingUser(null);
-                                  setSelectedRole("");
-                                }}
-                                className="p-2 bg-gray-50 text-gray-600 rounded-lg transition-colors hover:bg-gray-100"
-                                title="Cancel"
-                              >
-                                <FaTimes className="text-sm" />
-                              </button>
-                            </div>
-                          ) : (
-                            <div className="flex items-center justify-end gap-2">
-                              <PermissionButton
-                                action="edit"
-                                onClick={() => {
-                                  setEditingUser(user._id);
-                                  setSelectedRole(user.role);
-                                }}
-                                className="p-2 bg-blue-50 text-blue-600 rounded-lg transition-colors hover:bg-blue-100"
-                                title={getPermissionMessage("edit", currentRole)}
-                                disabled={!canManageUsers}
-                              >
-                                <FaEdit className="text-sm" />
-                              </PermissionButton>
-                              <PermissionButton
-                                action="delete"
-                                onClick={() => {
-                                  setUserToDelete(user);
-                                  setShowDeleteConfirm(true);
-                                }}
-                                className="p-2 bg-red-50 text-red-600 rounded-lg transition-colors hover:bg-red-100"
-                                title={getPermissionMessage("delete", currentRole)}
-                                disabled={!canManageUsers}
-                              >
-                                <FaTrash className="text-sm" />
-                              </PermissionButton>
-                            </div>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-
-        {/* Role Descriptions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {roles.map((role) => {
-            const RoleIcon = role.icon;
-            const permissions = permissionMatrix.filter((p) =>
-              p.roles.includes(role.value)
-            );
-
-            return (
-              <div
-                key={role.value}
-                className="bg-white border border-gray-200 rounded-lg shadow-sm p-5 hover:shadow-md transition-shadow"
-              >
-                <div className="flex items-center gap-3 mb-3">
-                  <div className={`p-2 ${role.bgClass} rounded-lg`}>
-                    <RoleIcon className={`${role.colorClass} text-lg`} />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Name */}
+              <div>
+                <label
+                  htmlFor="create-name"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  Full Name
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <FaUsers className="text-gray-400 text-sm" />
                   </div>
-                  <h3 className="text-base font-semibold text-gray-900">
-                    {role.label}
-                  </h3>
-                </div>
-                <div className="space-y-2">
-                  {permissions.map((perm, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center gap-2 text-sm text-gray-600"
-                    >
-                      <FaCheck className="text-green-600 text-xs" />
-                      <span>{perm.action}</span>
-                    </div>
-                  ))}
+                  <input
+                    type="text"
+                    id="create-name"
+                    name="name"
+                    value={createFormData.name}
+                    onChange={handleCreateFormChange}
+                    required
+                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                    placeholder="John Doe"
+                  />
                 </div>
               </div>
-            );
-          })}
+
+              {/* Email */}
+              <div>
+                <label
+                  htmlFor="create-email"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  Email Address
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <FaEnvelope className="text-gray-400 text-sm" />
+                  </div>
+                  <input
+                    type="email"
+                    id="create-email"
+                    name="email"
+                    value={createFormData.email}
+                    onChange={handleCreateFormChange}
+                    required
+                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                    placeholder="user@example.com"
+                  />
+                </div>
+              </div>
+
+              {/* Password */}
+              <div>
+                <label
+                  htmlFor="create-password"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  Password
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <FaKey className="text-gray-400 text-sm" />
+                  </div>
+                  <input
+                    type="password"
+                    id="create-password"
+                    name="password"
+                    value={createFormData.password}
+                    onChange={handleCreateFormChange}
+                    required
+                    minLength={6}
+                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                    placeholder="At least 6 characters"
+                  />
+                </div>
+              </div>
+
+              {/* Confirm Password */}
+              <div>
+                <label
+                  htmlFor="create-confirm-password"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  Confirm Password
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <FaKey className="text-gray-400 text-sm" />
+                  </div>
+                  <input
+                    type="password"
+                    id="create-confirm-password"
+                    name="confirmPassword"
+                    value={createFormData.confirmPassword}
+                    onChange={handleCreateFormChange}
+                    required
+                    minLength={6}
+                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                    placeholder="Confirm password"
+                  />
+                </div>
+              </div>
+
+              {/* Role */}
+              <div>
+                <label
+                  htmlFor="create-role"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  Role
+                </label>
+                <select
+                  id="create-role"
+                  name="role"
+                  value={createFormData.role}
+                  onChange={handleCreateFormChange}
+                  required
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                >
+                  {roles.map((role) => (
+                    <option key={role.value} value={role.value}>
+                      {role.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Submit Button */}
+            <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowCreateForm(false);
+                  setCreateFormData({
+                    name: "",
+                    email: "",
+                    password: "",
+                    confirmPassword: "",
+                    role: "viewer",
+                  });
+                  setError(null);
+                }}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={creating}
+                className="px-4 py-2 text-sm font-medium text-white bg-[#0056FF] rounded-lg hover:bg-[#0044CC] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {creating ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                    <span>Creating...</span>
+                  </>
+                ) : (
+                  <>
+                    <FaUserPlus className="text-sm" />
+                    <span>Create User</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
         </div>
+      )}
+
+      {/* Users List */}
+      <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+        <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <FaUsers className="text-gray-600" />
+                Users ({users.length})
+              </h2>
+              <p className="text-sm text-gray-600 mt-1">
+                Manage user roles and permissions
+              </p>
+            </div>
+            <PermissionButton
+              action="create"
+              onClick={() => setShowCreateForm(!showCreateForm)}
+              className="px-4 py-2 bg-[#0056FF] text-white rounded-lg text-sm font-medium hover:bg-[#0044CC] transition-colors shadow-sm flex items-center gap-2"
+              title={getPermissionMessage("create", currentRole)}
+              disabled={!canManageUsers}
+            >
+              <FaUserPlus className="text-sm" />
+              {showCreateForm ? "Cancel" : "Create User"}
+            </PermissionButton>
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="p-12 text-center">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-600 border-t-transparent"></div>
+            <p className="text-sm text-gray-600 mt-4">Loading users...</p>
+          </div>
+        ) : error ? (
+          <div className="p-12 text-center">
+            <p className="text-sm text-red-600">{error}</p>
+          </div>
+        ) : users.length === 0 ? (
+          <div className="p-12 text-center">
+            <FaUsers className="text-gray-400 text-4xl mx-auto mb-4" />
+            <p className="text-sm text-gray-600">No users found</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                    User
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                    Email
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                    Role
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                    Created
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {users.map((user) => {
+                  const roleInfo = getRoleInfo(user.role);
+                  const RoleIcon = roleInfo.icon;
+                  const isEditing = editingUser === user._id;
+
+                  return (
+                    <tr
+                      key={user._id}
+                      className={`hover:bg-gray-50 transition-colors ${
+                        user.status === "inactive" ? "opacity-60" : ""
+                      }`}
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div
+                          className={`text-sm font-medium ${
+                            user.status === "inactive"
+                              ? "text-gray-500 line-through"
+                              : "text-gray-900"
+                          }`}
+                        >
+                          {user.name}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-600">
+                          {user.email}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {isEditing ? (
+                          <select
+                            value={selectedRole || user.role}
+                            onChange={(e) => setSelectedRole(e.target.value)}
+                            className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          >
+                            {roles.map((role) => (
+                              <option key={role.value} value={role.value}>
+                                {role.label}
+                              </option>
+                            ))}
+                          </select>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <RoleIcon
+                              className={`${roleInfo.colorClass} text-base`}
+                            />
+                            <span className="text-sm font-medium text-gray-900">
+                              {roleInfo.label}
+                            </span>
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            user.status === "active"
+                              ? "bg-green-100 text-green-800"
+                              : "bg-red-100 text-red-800"
+                          }`}
+                        >
+                          {user.status === "active" ? "Active" : "Inactive"}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-600">
+                          {new Date(user.createdAt).toLocaleDateString()}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        {isEditing ? (
+                          <div className="flex items-center justify-end gap-2">
+                            <PermissionButton
+                              action="edit"
+                              onClick={() => {
+                                handleRoleUpdate(
+                                  user._id,
+                                  selectedRole || user.role
+                                );
+                              }}
+                              className="p-2 bg-green-50 text-green-600 rounded-lg transition-colors hover:bg-green-100"
+                              title={getPermissionMessage("edit", currentRole)}
+                              disabled={!canManageUsers}
+                            >
+                              <FaCheck className="text-sm" />
+                            </PermissionButton>
+                            <button
+                              onClick={() => {
+                                setEditingUser(null);
+                                setSelectedRole("");
+                              }}
+                              className="p-2 bg-gray-50 text-gray-600 rounded-lg transition-colors hover:bg-gray-100"
+                              title="Cancel"
+                            >
+                              <FaTimes className="text-sm" />
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-end gap-2">
+                            <PermissionButton
+                              action="edit"
+                              onClick={() => {
+                                setEditingUser(user._id);
+                                setSelectedRole(user.role);
+                              }}
+                              className="p-2 bg-blue-50 text-blue-600 rounded-lg transition-colors hover:bg-blue-100"
+                              title={getPermissionMessage("edit", currentRole)}
+                              disabled={!canManageUsers}
+                            >
+                              <FaEdit className="text-sm" />
+                            </PermissionButton>
+                            <PermissionButton
+                              action="edit"
+                              onClick={() => {
+                                setUserToChangePassword(user);
+                                setShowPasswordModal(true);
+                                setPasswordData({
+                                  newPassword: "",
+                                  confirmPassword: "",
+                                });
+                                setError(null);
+                              }}
+                              disabled={!canManageUsers}
+                              className="p-2 bg-purple-50 text-purple-600 rounded-lg transition-colors hover:bg-purple-100"
+                              title="Change Password"
+                            >
+                              <FaKey className="text-sm" />
+                            </PermissionButton>
+                            <PermissionButton
+                              action="edit"
+                              onClick={() => handleToggleStatus(user)}
+                              disabled={!canManageUsers || togglingStatus}
+                              className="p-2 bg-orange-50 text-orange-600 rounded-lg transition-colors hover:bg-orange-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                              title={
+                                user.status === "active"
+                                  ? "Deactivate User"
+                                  : "Activate User"
+                              }
+                            >
+                              <FaPowerOff className="text-sm" />
+                            </PermissionButton>
+                            <PermissionButton
+                              action="delete"
+                              onClick={() => {
+                                setUserToDelete(user);
+                                setShowDeleteConfirm(true);
+                              }}
+                              className="p-2 bg-red-50 text-red-600 rounded-lg transition-colors hover:bg-red-100"
+                              title={getPermissionMessage(
+                                "delete",
+                                currentRole
+                              )}
+                              disabled={!canManageUsers}
+                            >
+                              <FaTrash className="text-sm" />
+                            </PermissionButton>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
+
+      {/* Role Descriptions */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {roles.map((role) => {
+          const RoleIcon = role.icon;
+          const permissions = permissionMatrix.filter((p) =>
+            p.roles.includes(role.value)
+          );
+
+          return (
+            <div
+              key={role.value}
+              className="bg-white border border-gray-200 rounded-lg shadow-sm p-5 hover:shadow-md transition-shadow"
+            >
+              <div className="flex items-center gap-3 mb-3">
+                <div className={`p-2 ${role.bgClass} rounded-lg`}>
+                  <RoleIcon className={`${role.colorClass} text-lg`} />
+                </div>
+                <h3 className="text-base font-semibold text-gray-900">
+                  {role.label}
+                </h3>
+              </div>
+              <div className="space-y-2">
+                {permissions.map((perm, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center gap-2 text-sm text-gray-600"
+                  >
+                    <FaCheck className="text-green-600 text-xs" />
+                    <span>{perm.action}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 };
 
