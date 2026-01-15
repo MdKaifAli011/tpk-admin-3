@@ -17,7 +17,7 @@ const WhatsAppFloatButton = () => {
       href={whatsappUrl}
       target="_blank"
       rel="noopener noreferrer"
-      className="fixed bottom-6 right-6 z-[100] group"
+      className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-[90] group"
       aria-label="Contact us on WhatsApp"
     >
       <div className="relative">

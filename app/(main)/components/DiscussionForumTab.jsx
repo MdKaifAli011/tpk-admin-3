@@ -292,7 +292,7 @@ const SuccessModal = ({ isOpen, onClose, title, message }) => {
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -1383,9 +1383,10 @@ const DiscussionForumTab = ({ entityName, entityType, examId, examSlug, subjectI
   };
 
   return (
-    <div className="space-y-6 px-3 sm:px-4 py-3 sm:py-4">
-      {/* SEO Metadata Updater for Thread Details */}
-      {view === "DETAIL" && <DiscussionMetadata entityData={entityData} />}
+    <div className="relative w-full min-h-0 overflow-x-hidden">
+      <div className="space-y-6 px-3 sm:px-4 py-3 sm:py-4 pb-20 sm:pb-24">
+        {/* SEO Metadata Updater for Thread Details */}
+        {view === "DETAIL" && <DiscussionMetadata entityData={entityData} />}
 
       {/* Header Section */}
       {view === "LIST" && (
@@ -1522,31 +1523,33 @@ const DiscussionForumTab = ({ entityName, entityType, examId, examSlug, subjectI
         view === "LIST" && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
             {/* Communities Banner */}
-            <Card variant="gradient" className="p-4 sm:p-5 border-indigo-100">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div className="max-w-xl">
-                  <h3 className="text-lg font-bold text-gray-900 mb-1 tracking-tight">
+            <Card variant="gradient" className="p-3 sm:p-4 md:p-5 border-indigo-100 relative overflow-hidden">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4 relative z-0">
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-1 sm:mb-1.5 tracking-tight">
                     Welcome to the Hub
                   </h3>
-                  <p className="text-xs text-gray-600 font-medium">
+                  <p className="text-[11px] sm:text-xs text-gray-600 font-medium leading-relaxed">
                     Engage with a community of over 120+ active students. Get instant help and share your learning journey.
                   </p>
-
                 </div>
-                <div className="flex items-center gap-3 bg-white/80 p-2.5 rounded-lg border border-white shadow-sm self-start md:self-auto">
-                  <div className="flex -space-x-2">
-                    {[1, 2, 3].map(i => (
-                      <div key={i} className={`w-7 h-7 rounded-full border-2 border-white shadow-sm flex items-center justify-center overflow-hidden bg-gray-100 z-${i * 10}`}>
-                        <img src={`https://i.pravatar.cc/100?u=${i + 20}`} alt="user" className="w-full h-full object-cover" />
-                      </div>
-                    ))}
-                    <div className="w-7 h-7 rounded-full border-2 border-white bg-blue-600 flex items-center justify-center text-[9px] font-bold text-white z-30 shadow-md">
+                <div className="flex items-center gap-2 sm:gap-3 bg-white/80 p-2 sm:p-2.5 rounded-lg border border-white shadow-sm self-start md:self-auto relative z-0">
+                  <div className="flex -space-x-2 relative">
+                    {[1, 2, 3].map(i => {
+                      const zIndexClass = i === 1 ? 'z-[1]' : i === 2 ? 'z-[2]' : 'z-[3]';
+                      return (
+                        <div key={i} className={`w-6 h-6 sm:w-7 sm:h-7 rounded-full border-2 border-white shadow-sm flex items-center justify-center overflow-hidden bg-gray-100 ${zIndexClass} relative`}>
+                          <img src={`https://i.pravatar.cc/100?u=${i + 20}`} alt="user" className="w-full h-full object-cover" />
+                        </div>
+                      );
+                    })}
+                    <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full border-2 border-white bg-blue-600 flex items-center justify-center text-[8px] sm:text-[9px] font-bold text-white z-[4] shadow-md relative">
                       +124
                     </div>
                   </div>
-                  <div className="flex flex-col">
-                    <span className="text-[9px] font-bold text-gray-900 uppercase tracking-wider leading-none mb-0.5">Active Now</span>
-                    <span className="text-[8px] text-emerald-500 font-bold uppercase tracking-wider flex items-center gap-1">
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-[8px] xs:text-[9px] font-bold text-gray-900 uppercase tracking-wider leading-none mb-0.5 whitespace-nowrap">Active Now</span>
+                    <span className="text-[7px] xs:text-[8px] text-emerald-500 font-bold uppercase tracking-wider flex items-center gap-1 whitespace-nowrap">
                       <span className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse"></span> Discussion Hub
                     </span>
                   </div>
@@ -1556,12 +1559,12 @@ const DiscussionForumTab = ({ entityName, entityType, examId, examSlug, subjectI
 
             {/* Search & Filters */}
             <div className="py-2">
-              <div className="flex flex-col lg:flex-row gap-4 items-center">
+              <div className="flex flex-col lg:flex-row gap-3 sm:gap-4 items-stretch lg:items-center">
                 <div className="relative flex-1 w-full group">
-                  <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-500 transition-colors" size={14} />
+                  <FaSearch className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-500 transition-colors" size={12} />
                   <input
                     type="text" placeholder="Search discussions, topics, or peers..."
-                    className="w-full pl-11 pr-5 py-3 rounded-lg border border-gray-200 bg-white text-sm font-semibold text-gray-800 placeholder-gray-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-50 transition-all outline-none shadow-sm"
+                    className="w-full pl-9 sm:pl-11 pr-3 sm:pr-5 py-2.5 sm:py-3 rounded-lg border border-gray-200 bg-white text-xs sm:text-sm font-semibold text-gray-800 placeholder-gray-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-50 transition-all outline-none shadow-sm"
                     defaultValue={search}
                     onChange={(e) => {
                       if (threadSearchTimeout.current) clearTimeout(threadSearchTimeout.current);
@@ -1573,19 +1576,19 @@ const DiscussionForumTab = ({ entityName, entityType, examId, examSlug, subjectI
                   />
                 </div>
 
-                <div className="flex items-center gap-3 w-full lg:w-auto">
-                  <div className="flex items-center bg-gray-100 p-1 rounded-lg border border-gray-200">
+                <div className="flex items-center gap-2 sm:gap-3 w-full lg:w-auto flex-wrap">
+                  <div className="flex items-center bg-gray-100 p-0.5 sm:p-1 rounded-lg border border-gray-200 flex-1 lg:flex-none min-w-0">
                     {["All", "New", "Hot"].map(t => (
                       <button key={t} onClick={() => { setFilter(t); setListPage(1); }}
-                        className={`px-4 py-1.5 rounded-md text-xs font-bold flex items-center gap-1.5 transition-all ${filter === t ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-900"}`}>
-                        {t === "Hot" && <FaFire className="text-orange-500" />} {t}
+                        className={`flex-1 lg:flex-none px-2 sm:px-4 py-1.5 rounded-md text-[10px] xs:text-xs font-bold flex items-center justify-center gap-1 sm:gap-1.5 transition-all ${filter === t ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-900"}`}>
+                        {t === "Hot" && <FaFire className="text-orange-500" size={10} />} {t}
                       </button>
                     ))}
                   </div>
 
-                  <div className="relative shrink-0">
+                  <div className="relative shrink-0 flex-1 lg:flex-none min-w-[140px]">
                     <select
-                      className="appearance-none bg-white border border-gray-200 rounded-lg px-4 py-2 text-xs font-bold text-gray-700 outline-none focus:border-blue-500 transition shadow-sm cursor-pointer pr-10"
+                      className="w-full appearance-none bg-white border border-gray-200 rounded-lg px-3 sm:px-4 py-2 text-[10px] xs:text-xs font-bold text-gray-700 outline-none focus:border-blue-500 transition shadow-sm cursor-pointer pr-8 sm:pr-10"
                       value={selectedTag}
                       onChange={(e) => { setSelectedTag(e.target.value); setListPage(1); }}
                     >
@@ -1593,16 +1596,16 @@ const DiscussionForumTab = ({ entityName, entityType, examId, examSlug, subjectI
                         <option key={tag} value={tag}>{tag}</option>
                       ))}
                     </select>
-                    <FaFilter className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300 pointer-events-none" size={10} />
+                    <FaFilter className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 text-gray-300 pointer-events-none" size={9} />
                   </div>
 
                   <Button
                     variant="primary"
                     size="md"
                     onClick={handleStartCreate}
-                    className="flex items-center gap-2 shrink-0 py-[10px]"
+                    className="flex items-center justify-center gap-1.5 sm:gap-2 shrink-0 py-2 sm:py-[10px] px-3 sm:px-4 text-xs sm:text-sm w-full lg:w-auto"
                   >
-                    <FaPlus size={12} /> Start Post
+                    <FaPlus size={10} /> <span className="whitespace-nowrap">Start Post</span>
                   </Button>
                 </div>
               </div>
@@ -1702,28 +1705,29 @@ const DiscussionForumTab = ({ entityName, entityType, examId, examSlug, subjectI
         )
       }
 
-      <SuccessModal
-        isOpen={showSuccessModal}
-        onClose={() => setShowSuccessModal(false)}
-        title={successContent.title}
-        message={successContent.message}
-      />
+        <SuccessModal
+          isOpen={showSuccessModal}
+          onClose={() => setShowSuccessModal(false)}
+          title={successContent.title}
+          message={successContent.message}
+        />
 
-      <DiscussionFormModal
-        isOpen={showAuthModal}
-        onClose={() => {
-          setShowAuthModal(false);
-          setPendingAction(null);
-        }}
-        onSuccess={() => {
-          if (pendingAction?.onSuccess) {
-            pendingAction.onSuccess();
-          }
-          setShowAuthModal(false);
-          setPendingAction(null);
-        }}
-        formId={pendingAction?.formId || "Discussion-forum-post"}
-      />
+        <DiscussionFormModal
+          isOpen={showAuthModal}
+          onClose={() => {
+            setShowAuthModal(false);
+            setPendingAction(null);
+          }}
+          onSuccess={() => {
+            if (pendingAction?.onSuccess) {
+              pendingAction.onSuccess();
+            }
+            setShowAuthModal(false);
+            setPendingAction(null);
+          }}
+          formId={pendingAction?.formId || "Discussion-forum-post"}
+        />
+      </div>
     </div>
   );
 };
