@@ -48,12 +48,22 @@ const SubjectManagement = () => {
       setIsDataLoading(true);
       setError(null);
       // Fetch all subjects (active and inactive) to show correct status
-      const response = await api.get("/subject?status=all");
+      // Use a high limit to get all subjects at once (or use pagination if needed)
+      const response = await api.get("/subject?status=all&limit=1000");
 
       if (response.data?.success) {
-        setSubjects(response.data.data || []);
+        const fetchedSubjects = response.data.data || [];
+        // Ensure we have an array
+        if (Array.isArray(fetchedSubjects)) {
+          setSubjects(fetchedSubjects);
+        } else {
+          console.error("❌ Invalid subjects data format:", fetchedSubjects);
+          setError("Invalid data format received from server");
+          setSubjects([]);
+        }
       } else {
         setError(response.data?.message || "Failed to fetch subjects");
+        setSubjects([]);
       }
     } catch (err) {
       console.error("❌ Error fetching subjects:", err);

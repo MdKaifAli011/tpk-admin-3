@@ -33,18 +33,39 @@ const SubjectTable = ({ subjects, onEdit, onDelete, onToggleStatus }) => {
     if (!subjects || subjects.length === 0) {
       return [];
     }
+
     const groups = {};
     subjects.forEach((subject) => {
-      const examId = subject.examId?._id || subject.examId || "unassigned";
-      const examName = subject.examId?.name || "Unassigned";
-      if (!groups[examId]) {
-        groups[examId] = {
-          examId,
+      // Handle different examId formats:
+      // 1. Populated object: { _id: "...", name: "..." }
+      // 2. ObjectId string: "..."
+      // 3. Null/undefined: unassigned
+      let examId = "unassigned";
+      let examName = "Unassigned";
+
+      if (subject.examId) {
+        if (typeof subject.examId === "object" && subject.examId !== null) {
+          // Populated object
+          examId = subject.examId._id?.toString() || subject.examId.id?.toString() || "unassigned";
+          examName = subject.examId.name || "Unassigned";
+        } else if (typeof subject.examId === "string") {
+          // ObjectId string
+          examId = subject.examId;
+          examName = "Unassigned";
+        }
+      }
+
+      // Use examId as key (convert to string for consistency)
+      const groupKey = String(examId);
+
+      if (!groups[groupKey]) {
+        groups[groupKey] = {
+          examId: groupKey,
           examName,
           subjects: [],
         };
       }
-      groups[examId].subjects.push(subject);
+      groups[groupKey].subjects.push(subject);
     });
 
     // Sort groups alphabetically by exam name
@@ -116,16 +137,14 @@ const SubjectTable = ({ subjects, onEdit, onDelete, onToggleStatus }) => {
                 {group.subjects.map((subject, index) => (
                   <tr
                     key={subject._id || subject.id || index}
-                    className={`hover:bg-gray-50 transition-colors ${
-                      subject.status === "inactive" ? "opacity-60" : ""
-                    }`}
+                    className={`hover:bg-gray-50 transition-colors ${subject.status === "inactive" ? "opacity-60" : ""
+                      }`}
                   >
                     <td
-                      className={`px-2 py-1 whitespace-nowrap text-sm font-medium cursor-pointer hover:text-blue-600 transition-colors ${
-                        subject.status === "inactive"
+                      className={`px-2 py-1 whitespace-nowrap text-sm font-medium cursor-pointer hover:text-blue-600 transition-colors ${subject.status === "inactive"
                           ? "text-gray-500 line-through"
                           : "text-gray-900"
-                      }`}
+                        }`}
                       onClick={() => handleSubjectClick(subject)}
                       title={subject.name}
                     >
@@ -133,11 +152,10 @@ const SubjectTable = ({ subjects, onEdit, onDelete, onToggleStatus }) => {
                     </td>
                     <td className="px-2 py-1 whitespace-nowrap w-40">
                       <span
-                        className={`text-sm ${
-                          subject.contentInfo?.hasContent
+                        className={`text-sm ${subject.contentInfo?.hasContent
                             ? "text-gray-700"
                             : "text-gray-400 italic"
-                        }`}
+                          }`}
                       >
                         {formatContentDate(subject.contentInfo)}
                       </span>
@@ -234,9 +252,8 @@ const SubjectTable = ({ subjects, onEdit, onDelete, onToggleStatus }) => {
             {group.subjects.map((subject, index) => (
               <div
                 key={subject._id || subject.id || index}
-                className={`p-1.5 hover:bg-gray-50 transition-colors ${
-                  subject.status === "inactive" ? "opacity-60" : ""
-                }`}
+                className={`p-1.5 hover:bg-gray-50 transition-colors ${subject.status === "inactive" ? "opacity-60" : ""
+                  }`}
               >
                 <div className="flex items-start justify-between gap-2">
                   <div
@@ -244,31 +261,28 @@ const SubjectTable = ({ subjects, onEdit, onDelete, onToggleStatus }) => {
                     onClick={() => handleSubjectClick(subject)}
                   >
                     <h3
-                      className={`text-sm font-semibold mb-1 ${
-                        subject.status === "inactive"
+                      className={`text-sm font-semibold mb-1 ${subject.status === "inactive"
                           ? "text-gray-500 line-through"
                           : "text-gray-900"
-                      }`}
+                        }`}
                       title={subject.name}
                     >
                       {subject.name}
                     </h3>
                     <div className="flex items-center gap-1 flex-wrap">
                       <span
-                        className={`px-2 py-0.5 rounded-full text-sm font-medium ${
-                          subject.status === "active"
+                        className={`px-2 py-0.5 rounded-full text-sm font-medium ${subject.status === "active"
                             ? "bg-green-100 text-green-800"
                             : "bg-red-100 text-red-800"
-                        }`}
+                          }`}
                       >
                         {subject.status === "active" ? "Active" : "Inactive"}
                       </span>
                       <span
-                        className={`text-sm ${
-                          subject.contentInfo?.hasContent
+                        className={`text-sm ${subject.contentInfo?.hasContent
                             ? "text-gray-600"
                             : "text-gray-400 italic"
-                        }`}
+                          }`}
                       >
                         Content: {formatContentDate(subject.contentInfo)}
                       </span>
