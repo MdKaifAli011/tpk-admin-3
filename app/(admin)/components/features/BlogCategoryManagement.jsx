@@ -15,6 +15,7 @@ import {
   usePermissions,
   getPermissionMessage,
 } from "../../hooks/usePermissions";
+import { PermissionButton } from "../common/PermissionButton";
 import {
   LoadingWrapper,
   SkeletonPageContent,
@@ -46,7 +47,7 @@ const StatusBadge = ({ status, onClick }) => {
   );
 };
 
-const BlogCategoryTable = ({ categories, onEdit, onDelete, onToggleStatus }) => {
+const BlogCategoryTable = ({ categories, onEdit, onDelete, onToggleStatus, canEdit, canDelete, role }) => {
   if (!categories || categories.length === 0) {
     return (
       <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200 shadow-sm">
@@ -122,27 +123,44 @@ const BlogCategoryTable = ({ categories, onEdit, onDelete, onToggleStatus }) => 
                   )}
                 </td>
                 <td className="px-2 py-1 whitespace-nowrap w-32">
-                  <StatusBadge
-                    status={category.status}
-                    onClick={() => onToggleStatus(category)}
-                  />
+                  {canEdit ? (
+                    <StatusBadge
+                      status={category.status}
+                      onClick={() => onToggleStatus(category)}
+                    />
+                  ) : (
+                    <span
+                      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                        category.status === "active"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
+                      }`}
+                    >
+                      {(category.status || "active").charAt(0).toUpperCase() +
+                        (category.status || "active").slice(1)}
+                    </span>
+                  )}
                 </td>
                 <td className="px-2 py-1 whitespace-nowrap text-right w-32">
                   <div className="flex items-center justify-end gap-1">
-                    <button
+                    <PermissionButton
+                      action="edit"
                       onClick={() => onEdit(category)}
-                      className="p-1 bg-blue-50 text-blue-600 rounded-lg transition-colors hover:bg-blue-100"
-                      title="Edit Category"
+                      disabled={!canEdit}
+                      className="p-1 bg-blue-50 text-blue-600 rounded-lg transition-colors hover:bg-blue-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                      title={getPermissionMessage("edit", role)}
                     >
                       <FaEdit className="text-sm" />
-                    </button>
-                    <button
+                    </PermissionButton>
+                    <PermissionButton
+                      action="delete"
                       onClick={() => onDelete(category)}
-                      className="p-1 bg-red-50 text-red-600 rounded-lg transition-colors hover:bg-red-100"
-                      title="Delete Category"
+                      disabled={!canDelete}
+                      className="p-1 bg-red-50 text-red-600 rounded-lg transition-colors hover:bg-red-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                      title={getPermissionMessage("delete", role)}
                     >
                       <FaTrash className="text-sm" />
-                    </button>
+                    </PermissionButton>
                   </div>
                 </td>
               </tr>
@@ -188,27 +206,44 @@ const BlogCategoryTable = ({ categories, onEdit, onDelete, onToggleStatus }) => 
                   )}
                 </div>
                 <div className="flex items-center gap-2 flex-wrap mt-2">
-                  <StatusBadge
-                    status={category.status}
-                    onClick={() => onToggleStatus(category)}
-                  />
+                  {canEdit ? (
+                    <StatusBadge
+                      status={category.status}
+                      onClick={() => onToggleStatus(category)}
+                    />
+                  ) : (
+                    <span
+                      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                        category.status === "active"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
+                      }`}
+                    >
+                      {(category.status || "active").charAt(0).toUpperCase() +
+                        (category.status || "active").slice(1)}
+                    </span>
+                  )}
                 </div>
               </div>
               <div className="flex items-center gap-1 ml-3">
-                <button
+                <PermissionButton
+                  action="edit"
                   onClick={() => onEdit(category)}
-                  className="p-1 bg-blue-50 text-blue-600 rounded-lg transition-colors hover:bg-blue-100"
-                  title="Edit Category"
+                  disabled={!canEdit}
+                  className="p-1 bg-blue-50 text-blue-600 rounded-lg transition-colors hover:bg-blue-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  title={getPermissionMessage("edit", role)}
                 >
                   <FaEdit className="text-sm" />
-                </button>
-                <button
+                </PermissionButton>
+                <PermissionButton
+                  action="delete"
                   onClick={() => onDelete(category)}
-                  className="p-1 bg-red-50 text-red-600 rounded-lg transition-colors hover:bg-red-100"
-                  title="Delete Category"
+                  disabled={!canDelete}
+                  className="p-1 bg-red-50 text-red-600 rounded-lg transition-colors hover:bg-red-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  title={getPermissionMessage("delete", role)}
                 >
                   <FaTrash className="text-sm" />
-                </button>
+                </PermissionButton>
               </div>
             </div>
           </div>
@@ -455,6 +490,11 @@ const BlogCategoryManagement = () => {
 
   // Handle Toggle Status
   const handleToggleStatus = async (category) => {
+    if (!canEdit) {
+      showError(getPermissionMessage("edit", role));
+      return;
+    }
+
     const currentStatus = category.status || "active";
     const newStatus = currentStatus === "active" ? "inactive" : "active";
     const action = newStatus === "inactive" ? "deactivate" : "activate";
@@ -506,22 +546,15 @@ const BlogCategoryManagement = () => {
               </p>
             </div>
             <div className="flex items-center gap-2">
-              {canCreate ? (
-                <button
-                  onClick={() => setShowAddForm(true)}
-                  className="px-2 py-1 bg-[#0056FF] hover:bg-[#0044CC] text-white rounded-lg text-xs font-medium transition-colors"
-                >
-                  Create Category
-                </button>
-              ) : (
-                <button
-                  disabled
-                  title={getPermissionMessage("create", role)}
-                  className="px-2 py-1 bg-gray-100 text-gray-400 rounded-lg text-xs font-medium cursor-not-allowed"
-                >
-                  Create Category
-                </button>
-              )}
+              <PermissionButton
+                action="create"
+                onClick={() => setShowAddForm(true)}
+                disabled={!canCreate}
+                className="px-2 py-1 bg-[#0056FF] hover:bg-[#0044CC] text-white rounded-lg text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400 disabled:hover:bg-gray-100"
+                title={getPermissionMessage("create", role)}
+              >
+                Create Category
+              </PermissionButton>
             </div>
           </div>
         </div>
@@ -727,6 +760,9 @@ const BlogCategoryManagement = () => {
                 onEdit={handleEditCategory}
                 onDelete={handleDeleteCategory}
                 onToggleStatus={handleToggleStatus}
+                canEdit={canEdit}
+                canDelete={canDelete}
+                role={role}
               />
             )}
           </div>
