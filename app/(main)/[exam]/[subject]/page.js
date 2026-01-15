@@ -6,7 +6,7 @@ import NavigationClient from "../../components/NavigationClient";
 import UnitsSectionClient from "../../components/UnitsSectionClient";
 import SubjectProgressClient from "../../components/SubjectProgressClient";
 import SubjectCompletionTracker from "../../components/SubjectCompletionTracker";
-import TestListTable from "../../components/TestListTable";
+import ConditionalTestListTable from "../../components/ConditionalTestListTable";
 import {
   fetchExamById,
   fetchSubjectsByExam,
@@ -216,7 +216,7 @@ const SubjectPage = async ({ params }) => {
       />
 
       {/* Test List Table */}
-      <TestListTable examId={fetchedExam._id} subjectId={subject._id} />
+      <ConditionalTestListTable examId={fetchedExam._id} subjectId={subject._id} />
 
       {/* Units Section */}
       <UnitsSectionClient

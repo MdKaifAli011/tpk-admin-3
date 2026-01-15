@@ -6,7 +6,7 @@ import ChaptersSectionClient from "../../../../../../components/ChaptersSectionC
 import UnitProgressClient from "../../../../../../components/UnitProgressClient";
 import ProgressTracker from "../../../../../../components/ProgressTracker";
 import DefinitionPreviewClient from "../../../../../../components/DefinitionPreviewClient";
-import TestListTable from "../../../../../../components/TestListTable";
+import ConditionalTestListTable from "../../../../../../components/ConditionalTestListTable";
 import { ERROR_MESSAGES } from "@/constants";
 import {
   fetchExamById,
@@ -346,7 +346,7 @@ const SubTopicPage = async ({ params }) => {
         />
 
         {/* Test List Table */}
-        <TestListTable
+        <ConditionalTestListTable
           examId={fetchedExam._id}
           subjectId={subject._id}
           unitId={unit._id}

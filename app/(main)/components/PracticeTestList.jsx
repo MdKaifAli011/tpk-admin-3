@@ -605,34 +605,61 @@ const PracticeTestList = ({
 
         // Calculate relevance priority for each test
         // Priority system: Current level → Nearest parent with tests → All others
+        // CRITICAL: Unit isolation - Tests from Unit 1 ONLY show in Unit 1 and its children
+        // Tests from Unit 2 will NEVER show in Unit 1 pages (strict unit boundary)
         const getPriority = (test) => {
-          const tUnitId = test.unitId?._id || test.unitId;
-          const tChapterId = test.chapterId?._id || test.chapterId;
-          const tTopicId = test.topicId?._id || test.topicId;
-          const tSubTopicId = test.subTopicId?._id || test.subTopicId;
-          const tSubjectId = test.subjectId?._id || test.subjectId;
+          const tUnitId = test.unitId ? (test.unitId._id || test.unitId.id || test.unitId) : null;
+          const tChapterId = test.chapterId ? (test.chapterId._id || test.chapterId.id || test.chapterId) : null;
+          const tTopicId = test.topicId ? (test.topicId._id || test.topicId.id || test.topicId) : null;
+          const tSubTopicId = test.subTopicId ? (test.subTopicId._id || test.subTopicId.id || test.subTopicId) : null;
+          const tSubjectId = test.subjectId ? (test.subjectId._id || test.subjectId.id || test.subjectId) : null;
 
-          const sUnitId = unitId ? String(unitId) : null;
-          const sChapterId = chapterId ? String(chapterId) : null;
-          const sTopicId = topicId ? String(topicId) : null;
-          const sSubTopicId = subTopicId ? String(subTopicId) : null;
-          const sSubjectId = subjectId ? String(subjectId) : null;
-          const sExamId = examId ? String(examId) : null;
+          // Convert to strings for comparison (normalize)
+          const sUnitId = unitId ? String(unitId).trim() : null;
+          const sChapterId = chapterId ? String(chapterId).trim() : null;
+          const sTopicId = topicId ? String(topicId).trim() : null;
+          const sSubTopicId = subTopicId ? String(subTopicId).trim() : null;
+          const sSubjectId = subjectId ? String(subjectId).trim() : null;
+          const sExamId = examId ? String(examId).trim() : null;
+
+          // Convert test IDs to strings for comparison (normalize)
+          const testUnitId = tUnitId ? String(tUnitId).trim() : null;
+          const testChapterId = tChapterId ? String(tChapterId).trim() : null;
+          const testTopicId = tTopicId ? String(tTopicId).trim() : null;
+          const testSubTopicId = tSubTopicId ? String(tSubTopicId).trim() : null;
+          const testSubjectId = tSubjectId ? String(tSubjectId).trim() : null;
+
+          // CRITICAL: Never show tests from other units
+          // If we're on any page with a unitId, only show tests from that unit
+          // This ensures Unit 1 tests only show in Unit 1 and its children, never in Unit 2
+          if (sUnitId) {
+            // If test has a unitId, it must match the current unitId
+            if (testUnitId && testUnitId !== sUnitId) {
+              return 99; // Filter out - different unit (high priority number to filter later)
+            }
+            // If test doesn't have unitId but we're on a unit page or its children, filter it out
+            // Exception: Subject-level tests (no unitId) should be shown on subject page only
+            // But if we're on a unit's child page (chapter/topic/subtopic), test must have unitId
+            if (!testUnitId && (sChapterId || sTopicId || sSubTopicId)) {
+              // On a chapter/topic/subtopic page, test must have unitId matching current unit
+              return 99; // Filter out - test doesn't have unitId but we're in a unit's child page
+            }
+          }
 
           // Check if test is assigned to current page level
           // A test is "assigned" to a level if it has that level's ID set
           // It doesn't matter if it also has child level IDs
           let matchesCurrentLevel = false;
 
-          if (sSubTopicId && String(tSubTopicId) === sSubTopicId) {
+          if (sSubTopicId && testSubTopicId && String(testSubTopicId) === sSubTopicId) {
             matchesCurrentLevel = true;
-          } else if (sTopicId && !sSubTopicId && String(tTopicId) === sTopicId) {
+          } else if (sTopicId && !sSubTopicId && testTopicId && String(testTopicId) === sTopicId) {
             matchesCurrentLevel = true;
-          } else if (sChapterId && !sTopicId && !sSubTopicId && String(tChapterId) === sChapterId) {
+          } else if (sChapterId && !sTopicId && !sSubTopicId && testChapterId && String(testChapterId) === sChapterId) {
             matchesCurrentLevel = true;
-          } else if (sUnitId && !sChapterId && !sTopicId && !sSubTopicId && String(tUnitId) === sUnitId) {
+          } else if (sUnitId && !sChapterId && !sTopicId && !sSubTopicId && testUnitId && String(testUnitId) === sUnitId) {
             matchesCurrentLevel = true;
-          } else if (sSubjectId && !sUnitId && !sChapterId && !sTopicId && !sSubTopicId && String(tSubjectId) === sSubjectId) {
+          } else if (sSubjectId && !sUnitId && !sChapterId && !sTopicId && !sSubTopicId && testSubjectId && String(testSubjectId) === sSubjectId) {
             matchesCurrentLevel = true;
           } else if (sExamId && !sSubjectId && !sUnitId && !sChapterId && !sTopicId && !sSubTopicId) {
             const testExamId = String(test.examId?._id || test.examId);
@@ -651,16 +678,54 @@ const PracticeTestList = ({
           return 10;
         };
 
-        // Process tests with priority
-        const processedTests = allTests.map((t) => {
-          const priority = getPriority(t);
-          return {
-            ...t,
-            priority,
-            isDirect: priority === 1, // Assigned to current level
-            isOther: priority === 10 // All other tests
-          };
+        // CRITICAL: Unit isolation - Filter out tests from other units BEFORE processing
+        // If we're on any page with a unitId, only show tests from that unit
+        // This ensures Unit 1 tests only show in Unit 1 and its children, never in Unit 2
+        const filteredTests = allTests.filter((test) => {
+          // Extract test unit ID
+          const tUnitId = test.unitId ? (test.unitId._id || test.unitId.id || test.unitId) : null;
+          const testUnitId = tUnitId ? String(tUnitId).trim() : null;
+          
+          // Current page unit ID and child IDs (convert to strings for consistency)
+          const sUnitId = unitId ? String(unitId).trim() : null;
+          const sChapterId = chapterId ? String(chapterId).trim() : null;
+          const sTopicId = topicId ? String(topicId).trim() : null;
+          const sSubTopicId = subTopicId ? String(subTopicId).trim() : null;
+          
+          // If we're on a unit page (or its children), filter by unit
+          if (sUnitId) {
+            // If test has a unitId, it must match the current unitId
+            if (testUnitId && testUnitId !== sUnitId) {
+              return false; // Filter out - different unit
+            }
+            // If test doesn't have unitId but we're on a unit page or its children, filter it out
+            // Exception: Subject-level tests (no unitId) should be shown on subject page only
+            // But if we're on a unit's child page (chapter/topic/subtopic), test must have unitId
+            if (!testUnitId && (sChapterId || sTopicId || sSubTopicId)) {
+              // On a chapter/topic/subtopic page, test must have unitId matching current unit
+              return false; // Filter out - test doesn't have unitId but we're in a unit's child page
+            }
+          }
+          
+          // If not on a unit page, show all tests (subject page or above)
+          return true;
         });
+
+        // Process tests with priority
+        const processedTests = filteredTests
+          .map((t) => {
+            const priority = getPriority(t);
+            return {
+              ...t,
+              priority,
+              isDirect: priority === 1, // Assigned to current level
+              isOther: priority === 10 // All other tests
+            };
+          })
+          .filter((test) => {
+            // Filter out tests with priority 99 (different unit)
+            return test.priority !== 99;
+          });
 
         // Sort: Priority 1 (current level assigned) → Priority 10 (all others)
         // Within same priority, sort by orderNumber
@@ -732,6 +797,14 @@ const PracticeTestList = ({
                   maximumMarks: test.maximumMarks || (qCount * DEFAULT_MARKS_PER_QUESTION),
                   negativeMarks: test.negativeMarks || DEFAULT_NEGATIVE_MARKS,
                   duration: test.duration || (qCount > 0 ? `${Math.ceil((qCount * DEFAULT_SECONDS_PER_QUESTION) / 60)} Min` : "0 Min")
+                };
+              })
+              .map((test, index) => {
+                // Assign sequential display order number (1, 2, 3...) for client-side display
+                // This ensures tests show in sequential order regardless of database orderNumber
+                return {
+                  ...test,
+                  _displayOrderNumber: index + 1,
                 };
               });
             // Note: Tests are already sorted by priority in processedTests above
@@ -2453,7 +2526,7 @@ const PracticeTestList = ({
                     {/* Col 1 */}
                     <td className="px-4 py-3 w-[28%]">
                       <div className="text-sm font-medium text-gray-900 flex ">
-                        <span className="mr-1">{test.orderNumber}.</span>
+                        <span className="mr-1">{test._displayOrderNumber || (i + 1)}.</span>
                         {test.name}
                       </div>
                     </td>
@@ -2587,7 +2660,7 @@ const PracticeTestList = ({
 
                 {/* Paper Name */}
                 <div className="text-sm font-semibold text-gray-900 mb-3 flex items-center">
-                  <span className="mr-1">{test.orderNumber}.</span>
+                  <span className="mr-1">{test._displayOrderNumber || (i + 1)}.</span>
                   <span dangerouslySetInnerHTML={{ __html: renderFormattedName(test.name) }} />
                 </div>
 
