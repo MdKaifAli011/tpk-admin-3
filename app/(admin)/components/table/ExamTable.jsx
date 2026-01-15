@@ -8,13 +8,14 @@ import {
   FaClipboardList,
   FaPowerOff,
   FaLock,
+  FaInfoCircle,
 } from "react-icons/fa";
 import {
   usePermissions,
   getPermissionMessage,
 } from "../../hooks/usePermissions";
 
-const ExamTable = ({ exams, onEdit, onDelete, onView, onToggleStatus }) => {
+const ExamTable = ({ exams, onEdit, onDelete, onView, onToggleStatus, onManageInfo }) => {
   const { canEdit, canDelete, canReorder, role } = usePermissions();
   const router = useRouter();
 
@@ -143,6 +144,15 @@ const ExamTable = ({ exams, onEdit, onDelete, onView, onToggleStatus }) => {
                 </td>
                 <td className="px-2 py-1 whitespace-nowrap text-right w-32">
                   <div className="flex items-center justify-end gap-1">
+                    {onManageInfo && (
+                      <button
+                        onClick={() => onManageInfo(exam)}
+                        className="p-1 bg-purple-50 text-purple-600 rounded-lg transition-colors hover:bg-purple-100"
+                        title="Manage Exam Info"
+                      >
+                        <FaInfoCircle className="text-sm" />
+                      </button>
+                    )}
                     <button
                       onClick={() => handleExamClick(exam)}
                       className="p-1 bg-green-50 text-green-600 rounded-lg transition-colors hover:bg-green-100"
@@ -268,6 +278,15 @@ const ExamTable = ({ exams, onEdit, onDelete, onView, onToggleStatus }) => {
                 </div>
               </div>
               <div className="flex items-center gap-1 ml-3">
+                {onManageInfo && (
+                  <button
+                    onClick={() => onManageInfo(exam)}
+                    className="p-1 bg-purple-50 text-purple-600 rounded-lg transition-colors hover:bg-purple-100"
+                    title="Manage Exam Info"
+                  >
+                    <FaInfoCircle className="text-sm" />
+                  </button>
+                )}
                 <button
                   onClick={() => handleExamClick(exam)}
                   className="p-1 bg-green-50 text-green-600 rounded-lg transition-colors hover:bg-green-100"

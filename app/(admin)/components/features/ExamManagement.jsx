@@ -17,9 +17,11 @@ import {
 import { ToastContainer, useToast } from "../ui/Toast";
 import api from "@/lib/api";
 import { usePermissions, getPermissionMessage } from "../../hooks/usePermissions";
+import { useRouter } from "next/navigation";
 
 const ExamManagement = () => {
   const { canCreate, canEdit, canDelete, canReorder, role } = usePermissions();
+  const router = useRouter();
   const [showAddForm, setShowAddForm] = useState(false);
   const [isDataLoading, setIsDataLoading] = useState(false);
   const [isFormLoading, setIsFormLoading] = useState(false);
@@ -277,6 +279,10 @@ const ExamManagement = () => {
         setIsFormLoading(false);
       }
     }
+  };
+
+  const handleManageInfo = (exam) => {
+    router.push(`/admin/exam-info/${exam._id}`);
   };
 
   const handleToggleStatus = async (exam) => {
@@ -581,6 +587,7 @@ const ExamManagement = () => {
                 onEdit={handleEditExam}
                 onDelete={handleDeleteExam}
                 onToggleStatus={handleToggleStatus}
+                onManageInfo={handleManageInfo}
               />
             )}
           </div>
