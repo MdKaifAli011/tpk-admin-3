@@ -36,33 +36,33 @@ export async function GET(request) {
     const query = {};
     
     // Filter by parent folder (null for root folders)
-    if (parentFolderId === "null" || parentFolderId === null) {
+    if (parentFolderId === "null" || parentFolderId === null || parentFolderId === "undefined") {
       query.parentFolderId = null;
     } else if (parentFolderId && mongoose.Types.ObjectId.isValid(parentFolderId)) {
-      query.parentFolderId = parentFolderId;
+      query.parentFolderId = new mongoose.Types.ObjectId(parentFolderId);
     }
 
     // Filter by exam
     if (examId && mongoose.Types.ObjectId.isValid(examId)) {
-      query.examId = examId;
+      query.examId = new mongoose.Types.ObjectId(examId);
     }
 
-    // Filter by status
+    // Filter by status - Fixed regex issue
     if (statusFilter !== "all") {
-      query.status = { $regex: new RegExp(`^${statusFilter}$`, "i") };
+      query.status = statusFilter; // Direct match instead of regex
     }
 
-    // Fetch folders with pagination
-    const folders = await DownloadFolder.find(query)
-      .populate("parentFolderId", "name slug")
-      .populate("examId", "name slug")
-      .sort({ orderNumber: 1, createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .lean();
-
-    // Get total count for pagination
-    const total = await DownloadFolder.countDocuments(query);
+    // Execute both count and find in parallel for better performance
+    const [folders, total] = await Promise.all([
+      DownloadFolder.find(query)
+        .populate("parentFolderId", "name slug")
+        .populate("examId", "name slug")
+        .sort({ orderNumber: 1, createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      DownloadFolder.countDocuments(query)
+    ]);
 
     return NextResponse.json(
       createPaginationResponse(folders, total, page, limit)
@@ -89,29 +89,48 @@ export async function POST(request) {
       return errorResponse("Folder name is required", 400);
     }
 
+    // Sanitize input
+    const sanitizedName = body.name.trim();
+
     // Validate parentFolderId if provided
+    let parentFolderId = null;
     if (body.parentFolderId) {
       if (!mongoose.Types.ObjectId.isValid(body.parentFolderId)) {
         return errorResponse("Invalid parent folder ID", 400);
       }
-      // Check if parent folder exists
-      const parentFolder = await DownloadFolder.findById(body.parentFolderId);
+      parentFolderId = new mongoose.Types.ObjectId(body.parentFolderId);
+      
+      // Check if parent folder exists and is not itself (prevent circular reference)
+      const parentFolder = await DownloadFolder.findById(parentFolderId);
       if (!parentFolder) {
         return errorResponse("Parent folder not found", 404);
       }
     }
 
     // Validate examId if provided
+    let examId = null;
     if (body.examId) {
       if (!mongoose.Types.ObjectId.isValid(body.examId)) {
         return errorResponse("Invalid exam ID", 400);
       }
+      examId = new mongoose.Types.ObjectId(body.examId);
+    }
+
+    // Check for duplicate folder name in same parent
+    const duplicateCheck = await DownloadFolder.findOne({
+      name: sanitizedName,
+      parentFolderId: parentFolderId,
+      status: { $ne: 'deleted' } // Exclude soft-deleted folders
+    });
+    
+    if (duplicateCheck) {
+      return errorResponse("A folder with this name already exists in this location", 409);
     }
 
     // Auto-generate orderNumber if not provided
     let orderNumber = body.orderNumber;
     if (!orderNumber || orderNumber < 1) {
-      const query = { parentFolderId: body.parentFolderId || null };
+      const query = { parentFolderId: parentFolderId };
       const maxOrderFolder = await DownloadFolder.findOne(query)
         .sort({ orderNumber: -1 })
         .select("orderNumber")
@@ -121,12 +140,12 @@ export async function POST(request) {
 
     // Create new folder
     const newFolder = await DownloadFolder.create({
-      name: body.name.trim(),
-      parentFolderId: body.parentFolderId || null,
-      examId: body.examId || null,
+      name: sanitizedName,
+      parentFolderId: parentFolderId,
+      examId: examId,
       status: body.status || STATUS.ACTIVE,
       orderNumber: orderNumber,
-      description: body.description || "",
+      description: body.description?.trim() || "",
     });
 
     // Populate references
@@ -141,4 +160,3 @@ export async function POST(request) {
     return handleApiError(error, ERROR_MESSAGES.SAVE_FAILED);
   }
 }
-

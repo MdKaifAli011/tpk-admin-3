@@ -7,13 +7,20 @@ import {
   errorResponse,
   handleApiError,
 } from "@/utils/apiResponse";
-import { requireAction } from "@/middleware/authMiddleware";
+import { requireAuth, requireAction } from "@/middleware/authMiddleware";
 
 // GET: Fetch single download folder by ID
 export async function GET(request, { params }) {
   try {
+    const authCheck = await requireAuth(request);
+    if (authCheck.error) {
+      return NextResponse.json(authCheck, { status: authCheck.status || 401 });
+    }
+
     await connectDB();
-    const { id } = params;
+    
+    // 🔥 FIX: Await params before destructuring
+    const { id } = await params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return errorResponse("Invalid folder ID", 400);
@@ -37,14 +44,15 @@ export async function GET(request, { params }) {
 // PUT: Update download folder
 export async function PUT(request, { params }) {
   try {
-    // Check authentication and permissions
     const authCheck = await requireAction(request, "PUT");
     if (authCheck.error) {
       return NextResponse.json(authCheck, { status: authCheck.status || 403 });
     }
 
     await connectDB();
-    const { id } = params;
+    
+    // 🔥 FIX: Await params before destructuring
+    const { id } = await params;
     const body = await request.json();
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -61,7 +69,7 @@ export async function PUT(request, { params }) {
       if (body.parentFolderId === null || body.parentFolderId === "null") {
         folder.parentFolderId = null;
       } else if (mongoose.Types.ObjectId.isValid(body.parentFolderId)) {
-        // Prevent circular reference (folder cannot be its own parent)
+        // Prevent circular reference
         if (body.parentFolderId === id) {
           return errorResponse("Folder cannot be its own parent", 400);
         }
@@ -70,16 +78,29 @@ export async function PUT(request, { params }) {
         if (!parentFolder) {
           return errorResponse("Parent folder not found", 404);
         }
-        folder.parentFolderId = body.parentFolderId;
+        folder.parentFolderId = new mongoose.Types.ObjectId(body.parentFolderId);
       } else {
         return errorResponse("Invalid parent folder ID", 400);
       }
     }
 
-    // Update fields
+    // Update other fields safely
     if (body.name !== undefined) {
-      folder.name = body.name.trim();
+      const trimmedName = body.name?.trim();
+      if (trimmedName) {
+        // Check for duplicate name in same parent location
+        const duplicate = await DownloadFolder.findOne({
+          name: trimmedName,
+          parentFolderId: folder.parentFolderId,
+          _id: { $ne: id }
+        });
+        if (duplicate) {
+          return errorResponse("A folder with this name already exists in this location", 409);
+        }
+        folder.name = trimmedName;
+      }
     }
+    
     if (body.examId !== undefined) {
       folder.examId = body.examId || null;
     }
@@ -90,7 +111,7 @@ export async function PUT(request, { params }) {
       folder.orderNumber = body.orderNumber;
     }
     if (body.description !== undefined) {
-      folder.description = body.description || "";
+      folder.description = body.description?.trim() || "";
     }
 
     await folder.save();
@@ -108,31 +129,39 @@ export async function PUT(request, { params }) {
   }
 }
 
-// DELETE: Delete download folder (cascading delete handled by model)
+// DELETE: Soft delete download folder
 export async function DELETE(request, { params }) {
   try {
-    // Check authentication and permissions
     const authCheck = await requireAction(request, "DELETE");
     if (authCheck.error) {
       return NextResponse.json(authCheck, { status: authCheck.status || 403 });
     }
 
     await connectDB();
-    const { id } = params;
+    
+    // 🔥 FIX: Await params before destructuring
+    const { id } = await params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return errorResponse("Invalid folder ID", 400);
     }
 
-    const folder = await DownloadFolder.findByIdAndDelete(id);
+    // Use soft delete instead of hard delete for better data integrity
+    const folder = await DownloadFolder.findByIdAndUpdate(
+      id,
+      { 
+        status: "deleted", 
+        deletedAt: new Date() 
+      },
+      { new: true }
+    );
 
     if (!folder) {
       return errorResponse("Download folder not found", 404);
     }
 
-    return successResponse(null, "Download folder deleted successfully");
+    return successResponse(folder, "Download folder deleted successfully");
   } catch (error) {
     return handleApiError(error, "Failed to delete download folder");
   }
 }
-
