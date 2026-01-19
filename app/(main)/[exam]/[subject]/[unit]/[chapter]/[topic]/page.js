@@ -337,6 +337,7 @@ const TopicPage = async ({ params }) => {
           examName={fetchedExam.name}
           subjectName={subject.name}
           unitName={unit.name}
+          practiceDisabled={subject.practiceDisabled || false}
         />
 
         {/* Navigation */}
