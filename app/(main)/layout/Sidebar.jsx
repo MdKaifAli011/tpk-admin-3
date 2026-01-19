@@ -22,15 +22,6 @@ import { logger } from "@/utils/logger";
 import ExamDropdown from "../components/ExamDropdown";
 import SidebarNavigationTree from "../components/SidebarNavigationTree";
 
-/* ------------------------------------------------------------------------- */
-/* Premium ChatGPT-style Light Sidebar (UI only changes)                     */
-/* - Compact width (300px)                                                   */
-/* - Light mode, rounded corners, subtle shadows                             */
-/* - Compact spacing, smaller fonts                                          */
-/* - Smooth animations & polished hover states                               */
-/* - Keeps all original logic/behaviour                                      */
-/* ------------------------------------------------------------------------- */
-
 // Helper: build node (same as your original)
 const buildNode = (item) => ({
   id: item?._id ?? "",
@@ -55,12 +46,8 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [blogCategories, setBlogCategories] = useState([]);
-  const [isBlogMenuOpen, setIsBlogMenuOpen] = useState(false);
   const [downloadFolders, setDownloadFolders] = useState([]);
-  const [isDownloadMenuOpen, setIsDownloadMenuOpen] = useState(false);
-
-  const userToggledBlogRef = useRef(false);
-  const userToggledDownloadRef = useRef(false);
+  const [activeMenu, setActiveMenu] = useState(null);
 
   // internal caches & dedupe
   const hasLoadedExamsRef = useRef(false);
@@ -73,7 +60,7 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
   const [openSubjectId, setOpenSubjectId] = useState(null);
   const [openUnitId, setOpenUnitId] = useState(null);
   const [openChapterId, setOpenChapterId] = useState(null);
-  const [navbarHeight, setNavbarHeight] = useState(120); // Default fallback
+  const [navbarHeight, setNavbarHeight] = useState(120);
 
   // refs for auto-scrolling active items
   const sidebarBodyRef = useRef(null);
@@ -81,13 +68,15 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
 
   const MAX_TREE_CACHE_SIZE = 12;
 
+  // ✅ Subjects button visibility logic
+  const shouldShowSubjectsButton = activeMenu !== "subjects";
+
   // sync prop
   useEffect(() => setSidebarOpen(isOpen), [isOpen]);
 
   // Monitor navbar height for accurate positioning - ensures no gap
   useEffect(() => {
     const updateNavbarHeight = () => {
-      // Directly measure navbar element for most accurate height
       const navbar = document.querySelector("nav[data-navbar]");
       if (navbar) {
         const height = navbar.offsetHeight;
@@ -97,7 +86,6 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
         }
       }
 
-      // Fallback to CSS variable if direct measurement fails
       const cssHeight = getComputedStyle(document.documentElement)
         .getPropertyValue("--navbar-height")
         .trim();
@@ -109,10 +97,8 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
       }
     };
 
-    // Initial check immediately
     updateNavbarHeight();
 
-    // Use ResizeObserver for accurate real-time tracking
     const navbar = document.querySelector("nav[data-navbar]");
     let resizeObserver = null;
 
@@ -123,7 +109,6 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
       resizeObserver.observe(navbar);
     }
 
-    // Also watch for changes as fallback
     const interval = setInterval(updateNavbarHeight, 100);
     const timeout = setTimeout(() => clearInterval(interval), 2000);
 
@@ -260,9 +245,7 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
         return;
       }
 
-      // If already loading this specific exam, wait for it (but allow force refresh)
       if (!forceRefresh && treeLoadingRef.current.has(examId)) {
-        // Wait for existing request to complete
         const key = `tree-${examId}`;
         if (pendingApiRequestsRef.current.has(key)) {
           try {
@@ -274,19 +257,16 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
               return;
             }
           } catch (err) {
-            // If existing request failed, continue with new request
             logger.warn("Previous tree request failed, retrying:", err);
           }
         }
       }
 
-      // Clear cache if force refresh
       if (forceRefresh) {
         treeCacheRef.current.delete(examId);
         pendingApiRequestsRef.current.delete(`tree-${examId}`);
       }
 
-      // Check cache only if not forcing refresh
       if (!forceRefresh && treeCacheRef.current.has(examId)) {
         const cachedTree = treeCacheRef.current.get(examId);
         setTree(cachedTree);
@@ -295,7 +275,6 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
         return;
       }
 
-      // Mark as loading
       treeLoadingRef.current.add(examId);
       setTreeLoading(true);
       setError("");
@@ -303,20 +282,16 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
       try {
         const key = `tree-${examId}`;
         
-        // Cancel any existing pending request for this exam
         if (pendingApiRequestsRef.current.has(key)) {
           pendingApiRequestsRef.current.delete(key);
         }
 
-        // Make fresh API call
         const promise = fetchTree({ examId, status: "active" });
         pendingApiRequestsRef.current.set(key, promise);
 
         const treeData = await promise;
         
-        // Check if this request is still relevant (exam hasn't changed)
         if (!treeLoadingRef.current.has(examId)) {
-          // Exam changed while request was in flight, ignore result
           pendingApiRequestsRef.current.delete(key);
           return;
         }
@@ -340,7 +315,6 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
           return;
         }
 
-        // Only update if still loading this exam (hasn't changed)
         if (treeLoadingRef.current.has(examId)) {
           treeCacheRef.current.set(examId, transformed);
           setTree(transformed);
@@ -348,14 +322,10 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
           setTreeLoading(false);
         }
       } catch (err) {
-        // Only handle error if still loading this exam
         if (treeLoadingRef.current.has(examId)) {
           const errorMessage = err?.message || err?.toString() || "Unknown error";
-          const errorStack = err?.stack || "No stack trace available";
-
           logger.error("loadTree error", {
             message: errorMessage,
-            stack: errorStack,
             examId,
             error: err ? String(err) : "Error object is empty",
           });
@@ -376,7 +346,6 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
   /* -------------------- lifecycle -------------------- */
   useEffect(() => {
     loadExams();
-    // Increased interval from 2 minutes to 5 minutes to reduce API calls
     const interval = setInterval(() => loadExams(true), 5 * 60 * 1000);
     const onFocus = () => loadExams(true);
     window.addEventListener("focus", onFocus);
@@ -398,7 +367,6 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
 
   // load tree when activeExamId changes
   useEffect(() => {
-    // Store previous examId to clean up
     let previousExamId = activeExamId;
     
     if (!activeExamId) {
@@ -413,19 +381,14 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
       return;
     }
 
-    // Clear UI state immediately when exam changes
     setOpenSubjectId(null);
     setOpenUnitId(null);
     setOpenChapterId(null);
-    setError(""); // Clear any previous errors
-    
-    // Clear tree immediately to show loading state
+    setError("");
     setTree([]);
     setTreeLoading(true);
 
-    // Clean up any pending requests for previous exam
     const cleanupPreviousExam = () => {
-      // Cancel any pending requests that aren't for the current exam
       const currentKey = `tree-${activeExamId}`;
       const keysToDelete = [];
       pendingApiRequestsRef.current.forEach((_, key) => {
@@ -437,7 +400,6 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
         pendingApiRequestsRef.current.delete(key);
       });
 
-      // Clear loading state for exams that aren't the current one
       const loadingExamsToDelete = [];
       treeLoadingRef.current.forEach((examId) => {
         if (examId !== activeExamId) {
@@ -451,10 +413,8 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
 
     cleanupPreviousExam();
 
-    // Load tree for new exam (force fresh load on exam switch)
     loadTree(activeExamId);
 
-    // Load blog categories for this exam
     const loadCategories = async () => {
       try {
         const categories = await fetchBlogCategories({
@@ -470,7 +430,6 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
     };
     loadCategories();
 
-    // Load download folders for this exam
     const loadDownloadFolders = async () => {
       try {
         const folders = await fetchDownloadFolders(activeExamId, {
@@ -485,9 +444,7 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
     };
     loadDownloadFolders();
 
-    // Cleanup function
     return () => {
-      // If exam changed, clean up previous exam's state
       if (previousExamId && previousExamId !== activeExamId) {
         const prevKey = `tree-${previousExamId}`;
         pendingApiRequestsRef.current.delete(prevKey);
@@ -496,17 +453,14 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
     };
   }, [activeExamId, loadTree]);
 
-  // Auto-expand blog menu if we're on a blog or category page
+  // Auto-expand menu based on path
   useEffect(() => {
-    if (userToggledBlogRef.current) return;
-    setIsBlogMenuOpen(pathname.includes("/blog"));
-  }, [pathname]);
-
-  // Auto-expand download menu if we're on a download page
-  useEffect(() => {
-    const isDownloadPage = pathname.includes("/download");
-    if (isDownloadPage) {
-      setIsDownloadMenuOpen(true);
+    if (pathname.includes("/blog")) {
+      setActiveMenu('blog');
+    } else if (pathname.includes("/download")) {
+      setActiveMenu('download');
+    } else {
+      setActiveMenu('subjects');
     }
   }, [pathname]);
 
@@ -629,6 +583,10 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
   );
 
   // accordion toggles
+  const toggleMenu = useCallback((menu) => {
+    setActiveMenu((prev) => (prev === menu ? null : menu));
+  }, []);
+
   const toggleSubject = useCallback((subjectId) => {
     setOpenSubjectId((prev) => (prev === subjectId ? null : subjectId));
     setOpenUnitId(null);
@@ -688,12 +646,10 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
               exams={exams}
               activeExamId={activeExamId}
               onSelect={(exam) => {
-                // Clear cache and loading state for previous exam
                 if (activeExamId && activeExamId !== exam._id) {
                   const prevKey = `tree-${activeExamId}`;
                   pendingApiRequestsRef.current.delete(prevKey);
                   treeLoadingRef.current.delete(activeExamId);
-                  // Clear tree immediately to show loading state
                   setTree([]);
                   setTreeLoading(true);
                   setError("");
@@ -739,25 +695,52 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
               listToRender.length === 0 &&
               renderEmpty()}
 
+            {/* ✅ SUBJECTS - HIDE BUTTON WHEN ACTIVE */}
             {!treeLoading && !error && listToRender.length > 0 && (
-              <SidebarNavigationTree
-                tree={listToRender}
-                navigateTo={navigateTo}
-                openSubjectId={openSubjectId}
-                openUnitId={openUnitId}
-                openChapterId={openChapterId}
-                toggleSubject={toggleSubject}
-                toggleUnit={toggleUnit}
-                toggleChapter={toggleChapter}
-                subjectSlugFromPath={subjectSlugFromPath}
-                unitSlugFromPath={unitSlugFromPath}
-                chapterSlugFromPath={chapterSlugFromPath}
-                topicSlugFromPath={topicSlugFromPath}
-                activeItemRef={activeItemRef}
-              />
+              <>
+                {shouldShowSubjectsButton && (
+                  <div className="mb-2.5">
+                    <button
+                      onClick={() => toggleMenu('subjects')}
+                      className={`w-full flex items-center justify-between px-3 py-2 font-semibold rounded-lg cursor-pointer transition-all duration-200 ${
+                        activeMenu === 'subjects'
+                          ? "bg-indigo-100/60 shadow-sm text-indigo-900"
+                          : "text-black hover:text-indigo-600 hover:bg-gray-50"
+                      }`}
+                    >
+                      <span>Subjects</span>
+                      {activeMenu === 'subjects' ? (
+                        <FaChevronDown className="text-[10px] text-gray-400" />
+                      ) : (
+                        <FaChevronRight className="text-[10px] text-gray-400" />
+                      )}
+                    </button>
+                  </div>
+                )}
+                
+                {activeMenu === 'subjects' && (
+                  <div className="mb-4 space-y-0.5 ">
+                    <SidebarNavigationTree
+                      tree={listToRender}
+                      navigateTo={navigateTo}
+                      openSubjectId={openSubjectId}
+                      openUnitId={openUnitId}
+                      openChapterId={openChapterId}
+                      toggleSubject={toggleSubject}
+                      toggleUnit={toggleUnit}
+                      toggleChapter={toggleChapter}
+                      subjectSlugFromPath={subjectSlugFromPath}
+                      unitSlugFromPath={unitSlugFromPath}
+                      chapterSlugFromPath={chapterSlugFromPath}
+                      topicSlugFromPath={topicSlugFromPath}
+                      activeItemRef={activeItemRef}
+                    />
+                  </div>
+                )}
+              </>
             )}
 
-            {/* Static links: Blog (expandable), Download, Course */}
+            {/* Static links: Blog & Download - ALWAYS VISIBLE */}
             <div className="mt-2.5 pt-2.5 border-t border-gray-100">
               <ul className="space-y-1">
                 {/* Blog with expandable categories */}
@@ -765,25 +748,21 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
                   <li>
                     <div>
                       <button
-                        onClick={() => {
-                          userToggledBlogRef.current = true;
-                          setIsBlogMenuOpen((prev) => !prev);
-                          setIsDownloadMenuOpen(false); // UX: close other menu
-                        }}
+                        onClick={() => toggleMenu('blog')}
                         className={`w-full flex items-center justify-between px-3 py-2 font-semibold rounded-lg cursor-pointer transition-all duration-200 ${
                           pathname.includes("/blog")
-                            ? "bg-indigo-100/60 shadow-sm text-indigo-900 "
+                            ? "bg-indigo-100/60 shadow-sm text-indigo-900"
                             : "text-black hover:text-indigo-600 hover:bg-gray-50"
                         }`}
                       >
                         <span>Blog</span>
-                        {isBlogMenuOpen ? (
+                        {activeMenu === 'blog' ? (
                           <FaChevronDown className="text-[10px] text-gray-400" />
                         ) : (
                           <FaChevronRight className="text-[10px] text-gray-400" />
                         )}
                       </button>
-                      {isBlogMenuOpen && (
+                      {activeMenu === 'blog' && (
                         <ul className="ml-3 mt-1 space-y-0.5 border-l border-gray-200 pl-2">
                           <li>
                             <Link
@@ -810,7 +789,7 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
                                     href={categoryPath}
                                     className={`block px-2 py-1.5 rounded-md font-light text-[14px] transition-all duration-200 ${
                                       isActive
-                                        ? "bg-indigo-100/60 shadow-sm text-indigo-900 "
+                                        ? "bg-indigo-100/60 shadow-sm text-indigo-900"
                                         : "text-black hover:text-indigo-600 hover:bg-gray-50"
                                     }`}
                                     onClick={closeOnMobile}
@@ -840,11 +819,7 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
                   <li>
                     <div>
                       <button
-                        onClick={() => {
-                          userToggledDownloadRef.current = true;
-                          setIsDownloadMenuOpen((prev) => !prev);
-                          setIsBlogMenuOpen(false);
-                        }}
+                        onClick={() => toggleMenu('download')}
                         className={`w-full flex items-center justify-between px-3 py-2 font-semibold rounded-lg cursor-pointer transition-all duration-200 ${
                           pathname.includes("/download")
                             ? "text-indigo-600 bg-indigo-50"
@@ -852,13 +827,13 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
                         }`}
                       >
                         <span>Download</span>
-                        {isDownloadMenuOpen ? (
+                        {activeMenu === 'download' ? (
                           <FaChevronDown className="text-[10px] text-gray-400" />
                         ) : (
                           <FaChevronRight className="text-[10px] text-gray-400" />
                         )}
                       </button>
-                      {isDownloadMenuOpen && (
+                      {activeMenu === 'download' && (
                         <ul className="ml-3 mt-1 space-y-0.5 border-l border-gray-200 pl-2">
                           <li>
                             <Link
@@ -888,7 +863,7 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
                                     href={folderPath}
                                     className={`block px-2 py-1.5 font-normal text-[14px] rounded-md transition-all duration-200 ${
                                       isActive
-                                        ? "text-indigo-600 font-normal text-[14px] bg-indigo-50 "
+                                        ? "text-indigo-600 font-normal text-[14px] bg-indigo-50"
                                         : "text-gray-600 font-normal text-[14px] hover:text-indigo-600 hover:bg-gray-50"
                                     }`}
                                     onClick={closeOnMobile}
@@ -912,28 +887,6 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
                     Download
                   </li>
                 )}
-
-                {/* Course */}
-                {/* {activeExamSlug ? (
-                  <li>
-                    <Link
-                      href={`/${activeExamSlug}/course`}
-                      className={`block px-3 py-2  font-semibold rounded-lg cursor-pointer transition-all duration-200 ${
-                        pathname === `/${activeExamSlug}/course` ||
-                        pathname.startsWith(`/${activeExamSlug}/course/`)
-                          ? "text-indigo-600 bg-indigo-50"
-                          : "text-black hover:text-indigo-600 hover:bg-gray-50"
-                      }`}
-                      onClick={closeOnMobile}
-                    >
-                      Course
-                    </Link>
-                  </li>
-                ) : (
-                  <li className="px-3 py-2 text-xs sm:text-sm font-medium text-gray-400">
-                    Course
-                  </li>
-                )} */}
               </ul>
             </div>
           </div>

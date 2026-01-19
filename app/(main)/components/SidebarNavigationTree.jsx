@@ -31,24 +31,23 @@ const SidebarNavigationTree = ({
             {/* SUBJECT */}
             <div
               className={`
-              flex items-center gap-2 px-2.5 py-2 rounded-lg cursor-pointer 
-              transition-all duration-200 group
-              ${isActive
-                ? "bg-indigo-100/60 shadow-sm text-indigo-900 font-semibold"
-                : isOpen
-                ? "bg-indigo-50/40 text-indigo-800 font-medium"
-                : "text-slate-800 hover:bg-slate-50 font-medium"
-              }
-            `}
+                flex items-center justify-between px-2.5 py-2 rounded-lg cursor-pointer 
+                transition-all duration-200 group
+                ${isActive
+                  ? "bg-indigo-100/60 shadow-sm text-indigo-900 font-semibold"
+                  : isOpen
+                  ? "bg-indigo-50/40 text-indigo-800 font-medium"
+                  : "text-slate-800 hover:bg-slate-50 font-medium"
+                }
+              `}
             >
               <button
                 onClick={() => navigateTo([subject.slug])}
-                className="flex-1 overflow-hidden text-left cursor-pointer hover:opacity-80 transition-opacity"
+                className="flex-1 overflow-hidden text-left cursor-pointer hover:opacity-80 transition-opacity pr-2"
               >
                 <TextEllipsis
                   maxW="max-w-full"
                   fontSize="text-[15px]"
-            
                 >
                   {subject.name}
                 </TextEllipsis>
@@ -60,11 +59,11 @@ const SidebarNavigationTree = ({
                     e.stopPropagation();
                     toggleSubject(subject.id);
                   }}
-                  className="cursor-pointer hover:opacity-70  w-20 flex justify-end transition-opacity"
+                  className="flex-shrink-0 p-1 ml-1 cursor-pointer hover:opacity-70 transition-opacity"
                 >
                   <FaChevronDown
                     className={`
-                      h-3 w-3 transition-transform duration-200
+                      h-3.5 w-3.5 transition-transform duration-200 flex-shrink-0
                       ${isOpen ? "rotate-180" : ""}
                       ${isActive ? "text-indigo-600" : "text-slate-400"}
                     `}
@@ -89,7 +88,7 @@ const SidebarNavigationTree = ({
                       {/* UNIT */}
                       <div
                         className={`
-                          flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer
+                          flex items-center justify-between px-2 py-1.5 rounded-md cursor-pointer
                           transition-all duration-200
                           ${isUnitActive
                             ? "bg-emerald-100/50 text-emerald-800 font-medium shadow-sm"
@@ -103,7 +102,7 @@ const SidebarNavigationTree = ({
                           onClick={() =>
                             navigateTo([subject.slug, unit.slug])
                           }
-                          className="flex-1 overflow-hidden text-left cursor-pointer hover:opacity-80 transition-opacity"
+                          className="flex-1 overflow-hidden text-left cursor-pointer hover:opacity-80 transition-opacity pr-2"
                         >
                           <TextEllipsis
                             maxW="max-w-full"
@@ -119,11 +118,11 @@ const SidebarNavigationTree = ({
                               e.stopPropagation();
                               toggleUnit(unit.id, subject.id);
                             }}
-                            className="cursor-pointer hover:opacity-70 w-20 flex justify-end transition-opacity"
+                            className="flex-shrink-0 p-1 ml-1 cursor-pointer hover:opacity-70 transition-opacity"
                           >
                             <FaChevronDown
                               className={`
-                                h-3 w-3 transition-transform duration-200
+                                h-3 w-3 transition-transform duration-200 flex-shrink-0
                                 ${isUnitOpen ? "rotate-180" : ""}
                                 ${isUnitActive ? "text-emerald-700" : "text-emerald-400"}
                               `}
@@ -150,15 +149,15 @@ const SidebarNavigationTree = ({
                                 {/* CHAPTER */}
                                 <div
                                   className={`
-                                flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer
-                                transition-all duration-200
-                                ${isChapterActive
-                                  ? "bg-indigo-100/50 text-indigo-800 font-medium shadow-sm"
-                                  : isChapterOpen
-                                  ? "bg-indigo-50/40 text-indigo-700 font-medium"
-                                  : "text-indigo-700 hover:bg-indigo-50 font-normal"
-                                }
-                              `}
+                                    flex items-center justify-between px-2 py-1.5 rounded-md cursor-pointer
+                                    transition-all duration-200
+                                    ${isChapterActive
+                                      ? "bg-indigo-100/50 text-indigo-800 font-medium shadow-sm"
+                                      : isChapterOpen
+                                      ? "bg-indigo-50/40 text-indigo-700 font-medium"
+                                      : "text-indigo-700 hover:bg-indigo-50 font-normal"
+                                    }
+                                  `}
                                 >
                                   <button
                                     onClick={() =>
@@ -168,7 +167,7 @@ const SidebarNavigationTree = ({
                                         chapter.slug,
                                       ])
                                     }
-                                    className="flex-1 overflow-hidden text-left cursor-pointer hover:opacity-80 transition-opacity"
+                                    className="flex-1 overflow-hidden text-left cursor-pointer hover:opacity-80 transition-opacity pr-2"
                                   >
                                     <TextEllipsis
                                       maxW="max-w-full"
@@ -188,18 +187,17 @@ const SidebarNavigationTree = ({
                                           unit.id
                                         );
                                       }}
-                                      className="cursor-pointer hover:opacity-70 w-20 flex justify-end transition-opacity"
+                                      className="flex-shrink-0 p-1 ml-1 cursor-pointer hover:opacity-70 transition-opacity"
                                     >
                                       <FaChevronDown
                                         className={`
-                                      h-3 w-3 transition-transform duration-200
-                                      ${isChapterOpen ? "rotate-180" : ""}
-                                      ${
-                                        isChapterActive
-                                          ? "text-indigo-700"
-                                          : "text-indigo-400"
-                                      }
-                                    `}
+                                          h-3 w-3 transition-transform duration-200 flex-shrink-0
+                                          ${isChapterOpen ? "rotate-180" : ""}
+                                          ${isChapterActive
+                                            ? "text-indigo-700"
+                                            : "text-indigo-400"
+                                          }
+                                        `}
                                       />
                                     </button>
                                   )}
@@ -228,15 +226,15 @@ const SidebarNavigationTree = ({
                                             ])
                                           }
                                           className={`
-                                        w-full text-left px-2 py-1.5 rounded-md
-                                        transition-all duration-200 truncate cursor-pointer
-                                        hover:opacity-80
-                                        ${
-                                          isTopicActive
-                                            ? "bg-rose-100/60 text-rose-700 font-medium shadow-sm"
-                                            : "text-rose-700 hover:bg-rose-50 font-normal"
-                                        }
-                                      `}
+                                            w-full text-left px-2 py-1.5 rounded-md
+                                            transition-all duration-200 truncate cursor-pointer
+                                            hover:opacity-80
+                                            ${
+                                              isTopicActive
+                                                ? "bg-rose-100/60 text-rose-700 font-medium shadow-sm"
+                                                : "text-rose-700 hover:bg-rose-50 font-normal"
+                                            }
+                                          `}
                                         >
                                           <TextEllipsis maxW="max-w-full">
                                             {topic.name}
