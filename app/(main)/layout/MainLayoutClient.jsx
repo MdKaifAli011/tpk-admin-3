@@ -275,6 +275,7 @@ export default function MainLayoutClient({ children }) {
             className={`
               flex-1
               pt-[110px] md:pt-[120px]
+              min-h-screen
               ${showSidebar && isSidebarOpen ? "lg:ml-[300px]" : ""}
               bg-white
               overflow-y-auto
