@@ -246,11 +246,10 @@ const SubjectTable = ({ subjects, onEdit, onDelete, onToggleStatus, onTogglePrac
                                 e.stopPropagation();
                                 onTogglePractice(subject);
                               }}
-                              className={`p-1 rounded-lg transition-colors ${
-                                subject.practiceDisabled
+                              className={`p-1 rounded-lg transition-colors ${subject.practiceDisabled
                                   ? "bg-red-50 text-red-600 hover:bg-red-100"
                                   : "bg-green-50 text-green-600 hover:bg-green-100"
-                              }`}
+                                }`}
                               title={
                                 subject.practiceDisabled
                                   ? "Enable Practice Tests"
@@ -402,11 +401,10 @@ const SubjectTable = ({ subjects, onEdit, onDelete, onToggleStatus, onTogglePrac
                             e.stopPropagation();
                             onTogglePractice(subject);
                           }}
-                          className={`p-1 rounded-lg transition-colors ${
-                            subject.practiceDisabled
+                          className={`p-1 rounded-lg transition-colors ${subject.practiceDisabled
                               ? "bg-red-50 text-red-600 hover:bg-red-100"
                               : "bg-green-50 text-green-600 hover:bg-green-100"
-                          }`}
+                            }`}
                           title={
                             subject.practiceDisabled
                               ? "Enable Practice Tests"

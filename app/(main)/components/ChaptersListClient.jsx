@@ -27,11 +27,11 @@ const ChaptersListClient = ({
   // Notify parent component when unit progress changes
   // Use ref to store callback to avoid dependency issues
   const onUnitProgressChangeRef = useRef(onUnitProgressChange);
-  
+
   useEffect(() => {
     onUnitProgressChangeRef.current = onUnitProgressChange;
   }, [onUnitProgressChange]);
-  
+
   useEffect(() => {
     if (onUnitProgressChangeRef.current) {
       try {

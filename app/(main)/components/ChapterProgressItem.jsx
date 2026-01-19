@@ -177,12 +177,12 @@ const ChapterProgressItem = ({
   const handleSliderChange = useCallback(
     async (e) => {
       e.stopPropagation();
-      
+
       // Check if practice is disabled
       if (practiceDisabled) {
         return;
       }
-      
+
       const newProgress = parseInt(e.target.value);
       const prevProgress = prevProgressRef.current;
 
@@ -193,7 +193,7 @@ const ChapterProgressItem = ({
         // Allow visual update but don't save
         setLocalProgress(newProgress);
         setIsCompleted(newProgress === 100);
-        
+
         // Show login prompt modal
         setShowLoginPrompt(true);
         return;
@@ -351,13 +351,12 @@ const ChapterProgressItem = ({
         aria-label={isCompleted ? "Mark as incomplete" : "Mark as done"}
       />
       <div
-        className={`relative inline-flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-lg border-2 transition-all duration-300 ${
-          practiceDisabled
+        className={`relative inline-flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-lg border-2 transition-all duration-300 ${practiceDisabled
             ? "bg-gray-100 border-gray-300 cursor-not-allowed opacity-60"
             : isCompleted
-            ? "bg-gradient-to-br from-emerald-500 to-emerald-600 border-emerald-500 shadow-lg shadow-emerald-200/60 group-hover/checkbox:shadow-xl group-hover/checkbox:scale-110 group-hover/checkbox:from-emerald-600 group-hover/checkbox:to-emerald-700 ring-2 ring-emerald-200/50"
-            : "bg-white border-gray-300 group-hover/checkbox:border-emerald-400 group-hover/checkbox:bg-gradient-to-br group-hover/checkbox:from-emerald-50 group-hover/checkbox:to-emerald-100/50 group-hover/checkbox:scale-110 group-hover/checkbox:shadow-md"
-        }`}
+              ? "bg-gradient-to-br from-emerald-500 to-emerald-600 border-emerald-500 shadow-lg shadow-emerald-200/60 group-hover/checkbox:shadow-xl group-hover/checkbox:scale-110 group-hover/checkbox:from-emerald-600 group-hover/checkbox:to-emerald-700 ring-2 ring-emerald-200/50"
+              : "bg-white border-gray-300 group-hover/checkbox:border-emerald-400 group-hover/checkbox:bg-gradient-to-br group-hover/checkbox:from-emerald-50 group-hover/checkbox:to-emerald-100/50 group-hover/checkbox:scale-110 group-hover/checkbox:shadow-md"
+          }`}
       >
         {isCompleted && (
           <FaCheck className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-white drop-shadow-md animate-in fade-in zoom-in duration-200" />
@@ -368,13 +367,11 @@ const ChapterProgressItem = ({
 
   return (
     <div
-      className={`group/item relative block px-4 py-4 transition-all duration-300 border-b border-gray-100 last:border-b-0 bg-white hover:bg-gradient-to-r hover:from-indigo-50/40 hover:via-white hover:to-purple-50/40 hover:shadow-sm hover:border-indigo-100/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 sm:px-6 ${
-        isDragging ? "cursor-grabbing bg-gray-50" : ""
-      } ${
-        isCompleted
+      className={`group/item relative block px-4 py-4 transition-all duration-300 border-b border-gray-100 last:border-b-0 bg-white hover:bg-gradient-to-r hover:from-indigo-50/40 hover:via-white hover:to-purple-50/40 hover:shadow-sm hover:border-indigo-100/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 sm:px-6 ${isDragging ? "cursor-grabbing bg-gray-50" : ""
+        } ${isCompleted
           ? "bg-gradient-to-r from-emerald-50/20 via-white to-emerald-50/10"
           : ""
-      }`}
+        }`}
     >
       {/* Subtle left border accent on hover */}
       <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-gradient-to-b from-indigo-500 to-purple-500 opacity-0 group-hover/item:opacity-100 transition-opacity duration-300 rounded-r-full"></div>
@@ -450,25 +447,22 @@ const ChapterProgressItem = ({
                 onPointerDown={(e) => e.stopPropagation()}
                 onPointerUp={(e) => e.stopPropagation()}
                 disabled={practiceDisabled}
-                className={`w-full h-2.5 sm:h-3 bg-gray-200 rounded-full appearance-none slider pointer-events-auto shadow-inner transition-all duration-200 ${
-                  practiceDisabled
+                className={`w-full h-2.5 sm:h-3 bg-gray-200 rounded-full appearance-none slider pointer-events-auto shadow-inner transition-all duration-200 ${practiceDisabled
                     ? "cursor-not-allowed opacity-60"
                     : "cursor-pointer group-hover/slider:shadow-md"
-                }`}
+                  }`}
                 style={{
-                  background: `linear-gradient(to right, ${
-                    progressPercent >= 100
+                  background: `linear-gradient(to right, ${progressPercent >= 100
                       ? "#10b981"
                       : progressPercent >= 50
-                      ? "#34d399"
-                      : "#6ee7b7"
-                  } 0%, ${
-                    progressPercent >= 100
+                        ? "#34d399"
+                        : "#6ee7b7"
+                    } 0%, ${progressPercent >= 100
                       ? "#10b981"
                       : progressPercent >= 50
-                      ? "#34d399"
-                      : "#6ee7b7"
-                  } ${progressPercent}%, #e5e7eb ${progressPercent}%, #e5e7eb 100%)`,
+                        ? "#34d399"
+                        : "#6ee7b7"
+                    } ${progressPercent}%, #e5e7eb ${progressPercent}%, #e5e7eb 100%)`,
                 }}
                 aria-label={`Progress for ${chapter.name}`}
               />
@@ -479,8 +473,8 @@ const ChapterProgressItem = ({
                   height: 20px;
                   border-radius: 50%;
                   background: ${progressPercent >= 100
-                    ? "linear-gradient(135deg, #10b981 0%, #059669 100%)"
-                    : progressPercent >= 50
+                  ? "linear-gradient(135deg, #10b981 0%, #059669 100%)"
+                  : progressPercent >= 50
                     ? "linear-gradient(135deg, #34d399 0%, #10b981 100%)"
                     : "linear-gradient(135deg, #6ee7b7 0%, #34d399 100%)"};
                   cursor: pointer;
@@ -488,10 +482,10 @@ const ChapterProgressItem = ({
                   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15),
                     0 0 0 3px
                       ${progressPercent >= 100
-                        ? "rgba(16, 185, 129, 0.15)"
-                        : progressPercent >= 50
-                        ? "rgba(52, 211, 153, 0.15)"
-                        : "rgba(110, 231, 183, 0.15)"},
+                  ? "rgba(16, 185, 129, 0.15)"
+                  : progressPercent >= 50
+                    ? "rgba(52, 211, 153, 0.15)"
+                    : "rgba(110, 231, 183, 0.15)"},
                     inset 0 1px 2px rgba(255, 255, 255, 0.5);
                   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
                 }
@@ -506,10 +500,10 @@ const ChapterProgressItem = ({
                   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2),
                     0 0 0 4px
                       ${progressPercent >= 100
-                        ? "rgba(16, 185, 129, 0.25)"
-                        : progressPercent >= 50
-                        ? "rgba(52, 211, 153, 0.25)"
-                        : "rgba(110, 231, 183, 0.25)"},
+                  ? "rgba(16, 185, 129, 0.25)"
+                  : progressPercent >= 50
+                    ? "rgba(52, 211, 153, 0.25)"
+                    : "rgba(110, 231, 183, 0.25)"},
                     inset 0 1px 2px rgba(255, 255, 255, 0.6);
                 }
                 .slider::-webkit-slider-thumb:active {
@@ -517,18 +511,18 @@ const ChapterProgressItem = ({
                   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25),
                     0 0 0 3px
                       ${progressPercent >= 100
-                        ? "rgba(16, 185, 129, 0.3)"
-                        : progressPercent >= 50
-                        ? "rgba(52, 211, 153, 0.3)"
-                        : "rgba(110, 231, 183, 0.3)"};
+                  ? "rgba(16, 185, 129, 0.3)"
+                  : progressPercent >= 50
+                    ? "rgba(52, 211, 153, 0.3)"
+                    : "rgba(110, 231, 183, 0.3)"};
                 }
                 .slider::-moz-range-thumb {
                   width: 20px;
                   height: 20px;
                   border-radius: 50%;
                   background: ${progressPercent >= 100
-                    ? "#10b981"
-                    : progressPercent >= 50
+                  ? "#10b981"
+                  : progressPercent >= 50
                     ? "#34d399"
                     : "#6ee7b7"};
                   cursor: pointer;
@@ -536,10 +530,10 @@ const ChapterProgressItem = ({
                   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15),
                     0 0 0 3px
                       ${progressPercent >= 100
-                        ? "rgba(16, 185, 129, 0.15)"
-                        : progressPercent >= 50
-                        ? "rgba(52, 211, 153, 0.15)"
-                        : "rgba(110, 231, 183, 0.15)"};
+                  ? "rgba(16, 185, 129, 0.15)"
+                  : progressPercent >= 50
+                    ? "rgba(52, 211, 153, 0.15)"
+                    : "rgba(110, 231, 183, 0.15)"};
                   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
                 }
                 @media (min-width: 640px) {
@@ -553,28 +547,28 @@ const ChapterProgressItem = ({
                   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2),
                     0 0 0 4px
                       ${progressPercent >= 100
-                        ? "rgba(16, 185, 129, 0.25)"
-                        : progressPercent >= 50
-                        ? "rgba(52, 211, 153, 0.25)"
-                        : "rgba(110, 231, 183, 0.25)"};
+                  ? "rgba(16, 185, 129, 0.25)"
+                  : progressPercent >= 50
+                    ? "rgba(52, 211, 153, 0.25)"
+                    : "rgba(110, 231, 183, 0.25)"};
                 }
                 .slider::-moz-range-thumb:active {
                   transform: scale(1.15);
                   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25),
                     0 0 0 3px
                       ${progressPercent >= 100
-                        ? "rgba(16, 185, 129, 0.3)"
-                        : progressPercent >= 50
-                        ? "rgba(52, 211, 153, 0.3)"
-                        : "rgba(110, 231, 183, 0.3)"};
+                  ? "rgba(16, 185, 129, 0.3)"
+                  : progressPercent >= 50
+                    ? "rgba(52, 211, 153, 0.3)"
+                    : "rgba(110, 231, 183, 0.3)"};
                 }
                 .slider:focus-visible {
                   outline: 2px solid
                     ${progressPercent >= 100
-                      ? "#10b981"
-                      : progressPercent >= 50
-                      ? "#34d399"
-                      : "#6ee7b7"};
+                  ? "#10b981"
+                  : progressPercent >= 50
+                    ? "#34d399"
+                    : "#6ee7b7"};
                   outline-offset: 2px;
                 }
               `}</style>
@@ -583,9 +577,8 @@ const ChapterProgressItem = ({
           {/* Percentage Label */}
           <div className="flex items-center gap-2">
             <span
-              className={`min-w-[3rem] sm:min-w-[3.5rem] text-right text-xs sm:text-sm font-semibold whitespace-nowrap transition-colors duration-200 ${
-                progressPercent >= 100 ? "text-emerald-600" : "text-gray-700"
-              }`}
+              className={`min-w-[3rem] sm:min-w-[3.5rem] text-right text-xs sm:text-sm font-semibold whitespace-nowrap transition-colors duration-200 ${progressPercent >= 100 ? "text-emerald-600" : "text-gray-700"
+                }`}
             >
               {progressLabel}%
             </span>
