@@ -217,7 +217,7 @@ const SubjectPage = async ({ params }) => {
       />
 
       {/* Test List Table */}
-      <ConditionalTestListTable examId={fetchedExam._id} subjectId={subject._id} />
+      <ConditionalTestListTable examId={fetchedExam._id} subjectId={subject._id} practiceDisabled={subject.practiceDisabled || false} />
 
       {/* Units Section */}
       <UnitsSectionClient

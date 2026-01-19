@@ -240,6 +240,7 @@ const UnitPage = async ({ params }) => {
         examId={fetchedExam._id}
         subjectId={subject._id}
         unitId={unit._id}
+        practiceDisabled={subject.practiceDisabled || false}
       />
 
       {/* Chapters Section */}

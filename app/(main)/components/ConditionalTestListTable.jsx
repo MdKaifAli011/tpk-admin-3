@@ -15,13 +15,13 @@ const ConditionalTestListTable = ({
   chapterId,
   topicId,
   subTopicId,
+  practiceDisabled = false, // Add practiceDisabled prop with default false
 }) => {
   const searchParams = useSearchParams();
   const currentTab = searchParams.get("tab");
 
-  // Hide TestListTable when on Practice tab
-  // Show on Overview (default), Discussion Forum, and Performance tabs
-  if (currentTab === "practice") {
+  // Hide TestListTable when on Practice tab OR if practice is disabled
+  if (currentTab === "practice" || practiceDisabled) {
     return null;
   }
 
@@ -33,6 +33,7 @@ const ConditionalTestListTable = ({
       chapterId={chapterId}
       topicId={topicId}
       subTopicId={subTopicId}
+      practiceDisabled={practiceDisabled} // Pass practiceDisabled to TestListTable
     />
   );
 };

@@ -324,6 +324,7 @@ const TopicPage = async ({ params }) => {
           unitId={unit._id}
           chapterId={chapter._id}
           topicId={topic._id}
+          practiceDisabled={subject.practiceDisabled || false}
         />
 
         {/* Chapters Section */}

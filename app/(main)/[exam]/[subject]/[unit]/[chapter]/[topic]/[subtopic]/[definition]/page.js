@@ -361,6 +361,7 @@ const DefinitionPage = async ({ params }) => {
           chapterId={chapter._id}
           topicId={topic._id}
           subTopicId={subTopic._id}
+          practiceDisabled={subject.practiceDisabled || false}
         />
 
         {/* Chapters Section */}
