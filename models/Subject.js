@@ -28,6 +28,10 @@ const subjectSchema = new mongoose.Schema(
       enum: ["active", "inactive"],
       default: "active",
     },
+    practiceDisabled: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );

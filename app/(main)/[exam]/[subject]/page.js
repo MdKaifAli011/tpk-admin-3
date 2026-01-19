@@ -213,6 +213,7 @@ const SubjectPage = async ({ params }) => {
         examSlug={examSlug}
         subjectSlug={subjectSlugValue}
         units={fetchedUnits}
+        practiceDisabled={subject.practiceDisabled || false}
       />
 
       {/* Test List Table */}

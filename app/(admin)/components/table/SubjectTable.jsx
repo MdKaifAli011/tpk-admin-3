@@ -1,13 +1,13 @@
 "use client";
 import React, { useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { FaEdit, FaTrash, FaEye, FaPowerOff, FaLock } from "react-icons/fa";
+import { FaEdit, FaTrash, FaEye, FaPowerOff, FaLock, FaGraduationCap } from "react-icons/fa";
 import {
   usePermissions,
   getPermissionMessage,
 } from "../../hooks/usePermissions";
 
-const SubjectTable = ({ subjects, onEdit, onDelete, onToggleStatus }) => {
+const SubjectTable = ({ subjects, onEdit, onDelete, onToggleStatus, onTogglePractice }) => {
   const { canEdit, canDelete, canReorder, role } = usePermissions();
   const router = useRouter();
 
@@ -239,6 +239,35 @@ const SubjectTable = ({ subjects, onEdit, onDelete, onToggleStatus }) => {
                               <FaLock className="text-sm" />
                             </button>
                           ))}
+                        {onTogglePractice &&
+                          (canReorder ? (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onTogglePractice(subject);
+                              }}
+                              className={`p-1 rounded-lg transition-colors ${
+                                subject.practiceDisabled
+                                  ? "bg-red-50 text-red-600 hover:bg-red-100"
+                                  : "bg-green-50 text-green-600 hover:bg-green-100"
+                              }`}
+                              title={
+                                subject.practiceDisabled
+                                  ? "Enable Practice Tests"
+                                  : "Disable Practice Tests"
+                              }
+                            >
+                              <FaGraduationCap className="text-sm" />
+                            </button>
+                          ) : (
+                            <button
+                              disabled
+                              title={getPermissionMessage("reorder", role)}
+                              className="p-1 bg-gray-100 text-gray-400 rounded-lg cursor-not-allowed"
+                            >
+                              <FaLock className="text-sm" />
+                            </button>
+                          ))}
                       </div>
                     </td>
                   </tr>
@@ -356,6 +385,35 @@ const SubjectTable = ({ subjects, onEdit, onDelete, onToggleStatus }) => {
                           }
                         >
                           <FaPowerOff className="text-sm" />
+                        </button>
+                      ) : (
+                        <button
+                          disabled
+                          title={getPermissionMessage("reorder", role)}
+                          className="p-1 bg-gray-100 text-gray-400 rounded-lg cursor-not-allowed"
+                        >
+                          <FaLock className="text-sm" />
+                        </button>
+                      ))}
+                    {onTogglePractice &&
+                      (canReorder ? (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onTogglePractice(subject);
+                          }}
+                          className={`p-1 rounded-lg transition-colors ${
+                            subject.practiceDisabled
+                              ? "bg-red-50 text-red-600 hover:bg-red-100"
+                              : "bg-green-50 text-green-600 hover:bg-green-100"
+                          }`}
+                          title={
+                            subject.practiceDisabled
+                              ? "Enable Practice Tests"
+                              : "Disable Practice Tests"
+                          }
+                        >
+                          <FaGraduationCap className="text-sm" />
                         </button>
                       ) : (
                         <button

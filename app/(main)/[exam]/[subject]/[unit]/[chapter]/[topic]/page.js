@@ -312,6 +312,7 @@ const TopicPage = async ({ params }) => {
           examSlug={examSlug}
           subjectSlug={subjectSlugValue}
           unitSlug={unitSlugValue}
+          practiceDisabled={subject.practiceDisabled || false}
           chapterSlug={chapterSlugValue}
           topicSlug={topicSlugValue}
         />

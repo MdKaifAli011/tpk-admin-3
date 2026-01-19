@@ -232,6 +232,7 @@ const UnitPage = async ({ params }) => {
         subjectSlug={subjectSlugValue}
         unitSlug={unitSlugValue}
         unitName={unit.name}
+        practiceDisabled={subject.practiceDisabled || false}
       />
 
       {/* Test List Table */}
@@ -251,6 +252,7 @@ const UnitPage = async ({ params }) => {
         examName={fetchedExam.name}
         subjectName={subject.name}
         unitName={unit.name}
+        practiceDisabled={subject.practiceDisabled || false}
       />
 
       {/* Navigation */}

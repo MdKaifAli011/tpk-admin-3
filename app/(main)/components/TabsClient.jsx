@@ -83,6 +83,7 @@ const TabsClient = ({
   unitName,
   subjectsWithUnits = [],
   units = [],
+  practiceDisabled = false,
 }) => {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -212,6 +213,7 @@ const TabsClient = ({
             chapterId={chapterId}
             topicId={topicId}
             subTopicId={subTopicId}
+            practiceDisabled={practiceDisabled}
           />
         );
 

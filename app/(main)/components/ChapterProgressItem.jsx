@@ -21,6 +21,7 @@ const ChapterProgressItem = ({
   onProgressChange,
   onMarkAsDone,
   onReset,
+  practiceDisabled = false,
 }) => {
   const [localProgress, setLocalProgress] = useState(initialProgress);
   const [isCompleted, setIsCompleted] = useState(initialIsCompleted);
@@ -176,6 +177,12 @@ const ChapterProgressItem = ({
   const handleSliderChange = useCallback(
     async (e) => {
       e.stopPropagation();
+      
+      // Check if practice is disabled
+      if (practiceDisabled) {
+        return;
+      }
+      
       const newProgress = parseInt(e.target.value);
       const prevProgress = prevProgressRef.current;
 
@@ -234,13 +241,19 @@ const ChapterProgressItem = ({
         }
       }
     },
-    [chapter._id, onProgressChange, unitId, isAuthenticated]
+    [chapter._id, onProgressChange, unitId, isAuthenticated, practiceDisabled]
   );
 
   const handleMarkAsDone = useCallback(
     async (e) => {
       e.stopPropagation();
       const checked = e.target.checked;
+
+      // Check if practice is disabled
+      if (practiceDisabled) {
+        e.target.checked = isCompleted; // Revert checkbox state
+        return;
+      }
 
       // Check authentication - if not authenticated, show login prompt
       if (!isAuthenticated && checked) {
@@ -314,7 +327,7 @@ const ChapterProgressItem = ({
         }
       }
     },
-    [chapter._id, onMarkAsDone, onReset, unitId, isAuthenticated]
+    [chapter._id, onMarkAsDone, onReset, unitId, isAuthenticated, practiceDisabled, isCompleted]
   );
 
   const handleMouseDown = useCallback((e) => {
@@ -328,17 +341,20 @@ const ChapterProgressItem = ({
   }, []);
 
   const statusMarkup = (
-    <label className="flex items-center cursor-pointer group/checkbox">
+    <label className={`flex items-center group/checkbox ${practiceDisabled ? "cursor-not-allowed" : "cursor-pointer"}`}>
       <input
         type="checkbox"
         checked={isCompleted}
         onChange={handleMarkAsDone}
+        disabled={practiceDisabled}
         className="sr-only"
         aria-label={isCompleted ? "Mark as incomplete" : "Mark as done"}
       />
       <div
         className={`relative inline-flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-lg border-2 transition-all duration-300 ${
-          isCompleted
+          practiceDisabled
+            ? "bg-gray-100 border-gray-300 cursor-not-allowed opacity-60"
+            : isCompleted
             ? "bg-gradient-to-br from-emerald-500 to-emerald-600 border-emerald-500 shadow-lg shadow-emerald-200/60 group-hover/checkbox:shadow-xl group-hover/checkbox:scale-110 group-hover/checkbox:from-emerald-600 group-hover/checkbox:to-emerald-700 ring-2 ring-emerald-200/50"
             : "bg-white border-gray-300 group-hover/checkbox:border-emerald-400 group-hover/checkbox:bg-gradient-to-br group-hover/checkbox:from-emerald-50 group-hover/checkbox:to-emerald-100/50 group-hover/checkbox:scale-110 group-hover/checkbox:shadow-md"
         }`}
@@ -433,7 +449,12 @@ const ChapterProgressItem = ({
                 onClick={(e) => e.stopPropagation()}
                 onPointerDown={(e) => e.stopPropagation()}
                 onPointerUp={(e) => e.stopPropagation()}
-                className="w-full h-2.5 sm:h-3 bg-gray-200 rounded-full appearance-none cursor-pointer slider pointer-events-auto shadow-inner transition-all duration-200 group-hover/slider:shadow-md"
+                disabled={practiceDisabled}
+                className={`w-full h-2.5 sm:h-3 bg-gray-200 rounded-full appearance-none slider pointer-events-auto shadow-inner transition-all duration-200 ${
+                  practiceDisabled
+                    ? "cursor-not-allowed opacity-60"
+                    : "cursor-pointer group-hover/slider:shadow-md"
+                }`}
                 style={{
                   background: `linear-gradient(to right, ${
                     progressPercent >= 100

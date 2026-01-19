@@ -343,6 +343,7 @@ const SubTopicPage = async ({ params }) => {
           chapterSlug={chapterSlugValue}
           topicSlug={topicSlugValue}
           subTopicSlug={subTopicSlugValue}
+          practiceDisabled={subject.practiceDisabled || false}
         />
 
         {/* Test List Table */}

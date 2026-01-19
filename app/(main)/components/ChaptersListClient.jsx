@@ -13,6 +13,7 @@ const ChaptersListClient = ({
   unitSlug,
   examName,
   onUnitProgressChange,
+  practiceDisabled = false,
 }) => {
   const {
     chaptersProgress,
@@ -90,6 +91,7 @@ const ChaptersListClient = ({
             onProgressChange={updateChapterProgress}
             onMarkAsDone={markAsDone}
             onReset={resetChapterProgress}
+            practiceDisabled={practiceDisabled}
           />
         );
       })}

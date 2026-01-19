@@ -326,6 +326,48 @@ const SubjectManagement = () => {
     }
   };
 
+  // ✅ Handle Toggle Practice
+  const handleTogglePractice = async (subject) => {
+    const currentPracticeDisabled = subject.practiceDisabled || false;
+    const newPracticeDisabled = !currentPracticeDisabled;
+    const action = newPracticeDisabled ? "disable" : "enable";
+
+    if (
+      window.confirm(
+        `Are you sure you want to ${action} practice tests for "${subject.name}"? This will ${action} practice tests for all children (units, chapters, topics, subtopics) of this subject.`
+      )
+    ) {
+      try {
+        setIsFormLoading(true);
+        setError(null);
+
+        const response = await api.patch(`/subject/${subject._id}/practice`, {
+          practiceDisabled: newPracticeDisabled,
+        });
+
+        if (response.data.success) {
+          // Refetch subjects to get updated practiceDisabled from database
+          await fetchSubjects();
+          success(
+            `Practice tests ${action}d successfully for "${subject.name}" and all children!`
+          );
+        } else {
+          setError(response.data.message || `Failed to ${action} practice tests`);
+          showError(response.data.message || `Failed to ${action} practice tests`);
+        }
+      } catch (error) {
+        console.error(`Error ${action}ing practice tests:`, error);
+        const errorMessage =
+          error.response?.data?.message ||
+          `Failed to ${action} practice tests. Please try again.`;
+        setError(errorMessage);
+        showError(errorMessage);
+      } finally {
+        setIsFormLoading(false);
+      }
+    }
+  };
+
   // ✅ Handle Toggle Status
   const handleToggleStatus = async (subject) => {
     const currentStatus = subject.status || "active";
@@ -679,6 +721,7 @@ const SubjectManagement = () => {
                 onEdit={handleEditSubject}
                 onDelete={handleDeleteSubject}
                 onToggleStatus={handleToggleStatus}
+                onTogglePractice={handleTogglePractice}
               />
             )}
           </div>

@@ -136,6 +136,7 @@ const DefinitionPage = async ({ params }) => {
     notFound();
   }
 
+ 
   // Fetch full subject data
   const fullSubjectData = await fetchSubjectById(foundSubject._id);
   const subject = fullSubjectData || foundSubject;
@@ -349,6 +350,7 @@ const DefinitionPage = async ({ params }) => {
           chapterSlug={chapterSlugValue}
           topicSlug={topicSlugValue}
           subTopicSlug={subTopicSlugValue}
+          practiceDisabled={subject.practiceDisabled || false}
         />
 
         {/* Test List Table */}

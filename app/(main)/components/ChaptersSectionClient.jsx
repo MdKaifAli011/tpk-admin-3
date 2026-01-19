@@ -13,6 +13,7 @@ const ChaptersSectionClient = ({
   subjectName,
   unitName,
   onUnitProgressChange,
+  practiceDisabled,
 }) => {
   return (
     <section className="bg-transparent">
@@ -45,6 +46,7 @@ const ChaptersSectionClient = ({
           unitSlug={unitSlug}
           examName={examName}
           onUnitProgressChange={onUnitProgressChange}
+          practiceDisabled={practiceDisabled}
         />
       </div>
     </section>

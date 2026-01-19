@@ -68,6 +68,7 @@ export async function PUT(request, { params }) {
       examId,
       orderNumber,
       status,
+      practiceDisabled,
     } = body;
 
     // Validate required fields
@@ -106,6 +107,7 @@ export async function PUT(request, { params }) {
     if (examId) updateData.examId = examId;
     if (orderNumber !== undefined) updateData.orderNumber = orderNumber;
     if (status) updateData.status = status;
+    if (practiceDisabled !== undefined) updateData.practiceDisabled = practiceDisabled;
 
     const updated = await Subject.findByIdAndUpdate(
       id,

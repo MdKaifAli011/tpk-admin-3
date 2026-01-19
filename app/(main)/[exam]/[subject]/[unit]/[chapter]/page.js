@@ -279,6 +279,7 @@ const ChapterPage = async ({ params }) => {
           subjectSlug={subjectSlugValue}
           unitSlug={unitSlugValue}
           chapterSlug={chapterSlugValue}
+          practiceDisabled={subject.practiceDisabled || false}
         />
 
         {/* Test List Table */}
@@ -299,6 +300,7 @@ const ChapterPage = async ({ params }) => {
           examName={fetchedExam.name}
           subjectName={subject.name}
           unitName={unit.name}
+          practiceDisabled={subject.practiceDisabled || false}
         />
 
         {/* Navigation */}
