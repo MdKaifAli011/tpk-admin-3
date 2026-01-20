@@ -97,7 +97,7 @@ const DefinitionManagement = () => {
   const fetchExams = useCallback(async () => {
     try {
       // Fetch all exams (active and inactive) for dropdown
-      const response = await api.get("/exam?status=all");
+      const response = await api.get("/exam?status=all&limit=1000");
       if (response.data.success) {
         setExams(response.data.data || []);
       }
@@ -110,7 +110,7 @@ const DefinitionManagement = () => {
   const fetchSubjects = useCallback(async () => {
     try {
       // Fetch all subjects (active and inactive) for dropdown
-      const response = await api.get("/subject?status=all");
+      const response = await api.get("/subject?status=all&limit=10000");
       if (response.data.success) {
         setSubjects(response.data.data || []);
       }
@@ -1713,7 +1713,7 @@ const DefinitionManagement = () => {
                     const hasEmptySelection = selectedSubTopics.some(
                       (st) => !st.subTopicId || st.subTopicId === ""
                     );
-                    
+
                     // Check if there are any unselected subtopics available
                     const selectedSubTopicIds = selectedSubTopics
                       .map((st) => st.subTopicId)
@@ -1721,14 +1721,14 @@ const DefinitionManagement = () => {
                     const availableSubTopics = filteredSubTopics.filter(
                       (st) => !selectedSubTopicIds.includes(st._id)
                     );
-                    
+
                     // Button should be enabled only if:
                     // 1. Topic is selected
                     // 2. No empty subtopic selections exist (all existing selections are filled)
                     // 3. There are available subtopics to select
-                    const canAddMore = 
-                      formData.topicId && 
-                      !hasEmptySelection && 
+                    const canAddMore =
+                      formData.topicId &&
+                      !hasEmptySelection &&
                       availableSubTopics.length > 0;
 
                     return (

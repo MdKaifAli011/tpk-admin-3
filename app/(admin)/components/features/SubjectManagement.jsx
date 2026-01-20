@@ -82,7 +82,7 @@ const SubjectManagement = () => {
   const fetchExams = async () => {
     try {
       // Fetch all exams (active and inactive) for dropdown
-      const response = await api.get("/exam?status=all");
+      const response = await api.get("/exam?status=all&limit=1000");
 
       if (response.data?.success) {
         setExams(response.data.data || []);

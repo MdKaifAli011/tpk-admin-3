@@ -87,7 +87,7 @@ const TopicManagement = () => {
   const fetchExams = useCallback(async () => {
     try {
       // Fetch all exams (active and inactive) for dropdown
-      const response = await api.get("/exam?status=all");
+      const response = await api.get("/exam?status=all&limit=1000");
       if (response.data.success) {
         setExams(response.data.data || []);
       }
@@ -100,7 +100,7 @@ const TopicManagement = () => {
   const fetchSubjects = useCallback(async () => {
     try {
       // Fetch all subjects (active and inactive) for dropdown
-      const response = await api.get("/subject?status=all");
+      const response = await api.get("/subject?status=all&limit=10000");
       if (response.data.success) {
         setSubjects(response.data.data || []);
       }
@@ -1233,7 +1233,7 @@ const TopicManagement = () => {
                     const hasEmptySelection = selectedChapters.some(
                       (ch) => !ch.chapterId || ch.chapterId === ""
                     );
-                    
+
                     // Check if there are any unselected chapters available
                     const selectedChapterIds = selectedChapters
                       .map((ch) => ch.chapterId)
@@ -1241,14 +1241,14 @@ const TopicManagement = () => {
                     const availableChapters = filteredChapters.filter(
                       (ch) => !selectedChapterIds.includes(ch._id)
                     );
-                    
+
                     // Button should be enabled only if:
                     // 1. Unit is selected
                     // 2. No empty chapter selections exist (all existing selections are filled)
                     // 3. There are available chapters to select
-                    const canAddMore = 
-                      formData.unitId && 
-                      !hasEmptySelection && 
+                    const canAddMore =
+                      formData.unitId &&
+                      !hasEmptySelection &&
                       availableChapters.length > 0;
 
                     return (
@@ -1257,8 +1257,8 @@ const TopicManagement = () => {
                         onClick={handleAddAnotherChapter}
                         disabled={!canAddMore}
                         className={`text-sm font-medium flex items-center gap-1 px-3 py-1.5 rounded-lg transition-colors ${canAddMore
-                            ? "text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100"
-                            : "text-gray-400 bg-gray-100 cursor-not-allowed"
+                          ? "text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100"
+                          : "text-gray-400 bg-gray-100 cursor-not-allowed"
                           }`}
                         title={
                           !formData.unitId

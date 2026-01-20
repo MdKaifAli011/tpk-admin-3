@@ -79,8 +79,8 @@ const SubTopicsManagement = () => {
       console.error("❌ Error fetching sub topics:", error);
       setError(
         error.response?.data?.message ||
-          error.message ||
-          "Failed to fetch sub topics"
+        error.message ||
+        "Failed to fetch sub topics"
       );
     } finally {
       setIsDataLoading(false);
@@ -92,7 +92,7 @@ const SubTopicsManagement = () => {
   const fetchExams = useCallback(async () => {
     try {
       // Fetch all exams (active and inactive) for dropdown
-      const response = await api.get("/exam?status=all");
+      const response = await api.get("/exam?status=all&limit=1000");
       if (response.data.success) {
         setExams(response.data.data || []);
       }
@@ -105,7 +105,7 @@ const SubTopicsManagement = () => {
   const fetchSubjects = useCallback(async () => {
     try {
       // Fetch all subjects (active and inactive) for dropdown
-      const response = await api.get("/subject?status=all");
+      const response = await api.get("/subject?status=all&limit=10000");
       if (response.data.success) {
         setSubjects(response.data.data || []);
       }
@@ -511,7 +511,7 @@ const SubTopicsManagement = () => {
     const { name, value } = e.target;
     setFormData((prev) => {
       const newData = { ...prev, [name]: value };
-      
+
       // Reset subject when exam changes
       if (name === "examId" && value !== prev.examId) {
         newData.subjectId = "";
@@ -522,7 +522,7 @@ const SubTopicsManagement = () => {
         setChapters([]); // Clear chapters when exam changes
         setTopics([]); // Clear topics when exam changes
       }
-      
+
       // Reset unit when subject changes and fetch units for the selected exam and subject
       if (name === "subjectId" && value !== prev.subjectId) {
         newData.unitId = "";
@@ -537,7 +537,7 @@ const SubTopicsManagement = () => {
           setUnits([]);
         }
       }
-      
+
       // Reset chapter when unit changes and fetch chapters for the selected unit
       if (name === "unitId" && value !== prev.unitId) {
         newData.chapterId = "";
@@ -550,7 +550,7 @@ const SubTopicsManagement = () => {
           setChapters([]);
         }
       }
-      
+
       // Reset topic when chapter changes and fetch topics for the selected chapter
       if (name === "chapterId" && value !== prev.chapterId) {
         newData.topicId = "";
@@ -563,7 +563,7 @@ const SubTopicsManagement = () => {
           setTopics([]);
         }
       }
-      
+
       return newData;
     });
     setFormError(null);
@@ -573,7 +573,7 @@ const SubTopicsManagement = () => {
     const { name, value } = e.target;
     setEditFormData((prev) => {
       const newData = { ...prev, [name]: value };
-      
+
       // Reset subject when exam changes
       if (name === "examId" && value !== prev.examId) {
         newData.subjectId = "";
@@ -584,7 +584,7 @@ const SubTopicsManagement = () => {
         setChapters([]); // Clear chapters when exam changes
         setTopics([]); // Clear topics when exam changes
       }
-      
+
       // Reset unit when subject changes and fetch units for the selected exam and subject
       if (name === "subjectId" && value !== prev.subjectId) {
         newData.unitId = "";
@@ -599,7 +599,7 @@ const SubTopicsManagement = () => {
           setUnits([]);
         }
       }
-      
+
       // Reset chapter when unit changes and fetch chapters for the selected unit
       if (name === "unitId" && value !== prev.unitId) {
         newData.chapterId = "";
@@ -612,7 +612,7 @@ const SubTopicsManagement = () => {
           setChapters([]);
         }
       }
-      
+
       // Reset topic when chapter changes and fetch topics for the selected chapter
       if (name === "chapterId" && value !== prev.chapterId) {
         newData.topicId = "";
@@ -623,7 +623,7 @@ const SubTopicsManagement = () => {
           setTopics([]);
         }
       }
-      
+
       return newData;
     });
     setFormError(null);
@@ -705,7 +705,7 @@ const SubTopicsManagement = () => {
     const updatedTopics = [...selectedTopics];
     updatedTopics[index].topicId = topicId;
     updatedTopics[index].subTopicsText = ""; // Clear subtopics when topic changes
-    
+
     // Get order number for the selected topic
     if (topicId) {
       const orderNumber = await getNextOrderNumber(topicId);
@@ -713,9 +713,9 @@ const SubTopicsManagement = () => {
     } else {
       updatedTopics[index].orderNumber = 1;
     }
-    
+
     setSelectedTopics(updatedTopics);
-    
+
     // Also update formData.topicId for backward compatibility (use first selected)
     setFormData((prev) => ({
       ...prev,
@@ -785,7 +785,7 @@ const SubTopicsManagement = () => {
     const validTopics = selectedTopics.filter(
       (t) => t.topicId && t.subTopicsText.trim().length > 0
     );
-    
+
     if (validTopics.length === 0) {
       setFormError("Please select at least one topic and enter subtopics for it.");
       return;
@@ -797,7 +797,7 @@ const SubTopicsManagement = () => {
     try {
       // Create subtopics for each topic that has subtopics entered
       const allSubTopicsToCreate = [];
-      
+
       for (const topic of validTopics) {
         // Parse subtopics from textarea (split by newlines)
         const subTopicLines = topic.subTopicsText
@@ -843,8 +843,8 @@ const SubTopicsManagement = () => {
       console.error("❌ Error creating sub topics:", error);
       setFormError(
         error.response?.data?.message ||
-          error.message ||
-          "Failed to create sub topics"
+        error.message ||
+        "Failed to create sub topics"
       );
     } finally {
       setIsFormLoading(false);
@@ -874,7 +874,7 @@ const SubTopicsManagement = () => {
       topicId: topicId,
       orderNumber: subTopicToEdit.orderNumber?.toString() || "",
     });
-    
+
     // Fetch units, chapters, and topics for the selected exam, subject, unit, and chapter when editing
     if (examId && subjectId) {
       fetchUnits(examId, subjectId).then(() => {
@@ -887,7 +887,7 @@ const SubTopicsManagement = () => {
         }
       });
     }
-    
+
     setShowEditForm(true);
   };
 
@@ -926,8 +926,8 @@ const SubTopicsManagement = () => {
       console.error("❌ Error updating sub topic:", error);
       setFormError(
         error.response?.data?.message ||
-          error.message ||
-          "Failed to update sub topic"
+        error.message ||
+        "Failed to update sub topic"
       );
     } finally {
       setIsFormLoading(false);
@@ -969,8 +969,8 @@ const SubTopicsManagement = () => {
       console.error("❌ Error deleting sub topic:", error);
       setError(
         error.response?.data?.message ||
-          error.message ||
-          "Failed to delete sub topic"
+        error.message ||
+        "Failed to delete sub topic"
       );
     } finally {
       setIsFormLoading(false);
@@ -1012,8 +1012,8 @@ const SubTopicsManagement = () => {
         console.error(`❌ Error ${action}ing subtopic:`, error);
         setError(
           error.response?.data?.message ||
-            error.message ||
-            `Failed to ${action} subtopic`
+          error.message ||
+          `Failed to ${action} subtopic`
         );
       } finally {
         setIsFormLoading(false);
@@ -1037,7 +1037,7 @@ const SubTopicsManagement = () => {
 
     const items = Array.from(subTopics);
     const reorderedItem = items[sourceIndex];
-    
+
     // Get the topic ID to identify the group
     const topicId = reorderedItem.topicId?._id || reorderedItem.topicId;
 
@@ -1051,11 +1051,11 @@ const SubTopicsManagement = () => {
     const groupSourceIndex = groupSubTopics.findIndex(
       (st) => (st._id || st.id) === (reorderedItem._id || reorderedItem.id)
     );
-    
+
     // Create a reordered group array
     const reorderedGroup = Array.from(groupSubTopics);
     const [movedSubTopic] = reorderedGroup.splice(groupSourceIndex, 1);
-    
+
     // Calculate destination index within the group
     const groupDestIndex = groupSubTopics.findIndex((subTopic, idx) => {
       if (idx === groupSourceIndex) return false;
@@ -1108,8 +1108,7 @@ const SubTopicsManagement = () => {
       console.log("🔄 Reverting sub topic order due to API error");
       fetchSubTopics(); // Revert local state
       setError(
-        `Failed to update sub topic order: ${
-          error.response?.data?.message || error.message
+        `Failed to update sub topic order: ${error.response?.data?.message || error.message
         }`
       );
     }
@@ -1404,7 +1403,7 @@ const SubTopicsManagement = () => {
                     const hasEmptySelection = selectedTopics.some(
                       (t) => !t.topicId || t.topicId === ""
                     );
-                    
+
                     // Check if there are any unselected topics available
                     const selectedTopicIds = selectedTopics
                       .map((t) => t.topicId)
@@ -1412,26 +1411,25 @@ const SubTopicsManagement = () => {
                     const availableTopics = filteredTopics.filter(
                       (t) => !selectedTopicIds.includes(t._id)
                     );
-                    
+
                     // Button should be enabled only if:
                     // 1. Chapter is selected
                     // 2. No empty topic selections exist (all existing selections are filled)
                     // 3. There are available topics to select
-                    const canAddMore = 
-                      formData.chapterId && 
-                      !hasEmptySelection && 
+                    const canAddMore =
+                      formData.chapterId &&
+                      !hasEmptySelection &&
                       availableTopics.length > 0;
-                    
+
                     return (
                       <button
                         type="button"
                         onClick={handleAddAnotherTopic}
                         disabled={!canAddMore}
-                        className={`text-sm font-medium flex items-center gap-1 px-3 py-1.5 rounded-lg transition-colors ${
-                          canAddMore
+                        className={`text-sm font-medium flex items-center gap-1 px-3 py-1.5 rounded-lg transition-colors ${canAddMore
                             ? "text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100"
                             : "text-gray-400 bg-gray-100 cursor-not-allowed"
-                        }`}
+                          }`}
                         title={
                           !formData.chapterId
                             ? "Please select a chapter first"

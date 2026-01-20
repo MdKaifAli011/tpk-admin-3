@@ -107,7 +107,7 @@ const ChaptersManagement = () => {
   const fetchExams = async () => {
     try {
       // Fetch all exams (active and inactive) for dropdown
-      const response = await api.get("/exam?status=all");
+      const response = await api.get("/exam?status=all&limit=1000");
 
       if (response.data.success) {
         setExams(response.data.data || []);
@@ -123,7 +123,7 @@ const ChaptersManagement = () => {
   const fetchSubjects = async () => {
     try {
       // Fetch all subjects (active and inactive) for dropdown
-      const response = await api.get("/subject?status=all");
+      const response = await api.get("/subject?status=all&limit=10000");
 
       if (response.data.success) {
         setSubjects(response.data.data || []);
@@ -340,7 +340,7 @@ const ChaptersManagement = () => {
     if (formData.unitId && showAddForm) {
       getNextOrderNumber(formData.unitId).then((nextOrder) => {
         setNextOrderNumber(nextOrder);
-        
+
         // Always update chapters - create first one if none exist, or update existing ones
         setAdditionalChapters((prev) => {
           if (prev.length === 0) {
@@ -379,14 +379,14 @@ const ChaptersManagement = () => {
     const { name, value } = e.target;
     setFormData((prev) => {
       const newData = { ...prev, [name]: value };
-      
+
       // Reset subject when exam changes
       if (name === "examId" && value !== prev.examId) {
         newData.subjectId = "";
         newData.unitId = "";
         setUnits([]); // Clear units when exam changes
       }
-      
+
       // Reset unit when subject changes and fetch units for the selected exam and subject
       if (name === "subjectId" && value !== prev.subjectId) {
         newData.unitId = "";
@@ -397,10 +397,10 @@ const ChaptersManagement = () => {
           setUnits([]);
         }
       }
-      
+
       // Note: Chapter clearing and order number calculation is handled by useEffect
       // when unitId changes
-      
+
       return newData;
     });
     setFormError(null);
@@ -578,7 +578,7 @@ const ChaptersManagement = () => {
     const examId = chapterToEdit.examId?._id || chapterToEdit.examId;
     const subjectId = chapterToEdit.subjectId?._id || chapterToEdit.subjectId;
     const unitId = chapterToEdit.unitId?._id || chapterToEdit.unitId;
-    
+
     setEditingChapter(chapterToEdit);
     setEditFormData({
       name: chapterToEdit.name,
@@ -590,12 +590,12 @@ const ChaptersManagement = () => {
       time: chapterToEdit.time || 0,
       questions: chapterToEdit.questions || 0,
     });
-    
+
     // Fetch units for the selected exam and subject when editing
     if (examId && subjectId) {
       fetchUnits(examId, subjectId);
     }
-    
+
     setShowEditForm(true);
     setFormError(null);
   };
@@ -604,14 +604,14 @@ const ChaptersManagement = () => {
     const { name, value } = e.target;
     setEditFormData((prev) => {
       const newData = { ...prev, [name]: value };
-      
+
       // Reset subject when exam changes
       if (name === "examId" && value !== prev.examId) {
         newData.subjectId = "";
         newData.unitId = "";
         setUnits([]); // Clear units when exam changes
       }
-      
+
       // Reset unit when subject changes and fetch units for the selected exam and subject
       if (name === "subjectId" && value !== prev.subjectId) {
         newData.unitId = "";
@@ -622,7 +622,7 @@ const ChaptersManagement = () => {
           setUnits([]);
         }
       }
-      
+
       return newData;
     });
     setFormError(null);
@@ -750,7 +750,7 @@ const ChaptersManagement = () => {
       console.error("Error deleting chapter:", error);
       setError(
         error.response?.data?.message ||
-          "Failed to delete chapter. Please try again."
+        "Failed to delete chapter. Please try again."
       );
       showError("Failed to delete chapter. Please try again.");
     } finally {
@@ -820,7 +820,7 @@ const ChaptersManagement = () => {
 
     const items = Array.from(chapters);
     const reorderedItem = items[sourceIndex];
-    
+
     // Get the unit ID to identify the group
     const unitId = reorderedItem.unitId?._id || reorderedItem.unitId;
 
@@ -834,11 +834,11 @@ const ChaptersManagement = () => {
     const groupSourceIndex = groupChapters.findIndex(
       (c) => (c._id || c.id) === (reorderedItem._id || reorderedItem.id)
     );
-    
+
     // Create a reordered group array
     const reorderedGroup = Array.from(groupChapters);
     const [movedChapter] = reorderedGroup.splice(groupSourceIndex, 1);
-    
+
     // Calculate destination index within the group
     const groupDestIndex = groupChapters.findIndex((chapter, idx) => {
       if (idx === groupSourceIndex) return false;
@@ -896,8 +896,7 @@ const ChaptersManagement = () => {
 
       // Show user-friendly error message
       setError(
-        `Failed to update chapter order: ${
-          error.response?.data?.message || error.message
+        `Failed to update chapter order: ${error.response?.data?.message || error.message
         }`
       );
     }

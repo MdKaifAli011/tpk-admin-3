@@ -140,7 +140,7 @@ const UnitsManagement = () => {
   const fetchExams = async () => {
     try {
       // Fetch all exams (active and inactive) for dropdown
-      const response = await api.get("/exam?status=all");
+      const response = await api.get("/exam?status=all&limit=1000");
 
       if (response.data.success) {
         setExams(response.data.data || []);
@@ -156,7 +156,7 @@ const UnitsManagement = () => {
   const fetchSubjects = async () => {
     try {
       // Fetch all subjects (active and inactive) for dropdown
-      const response = await api.get("/subject?status=all");
+      const response = await api.get("/subject?status=all&limit=10000");
 
       if (response.data.success) {
         setSubjects(response.data.data || []);
@@ -479,7 +479,7 @@ const UnitsManagement = () => {
         console.error("Error deleting unit:", error);
         setError(
           error.response?.data?.message ||
-            "Failed to delete unit. Please try again."
+          "Failed to delete unit. Please try again."
         );
         showError("Failed to delete unit. Please try again.");
       } finally {
@@ -550,7 +550,7 @@ const UnitsManagement = () => {
 
     const items = Array.from(units);
     const reorderedItem = items[sourceIndex];
-    
+
     // Get the subject ID to identify the group
     const subjectId = reorderedItem.subjectId?._id || reorderedItem.subjectId;
     const examId = reorderedItem.examId?._id || reorderedItem.examId;
@@ -566,11 +566,11 @@ const UnitsManagement = () => {
     const groupSourceIndex = groupUnits.findIndex(
       (u) => (u._id || u.id) === (reorderedItem._id || reorderedItem.id)
     );
-    
+
     // Create a reordered group array
     const reorderedGroup = Array.from(groupUnits);
     const [movedUnit] = reorderedGroup.splice(groupSourceIndex, 1);
-    
+
     // Calculate destination index within the group
     const groupDestIndex = groupUnits.findIndex((unit, idx) => {
       if (idx === groupSourceIndex) return false;
@@ -628,8 +628,7 @@ const UnitsManagement = () => {
 
       // Show user-friendly error message
       setError(
-        `Failed to update unit order: ${
-          error.response?.data?.message || error.message
+        `Failed to update unit order: ${error.response?.data?.message || error.message
         }`
       );
     }
