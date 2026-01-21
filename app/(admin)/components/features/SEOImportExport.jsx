@@ -122,7 +122,9 @@ const SEOImportExport = () => {
         try {
             const res = await api.post("/admin/seo/export", { type: level, filters });
             if (res.data.success && res.data.data) {
-                const blob = new Blob([res.data.data], { type: "text/csv;charset=utf-8;" });
+                // 🔥 FIX: Add UTF-8 BOM for Excel emoji/Unicode support
+                const BOM = "\uFEFF";
+                const blob = new Blob([BOM + res.data.data], { type: "text/csv;charset=utf-8;" });
                 const url = URL.createObjectURL(blob);
                 const link = document.createElement("a");
                 link.setAttribute("href", url);
@@ -141,92 +143,100 @@ const SEOImportExport = () => {
         }
     };
 
-   const parseCSV = (text) => {
-    if (!text) return { headers: [], rows: [] };
+    const parseCSV = (text) => {
+        if (!text) return { headers: [], rows: [] };
 
-    // 🔥 FIX 1: Remove UTF-8 BOM (Excel issue)
-    if (text.charCodeAt(0) === 0xFEFF) {
-        text = text.slice(1);
-    }
-
-    // 🔥 FIX 2: Normalize Unicode (icons, emojis, Hindi, Arabic)
-    text = text.normalize("NFC");
-
-    const lines = text.split(/\r?\n/);
-    if (lines.length < 2) return { headers: [], rows: [] };
-
-    const parseRow = (row) => {
-        const result = [];
-        let current = "";
-        let inQuotes = false;
-
-        for (let i = 0; i < row.length; i++) {
-            const char = row[i];
-
-            if (char === '"') {
-                if (inQuotes && row[i + 1] === '"') {
-                    current += '"';
-                    i++;
-                } else {
-                    inQuotes = !inQuotes;
-                }
-            } else if (char === ',' && !inQuotes) {
-                result.push(current);
-                current = "";
-            } else {
-                current += char;
-            }
+        // 🔥 FIX 1: Remove UTF-8 BOM (Excel issue)
+        if (text.charCodeAt(0) === 0xFEFF) {
+            text = text.slice(1);
         }
 
-        result.push(current);
-        return result;
-    };
+        // 🔥 FIX 2: Normalize Unicode (icons, emojis, Hindi, Arabic)
+        text = text.normalize("NFC");
 
-    const headers = parseRow(lines[0]).map(h => h.trim());
+        const lines = text.split(/\r?\n/);
+        if (lines.length < 2) return { headers: [], rows: [] };
 
-    const rows = lines
-        .slice(1)
-        .filter(l => l.trim())
-        .map(line => {
-            const cells = parseRow(line);
-            const obj = {};
-            headers.forEach((h, i) => {
-                obj[h] = cells[i]?.trim() || "";
+        const parseRow = (row) => {
+            const result = [];
+            let current = "";
+            let inQuotes = false;
+
+            for (let i = 0; i < row.length; i++) {
+                const char = row[i];
+
+                if (char === '"') {
+                    if (inQuotes && row[i + 1] === '"') {
+                        current += '"';
+                        i++;
+                    } else {
+                        inQuotes = !inQuotes;
+                    }
+                } else if (char === ',' && !inQuotes) {
+                    result.push(current);
+                    current = "";
+                } else {
+                    current += char;
+                }
+            }
+
+            result.push(current);
+            return result;
+        };
+
+        const headers = parseRow(lines[0]).map(h => h.trim());
+
+        const rows = lines
+            .slice(1)
+            .filter(l => l.trim())
+            .map(line => {
+                const cells = parseRow(line);
+                const obj = {};
+                headers.forEach((h, i) => {
+                    obj[h] = cells[i]?.trim() || "";
+                });
+                return obj;
             });
-            return obj;
-        });
 
-    return { headers, rows };
-};
+        return { headers, rows };
+    };
 
 
     const handleFileChange = (e) => {
-    const f = e.target.files[0];
-    if (!f) return;
+        const f = e.target.files[0];
+        if (!f) return;
 
-    setFile(f);
+        setFile(f);
 
-    const reader = new FileReader();
+        const reader = new FileReader();
 
-    reader.onload = () => {
-        const buffer = reader.result;
+        reader.onload = () => {
+            const buffer = reader.result;
 
-        let text;
+            let text;
 
-        try {
-            // 🔥 Try UTF-8 first
-            text = new TextDecoder("utf-8", { fatal: true }).decode(buffer);
-        } catch (e) {
-            // 🔥 Fallback for Excel Windows CSV (ANSI / Windows-1252)
-            text = new TextDecoder("windows-1252").decode(buffer);
-        }
+            try {
+                // 🔥 Try UTF-8 first
+                text = new TextDecoder("utf-8", { fatal: true }).decode(buffer);
+            } catch (e) {
+                // 🔥 Fallback for Excel Windows CSV (ANSI / Windows-1252)
+                text = new TextDecoder("windows-1252").decode(buffer);
+            }
 
-        const { rows } = parseCSV(text);
-        setParsedData(rows);
+
+            const { rows } = parseCSV(text);
+
+            // 🔥 DEBUG: Log first row to verify Unicode is preserved
+            if (rows.length > 0) {
+                console.log("✅ First row parsed:", rows[0]);
+                console.log("✅ Sample Name field:", rows[0].Name || rows[0].name);
+            }
+
+            setParsedData(rows);
+        };
+
+        reader.readAsArrayBuffer(f);
     };
-
-    reader.readAsArrayBuffer(f);
-};
 
 
 
@@ -516,24 +526,32 @@ const SEOImportExport = () => {
                         <div className="px-4 py-3 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
                             <h4 className="text-xs font-bold text-gray-600 uppercase tracking-wider">Data Preview ({parsedData.length} rows)</h4>
                         </div>
-                        <div className="overflow-x-auto  scrollbar-thin">
-                            <table className="w-full text-left text-xs">
-                                <thead className="bg-gray-50 border-b border-gray-200 sticky top-0">
+                        <div className="overflow-x-auto max-h-[500px] scrollbar-thin">
+                            <table className="w-full text-left text-xs table-auto">
+                                <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
                                     <tr>
-                                        <th className="px-4 py-3 font-semibold text-gray-700">Name</th>
-                                        <th className="px-4 py-3 font-semibold text-gray-700">SEO Title</th>
-                                        <th className="px-4 py-3 font-semibold text-gray-700">Keywords</th>
-                                        <th className="px-4 py-3 font-semibold text-gray-700">Status</th>
+                                        <th className="px-4 py-3 font-semibold text-gray-700 whitespace-nowrap min-w-[200px]">Name</th>
+                                        <th className="px-4 py-3 font-semibold text-gray-700 whitespace-nowrap min-w-[250px]">SEO Title</th>
+                                        <th className="px-4 py-3 font-semibold text-gray-700 whitespace-nowrap min-w-[200px]">Keywords</th>
+                                        <th className="px-4 py-3 font-semibold text-gray-700 whitespace-nowrap min-w-[100px]">Status</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">
                                     {parsedData.slice(0, 50).map((row, idx) => (
                                         <tr key={idx} className="hover:bg-gray-50 transition-colors">
-                                            <td className="px-4 py-3 text-gray-900 font-medium">{row.Name || row.name || "-"}</td>
-                                            <td className="px-4 py-3 text-gray-500 max-w-[200px] truncate">{row["SEO Title"] || row.seotitle || "-"}</td>
-                                            <td className="px-4 py-3 text-gray-500 max-w-[150px] truncate">{row.Keywords || row.keywords || "-"}</td>
+                                            <td className="px-4 py-3 text-gray-900 font-medium break-words max-w-[300px]">
+                                                {row.Name || row.name || "-"}
+                                            </td>
+                                            <td className="px-4 py-3 text-gray-500 break-words max-w-[350px]">
+                                                {row["SEO Title"] || row.seotitle || row.title || "-"}
+                                            </td>
+                                            <td className="px-4 py-3 text-gray-500 break-words max-w-[300px]">
+                                                {row.Keywords || row.keywords || "-"}
+                                            </td>
                                             <td className="px-4 py-3">
-                                                <span className={`px-2 py-0.5 rounded-full text-[10px] uppercase font-bold ${(row.Status || row.status) === 'publish' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
+                                                <span className={`px-2 py-0.5 rounded-full text-[10px] uppercase font-bold whitespace-nowrap ${(row.Status || row.status) === 'publish'
+                                                    ? 'bg-green-100 text-green-700'
+                                                    : 'bg-gray-100 text-gray-600'
                                                     }`}>
                                                     {row.Status || row.status || "draft"}
                                                 </span>
