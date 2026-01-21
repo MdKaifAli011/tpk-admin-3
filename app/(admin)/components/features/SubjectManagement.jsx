@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState, useRef, useMemo } from "react";
+import React, { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import SubjectTable from "../table/SubjectTable";
 import {
   LoadingWrapper,
@@ -42,7 +42,7 @@ const SubjectManagement = () => {
   const [metaFilter, setMetaFilter] = useState("all"); // all, filled, notFilled
 
   // ✅ Fetch Subjects using Axios
-  const fetchSubjects = async () => {
+  const fetchSubjects = useCallback(async () => {
     if (isFetchingRef.current) return;
     isFetchingRef.current = true;
     try {
@@ -77,7 +77,7 @@ const SubjectManagement = () => {
       setIsDataLoading(false);
       isFetchingRef.current = false;
     }
-  };
+  }, [metaFilter]);
 
   // ✅ Fetch Exams (for dropdown) using Axios
   const fetchExams = async () => {
@@ -97,7 +97,7 @@ const SubjectManagement = () => {
 
   useEffect(() => {
     fetchSubjects();
-  }, [metaFilter]);
+  }, [fetchSubjects, metaFilter]);
 
   useEffect(() => {
     fetchExams();

@@ -65,7 +65,7 @@ export async function GET(request) {
         ]
       }).select("definitionId").lean();
 
-      const definitionIdsWithMeta = detailsWithMeta.map(d => d.definitionId.toString());
+      const definitionIdsWithMeta = detailsWithMeta.map(d => d.definitionId);
 
       if (metaStatus === "filled") {
         filter._id = { $in: definitionIdsWithMeta };

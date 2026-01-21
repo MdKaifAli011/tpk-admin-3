@@ -57,7 +57,7 @@ export async function GET(request) {
         ]
       }).select("subTopicId").lean();
 
-      const subTopicIdsWithMeta = detailsWithMeta.map(d => d.subTopicId.toString());
+      const subTopicIdsWithMeta = detailsWithMeta.map(d => d.subTopicId);
 
       if (metaStatus === "filled") {
         filter._id = { $in: subTopicIdsWithMeta };

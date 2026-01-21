@@ -102,7 +102,7 @@ const ChaptersManagement = () => {
       setIsDataLoading(false);
       isFetchingRef.current = false;
     }
-  }, []);
+  }, [metaFilter]);
 
   // Fetch exams from API using Axios
   const fetchExams = async () => {

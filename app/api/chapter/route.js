@@ -60,7 +60,7 @@ export async function GET(request) {
         ]
       }).select("chapterId").lean();
 
-      const chapterIdsWithMeta = detailsWithMeta.map(d => d.chapterId.toString());
+      const chapterIdsWithMeta = detailsWithMeta.map(d => d.chapterId);
 
       if (metaStatus === "filled") {
         query._id = { $in: chapterIdsWithMeta };

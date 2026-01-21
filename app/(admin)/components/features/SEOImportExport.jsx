@@ -397,13 +397,23 @@ const SEOImportExport = () => {
 
                     {parsedData.length > 0 && (
                         <button
-                            onClick={() => { setFile(null); setParsedData([]); }}
+                            onClick={() => {
+                                setFile(null);
+                                setParsedData([]);
+                                setResults(null); // optional but recommended
+
+                                // 🔥 THIS LINE FIXES THE BUG
+                                if (fileInputRef.current) {
+                                    fileInputRef.current.value = "";
+                                }
+                            }}
                             className="px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
                         >
                             <FaTrash />
                             Clear File
                         </button>
                     )}
+
                 </div>
             </div>
 
@@ -466,12 +476,12 @@ const SEOImportExport = () => {
                         </div>
                         <div className="overflow-x-auto  scrollbar-thin">
                             <table className="w-full text-left text-xs">
-                                <thead className="bg-gray-50 sticky top-0">
+                                <thead className="bg-gray-50 border-b border-gray-200 sticky top-0">
                                     <tr>
-                                        <th className="px-4 py-3 font-semibold text-gray-700 border-b">Name</th>
-                                        <th className="px-4 py-3 font-semibold text-gray-700 border-b">SEO Title</th>
-                                        <th className="px-4 py-3 font-semibold text-gray-700 border-b">Keywords</th>
-                                        <th className="px-4 py-3 font-semibold text-gray-700 border-b">Status</th>
+                                        <th className="px-4 py-3 font-semibold text-gray-700">Name</th>
+                                        <th className="px-4 py-3 font-semibold text-gray-700">SEO Title</th>
+                                        <th className="px-4 py-3 font-semibold text-gray-700">Keywords</th>
+                                        <th className="px-4 py-3 font-semibold text-gray-700">Status</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">

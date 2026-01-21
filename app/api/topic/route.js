@@ -56,7 +56,7 @@ export async function GET(request) {
         ]
       }).select("topicId").lean();
 
-      const topicIdsWithMeta = detailsWithMeta.map(d => d.topicId.toString());
+      const topicIdsWithMeta = detailsWithMeta.map(d => d.topicId);
 
       if (metaStatus === "filled") {
         filter._id = { $in: topicIdsWithMeta };

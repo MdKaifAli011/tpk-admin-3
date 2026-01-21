@@ -92,7 +92,7 @@ const DefinitionManagement = () => {
       setIsDataLoading(false);
       isFetchingRef.current = false;
     }
-  }, []);
+  }, [metaFilter]);
 
   // Fetch exams from API
   const fetchExams = useCallback(async () => {

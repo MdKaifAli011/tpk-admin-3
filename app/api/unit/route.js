@@ -54,7 +54,7 @@ export async function GET(request) {
         ]
       }).select("unitId").lean();
 
-      const unitIdsWithMeta = detailsWithMeta.map(d => d.unitId.toString());
+      const unitIdsWithMeta = detailsWithMeta.map(d => d.unitId);
 
       if (metaStatus === "filled") {
         query._id = { $in: unitIdsWithMeta };

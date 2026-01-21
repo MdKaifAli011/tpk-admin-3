@@ -50,7 +50,7 @@ export async function GET(request) {
         ]
       }).select("subjectId").lean();
 
-      const subjectIdsWithMeta = detailsWithMeta.map(d => d.subjectId.toString());
+      const subjectIdsWithMeta = detailsWithMeta.map(d => d.subjectId);
 
       if (metaStatus === "filled") {
         query._id = { $in: subjectIdsWithMeta };
