@@ -37,11 +37,33 @@ export async function GET(request) {
     // Parse pagination
     const { page, limit, skip } = parsePagination(searchParams);
 
+    const metaStatus = searchParams.get("metaStatus"); // filled, notFilled
+
     // Build query with case-insensitive status matching
     let query = {};
     if (statusFilter !== "all") {
       // Use regex for case-insensitive matching
       query.status = { $regex: new RegExp(`^${statusFilter}$`, "i") };
+    }
+
+    // Handle Metadata filtering
+    if (metaStatus === "filled" || metaStatus === "notFilled") {
+      const ExamDetails = (await import("@/models/ExamDetails")).default;
+      const detailsWithMeta = await ExamDetails.find({
+        $or: [
+          { title: { $ne: "", $exists: true } },
+          { metaDescription: { $ne: "", $exists: true } },
+          { keywords: { $ne: "", $exists: true } }
+        ]
+      }).select("examId").lean();
+
+      const examIdsWithMeta = detailsWithMeta.map(d => d.examId);
+
+      if (metaStatus === "filled") {
+        query._id = { $in: examIdsWithMeta };
+      } else {
+        query._id = { $nin: examIdsWithMeta };
+      }
     }
 
     // Create cache key
@@ -86,15 +108,17 @@ export async function GET(request) {
     const examDetails = await ExamDetails.find({
       examId: { $in: examIds },
     })
-      .select("examId content createdAt updatedAt")
+      .select("examId content title metaDescription keywords createdAt updatedAt")
       .lean();
 
     // Create a map of examId to content info
     const contentMap = new Map();
     examDetails.forEach((detail) => {
       const hasContent = detail.content && detail.content.trim() !== "";
+      const hasMeta = !!(detail.title?.trim() || detail.metaDescription?.trim() || detail.keywords?.trim());
       contentMap.set(detail.examId.toString(), {
         hasContent,
+        hasMeta,
         contentDate: hasContent ? (detail.updatedAt || detail.createdAt) : null,
       });
     });
@@ -103,6 +127,7 @@ export async function GET(request) {
     const examsWithContent = validExams.map((exam) => {
       const contentInfo = contentMap.get(exam._id.toString()) || {
         hasContent: false,
+        hasMeta: false,
         contentDate: null,
       };
       return {

@@ -19,15 +19,17 @@ export async function GET(request) {
 
     await connectDB();
     const { searchParams } = new URL(request.url);
-    
+
     // Parse pagination
     const { page, limit, skip } = parsePagination(searchParams);
-    
+
     // Get filters (normalize status to lowercase for case-insensitive matching)
     const subjectId = searchParams.get("subjectId");
     const examId = searchParams.get("examId");
     const statusFilterParam = searchParams.get("status") || STATUS.ACTIVE;
     const statusFilter = statusFilterParam.toLowerCase();
+
+    const metaStatus = searchParams.get("metaStatus"); // filled, notFilled
 
     // Build query with case-insensitive status matching
     const query = {};
@@ -39,6 +41,26 @@ export async function GET(request) {
     }
     if (statusFilter !== "all") {
       query.status = { $regex: new RegExp(`^${statusFilter}$`, "i") };
+    }
+
+    // Handle Metadata filtering
+    if (metaStatus === "filled" || metaStatus === "notFilled") {
+      const UnitDetails = (await import("@/models/UnitDetails")).default;
+      const detailsWithMeta = await UnitDetails.find({
+        $or: [
+          { title: { $ne: "", $exists: true } },
+          { metaDescription: { $ne: "", $exists: true } },
+          { keywords: { $ne: "", $exists: true } }
+        ]
+      }).select("unitId").lean();
+
+      const unitIdsWithMeta = detailsWithMeta.map(d => d.unitId.toString());
+
+      if (metaStatus === "filled") {
+        query._id = { $in: unitIdsWithMeta };
+      } else {
+        query._id = { $nin: unitIdsWithMeta };
+      }
     }
 
     // Create cache key
@@ -54,7 +76,7 @@ export async function GET(request) {
 
     // Optimize query: only get count if we need pagination info
     const shouldCount = page === 1 || limit < 100;
-    
+
     // Parallel execution for better performance
     const [total, units] = await Promise.all([
       shouldCount ? Unit.countDocuments(query) : Promise.resolve(0),
@@ -74,15 +96,17 @@ export async function GET(request) {
     const unitDetails = await UnitDetails.find({
       unitId: { $in: unitIds },
     })
-      .select("unitId content createdAt updatedAt")
+      .select("unitId content title metaDescription keywords createdAt updatedAt")
       .lean();
 
     // Create a map of unitId to content info
     const contentMap = new Map();
     unitDetails.forEach((detail) => {
       const hasContent = detail.content && detail.content.trim() !== "";
+      const hasMeta = !!(detail.title?.trim() || detail.metaDescription?.trim() || detail.keywords?.trim());
       contentMap.set(detail.unitId.toString(), {
         hasContent,
+        hasMeta,
         contentDate: hasContent ? (detail.updatedAt || detail.createdAt) : null,
       });
     });
@@ -91,6 +115,7 @@ export async function GET(request) {
     const unitsWithContent = units.map((unit) => {
       const contentInfo = contentMap.get(unit._id.toString()) || {
         hasContent: false,
+        hasMeta: false,
         contentDate: null,
       };
       return {

@@ -65,6 +65,7 @@ const DefinitionManagement = () => {
   const [filterSubTopic, setFilterSubTopic] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const isFetchingRef = useRef(false);
+  const [metaFilter, setMetaFilter] = useState("all"); // all, filled, notFilled
 
   // Fetch definitions from API using Axios
   const fetchDefinitions = useCallback(async () => {
@@ -73,7 +74,7 @@ const DefinitionManagement = () => {
       isFetchingRef.current = true;
       setIsDataLoading(true);
       setError(null);
-      const response = await api.get("/definition?status=all&limit=10000");
+      const response = await api.get(`/definition?status=all&limit=10000&metaStatus=${metaFilter}`);
 
       if (response.data.success) {
         setDefinitions(response.data.data);
@@ -232,10 +233,13 @@ const DefinitionManagement = () => {
   // Load data on component mount
   useEffect(() => {
     fetchDefinitions();
+  }, [fetchDefinitions, metaFilter]);
+
+  useEffect(() => {
     fetchExams();
     fetchSubjects();
     // Don't fetch units, topics, and subtopics on mount - will fetch when parent is selected
-  }, [fetchDefinitions, fetchExams, fetchSubjects]);
+  }, [fetchExams, fetchSubjects]);
 
   // Auto-clear error after 5 seconds with cleanup
   useEffect(() => {
@@ -2057,14 +2061,27 @@ const DefinitionManagement = () => {
                     className="w-full sm:w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                   />
                 </div>
+                <div className="flex items-center gap-2">
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Meta Status:</label>
+                  <select
+                    value={metaFilter}
+                    onChange={(e) => setMetaFilter(e.target.value)}
+                    className="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-medium focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                  >
+                    <option value="all">All Items</option>
+                    <option value="filled">Meta Filled</option>
+                    <option value="notFilled">Meta Not Filled</option>
+                  </select>
+                </div>
                 <button
                   onClick={() => setShowFilters(!showFilters)}
-                  className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5"
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${showFilters
+                    ? "bg-blue-600 text-white shadow-md"
+                    : "bg-white text-gray-600 border border-gray-200 hover:border-blue-400"
+                    }`}
                 >
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                  </svg>
-                  Filter Definitions
+                  <FaSearch className="w-4 h-4" />
+                  Filters
                   {activeFilterCount > 0 && (
                     <span className="bg-white text-blue-600 px-1.5 py-0.5 rounded-full text-xs font-medium">
                       {activeFilterCount}

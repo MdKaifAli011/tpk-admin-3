@@ -1,6 +1,7 @@
 "use client";
 import React, { useMemo } from "react";
 import { FaEdit, FaTrash, FaEye, FaPowerOff, FaLock } from "react-icons/fa";
+import { FiCheck } from "react-icons/fi";
 import { useRouter } from "next/navigation";
 import {
   usePermissions,
@@ -180,8 +181,14 @@ const SubTopicsTable = ({
                     <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       SubTopic Name
                     </th>
+                    <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
+                      Preview
+                    </th>
                     <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-40">
                       Content
+                    </th>
+                    <th className="px-2 py-1 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-16">
+                      Meta
                     </th>
                     <th className="px-2 py-1 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
                       Actions
@@ -193,9 +200,8 @@ const SubTopicsTable = ({
                     return (
                       <tr
                         key={subTopic._id || subTopicIndex}
-                        className={`hover:bg-gray-50 transition-colors ${
-                          subTopic.status === "inactive" ? "opacity-60" : ""
-                        }`}
+                        className={`hover:bg-gray-50 transition-colors ${subTopic.status === "inactive" ? "opacity-60" : ""
+                          }`}
                       >
                         {/* Order Number */}
                         <td className="px-2 py-1 whitespace-nowrap">
@@ -207,24 +213,34 @@ const SubTopicsTable = ({
                         <td className="px-2 py-1">
                           <span
                             onClick={() => handleSubTopicClick(subTopic._id)}
-                            className={`cursor-pointer text-sm font-medium hover:text-blue-600 transition-colors ${
-                              subTopic.status === "inactive"
-                                ? "text-gray-500 line-through"
-                                : "text-gray-900"
-                            }`}
+                            className={`cursor-pointer text-sm font-medium hover:text-blue-600 transition-colors ${subTopic.status === "inactive"
+                              ? "text-gray-500 line-through"
+                              : "text-gray-900"
+                              }`}
                             title={subTopic.name}
                           >
                             {subTopic.name}
                           </span>
                         </td>
+                        <td className="px-2 py-1 whitespace-nowrap w-24">
+                          <span className="text-[10px] text-gray-400">No Image</span>
+                        </td>
                         <td className="px-2 py-1 whitespace-nowrap w-40">
-                          <span className={`text-sm ${
-                            subTopic.contentInfo?.hasContent 
-                              ? "text-gray-700" 
-                              : "text-gray-400 italic"
-                          }`}>
+                          <span className={`text-sm ${subTopic.contentInfo?.hasContent
+                            ? "text-gray-700"
+                            : "text-gray-400 italic"
+                            }`}>
                             {formatContentDate(subTopic.contentInfo)}
                           </span>
+                        </td>
+                        <td className="px-2 py-1 whitespace-nowrap w-16 text-center">
+                          {subTopic.contentInfo?.hasMeta ? (
+                            <div className="flex justify-center">
+                              <FiCheck className="text-green-600 w-5 h-5 font-black" style={{ strokeWidth: 5 }} title="Meta data filled" />
+                            </div>
+                          ) : (
+                            <span className="text-gray-300">-</span>
+                          )}
                         </td>
                         {/* Actions */}
                         <td className="px-2 py-1 whitespace-nowrap text-right w-32">
@@ -327,19 +343,17 @@ const SubTopicsTable = ({
                 return (
                   <div
                     key={subTopic._id || subTopicIndex}
-                    className={`p-1.5 hover:bg-gray-50 transition-colors ${
-                      subTopic.status === "inactive" ? "opacity-60" : ""
-                    }`}
+                    className={`p-1.5 hover:bg-gray-50 transition-colors ${subTopic.status === "inactive" ? "opacity-60" : ""
+                      }`}
                   >
                     <div className="flex justify-between items-start gap-2">
                       <div className="flex-1 min-w-0 pr-2">
                         <h3
                           onClick={() => handleSubTopicClick(subTopic._id)}
-                          className={`text-sm font-semibold mb-1 cursor-pointer hover:text-blue-600 transition-colors ${
-                            subTopic.status === "inactive"
-                              ? "text-gray-500 line-through"
-                              : "text-gray-900"
-                          }`}
+                          className={`text-sm font-semibold mb-1 cursor-pointer hover:text-blue-600 transition-colors ${subTopic.status === "inactive"
+                            ? "text-gray-500 line-through"
+                            : "text-gray-900"
+                            }`}
                           title={subTopic.name}
                         >
                           {subTopic.name}
@@ -348,13 +362,20 @@ const SubTopicsTable = ({
                           <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 font-medium text-sm">
                             #{subTopic.orderNumber || subTopicIndex + 1}
                           </span>
-                          <span className={`text-sm ${
-                            subTopic.contentInfo?.hasContent 
-                              ? "text-gray-600" 
-                              : "text-gray-400 italic"
-                          }`}>
+                          <span className={`text-sm ${subTopic.contentInfo?.hasContent
+                            ? "text-gray-600"
+                            : "text-gray-400 italic"
+                            }`}>
                             Content: {formatContentDate(subTopic.contentInfo)}
                           </span>
+                          <div className="flex items-center gap-1 mt-1">
+                            <span className="text-[10px] text-gray-500">Meta:</span>
+                            {subTopic.contentInfo?.hasMeta ? (
+                              <FiCheck className="text-green-600 w-4 h-4" style={{ strokeWidth: 4 }} />
+                            ) : (
+                              <span className="text-gray-400 text-[10px]">-</span>
+                            )}
+                          </div>
                         </div>
                       </div>
                       <div className="flex items-center gap-1 flex-shrink-0">

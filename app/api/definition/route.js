@@ -24,15 +24,17 @@ export async function GET(request) {
 
     await connectDB();
     const { searchParams } = new URL(request.url);
-    
+
     // Parse pagination
     const { page, limit, skip } = parsePagination(searchParams);
-    
+
     // Get filters (normalize status to lowercase for case-insensitive matching)
     const topicId = searchParams.get("topicId");
     const subTopicId = searchParams.get("subTopicId");
     const statusFilterParam = searchParams.get("status") || STATUS.ACTIVE;
     const statusFilter = statusFilterParam.toLowerCase();
+
+    const metaStatus = searchParams.get("metaStatus"); // filled, notFilled
 
     // Build query with case-insensitive status matching
     const filter = {};
@@ -50,6 +52,26 @@ export async function GET(request) {
     }
     if (statusFilter !== "all") {
       filter.status = { $regex: new RegExp(`^${statusFilter}$`, "i") };
+    }
+
+    // Handle Metadata filtering
+    if (metaStatus === "filled" || metaStatus === "notFilled") {
+      const DefinitionDetails = (await import("@/models/DefinitionDetails")).default;
+      const detailsWithMeta = await DefinitionDetails.find({
+        $or: [
+          { title: { $ne: "", $exists: true } },
+          { metaDescription: { $ne: "", $exists: true } },
+          { keywords: { $ne: "", $exists: true } }
+        ]
+      }).select("definitionId").lean();
+
+      const definitionIdsWithMeta = detailsWithMeta.map(d => d.definitionId.toString());
+
+      if (metaStatus === "filled") {
+        filter._id = { $in: definitionIdsWithMeta };
+      } else {
+        filter._id = { $nin: definitionIdsWithMeta };
+      }
     }
 
     // Get total count
@@ -89,15 +111,17 @@ export async function GET(request) {
     const definitionDetails = await DefinitionDetails.find({
       definitionId: { $in: definitionIds },
     })
-      .select("definitionId content createdAt updatedAt")
+      .select("definitionId content title metaDescription keywords createdAt updatedAt")
       .lean();
 
     // Create a map of definitionId to content info
     const contentMap = new Map();
     definitionDetails.forEach((detail) => {
       const hasContent = detail.content && detail.content.trim() !== "";
+      const hasMeta = !!(detail.title?.trim() || detail.metaDescription?.trim() || detail.keywords?.trim());
       contentMap.set(detail.definitionId.toString(), {
         hasContent,
+        hasMeta,
         contentDate: hasContent ? (detail.updatedAt || detail.createdAt) : null,
       });
     });
@@ -106,6 +130,7 @@ export async function GET(request) {
     const definitionsWithContent = definitions.map((def) => {
       const contentInfo = contentMap.get(def._id.toString()) || {
         hasContent: false,
+        hasMeta: false,
         contentDate: null,
       };
       return {
@@ -162,7 +187,7 @@ export async function POST(request) {
           );
         }
       }
-      
+
       // Validate chapterId if provided
       if (chapterId && !mongoose.Types.ObjectId.isValid(chapterId)) {
         return NextResponse.json(
@@ -175,7 +200,7 @@ export async function POST(request) {
     // Verify referenced documents exist (using first item's ids; all items use same ids from UI)
     const { examId, subjectId, unitId, chapterId, topicId, subTopicId } = items[0];
     const Chapter = (await import("@/models/Chapter")).default;
-    
+
     // Fetch topic first to get chapterId if not provided
     const topic = await Topic.findById(topicId);
     if (!topic) {
@@ -184,10 +209,10 @@ export async function POST(request) {
         { status: 404 }
       );
     }
-    
+
     // Use provided chapterId or get it from topic
     const finalChapterId = chapterId || topic.chapterId;
-    
+
     const [exam, subject, unit, chapter, subTopic] = await Promise.all([
       Exam.findById(examId),
       Subject.findById(subjectId),
@@ -243,7 +268,7 @@ export async function POST(request) {
           console.error("Error fetching chapterId from topic:", error);
         }
       }
-      
+
       // Ensure chapterId is set - if still missing, this is an error
       if (!finalChapterId) {
         return NextResponse.json(
@@ -316,17 +341,17 @@ export async function POST(request) {
           // Order conflict can be from old index (chapterId_1_orderNumber_1) or new index (subTopicId_1_orderNumber_1)
           const isOrderConflict = errorKeyPattern.orderNumber !== undefined;
           const isOldChapterIndexConflict = errorKeyPattern.chapterId !== undefined && errorKeyPattern.orderNumber !== undefined;
-          
+
           try {
             let retryDoc;
-            
+
             if (isSlugConflict) {
               // Slug conflict: This should not happen if scoped to subtopic correctly
               // But old database index (chapterId_1_slug_1) might cause conflicts
               // Generate unique slug scoped to subtopic (definitions depend on subtopic, not chapter)
               const { createSlug, generateUniqueSlug } = await import("@/utils/serverSlug");
               const baseSlug = createSlug(definitionName);
-              
+
               // Check for existing slugs in the same subtopic (correct scope)
               const checkSlugExists = async (slug, excludeId) => {
                 const query = { subTopicId, slug };
@@ -336,27 +361,27 @@ export async function POST(request) {
                 const existing = await Definition.findOne(query);
                 return !!existing;
               };
-              
+
               // Generate unique slug per subtopic (definitions are scoped to subtopic)
               let uniqueSlug = await generateUniqueSlug(
                 baseSlug,
                 checkSlugExists,
                 null
               );
-              
+
               // If old chapterId_1_slug_1 index still exists, add subtopic suffix to ensure uniqueness
               // Check if slug exists in same chapter (for old index compatibility)
-              const checkChapterSlug = await Definition.findOne({ 
-                chapterId: finalChapterId, 
-                slug: uniqueSlug 
+              const checkChapterSlug = await Definition.findOne({
+                chapterId: finalChapterId,
+                slug: uniqueSlug
               });
-              
+
               if (checkChapterSlug && checkChapterSlug.subTopicId.toString() !== subTopicId.toString()) {
                 // Old index conflict: Add subtopic-specific suffix to make it unique
                 const subTopicSuffix = subTopicId.toString().slice(-6); // Last 6 chars of ObjectId
                 uniqueSlug = `${uniqueSlug}-st${subTopicSuffix}`;
               }
-              
+
               // Create with temporary unique name, then update with correct name and slug
               // This bypasses pre-save hook slug generation
               const tempName = `${definitionName}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -371,13 +396,13 @@ export async function POST(request) {
                 orderNumber: finalOrderNumber,
                 status: item.status || STATUS.ACTIVE,
               });
-              
+
               // Update with correct name and unique slug (findByIdAndUpdate bypasses pre-save hook)
               retryDoc = await Definition.findByIdAndUpdate(
                 tempDoc._id,
-                { 
+                {
                   name: definitionName,
-                  slug: uniqueSlug 
+                  slug: uniqueSlug
                 },
                 { new: true, runValidators: false }
               );
@@ -388,9 +413,9 @@ export async function POST(request) {
                 .sort({ orderNumber: -1 })
                 .select("orderNumber");
               const altOrder = lastBySubTopic ? lastBySubTopic.orderNumber + 1 : 1;
-              
+
               console.log(`⚠️ Order conflict detected (old index: ${isOldChapterIndexConflict ? 'chapterId' : 'subTopicId'}). Recalculating order number for subTopic ${subTopicId}: ${altOrder}`);
-              
+
               // Try creating with recalculated order number
               try {
                 retryDoc = await Definition.create({
@@ -414,15 +439,15 @@ export async function POST(request) {
                     .select("orderNumber")
                     .lean();
                   const usedOrders = new Set(existingOrders.map(d => d.orderNumber));
-                  
+
                   // Find first available order number starting from 1
                   let uniqueOrder = 1;
                   while (usedOrders.has(uniqueOrder)) {
                     uniqueOrder++;
                   }
-                  
+
                   console.log(`✅ Using order number ${uniqueOrder} for subTopic ${subTopicId}`);
-                  
+
                   retryDoc = await Definition.create({
                     name: definitionName,
                     examId: item.examId,
@@ -447,7 +472,7 @@ export async function POST(request) {
               });
               throw err;
             }
-            
+
             createdDefinitions.push(retryDoc._id);
             console.log(`✅ Retried creation after duplicate key error for definition "${definitionName}"`);
           } catch (err2) {

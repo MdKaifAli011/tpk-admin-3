@@ -2,6 +2,7 @@
 import React, { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { FaEdit, FaTrash, FaEye, FaPowerOff, FaLock, FaGraduationCap } from "react-icons/fa";
+import { FiCheck } from "react-icons/fi";
 import {
   usePermissions,
   getPermissionMessage,
@@ -125,8 +126,14 @@ const SubjectTable = ({ subjects, onEdit, onDelete, onToggleStatus, onTogglePrac
                   <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Subject Name
                   </th>
+                  <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
+                    Preview
+                  </th>
                   <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-40">
                     Content
+                  </th>
+                  <th className="px-2 py-1 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-16">
+                    Meta
                   </th>
                   <th className="px-2 py-1 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
                     Actions
@@ -150,6 +157,9 @@ const SubjectTable = ({ subjects, onEdit, onDelete, onToggleStatus, onTogglePrac
                     >
                       {subject.name}
                     </td>
+                    <td className="px-2 py-1 whitespace-nowrap w-24">
+                      <span className="text-[10px] text-gray-400">No Image</span>
+                    </td>
                     <td className="px-2 py-1 whitespace-nowrap w-40">
                       <span
                         className={`text-sm ${subject.contentInfo?.hasContent
@@ -159,6 +169,15 @@ const SubjectTable = ({ subjects, onEdit, onDelete, onToggleStatus, onTogglePrac
                       >
                         {formatContentDate(subject.contentInfo)}
                       </span>
+                    </td>
+                    <td className="px-2 py-1 whitespace-nowrap w-16 text-center">
+                      {subject.contentInfo?.hasMeta ? (
+                        <div className="flex justify-center">
+                          <FiCheck className="text-green-600 w-5 h-5 font-black" style={{ strokeWidth: 5 }} title="Meta data filled" />
+                        </div>
+                      ) : (
+                        <span className="text-gray-300">-</span>
+                      )}
                     </td>
                     <td className="px-2 py-1 whitespace-nowrap text-right w-32">
                       <div className="flex items-center justify-end gap-1">
@@ -247,8 +266,8 @@ const SubjectTable = ({ subjects, onEdit, onDelete, onToggleStatus, onTogglePrac
                                 onTogglePractice(subject);
                               }}
                               className={`p-1 rounded-lg transition-colors ${subject.practiceDisabled
-                                  ? "bg-red-50 text-red-600 hover:bg-red-100"
-                                  : "bg-green-50 text-green-600 hover:bg-green-100"
+                                ? "bg-red-50 text-red-600 hover:bg-red-100"
+                                : "bg-green-50 text-green-600 hover:bg-green-100"
                                 }`}
                               title={
                                 subject.practiceDisabled
@@ -314,6 +333,14 @@ const SubjectTable = ({ subjects, onEdit, onDelete, onToggleStatus, onTogglePrac
                       >
                         Content: {formatContentDate(subject.contentInfo)}
                       </span>
+                      <div className="flex items-center gap-1">
+                        <span className="text-[10px] text-gray-500">Meta:</span>
+                        {subject.contentInfo?.hasMeta ? (
+                          <FiCheck className="text-green-600 w-4 h-4" style={{ strokeWidth: 4 }} />
+                        ) : (
+                          <span className="text-gray-400 text-[10px]">-</span>
+                        )}
+                      </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-1 flex-shrink-0">
@@ -402,8 +429,8 @@ const SubjectTable = ({ subjects, onEdit, onDelete, onToggleStatus, onTogglePrac
                             onTogglePractice(subject);
                           }}
                           className={`p-1 rounded-lg transition-colors ${subject.practiceDisabled
-                              ? "bg-red-50 text-red-600 hover:bg-red-100"
-                              : "bg-green-50 text-green-600 hover:bg-green-100"
+                            ? "bg-red-50 text-red-600 hover:bg-red-100"
+                            : "bg-green-50 text-green-600 hover:bg-green-100"
                             }`}
                           title={
                             subject.practiceDisabled

@@ -10,6 +10,7 @@ import {
   FaLock,
   FaInfoCircle,
 } from "react-icons/fa";
+import { FiCheck } from "react-icons/fi";
 import {
   usePermissions,
   getPermissionMessage,
@@ -74,6 +75,9 @@ const ExamTable = ({ exams, onEdit, onDelete, onView, onToggleStatus, onManageIn
               </th>
               <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
                 Content
+              </th>
+              <th className="px-2 py-1 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-16">
+                Meta
               </th>
               <th className="px-2 py-1 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
                 Actions
@@ -141,6 +145,15 @@ const ExamTable = ({ exams, onEdit, onDelete, onView, onToggleStatus, onManageIn
                   >
                     {formatContentDate(exam.contentInfo)}
                   </span>
+                </td>
+                <td className="px-2 py-1 whitespace-nowrap w-16 text-center">
+                  {exam.contentInfo?.hasMeta ? (
+                    <div className="flex justify-center">
+                      <FiCheck className="text-green-600 w-5 h-5 font-black" style={{ strokeWidth: 5 }} title="Meta data filled" />
+                    </div>
+                  ) : (
+                    <span className="text-gray-300">-</span>
+                  )}
                 </td>
                 <td className="px-2 py-1 whitespace-nowrap text-right w-32">
                   <div className="flex items-center justify-end gap-1">
@@ -261,10 +274,10 @@ const ExamTable = ({ exams, onEdit, onDelete, onView, onToggleStatus, onManageIn
                 <div className="flex items-center gap-1.5 flex-wrap">
                   <span
                     className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${exam.status === "active"
-                        ? "bg-green-100 text-green-800"
-                        : exam.status === "inactive"
-                          ? "bg-red-100 text-red-800"
-                          : "bg-gray-100 text-gray-800"
+                      ? "bg-green-100 text-green-800"
+                      : exam.status === "inactive"
+                        ? "bg-red-100 text-red-800"
+                        : "bg-gray-100 text-gray-800"
                       }`}
                   >
                     {(exam.status || "active").toUpperCase()}
@@ -275,6 +288,14 @@ const ExamTable = ({ exams, onEdit, onDelete, onView, onToggleStatus, onManageIn
                   >
                     Content: {formatContentDate(exam.contentInfo)}
                   </span>
+                  <div className="flex items-center gap-1">
+                    <span className="text-[10px] text-gray-500">Meta:</span>
+                    {exam.contentInfo?.hasMeta ? (
+                      <FiCheck className="text-green-600 w-4 h-4" style={{ strokeWidth: 4 }} />
+                    ) : (
+                      <span className="text-gray-400 text-[10px]">-</span>
+                    )}
+                  </div>
                 </div>
               </div>
               <div className="flex items-center gap-1 ml-3">

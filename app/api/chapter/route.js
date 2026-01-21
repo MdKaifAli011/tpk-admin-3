@@ -21,16 +21,18 @@ export async function GET(request) {
 
     await connectDB();
     const { searchParams } = new URL(request.url);
-    
+
     // Parse pagination
     const { page, limit, skip } = parsePagination(searchParams);
-    
+
     // Get filters (normalize status to lowercase for case-insensitive matching)
     const unitId = searchParams.get("unitId");
     const subjectId = searchParams.get("subjectId");
     const examId = searchParams.get("examId");
     const statusFilterParam = searchParams.get("status") || STATUS.ACTIVE;
     const statusFilter = statusFilterParam.toLowerCase();
+
+    const metaStatus = searchParams.get("metaStatus"); // filled, notFilled
 
     // Build query with case-insensitive status matching
     const query = {};
@@ -45,6 +47,26 @@ export async function GET(request) {
     }
     if (statusFilter !== "all") {
       query.status = { $regex: new RegExp(`^${statusFilter}$`, "i") };
+    }
+
+    // Handle Metadata filtering
+    if (metaStatus === "filled" || metaStatus === "notFilled") {
+      const ChapterDetails = (await import("@/models/ChapterDetails")).default;
+      const detailsWithMeta = await ChapterDetails.find({
+        $or: [
+          { title: { $ne: "", $exists: true } },
+          { metaDescription: { $ne: "", $exists: true } },
+          { keywords: { $ne: "", $exists: true } }
+        ]
+      }).select("chapterId").lean();
+
+      const chapterIdsWithMeta = detailsWithMeta.map(d => d.chapterId.toString());
+
+      if (metaStatus === "filled") {
+        query._id = { $in: chapterIdsWithMeta };
+      } else {
+        query._id = { $nin: chapterIdsWithMeta };
+      }
     }
 
     // Get total count
@@ -66,15 +88,17 @@ export async function GET(request) {
     const chapterDetails = await ChapterDetails.find({
       chapterId: { $in: chapterIds },
     })
-      .select("chapterId content createdAt updatedAt")
+      .select("chapterId content title metaDescription keywords createdAt updatedAt")
       .lean();
 
     // Create a map of chapterId to content info
     const contentMap = new Map();
     chapterDetails.forEach((detail) => {
       const hasContent = detail.content && detail.content.trim() !== "";
+      const hasMeta = !!(detail.title?.trim() || detail.metaDescription?.trim() || detail.keywords?.trim());
       contentMap.set(detail.chapterId.toString(), {
         hasContent,
+        hasMeta,
         contentDate: hasContent ? (detail.updatedAt || detail.createdAt) : null,
       });
     });
@@ -83,6 +107,7 @@ export async function GET(request) {
     const chaptersWithContent = chapters.map((chapter) => {
       const contentInfo = contentMap.get(chapter._id.toString()) || {
         hasContent: false,
+        hasMeta: false,
         contentDate: null,
       };
       return {
@@ -118,9 +143,9 @@ export async function POST(request) {
     }
 
     // Validate ObjectIds
-    if (!mongoose.Types.ObjectId.isValid(examId) || 
-        !mongoose.Types.ObjectId.isValid(subjectId) || 
-        !mongoose.Types.ObjectId.isValid(unitId)) {
+    if (!mongoose.Types.ObjectId.isValid(examId) ||
+      !mongoose.Types.ObjectId.isValid(subjectId) ||
+      !mongoose.Types.ObjectId.isValid(unitId)) {
       return errorResponse("Invalid ID format", 400);
     }
 

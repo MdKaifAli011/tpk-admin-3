@@ -19,15 +19,17 @@ export async function GET(request) {
 
     await connectDB();
     const { searchParams } = new URL(request.url);
-    
+
     // Parse pagination
     const { page, limit, skip } = parsePagination(searchParams);
-    
+
     // Get filters (normalize status to lowercase for case-insensitive matching)
     const examId = searchParams.get("examId");
     const statusFilterParam = searchParams.get("status") || STATUS.ACTIVE;
     const statusFilter = statusFilterParam.toLowerCase();
-    
+
+    const metaStatus = searchParams.get("metaStatus"); // filled, notFilled
+
     // Build query with case-insensitive status matching
     const query = {};
     if (examId && mongoose.Types.ObjectId.isValid(examId)) {
@@ -36,7 +38,27 @@ export async function GET(request) {
     if (statusFilter !== "all") {
       query.status = { $regex: new RegExp(`^${statusFilter}$`, "i") };
     }
-    
+
+    // Handle Metadata filtering
+    if (metaStatus === "filled" || metaStatus === "notFilled") {
+      const SubjectDetails = (await import("@/models/SubjectDetails")).default;
+      const detailsWithMeta = await SubjectDetails.find({
+        $or: [
+          { title: { $ne: "", $exists: true } },
+          { metaDescription: { $ne: "", $exists: true } },
+          { keywords: { $ne: "", $exists: true } }
+        ]
+      }).select("subjectId").lean();
+
+      const subjectIdsWithMeta = detailsWithMeta.map(d => d.subjectId.toString());
+
+      if (metaStatus === "filled") {
+        query._id = { $in: subjectIdsWithMeta };
+      } else {
+        query._id = { $nin: subjectIdsWithMeta };
+      }
+    }
+
     // Create cache key
     const cacheKey = `subjects-${JSON.stringify(query)}-${page}-${limit}`;
 
@@ -67,15 +89,17 @@ export async function GET(request) {
     const subjectDetails = await SubjectDetails.find({
       subjectId: { $in: subjectIds },
     })
-      .select("subjectId content createdAt updatedAt")
+      .select("subjectId content title metaDescription keywords createdAt updatedAt")
       .lean();
 
     // Create a map of subjectId to content info
     const contentMap = new Map();
     subjectDetails.forEach((detail) => {
       const hasContent = detail.content && detail.content.trim() !== "";
+      const hasMeta = !!(detail.title?.trim() || detail.metaDescription?.trim() || detail.keywords?.trim());
       contentMap.set(detail.subjectId.toString(), {
         hasContent,
+        hasMeta,
         contentDate: hasContent ? (detail.updatedAt || detail.createdAt) : null,
       });
     });
@@ -84,6 +108,7 @@ export async function GET(request) {
     const subjectsWithContent = subjects.map((subject) => {
       const contentInfo = contentMap.get(subject._id.toString()) || {
         hasContent: false,
+        hasMeta: false,
         contentDate: null,
       };
       return {

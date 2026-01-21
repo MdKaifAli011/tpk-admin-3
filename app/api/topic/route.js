@@ -22,14 +22,16 @@ export async function GET(request) {
 
     await connectDB();
     const { searchParams } = new URL(request.url);
-    
+
     // Parse pagination
     const { page, limit, skip } = parsePagination(searchParams);
-    
+
     // Get filters (normalize status to lowercase for case-insensitive matching)
     const chapterId = searchParams.get("chapterId");
     const statusFilterParam = searchParams.get("status") || STATUS.ACTIVE;
     const statusFilter = statusFilterParam.toLowerCase();
+
+    const metaStatus = searchParams.get("metaStatus"); // filled, notFilled
 
     // Build query with case-insensitive status matching
     const filter = {};
@@ -41,6 +43,26 @@ export async function GET(request) {
     }
     if (statusFilter !== "all") {
       filter.status = { $regex: new RegExp(`^${statusFilter}$`, "i") };
+    }
+
+    // Handle Metadata filtering
+    if (metaStatus === "filled" || metaStatus === "notFilled") {
+      const TopicDetails = (await import("@/models/TopicDetails")).default;
+      const detailsWithMeta = await TopicDetails.find({
+        $or: [
+          { title: { $ne: "", $exists: true } },
+          { metaDescription: { $ne: "", $exists: true } },
+          { keywords: { $ne: "", $exists: true } }
+        ]
+      }).select("topicId").lean();
+
+      const topicIdsWithMeta = detailsWithMeta.map(d => d.topicId.toString());
+
+      if (metaStatus === "filled") {
+        filter._id = { $in: topicIdsWithMeta };
+      } else {
+        filter._id = { $nin: topicIdsWithMeta };
+      }
     }
 
     // Get total count
@@ -63,15 +85,17 @@ export async function GET(request) {
     const topicDetails = await TopicDetails.find({
       topicId: { $in: topicIds },
     })
-      .select("topicId content createdAt updatedAt")
+      .select("topicId content title metaDescription keywords createdAt updatedAt")
       .lean();
 
     // Create a map of topicId to content info
     const contentMap = new Map();
     topicDetails.forEach((detail) => {
       const hasContent = detail.content && detail.content.trim() !== "";
+      const hasMeta = !!(detail.title?.trim() || detail.metaDescription?.trim() || detail.keywords?.trim());
       contentMap.set(detail.topicId.toString(), {
         hasContent,
+        hasMeta,
         contentDate: hasContent ? (detail.updatedAt || detail.createdAt) : null,
       });
     });
@@ -80,6 +104,7 @@ export async function GET(request) {
     const topicsWithContent = topics.map((topic) => {
       const contentInfo = contentMap.get(topic._id.toString()) || {
         hasContent: false,
+        hasMeta: false,
         contentDate: null,
       };
       return {

@@ -38,6 +38,7 @@ const ExamManagement = () => {
   const [formError, setFormError] = useState(null);
   const { toasts, removeToast, success, error: showError } = useToast();
   const isFetchingRef = useRef(false);
+  const [metaFilter, setMetaFilter] = useState("all"); // all, filled, notFilled
 
   // Fetch exams from API using Axios
   const fetchExams = async () => {
@@ -47,7 +48,7 @@ const ExamManagement = () => {
       setIsDataLoading(true);
       setError(null);
       // Fetch all exams (active and inactive) to show correct status
-      const response = await api.get("/exam?status=all");
+      const response = await api.get(`/exam?status=all&metaStatus=${metaFilter}`);
 
       if (response.data?.success) {
         setExams(response.data.data || []);
@@ -66,10 +67,10 @@ const ExamManagement = () => {
     }
   };
 
-  // Load exams on component mount
+  // Load exams when filter changes
   useEffect(() => {
     fetchExams();
-  }, []);
+  }, [metaFilter]);
 
   // Set orderNumber when editing (not needed for adding since it's auto-generated)
   useEffect(() => {
@@ -542,6 +543,20 @@ const ExamManagement = () => {
                 <p className="text-sm text-gray-600 mt-1">
                   Manage your exams, view details, and perform actions
                 </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Meta Status:</label>
+                  <select
+                    value={metaFilter}
+                    onChange={(e) => setMetaFilter(e.target.value)}
+                    className="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-medium focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                  >
+                    <option value="all">All Items</option>
+                    <option value="filled">Meta Filled</option>
+                    <option value="notFilled">Meta Not Filled</option>
+                  </select>
+                </div>
               </div>
             </div>
           </div>
