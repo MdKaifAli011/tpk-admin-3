@@ -141,30 +141,53 @@ const SEOImportExport = () => {
         }
     };
 
-    const parseCSV = (text) => {
-        const lines = text.split(/\r?\n/);
-        if (lines.length < 2) return { headers: [], rows: [] };
+   const parseCSV = (text) => {
+    if (!text) return { headers: [], rows: [] };
 
-        const parseRow = (row) => {
-            const result = [];
-            let current = "";
-            let inQuotes = false;
-            for (let i = 0; i < row.length; i++) {
-                const char = row[i];
-                if (char === '"') {
-                    if (inQuotes && row[i + 1] === '"') {
-                        current += '"'; i++;
-                    } else inQuotes = !inQuotes;
-                } else if (char === ',' && !inQuotes) {
-                    result.push(current); current = "";
-                } else current += char;
+    // 🔥 FIX 1: Remove UTF-8 BOM (Excel issue)
+    if (text.charCodeAt(0) === 0xFEFF) {
+        text = text.slice(1);
+    }
+
+    // 🔥 FIX 2: Normalize Unicode (icons, emojis, Hindi, Arabic)
+    text = text.normalize("NFC");
+
+    const lines = text.split(/\r?\n/);
+    if (lines.length < 2) return { headers: [], rows: [] };
+
+    const parseRow = (row) => {
+        const result = [];
+        let current = "";
+        let inQuotes = false;
+
+        for (let i = 0; i < row.length; i++) {
+            const char = row[i];
+
+            if (char === '"') {
+                if (inQuotes && row[i + 1] === '"') {
+                    current += '"';
+                    i++;
+                } else {
+                    inQuotes = !inQuotes;
+                }
+            } else if (char === ',' && !inQuotes) {
+                result.push(current);
+                current = "";
+            } else {
+                current += char;
             }
-            result.push(current);
-            return result;
-        };
+        }
 
-        const headers = parseRow(lines[0]).map(h => h.trim());
-        const rows = lines.slice(1).filter(l => l.trim()).map(line => {
+        result.push(current);
+        return result;
+    };
+
+    const headers = parseRow(lines[0]).map(h => h.trim());
+
+    const rows = lines
+        .slice(1)
+        .filter(l => l.trim())
+        .map(line => {
             const cells = parseRow(line);
             const obj = {};
             headers.forEach((h, i) => {
@@ -172,21 +195,40 @@ const SEOImportExport = () => {
             });
             return obj;
         });
-        return { headers, rows };
-    };
+
+    return { headers, rows };
+};
+
 
     const handleFileChange = (e) => {
-        const f = e.target.files[0];
-        if (f) {
-            setFile(f);
-            const reader = new FileReader();
-            reader.onload = (evt) => {
-                const { rows } = parseCSV(evt.target.result);
-                setParsedData(rows);
-            };
-            reader.readAsText(f);
+    const f = e.target.files[0];
+    if (!f) return;
+
+    setFile(f);
+
+    const reader = new FileReader();
+
+    reader.onload = () => {
+        const buffer = reader.result;
+
+        let text;
+
+        try {
+            // 🔥 Try UTF-8 first
+            text = new TextDecoder("utf-8", { fatal: true }).decode(buffer);
+        } catch (e) {
+            // 🔥 Fallback for Excel Windows CSV (ANSI / Windows-1252)
+            text = new TextDecoder("windows-1252").decode(buffer);
         }
+
+        const { rows } = parseCSV(text);
+        setParsedData(rows);
     };
+
+    reader.readAsArrayBuffer(f);
+};
+
+
 
     const handleImport = async () => {
         if (!parsedData.length) {
