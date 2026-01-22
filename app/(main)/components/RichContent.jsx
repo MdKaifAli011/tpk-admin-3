@@ -6,7 +6,10 @@ import React, {
   useState,
   useMemo,
   useCallback,
+  forwardRef,
 } from "react";
+import { createPortal } from "react-dom";
+import { FaTimes, FaPlay, FaSpinner } from "react-icons/fa";
 import { lazy, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import loadMathJax from "../lib/utils/mathJaxLoader";
@@ -128,6 +131,7 @@ const RichContent = ({ html }) => {
   const [mathJaxError, setMathJaxError] = useState(false);
   const [formStates, setFormStates] = useState({});
   const [formConfigs, setFormConfigs] = useState({});
+  const [activeVideo, setActiveVideo] = useState(null); // { url, type, mimeType }
   const router = useRouter();
 
   // Cleanup on unmount
@@ -140,56 +144,78 @@ const RichContent = ({ html }) => {
     };
   }, []);
 
-  // Handle button clicks - ensure links work properly
+  // Handle interaction clicks (Buttons and Videos)
   useEffect(() => {
     if (!containerRef.current || !html) return;
 
-    const handleButtonClick = (e) => {
-      // Check if clicked element is a button link or inside a button wrapper
+    const handleContainerClick = (e) => {
+      // 1. Handle Button Clicks
       const buttonLink = e.target.closest(
         ".inline-button-wrapper a, .inline-button"
       );
-      if (!buttonLink) return;
 
-      // If it's an anchor tag, handle the link
-      if (buttonLink.tagName === "A") {
-        const href =
-          buttonLink.getAttribute("href") ||
-          buttonLink.getAttribute("data-button-link");
-        if (href) {
-          // Internal navigation: DO NOT manually prepend basePath.
-          // Next.js basePath is applied automatically to router navigation.
-          if (href.startsWith("/")) {
-            e.preventDefault();
-            router.push(href);
-          } else if (
-            href.startsWith("http://") ||
-            href.startsWith("https://")
-          ) {
-            // External links - let default behavior handle it (target="_blank" already set)
-            // No need to prevent default
-          } else if (href.startsWith("#")) {
-            // Anchor links - let default behavior handle it
-            // No need to prevent default
-          } else {
-            // Treat as relative internal URL (e.g. "contact") - route it through Next router.
-            e.preventDefault();
-            router.push(`/${href}`);
+      if (buttonLink) {
+        if (buttonLink.tagName === "A") {
+          const href =
+            buttonLink.getAttribute("href") ||
+            buttonLink.getAttribute("data-button-link");
+          if (href) {
+            if (href.startsWith("/")) {
+              e.preventDefault();
+              router.push(href);
+            } else if (href.startsWith("http")) {
+              // Let browser handle external links
+            } else if (href.startsWith("#")) {
+              // Let browser handle anchors
+            } else {
+              e.preventDefault();
+              router.push(`/${href}`);
+            }
+          }
+        } else if (buttonLink.tagName === "BUTTON") {
+          e.preventDefault();
+        }
+        return;
+      }
+
+      // 2. Handle Video Container Clicks
+      const videoContainer = e.target.closest(".video-container");
+      if (videoContainer) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const url = videoContainer.getAttribute("data-video-url");
+        const type = videoContainer.getAttribute("data-video-type");
+        const mimeType = videoContainer.getAttribute("data-mime-type");
+
+        if (url) {
+          setActiveVideo({ url, type, mimeType });
+        } else {
+          // Fallback for older content: find video/iframe
+          const videoEl = videoContainer.querySelector("video source");
+          const iframeEl = videoContainer.querySelector("iframe");
+
+          if (videoEl) {
+            setActiveVideo({
+              url: videoEl.src,
+              type: "upload",
+              mimeType: videoEl.type,
+            });
+          } else if (iframeEl) {
+            setActiveVideo({
+              url: iframeEl.src,
+              type: "youtube",
+            });
           }
         }
-      } else if (buttonLink.tagName === "BUTTON") {
-        // Button without link - do nothing or handle as needed
-        e.preventDefault();
       }
     };
 
     const container = containerRef.current;
-
-    // Use event delegation for dynamically inserted buttons
-    container.addEventListener("click", handleButtonClick, true);
+    container.addEventListener("click", handleContainerClick, true);
 
     return () => {
-      container.removeEventListener("click", handleButtonClick, true);
+      container.removeEventListener("click", handleContainerClick, true);
     };
   }, [html, router]);
 
@@ -747,9 +773,103 @@ const RichContent = ({ html }) => {
         </div>
       )}
       <div ref={containerRef} className="rich-text-content wrap-anywhere">
+        <style jsx global>{`
+        .video-container {
+          transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
+        }
+        .video-container:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+        }
+        .video-container:hover .video-play-overlay > div {
+          transform: scale(1.15);
+          background: rgba(220, 38, 38, 1) !important;
+          box-shadow: 0 0 30px rgba(220, 38, 38, 0.5);
+        }
+        .video-play-overlay > div {
+          transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+      `}</style>
         {renderContent}
       </div>
+
+      {/* Video Modal Player */}
+      {activeVideo && (
+        <VideoModal
+          video={activeVideo}
+          onClose={() => setActiveVideo(null)}
+        />
+      )}
     </>
+  );
+};
+
+// Internal Video Modal Component
+const VideoModal = ({ video, onClose }) => {
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const handleEsc = (e) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleEsc);
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", handleEsc);
+      document.body.style.overflow = "unset";
+    };
+  }, [onClose]);
+
+  return createPortal(
+    <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/90 backdrop-blur-md animate-in fade-in duration-500">
+      {/* Background overlay for closing */}
+      <div className="absolute inset-0 cursor-pointer" onClick={onClose}></div>
+
+      {/* Modal Container */}
+      <div className="relative w-full max-w-[95vw] lg:max-w-6xl aspect-video bg-black rounded-xl lg:rounded-2xl overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)] scale-in-center animate-in zoom-in-90 duration-500">
+        {/* Loading Spinner */}
+        {loading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black z-10">
+            <FaSpinner className="w-10 h-10 text-red-600 animate-spin" />
+          </div>
+        )}
+
+        {/* Close Button */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 z-[60] p-2.5 bg-black/40 hover:bg-red-600 text-white rounded-full transition-all duration-300 backdrop-blur-sm group"
+          title="Close (Esc)"
+        >
+          <FaTimes className="w-5 h-5 group-hover:scale-110" />
+        </button>
+
+        {/* Video Frame */}
+        <div className="w-full h-full">
+          {video.type === "youtube" ? (
+            <iframe
+              src={video.url.includes("?") ? `${video.url}&autoplay=1&rel=0&modestbranding=1` : `${video.url}?autoplay=1&rel=0&modestbranding=1`}
+              className="w-full h-full border-none"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              onLoad={() => setLoading(false)}
+            ></iframe>
+          ) : (
+            <video
+              src={video.url}
+              className="w-full h-full"
+              controls
+              autoPlay
+              playsInline
+              onLoadedData={() => setLoading(false)}
+            >
+              <source src={video.url} type={video.mimeType} />
+              Your browser does not support the video tag.
+            </video>
+          )}
+        </div>
+      </div>
+    </div>,
+    document.body
   );
 };
 

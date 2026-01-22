@@ -60,9 +60,8 @@ const Toast = ({ message, type = "success", duration = 3000, onClose }) => {
 
   return (
     <div
-      className={`fixed top-4 right-4 z-50 max-w-sm w-full mx-4 transform transition-all duration-300 ${
-        isVisible ? "translate-x-0 opacity-100" : "translate-x-full opacity-0"
-      }`}
+      className={`fixed top-4 right-4 z-50 max-w-sm w-full mx-4 transform transition-all duration-300 ${isVisible ? "translate-x-0 opacity-100" : "translate-x-full opacity-0"
+        }`}
     >
       <div
         className={`${styles.bg} ${styles.border} border rounded-xl shadow-lg p-4`}
@@ -87,9 +86,13 @@ const Toast = ({ message, type = "success", duration = 3000, onClose }) => {
 };
 
 // Toast Container Component
+import { createPortal } from "react-dom";
+
 export const ToastContainer = ({ toasts, removeToast }) => {
-  return (
-    <div className="fixed top-4 right-4 z-50 space-y-2">
+  if (typeof document === "undefined") return null;
+
+  return createPortal(
+    <div className="fixed top-4 right-4 z-[10000] space-y-2">
       {toasts.map((toast) => (
         <Toast
           key={toast.id}
@@ -99,7 +102,8 @@ export const ToastContainer = ({ toasts, removeToast }) => {
           onClose={() => removeToast(toast.id)}
         />
       ))}
-    </div>
+    </div>,
+    document.body
   );
 };
 

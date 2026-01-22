@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { FaTimes, FaSearch, FaImage, FaUpload, FaSpinner } from "react-icons/fa";
+import { createPortal } from "react-dom";
+import { FaTimes, FaSearch, FaImage, FaUpload, FaSpinner, FaVideo, FaAlignLeft, FaAlignCenter, FaAlignRight } from "react-icons/fa";
 import api from "@/lib/api";
 
 // Base path - should match next.config.mjs basePath
@@ -58,8 +59,11 @@ const RichTextEditor = ({
   const [showFormModal, setShowFormModal] = useState(false);
   const [showButtonModal, setShowButtonModal] = useState(false);
   const [showImageModal, setShowImageModal] = useState(false);
+  const [showVideoModal, setShowVideoModal] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
   const [imageError, setImageError] = useState("");
+  const [videoError, setVideoError] = useState("");
   const [forms, setForms] = useState([]);
   const [loadingForms, setLoadingForms] = useState(false);
   const [selectedForm, setSelectedForm] = useState(null);
@@ -76,6 +80,11 @@ const RichTextEditor = ({
     color: "#2563eb", // Default blue
     link: "",
   });
+  const [youtubeUrl, setYoutubeUrl] = useState("");
+  const [videoTab, setVideoTab] = useState("upload"); // "upload" or "youtube"
+  const [videoAlign, setVideoAlign] = useState("center"); // "left", "center", "right"
+  const [customWidth, setCustomWidth] = useState("640");
+  const [customHeight, setCustomHeight] = useState("360");
   const onChangeRef = useRef(onChange);
   const valueRef = useRef(value);
   const placeholderRef = useRef(placeholder);
@@ -696,15 +705,199 @@ const RichTextEditor = ({
     }
   };
 
+  // Handle video upload
+  const handleVideoUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = ["video/mp4", "video/webm", "video/ogg", "video/quicktime"];
+    if (!allowedTypes.includes(file.type)) {
+      setVideoError("Invalid file type. Only MP4, WebM, OGG, and MOV are allowed.");
+      return;
+    }
+
+    // Validate file size (max 100MB)
+    const maxSize = 100 * 1024 * 1024;
+    if (file.size > maxSize) {
+      setVideoError("File size exceeds 100MB limit.");
+      return;
+    }
+
+    await uploadAndInsertVideo(file);
+  };
+
+  // Get video dimensions and alignment based on selection
+  const getVideoDimensions = () => {
+    const w = parseInt(customWidth) || 640;
+    const h = parseInt(customHeight) || 360;
+    // Calculate aspect ratio percentage
+    const aspect = (h / w) * 100 || 56.25;
+
+    let dims = {
+      width: `${w}px`,
+      height: `${h}px`,
+      maxWidth: "100%",
+      aspectRatio: `${w}/${h}`,
+      paddingBottom: `${aspect}%`
+    };
+
+    // Alignment logic
+    let margin = "10px";
+    let textAlign = "center";
+    let parentStyle = "text-align: center; margin: 20px 0;";
+
+    if (videoAlign === "left") {
+      textAlign = "left";
+      parentStyle = "text-align: left; margin: 20px 0;";
+      margin = "0 20px 20px 0";
+    } else if (videoAlign === "right") {
+      textAlign = "right";
+      parentStyle = "text-align: right; margin: 20px 0;";
+      margin = "20px 0 20px 20px";
+    } else {
+      parentStyle = "text-align: center; margin: 20px 0;";
+      margin = "0 auto";
+    }
+
+    return { ...dims, margin, textAlign, parentStyle, w, h };
+  };
+
+  // Upload video and insert into editor
+  const uploadAndInsertVideo = async (file) => {
+    try {
+      setUploadingVideo(true);
+      setVideoError("");
+
+      const formData = new FormData();
+      formData.append("video", file);
+
+      // Add context IDs if available
+      if (examId) formData.append("examId", examId);
+      if (subjectId) formData.append("subjectId", subjectId);
+      if (unitId) formData.append("unitId", unitId);
+      if (chapterId) formData.append("chapterId", chapterId);
+      if (topicId) formData.append("topicId", topicId);
+      if (subtopicId) formData.append("subtopicId", subtopicId);
+      if (definitionId) formData.append("definitionId", definitionId);
+
+      const response = await api.post("/upload/video", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      if (response.data?.success && response.data?.data?.url) {
+        const videoUrl = response.data.data.url;
+        const editor = editorRef.current;
+        const dims = getVideoDimensions();
+
+        if (editor) {
+          try {
+            editor.focus();
+            // Insert responsive video into editor
+            const parentStyle = dims.parentStyle;
+            const containerStyle = `display: inline-block; vertical-align: middle; position: relative; width: ${dims.width}; height: auto; aspect-ratio: ${dims.aspectRatio}; max-width: 100%; cursor: pointer; border-radius: 8px; overflow: hidden; background: #000;`;
+            const videoHtml = `<div class="video-parent-container" style="${parentStyle}"><span class="video-container" data-video-url="${videoUrl}" data-video-type="upload" data-mime-type="${file.type}" style="${containerStyle}"><span class="video-play-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.2); z-index: 10; pointer-events: none;"><span style="width: 60px; height: 60px; background: rgba(239, 68, 68, 0.9); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3);"><span style="width: 0; height: 0; border-top: 12px solid transparent; border-bottom: 12px solid transparent; border-left: 20px solid white; margin-left: 5px;"></span></span></span><video style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; background: #000; pointer-events: none; display: block;" preload="metadata"><source src="${videoUrl}" type="${file.type}" />Your browser does not support the video tag.</video></span></div>`;
+            editor.insertHtml(videoHtml);
+          } catch (err) {
+            console.error("Error inserting video:", err);
+          }
+        }
+
+        setShowVideoModal(false);
+        setVideoError("");
+        setYoutubeUrl("");
+        setVideoTab("upload");
+        setVideoAlign("center");
+        setCustomWidth("640");
+        setCustomHeight("360");
+      } else {
+        setVideoError(response.data?.message || "Failed to upload video");
+      }
+    } catch (error) {
+      console.error("Video upload error:", error);
+      setVideoError(
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to upload video. Please try again."
+      );
+    } finally {
+      setUploadingVideo(false);
+    }
+  };
+
+  // Extract YouTube video ID from URL
+  const extractYouTubeId = (url) => {
+    if (!url) return null;
+
+    // Handle various YouTube URL formats
+    const patterns = [
+      /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/,
+      /youtube\.com\/embed\/([^&\n?#]+)/,
+      /youtube\.com\/v\/([^&\n?#]+)/,
+    ];
+
+    for (const pattern of patterns) {
+      const match = url.match(pattern);
+      if (match && match[1]) {
+        return match[1];
+      }
+    }
+
+    return null;
+  };
+
+  // Insert YouTube video
+  const insertYouTubeVideo = () => {
+    const editor = editorRef.current;
+    if (!editor || !youtubeUrl.trim()) return;
+
+    const videoId = extractYouTubeId(youtubeUrl);
+
+    if (!videoId) {
+      setVideoError("Invalid YouTube URL. Please enter a valid YouTube video link.");
+      return;
+    }
+
+    const dims = getVideoDimensions();
+
+    try {
+      editor.focus();
+      const parentStyle = dims.parentStyle;
+      const containerStyle = `display: inline-block; vertical-align: middle; position: relative; width: ${dims.width}; height: auto; aspect-ratio: ${dims.aspectRatio}; max-width: 100%; cursor: pointer; border-radius: 8px; overflow: hidden; background: #000;`;
+      const youtubeHtml = `<div class="video-parent-container" style="${parentStyle}"><span class="video-container" data-video-url="https://www.youtube.com/embed/${videoId}" data-video-type="youtube" style="${containerStyle}"><span class="video-play-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.2); z-index: 10; pointer-events: none;"><span style="width: 60px; height: 60px; background: rgba(239, 68, 68, 0.9); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3);"><span style="width: 0; height: 0; border-top: 12px solid transparent; border-bottom: 12px solid transparent; border-left: 20px solid white; margin-left: 5px;"></span></span></span><iframe style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; background: #000; pointer-events: none; display: block;" src="https://www.youtube.com/embed/${videoId}?controls=0&showinfo=0&rel=0&modestbranding=1" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></span></div>`;
+
+      editor.insertHtml(youtubeHtml);
+    } catch (err) {
+      console.error("Error inserting youtube video:", err);
+    }
+    setShowVideoModal(false);
+    setVideoError("");
+    setYoutubeUrl("");
+    setVideoTab("upload");
+    setVideoAlign("center");
+    setCustomWidth("640");
+    setCustomHeight("360");
+  };
+
   return (
     <>
       <div
         className={`rounded-lg border border-gray-200 bg-white shadow-sm ${disabled ? "opacity-90" : ""
           } ${className}`}
       >
-        {/* Insert Form, Button, and Image */}
+        {/* Insert Form, Button, Image, and Video */}
         {isReady && !disabled && !hideAdminTools && (
           <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50 flex items-center justify-end gap-2">
+            <button
+              onClick={() => setShowVideoModal(true)}
+              className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+              type="button"
+            >
+              <FaVideo className="w-4 h-4" />
+              Insert Video
+            </button>
             <button
               onClick={() => setShowImageModal(true)}
               className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
@@ -771,10 +964,10 @@ const RichTextEditor = ({
       </div>
 
       {/* Form Selection Modal */}
-      {showFormModal && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      {showFormModal && typeof document !== "undefined" && createPortal(
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
           {/* Modal Container */}
-          <div className="bg-white rounded shadow w-full max-w-4xl max-h-[90vh] overflow-hidden border border-gray-200">
+          <div className="bg-white rounded shadow w-full max-w-4xl max-h-[90vh] overflow-hidden border border-gray-200 flex flex-col">
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b bg-white sticky top-0 z-40">
               <div>
@@ -795,8 +988,7 @@ const RichTextEditor = ({
 
             {/* Body */}
             <div
-              className="grid grid-cols-1 lg:grid-cols-2 gap-6 p-3 overflow-y-auto"
-              style={{ maxHeight: "calc(90vh - 120px)" }}
+              className="grid grid-cols-1 lg:grid-cols-2 gap-6 p-3 flex-1 overflow-y-auto"
             >
               {/* Left Column - Form List */}
               <div className="space-y-2">
@@ -1134,13 +1326,13 @@ const RichTextEditor = ({
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
-      {/* Button Insertion Modal */}
-      {showButtonModal && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-200">
+      {showButtonModal && typeof document !== "undefined" && createPortal(
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-200 max-h-[90vh] flex flex-col">
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b bg-white">
               <div>
@@ -1167,7 +1359,7 @@ const RichTextEditor = ({
             </div>
 
             {/* Body */}
-            <div className="p-6 space-y-4">
+            <div className="flex-1 overflow-y-auto p-6 space-y-4">
               {/* Button Text */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
@@ -1324,13 +1516,14 @@ const RichTextEditor = ({
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Image Upload Modal */}
-      {showImageModal && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-200">
+      {showImageModal && typeof document !== "undefined" && createPortal(
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-200 max-h-[90vh] flex flex-col">
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b bg-white">
               <div>
@@ -1353,7 +1546,7 @@ const RichTextEditor = ({
             </div>
 
             {/* Body */}
-            <div className="p-6 space-y-4">
+            <div className="flex-1 overflow-y-auto p-6 space-y-4">
               {/* File Input */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1399,7 +1592,336 @@ const RichTextEditor = ({
               )}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Video Upload/YouTube Modal */}
+      {showVideoModal && typeof document !== "undefined" && createPortal(
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden border border-gray-200 max-h-[90vh] flex flex-col">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b bg-white">
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900">
+                  Insert Video
+                </h2>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Upload a video file or embed from YouTube
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setShowVideoModal(false);
+                  setVideoError("");
+                  setYoutubeUrl("");
+                  setVideoTab("upload");
+                }}
+                className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-2 rounded-lg transition"
+              >
+                <FaTimes className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Tabs */}
+            <div className="flex border-b border-gray-200 bg-gray-50">
+              <button
+                onClick={() => {
+                  setVideoTab("upload");
+                  setVideoError("");
+                }}
+                className="flex-1 px-4 py-3 text-sm font-medium transition-colors border-b-2 hover:bg-gray-100"
+                style={{
+                  borderBottomColor: videoTab === "upload" ? "#ef4444" : "transparent",
+                  color: videoTab === "upload" ? "#ef4444" : "#6b7280",
+                  backgroundColor: videoTab === "upload" ? "#ffffff" : "transparent",
+                }}
+              >
+                <div className="flex items-center justify-center gap-2">
+                  <FaUpload className="w-4 h-4" />
+                  Upload Video
+                </div>
+              </button>
+              <button
+                onClick={() => {
+                  setVideoTab("youtube");
+                  setVideoError("");
+                }}
+                className="flex-1 px-4 py-3 text-sm font-medium transition-colors border-b-2 hover:bg-gray-100"
+                style={{
+                  borderBottomColor: videoTab === "youtube" ? "#ef4444" : "transparent",
+                  color: videoTab === "youtube" ? "#ef4444" : "#6b7280",
+                  backgroundColor: videoTab === "youtube" ? "#ffffff" : "transparent",
+                }}
+              >
+                <div className="flex items-center justify-center gap-2">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+                  </svg>
+                  YouTube URL
+                </div>
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-4">
+              {/* Upload Tab Content */}
+              {videoTab === "upload" && (
+                <>
+                  {/* File Input */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Select Video File
+                    </label>
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-red-400 transition-colors">
+                      <input
+                        type="file"
+                        id="video-upload"
+                        accept="video/mp4,video/webm,video/ogg,video/quicktime"
+                        onChange={handleVideoUpload}
+                        className="hidden"
+                        disabled={uploadingVideo}
+                      />
+                      <label
+                        htmlFor="video-upload"
+                        className="cursor-pointer flex flex-col items-center"
+                      >
+                        <FaVideo className="w-8 h-8 text-gray-400 mb-2" />
+                        <span className="text-sm text-gray-600">
+                          Click to select video file
+                        </span>
+                        <span className="text-xs text-gray-500 mt-1">
+                          MP4, WebM, OGG, MOV (max 100MB)
+                        </span>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Video Dimensions & Alignment */}
+                  <div className="pt-4 border-t border-gray-100 space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-3">
+                        Video Dimensions
+                      </label>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-[11px] font-medium text-gray-500 uppercase tracking-wider mb-1">
+                            Width (px)
+                          </label>
+                          <input
+                            type="number"
+                            value={customWidth}
+                            onChange={(e) => setCustomWidth(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
+                            placeholder="640"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] font-medium text-gray-500 uppercase tracking-wider mb-1">
+                            Height (px)
+                          </label>
+                          <input
+                            type="number"
+                            value={customHeight}
+                            onChange={(e) => setCustomHeight(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
+                            placeholder="360"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Alignment
+                      </label>
+                      <div className="flex bg-gray-100 p-1 rounded-lg w-max">
+                        {[
+                          { id: "left", icon: <FaAlignLeft /> },
+                          { id: "center", icon: <FaAlignCenter /> },
+                          { id: "right", icon: <FaAlignRight /> },
+                        ].map((align) => (
+                          <button
+                            key={align.id}
+                            type="button"
+                            onClick={() => setVideoAlign(align.id)}
+                            className={`p-2 rounded-md transition-all ${videoAlign === align.id
+                              ? "bg-white text-red-600 shadow-sm"
+                              : "text-gray-500 hover:text-gray-700"
+                              }`}
+                          >
+                            {align.icon}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Info Message */}
+                  <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-xs text-blue-700">
+                      <strong>💡 Tip:</strong> Videos will be embedded as responsive players. The dimensions you set act as the maximum size.
+                    </p>
+                  </div>
+                </>
+              )}
+
+              {/* YouTube Tab Content */}
+              {videoTab === "youtube" && (
+                <>
+                  {/* YouTube URL Input */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      YouTube Video URL
+                    </label>
+                    <input
+                      type="url"
+                      value={youtubeUrl}
+                      onChange={(e) => {
+                        setYoutubeUrl(e.target.value);
+                        setVideoError("");
+                      }}
+                      placeholder="https://www.youtube.com/watch?v=..."
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm"
+                    />
+                    <p className="mt-1.5 text-xs text-gray-500">
+                      Paste any YouTube video URL (watch, share, or embed link)
+                    </p>
+                  </div>
+
+                  {/* YouTube Info */}
+                  <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                    <p className="text-xs text-red-700">
+                      <strong>📺 YouTube:</strong> The video will be embedded as a responsive iframe with full YouTube player features.
+                    </p>
+                  </div>
+
+                  {/* Preview */}
+                  {youtubeUrl && extractYouTubeId(youtubeUrl) && (
+                    <div className="mt-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Preview
+                      </label>
+                      <div className="relative" style={{ paddingBottom: `${(parseInt(customHeight) / parseInt(customWidth)) * 100 || 56.25}%`, height: 0, overflow: "hidden", borderRadius: "8px", background: "#000" }}>
+                        <iframe
+                          className="absolute inset-0 w-full h-full border-none rounded-lg"
+                          src={`https://www.youtube.com/embed/${extractYouTubeId(youtubeUrl)}`}
+                          title="YouTube video preview"
+                          frameBorder="0"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                        ></iframe>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Dimensions & Alignment */}
+                  <div className="pt-4 border-t border-gray-100 space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-3">
+                        Video Dimensions
+                      </label>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-[11px] font-medium text-gray-500 uppercase tracking-wider mb-1">
+                            Width (px)
+                          </label>
+                          <input
+                            type="number"
+                            value={customWidth}
+                            onChange={(e) => setCustomWidth(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
+                            placeholder="640"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] font-medium text-gray-500 uppercase tracking-wider mb-1">
+                            Height (px)
+                          </label>
+                          <input
+                            type="number"
+                            value={customHeight}
+                            onChange={(e) => setCustomHeight(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
+                            placeholder="360"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Alignment
+                      </label>
+                      <div className="flex bg-gray-100 p-1 rounded-lg w-max">
+                        {[
+                          { id: "left", icon: <FaAlignLeft /> },
+                          { id: "center", icon: <FaAlignCenter /> },
+                          { id: "right", icon: <FaAlignRight /> },
+                        ].map((align) => (
+                          <button
+                            key={align.id}
+                            type="button"
+                            onClick={() => setVideoAlign(align.id)}
+                            className={`p-2 rounded-md transition-all ${videoAlign === align.id
+                              ? "bg-white text-red-600 shadow-sm"
+                              : "text-gray-500 hover:text-gray-700"
+                              }`}
+                          >
+                            {align.icon}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* Error Message */}
+              {videoError && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm text-red-600">{videoError}</p>
+                </div>
+              )}
+
+              {/* Upload Progress */}
+              {uploadingVideo && (
+                <div className="flex items-center justify-center gap-2 p-4">
+                  <FaSpinner className="w-5 h-5 animate-spin text-red-600" />
+                  <span className="text-sm text-gray-600">Uploading video...</span>
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            {videoTab === "youtube" && (
+              <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50">
+                <button
+                  onClick={() => {
+                    setShowVideoModal(false);
+                    setVideoError("");
+                    setYoutubeUrl("");
+                    setVideoTab("upload");
+                  }}
+                  className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-900 rounded-lg text-sm font-medium transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={insertYouTubeVideo}
+                  disabled={!youtubeUrl.trim()}
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+                  </svg>
+                  Insert YouTube Video
+                </button>
+              </div>
+            )}
+          </div>
+        </div>,
+        document.body
       )}
     </>
   );

@@ -226,6 +226,24 @@
   max-width: 100%;
 }
 
+.rich-text-content .video-container {
+  display: inline-block;
+  vertical-align: middle;
+  background-color: #000;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+
+.rich-text-content .video-container video,
+.rich-text-content .video-container iframe {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  box-shadow: none !important;
+}
+
 .rich-text-content a {
   color: #2563eb;
   text-decoration: underline;
