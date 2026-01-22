@@ -1,81 +1,100 @@
 "use client";
-import React, { useState, useEffect } from "react";
-import { FaCheckCircle, FaExclamationCircle, FaTimes } from "react-icons/fa";
 
-const Toast = ({ message, type = "success", duration = 3000, onClose }) => {
-  const [isVisible, setIsVisible] = useState(true);
+import React, { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
+import {
+  FaCheckCircle,
+  FaExclamationCircle,
+  FaInfoCircle,
+  FaTimes,
+} from "react-icons/fa";
+
+/* -------------------------------------------------------------------------- */
+/*                                    Toast                                   */
+/* -------------------------------------------------------------------------- */
+
+const Toast = ({ message, type, duration, onClose }) => {
+  const [visible, setVisible] = useState(true);
+  const [progress, setProgress] = useState(100);
+  const [hovered, setHovered] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsVisible(false);
-      setTimeout(() => onClose(), 300); // Wait for animation to complete
+    if (hovered) return;
+
+    const start = Date.now();
+
+    const interval = setInterval(() => {
+      const elapsed = Date.now() - start;
+      const percent = Math.max(0, 100 - (elapsed / duration) * 100);
+      setProgress(percent);
+    }, 30);
+
+    const timeout = setTimeout(() => {
+      setVisible(false);
+      setTimeout(onClose, 300);
     }, duration);
 
-    return () => clearTimeout(timer);
-  }, [duration, onClose]);
+    return () => {
+      clearInterval(interval);
+      clearTimeout(timeout);
+    };
+  }, [duration, hovered, onClose]);
 
-  const handleClose = () => {
-    setIsVisible(false);
-    setTimeout(() => onClose(), 300);
+  const styles = {
+    success: {
+      bg: "from-emerald-500/90 to-green-600/90",
+      icon: <FaCheckCircle />,
+    },
+    error: {
+      bg: "from-red-500/90 to-rose-600/90",
+      icon: <FaExclamationCircle />,
+    },
+    info: {
+      bg: "from-blue-500/90 to-indigo-600/90",
+      icon: <FaInfoCircle />,
+    },
   };
 
-  const getToastStyles = () => {
-    switch (type) {
-      case "success":
-        return {
-          bg: "bg-green-50",
-          border: "border-green-200",
-          icon: "text-green-500",
-          text: "text-green-800",
-          iconComponent: <FaCheckCircle className="w-5 h-5" />,
-        };
-      case "error":
-        return {
-          bg: "bg-red-50",
-          border: "border-red-200",
-          icon: "text-red-500",
-          text: "text-red-800",
-          iconComponent: <FaExclamationCircle className="w-5 h-5" />,
-        };
-      case "info":
-        return {
-          bg: "bg-blue-50",
-          border: "border-blue-200",
-          icon: "text-blue-500",
-          text: "text-blue-800",
-          iconComponent: <FaExclamationCircle className="w-5 h-5" />,
-        };
-      default:
-        return {
-          bg: "bg-gray-50",
-          border: "border-gray-200",
-          icon: "text-gray-500",
-          text: "text-gray-800",
-          iconComponent: <FaExclamationCircle className="w-5 h-5" />,
-        };
-    }
-  };
-
-  const styles = getToastStyles();
+  const current = styles[type] || styles.success;
 
   return (
     <div
-      className={`fixed top-4 right-4 z-50 max-w-sm w-full mx-4 transform transition-all duration-300 ${isVisible ? "translate-x-0 opacity-100" : "translate-x-full opacity-0"
-        }`}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      className={`transform transition-all duration-300 ${
+        visible
+          ? "translate-x-0 opacity-100 scale-100"
+          : "translate-x-full opacity-0 scale-95"
+      }`}
     >
       <div
-        className={`${styles.bg} ${styles.border} border rounded-xl shadow-lg p-4`}
+        className={`relative overflow-hidden rounded-2xl border border-white/20 
+        bg-gradient-to-br ${current.bg}
+        backdrop-blur-xl shadow-2xl px-5 py-4 text-white`}
       >
-        <div className="flex items-start gap-3">
-          <div className={`flex-shrink-0 ${styles.icon}`}>
-            {styles.iconComponent}
+        {/* Progress bar */}
+        <div
+          className="absolute bottom-0 left-0 h-[3px] bg-white/70 transition-all"
+          style={{ width: `${progress}%` }}
+        />
+
+        <div className="flex items-start gap-4">
+          <div className="text-xl mt-0.5 opacity-90">
+            {current.icon}
           </div>
+
           <div className="flex-1">
-            <p className={`text-sm font-medium ${styles.text}`}>{message}</p>
+            <p className="text-sm font-medium leading-relaxed">
+              {message}
+            </p>
           </div>
+
           <button
-            onClick={handleClose}
-            className={`flex-shrink-0 ${styles.icon} hover:opacity-70 transition-opacity`}
+            onClick={() => {
+              setVisible(false);
+              setTimeout(onClose, 300);
+            }}
+            className="opacity-70 hover:opacity-100 transition"
           >
             <FaTimes className="w-4 h-4" />
           </button>
@@ -85,14 +104,15 @@ const Toast = ({ message, type = "success", duration = 3000, onClose }) => {
   );
 };
 
-// Toast Container Component
-import { createPortal } from "react-dom";
+/* -------------------------------------------------------------------------- */
+/*                               Toast Container                              */
+/* -------------------------------------------------------------------------- */
 
 export const ToastContainer = ({ toasts, removeToast }) => {
   if (typeof document === "undefined") return null;
 
   return createPortal(
-    <div className="fixed top-4 right-4 z-[10000] space-y-2">
+    <div className="fixed top-6 right-6 z-[999999] w-full max-w-sm space-y-3">
       {toasts.map((toast) => (
         <Toast
           key={toast.id}
@@ -107,30 +127,31 @@ export const ToastContainer = ({ toasts, removeToast }) => {
   );
 };
 
-// Hook for managing toasts
+/* -------------------------------------------------------------------------- */
+/*                                  useToast                                  */
+/* -------------------------------------------------------------------------- */
+
 export const useToast = () => {
   const [toasts, setToasts] = useState([]);
 
-  const addToast = (message, type = "success", duration = 3000) => {
+  const addToast = (message, type = "success", duration = 3500) => {
     const id = Date.now() + Math.random();
-    setToasts((prev) => [...prev, { id, message, type, duration }]);
+    setToasts((prev) => [
+      ...prev,
+      { id, message, type, duration },
+    ]);
   };
 
   const removeToast = (id) => {
-    setToasts((prev) => prev.filter((toast) => toast.id !== id));
+    setToasts((prev) => prev.filter((t) => t.id !== id));
   };
-
-  const success = (message, duration) => addToast(message, "success", duration);
-  const error = (message, duration) => addToast(message, "error", duration);
-  const info = (message, duration) => addToast(message, "info", duration);
 
   return {
     toasts,
-    addToast,
     removeToast,
-    success,
-    error,
-    info,
+    success: (msg, d) => addToast(msg, "success", d),
+    error: (msg, d) => addToast(msg, "error", d),
+    info: (msg, d) => addToast(msg, "info", d),
   };
 };
 

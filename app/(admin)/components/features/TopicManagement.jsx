@@ -9,11 +9,13 @@ import React, {
 import TopicsTable from "../table/TopicsTable";
 import { LoadingWrapper, SkeletonChaptersTable } from "../ui/SkeletonLoader";
 import { FaEdit, FaPlus, FaTimes, FaLock, FaSearch } from "react-icons/fa";
+import { ToastContainer, useToast } from "../ui/Toast";
 import api from "@/lib/api";
 import { usePermissions, getPermissionMessage } from "../../hooks/usePermissions";
 
 const TopicManagement = () => {
   const { canCreate, canEdit, canDelete, canReorder, role } = usePermissions();
+  const { toasts, removeToast, success, error: showError } = useToast();
   const [showAddForm, setShowAddForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [editingTopic, setEditingTopic] = useState(null);
@@ -633,6 +635,7 @@ const TopicManagement = () => {
     // Check permissions
     if (!canCreate) {
       setFormError(getPermissionMessage("create", role));
+      showError(getPermissionMessage("create", role));
       return;
     }
 
@@ -643,6 +646,7 @@ const TopicManagement = () => {
 
     if (validChapters.length === 0) {
       setFormError("Please select at least one chapter and enter topics for it.");
+      showError("Please select at least one chapter and enter topics for it.");
       return;
     }
 
@@ -675,6 +679,7 @@ const TopicManagement = () => {
 
       if (allTopicsToCreate.length === 0) {
         setFormError("Please enter at least one topic name.");
+        showError("Please enter at least one topic name.");
         setIsFormLoading(false);
         return;
       }
@@ -688,8 +693,8 @@ const TopicManagement = () => {
           : [response.data.data];
         setTopics((prevTopics) => [...prevTopics, ...newTopics]);
         handleCancelForm();
-        console.log(
-          `✅ ${newTopics.length} topic(s) created successfully for ${validChapters.length} chapter(s)`
+        success(
+          `${newTopics.length} topic(s) created successfully for ${validChapters.length} chapter(s)`
         );
       } else {
         throw new Error(response.data.message || "Failed to create topics");
@@ -701,6 +706,7 @@ const TopicManagement = () => {
         error.message ||
         "Failed to create topics"
       );
+      showError(error.response?.data?.message || error.message || "Failed to create topics");
     } finally {
       setIsFormLoading(false);
     }
@@ -710,6 +716,7 @@ const TopicManagement = () => {
     // Check permissions
     if (!canEdit) {
       setFormError(getPermissionMessage("edit", role));
+      showError(getPermissionMessage("edit", role));
       return;
     }
 
@@ -764,8 +771,8 @@ const TopicManagement = () => {
           )
         );
         handleCancelEditForm();
-        console.log(
-          `✅ Topic "${response.data.data.name}" updated successfully`
+        success(
+          `Topic "${response.data.data.name}" updated successfully`
         );
       } else {
         throw new Error(response.data.message || "Failed to update topic");
@@ -777,6 +784,7 @@ const TopicManagement = () => {
         error.message ||
         "Failed to update topic"
       );
+      showError(error.response?.data?.message || error.message || "Failed to update topic");
     } finally {
       setIsFormLoading(false);
     }
@@ -786,6 +794,7 @@ const TopicManagement = () => {
     // Check permissions
     if (!canDelete) {
       setFormError(getPermissionMessage("delete", role));
+      showError(getPermissionMessage("delete", role));
       return;
     }
 
@@ -807,7 +816,7 @@ const TopicManagement = () => {
         setTopics((prevTopics) =>
           prevTopics.filter((t) => t._id !== topicToDelete._id)
         );
-        console.log(`✅ Topic "${topicToDelete.name}" deleted successfully`);
+        success(`Topic "${topicToDelete.name}" deleted successfully`);
       } else {
         throw new Error(response.data.message || "Failed to delete topic");
       }
@@ -818,6 +827,7 @@ const TopicManagement = () => {
         error.message ||
         "Failed to delete topic"
       );
+      showError(error.response?.data?.message || error.message || "Failed to delete topic");
     } finally {
       setIsFormLoading(false);
     }
@@ -848,8 +858,8 @@ const TopicManagement = () => {
               t._id === topic._id ? { ...t, status: newStatus } : t
             )
           );
-          console.log(
-            `✅ Topic "${topic.name}" and all children ${action}d successfully`
+          success(
+            `Topic "${topic.name}" and all children ${action}d successfully`
           );
         } else {
           throw new Error(response.data.message || `Failed to ${action} topic`);
@@ -861,6 +871,7 @@ const TopicManagement = () => {
           error.message ||
           `Failed to ${action} topic`
         );
+        showError(error.response?.data?.message || error.message || `Failed to ${action} topic`);
       } finally {
         setIsFormLoading(false);
       }
@@ -871,6 +882,7 @@ const TopicManagement = () => {
     // Check permissions
     if (!canReorder) {
       setFormError(getPermissionMessage("reorder", role));
+      showError(getPermissionMessage("reorder", role));
       return;
     }
 
@@ -941,8 +953,8 @@ const TopicManagement = () => {
       });
 
       if (response.data.success) {
-        console.log(
-          `✅ Topic "${reorderedItem.name}" moved to position ${finalDestIndex + 1}`
+        success(
+          `Topic "${reorderedItem.name}" moved to position ${finalDestIndex + 1}`
         );
       } else {
         throw new Error(
@@ -961,10 +973,12 @@ const TopicManagement = () => {
   };
 
   return (
-    <LoadingWrapper
-      isLoading={isDataLoading}
-      skeleton={<SkeletonChaptersTable />}
-    >
+    <>
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
+      <LoadingWrapper
+        isLoading={isDataLoading}
+        skeleton={<SkeletonChaptersTable />}
+      >
       <div className="space-y-6">
         {/* Error Display */}
         {error && (
@@ -1764,6 +1778,7 @@ const TopicManagement = () => {
         </div>
       </div>
     </LoadingWrapper>
+    </>
   );
 };
 

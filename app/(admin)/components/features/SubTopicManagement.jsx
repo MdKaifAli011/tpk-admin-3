@@ -9,11 +9,13 @@ import React, {
 import SubTopicsTable from "../table/SubTopicsTable";
 import { LoadingWrapper, SkeletonChaptersTable } from "../ui/SkeletonLoader";
 import { FaEdit, FaPlus, FaTimes, FaLock, FaSearch } from "react-icons/fa";
+import { ToastContainer, useToast } from "../ui/Toast";
 import api from "@/lib/api";
 import { usePermissions, getPermissionMessage } from "../../hooks/usePermissions";
 
 const SubTopicsManagement = () => {
   const { canCreate, canEdit, canDelete, canReorder, role } = usePermissions();
+  const { toasts, removeToast, success, error: showError } = useToast();
   const [showAddForm, setShowAddForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [editingSubTopic, setEditingSubTopic] = useState(null);
@@ -783,6 +785,7 @@ const SubTopicsManagement = () => {
     // Check permissions
     if (!canCreate) {
       setFormError(getPermissionMessage("create", role));
+      showError(getPermissionMessage("create", role));
       return;
     }
 
@@ -793,6 +796,7 @@ const SubTopicsManagement = () => {
 
     if (validTopics.length === 0) {
       setFormError("Please select at least one topic and enter subtopics for it.");
+      showError("Please select at least one topic and enter subtopics for it.");
       return;
     }
 
@@ -826,6 +830,7 @@ const SubTopicsManagement = () => {
 
       if (allSubTopicsToCreate.length === 0) {
         setFormError("Please enter at least one subtopic name.");
+        showError("Please enter at least one subtopic name.");
         setIsFormLoading(false);
         return;
       }
@@ -838,8 +843,8 @@ const SubTopicsManagement = () => {
           : [response.data.data];
         setSubTopics((prevSubTopics) => [...prevSubTopics, ...newSubTopics]);
         handleCancelForm();
-        console.log(
-          `✅ ${newSubTopics.length} sub topic(s) created successfully for ${validTopics.length} topic(s)`
+        success(
+          `${newSubTopics.length} sub topic(s) created successfully for ${validTopics.length} topic(s)`
         );
       } else {
         throw new Error(response.data.message || "Failed to create sub topics");
@@ -851,6 +856,7 @@ const SubTopicsManagement = () => {
         error.message ||
         "Failed to create sub topics"
       );
+      showError(error.response?.data?.message || error.message || "Failed to create sub topics");
     } finally {
       setIsFormLoading(false);
     }
@@ -860,6 +866,7 @@ const SubTopicsManagement = () => {
     // Check permissions
     if (!canEdit) {
       setFormError(getPermissionMessage("edit", role));
+      showError(getPermissionMessage("edit", role));
       return;
     }
 
@@ -921,8 +928,8 @@ const SubTopicsManagement = () => {
           )
         );
         handleCancelEditForm();
-        console.log(
-          `✅ Sub Topic "${response.data.data.name}" updated successfully`
+        success(
+          `Sub Topic "${response.data.data.name}" updated successfully`
         );
       } else {
         throw new Error(response.data.message || "Failed to update sub topic");
@@ -934,6 +941,7 @@ const SubTopicsManagement = () => {
         error.message ||
         "Failed to update sub topic"
       );
+      showError(error.response?.data?.message || error.message || "Failed to update sub topic");
     } finally {
       setIsFormLoading(false);
     }
@@ -943,6 +951,7 @@ const SubTopicsManagement = () => {
     // Check permissions
     if (!canDelete) {
       setFormError(getPermissionMessage("delete", role));
+      showError(getPermissionMessage("delete", role));
       return;
     }
 
@@ -964,8 +973,8 @@ const SubTopicsManagement = () => {
         setSubTopics((prevSubTopics) =>
           prevSubTopics.filter((st) => st._id !== subTopicToDelete._id)
         );
-        console.log(
-          `✅ Sub Topic "${subTopicToDelete.name}" deleted successfully`
+        success(
+          `Sub Topic "${subTopicToDelete.name}" deleted successfully`
         );
       } else {
         throw new Error(response.data.message || "Failed to delete sub topic");
@@ -977,6 +986,7 @@ const SubTopicsManagement = () => {
         error.message ||
         "Failed to delete sub topic"
       );
+      showError(error.response?.data?.message || error.message || "Failed to delete sub topic");
     } finally {
       setIsFormLoading(false);
     }
@@ -1007,7 +1017,7 @@ const SubTopicsManagement = () => {
               st._id === subTopic._id ? { ...st, status: newStatus } : st
             )
           );
-          console.log(`✅ SubTopic "${subTopic.name}" ${action}d successfully`);
+          success(`SubTopic "${subTopic.name}" ${action}d successfully`);
         } else {
           throw new Error(
             response.data.message || `Failed to ${action} sub topic`
@@ -1020,6 +1030,7 @@ const SubTopicsManagement = () => {
           error.message ||
           `Failed to ${action} subtopic`
         );
+        showError(error.response?.data?.message || error.message || `Failed to ${action} subtopic`);
       } finally {
         setIsFormLoading(false);
       }
@@ -1030,6 +1041,7 @@ const SubTopicsManagement = () => {
     // Check permissions
     if (!canReorder) {
       setFormError(getPermissionMessage("reorder", role));
+      showError(getPermissionMessage("reorder", role));
       return;
     }
 
@@ -1100,8 +1112,8 @@ const SubTopicsManagement = () => {
       });
 
       if (response.data.success) {
-        console.log(
-          `✅ Sub Topic "${reorderedItem.name}" moved to position ${finalDestIndex + 1}`
+        success(
+          `Sub Topic "${reorderedItem.name}" moved to position ${finalDestIndex + 1}`
         );
       } else {
         throw new Error(
@@ -1120,10 +1132,12 @@ const SubTopicsManagement = () => {
   };
 
   return (
-    <LoadingWrapper
-      isLoading={isDataLoading}
-      skeleton={<SkeletonChaptersTable />}
-    >
+    <>
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
+      <LoadingWrapper
+        isLoading={isDataLoading}
+        skeleton={<SkeletonChaptersTable />}
+      >
       <div className="space-y-6">
         {/* Error Display */}
         {error && (
@@ -2011,6 +2025,7 @@ const SubTopicsManagement = () => {
         </div>
       </div>
     </LoadingWrapper>
+    </>
   );
 };
 

@@ -9,11 +9,13 @@ import React, {
 import DefinitionsTable from "../table/DefinitionsTable";
 import { LoadingWrapper, SkeletonChaptersTable } from "../ui/SkeletonLoader";
 import { FaEdit, FaPlus, FaTimes, FaLock, FaSearch } from "react-icons/fa";
+import { ToastContainer, useToast } from "../ui/Toast";
 import api from "@/lib/api";
 import { usePermissions, getPermissionMessage } from "../../hooks/usePermissions";
 
 const DefinitionManagement = () => {
   const { canCreate, canEdit, canDelete, canReorder, role } = usePermissions();
+  const { toasts, removeToast, success, error: showError } = useToast();
   const [showAddForm, setShowAddForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [editingDefinition, setEditingDefinition] = useState(null);
@@ -943,12 +945,14 @@ const DefinitionManagement = () => {
     // Check permissions
     if (!canCreate) {
       setFormError(getPermissionMessage("create", role));
+      showError(getPermissionMessage("create", role));
       return;
     }
 
     // Validate required fields
     if (!formData.examId || !formData.subjectId || !formData.unitId || !formData.chapterId || !formData.topicId) {
       setFormError("Please select Exam, Subject, Unit, Chapter, and Topic");
+      showError("Please select Exam, Subject, Unit, Chapter, and Topic");
       setIsFormLoading(false);
       return;
     }
@@ -960,6 +964,7 @@ const DefinitionManagement = () => {
 
     if (validSubTopics.length === 0) {
       setFormError("Please select at least one subtopic and enter definitions for it.");
+      showError("Please select at least one subtopic and enter definitions for it.");
       setIsFormLoading(false);
       return;
     }
@@ -996,10 +1001,9 @@ const DefinitionManagement = () => {
 
         if (duplicates.length > 0) {
           const subTopicName = filteredSubTopics.find((st) => st._id === subTopic.subTopicId)?.name || "this subtopic";
-          setFormError(
-            `Duplicate definition names are not allowed in "${subTopicName}". ` +
-            `Please remove duplicates: ${duplicates.map(d => `"${d}"`).join(", ")}`
-          );
+          const errorMessage = `Duplicate definition names are not allowed in "${subTopicName}". Please remove duplicates: ${duplicates.map(d => `"${d}"`).join(", ")}`;
+          setFormError(errorMessage);
+          showError(errorMessage);
           setIsFormLoading(false);
           return;
         }
@@ -1017,10 +1021,9 @@ const DefinitionManagement = () => {
 
             if (conflictingNames.length > 0) {
               const subTopicName = filteredSubTopics.find((st) => st._id === subTopic.subTopicId)?.name || "this subtopic";
-              setFormError(
-                `Definition name(s) already exist in "${subTopicName}": ${conflictingNames.map(n => `"${n}"`).join(", ")}. ` +
-                `Please use unique names.`
-              );
+              const errorMessage = `Definition name(s) already exist in "${subTopicName}": ${conflictingNames.map(n => `"${n}"`).join(", ")}. Please use unique names.`;
+              setFormError(errorMessage);
+              showError(errorMessage);
               setIsFormLoading(false);
               return;
             }
@@ -1049,6 +1052,7 @@ const DefinitionManagement = () => {
 
       if (allDefinitionsToCreate.length === 0) {
         setFormError("Please enter at least one definition name.");
+        showError("Please enter at least one definition name.");
         setIsFormLoading(false);
         return;
       }
@@ -1061,8 +1065,8 @@ const DefinitionManagement = () => {
           : [response.data.data];
         setDefinitions((prevDefinitions) => [...prevDefinitions, ...newDefinitions]);
         handleCancelForm();
-        console.log(
-          `✅ ${newDefinitions.length} definition(s) created successfully for ${validSubTopics.length} subtopic(s)`
+        success(
+          `${newDefinitions.length} definition(s) created successfully for ${validSubTopics.length} subtopic(s)`
         );
       } else {
         throw new Error(response.data.message || "Failed to create definitions");
@@ -1072,6 +1076,7 @@ const DefinitionManagement = () => {
 
       const errorMessage = error.response?.data?.message || error.message || "Failed to create definitions";
       setFormError(errorMessage);
+      showError(errorMessage);
     } finally {
       setIsFormLoading(false);
     }
@@ -1081,6 +1086,7 @@ const DefinitionManagement = () => {
     // Check permissions
     if (!canEdit) {
       setFormError(getPermissionMessage("edit", role));
+      showError(getPermissionMessage("edit", role));
       return;
     }
 
@@ -1097,7 +1103,7 @@ const DefinitionManagement = () => {
         const topicResponse = await api.get(`/topic/${topicId}`);
         if (topicResponse.data.success && topicResponse.data.data?.chapterId) {
           chapterId = topicResponse.data.data.chapterId._id || topicResponse.data.data.chapterId;
-          console.log(`✅ Auto-populated chapterId ${chapterId} from topicId ${topicId} for editing definition`);
+          console.log(`Auto-populated chapterId ${chapterId} from topicId ${topicId} for editing definition`);
         }
       } catch (error) {
         console.error("Error fetching chapterId from topic:", error);
@@ -1147,6 +1153,7 @@ const DefinitionManagement = () => {
     // Validate required fields
     if (!editFormData.examId || !editFormData.subjectId || !editFormData.unitId || !editFormData.chapterId || !editFormData.topicId || !editFormData.subTopicId) {
       setFormError("Please select Exam, Subject, Unit, Chapter, Topic, and SubTopic");
+      showError("Please select Exam, Subject, Unit, Chapter, Topic, and SubTopic");
       setIsFormLoading(false);
       return;
     }
@@ -1175,8 +1182,8 @@ const DefinitionManagement = () => {
           )
         );
         handleCancelEditForm();
-        console.log(
-          `✅ Definition "${response.data.data.name}" updated successfully`
+        success(
+          `Definition "${response.data.data.name}" updated successfully`
         );
       } else {
         throw new Error(response.data.message || "Failed to update definition");
@@ -1188,6 +1195,7 @@ const DefinitionManagement = () => {
         error.message ||
         "Failed to update definition"
       );
+      showError(error.response?.data?.message || error.message || "Failed to update definition");
     } finally {
       setIsFormLoading(false);
     }
@@ -1197,6 +1205,7 @@ const DefinitionManagement = () => {
     // Check permissions
     if (!canDelete) {
       setFormError(getPermissionMessage("delete", role));
+      showError(getPermissionMessage("delete", role));
       return;
     }
 
@@ -1218,7 +1227,7 @@ const DefinitionManagement = () => {
         setDefinitions((prevDefinitions) =>
           prevDefinitions.filter((d) => d._id !== definitionToDelete._id)
         );
-        console.log(`✅ Definition "${definitionToDelete.name}" deleted successfully`);
+        success(`Definition "${definitionToDelete.name}" deleted successfully`);
       } else {
         throw new Error(response.data.message || "Failed to delete definition");
       }
@@ -1229,6 +1238,7 @@ const DefinitionManagement = () => {
         error.message ||
         "Failed to delete definition"
       );
+      showError(error.response?.data?.message || error.message || "Failed to delete definition");
     } finally {
       setIsFormLoading(false);
     }
@@ -1259,8 +1269,8 @@ const DefinitionManagement = () => {
               d._id === definition._id ? { ...d, status: newStatus } : d
             )
           );
-          console.log(
-            `✅ Definition "${definition.name}" ${action}d successfully`
+          success(
+            `Definition "${definition.name}" ${action}d successfully`
           );
         } else {
           throw new Error(response.data.message || `Failed to ${action} definition`);
@@ -1272,6 +1282,7 @@ const DefinitionManagement = () => {
           error.message ||
           `Failed to ${action} definition`
         );
+        showError(error.response?.data?.message || error.message || `Failed to ${action} definition`);
       } finally {
         setIsFormLoading(false);
       }
@@ -1282,6 +1293,7 @@ const DefinitionManagement = () => {
     // Check permissions
     if (!canReorder) {
       setFormError(getPermissionMessage("reorder", role));
+      showError(getPermissionMessage("reorder", role));
       return;
     }
 
@@ -1352,8 +1364,8 @@ const DefinitionManagement = () => {
       });
 
       if (response.data.success) {
-        console.log(
-          `✅ Definition "${reorderedItem.name}" moved to position ${finalDestIndex + 1}`
+        success(
+          `Definition "${reorderedItem.name}" moved to position ${finalDestIndex + 1}`
         );
       } else {
         throw new Error(
@@ -1372,11 +1384,13 @@ const DefinitionManagement = () => {
   };
 
   return (
-    <LoadingWrapper
-      isLoading={isDataLoading}
-      skeleton={<SkeletonChaptersTable />}
-    >
-      <div className="space-y-6">
+    <>
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
+      <LoadingWrapper
+        isLoading={isDataLoading}
+        skeleton={<SkeletonChaptersTable />}
+      >
+        <div className="space-y-6">
         {/* Error Display */}
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
@@ -2380,6 +2394,7 @@ const DefinitionManagement = () => {
         </div>
       </div>
     </LoadingWrapper>
+    </>
   );
 };
 
