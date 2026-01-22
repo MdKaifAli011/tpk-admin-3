@@ -110,7 +110,11 @@ const MainLayout = ({ children, showSidebar = true, fullWidth = false }) => {
       <WhatsAppFloatButton />
       <div className="flex flex-col min-h-screen bg-gray-50">
         {/* NAVBAR */}
-        <Navbar onMenuToggle={toggleSidebar} isMenuOpen={isSidebarOpen} />
+        <Navbar 
+          onMenuToggle={toggleSidebar} 
+          isMenuOpen={isSidebarOpen} 
+          showSidebar={showSidebar}
+        />
 
         <div className="flex flex-1 relative">
           {/* SIDEBAR (Premium 300px Glass UI) - Only show if showSidebar is true */}

@@ -320,6 +320,13 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
           setTree(transformed);
           setError("");
           setTreeLoading(false);
+          
+          // Emit custom event for search modal
+          if (typeof window !== "undefined") {
+            window.dispatchEvent(new CustomEvent("treeDataUpdated", {
+              detail: { tree: transformed, activeExamId: examId }
+            }));
+          }
         }
       } catch (err) {
         if (treeLoadingRef.current.has(examId)) {

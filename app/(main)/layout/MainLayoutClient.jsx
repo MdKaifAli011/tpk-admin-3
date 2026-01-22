@@ -15,6 +15,7 @@ import Footer from "./Footer";
 import ServiceWorkerRegistration from "../components/ServiceWorkerRegistration";
 import ScrollToTop from "../components/ScrollToTop";
 import WhatsAppFloatButton from "../components/WhatsAppFloatButton";
+import { SearchProvider } from "./context/SearchContext";
 import api from "../../../lib/api.js";
 
 export default function MainLayoutClient({ children }) {
@@ -256,71 +257,76 @@ export default function MainLayoutClient({ children }) {
 
   return (
     <ErrorBoundary>
-      <ServiceWorkerRegistration />
-      <ScrollToTop />
-      <WhatsAppFloatButton />
-      <div className="flex flex-col min-h-screen bg-gray-50">
-        {/* Persistent Navbar - won't re-render on navigation */}
-        <Navbar onMenuToggle={toggleSidebar} isMenuOpen={isSidebarOpen} />
-
-        <div className="flex flex-1 relative">
-          {/* Persistent Sidebar - always rendered to prevent flickering */}
-          <Sidebar
-            isOpen={showSidebar && isSidebarOpen}
-            onClose={closeSidebar}
+      <SearchProvider>
+        <ServiceWorkerRegistration />
+        <ScrollToTop />
+        <WhatsAppFloatButton />
+        <div className="flex flex-col min-h-screen bg-gray-50">
+          {/* Persistent Navbar - won't re-render on navigation */}
+          <Navbar 
+            onMenuToggle={toggleSidebar} 
+            isMenuOpen={isSidebarOpen} 
+            showSidebar={showSidebar}
           />
 
-          {/* Main content area - only this changes on navigation */}
-          <main
-            className={`
-              flex-1
-              pt-[110px] md:pt-[120px]
-              min-h-screen
-              ${showSidebar && isSidebarOpen ? "lg:ml-[300px]" : ""}
-              bg-white
-              overflow-y-auto
-              min-h-0
-              px-4 md:px-6 pb-6
-              transition-all duration-300 ease-out
-              [&::-webkit-scrollbar]:hidden
-              [-ms-overflow-style:none]
-              [scrollbar-width:none]
-            `}
-          >
-            <div className="w-full max-w-7xl mx-auto min-h-[400px]">
-              <Suspense
-                fallback={
-                  <div className="flex items-center justify-center min-h-[500px] sm:min-h-[600px] py-12 sm:py-16">
-                    <div className="text-center">
-                      {/* Spinner with gradient and glow effect */}
-                      <div className="relative inline-flex items-center justify-center mb-4 sm:mb-5">
-                        {/* Glow effect */}
-                        <div className="absolute inset-0 bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 rounded-full blur-2xl opacity-30 animate-pulse" />
-                        {/* Spinner */}
-                        <div className="relative">
-                          <div
-                            className="inline-block animate-spin rounded-full h-12 w-12 sm:h-14 sm:w-14 md:h-16 md:w-16 border-4 border-indigo-500 border-t-transparent"
-                            style={{ animationDuration: "1s" }}
-                          />
-                        </div>
-                      </div>
-                      {/* Loading text */}
-                      <p className="text-sm sm:text-base font-semibold text-gray-700">
-                        Loading...
-                      </p>
-                    </div>
-                  </div>
-                }
-              >
-                {children}
-              </Suspense>
-            </div>
-          </main>
-        </div>
+          <div className="flex flex-1 relative">
+            {/* Persistent Sidebar - always rendered to prevent flickering */}
+            <Sidebar
+              isOpen={showSidebar && isSidebarOpen}
+              onClose={closeSidebar}
+            />
 
-        {/* Persistent Footer - won't re-render on navigation */}
-        <Footer />
-      </div>
+            {/* Main content area - only this changes on navigation */}
+            <main
+              className={`
+                flex-1
+                pt-[110px] md:pt-[120px]
+                ${showSidebar && isSidebarOpen ? "lg:ml-[300px]" : ""}
+                bg-white
+                overflow-y-auto
+                min-h-0
+                px-4 md:px-6 pb-6
+                transition-all duration-300 ease-out
+                [&::-webkit-scrollbar]:hidden
+                [-ms-overflow-style:none]
+                [scrollbar-width:none]
+              `}
+            >
+              <div className="w-full max-w-7xl mx-auto min-h-[400px]">
+                <Suspense
+                  fallback={
+                    <div className="flex items-center justify-center min-h-[500px] sm:min-h-[600px] py-12 sm:py-16">
+                      <div className="text-center">
+                        {/* Spinner with gradient and glow effect */}
+                        <div className="relative inline-flex items-center justify-center mb-4 sm:mb-5">
+                          {/* Glow effect */}
+                          <div className="absolute inset-0 bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 rounded-full blur-2xl opacity-30 animate-pulse" />
+                          {/* Spinner */}
+                          <div className="relative">
+                            <div
+                              className="inline-block animate-spin rounded-full h-12 w-12 sm:h-14 sm:w-14 md:h-16 md:w-16 border-4 border-indigo-500 border-t-transparent"
+                              style={{ animationDuration: "1s" }}
+                            />
+                          </div>
+                        </div>
+                        {/* Loading text */}
+                        <p className="text-sm sm:text-base font-semibold text-gray-700">
+                          Loading...
+                        </p>
+                      </div>
+                    </div>
+                  }
+                >
+                  {children}
+                </Suspense>
+              </div>
+            </main>
+          </div>
+
+          {/* Persistent Footer - won't re-render on navigation */}
+          <Footer />
+        </div>
+      </SearchProvider>
     </ErrorBoundary>
   );
 }

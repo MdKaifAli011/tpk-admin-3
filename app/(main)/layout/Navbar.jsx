@@ -25,6 +25,7 @@ import CoursesMegaMenu from "./components/CoursesMegaMenu";
 import UtilitiesMegaMenu from "./components/UtilitiesMegaMenu";
 import DownloadsMegaMenu from "./components/DownloadsMegaMenu";
 import ContactMegaMenu from "./components/ContactMegaMenu";
+import SearchModal from "./components/SearchModal";
 import {
   ExaminationsMobileContent,
   CoursesMobileContent,
@@ -36,11 +37,12 @@ import {
 // Base path - should match next.config.mjs basePath
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
 
-const Navbar = memo(({ onMenuToggle, isMenuOpen }) => {
+const Navbar = memo(({ onMenuToggle, isMenuOpen, showSidebar }) => {
   const [isNavMenuOpen, setIsNavMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [activeMegaMenu, setActiveMegaMenu] = useState(null);
   const [mobileExpandedMenu, setMobileExpandedMenu] = useState(null);
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const router = useRouter();
   const { student, isLoading, isAuthenticated, logout } = useStudent();
 
@@ -340,13 +342,16 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen }) => {
 
             {/* Right: Search, Sign In, Enroll Now */}
             <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 shrink-0">
-              {/* Search Icon */}
-              <button
-                className="p-2 sm:p-2.5 md:p-2 text-gray-600 hover:text-blue-600 active:text-blue-700 transition-colors touch-manipulation flex items-center justify-center min-w-[44px] min-h-[44px]"
-                aria-label="Search"
-              >
-                <FaSearch className="text-base sm:text-lg md:text-xl" />
-              </button>
+              {/* Search Icon - Only show on pages with sidebar */}
+              {showSidebar && (
+                <button
+                  onClick={() => setIsSearchModalOpen(true)}
+                  className="p-2 sm:p-2.5 md:p-2 text-gray-600 hover:text-blue-600 active:text-blue-700 transition-colors touch-manipulation flex items-center justify-center min-w-[44px] min-h-[44px]"
+                  aria-label="Search"
+                >
+                  <FaSearch className="text-base sm:text-lg md:text-xl" />
+                </button>
+              )}
 
               {/* User Menu / Sign In */}
               {isAuthenticated && !isLoading ? (
@@ -707,6 +712,12 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen }) => {
           )}
         </div>
       </div>
+
+      {/* Search Modal */}
+      <SearchModal
+        isOpen={isSearchModalOpen}
+        onClose={() => setIsSearchModalOpen(false)}
+      />
     </nav>
   );
 });
