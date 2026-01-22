@@ -324,7 +324,11 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
           // Emit custom event for search modal
           if (typeof window !== "undefined") {
             window.dispatchEvent(new CustomEvent("treeDataUpdated", {
-              detail: { tree: transformed, activeExamId: examId }
+              detail: { 
+                tree: transformed, 
+                activeExamId: examId,
+                exams: exams 
+              }
             }));
           }
         }

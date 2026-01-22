@@ -15,6 +15,7 @@ import Image from "next/image";
 import api from "../../../lib/api.js";
 import Navbar from "../layout/Navbar";
 import Footer from "../layout/Footer";
+import { SearchProvider } from "../layout/context/SearchContext";
 
 // Base path - used for public asset URLs (Next.js applies basePath automatically for navigation)
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
@@ -107,9 +108,10 @@ const LoginPage = () => {
   };
 
   return (
-    <>
-      <Navbar onMenuToggle={() => {}} isMenuOpen={false} />
-      <div className="min-h-screen pt-24 sm:pt-28 md:pt-32 bg-gradient-to-br from-indigo-100 via-white to-purple-100 flex flex-col relative overflow-hidden">
+    <SearchProvider>
+      <>
+        <Navbar onMenuToggle={() => {}} isMenuOpen={false} showSidebar={false} />
+        <div className="min-h-screen pt-24 sm:pt-28 md:pt-32 bg-gradient-to-br from-indigo-100 via-white to-purple-100 flex flex-col relative overflow-hidden">
         {/* Main Content */}
         <div className="flex-1 flex items-center justify-center p-4 relative">
           {/* Background Dots */}
@@ -291,7 +293,8 @@ const LoginPage = () => {
         </div>
       </div>
       <Footer />
-    </>
+      </>
+    </SearchProvider>
   );
 };
 

@@ -284,7 +284,7 @@ export default function MainLayoutClient({ children }) {
                 ${showSidebar && isSidebarOpen ? "lg:ml-[300px]" : ""}
                 bg-white
                 overflow-y-auto
-                min-h-0
+                min-h-screen
                 px-4 md:px-6 pb-6
                 transition-all duration-300 ease-out
                 [&::-webkit-scrollbar]:hidden

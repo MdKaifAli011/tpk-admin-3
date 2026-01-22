@@ -14,7 +14,55 @@ import { useSearchContext } from "../context/SearchContext";
 const SearchModal = ({ isOpen, onClose }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
-  const { tree, treeLoading } = useSearchContext();
+  const { tree, treeLoading, activeExamSlug } = useSearchContext();
+  const [currentExamSlug, setCurrentExamSlug] = useState("");
+
+  // Update exam slug when URL changes or context changes
+  useEffect(() => {
+    const updateExamSlug = () => {
+      if (typeof window !== "undefined") {
+        const pathname = window.location.pathname;
+        const pathSegments = pathname.split('/').filter(Boolean);
+        
+        // Remove basePath if present
+        const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
+        const basePathSegments = basePath.split('/').filter(Boolean);
+        
+        // Filter out basePath segments
+        const filteredSegments = pathSegments.filter(segment => 
+          !basePathSegments.includes(segment)
+        );
+        
+        if (filteredSegments.length > 0) {
+          // First segment should be the exam slug
+          const newExamSlug = filteredSegments[0];
+          setCurrentExamSlug(newExamSlug);
+        }
+      }
+    };
+
+    // Initial update
+    updateExamSlug();
+
+    // Listen for URL changes
+    const handleURLChange = () => {
+      setTimeout(updateExamSlug, 100);
+    };
+
+    window.addEventListener("popstate", handleURLChange);
+    
+    // Also listen for custom navigation events
+    const handleNavigation = () => {
+      setTimeout(updateExamSlug, 100);
+    };
+    
+    window.addEventListener("navigation", handleNavigation);
+
+    return () => {
+      window.removeEventListener("popstate", handleURLChange);
+      window.removeEventListener("navigation", handleNavigation);
+    };
+  }, [activeExamSlug]); // Re-run when activeExamSlug from context changes
 
   /* ------------------------------- Debounce ------------------------------- */
   useEffect(() => {
@@ -28,6 +76,25 @@ const SearchModal = ({ isOpen, onClose }) => {
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
   }, [onClose]);
+
+  /* ----------------------------- Ctrl+K Open ----------------------------- */
+  useEffect(() => {
+    const handleCtrlK = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+        e.preventDefault();
+        if (isOpen) {
+          onClose();
+        } else {
+          // This will be handled by the parent component
+          // We'll emit a custom event to notify parent
+          window.dispatchEvent(new CustomEvent("openSearchModal"));
+        }
+      }
+    };
+
+    document.addEventListener("keydown", handleCtrlK);
+    return () => document.removeEventListener("keydown", handleCtrlK);
+  }, [isOpen, onClose]);
 
   /* ----------------------------- Tree Filter ------------------------------ */
   const normalizedQuery = debouncedQuery.trim().toLowerCase();
@@ -84,7 +151,7 @@ const SearchModal = ({ isOpen, onClose }) => {
         results.push({
           type: "subject",
           name: subject.name,
-          path: `/${subject.slug}`,
+          path: `/${currentExamSlug}/${subject.slug}`,
         });
       }
 
@@ -94,7 +161,7 @@ const SearchModal = ({ isOpen, onClose }) => {
             type: "unit",
             name: unit.name,
             parent: subject.name,
-            path: `/${subject.slug}/${unit.slug}`,
+            path: `/${currentExamSlug}/${subject.slug}/${unit.slug}`,
           });
         }
 
@@ -104,7 +171,7 @@ const SearchModal = ({ isOpen, onClose }) => {
               type: "chapter",
               name: chapter.name,
               parent: `${subject.name} › ${unit.name}`,
-              path: `/${subject.slug}/${unit.slug}/${chapter.slug}`,
+              path: `/${currentExamSlug}/${subject.slug}/${unit.slug}/${chapter.slug}`,
             });
           }
 
@@ -114,7 +181,7 @@ const SearchModal = ({ isOpen, onClose }) => {
                 type: "topic",
                 name: topic.name,
                 parent: `${subject.name} › ${unit.name} › ${chapter.name}`,
-                path: `/${subject.slug}/${unit.slug}/${chapter.slug}/${topic.slug}`,
+                path: `/${currentExamSlug}/${subject.slug}/${unit.slug}/${chapter.slug}/${topic.slug}`,
               });
             }
           });
@@ -123,7 +190,7 @@ const SearchModal = ({ isOpen, onClose }) => {
     });
 
     return results;
-  }, [filteredTree, normalizedQuery]);
+  }, [filteredTree, normalizedQuery, currentExamSlug]);
 
   const icons = {
     subject: <FaBook className="text-blue-600" />,
@@ -139,7 +206,7 @@ const SearchModal = ({ isOpen, onClose }) => {
       {/* Backdrop */}
       <div
         onClick={onClose}
-        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[9998]"
+        className="fixed inset-0 bg-black/40  z-[9998]"
       />
 
       {/* Modal */}

@@ -293,7 +293,7 @@ const DiscussionFormModal = ({
                     : formId === "Discussion-forum-reply"
                       ? "Reply to Discussion"
                       : formId === "Discussion-forum-thread-image"
-                        ? "View Discussion Forum Image"
+                        ? "Join the Discussion"
                         : "Join the Discussion"}
               </h2>
               <p className="text-xs xs:text-sm text-gray-600 mb-3 sm:mb-4">

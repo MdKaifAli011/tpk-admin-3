@@ -67,16 +67,9 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen, showSidebar }) => {
     // Set initial height immediately
     updateNavbarHeight();
 
-    // Use ResizeObserver for more accurate height tracking
-    const resizeObserver = new ResizeObserver(() => {
-      updateNavbarHeight();
-    });
+    const resizeObserver = new ResizeObserver(updateNavbarHeight);
     resizeObserver.observe(navbar);
 
-    // Also listen to window resize as fallback
-    window.addEventListener("resize", updateNavbarHeight);
-
-    // Recalculate after multiple delays to catch all render phases
     const timeouts = [
       setTimeout(updateNavbarHeight, 0),
       setTimeout(updateNavbarHeight, 100),
@@ -89,6 +82,20 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen, showSidebar }) => {
       timeouts.forEach(clearTimeout);
     };
   }, []);
+
+  // Handle Ctrl+K keyboard shortcut
+  React.useEffect(() => {
+    const handleOpenSearchModal = () => {
+      if (showSidebar) {
+        setIsSearchModalOpen(true);
+      }
+    };
+
+    window.addEventListener("openSearchModal", handleOpenSearchModal);
+    return () => {
+      window.removeEventListener("openSearchModal", handleOpenSearchModal);
+    };
+  }, [showSidebar]);
 
   // Prevent body scroll when nav menu is open on mobile
   React.useEffect(() => {
@@ -346,10 +353,15 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen, showSidebar }) => {
               {showSidebar && (
                 <button
                   onClick={() => setIsSearchModalOpen(true)}
-                  className="p-2 sm:p-2.5 md:p-2 text-gray-600 hover:text-blue-600 active:text-blue-700 transition-colors touch-manipulation flex items-center justify-center min-w-[44px] min-h-[44px]"
-                  aria-label="Search"
+                  className="p-2 sm:p-2.5 md:p-2 text-gray-600 hover:text-blue-600 active:text-blue-700 transition-colors touch-manipulation flex items-center justify-center min-w-[44px] min-h-[44px] group relative"
+                  aria-label="Search (Ctrl+K)"
+                  title="Search (Ctrl+K)"
                 >
                   <FaSearch className="text-base sm:text-lg md:text-xl" />
+                  {/* Ctrl+K hint */}
+                  <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                    <kbd className="font-mono text-xs">Ctrl</kbd>+<kbd className="font-mono text-xs">K</kbd>
+                  </div>
                 </button>
               )}
 
