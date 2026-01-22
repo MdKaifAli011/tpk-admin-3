@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import ExamTable from "../table/ExamTable";
 import {
   LoadingWrapper,
@@ -13,6 +13,7 @@ import {
   FaExclamationTriangle,
   FaClipboardList,
   FaLock,
+  FaSearch,
 } from "react-icons/fa";
 import { ToastContainer, useToast } from "../ui/Toast";
 import api from "@/lib/api";
@@ -39,6 +40,7 @@ const ExamManagement = () => {
   const { toasts, removeToast, success, error: showError } = useToast();
   const isFetchingRef = useRef(false);
   const [metaFilter, setMetaFilter] = useState("all"); // all, filled, notFilled
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Fetch exams from API using Axios
   const fetchExams = async () => {
@@ -71,6 +73,16 @@ const ExamManagement = () => {
   useEffect(() => {
     fetchExams();
   }, [metaFilter]);
+
+  // Client-side filtering for search
+  const filteredExams = useMemo(() => {
+    return exams.filter((exam) => {
+      const matchesSearch = exam.name
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase());
+      return matchesSearch;
+    });
+  }, [exams, searchQuery]);
 
   // Set orderNumber when editing (not needed for adding since it's auto-generated)
   useEffect(() => {
@@ -544,9 +556,29 @@ const ExamManagement = () => {
                   Manage your exams, view details, and perform actions
                 </p>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
+                {/* Search Input */}
+                <div className="relative min-w-[200px] sm:min-w-[240px]">
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search exams..."
+                    className="w-full pl-9 pr-8 py-1.5 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                  />
+                  <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-3.5 h-3.5" />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery("")}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                    >
+                      <FaTimes className="w-3 h-3" />
+                    </button>
+                  )}
+                </div>
+
                 <div className="flex items-center gap-2">
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Meta Status:</label>
+                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap">Meta Status:</label>
                   <select
                     value={metaFilter}
                     onChange={(e) => setMetaFilter(e.target.value)}
@@ -561,7 +593,7 @@ const ExamManagement = () => {
             </div>
           </div>
 
-          <div >
+          <div className="p-2">
             {isDataLoading ? (
               <div className="flex items-center justify-center py-12">
                 <div className="text-center">
@@ -569,7 +601,7 @@ const ExamManagement = () => {
                   <p className="text-sm text-gray-500 mt-3">Loading exams...</p>
                 </div>
               </div>
-            ) : exams.length === 0 ? (
+            ) : filteredExams.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-center">
                 <div className="p-4 bg-gray-100 rounded-full mb-4">
                   <FaClipboardList className="w-8 h-8 text-gray-400" />
@@ -578,10 +610,18 @@ const ExamManagement = () => {
                   No Exams Found
                 </h3>
                 <p className="text-sm text-gray-500 mb-4 max-w-sm">
-                  You haven&apos;t created any exams yet. Click the &quot;Add
-                  New Exam&quot; button to get started.
+                  {searchQuery
+                    ? "No exams match your search criteria."
+                    : "You haven't created any exams yet. Click the \"Add New Exam\" button to get started."}
                 </p>
-                {canCreate ? (
+                {searchQuery ? (
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
+                  >
+                    Clear Search
+                  </button>
+                ) : canCreate ? (
                   <button
                     onClick={() => setShowAddForm(true)}
                     className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 flex items-center gap-2"
@@ -598,7 +638,7 @@ const ExamManagement = () => {
               </div>
             ) : (
               <ExamTable
-                exams={exams}
+                exams={filteredExams}
                 onEdit={handleEditExam}
                 onDelete={handleDeleteExam}
                 onToggleStatus={handleToggleStatus}

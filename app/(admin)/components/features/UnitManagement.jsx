@@ -224,12 +224,13 @@ const UnitsManagement = () => {
   }, [units, filterExam, filterSubject, searchQuery]);
 
   // Get active filter count
-  const activeFilterCount = (filterExam ? 1 : 0) + (filterSubject ? 1 : 0);
+  const activeFilterCount = (filterExam ? 1 : 0) + (filterSubject ? 1 : 0) + (searchQuery ? 1 : 0);
 
   // Clear all filters
   const clearFilters = () => {
     setFilterExam("");
     setFilterSubject("");
+    setSearchQuery("");
   };
 
   const handleAddUnits = async (e) => {
@@ -1053,9 +1054,29 @@ const UnitsManagement = () => {
                   drag to reorder units.
                 </p>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
+                {/* Search Input */}
+                <div className="relative min-w-[200px] sm:min-w-[240px]">
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search units..."
+                    className="w-full pl-9 pr-8 py-1.5 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                  />
+                  <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-3.5 h-3.5" />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery("")}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                    >
+                      <FaTimes className="w-3 h-3" />
+                    </button>
+                  )}
+                </div>
+
                 <div className="flex items-center gap-2">
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Meta Status:</label>
+                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap">Meta Status:</label>
                   <select
                     value={metaFilter}
                     onChange={(e) => setMetaFilter(e.target.value)}
@@ -1068,7 +1089,7 @@ const UnitsManagement = () => {
                 </div>
                 <button
                   onClick={() => setShowFilters(!showFilters)}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${showFilters
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${showFilters
                     ? "bg-blue-600 text-white shadow-md"
                     : "bg-white text-gray-600 border border-gray-200 hover:border-blue-400"
                     }`}
@@ -1076,7 +1097,7 @@ const UnitsManagement = () => {
                   <FaSearch className="w-4 h-4" />
                   Filters
                   {activeFilterCount > 0 && (
-                    <span className="bg-white text-blue-600 px-1.5 py-0.5 rounded-full text-xs font-medium">
+                    <span className="bg-white text-blue-600 px-1.5 py-0.5 rounded-full text-[10px] font-medium">
                       {activeFilterCount}
                     </span>
                   )}
@@ -1133,52 +1154,62 @@ const UnitsManagement = () => {
                   </select>
                 </div>
               </div>
-
-              {/* Active Filters */}
-              {activeFilterCount > 0 && (
-                <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-gray-200">
-                  <span className="text-xs font-semibold text-gray-600">
-                    Active Filters:
-                  </span>
-                  {filterExam && (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
-                      Exam:{" "}
-                      {exams.find((e) => e._id === filterExam)?.name || "N/A"}
-                      <button
-                        onClick={() => {
-                          setFilterExam("");
-                          setFilterSubject("");
-                        }}
-                        className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"
-                      >
-                        <FaTimes className="w-3 h-3" />
-                      </button>
-                    </span>
-                  )}
-                  {filterSubject && (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
-                      Subject:{" "}
-                      {subjects.find((s) => s._id === filterSubject)?.name ||
-                        "N/A"}
-                      <button
-                        onClick={() => setFilterSubject("")}
-                        className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"
-                      >
-                        <FaTimes className="w-3 h-3" />
-                      </button>
-                    </span>
-                  )}
-                  <button
-                    onClick={clearFilters}
-                    className="ml-auto px-3 py-1 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-full text-xs font-medium transition-colors"
-                  >
-                    Clear All Filters
-                  </button>
-                </div>
-              )}
             </div>
           )}
 
+          {/* Active Filters */}
+          {activeFilterCount > 0 && (
+            <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-gray-200">
+              <span className="text-xs font-semibold text-gray-600">
+                Active Filters:
+              </span>
+              {filterExam && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
+                  Exam:{" "}
+                  {exams.find((e) => e._id === filterExam)?.name || "N/A"}
+                  <button
+                    onClick={() => {
+                      setFilterExam("");
+                      setFilterSubject("");
+                    }}
+                    className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"
+                  >
+                    <FaTimes className="w-3 h-3" />
+                  </button>
+                </span>
+              )}
+              {filterSubject && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-medium">
+                  Subject:{" "}
+                  {subjects.find((s) => s._id === filterSubject)?.name ||
+                    "N/A"}
+                  <button
+                    onClick={() => setFilterSubject("")}
+                    className="hover:bg-purple-200 rounded-full p-0.5 transition-colors"
+                  >
+                    <FaTimes className="w-3 h-3" />
+                  </button>
+                </span>
+              )}
+              {searchQuery && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-medium">
+                  Search: {searchQuery}
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="hover:bg-indigo-200 rounded-full p-0.5 transition-colors"
+                  >
+                    <FaTimes className="w-3 h-3" />
+                  </button>
+                </span>
+              )}
+              <button
+                onClick={clearFilters}
+                className="ml-auto px-3 py-1 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-full text-xs font-medium transition-colors"
+              >
+                Clear All Filters
+              </button>
+            </div>
+          )}
           <div className="p-2">
             {isDataLoading ? (
               <div className="flex items-center justify-center py-12">
