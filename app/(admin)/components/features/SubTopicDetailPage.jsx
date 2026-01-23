@@ -20,6 +20,7 @@ const SubTopicDetailPage = ({ subTopicId }) => {
   const [error, setError] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [originalContent, setOriginalContent] = useState(""); // Store original content when editing starts
+  const [originalData, setOriginalData] = useState({}); // Store all original data when editing starts
   const [formData, setFormData] = useState({
     name: "",
     content: "",

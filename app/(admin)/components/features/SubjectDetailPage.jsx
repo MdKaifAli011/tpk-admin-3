@@ -23,6 +23,7 @@ const SubjectDetailPage = ({ subjectId }) => {
   const [error, setError] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [originalContent, setOriginalContent] = useState(""); // Store original content when editing starts
+  const [originalData, setOriginalData] = useState({}); // Store all original data when editing starts
   const [formData, setFormData] = useState({
     name: "",
     content: "",
@@ -89,7 +90,7 @@ const SubjectDetailPage = ({ subjectId }) => {
   const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
 
-  // Save only content for preview
+  // Save content and metadata for preview
   const handleSaveContent = async () => {
     // Check permissions
     if (!canEdit) {
@@ -99,52 +100,64 @@ const SubjectDetailPage = ({ subjectId }) => {
 
     try {
       setIsSaving(true);
-      // Save only content field
+      // Save content and SEO metadata (but not entity name)
       const detailsRes = await api.put(`/subject/${subjectId}/details`, {
         content: formData.content,
+        title: formData.title,
+        metaDescription: formData.metaDescription,
+        keywords: formData.keywords,
+        status: formData.status,
       });
       
       if (detailsRes.data?.success) {
-        success("Content saved! You can preview on frontend.");
+        success("Content and metadata saved! You can preview on frontend.");
         // Keep editor open (isEditing stays true)
-        // Keep originalContent unchanged so Cancel can restore it
+        // Update originalContent to current content for proper cancel functionality
+        setOriginalContent(formData.content);
       } else {
-        showError(detailsRes.data?.message || "Failed to save content");
+        showError(detailsRes.data?.message || "Failed to save content and metadata");
       }
     } catch (err) {
-      showError(err?.response?.data?.message || "Failed to save content");
+      showError(err?.response?.data?.message || "Failed to save content and metadata");
     } finally {
       setIsSaving(false);
     }
   };
 
-  // Handle Cancel - restore original content and close editor
+  // Handle Cancel - restore all original data and close editor
   const handleCancel = async () => {
-    // If content was saved (different from original), restore it
-    if (formData.content !== originalContent) {
-      try {
-        setIsSaving(true);
-        // Restore original content to database
-        const detailsRes = await api.put(`/subject/${subjectId}/details`, {
-          content: originalContent,
+    try {
+      setIsSaving(true);
+      // Restore all original data (content + metadata)
+      const detailsRes = await api.put(`/subject/${subjectId}/details`, {
+        content: originalData.content || "",
+        title: originalData.title || "",
+        metaDescription: originalData.metaDescription || "",
+        keywords: originalData.keywords || "",
+        status: originalData.status || "draft",
+      });
+      
+      if (detailsRes.data?.success) {
+        // Update formData to show original data
+        setFormData({
+          ...formData,
+          content: originalData.content || "",
+          title: originalData.title || "",
+          metaDescription: originalData.metaDescription || "",
+          keywords: originalData.keywords || "",
+          status: originalData.status || "draft",
         });
-        
-        if (detailsRes.data?.success) {
-          // Update formData to show original content
-          setFormData({ ...formData, content: originalContent });
-          success("Changes discarded. Original content restored.");
-        } else {
-          showError(detailsRes.data?.message || "Failed to restore content");
-        }
-      } catch (err) {
-        showError(err?.response?.data?.message || "Failed to restore content");
-      } finally {
-        setIsSaving(false);
+        success("All changes discarded. Original data restored.");
+      } else {
+        showError(detailsRes.data?.message || "Failed to restore data");
       }
+    } catch (err) {
+      showError(err?.response?.data?.message || "Failed to restore data");
+    } finally {
+      setIsSaving(false);
+      // Close editor
+      setIsEditing(false);
     }
-    
-    // Close editor
-    setIsEditing(false);
   };
 
   // Save all fields and close editor
@@ -343,8 +356,15 @@ const SubjectDetailPage = ({ subjectId }) => {
             <button
               onClick={() => {
                 if (canEdit) {
-                  // Store original content when starting to edit
+                  // Store all original data when starting to edit
                   setOriginalContent(formData.content);
+                  setOriginalData({
+                    content: formData.content,
+                    title: formData.title,
+                    metaDescription: formData.metaDescription,
+                    keywords: formData.keywords,
+                    status: formData.status,
+                  });
                   setIsEditing(true);
                 } else {
                   showError(getPermissionMessage("edit", role));
