@@ -17,7 +17,7 @@ import RichContent from "./RichContent";
 import Card from "./Card";
 import Button from "./Button";
 import DiscussionMetadata from "./DiscussionMetadata";
-import BannerCarousel from "./BannerCarousel";
+import VerticalBannerList from "./BannerCarousel";
 import DiscussionFormModal from "./DiscussionFormModal";
 import { useStudent } from "../hooks/useStudent";
 import Image from "next/image";
@@ -951,20 +951,39 @@ const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal, examImage 
               className="w-full h-full object-cover rounded-lg"
               unoptimized={true}
             />
-
-            
-
-            
           </div>
 
 
           {/* Dynamic Discussion Banner Carousel */}
           {discussionBanner && discussionBanner.banners && discussionBanner.banners.length > 0 ? (
             <>
-             
-              <BannerCarousel 
-                banners={discussionBanner.banners.filter(banner => banner.isActive)}
-              />
+              <div
+                onClick={() => {
+                  if (onShowAuthModal) {
+                    onShowAuthModal("Discussion-forum-thread-image", () => {
+                      // Optional: Add any success callback logic here
+                      console.log("Image form submitted successfully");
+                    });
+                  }
+                }}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    if (onShowAuthModal) {
+                      onShowAuthModal("Discussion-forum-thread-image", () => {
+                        console.log("Image form submitted successfully");
+                      });
+                    }
+                  }
+                }}
+                className="cursor-pointer"
+              >
+                <VerticalBannerList 
+                  banners={discussionBanner.banners.filter(banner => banner.isActive)}
+                />
+              </div>
             </>
           ) : (
             <div className="w-full h-48 bg-gradient-to-r from-blue-100 to-purple-100 rounded-lg flex items-center justify-center border-2 border-dashed border-gray-300">
