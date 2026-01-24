@@ -7,6 +7,7 @@ import ChaptersSectionClient from "../../../../../components/ChaptersSectionClie
 import UnitProgressClient from "../../../../../components/UnitProgressClient";
 import ProgressTracker from "../../../../../components/ProgressTracker";
 import ConditionalTestListTable from "../../../../../components/ConditionalTestListTable";
+import VisitTracker from "../../../../../components/VisitTracker";
 import { ERROR_MESSAGES } from "@/constants";
 import {
   fetchExamById,
@@ -233,7 +234,13 @@ const TopicPage = async ({ params }) => {
   ]);
 
   return (
-    <>
+    <div className="space-y-4">
+      <VisitTracker 
+        level="topic" 
+        itemId={topic._id} 
+        itemSlug={topicSlugValue} 
+        itemName={topic.name} 
+      />
       <ProgressTracker
         unitId={unit._id}
         chapterId={chapter._id}
@@ -348,7 +355,7 @@ const TopicPage = async ({ params }) => {
           nextNav={nextNav}
         />
       </div>
-    </>
+    </div>
   );
 };
 

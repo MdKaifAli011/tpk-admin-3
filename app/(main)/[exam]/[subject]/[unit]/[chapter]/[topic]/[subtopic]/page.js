@@ -7,6 +7,7 @@ import UnitProgressClient from "../../../../../../components/UnitProgressClient"
 import ProgressTracker from "../../../../../../components/ProgressTracker";
 import DefinitionPreviewClient from "../../../../../../components/DefinitionPreviewClient";
 import ConditionalTestListTable from "../../../../../../components/ConditionalTestListTable";
+import VisitTracker from "../../../../../../components/VisitTracker";
 import { ERROR_MESSAGES } from "@/constants";
 import {
   fetchExamById,
@@ -260,7 +261,13 @@ const SubTopicPage = async ({ params }) => {
   ]);
 
   return (
-    <>
+    <div className="space-y-4">
+      <VisitTracker 
+        level="subtopic" 
+        itemId={subTopic._id} 
+        itemSlug={subTopicSlugValue} 
+        itemName={subTopic.name} 
+      />
       <ProgressTracker
         unitId={unit._id}
         chapterId={chapter._id}
@@ -378,7 +385,7 @@ const SubTopicPage = async ({ params }) => {
           nextNav={nextNav}
         />
       </div>
-    </>
+    </div>
   );
 };
 

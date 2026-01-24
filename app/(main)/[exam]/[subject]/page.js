@@ -7,6 +7,7 @@ import UnitsSectionClient from "../../components/UnitsSectionClient";
 import SubjectProgressClient from "../../components/SubjectProgressClient";
 import SubjectCompletionTracker from "../../components/SubjectCompletionTracker";
 import ConditionalTestListTable from "../../components/ConditionalTestListTable";
+import VisitTracker from "../../components/VisitTracker";
 import {
   fetchExamById,
   fetchSubjectsByExam,
@@ -154,6 +155,12 @@ const SubjectPage = async ({ params }) => {
 
   return (
     <div className="space-y-4">
+      <VisitTracker 
+        level="subject" 
+        itemId={subject._id} 
+        itemSlug={subjectSlugValue} 
+        itemName={subject.name} 
+      />
       {/* Premium Educational Header */}
       <section
         className="

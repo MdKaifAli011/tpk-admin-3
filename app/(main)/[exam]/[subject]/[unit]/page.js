@@ -7,6 +7,7 @@ import ChaptersSectionClient from "../../../components/ChaptersSectionClient";
 import UnitProgressClient from "../../../components/UnitProgressClient";
 import UnitCompletionTracker from "../../../components/UnitCompletionTracker";
 import ConditionalTestListTable from "../../../components/ConditionalTestListTable";
+import VisitTracker from "../../../components/VisitTracker";
 import { ERROR_MESSAGES } from "@/constants";
 import {
   fetchExamById,
@@ -168,6 +169,12 @@ const UnitPage = async ({ params }) => {
 
   return (
     <div className="space-y-4">
+      <VisitTracker 
+        level="unit" 
+        itemId={unit._id} 
+        itemSlug={unitSlugValue} 
+        itemName={unit.name} 
+      />
       {/* Premium Educational Header */}
       <section
         className="

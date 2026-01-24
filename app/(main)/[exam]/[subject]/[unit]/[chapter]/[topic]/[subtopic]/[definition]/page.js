@@ -7,6 +7,7 @@ import ChaptersSectionClient from "../../../../../../../components/ChaptersSecti
 import UnitProgressClient from "../../../../../../../components/UnitProgressClient";
 import ProgressTracker from "../../../../../../../components/ProgressTracker";
 import ConditionalTestListTable from "../../../../../../../components/ConditionalTestListTable";
+import VisitTracker from "../../../../../../../components/VisitTracker";
 import {
   fetchExamById,
   fetchSubjectsByExam,
@@ -232,6 +233,7 @@ const DefinitionPage = async ({ params }) => {
   const chapterSlugValue = chapter.slug || createSlug(chapter.name);
   const topicSlugValue = topic.slug || createSlug(topic.name);
   const subTopicSlugValue = subTopic.slug || createSlug(subTopic.name);
+  const definitionSlugValue = definition.slug || createSlug(definition.name);
 
   // Calculate hierarchical navigation
   const [nextNav, prevNav] = await Promise.all([
@@ -270,7 +272,13 @@ const DefinitionPage = async ({ params }) => {
   ]);
 
   return (
-    <>
+    <div className="space-y-4">
+      <VisitTracker 
+        level="definition" 
+        itemId={definition._id} 
+        itemSlug={definitionSlugValue} 
+        itemName={definition.name} 
+      />
       <ProgressTracker
         unitId={unit._id}
         chapterId={chapter._id}
@@ -385,7 +393,7 @@ const DefinitionPage = async ({ params }) => {
           nextNav={nextNav}
         />
       </div>
-    </>
+    </div>
   );
 };
 

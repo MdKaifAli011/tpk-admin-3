@@ -8,6 +8,7 @@ import UnitProgressClient from "../../../../components/UnitProgressClient";
 import ProgressTracker from "../../../../components/ProgressTracker";
 import ChapterCompletionTracker from "../../../../components/ChapterCompletionTracker";
 import ConditionalTestListTable from "../../../../components/ConditionalTestListTable";
+import VisitTracker from "../../../../components/VisitTracker";
 import {
   fetchExamById,
   fetchSubjectsByExam,
@@ -196,7 +197,13 @@ const ChapterPage = async ({ params }) => {
   ]);
 
   return (
-    <>
+    <div className="space-y-4">
+      <VisitTracker 
+        level="chapter" 
+        itemId={chapter._id} 
+        itemSlug={chapterSlugValue} 
+        itemName={chapter.name} 
+      />
       <ProgressTracker
         unitId={unit._id}
         chapterId={chapter._id}
@@ -312,7 +319,7 @@ const ChapterPage = async ({ params }) => {
           nextNav={nextNav}
         />
       </div>
-    </>
+    </div>
   );
 };
 

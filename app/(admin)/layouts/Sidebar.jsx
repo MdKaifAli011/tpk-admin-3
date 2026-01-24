@@ -66,6 +66,13 @@ const ALL_MENU_ITEMS = [
     ],
   },
   {
+    name: "Analytics",
+    icon: FaClipboardList,
+    children: [
+      { name: "IP Management", href: "/admin/analytics/ip-management" },
+    ],
+  },
+  {
     name: "Admin",
     icon: FaUser,
     adminOnly: true,

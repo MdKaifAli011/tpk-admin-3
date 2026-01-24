@@ -7,6 +7,7 @@ import {
   usePermissions,
   getPermissionMessage,
 } from "../../hooks/usePermissions";
+import { useMultipleVisitStats } from "../../hooks/useVisitStats";
 
 const SubTopicsTable = ({
   subTopics,
@@ -17,6 +18,9 @@ const SubTopicsTable = ({
 }) => {
   const { canEdit, canDelete, canReorder, role } = usePermissions();
   const router = useRouter();
+  
+  // Fetch visit statistics for all subTopics
+  const { statsMap, loading: statsLoading } = useMultipleVisitStats(subTopics, 'subtopic');
 
   // Helper function to format content date
   const formatContentDate = (contentInfo) => {
@@ -181,14 +185,17 @@ const SubTopicsTable = ({
                     <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       SubTopic Name
                     </th>
-                    <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
-                      Preview
-                    </th>
                     <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-40">
                       Content
                     </th>
                     <th className="px-2 py-1 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-16">
                       Meta
+                    </th>
+                    <th className="px-2 py-1 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
+                      Visits
+                    </th>
+                    <th className="px-2 py-1 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-20">
+                      Today
                     </th>
                     <th className="px-2 py-1 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
                       Actions
@@ -222,9 +229,6 @@ const SubTopicsTable = ({
                             {subTopic.name}
                           </span>
                         </td>
-                        <td className="px-2 py-1 whitespace-nowrap w-24">
-                          <span className="text-[10px] text-gray-400">No Image</span>
-                        </td>
                         <td className="px-2 py-1 whitespace-nowrap w-40">
                           <span className={`text-sm ${subTopic.contentInfo?.hasContent
                             ? "text-gray-700"
@@ -240,6 +244,29 @@ const SubTopicsTable = ({
                             </div>
                           ) : (
                             <span className="text-gray-300">-</span>
+                          )}
+                        </td>
+                        <td className="px-2 py-1 whitespace-nowrap text-center">
+                          {statsLoading ? (
+                            <div className="animate-pulse bg-gray-200 h-4 w-12 rounded mx-auto"></div>
+                          ) : (
+                            <div className="flex flex-col">
+                              <span className="text-sm font-medium text-gray-900">
+                                {statsMap[subTopic._id]?.totalVisits || 0}
+                              </span>
+                              <span className="text-xs text-gray-500">
+                                ({statsMap[subTopic._id]?.uniqueVisits || 0} unique)
+                              </span>
+                            </div>
+                          )}
+                        </td>
+                        <td className="px-2 py-1 whitespace-nowrap text-center">
+                          {statsLoading ? (
+                            <div className="animate-pulse bg-gray-200 h-4 w-8 rounded mx-auto"></div>
+                          ) : (
+                            <span className="text-sm text-gray-900">
+                              {statsMap[subTopic._id]?.todayVisits || 0}
+                            </span>
                           )}
                         </td>
                         {/* Actions */}
@@ -374,6 +401,26 @@ const SubTopicsTable = ({
                               <FiCheck className="text-green-600 w-4 h-4" style={{ strokeWidth: 4 }} />
                             ) : (
                               <span className="text-gray-400 text-[10px]">-</span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-1 mt-1">
+                            <span className="text-[10px] text-gray-500">Visits:</span>
+                            {statsLoading ? (
+                              <div className="animate-pulse bg-gray-200 h-3 w-8 rounded"></div>
+                            ) : (
+                              <span className="text-sm text-gray-900">
+                                {statsMap[subTopic._id]?.totalVisits || 0}
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-1 mt-1">
+                            <span className="text-[10px] text-gray-500">Today:</span>
+                            {statsLoading ? (
+                              <div className="animate-pulse bg-gray-200 h-3 w-6 rounded"></div>
+                            ) : (
+                              <span className="text-sm text-gray-900">
+                                {statsMap[subTopic._id]?.todayVisits || 0}
+                              </span>
                             )}
                           </div>
                         </div>

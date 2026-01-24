@@ -5,6 +5,7 @@ import ListItem from "../components/ListItem";
 import TabsClient from "../components/TabsClient";
 import NavigationClient from "../components/NavigationClient";
 import ExamProgressClient from "../components/ExamProgressClient";
+import VisitTracker from "../components/VisitTracker";
 import {
   fetchExamById,
   fetchSubjectsByExam,
@@ -119,6 +120,12 @@ const ExamPage = async ({ params }) => {
 
   return (
     <div className="space-y-4">
+      <VisitTracker 
+        level="exam" 
+        itemId={exam._id} 
+        itemSlug={examSlug} 
+        itemName={exam.name} 
+      />
       
 <section
   className="

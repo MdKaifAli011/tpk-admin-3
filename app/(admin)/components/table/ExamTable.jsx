@@ -15,10 +15,14 @@ import {
   usePermissions,
   getPermissionMessage,
 } from "../../hooks/usePermissions";
+import { useMultipleVisitStats } from "../../hooks/useVisitStats";
 
 const ExamTable = ({ exams, onEdit, onDelete, onView, onToggleStatus, onManageInfo }) => {
   const { canEdit, canDelete, canReorder, role } = usePermissions();
   const router = useRouter();
+  
+  // Fetch visit statistics for all exams
+  const { statsMap, loading: statsLoading } = useMultipleVisitStats(exams, 'exam');
 
   // Helper function to format content date
   const formatContentDate = (contentInfo) => {
@@ -78,6 +82,12 @@ const ExamTable = ({ exams, onEdit, onDelete, onView, onToggleStatus, onManageIn
               </th>
               <th className="px-2 py-1 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-16">
                 Meta
+              </th>
+              <th className="px-2 py-1 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
+                Visits
+              </th>
+              <th className="px-2 py-1 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-20">
+                Today
               </th>
               <th className="px-2 py-1 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
                 Actions
@@ -153,6 +163,29 @@ const ExamTable = ({ exams, onEdit, onDelete, onView, onToggleStatus, onManageIn
                     </div>
                   ) : (
                     <span className="text-gray-300">-</span>
+                  )}
+                </td>
+                <td className="px-2 py-1 whitespace-nowrap text-center">
+                  {statsLoading ? (
+                    <div className="animate-pulse bg-gray-200 h-4 w-12 rounded mx-auto"></div>
+                  ) : (
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium text-gray-900">
+                        {statsMap[exam._id]?.totalVisits || 0}
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        ({statsMap[exam._id]?.uniqueVisits || 0} unique)
+                      </span>
+                    </div>
+                  )}
+                </td>
+                <td className="px-2 py-1 whitespace-nowrap text-center">
+                  {statsLoading ? (
+                    <div className="animate-pulse bg-gray-200 h-4 w-8 rounded mx-auto"></div>
+                  ) : (
+                    <span className="text-sm text-gray-900">
+                      {statsMap[exam._id]?.todayVisits || 0}
+                    </span>
                   )}
                 </td>
                 <td className="px-2 py-1 whitespace-nowrap text-right w-32">
