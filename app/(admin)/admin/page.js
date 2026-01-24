@@ -206,6 +206,24 @@ const AdminDashboard = () => {
         textColor: "text-pink-600",
         count: stats.subtopics,
       },
+      {
+        name: "Discussion Management",
+        href: "/admin/discussion",
+        icon: FaClipboardList,
+        color: "from-blue-500 to-blue-600",
+        bgColor: "bg-blue-50",
+        textColor: "text-blue-600",
+        count: 0, // We can add discussion stats later
+      },
+      {
+        name: "Banner Upload",
+        href: "/admin/discussion/banner",
+        icon: FaClipboardList,
+        color: "from-purple-500 to-purple-600",
+        bgColor: "bg-purple-50",
+        textColor: "text-purple-600",
+        count: 0, // We can add banner stats later
+      },
     ],
     [stats]
   );

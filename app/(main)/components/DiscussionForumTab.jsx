@@ -17,6 +17,7 @@ import RichContent from "./RichContent";
 import Card from "./Card";
 import Button from "./Button";
 import DiscussionMetadata from "./DiscussionMetadata";
+import BannerCarousel from "./BannerCarousel";
 import DiscussionFormModal from "./DiscussionFormModal";
 import { useStudent } from "../hooks/useStudent";
 import Image from "next/image";
@@ -379,13 +380,17 @@ const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal, examImage 
     if (!examId) return;
     
     try {
+      console.log("Fetching banner for examId:", examId);
       const res = await api.get(`/discussion/banner?examId=${examId}`);
       if (res.data.success && res.data.data) {
+        console.log("Banner data received:", res.data.data);
         setDiscussionBanner(res.data.data);
       } else {
+        console.log("No banner data found");
         setDiscussionBanner(null);
       }
     } catch (error) {
+      console.error("Error fetching discussion banner:", error);
       // Don't show error for missing banners
       setDiscussionBanner(null);
     }
@@ -946,27 +951,24 @@ const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal, examImage 
               className="w-full h-full object-cover rounded-lg"
               unoptimized={true}
             />
+
+            
+
+            
           </div>
 
 
-          {/* Dynamic Discussion Banner */}
-          {discussionBanner ? (
-            <div className="w-full h-full">
-              <Image
-                src={discussionBanner.bannerImage}
-                alt={discussionBanner.altText || 'Discussion Forum Banner'}
-                width={1200}
-                height={300}
-                className="w-full h-full object-cover rounded-lg"
-                unoptimized={true}
+          {/* Dynamic Discussion Banner Carousel */}
+          {discussionBanner && discussionBanner.banners && discussionBanner.banners.length > 0 ? (
+            <>
+             
+              <BannerCarousel 
+                banners={discussionBanner.banners.filter(banner => banner.isActive)}
               />
-            </div>
+            </>
           ) : (
             <div className="w-full h-48 bg-gradient-to-r from-blue-100 to-purple-100 rounded-lg flex items-center justify-center border-2 border-dashed border-gray-300">
-              <div className="text-center">
-                <FaImage className="mx-auto text-gray-400 mb-2" size={24} />
-                <p className="text-sm text-gray-500">No banner uploaded for this exam</p>
-              </div>
+             No images
             </div>
           )}
         </div>

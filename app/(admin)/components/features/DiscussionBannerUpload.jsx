@@ -1,50 +1,54 @@
 "use client";
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useRef, useMemo, useCallback, useReducer } from "react";
 import * as FaIcons from "react-icons/fa";
 import { ToastContainer, useToast } from "../ui/Toast";
 import {
   LoadingWrapper,
-  SkeletonPageContent,
   LoadingSpinner,
 } from "../ui/SkeletonLoader";
 import api from "@/lib/api";
 import { usePermissions, getPermissionMessage } from "../../hooks/usePermissions";
 
+const BASE_PATH = "/self-study";
+
 const DiscussionBannerUpload = () => {
   const { canEdit, role } = usePermissions();
   const [exams, setExams] = useState([]);
   const [selectedExam, setSelectedExam] = useState("");
-  const [bannerImage, setBannerImage] = useState("");
+  const [selectedExamName, setSelectedExamName] = useState("");
+  const [banners, setBanners] = useState([]);
   const [altText, setAltText] = useState("");
   const [isActive, setIsActive] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [existingBanner, setExistingBanner] = useState(null);
+  const [existingBannerCollection, setExistingBannerCollection] = useState(null);
   const [previewUrl, setPreviewUrl] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [formError, setFormError] = useState(null);
+  const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
+  const [bannerImage, setBannerImage] = useState(null);
   const fileInputRef = useRef(null);
+  const isFetchingRef = useRef(false); // ✅ API LOOP PREVENTION
 
   const { toasts, removeToast, success, error: showError } = useToast();
 
-  // Fetch exams on component mount
-  useEffect(() => {
-    fetchExams();
+  // ✅ PERFECTED: File-system + Basepath compatible
+  const getImageUrl = useCallback((url) => {
+    if (!url) return "";
+    return url.startsWith("http") ? url : `${BASE_PATH}${url}`;
   }, []);
 
-  // Fetch existing banner when exam is selected
-  useEffect(() => {
-    if (selectedExam) {
-      fetchExistingBanner();
-    } else {
-      setExistingBanner(null);
-      setBannerImage("");
-      setAltText("");
-      setPreviewUrl("");
-    }
-  }, [selectedExam]);
+  // ✅ PERFECTED: Clean URL for backend storage
+  const cleanImageUrl = useCallback((url) => {
+    if (!url) return "";
+    return url.replace(`${BASE_PATH}`, "").replace(/^\/+/, "");
+  }, []);
 
+  // Fetch exams + exam names (regular function with ref)
   const fetchExams = async () => {
+    if (isFetchingRef.current) return; // Prevent duplicate calls
+    isFetchingRef.current = true;
+    
     try {
       setIsLoading(true);
       const res = await api.get("/exam?status=all");
@@ -56,56 +60,108 @@ const DiscussionBannerUpload = () => {
       showError("Failed to fetch exams");
     } finally {
       setIsLoading(false);
+      isFetchingRef.current = false;
     }
   };
 
-  const fetchExistingBanner = async () => {
+  // ✅ PERFECTED: File-system scanning API WITH LOOP PREVENTION
+  const fetchExistingBannerCollection = async () => {
+    if (!selectedExam || isFetchingRef.current) return; // ✅ LOOP PREVENTION
+    
+    isFetchingRef.current = true;
+    
     try {
       const res = await api.get(`/discussion/banner?examId=${selectedExam}`);
+
       if (res.data.success && res.data.data) {
-        const banner = res.data.data;
-        setExistingBanner(banner);
-        setBannerImage(banner.bannerImage);
-        setAltText(banner.altText || "");
-        setIsActive(banner.isActive);
-        setPreviewUrl(banner.bannerImage);
+        const bannerCollection = res.data.data;
+        const bannersList = (bannerCollection.banners || []).map((banner, index) => ({
+          ...banner,
+          url: banner.url.startsWith("http") ? banner.url : `${BASE_PATH}${banner.url}`, // Inline getImageUrl
+          index
+        }));
+
+        const defaultIndex = Math.max(0, Math.min(
+          bannerCollection.defaultBannerIndex || 0,
+          bannersList.length - 1
+        ));
+
+        setExistingBannerCollection(bannerCollection);
+        setBanners(bannersList);
+        setSelectedExamName(bannerCollection.examName || "");
+        setCurrentBannerIndex(defaultIndex);
+        setPreviewUrl(bannersList[defaultIndex]?.url || "");
+        setAltText(bannersList[defaultIndex]?.altText || "");
+        setIsActive(bannersList[defaultIndex]?.isActive !== false);
       } else {
-        setExistingBanner(null);
-        setBannerImage("");
+        setExistingBannerCollection(null);
+        setBanners([]);
+        setSelectedExamName("");
+        setCurrentBannerIndex(0);
+        setPreviewUrl("");
         setAltText("");
         setIsActive(true);
-        setPreviewUrl("");
       }
     } catch (err) {
-      console.error("Error fetching existing banner:", err);
-      // Don't show error for missing banners
+      console.error("Error fetching banner collection:", err);
+      setBanners([]);
+      setExistingBannerCollection(null);
+    } finally {
+      isFetchingRef.current = false; // ✅ LOOP PREVENTION
     }
   };
 
-  // Filter exams based on search
+  // Filter exams
   const filteredExams = useMemo(() => {
     return exams.filter((exam) =>
       exam.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
   }, [exams, searchQuery]);
 
+  // Reset state
+  const resetBannerState = useCallback(() => {
+    setExistingBannerCollection(null);
+    setBanners([]);
+    setCurrentBannerIndex(0);
+    setPreviewUrl("");
+    setAltText("");
+    setIsActive(true);
+    setBannerImage(null);
+    setSelectedExamName("");
+  }, []);
+
+  // ✅ FIXED Effects - NO API LOOP
+  useEffect(() => {
+    fetchExams();
+  }, []); // Only run once on mount
+
+  useEffect(() => {
+    if (selectedExam) {
+      const timeoutId = setTimeout(() => {
+        fetchExistingBannerCollection();
+      }, 100); // ✅ Debounce to prevent rapid calls
+      
+      return () => clearTimeout(timeoutId);
+    } else {
+      resetBannerState();
+    }
+  }, [selectedExam]); // Only depend on selectedExam
+
+  // ✅ PERFECTED: Upload + immediate preview
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Check permissions
     if (!canEdit) {
       showError(getPermissionMessage("edit", role));
       return;
     }
 
-    // Validate file type
     if (!file.type.startsWith('image/')) {
       setFormError("Please select an image file");
       return;
     }
 
-    // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       setFormError("Image size should be less than 5MB");
       return;
@@ -114,33 +170,51 @@ const DiscussionBannerUpload = () => {
     try {
       setIsUploading(true);
       setFormError(null);
+      
+      // Immediate preview
+      const previewUrl = URL.createObjectURL(file);
+      setPreviewUrl(previewUrl);
+      setBannerImage(file);
+
       const formData = new FormData();
       formData.append('image', file);
+      formData.append('examId', selectedExam);
 
-      const res = await api.post('/upload/image', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+      const res = await api.post('/upload/banner', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
       });
 
       if (res.data.success) {
-        const imageUrl = res.data.data.url;
-        setBannerImage(imageUrl);
-        setPreviewUrl(imageUrl);
-        success("Image uploaded successfully");
+        const newBanner = {
+          url: getImageUrl(res.data.data.url),
+          filename: res.data.data.filename,
+          altText: altText || 'Discussion Forum Banner',
+          isActive: isActive,
+          index: res.data.data.bannerIndex || banners.length
+        };
+        
+        setBanners(prev => [...prev, newBanner]);
+        setPreviewUrl(newBanner.url);
+        success("Banner uploaded successfully!");
+        
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
       } else {
-        setFormError(res.data.message || "Failed to upload image");
+        setFormError(res.data.message || "Failed to upload banner");
+        setPreviewUrl("");
       }
     } catch (err) {
-      console.error("Error uploading image:", err);
-      setFormError("Failed to upload image");
+      console.error("Upload error:", err);
+      setFormError(err.response?.data?.message || "Failed to upload banner");
+      setPreviewUrl("");
     } finally {
       setIsUploading(false);
     }
   };
 
+  // ✅ PERFECTED: File-system config save (no DB)
   const handleSaveBanner = async () => {
-    // Check permissions
     if (!canEdit) {
       showError(getPermissionMessage("edit", role));
       return;
@@ -151,64 +225,99 @@ const DiscussionBannerUpload = () => {
       return;
     }
 
-    if (!bannerImage) {
-      setFormError("Please upload a banner image");
+    if (banners.length === 0) {
+      setFormError("Please upload at least one banner");
       return;
     }
 
     try {
       setIsUploading(true);
       setFormError(null);
-      const res = await api.post('/discussion/banner', {
+
+      const payload = {
         examId: selectedExam,
-        bannerImage: bannerImage,
-        altText: altText || 'Discussion Forum Banner',
-        isActive: isActive
-      });
+        banners: banners.map(b => ({
+          url: cleanImageUrl(b.url),
+          filename: b.filename,
+          altText: b.altText,
+          isActive: b.isActive
+        })),
+        defaultBannerIndex: currentBannerIndex
+      };
+
+      console.log("💾 Saving banner config:", payload);
+
+      const res = await api.post('/discussion/banner', payload);
 
       if (res.data.success) {
-        success(existingBanner ? "Banner updated successfully" : "Banner uploaded successfully");
-        setExistingBanner(res.data.data);
+        success("Banner configuration saved successfully!");
+        // ✅ FIXED: Debounced refresh with flag check
+        setTimeout(() => {
+          if (!isFetchingRef.current) {
+            fetchExistingBannerCollection();
+          }
+        }, 500);
       } else {
-        setFormError(res.data.message || "Failed to save banner");
+        throw new Error(res.data.message || "Failed to save banners");
       }
     } catch (err) {
-      console.error("Error saving banner:", err);
-      setFormError("Failed to save banner");
+      console.error("Save error:", err);
+      setFormError(err.response?.data?.message || "Failed to save banner configuration");
     } finally {
       setIsUploading(false);
     }
   };
 
-  const handleDeleteBanner = async () => {
-    // Check permissions
+  // Delete banner (physical file)
+  const handleDeleteBanner = async (bannerIndex) => {
     if (!canEdit) {
       showError(getPermissionMessage("delete", role));
       return;
     }
 
-    if (!selectedExam || !existingBanner) return;
-
-    if (!confirm("Are you sure you want to delete this banner?")) return;
+    if (!confirm(`Delete "${banners[bannerIndex]?.filename}"?`)) return;
 
     try {
       setIsUploading(true);
-      setFormError(null);
-      const res = await api.delete(`/discussion/banner?examId=${selectedExam}`);
+      const res = await api.put(`/discussion/banner?examId=${selectedExam}`, {
+        action: 'removeBanner',
+        bannerIndex
+      });
 
       if (res.data.success) {
         success("Banner deleted successfully");
-        setExistingBanner(null);
-        setBannerImage("");
-        setAltText("");
-        setPreviewUrl("");
-        setIsActive(true);
+        // ✅ FIXED: Single refresh call
+        await fetchExistingBannerCollection();
       } else {
         setFormError(res.data.message || "Failed to delete banner");
       }
     } catch (err) {
-      console.error("Error deleting banner:", err);
-      setFormError("Failed to delete banner");
+      console.error("Delete error:", err);
+      setFormError(err.response?.data?.message || "Failed to delete banner");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  // Set default banner
+  const handleSetDefaultBanner = async (bannerIndex) => {
+    if (!canEdit) return;
+
+    try {
+      setIsUploading(true);
+      const res = await api.put(`/discussion/banner?examId=${selectedExam}`, {
+        action: 'setDefault',
+        bannerIndex
+      });
+
+      if (res.data.success) {
+        setCurrentBannerIndex(bannerIndex);
+        success("Default banner updated");
+        // ✅ FIXED: Single refresh call
+        await fetchExistingBannerCollection();
+      }
+    } catch (err) {
+      showError(err.response?.data?.message || "Failed to update default banner");
     } finally {
       setIsUploading(false);
     }
@@ -216,86 +325,85 @@ const DiscussionBannerUpload = () => {
 
   const handleResetForm = () => {
     setSelectedExam("");
-    setBannerImage("");
-    setAltText("");
-    setIsActive(true);
-    setPreviewUrl("");
-    setExistingBanner(null);
+    resetBannerState();
     setFormError(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
+    if (bannerImage && previewUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(previewUrl);
+    }
   };
+
+  // Stats
+  const examsWithBanners = useMemo(() => {
+    return exams.filter(exam => {
+      return existingBannerCollection?.examId === exam._id;
+    });
+  }, [exams, existingBannerCollection]);
 
   return (
     <>
       <ToastContainer toasts={toasts} removeToast={removeToast} />
       <div className="space-y-6">
-        {/* Page Header - Consistent with ExamManagement */}
-        <div className="bg-gradient-to-r from-purple-50 via-pink-50 to-orange-50 rounded-lg border border-gray-200 p-4 shadow-sm relative overflow-hidden">
-          <div className="absolute top-0 right-10 opacity-5 pointer-events-none">
-            <FaIcons.FaImage size={80} />
+        {/* Header */}
+        <div className="bg-gradient-to-r from-purple-50 via-pink-50 to-orange-50 rounded-xl border border-gray-200 p-6 shadow-sm relative overflow-hidden">
+          <div className="absolute top-0 right-10 opacity-10 pointer-events-none">
+            <FaIcons.FaImage size={100} />
           </div>
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 relative z-10">
             <div className="space-y-1">
-              <h1 className="text-xl font-semibold text-gray-900">
+              <h1 className="text-2xl font-bold text-gray-900">
                 Discussion Banner Management
               </h1>
-              <p className="text-xs text-gray-600">
-                Upload and manage exam-specific banners for the discussion forum interface.
+              <p className="text-sm text-gray-600 max-w-md">
+                Upload & manage exam-specific banners stored in <code className="bg-gray-100 px-1.5 py-0.5 rounded text-xs font-mono">public/images/banner/[exam]/</code>
               </p>
             </div>
 
-            {/* Quick Stats */}
-            <div className="flex items-center gap-3 bg-white/50 backdrop-blur-sm p-1.5 rounded-lg border border-white">
-              <div className="px-3 py-1 text-center border-r border-gray-100">
-                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Total Exams</p>
-                <p className="text-base font-bold text-gray-900 leading-none mt-1">{exams.length}</p>
+            <div className="flex items-center gap-4 bg-white/60 backdrop-blur-sm p-3 rounded-xl border">
+              <div className="text-center">
+                <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">Total Exams</p>
+                <p className="text-lg font-bold text-gray-900">{exams.length}</p>
               </div>
-              <div className="px-3 py-1 text-center">
-                <p className="text-[10px] font-bold text-purple-600 uppercase tracking-wider flex items-center gap-1 justify-center">
-                  <FaIcons.FaImage size={8} /> Banners
+              <div className="w-px h-8 bg-gray-200" />
+              <div className="text-center">
+                <p className="text-xs font-bold text-purple-600 uppercase tracking-wide flex items-center gap-1 justify-center">
+                  <FaIcons.FaImage size={12} /> Configured
                 </p>
-                <p className="text-base font-bold text-purple-600 leading-none mt-1">
-                  {exams.filter(exam => existingBanner && existingBanner.examId === exam._id).length}
-                </p>
+                <p className="text-lg font-bold text-purple-600">{examsWithBanners.length}</p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Banner Upload Form */}
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
-          <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
-            <div className="space-y-0.5">
-              <h2 className="text-xl font-semibold text-gray-900">
-                Banner Upload Form
-              </h2>
-              <p className="text-sm text-gray-600">
-                Select an exam and upload a banner image for the discussion forum.
-              </p>
-            </div>
+        {/* Upload Form */}
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+          <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white">
+            <h2 className="text-xl font-semibold text-gray-900">Banner Upload & Configuration</h2>
           </div>
 
           <div className="p-6 space-y-6">
-            {/* Form Error */}
             {formError && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
-                <FaIcons.FaExclamationTriangle className="text-red-500 mt-0.5" />
-                <span className="text-sm text-red-700">{formError}</span>
+              <div className="p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3">
+                <FaIcons.FaExclamationTriangle className="text-red-500 mt-0.5 flex-shrink-0" />
+                <span className="text-sm text-red-800 leading-relaxed">{formError}</span>
               </div>
             )}
 
             {/* Exam Selection */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="block text-sm font-semibold text-gray-700">
                   Select Exam <span className="text-red-500">*</span>
                 </label>
                 <select
                   value={selectedExam}
-                  onChange={(e) => setSelectedExam(e.target.value)}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm transition-all"
+                  onChange={(e) => {
+                    setSelectedExam(e.target.value);
+                    setSelectedExamName(filteredExams.find(exam => exam._id === e.target.value)?.name || "");
+                  }}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm transition-all bg-white shadow-sm"
                   disabled={isLoading}
                 >
                   <option value="">Choose an exam...</option>
@@ -305,28 +413,29 @@ const DiscussionBannerUpload = () => {
                     </option>
                   ))}
                 </select>
+                {selectedExamName && (
+                  <p className="text-xs text-gray-500 mt-1">Managing: <strong>{selectedExamName}</strong></p>
+                )}
               </div>
 
-              {/* Search */}
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  Search Exams
-                </label>
+                <label className="block text-sm font-semibold text-gray-700">Search Exams</label>
                 <div className="relative">
                   <input
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search exams..."
-                    className="w-full pl-9 pr-8 py-2.5 bg-white border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all"
+                    placeholder="Search by exam name..."
+                    className="w-full pl-10 pr-10 py-3 bg-white border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all shadow-sm"
                   />
-                  <FaIcons.FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-3.5 h-3.5" />
+                  <FaIcons.FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
                   {searchQuery && (
                     <button
+                      type="button"
                       onClick={() => setSearchQuery("")}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors p-1"
                     >
-                      <FaIcons.FaTimes className="w-3 h-3" />
+                      <FaIcons.FaTimes className="w-4 h-4" />
                     </button>
                   )}
                 </div>
@@ -335,21 +444,29 @@ const DiscussionBannerUpload = () => {
 
             {selectedExam && (
               <>
-                {/* Image Upload */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
+                {/* Upload Area */}
+                <div className="space-y-3">
+                  <label className="block text-sm font-semibold text-gray-700">
                     Banner Image <span className="text-red-500">*</span>
-                    <span className="text-xs text-gray-500 ml-2">(Recommended: 1200x300px, Max: 5MB)</span>
+                    <span className="text-xs text-gray-500 ml-2">(Max: 5MB, Recommended: 1200x300px)</span>
                   </label>
                   
-                  {/* Preview */}
                   {previewUrl && (
-                    <div className="mb-4">
+                    <div className="relative">
                       <img
                         src={previewUrl}
-                        alt="Banner preview"
-                        className="w-full h-48 object-cover rounded-lg border border-gray-200"
+                        alt="Preview"
+                        className="w-full h-48 object-cover rounded-xl border-2 border-gray-200 shadow-sm"
+                        onError={(e) => {
+                          console.error("Preview failed:", previewUrl);
+                          e.target.style.display = 'none';
+                        }}
                       />
+                      {isUploading && (
+                        <div className="absolute inset-0 bg-black/20 rounded-xl flex items-center justify-center">
+                          <LoadingSpinner size="md" />
+                        </div>
+                      )}
                     </div>
                   )}
 
@@ -365,100 +482,112 @@ const DiscussionBannerUpload = () => {
                     />
                     <label
                       htmlFor="banner-upload"
-                      className={`flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed rounded-lg cursor-pointer transition-all ${
+                      className={`block w-full p-8 border-2 border-dashed rounded-xl text-center cursor-pointer transition-all shadow-sm ${
                         !canEdit
-                          ? "border-gray-200 bg-gray-50 cursor-not-allowed"
+                          ? "border-gray-200 bg-gray-50 cursor-not-allowed text-gray-400"
                           : isUploading
-                          ? "border-gray-300 bg-gray-50 cursor-not-allowed"
-                          : "border-purple-300 bg-purple-50 hover:border-purple-400 hover:bg-purple-100"
+                          ? "border-gray-300 bg-gray-50 cursor-not-allowed text-gray-500"
+                          : "border-purple-300 bg-purple-50 hover:border-purple-400 hover:bg-purple-100 text-purple-700 hover:shadow-md"
                       }`}
                     >
-                      <FaIcons.FaUpload className={!canEdit ? "text-gray-400" : isUploading ? "text-gray-400" : "text-purple-600"} />
-                      <span className={`text-sm font-medium ${!canEdit ? "text-gray-400" : isUploading ? "text-gray-400" : "text-purple-700"}`}>
-                        {!canEdit ? "No permission" : isUploading ? "Uploading..." : "Choose Image"}
-                      </span>
+                      <FaIcons.FaCloudUploadAlt className="mx-auto mb-2 text-3xl opacity-75" />
+                      <div>
+                        {!canEdit ? "No edit permission" : isUploading ? "Uploading..." : "Click to upload image"}
+                      </div>
+                      <p className="text-xs mt-1 opacity-75">
+                        {isUploading ? "" : "PNG, JPG, GIF, WebP up to 5MB"}
+                      </p>
                     </label>
                   </div>
                 </div>
 
-                {/* Alt Text */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Alt Text (Optional)
-                  </label>
-                  <input
-                    type="text"
-                    value={altText}
-                    onChange={(e) => setAltText(e.target.value)}
-                    placeholder="Enter alt text for accessibility"
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm placeholder-gray-400 transition-all"
-                    disabled={!canEdit}
-                  />
+                {/* Banner Settings */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-gray-50 rounded-xl">
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-gray-700">Alt Text</label>
+                    <input
+                      type="text"
+                      value={altText}
+                      onChange={(e) => setAltText(e.target.value)}
+                      placeholder="Accessibility text (optional)"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm transition-all"
+                      disabled={!canEdit || isUploading}
+                    />
+                  </div>
+                  <div className="flex items-center pt-1">
+                    <input
+                      type="checkbox"
+                      id="isActive"
+                      checked={isActive}
+                      onChange={(e) => setIsActive(e.target.checked)}
+                      className="w-5 h-5 text-purple-600 border-gray-300 rounded focus:ring-purple-500 mr-3"
+                      disabled={!canEdit || isUploading}
+                    />
+                    <label htmlFor="isActive" className="text-sm font-semibold text-gray-700 cursor-pointer select-none">
+                      Banner is active
+                    </label>
+                  </div>
                 </div>
 
-                {/* Active Status */}
-                <div className="flex items-center gap-3">
-                  <input
-                    type="checkbox"
-                    id="isActive"
-                    checked={isActive}
-                    onChange={(e) => setIsActive(e.target.checked)}
-                    className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-                    disabled={!canEdit}
-                  />
-                  <label htmlFor="isActive" className="text-sm font-medium text-gray-700">
-                    Banner is active (visible to users)
-                  </label>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex items-center gap-3 pt-4 border-t border-gray-200">
+                {/* Actions */}
+                <div className="flex flex-col sm:flex-row gap-3 pt-2 border-t border-gray-100">
                   <button
                     onClick={handleSaveBanner}
-                    disabled={isUploading || !bannerImage || !canEdit}
-                    className="px-6 py-2.5 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                    disabled={isUploading || banners.length === 0 || !canEdit}
+                    className="px-8 py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-xl font-semibold hover:from-purple-700 hover:to-purple-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg flex items-center justify-center gap-2 flex-1"
                   >
                     {isUploading ? (
                       <>
                         <LoadingSpinner size="sm" />
-                        {existingBanner ? "Updating..." : "Uploading..."}
+                        Saving Configuration...
                       </>
                     ) : (
                       <>
-                        <FaIcons.FaSave size={14} />
-                        {existingBanner ? "Update Banner" : "Upload Banner"}
+                        <FaIcons.FaSave size={16} />
+                        {existingBannerCollection ? "Update Config" : "Save Config"}
                       </>
                     )}
                   </button>
 
-                  {existingBanner && canEdit && (
-                    <button
-                      onClick={handleDeleteBanner}
-                      disabled={isUploading}
-                      className="px-6 py-2.5 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
-                    >
-                      <FaIcons.FaTrash size={14} />
-                      Delete Banner
-                    </button>
+                  {banners.length > 0 && canEdit && (
+                    <>
+                      <button
+                        onClick={() => handleDeleteBanner(currentBannerIndex)}
+                        disabled={isUploading || !existingBannerCollection}
+                        className="px-8 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg flex items-center justify-center gap-2 flex-1 sm:flex-none"
+                      >
+                        <FaIcons.FaTrash size={16} />
+                        Delete Current
+                      </button>
+                      <button
+                        onClick={() => handleSetDefaultBanner(currentBannerIndex)}
+                        disabled={isUploading}
+                        className="px-8 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg flex items-center justify-center gap-2 flex-1 sm:flex-none"
+                      >
+                        <FaIcons.FaStar size={16} />
+                        Set Default
+                      </button>
+                    </>
                   )}
 
                   <button
                     onClick={handleResetForm}
                     disabled={isUploading}
-                    className="px-6 py-2.5 bg-gray-600 text-white rounded-lg font-medium hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                    className="px-8 py-3 bg-gray-600 text-white rounded-xl font-semibold hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg flex items-center justify-center gap-2 flex-1 sm:flex-none"
                   >
-                    <FaIcons.FaTimes size={14} />
+                    <FaIcons.FaTimes size={16} />
                     Reset
                   </button>
                 </div>
 
-                {/* Status */}
-                {existingBanner && (
-                  <div className="p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2">
-                    <FaIcons.FaCheckCircle className="text-green-600" />
-                    <span className="text-sm text-green-800">
-                      Banner exists for this exam. You can update or delete it.
-                    </span>
+                {banners.length > 0 && (
+                  <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-3">
+                    <FaIcons.FaCheckCircle className="text-emerald-600 flex-shrink-0" />
+                    <div>
+                      <span className="text-sm font-semibold text-emerald-800">
+                        Ready! Found {banners.length} banner{banners.length !== 1 ? 's' : ''} for {selectedExamName}
+                      </span>
+                    </div>
                   </div>
                 )}
               </>
@@ -466,67 +595,149 @@ const DiscussionBannerUpload = () => {
           </div>
         </div>
 
-        {/* Existing Banners List */}
-        {exams.length > 0 && (
-          <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
-            <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
-              <div className="space-y-0.5">
-                <h2 className="text-xl font-semibold text-gray-900">
-                  Existing Banners
-                </h2>
-                <p className="text-sm text-gray-600">
-                  View and manage all uploaded discussion banners.
-                </p>
+        {/* Current Banners */}
+        {selectedExam && banners.length > 0 && (
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+            <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white">
+              <h3 className="text-xl font-semibold text-gray-900">
+                Current Banners ({banners.length})
+              </h3>
+            </div>
+            <div className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                {banners.map((banner, index) => (
+                  <div
+                    key={banner.filename || index}
+                    className={`group relative border-2 rounded-xl p-6 hover:shadow-xl transition-all cursor-pointer hover:scale-[1.02] ${
+                      currentBannerIndex === index
+                        ? "border-purple-500 bg-purple-50 ring-4 ring-purple-100 shadow-2xl"
+                        : "border-gray-200 bg-white hover:border-gray-300"
+                    }`}
+                    onClick={() => {
+                      setCurrentBannerIndex(index);
+                      setPreviewUrl(banner.url);
+                      setAltText(banner.altText || "");
+                      setIsActive(banner.isActive !== false);
+                    }}
+                  >
+                    <div className="relative mb-4">
+                      <img
+                        src={banner.url}
+                        alt={banner.altText || "Banner"}
+                        className="w-full h-32 object-cover rounded-lg border border-gray-100 shadow-sm"
+                        onError={(e) => {
+                          console.error("Banner failed:", banner.url);
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                      {currentBannerIndex === index && (
+                        <div className="absolute -inset-2 bg-purple-500/10 rounded-lg flex items-center justify-center pointer-events-none">
+                          <FaIcons.FaCrown className="text-purple-600 text-xl" />
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <p className="font-mono text-sm bg-gray-100 px-2 py-1 rounded-lg truncate">
+                        {banner.filename}
+                      </p>
+                      <p className="text-xs text-gray-500 line-clamp-1">{banner.altText || "No alt text"}</p>
+                      <div className="flex items-center justify-between pt-2">
+                        <span className={`text-xs px-3 py-1 rounded-full font-semibold ${
+                          banner.isActive !== false 
+                            ? "bg-emerald-100 text-emerald-800" 
+                            : "bg-gray-100 text-gray-700"
+                        }`}>
+                          {banner.isActive !== false ? "Active" : "Inactive"}
+                        </span>
+                        {canEdit && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSetDefaultBanner(index);
+                            }}
+                            disabled={isUploading}
+                            className={`text-xs px-4 py-2 rounded-lg font-semibold transition-all shadow-sm ${
+                              currentBannerIndex === index
+                                ? "bg-purple-600 text-white hover:bg-purple-700 shadow-purple-300"
+                                : "bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 hover:from-gray-200 hover:to-gray-300 shadow-sm"
+                            }`}
+                          >
+                            {currentBannerIndex === index ? "⭐ Default" : "Set Default"}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
+          </div>
+        )}
 
+        {/* All Exams */}
+        {exams.length > 0 && (
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+            <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white">
+              <h2 className="text-xl font-semibold text-gray-900">All Exams</h2>
+              <p className="text-sm text-gray-600">Click any exam to manage banners</p>
+            </div>
             <LoadingWrapper isLoading={isLoading}>
               <div className="p-6">
                 {filteredExams.length === 0 ? (
-                  <div className="text-center py-12">
-                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <FaIcons.FaSearch size={24} className="text-gray-300" />
+                  <div className="text-center py-16">
+                    <div className="w-20 h-20 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                      <FaIcons.FaSearch size={28} className="text-gray-400" />
                     </div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-1">No exams found</h3>
-                    <p className="text-sm text-gray-500">
-                      Try adjusting your search criteria.
-                    </p>
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">No exams found</h3>
+                    <p className="text-gray-500">Try adjusting your search</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                     {filteredExams.map((exam) => {
-                      const hasBanner = existingBanner && existingBanner.examId === exam._id;
+                      const hasBanners = existingBannerCollection?.examId === exam._id;
                       return (
                         <div
                           key={exam._id}
-                          className={`border rounded-lg p-4 transition-all cursor-pointer hover:shadow-md ${
+                          className={`group border-2 rounded-xl p-6 transition-all cursor-pointer hover:shadow-xl hover:-translate-y-1 ${
                             selectedExam === exam._id
-                              ? "border-purple-500 bg-purple-50"
-                              : "border-gray-200 bg-white"
+                              ? "border-purple-500 bg-purple-50 ring-4 ring-purple-100 shadow-2xl"
+                              : "border-gray-200 bg-white hover:border-purple-200"
                           }`}
                           onClick={() => setSelectedExam(exam._id)}
                         >
-                          <div className="flex items-start justify-between mb-3">
+                          <div className="flex items-start justify-between mb-4">
                             <div>
-                              <h3 className="font-semibold text-gray-900 text-sm">{exam.name}</h3>
-                              <p className="text-xs text-gray-500 mt-1">
-                                Status: <span className={`font-medium ${exam.status === 'active' ? 'text-green-600' : 'text-gray-500'}`}>
+                              <h3 className="font-bold text-gray-900 text-base mb-1 truncate">{exam.name}</h3>
+                              <p className="text-xs text-gray-500">
+                                Status: <span className={`font-semibold px-2 py-0.5 rounded-full ${
+                                  exam.status === 'active' 
+                                    ? 'bg-emerald-100 text-emerald-800' 
+                                    : 'bg-gray-100 text-gray-700'
+                                }`}>
                                   {exam.status}
                                 </span>
                               </p>
                             </div>
-                            {hasBanner && (
-                              <div className="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full font-medium">
-                                Banner
+                            {hasBanners && (
+                              <div className="bg-emerald-100 text-emerald-800 text-xs px-3 py-1.5 rounded-full font-semibold ml-2">
+                                {banners.length} banner{banners.length !== 1 ? 's' : ''}
                               </div>
                             )}
                           </div>
-                          {hasBanner && existingBanner?.bannerImage && (
-                            <img
-                              src={existingBanner.bannerImage}
-                              alt={exam.name}
-                              className="w-full h-24 object-cover rounded border border-gray-200"
-                            />
+                          
+                          {hasBanners && banners[0] && (
+                            <div className="w-full h-28 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg overflow-hidden">
+                              <img
+                                src={banners[0].url}
+                                alt={`${exam.name} banner`}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = 'none';
+                                  e.currentTarget.parentNode.innerHTML = '<div class="w-full h-full bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center"><svg class="w-8 h-8 text-white opacity-75" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"></path></svg></div>';
+                                }}
+                              />
+                            </div>
                           )}
                         </div>
                       );
