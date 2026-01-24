@@ -18,6 +18,7 @@ const DiscussionManagement = () => {
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [statusFilter, setStatusFilter] = useState("all");
+    const [sortByViews, setSortByViews] = useState(false); // New state for Top Views filter
     const [stats, setStats] = useState({
         total: 0,
         pending: 0,
@@ -177,7 +178,7 @@ const DiscussionManagement = () => {
                 page,
                 limit: "10",
                 search,
-                sort: "new",
+                sort: sortByViews ? "views" : "new", // Sort by views if Top Views is active
                 status: statusFilter
             });
             if (filterExam) queryParams.set("examId", filterExam);
@@ -214,7 +215,7 @@ const DiscussionManagement = () => {
 
     useEffect(() => {
         fetchThreads();
-    }, [page, search, statusFilter, filterExam, filterSubject, filterUnit, filterChapter, filterTopic, filterSubTopic, filterDefinition]);
+    }, [page, search, statusFilter, sortByViews, filterExam, filterSubject, filterUnit, filterChapter, filterTopic, filterSubTopic, filterDefinition]);
 
     const handleToggleApproval = async (thread) => {
         if (!discussionPerms.canApproveThreads) {
@@ -315,7 +316,7 @@ const DiscussionManagement = () => {
 
                 {/* Filter Controls */}
                 <div className="flex flex-col gap-3">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                         <button
                             onClick={() => setShowFilters(!showFilters)}
                             className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-bold transition-all ${showFilters || activeFilterCount > 0 ? "bg-blue-50 border-blue-200 text-blue-600" : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"}`}
@@ -325,6 +326,20 @@ const DiscussionManagement = () => {
                             {activeFilterCount > 0 && (
                                 <span className="bg-blue-600 text-white text-[9px] px-1.5 py-0.5 rounded-full">
                                     {activeFilterCount}
+                                </span>
+                            )}
+                        </button>
+
+                        {/* Top Views Filter Button */}
+                        <button
+                            onClick={() => { setSortByViews(!sortByViews); setPage(1); }}
+                            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-bold transition-all ${sortByViews ? "bg-orange-50 border-orange-200 text-orange-600" : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"}`}
+                        >
+                            <FaIcons.FaEye size={10} />
+                            Top Views
+                            {sortByViews && (
+                                <span className="bg-orange-600 text-white text-[9px] px-1.5 py-0.5 rounded-full">
+                                    #1
                                 </span>
                             )}
                         </button>
@@ -488,6 +503,7 @@ const DiscussionManagement = () => {
                     <LoadingWrapper isLoading={isDataLoading}>
                         <DiscussionTable
                             threads={threads}
+                            sortByViews={sortByViews}
                             onToggleApproval={handleToggleApproval}
                             onDelete={handleDelete}
                             onTogglePin={handleTogglePin}

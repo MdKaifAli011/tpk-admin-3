@@ -22,6 +22,7 @@ import { usePermissions, getDiscussionPermissions, getDiscussionPermissionMessag
 
 const DiscussionTable = ({
     threads,
+    sortByViews = false,
     onToggleApproval,
     onDelete,
     onTogglePin
@@ -30,21 +31,7 @@ const DiscussionTable = ({
     const { role } = usePermissions();
     const discussionPerms = getDiscussionPermissions(role);
 
-    if (!threads || threads.length === 0) {
-        return (
-            <div className="flex flex-col items-center justify-center py-20 text-center">
-                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center text-gray-300 mb-4">
-                    <FaIcons.FaComment size={24} />
-                </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-1">No Discussions Found</h3>
-                <p className="text-sm text-gray-500 max-w-sm px-6">
-                    When students or guests post discussions, they will appear here for moderation and engagement tracking.
-                </p>
-            </div>
-        );
-    }
-
-    // Helper to generate hierarchy signature
+    // Helper to generate hierarchy signature - Move before useMemo to fix initialization error
     const getHierarchySignature = (thread) => {
         const parts = [
             thread.examId?._id || "gn",
@@ -58,7 +45,7 @@ const DiscussionTable = ({
         return parts.join("-");
     };
 
-    // Group threads
+    // Group threads - Now getHierarchySignature is available
     const groupedThreads = React.useMemo(() => {
         const groups = {};
         threads.forEach(thread => {
@@ -73,6 +60,20 @@ const DiscussionTable = ({
         });
         return Object.values(groups);
     }, [threads]);
+
+    if (!threads || threads.length === 0) {
+        return (
+            <div className="flex flex-col items-center justify-center py-20 text-center">
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center text-gray-300 mb-4">
+                    <FaIcons.FaComment size={24} />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-1">No Discussions Found</h3>
+                <p className="text-sm text-gray-500 max-w-sm px-6">
+                    When students or guests post discussions, they will appear here for moderation and engagement tracking.
+                </p>
+            </div>
+        );
+    }
 
     const HierarchyBreadcrumb = ({ thread, count }) => {
         const parts = [];
@@ -123,7 +124,17 @@ const DiscussionTable = ({
                             <thead>
                                 <tr className="bg-white border-b border-gray-100">
                                     <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider">Discussion Topic</th>
-                                    <th className="px-3 py-3 text-center text-[10px] font-bold text-gray-400 uppercase tracking-wider w-32">Engagement</th>
+                                    <th className={`px-3 py-3 text-center text-[10px] font-bold uppercase tracking-wider w-32 ${sortByViews ? 'text-orange-600 bg-orange-50' : 'text-gray-400'}`}>
+                                        <div className="flex items-center justify-center gap-1">
+                                            <FaIcons.FaEye size={10} />
+                                            Engagement
+                                            {sortByViews && (
+                                                <span className="bg-orange-600 text-white text-[8px] px-1.5 py-0.5 rounded-full ml-1">
+                                                    TOP RANK
+                                                </span>
+                                            )}
+                                        </div>
+                                    </th>
                                     <th className="px-3 py-3 text-center text-[10px] font-bold text-gray-400 uppercase tracking-wider w-32">Context</th>
                                     <th className="px-3 py-3 text-center text-[10px] font-bold text-gray-400 uppercase tracking-wider w-24">Status</th>
                                     <th className="px-4 py-3 text-right text-[10px] font-bold text-gray-400 uppercase tracking-wider w-40">Actions</th>
@@ -174,9 +185,21 @@ const DiscussionTable = ({
                                         {/* Stats */}
                                         <td className="px-3 py-4">
                                             <div className="flex items-center justify-center gap-4">
-                                                <div className="flex flex-col items-center">
-                                                    <span className="text-xs font-bold text-gray-900 leading-none">{thread.views || 0}</span>
-                                                    <span className="text-[9px] font-medium text-gray-400 uppercase tracking-wider mt-1">Views</span>
+                                                <div className={`flex flex-col items-center relative ${sortByViews ? 'animate-pulse' : ''}`}>
+                                                    {sortByViews && (
+                                                        <div className="absolute -top-2 -right-2 bg-orange-500 text-white text-[8px] font-bold px-1 py-0.5 rounded-full">
+                                                            #{group.items.indexOf(thread) + 1}
+                                                        </div>
+                                                    )}
+                                                    <div className={`flex items-center gap-1 ${sortByViews ? 'bg-orange-100 px-2 py-1 rounded-lg border border-orange-200' : ''}`}>
+                                                        <FaIcons.FaEye size={10} className={sortByViews ? 'text-orange-600' : 'text-gray-400'} />
+                                                        <span className={`text-xs font-bold leading-none ${sortByViews ? 'text-orange-700' : 'text-gray-900'}`}>
+                                                            {thread.views || 0}
+                                                        </span>
+                                                    </div>
+                                                    <span className={`text-[9px] font-medium uppercase tracking-wider mt-1 ${sortByViews ? 'text-orange-600' : 'text-gray-400'}`}>
+                                                        Views
+                                                    </span>
                                                 </div>
                                                 <div className="flex flex-col items-center">
                                                     <span className="text-xs font-bold text-gray-900 leading-none">{thread.replyCount || 0}</span>

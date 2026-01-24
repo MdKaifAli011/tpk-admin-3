@@ -3,6 +3,13 @@ import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import Thread from "@/models/Thread";
 import Student from "@/models/Student";
+import Exam from "@/models/Exam";
+import Subject from "@/models/Subject";
+import Unit from "@/models/Unit";
+import Chapter from "@/models/Chapter";
+import Topic from "@/models/Topic";
+import SubTopic from "@/models/SubTopic";
+import Definition from "@/models/Definition";
 import { verifyToken } from "@/lib/auth"; // For admin
 import { verifyStudentToken } from "@/lib/studentAuth"; // For student
 
@@ -50,7 +57,7 @@ export async function GET(request) {
         const topicId = searchParams.get("topicId");
         const subTopicId = searchParams.get("subTopicId");
 
-        const sort = searchParams.get("sort") || "new"; // new, hot
+        const sort = searchParams.get("sort") || "new"; // new, hot, views
         const search = searchParams.get("search");
         const tag = searchParams.get("tag"); // e.g., Urgent
 
@@ -95,6 +102,9 @@ export async function GET(request) {
         let sortOption = { isPinned: -1, createdAt: -1 }; // Default new
         if (sort === "hot") {
             sortOption = { isPinned: -1, views: -1, replyCount: -1 };
+        } else if (sort === "views") {
+            // Top Views sorting - primarily by views, then by recent activity
+            sortOption = { isPinned: -1, views: -1, createdAt: -1 };
         }
 
         // Pagination
