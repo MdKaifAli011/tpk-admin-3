@@ -982,6 +982,7 @@ const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal, examImage 
               >
                 <VerticalBannerList 
                   banners={discussionBanner.banners.filter(banner => banner.isActive)}
+                  defaultBannerIndex={discussionBanner.defaultBannerIndex || 0}
                 />
               </div>
             </>

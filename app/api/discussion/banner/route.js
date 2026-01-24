@@ -240,6 +240,16 @@ export async function PUT(request) {
       }
     }
 
+    if (body.action === "reorder") {
+      if (body.banners && Array.isArray(body.banners)) {
+        // Update the banners array with new order
+        banners.length = 0; // Clear existing array
+        banners.push(...body.banners);
+        updated = true;
+        console.log(`Reordered ${banners.length} banners for ${exam.name}`);
+      }
+    }
+
     if (body.action === "removeBanner") {
       const index = parseInt(body.bannerIndex);
       if (index >= 0 && index < banners.length) {

@@ -3,14 +3,33 @@ import React from "react";
 import Image from "next/image";
 import * as FaIcons from "react-icons/fa";
 
-const VerticalBannerList = ({ banners = [] }) => {
+const VerticalBannerList = ({ banners = [], defaultBannerIndex = 0 }) => {
   const getImageUrl = (url) => {
     if (!url) return "";
     if (url.startsWith("http")) return url;
     return url.startsWith("/self-study") ? url : `/self-study${url}`;
   };
 
-  if (!banners || banners.length === 0) {
+  // ✅ REORDER BANNERS: Default first, then rest in order
+  const getOrderedBanners = () => {
+    if (!banners || banners.length === 0) return [];
+    
+    // Create a copy of banners array
+    const orderedBanners = [...banners];
+    
+    // If defaultBannerIndex is valid and not already first
+    if (defaultBannerIndex > 0 && defaultBannerIndex < orderedBanners.length) {
+      // Move default banner to the front
+      const [defaultBanner] = orderedBanners.splice(defaultBannerIndex, 1);
+      orderedBanners.unshift(defaultBanner);
+    }
+    
+    return orderedBanners;
+  };
+
+  const orderedBanners = getOrderedBanners();
+
+  if (!orderedBanners || orderedBanners.length === 0) {
     return (
       <div className="w-full h-56 flex items-center justify-center border-2 border-dashed rounded-xl bg-gray-50">
         <div className="text-center text-gray-400">
@@ -23,8 +42,9 @@ const VerticalBannerList = ({ banners = [] }) => {
 
   return (
     <div className="w-full flex flex-col gap-10">
-      {banners.map((banner, index) => {
+      {orderedBanners.map((banner, index) => {
         const imageUrl = getImageUrl(banner.url);
+        const isDefaultBanner = index === 0; // First banner is always default after reordering
 
         return (
           <div
@@ -39,7 +59,7 @@ const VerticalBannerList = ({ banners = [] }) => {
                 width={1600}
                 height={400}
                 sizes="100vw"
-                priority={index === 0}
+                priority={index === 0} // Prioritize first (default) banner
                 className="w-full h-auto object-contain"
               />
             </div>

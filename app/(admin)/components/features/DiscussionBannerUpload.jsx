@@ -29,6 +29,8 @@ const DiscussionBannerUpload = () => {
   const [bannerImage, setBannerImage] = useState(null);
   const fileInputRef = useRef(null);
   const isFetchingRef = useRef(false); // ✅ API LOOP PREVENTION
+  const [draggedIndex, setDraggedIndex] = useState(null);
+  const [dragOverIndex, setDragOverIndex] = useState(null);
 
   const { toasts, removeToast, success, error: showError } = useToast();
 
@@ -323,6 +325,79 @@ const DiscussionBannerUpload = () => {
     }
   };
 
+  // ✅ DRAG AND DROP HANDLERS
+  const handleDragStart = (e, index) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', e.target.innerHTML);
+  };
+
+  const handleDragOver = (e, index) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDragOverIndex(index);
+  };
+
+  const handleDragLeave = () => {
+    setDragOverIndex(null);
+  };
+
+  const handleDrop = async (e, dropIndex) => {
+    e.preventDefault();
+    setDragOverIndex(null);
+    
+    if (draggedIndex === null || draggedIndex === dropIndex) {
+      setDraggedIndex(null);
+      return;
+    }
+
+    try {
+      setIsUploading(true);
+      
+      // Reorder banners array
+      const reorderedBanners = [...banners];
+      const draggedBanner = reorderedBanners[draggedIndex];
+      reorderedBanners.splice(draggedIndex, 1);
+      reorderedBanners.splice(dropIndex, 0, draggedBanner);
+      
+      // Update backend
+      const res = await api.put(`/discussion/banner?examId=${selectedExam}`, {
+        action: 'reorder',
+        banners: reorderedBanners.map(b => ({
+          url: cleanImageUrl(b.url),
+          filename: b.filename,
+          altText: b.altText,
+          isActive: b.isActive !== false
+        }))
+      });
+
+      if (res.data.success) {
+        setBanners(reorderedBanners);
+        
+        // Update current banner index if needed
+        if (currentBannerIndex === draggedIndex) {
+          setCurrentBannerIndex(dropIndex);
+        } else if (draggedIndex < currentBannerIndex && dropIndex >= currentBannerIndex) {
+          setCurrentBannerIndex(currentBannerIndex - 1);
+        } else if (draggedIndex > currentBannerIndex && dropIndex <= currentBannerIndex) {
+          setCurrentBannerIndex(currentBannerIndex + 1);
+        }
+        
+        success("Banners reordered successfully");
+      }
+    } catch (err) {
+      showError(err.response?.data?.message || "Failed to reorder banners");
+    } finally {
+      setIsUploading(false);
+      setDraggedIndex(null);
+    }
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
   const handleResetForm = () => {
     setSelectedExam("");
     resetBannerState();
@@ -604,23 +679,66 @@ const DiscussionBannerUpload = () => {
               </h3>
             </div>
             <div className="p-6">
+              <div className="mb-4 flex items-center justify-between">
+                <p className="text-sm text-gray-600">
+                  <FaIcons.FaInfoCircle className="inline mr-2" />
+                  Drag and drop banners to reorder their position. Click &quot;Set Default&quot; to make a banner the primary one.
+                </p>
+                {banners.length > 1 && (
+                  <div className="text-xs text-gray-500 bg-gray-100 px-3 py-2 rounded-lg">
+                    Position {currentBannerIndex + 1} is the default banner
+                  </div>
+                )}
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 {banners.map((banner, index) => (
                   <div
                     key={banner.filename || index}
-                    className={`group relative border-2 rounded-xl p-6 hover:shadow-xl transition-all cursor-pointer hover:scale-[1.02] ${
-                      currentBannerIndex === index
+                    draggable={canEdit && !isUploading}
+                    onDragStart={(e) => handleDragStart(e, index)}
+                    onDragOver={(e) => handleDragOver(e, index)}
+                    onDragLeave={handleDragLeave}
+                    onDrop={(e) => handleDrop(e, index)}
+                    onDragEnd={handleDragEnd}
+                    className={`group relative border-2 rounded-xl p-6 hover:shadow-xl transition-all cursor-move hover:scale-[1.02] ${
+                      draggedIndex === index
+                        ? "opacity-50 scale-95"
+                        : dragOverIndex === index
+                        ? "border-blue-500 bg-blue-50 ring-4 ring-blue-100"
+                        : currentBannerIndex === index
                         ? "border-purple-500 bg-purple-50 ring-4 ring-purple-100 shadow-2xl"
                         : "border-gray-200 bg-white hover:border-gray-300"
                     }`}
                     onClick={() => {
-                      setCurrentBannerIndex(index);
-                      setPreviewUrl(banner.url);
-                      setAltText(banner.altText || "");
-                      setIsActive(banner.isActive !== false);
+                      if (draggedIndex === null) {
+                        setCurrentBannerIndex(index);
+                        setPreviewUrl(banner.url);
+                        setAltText(banner.altText || "");
+                        setIsActive(banner.isActive !== false);
+                      }
                     }}
                   >
-                    <div className="relative mb-4">
+                    {/* Drag Handle */}
+                    {canEdit && (
+                      <div className="absolute top-2 left-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="bg-gray-800 text-white p-2 rounded-lg cursor-move shadow-lg">
+                          <FaIcons.FaGripVertical size={12} />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Position Badge */}
+                    <div className="absolute top-2 right-2 z-10">
+                      <div className={`px-3 py-1 rounded-full text-xs font-bold shadow-lg ${
+                        currentBannerIndex === index
+                          ? "bg-purple-600 text-white"
+                          : "bg-gray-600 text-white"
+                      }`}>
+                        #{index + 1}
+                      </div>
+                    </div>
+
+                    <div className="relative mb-4 mt-8">
                       <img
                         src={banner.url}
                         alt={banner.altText || "Banner"}
@@ -633,6 +751,13 @@ const DiscussionBannerUpload = () => {
                       {currentBannerIndex === index && (
                         <div className="absolute -inset-2 bg-purple-500/10 rounded-lg flex items-center justify-center pointer-events-none">
                           <FaIcons.FaCrown className="text-purple-600 text-xl" />
+                        </div>
+                      )}
+                      {draggedIndex === index && (
+                        <div className="absolute inset-0 bg-blue-500/20 rounded-lg flex items-center justify-center pointer-events-none">
+                          <div className="bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-semibold">
+                            Dragging...
+                          </div>
                         </div>
                       )}
                     </div>
