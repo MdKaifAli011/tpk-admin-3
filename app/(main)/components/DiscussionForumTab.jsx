@@ -6,7 +6,7 @@ import {
   FaSearch, FaPlus, FaFilter, FaFire, FaClock, FaComment, FaEye, FaShare,
   FaFlag, FaArrowLeft, FaThumbsUp, FaThumbsDown, FaCheckCircle, FaTimes,
   FaThumbtack, FaUser, FaPaperPlane, FaBullhorn, FaEllipsisV, FaBookmark, FaFilePdf,
-  FaShieldAlt
+  FaShieldAlt, FaImage
 } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import api from "@/lib/api";
@@ -362,6 +362,7 @@ const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal, examImage 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successContent, setSuccessContent] = useState({ title: "", message: "" });
+  const [discussionBanner, setDiscussionBanner] = useState(null);
   const editorRef = useRef(null);
   const repliesRef = useRef(null);
   const searchTimeout = useRef(null);
@@ -373,6 +374,22 @@ const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal, examImage 
   const scrollToReplies = () => {
     repliesRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
+
+  const fetchDiscussionBanner = useCallback(async (examId) => {
+    if (!examId) return;
+    
+    try {
+      const res = await api.get(`/discussion/banner?examId=${examId}`);
+      if (res.data.success && res.data.data) {
+        setDiscussionBanner(res.data.data);
+      } else {
+        setDiscussionBanner(null);
+      }
+    } catch (error) {
+      // Don't show error for missing banners
+      setDiscussionBanner(null);
+    }
+  }, []);
 
   const fetchDetail = useCallback(async () => {
     if (!slug) {
@@ -392,6 +409,11 @@ const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal, examImage 
         setReplies(res.data.data.replies);
         if (res.data.data.pagination) {
           setReplyPagination(res.data.data.pagination);
+        }
+        
+        // Fetch discussion banner for this thread's exam
+        if (res.data.data.thread?.examId?._id) {
+          fetchDiscussionBanner(res.data.data.thread.examId._id);
         }
       } else {
         console.warn("ThreadDetail: Failed to fetch thread", {
@@ -413,7 +435,7 @@ const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal, examImage 
     } finally {
       setLoading(false);
     }
-  }, [slug, guestIdentity, sortState, replyPage, replySearch]);
+  }, [slug, guestIdentity, sortState, replyPage, replySearch, fetchDiscussionBanner]);
 
   useEffect(() => {
     fetchDetail();
@@ -925,6 +947,28 @@ const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal, examImage 
               unoptimized={true}
             />
           </div>
+
+
+          {/* Dynamic Discussion Banner */}
+          {discussionBanner ? (
+            <div className="w-full h-full">
+              <Image
+                src={discussionBanner.bannerImage}
+                alt={discussionBanner.altText || 'Discussion Forum Banner'}
+                width={1200}
+                height={300}
+                className="w-full h-full object-cover rounded-lg"
+                unoptimized={true}
+              />
+            </div>
+          ) : (
+            <div className="w-full h-48 bg-gradient-to-r from-blue-100 to-purple-100 rounded-lg flex items-center justify-center border-2 border-dashed border-gray-300">
+              <div className="text-center">
+                <FaImage className="mx-auto text-gray-400 mb-2" size={24} />
+                <p className="text-sm text-gray-500">No banner uploaded for this exam</p>
+              </div>
+            </div>
+          )}
         </div>
 
       </div>

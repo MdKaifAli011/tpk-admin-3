@@ -61,6 +61,7 @@ const ALL_MENU_ITEMS = [
     icon: FaComments,
     children: [
       { name: "Threads", href: "/admin/discussion" },
+      { name: "Banner Upload", href: "/admin/discussion/banner" },
 
     ],
   },
