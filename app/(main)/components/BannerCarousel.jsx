@@ -2,12 +2,11 @@
 import React from "react";
 import Image from "next/image";
 import * as FaIcons from "react-icons/fa";
+import { getUrlWithBasePath } from "@/utils/basePath";
 
 const VerticalBannerList = ({ banners = [], defaultBannerIndex = 0 }) => {
   const getImageUrl = (url) => {
-    if (!url) return "";
-    if (url.startsWith("http")) return url;
-    return url.startsWith("/self-study") ? url : `/self-study${url}`;
+    return getUrlWithBasePath(url);
   };
 
   // ✅ REORDER BANNERS: Default first, then rest in order

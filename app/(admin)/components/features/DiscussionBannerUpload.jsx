@@ -8,8 +8,7 @@ import {
 } from "../ui/SkeletonLoader";
 import api from "@/lib/api";
 import { usePermissions, getPermissionMessage } from "../../hooks/usePermissions";
-
-const BASE_PATH = "/self-study";
+import { getUrlWithBasePath, cleanUrlFromBasePath } from "@/utils/basePath";
 
 const DiscussionBannerUpload = () => {
   const { canEdit, role } = usePermissions();
@@ -36,14 +35,12 @@ const DiscussionBannerUpload = () => {
 
   // ✅ PERFECTED: File-system + Basepath compatible
   const getImageUrl = useCallback((url) => {
-    if (!url) return "";
-    return url.startsWith("http") ? url : `${BASE_PATH}${url}`;
+    return getUrlWithBasePath(url);
   }, []);
 
   // ✅ PERFECTED: Clean URL for backend storage
   const cleanImageUrl = useCallback((url) => {
-    if (!url) return "";
-    return url.replace(`${BASE_PATH}`, "").replace(/^\/+/, "");
+    return cleanUrlFromBasePath(url);
   }, []);
 
   // Fetch exams + exam names (regular function with ref)
@@ -77,11 +74,19 @@ const DiscussionBannerUpload = () => {
 
       if (res.data.success && res.data.data) {
         const bannerCollection = res.data.data;
-        const bannersList = (bannerCollection.banners || []).map((banner, index) => ({
-          ...banner,
-          url: banner.url.startsWith("http") ? banner.url : `${BASE_PATH}${banner.url}`, // Inline getImageUrl
-          index
-        }));
+        const bannersList = (bannerCollection.banners || []).map((banner, index) => {
+          const fullUrl = getImageUrl(banner.url);
+          console.log(`🔍 Banner ${index + 1}:`, {
+            originalUrl: banner.url,
+            fullUrl: fullUrl,
+            filename: banner.filename
+          });
+          return {
+            ...banner,
+            url: fullUrl, // Use centralized getImageUrl function
+            index
+          };
+        });
 
         const defaultIndex = Math.max(0, Math.min(
           bannerCollection.defaultBannerIndex || 0,
@@ -194,6 +199,11 @@ const DiscussionBannerUpload = () => {
           isActive: isActive,
           index: res.data.data.bannerIndex || banners.length
         };
+        
+        console.log("🆕 New banner added:", {
+          apiResponse: res.data.data,
+          newBanner: newBanner
+        });
         
         setBanners(prev => [...prev, newBanner]);
         setPreviewUrl(newBanner.url);
@@ -743,8 +753,12 @@ const DiscussionBannerUpload = () => {
                         src={banner.url}
                         alt={banner.altText || "Banner"}
                         className="w-full h-32 object-cover rounded-lg border border-gray-100 shadow-sm"
+                        onLoad={(e) => {
+                          console.log("✅ Banner loaded successfully:", banner.url);
+                        }}
                         onError={(e) => {
-                          console.error("Banner failed:", banner.url);
+                          console.error("❌ Banner failed to load:", banner.url);
+                          console.error("❌ Full banner object:", banner);
                           e.currentTarget.style.display = 'none';
                         }}
                       />
