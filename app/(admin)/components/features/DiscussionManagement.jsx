@@ -18,7 +18,7 @@ const DiscussionManagement = () => {
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [statusFilter, setStatusFilter] = useState("all");
-    const [sortByViews, setSortByViews] = useState(false); // New state for Top Views filter
+    const [sortByViews, setSortByViews] = useState(false); // Top Views filter state
     const [stats, setStats] = useState({
         total: 0,
         pending: 0,
@@ -60,11 +60,18 @@ const DiscussionManagement = () => {
     }, []);
 
 
-    const fetchSubjects = useCallback(async () => {
+    const fetchSubjects = useCallback(async (examId = null) => {
         try {
-            const res = await api.get("/subject?status=all");
+            let url = "/subject?status=all&limit=1000";
+            if (examId) {
+                url += `&examId=${examId}`;
+            }
+            const res = await api.get(url);
             if (res.data.success) setSubjects(res.data.data || []);
-        } catch (err) { console.error("Error fetching subjects:", err); }
+        } catch (err) { 
+            console.error("Error fetching subjects:", err);
+            setSubjects([]);
+        }
     }, []);
 
     const fetchUnits = useCallback(async (examId, subjectId) => {
@@ -109,13 +116,27 @@ const DiscussionManagement = () => {
 
     useEffect(() => {
         fetchExams();
-        fetchSubjects();
-    }, [fetchExams, fetchSubjects]);
+        // Don't fetch subjects initially - wait for exam selection
+    }, [fetchExams]);
+
+    // Fetch subjects ONLY when exam is selected
+    useEffect(() => {
+        if (filterExam) {
+            // Only fetch subjects for the selected exam
+            fetchSubjects(filterExam);
+        } else {
+            // If no exam selected, clear subjects
+            setSubjects([]);
+        }
+    }, [filterExam, fetchSubjects]);
 
     // Cascading Effects
     useEffect(() => {
-        if (filterExam && filterSubject) fetchUnits(filterExam, filterSubject);
-        else setUnits([]);
+        if (filterExam && filterSubject) {
+            fetchUnits(filterExam, filterSubject);
+        } else {
+            setUnits([]);
+        }
     }, [filterExam, filterSubject, fetchUnits]);
 
     useEffect(() => {
@@ -140,7 +161,17 @@ const DiscussionManagement = () => {
 
     // Reset dependents when parent changes
     const handleExamChange = (val) => {
-        setFilterExam(val); setFilterSubject(""); setFilterUnit(""); setFilterChapter(""); setFilterTopic(""); setFilterSubTopic(""); setFilterDefinition("");
+        setFilterExam(val); 
+        setFilterSubject(""); 
+        setFilterUnit(""); 
+        setFilterChapter(""); 
+        setFilterTopic(""); 
+        setFilterSubTopic(""); 
+        setFilterDefinition("");
+        // Clear subjects when exam is cleared, or let useEffect handle fetching
+        if (!val) {
+            setSubjects([]);
+        }
     };
     const handleSubjectChange = (val) => {
         setFilterSubject(val); setFilterUnit(""); setFilterChapter(""); setFilterTopic(""); setFilterSubTopic(""); setFilterDefinition("");
@@ -158,10 +189,16 @@ const DiscussionManagement = () => {
         setFilterSubTopic(val); setFilterDefinition("");
     };
 
-    // Filtered Lists
+    // Filtered Subjects - when exam is selected, subjects are already filtered by API
+    // No need for additional filtering since API returns only subjects for that exam
     const filteredSubjects = useMemo(() => {
-        if (!filterExam) return [];
-        return subjects.filter(s => s.examId?._id === filterExam || s.examId === filterExam);
+        // If no exam selected, return empty array (don't show any subjects)
+        if (!filterExam) {
+            return [];
+        }
+        // Subjects are already filtered by API for the selected exam
+        // Just return them as-is
+        return subjects;
     }, [subjects, filterExam]);
 
     const activeFilterCount = [filterExam, filterSubject, filterUnit, filterChapter, filterTopic, filterSubTopic, filterDefinition].filter(Boolean).length;
@@ -215,7 +252,7 @@ const DiscussionManagement = () => {
 
     useEffect(() => {
         fetchThreads();
-    }, [page, search, statusFilter, sortByViews, filterExam, filterSubject, filterUnit, filterChapter, filterTopic, filterSubTopic, filterDefinition]);
+    }, [page, search, statusFilter, filterExam, filterSubject, filterUnit, filterChapter, filterTopic, filterSubTopic, filterDefinition]);
 
     const handleToggleApproval = async (thread) => {
         if (!discussionPerms.canApproveThreads) {
@@ -316,7 +353,7 @@ const DiscussionManagement = () => {
 
                 {/* Filter Controls */}
                 <div className="flex flex-col gap-3">
-                    <div className="flex items-center gap-2 flex-wrap">
+                    <div className="flex items-center gap-2">
                         <button
                             onClick={() => setShowFilters(!showFilters)}
                             className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-bold transition-all ${showFilters || activeFilterCount > 0 ? "bg-blue-50 border-blue-200 text-blue-600" : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"}`}
@@ -326,20 +363,6 @@ const DiscussionManagement = () => {
                             {activeFilterCount > 0 && (
                                 <span className="bg-blue-600 text-white text-[9px] px-1.5 py-0.5 rounded-full">
                                     {activeFilterCount}
-                                </span>
-                            )}
-                        </button>
-
-                        {/* Top Views Filter Button */}
-                        <button
-                            onClick={() => { setSortByViews(!sortByViews); setPage(1); }}
-                            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-bold transition-all ${sortByViews ? "bg-orange-50 border-orange-200 text-orange-600" : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"}`}
-                        >
-                            <FaIcons.FaEye size={10} />
-                            Top Views
-                            {sortByViews && (
-                                <span className="bg-orange-600 text-white text-[9px] px-1.5 py-0.5 rounded-full">
-                                    #1
                                 </span>
                             )}
                         </button>
@@ -380,7 +403,15 @@ const DiscussionManagement = () => {
                                     className="w-full text-xs p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-100 outline-none disabled:bg-gray-50 disabled:text-gray-400"
                                 >
                                     <option value="">All Subjects</option>
-                                    {filteredSubjects.map(s => <option key={s._id} value={s._id}>{s.name}</option>)}
+                                    {filterExam ? (
+                                        filteredSubjects.length > 0 ? (
+                                            filteredSubjects.map(s => <option key={s._id} value={s._id}>{s.name}</option>)
+                                        ) : (
+                                            <option value="" disabled>No subjects found for selected exam</option>
+                                        )
+                                    ) : (
+                                        <option value="" disabled>Select an exam first</option>
+                                    )}
                                 </select>
                             </div>
 
@@ -390,11 +421,17 @@ const DiscussionManagement = () => {
                                 <select
                                     value={filterUnit}
                                     onChange={(e) => handleUnitChange(e.target.value)}
-                                    disabled={!filterSubject}
+                                    disabled={!filterExam || !filterSubject}
                                     className="w-full text-xs p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-100 outline-none disabled:bg-gray-50 disabled:text-gray-400"
                                 >
                                     <option value="">All Units</option>
-                                    {units.map(u => <option key={u._id} value={u._id}>{u.name}</option>)}
+                                    {units.length > 0 ? (
+                                        units.map(u => <option key={u._id} value={u._id}>{u.name}</option>)
+                                    ) : filterExam && filterSubject ? (
+                                        <option value="" disabled>No units found</option>
+                                    ) : (
+                                        <option value="" disabled>Select exam and subject first</option>
+                                    )}
                                 </select>
                             </div>
 
@@ -408,7 +445,13 @@ const DiscussionManagement = () => {
                                     className="w-full text-xs p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-100 outline-none disabled:bg-gray-50 disabled:text-gray-400"
                                 >
                                     <option value="">All Chapters</option>
-                                    {chapters.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
+                                    {chapters.length > 0 ? (
+                                        chapters.map(c => <option key={c._id} value={c._id}>{c.name}</option>)
+                                    ) : filterUnit ? (
+                                        <option value="" disabled>No chapters found</option>
+                                    ) : (
+                                        <option value="" disabled>Select unit first</option>
+                                    )}
                                 </select>
                             </div>
 
@@ -422,7 +465,13 @@ const DiscussionManagement = () => {
                                     className="w-full text-xs p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-100 outline-none disabled:bg-gray-50 disabled:text-gray-400"
                                 >
                                     <option value="">All Topics</option>
-                                    {topics.map(t => <option key={t._id} value={t._id}>{t.name}</option>)}
+                                    {topics.length > 0 ? (
+                                        topics.map(t => <option key={t._id} value={t._id}>{t.name}</option>)
+                                    ) : filterChapter ? (
+                                        <option value="" disabled>No topics found</option>
+                                    ) : (
+                                        <option value="" disabled>Select chapter first</option>
+                                    )}
                                 </select>
                             </div>
 
@@ -436,7 +485,13 @@ const DiscussionManagement = () => {
                                     className="w-full text-xs p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-100 outline-none disabled:bg-gray-50 disabled:text-gray-400"
                                 >
                                     <option value="">All SubTopics</option>
-                                    {subTopics.map(st => <option key={st._id} value={st._id}>{st.name}</option>)}
+                                    {subTopics.length > 0 ? (
+                                        subTopics.map(st => <option key={st._id} value={st._id}>{st.name}</option>)
+                                    ) : filterTopic ? (
+                                        <option value="" disabled>No subtopics found</option>
+                                    ) : (
+                                        <option value="" disabled>Select topic first</option>
+                                    )}
                                 </select>
                             </div>
 
@@ -450,7 +505,13 @@ const DiscussionManagement = () => {
                                     className="w-full text-xs p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-100 outline-none disabled:bg-gray-50 disabled:text-gray-400"
                                 >
                                     <option value="">All Definitions</option>
-                                    {definitions.map(d => <option key={d._id} value={d._id}>{d.name}</option>)}
+                                    {definitions.length > 0 ? (
+                                        definitions.map(d => <option key={d._id} value={d._id}>{d.name}</option>)
+                                    ) : filterSubTopic ? (
+                                        <option value="" disabled>No definitions found</option>
+                                    ) : (
+                                        <option value="" disabled>Select subtopic first</option>
+                                    )}
                                 </select>
                             </div>
                         </div>
@@ -503,7 +564,6 @@ const DiscussionManagement = () => {
                     <LoadingWrapper isLoading={isDataLoading}>
                         <DiscussionTable
                             threads={threads}
-                            sortByViews={sortByViews}
                             onToggleApproval={handleToggleApproval}
                             onDelete={handleDelete}
                             onTogglePin={handleTogglePin}
