@@ -166,17 +166,147 @@ export async function POST(request) {
     }
 
     const fileText = await file.text();
-    const data = parseCSV(fileText);
-
-    // Validate required fields
-    const requiredFields = ["title", "content"];
-    const validation = validateCSVData(data, requiredFields);
-    if (!validation.isValid) {
+    let data;
+    try {
+      data = parseCSV(fileText);
+    } catch (parseError) {
+      console.error("CSV parsing error:", parseError);
       return NextResponse.json(
-        { success: false, message: "Validation failed", errors: validation.errors },
+        { 
+          success: false, 
+          message: "Failed to parse CSV file", 
+          errors: [parseError.message || "Invalid CSV format. Please check the file and try again."] 
+        },
         { status: 400 }
       );
     }
+
+    // Check if data is empty
+    if (!data || data.length === 0) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          message: "CSV file is empty or contains no data rows", 
+          errors: ["The CSV file must contain at least one data row (excluding headers)"] 
+        },
+        { status: 400 }
+      );
+    }
+
+    // Validate data structure
+    if (!Array.isArray(data)) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          message: "Invalid CSV format", 
+          errors: ["CSV parsing returned invalid data structure. Expected array of objects."] 
+        },
+        { status: 400 }
+      );
+    }
+
+    // Log parsed data structure for debugging (first row only)
+    if (data.length > 0) {
+      console.log("CSV Parsed Successfully:", {
+        totalRows: data.length,
+        firstRowKeys: Object.keys(data[0]),
+        firstRowSample: {
+          title: data[0].title?.substring(0, 50) || "NOT FOUND",
+          content: data[0].content?.substring(0, 50) || "NOT FOUND",
+        }
+      });
+    }
+
+    // Normalize field names helper (handle case variations and underscores)
+    const normalizeFieldName = (field) => {
+      return field.toLowerCase().replace(/[^a-z0-9]/g, "");
+    };
+
+    // Build field mapping from first row (map normalized names to actual CSV headers)
+    const fieldMapping = {};
+    if (data.length > 0) {
+      const firstRow = data[0];
+      Object.keys(firstRow).forEach(actualField => {
+        const normalized = normalizeFieldName(actualField);
+        if (!fieldMapping[normalized]) {
+          fieldMapping[normalized] = actualField;
+        }
+      });
+    }
+
+    // Helper to get field value with fallback
+    const getField = (row, fieldName) => {
+      const normalized = normalizeFieldName(fieldName);
+      const actualField = fieldMapping[normalized];
+      if (actualField && row[actualField] !== undefined) {
+        return row[actualField];
+      }
+      // Try direct match as fallback
+      return row[fieldName] || row[fieldName.toLowerCase()] || row[fieldName.toUpperCase()] || "";
+    };
+
+    // Check for required fields with flexible matching
+    const requiredFields = ["title", "content"];
+    const validationErrors = [];
+
+    // Validate required fields exist
+    requiredFields.forEach(requiredField => {
+      const normalized = normalizeFieldName(requiredField);
+      if (!fieldMapping[normalized]) {
+        validationErrors.push(`Missing required column: "${requiredField}". Found columns: ${Object.keys(data[0] || {}).join(", ")}`);
+      }
+    });
+
+    // Validate each row has required field values
+    data.forEach((row, index) => {
+      const rowNum = index + 2; // +2 for header row and 0-index
+      requiredFields.forEach(requiredField => {
+        const normalized = normalizeFieldName(requiredField);
+        const actualField = fieldMapping[normalized];
+        if (actualField) {
+          const value = row[actualField];
+          // Check if value is null, undefined, or empty string (after trimming)
+          const isEmpty = value === null || 
+                         value === undefined || 
+                         (typeof value === "string" && value.trim() === "") ||
+                         (typeof value === "string" && value.trim() === '""') ||
+                         (typeof value === "string" && value.trim() === "''");
+          
+          if (isEmpty) {
+            validationErrors.push(`Row ${rowNum}: Missing or empty value for required field "${requiredField}" (found in column "${actualField}")`);
+          }
+        } else {
+          // Field mapping exists but actual field not found in row
+          validationErrors.push(`Row ${rowNum}: Required field "${requiredField}" not found in row data. Available fields: ${Object.keys(row).join(", ")}`);
+        }
+      });
+    });
+
+    if (validationErrors.length > 0) {
+      // Log detailed error info for debugging
+      console.error("CSV Validation Errors:", {
+        totalErrors: validationErrors.length,
+        errors: validationErrors,
+        sampleRow: data[0] || null,
+        headers: Object.keys(data[0] || {}),
+        fieldMapping: fieldMapping,
+      });
+      
+      return NextResponse.json(
+        { 
+          success: false, 
+          message: "Validation failed", 
+          errors: validationErrors,
+          debug: {
+            foundColumns: Object.keys(data[0] || {}),
+            requiredColumns: requiredFields,
+            totalRows: data.length,
+          }
+        },
+        { status: 400 }
+      );
+    }
+
 
     const stats = {
       threadsCreated: 0,
@@ -196,23 +326,31 @@ export async function POST(request) {
       const rowNum = i + 2; // +2 for header row and 0-index
 
       try {
-        // Generate or use guest name
-        let guestName = row.guestname || row.guest_name || generateRandomGuestName();
-        const guest = await findOrCreateGuest(guestName);
-        if (!guest.guestId) {
+        // Generate or use guest name (handle various field name variations)
+        let guestName = getField(row, "guestname") || getField(row, "guest_name") || getField(row, "guest") || generateRandomGuestName();
+        
+        // Find or create guest and track if it was newly created
+        const guestBefore = await Guest.findOne({ name: guestName });
+        let guest = guestBefore;
+        let isNewGuest = false;
+        
+        if (!guest) {
+          guest = await Guest.create({
+            name: guestName,
+            guestId: generateUniqueId(),
+          });
+          isNewGuest = true;
+          stats.guestsCreated++;
+        } else if (!guest.guestId) {
+          // Fix existing guest without guestId
           guest.guestId = generateUniqueId();
           await guest.save();
         }
-        if (stats.guestsCreated === 0 || !await Guest.findById(guest._id)) {
-          stats.guestsCreated++;
-        }
 
-        // Find hierarchy IDs from CSV, but override with selected IDs for the level
-        let hierarchy = await findHierarchyIds(row);
+        // Build hierarchy from selected IDs (ignore CSV hierarchy columns when level is set)
+        // This ensures consistency - all threads imported at a level use the same hierarchy
+        let hierarchy = {};
         
-        // Override with selected IDs based on level
-        // If level is "exam", only use selected examId
-        // If level is "subject", use selected examId and subjectId, etc.
         if (level === "exam" && selectedIds.examId) {
           hierarchy = { examId: selectedIds.examId };
         } else if (level === "subject" && selectedIds.examId && selectedIds.subjectId) {
@@ -227,39 +365,101 @@ export async function POST(request) {
           hierarchy = { examId: selectedIds.examId, subjectId: selectedIds.subjectId, unitId: selectedIds.unitId, chapterId: selectedIds.chapterId, topicId: selectedIds.topicId, subTopicId: selectedIds.subTopicId };
         } else if (level === "definition" && selectedIds.examId && selectedIds.subjectId && selectedIds.unitId && selectedIds.chapterId && selectedIds.topicId && selectedIds.subTopicId && selectedIds.definitionId) {
           hierarchy = { examId: selectedIds.examId, subjectId: selectedIds.subjectId, unitId: selectedIds.unitId, chapterId: selectedIds.chapterId, topicId: selectedIds.topicId, subTopicId: selectedIds.subTopicId, definitionId: selectedIds.definitionId };
+        } else {
+          // Fallback: try to find hierarchy from CSV if selectedIds incomplete
+          // This allows flexibility but selectedIds take precedence
+          try {
+            hierarchy = await findHierarchyIds(row);
+          } catch (err) {
+            throw new Error(`Missing required hierarchy selection. Please ensure all required levels are selected in the UI. ${err.message}`);
+          }
+        }
+        
+        // Validate hierarchy is not empty
+        if (!hierarchy || Object.keys(hierarchy).length === 0) {
+          throw new Error("No hierarchy information available. Please select the required levels in the UI.");
+        }
+
+        // Get field values using normalized field names
+        const title = String(getField(row, "title") || "").trim();
+        const content = String(getField(row, "content") || "").trim();
+        
+        // Validate required fields are not empty
+        if (!title || title.length === 0) {
+          throw new Error("Title is required and cannot be empty");
+        }
+        if (!content || content.length === 0) {
+          throw new Error("Content is required and cannot be empty");
         }
 
         // Generate unique random date for thread (each thread gets a different date)
-        let threadDate = row.thread_date 
-          ? new Date(row.thread_date) 
-          : generateRandomDateLastWeek(lastThreadDate);
-        
-        // Update last thread date for next iteration
-        if (!row.thread_date) {
+        let threadDate;
+        const threadDateValue = getField(row, "thread_date");
+        if (threadDateValue && String(threadDateValue).trim()) {
+          try {
+            // Extract date from string (handle cases where HTML might be mixed in)
+            const dateStr = String(threadDateValue).trim();
+            // Try to extract ISO date format (YYYY-MM-DDTHH:MM:SS)
+            const dateMatch = dateStr.match(/(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?(?:Z)?)/);
+            const cleanDateStr = dateMatch ? dateMatch[1] : dateStr;
+            threadDate = new Date(cleanDateStr);
+            // Validate date
+            if (isNaN(threadDate.getTime())) {
+              throw new Error(`Invalid thread_date format: ${dateStr}`);
+            }
+          } catch (err) {
+            // If date parsing fails, generate random date instead of failing
+            console.warn(`Row ${rowNum}: Invalid thread_date, using generated date. Error: ${err.message}`);
+            threadDate = generateRandomDateLastWeek(lastThreadDate);
+            lastThreadDate = threadDate;
+          }
+        } else {
+          threadDate = generateRandomDateLastWeek(lastThreadDate);
+          // Update last thread date for next iteration
           lastThreadDate = threadDate;
         }
 
-        // Find existing thread by title and hierarchy (update if exists, create if not)
+        // Validate and process tags
+        let tags = ["General"]; // Default
+        const tagsValue = getField(row, "tags");
+        if (tagsValue && String(tagsValue).trim()) {
+          const tagArray = String(tagsValue).split(",").map(t => t.trim()).filter(t => t.length > 0);
+          // Validate tags against allowed values
+          const allowedTags = ["General", "Question", "Urgent", "Notes", "Exam"];
+          tags = tagArray.filter(tag => allowedTags.includes(tag));
+          if (tags.length === 0) {
+            tags = ["General"]; // Fallback to default if all invalid
+          }
+        }
+
+        // Find existing thread by title and exact hierarchy match
+        // Use all hierarchy fields to ensure we match the exact same location
+        const threadQuery = {
+          title: title,
+        };
+        // Add all hierarchy fields that are set
+        Object.keys(hierarchy).forEach(key => {
+          if (hierarchy[key]) {
+            threadQuery[key] = hierarchy[key];
+          }
+        });
+        const existingThread = await Thread.findOne(threadQuery);
+
+        // Prepare thread data
         const threadData = {
-          title: row.title.trim(),
-          content: row.content.trim(),
+          title: title,
+          content: content,
           author: null, // Guest has no author reference
           authorType: "Guest",
           guestName: guest.name,
-          tags: row.tags ? row.tags.split(",").map(t => t.trim()) : ["General"],
+          tags: tags,
           ...hierarchy,
-          views: parseInt(row.views) || 0,
-          isApproved: row.is_approved === "true" || row.isapproved === "true" || false,
-          isPinned: row.is_pinned === "true" || row.ispinned === "true" || false,
-          isLocked: row.is_locked === "true" || row.islocked === "true" || false,
-          isSolved: row.is_solved === "true" || row.issolved === "true" || false,
+          views: parseInt(getField(row, "views")) || 0,
+          isApproved: getField(row, "is_approved") === "true" || getField(row, "isapproved") === "true" || false,
+          isPinned: getField(row, "is_pinned") === "true" || getField(row, "ispinned") === "true" || false,
+          isLocked: getField(row, "is_locked") === "true" || getField(row, "islocked") === "true" || false,
+          isSolved: getField(row, "is_solved") === "true" || getField(row, "issolved") === "true" || false,
         };
-
-        // Find existing thread by title and hierarchy match
-        const existingThread = await Thread.findOne({
-          title: row.title.trim(),
-          ...hierarchy,
-        });
 
         let thread;
         let isNewThread = false;
@@ -269,7 +469,8 @@ export async function POST(request) {
           Object.assign(existingThread, threadData);
           existingThread.updatedAt = new Date();
           // Preserve original createdAt if thread_date not provided
-          if (!row.thread_date) {
+          if (!threadDateValue || !String(threadDateValue).trim()) {
+            // Keep original createdAt
             existingThread.createdAt = existingThread.createdAt || threadDate;
           } else {
             existingThread.createdAt = threadDate;
@@ -289,25 +490,43 @@ export async function POST(request) {
         }
 
         // Update or create reply if provided
-        if (row.reply_content && row.reply_content.trim()) {
+        const replyContent = getField(row, "reply_content");
+        if (replyContent && String(replyContent).trim()) {
           // Generate unique date for reply (should be after thread date)
-          let replyDate = row.reply_date 
-            ? new Date(row.reply_date) 
-            : generateRandomDateLastWeek(thread.createdAt);
+          let replyDate;
+          const replyDateValue = getField(row, "reply_date");
+          if (replyDateValue && String(replyDateValue).trim()) {
+            try {
+              // Extract date from string (handle cases where HTML might be mixed in)
+              const dateStr = String(replyDateValue).trim();
+              const dateMatch = dateStr.match(/(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?(?:Z)?)/);
+              const cleanDateStr = dateMatch ? dateMatch[1] : dateStr;
+              replyDate = new Date(cleanDateStr);
+              if (isNaN(replyDate.getTime())) {
+                throw new Error(`Invalid reply_date format: ${dateStr}`);
+              }
+            } catch (err) {
+              console.warn(`Row ${rowNum}: Invalid reply_date, using generated date. Error: ${err.message}`);
+              replyDate = generateRandomDateLastWeek(thread.createdAt);
+            }
+          } else {
+            replyDate = generateRandomDateLastWeek(thread.createdAt);
+          }
 
+          const replyContentStr = String(replyContent).trim();
           // Find existing top-level reply for this thread
           const existingReply = await Reply.findOne({
             threadId: thread._id,
             parentReplyId: null,
-            content: row.reply_content.trim(),
+            content: replyContentStr,
           });
 
           if (existingReply) {
             // Update existing reply
-            existingReply.content = row.reply_content.trim();
-            existingReply.isApproved = row.reply_approved === "true" || row.replyapproved === "true" || false;
+            existingReply.content = replyContentStr;
+            existingReply.isApproved = getField(row, "reply_approved") === "true" || getField(row, "replyapproved") === "true" || false;
             existingReply.updatedAt = new Date();
-            if (row.reply_date) {
+            if (replyDateValue && String(replyDateValue).trim()) {
               existingReply.createdAt = replyDate;
             }
             await existingReply.save();
@@ -316,12 +535,12 @@ export async function POST(request) {
             // Create new reply
             await Reply.create({
               threadId: thread._id,
-              content: row.reply_content.trim(),
+              content: replyContentStr,
               author: null,
               authorType: "Guest",
               guestName: guest.name,
               parentReplyId: null, // Top-level reply
-              isApproved: row.reply_approved === "true" || row.replyapproved === "true" || false,
+              isApproved: getField(row, "reply_approved") === "true" || getField(row, "replyapproved") === "true" || false,
               createdAt: replyDate,
               updatedAt: replyDate,
             });
@@ -332,32 +551,63 @@ export async function POST(request) {
         // Update or create nested replies if provided (reply2, reply3, etc.)
         let replyIndex = 2;
         let lastReply = null;
-        while (row[`reply${replyIndex}_content`] && row[`reply${replyIndex}_content`].trim()) {
-          // Find parent reply (use last created/updated reply, or find first top-level reply)
-          const parentReply = lastReply || await Reply.findOne({ 
-            threadId: thread._id, 
-            parentReplyId: null 
-          }).sort({ createdAt: -1 });
+        let nestedReplyContent = getField(row, `reply${replyIndex}_content`);
+        while (nestedReplyContent && String(nestedReplyContent).trim()) {
+          // Find parent reply: use last created/updated reply, or find first top-level reply
+          // If no top-level reply exists yet, create it first (shouldn't happen but handle gracefully)
+          let parentReply = lastReply;
+          
+          if (!parentReply) {
+            // Find the first top-level reply (reply_content) or any top-level reply
+            parentReply = await Reply.findOne({ 
+              threadId: thread._id, 
+              parentReplyId: null 
+            }).sort({ createdAt: 1 }); // Get first reply, not last
+          }
+          
+          if (!parentReply) {
+            // No parent reply found - skip this nested reply with warning
+            stats.errors.push(`Row ${rowNum}: Cannot create reply${replyIndex} - no parent reply found. Ensure reply_content is provided first.`);
+            replyIndex++;
+            continue;
+          }
           
           if (parentReply) {
             // Generate unique date for nested reply (should be after parent reply)
-            let nestedReplyDate = row[`reply${replyIndex}_date`] 
-              ? new Date(row[`reply${replyIndex}_date`]) 
-              : generateRandomDateLastWeek(parentReply.createdAt);
+            let nestedReplyDate;
+            const nestedReplyDateValue = getField(row, `reply${replyIndex}_date`);
+            if (nestedReplyDateValue && String(nestedReplyDateValue).trim()) {
+              try {
+                // Extract date from string (handle cases where HTML might be mixed in)
+                const dateStr = String(nestedReplyDateValue).trim();
+                const dateMatch = dateStr.match(/(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?(?:Z)?)/);
+                const cleanDateStr = dateMatch ? dateMatch[1] : dateStr;
+                nestedReplyDate = new Date(cleanDateStr);
+                if (isNaN(nestedReplyDate.getTime())) {
+                  throw new Error(`Invalid reply${replyIndex}_date format: ${dateStr}`);
+                }
+              } catch (err) {
+                console.warn(`Row ${rowNum}: Invalid reply${replyIndex}_date, using generated date. Error: ${err.message}`);
+                nestedReplyDate = generateRandomDateLastWeek(parentReply.createdAt);
+              }
+            } else {
+              nestedReplyDate = generateRandomDateLastWeek(parentReply.createdAt);
+            }
 
+            const nestedReplyContentStr = String(nestedReplyContent).trim();
             // Find existing nested reply with same content and parent
             const existingNestedReply = await Reply.findOne({
               threadId: thread._id,
               parentReplyId: parentReply._id,
-              content: row[`reply${replyIndex}_content`].trim(),
+              content: nestedReplyContentStr,
             });
 
             if (existingNestedReply) {
               // Update existing nested reply
-              existingNestedReply.content = row[`reply${replyIndex}_content`].trim();
-              existingNestedReply.isApproved = row[`reply${replyIndex}_approved`] === "true" || false;
+              existingNestedReply.content = nestedReplyContentStr;
+              existingNestedReply.isApproved = getField(row, `reply${replyIndex}_approved`) === "true" || getField(row, `reply${replyIndex}approved`) === "true" || false;
               existingNestedReply.updatedAt = new Date();
-              if (row[`reply${replyIndex}_date`]) {
+              if (nestedReplyDateValue && String(nestedReplyDateValue).trim()) {
                 existingNestedReply.createdAt = nestedReplyDate;
               }
               await existingNestedReply.save();
@@ -367,12 +617,12 @@ export async function POST(request) {
               // Create new nested reply
               const newReply = await Reply.create({
                 threadId: thread._id,
-                content: row[`reply${replyIndex}_content`].trim(),
+                content: nestedReplyContentStr,
                 author: null,
                 authorType: "Guest",
                 guestName: guest.name,
                 parentReplyId: parentReply._id,
-                isApproved: row[`reply${replyIndex}_approved`] === "true" || false,
+                isApproved: getField(row, `reply${replyIndex}_approved`) === "true" || getField(row, `reply${replyIndex}approved`) === "true" || false,
                 createdAt: nestedReplyDate,
                 updatedAt: nestedReplyDate,
               });
@@ -381,6 +631,7 @@ export async function POST(request) {
             }
           }
           replyIndex++;
+          nestedReplyContent = getField(row, `reply${replyIndex}_content`);
         }
 
       } catch (error) {

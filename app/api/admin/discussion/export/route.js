@@ -5,10 +5,6 @@ import Reply from "@/models/Reply";
 import { requireAuth } from "@/middleware/authMiddleware";
 import { arrayToCSV } from "@/utils/csvParser";
 
-// Prevent Next.js from generating metadata for this route
-export const dynamic = 'force-dynamic';
-export const runtime = 'nodejs';
-
 export async function GET(request) {
   try {
     const authCheck = await requireAuth(request);
@@ -19,91 +15,42 @@ export async function GET(request) {
     await connectDB();
     const { searchParams } = new URL(request.url);
     const level = searchParams.get("level") || "exam";
+    const checkOnly = searchParams.get("checkOnly") === "1";
 
     // Build query based on selected level
     const query = {};
     
-    // Filter by selected IDs and ensure we only get threads at the selected level (not children)
-    if (level === "exam") {
-      if (searchParams.get("examId")) query.examId = searchParams.get("examId");
-      query.subjectId = { $exists: false };
-    }
-    // For subject level: only threads with subjectId and no unitId
-    else if (level === "subject") {
-      if (searchParams.get("examId")) query.examId = searchParams.get("examId");
-      if (searchParams.get("subjectId")) query.subjectId = searchParams.get("subjectId");
-      query.unitId = { $exists: false };
-    }
-    // For unit level: only threads with unitId and no chapterId
-    else if (level === "unit") {
-      if (searchParams.get("examId")) query.examId = searchParams.get("examId");
-      if (searchParams.get("subjectId")) query.subjectId = searchParams.get("subjectId");
-      if (searchParams.get("unitId")) query.unitId = searchParams.get("unitId");
-      query.chapterId = { $exists: false };
-    }
-    // For chapter level: only threads with chapterId and no topicId
-    else if (level === "chapter") {
-      if (searchParams.get("examId")) query.examId = searchParams.get("examId");
-      if (searchParams.get("subjectId")) query.subjectId = searchParams.get("subjectId");
-      if (searchParams.get("unitId")) query.unitId = searchParams.get("unitId");
-      if (searchParams.get("chapterId")) query.chapterId = searchParams.get("chapterId");
-      query.topicId = { $exists: false };
-    }
-    // For topic level: only threads with topicId and no subTopicId
-    else if (level === "topic") {
-      if (searchParams.get("examId")) query.examId = searchParams.get("examId");
-      if (searchParams.get("subjectId")) query.subjectId = searchParams.get("subjectId");
-      if (searchParams.get("unitId")) query.unitId = searchParams.get("unitId");
-      if (searchParams.get("chapterId")) query.chapterId = searchParams.get("chapterId");
-      if (searchParams.get("topicId")) query.topicId = searchParams.get("topicId");
-      query.subTopicId = { $exists: false };
-    }
-    // For subtopic level: only threads with subTopicId and no definitionId
-    else if (level === "subtopic") {
-      if (searchParams.get("examId")) query.examId = searchParams.get("examId");
-      if (searchParams.get("subjectId")) query.subjectId = searchParams.get("subjectId");
-      if (searchParams.get("unitId")) query.unitId = searchParams.get("unitId");
-      if (searchParams.get("chapterId")) query.chapterId = searchParams.get("chapterId");
-      if (searchParams.get("topicId")) query.topicId = searchParams.get("topicId");
-      if (searchParams.get("subTopicId")) query.subTopicId = searchParams.get("subTopicId");
-      query.definitionId = { $exists: false };
-    }
-    // For definition level: only threads with definitionId
-    else if (level === "definition") {
-      if (searchParams.get("examId")) query.examId = searchParams.get("examId");
-      if (searchParams.get("subjectId")) query.subjectId = searchParams.get("subjectId");
-      if (searchParams.get("unitId")) query.unitId = searchParams.get("unitId");
-      if (searchParams.get("chapterId")) query.chapterId = searchParams.get("chapterId");
-      if (searchParams.get("topicId")) query.topicId = searchParams.get("topicId");
-      if (searchParams.get("subTopicId")) query.subTopicId = searchParams.get("subTopicId");
-      if (searchParams.get("definitionId")) query.definitionId = searchParams.get("definitionId");
+    // Same query for both "has data" check and export: all threads under the selected hierarchy path
+    // (e.g. exam=NEET → all threads with that examId, at any depth: subject/unit/chapter/etc.)
+    if (searchParams.get("examId")) query.examId = searchParams.get("examId");
+    if (searchParams.get("subjectId")) query.subjectId = searchParams.get("subjectId");
+    if (searchParams.get("unitId")) query.unitId = searchParams.get("unitId");
+    if (searchParams.get("chapterId")) query.chapterId = searchParams.get("chapterId");
+    if (searchParams.get("topicId")) query.topicId = searchParams.get("topicId");
+    if (searchParams.get("subTopicId")) query.subTopicId = searchParams.get("subTopicId");
+    if (searchParams.get("definitionId")) query.definitionId = searchParams.get("definitionId");
+
+    // If checkOnly: just count threads (optimized - no populate/sort needed)
+    if (checkOnly) {
+      const count = await Thread.countDocuments(query);
+      return NextResponse.json({
+        success: true,
+        hasData: count > 0,
+        count: count,
+      });
     }
 
-    // Fetch threads with all hierarchy populated
-    let threads;
-    try {
-      threads = await Thread.find(query)
-        .populate("examId", "name")
-        .populate("subjectId", "name")
-        .populate("unitId", "name")
-        .populate("chapterId", "name")
-        .populate("topicId", "name")
-        .populate("subTopicId", "name")
-        .populate("definitionId", "name")
-        .sort({ createdAt: -1 })
-        .lean();
-    } catch (dbError) {
-      console.error("Database query error:", dbError);
-      return NextResponse.json(
-        { success: false, message: "Failed to fetch discussions from database: " + dbError.message },
-        { 
-          status: 500,
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-    }
+    // Fetch threads with all hierarchy populated (for actual export)
+    const threads = await Thread.find(query)
+      .populate("examId", "name")
+      .populate("subjectId", "name")
+      .populate("unitId", "name")
+      .populate("chapterId", "name")
+      .populate("topicId", "name")
+      .populate("subTopicId", "name")
+      .populate("definitionId", "name")
+      .sort({ createdAt: -1 })
+      .lean();
 
     // Fetch replies for each thread
     const threadIds = threads.map(t => t._id);
@@ -222,73 +169,23 @@ export async function GET(request) {
       headers.push(`reply${i}_content`, `reply${i}_approved`, `reply${i}_date`);
     }
 
-    // Check if we have data
-    if (!threads || threads.length === 0) {
-      return NextResponse.json(
-        { success: false, message: "No discussions found to export" },
-        { 
-          status: 404,
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-    }
+    // Always return at least header row so file is not blank when no rows
+    const csvContent = csvData.length > 0
+      ? arrayToCSV(csvData, headers)
+      : headers.map(h => (h.includes(",") || h.includes('"') ? `"${String(h).replace(/"/g, '""')}"` : h)).join(",") + "\n";
 
-    let csvContent;
-    try {
-      csvContent = arrayToCSV(csvData, headers);
-      
-      if (!csvContent || csvContent.trim().length === 0) {
-        console.error("Generated CSV content is empty");
-        return NextResponse.json(
-          { success: false, message: "No data to export or CSV generation failed" },
-          { 
-            status: 400,
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
-      }
-    } catch (csvError) {
-      console.error("CSV generation error:", csvError);
-      return NextResponse.json(
-        { success: false, message: "Failed to generate CSV: " + csvError.message },
-        { 
-          status: 500,
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-    }
-
-    // Add UTF-8 BOM for Excel compatibility (handles emojis, Unicode, Hindi, Arabic, etc.)
-    const BOM = "\uFEFF";
-    const csvWithBOM = BOM + csvContent;
-
-    // Return CSV with proper headers
-    return new NextResponse(csvWithBOM, {
-      status: 200,
+    return new NextResponse(csvContent, {
       headers: {
         "Content-Type": "text/csv;charset=utf-8",
-        "Content-Disposition": `attachment; filename="discussions_export_${level}_${new Date().toISOString().split('T')[0]}.csv"`,
-        "Cache-Control": "no-cache",
+        "Content-Disposition": `attachment; filename="discussions_export_${new Date().toISOString().split('T')[0]}.csv"`,
       },
     });
 
   } catch (error) {
     console.error("Export error:", error);
-    // Return JSON error (not HTML)
     return NextResponse.json(
       { success: false, message: error.message || "Export failed" },
-      { 
-        status: 500,
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
+      { status: 500 }
     );
   }
 }

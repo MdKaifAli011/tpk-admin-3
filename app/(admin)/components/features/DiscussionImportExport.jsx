@@ -160,7 +160,7 @@ const DiscussionImportExport = () => {
         }
     }, []);
 
-    // Check if data exists at selected level
+    // Check if data exists at selected level (same query as export so "has data" matches export result)
     const checkDataExists = useCallback(async () => {
         if (!selectedLevel) {
             setHasData(null);
@@ -170,6 +170,7 @@ const DiscussionImportExport = () => {
         setLoadingData(true);
         try {
             const params = new URLSearchParams();
+            params.append("level", selectedLevel);
             if (selectedExamId) params.append("examId", selectedExamId);
             if (selectedSubjectId) params.append("subjectId", selectedSubjectId);
             if (selectedUnitId) params.append("unitId", selectedUnitId);
@@ -177,9 +178,10 @@ const DiscussionImportExport = () => {
             if (selectedTopicId) params.append("topicId", selectedTopicId);
             if (selectedSubTopicId) params.append("subTopicId", selectedSubTopicId);
             if (selectedDefinitionId) params.append("definitionId", selectedDefinitionId);
+            params.append("checkOnly", "1");
 
-            const res = await api.get(`/discussion/threads?${params.toString()}&limit=1`);
-            setHasData(res.data.success && res.data.data && res.data.data.length > 0);
+            const res = await api.get(`/admin/discussion/export?${params.toString()}`);
+            setHasData(res.data.success && res.data.hasData === true);
         } catch (err) {
             console.error("Error checking data:", err);
             setHasData(false);
@@ -445,53 +447,7 @@ const DiscussionImportExport = () => {
                 responseType: "blob",
             });
 
-            // Read blob as text to check if it's actually CSV or an error (HTML/JSON)
-            let blobText = await response.data.text();
-            
-            // Remove BOM if present (for detection purposes)
-            const textWithoutBOM = blobText.charCodeAt(0) === 0xFEFF ? blobText.slice(1) : blobText;
-            const trimmedText = textWithoutBOM.trim();
-            
-            // Debug: log first 200 chars to see what we got
-            console.log("Export response preview:", trimmedText.substring(0, 200));
-            
-            // Check if response is HTML or JSON error (more specific checks)
-            if (trimmedText.startsWith("<!DOCTYPE") || trimmedText.startsWith("<html") || trimmedText.startsWith("<?xml")) {
-                console.error("Export returned HTML:", trimmedText.substring(0, 500));
-                showError("Server returned HTML instead of CSV. Please check server logs.");
-                return;
-            }
-            
-            // Check if it's a JSON error response (must be valid JSON with error structure)
-            if (trimmedText.startsWith("{") && trimmedText.includes("\"success\"") && trimmedText.includes("false")) {
-                try {
-                    const errorData = JSON.parse(trimmedText);
-                    if (errorData.success === false) {
-                        console.error("Export returned JSON error:", errorData);
-                        showError(errorData.message || "Failed to export discussions");
-                        return;
-                    }
-                } catch (parseError) {
-                    // Not valid JSON, continue as CSV
-                }
-            }
-            
-            // If it looks like JSON but doesn't have the error structure, might still be CSV
-            // CSV should have commas or be empty (just headers)
-            if (trimmedText.startsWith("{") && !trimmedText.includes(",") && !trimmedText.includes("\n")) {
-                // Looks like pure JSON, try to parse
-                try {
-                    const errorData = JSON.parse(trimmedText);
-                    console.error("Export returned JSON:", errorData);
-                    showError(errorData.message || "Failed to export discussions");
-                    return;
-                } catch {
-                    // Not JSON, continue as CSV
-                }
-            }
-
-            // It's CSV - create blob and download
-            const blob = new Blob([blobText], { type: "text/csv;charset=utf-8;" });
+            const blob = new Blob([response.data], { type: "text/csv" });
             const url = window.URL.createObjectURL(blob);
             const link = document.createElement("a");
             link.href = url;
@@ -505,39 +461,7 @@ const DiscussionImportExport = () => {
             success("Discussions exported successfully");
         } catch (err) {
             console.error("Export error:", err);
-            // If response exists, try to read it as blob text
-            if (err.response?.data && err.response.data instanceof Blob) {
-                try {
-                    const errorText = await err.response.data.text();
-                    console.error("Export error response:", errorText.substring(0, 500));
-                    
-                    // Check if it's HTML
-                    if (errorText.includes("<!DOCTYPE") || errorText.includes("<html")) {
-                        showError("Server returned HTML error page. Please check server logs.");
-                        return;
-                    }
-                    
-                    // Try to parse as JSON
-                    try {
-                        const errorData = JSON.parse(errorText);
-                        showError(errorData.message || "Failed to export discussions");
-                        return;
-                    } catch {
-                        // Not JSON, show generic error
-                    }
-                } catch (blobError) {
-                    console.error("Failed to read error blob:", blobError);
-                }
-            }
-            
-            // Fallback error message
-            if (err.response?.data?.message) {
-                showError(err.response.data.message);
-            } else if (err.message) {
-                showError(err.message);
-            } else {
-                showError("Failed to export discussions. Please check server logs.");
-            }
+            showError(err.response?.data?.message || "Failed to export discussions");
         } finally {
             setIsExporting(false);
         }
@@ -557,103 +481,27 @@ const DiscussionImportExport = () => {
             });
             params.append("level", selectedLevel);
 
-            // Request CSV directly (not JSON)
-            const response = await api.get(`/admin/discussion/template?${params.toString()}`, {
-                responseType: "blob",
-            });
+            const response = await api.get(`/admin/discussion/template?${params.toString()}`);
 
-            // Read blob as text to check if it's actually CSV or an error (HTML/JSON)
-            let blobText = await response.data.text();
-            
-            // Remove BOM if present (for detection purposes)
-            const textWithoutBOM = blobText.charCodeAt(0) === 0xFEFF ? blobText.slice(1) : blobText;
-            const trimmedText = textWithoutBOM.trim();
-            
-            // Debug: log first 200 chars to see what we got
-            console.log("Template response preview:", trimmedText.substring(0, 200));
-            
-            // Check if response is HTML or JSON error (more specific checks)
-            if (trimmedText.startsWith("<!DOCTYPE") || trimmedText.startsWith("<html") || trimmedText.startsWith("<?xml")) {
-                console.error("Template returned HTML:", trimmedText.substring(0, 500));
-                showError("Server returned HTML instead of CSV. Please check server logs.");
-                return;
+            if (response.data.success) {
+                const csvContent = response.data.data.csvContent;
+                const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement("a");
+                link.setAttribute("href", url);
+                const levelName = selectedLevel.charAt(0).toUpperCase() + selectedLevel.slice(1);
+                link.setAttribute("download", `discussion_import_template_${levelName}.csv`);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+                success("Template downloaded successfully");
+            } else {
+                showError(response.data.message || "Failed to generate template");
             }
-            
-            // Check if it's a JSON error response (must be valid JSON with error structure)
-            if (trimmedText.startsWith("{") && trimmedText.includes("\"success\"") && trimmedText.includes("false")) {
-                try {
-                    const errorData = JSON.parse(trimmedText);
-                    if (errorData.success === false) {
-                        console.error("Template returned JSON error:", errorData);
-                        showError(errorData.message || "Failed to generate template");
-                        return;
-                    }
-                } catch (parseError) {
-                    // Not valid JSON, continue as CSV
-                }
-            }
-            
-            // If it looks like JSON but doesn't have the error structure, might still be CSV
-            // CSV should have commas or be empty (just headers)
-            if (trimmedText.startsWith("{") && !trimmedText.includes(",") && !trimmedText.includes("\n")) {
-                // Looks like pure JSON, try to parse
-                try {
-                    const errorData = JSON.parse(trimmedText);
-                    console.error("Template returned JSON:", errorData);
-                    showError(errorData.message || "Failed to generate template");
-                    return;
-                } catch {
-                    // Not JSON, continue as CSV
-                }
-            }
-
-            // It's CSV - create blob and download
-            const blob = new Blob([blobText], { type: "text/csv;charset=utf-8;" });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement("a");
-            link.setAttribute("href", url);
-            const levelName = selectedLevel.charAt(0).toUpperCase() + selectedLevel.slice(1);
-            link.setAttribute("download", `discussion_import_template_${levelName}.csv`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-            success("Template downloaded successfully");
         } catch (err) {
             console.error("Template error:", err);
-            // If response exists, try to read it as blob text
-            if (err.response?.data && err.response.data instanceof Blob) {
-                try {
-                    const errorText = await err.response.data.text();
-                    console.error("Template error response:", errorText.substring(0, 500));
-                    
-                    // Check if it's HTML
-                    if (errorText.includes("<!DOCTYPE") || errorText.includes("<html")) {
-                        showError("Server returned HTML error page. Please check server logs.");
-                        return;
-                    }
-                    
-                    // Try to parse as JSON
-                    try {
-                        const errorData = JSON.parse(errorText);
-                        showError(errorData.message || "Failed to generate template");
-                        return;
-                    } catch {
-                        // Not JSON, show generic error
-                    }
-                } catch (blobError) {
-                    console.error("Failed to read error blob:", blobError);
-                }
-            }
-            
-            // Fallback error message
-            if (err.response?.data?.message) {
-                showError(err.response.data.message);
-            } else if (err.message) {
-                showError(err.message);
-            } else {
-                showError("Failed to download template. Please check server logs.");
-            }
+            showError(err.response?.data?.message || "Failed to download template");
         }
     };
 

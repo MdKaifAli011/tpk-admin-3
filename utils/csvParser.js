@@ -21,20 +21,121 @@ export function parseCSV(csvText, options = {}) {
     throw new Error("CSV text is empty");
   }
 
-  const lines = csvText.split(/\r?\n/).filter((line) => {
-    if (skipEmptyLines) {
-      return line.trim().length > 0;
-    }
-    return true;
-  });
+  // Parse CSV handling multi-line quoted fields
+  // We need to process character by character to handle newlines inside quoted fields
+  const rows = [];
+  let currentRow = [];
+  let currentField = "";
+  let inQuotes = false;
+  let quoteChar = null;
+  let i = 0;
 
-  if (lines.length === 0) {
+  while (i < csvText.length) {
+    const char = csvText[i];
+    const nextChar = csvText[i + 1];
+    const isLastChar = i === csvText.length - 1;
+
+    // Handle quote start
+    if ((char === '"' || char === "'") && !inQuotes) {
+      inQuotes = true;
+      quoteChar = char;
+      i++;
+      continue;
+    }
+
+    // Handle quote end or escaped quote
+    if (char === quoteChar && inQuotes) {
+      if (nextChar === quoteChar) {
+        // Escaped quote (double quote) - add single quote to value
+        currentField += char;
+        i += 2; // Skip both quotes
+        continue;
+      } else if (nextChar === delimiter || nextChar === "\n" || nextChar === "\r" || nextChar === undefined || isLastChar) {
+        // End of quoted field - check if we're at end of field
+        inQuotes = false;
+        quoteChar = null;
+        i++;
+        continue;
+      } else if (nextChar === " " || nextChar === "\t") {
+        // Quote followed by whitespace might be end of field (check next non-whitespace)
+        let j = i + 1;
+        while (j < csvText.length && (csvText[j] === " " || csvText[j] === "\t")) {
+          j++;
+        }
+        if (j >= csvText.length || csvText[j] === delimiter || csvText[j] === "\n" || csvText[j] === "\r") {
+          // End of quoted field
+          inQuotes = false;
+          quoteChar = null;
+          i = j;
+          continue;
+        } else {
+          // Quote inside quoted field
+          currentField += char;
+          i++;
+          continue;
+        }
+      } else {
+        // Quote inside quoted field (might be part of content)
+        currentField += char;
+        i++;
+        continue;
+      }
+    }
+
+    // Handle newline (only end row if not inside quotes)
+    if ((char === "\n" || (char === "\r" && nextChar === "\n")) && !inQuotes) {
+      // End of row
+      if (char === "\r" && nextChar === "\n") {
+        i += 2; // Skip \r\n
+      } else {
+        i++; // Skip \n
+      }
+      
+      // Push current field and row
+      currentRow.push(currentField);
+      currentField = "";
+      
+      // Skip empty rows if option is set
+      if (skipEmptyLines && currentRow.every(f => !f.trim())) {
+        currentRow = [];
+        continue;
+      }
+      
+      if (currentRow.length > 0) {
+        rows.push(currentRow);
+      }
+      currentRow = [];
+      continue;
+    }
+
+    // Handle delimiter (only outside quotes)
+    if (char === delimiter && !inQuotes) {
+      currentRow.push(currentField);
+      currentField = "";
+      i++;
+      continue;
+    }
+
+    // Regular character (including newlines inside quotes)
+    currentField += char;
+    i++;
+  }
+
+  // Push last field and row if any
+  if (currentField !== "" || currentRow.length > 0) {
+    currentRow.push(currentField);
+    if (currentRow.length > 0 && (!skipEmptyLines || !currentRow.every(f => !f.trim()))) {
+      rows.push(currentRow);
+    }
+  }
+
+  if (rows.length === 0) {
     throw new Error("CSV file is empty");
   }
 
-  // Parse header using the same parser to handle quoted headers correctly
-  const headerLine = lines[0];
-  const headers = parseCSVLine(headerLine, delimiter).map((h) => {
+  // Parse headers
+  const headerRow = rows[0];
+  const headers = headerRow.map((h) => {
     let header = h.trim();
     // Remove quotes if present
     if ((header.startsWith('"') && header.endsWith('"')) ||
@@ -46,31 +147,24 @@ export function parseCSV(csvText, options = {}) {
 
   // Parse data rows
   const data = [];
-  for (let i = 1; i < lines.length; i++) {
-    const line = lines[i];
-    const trimmedLine = line.trim();
-    if (!trimmedLine) continue;
-
-    // Parse CSV line (handles quoted values and empty fields)
-    const values = parseCSVLine(trimmedLine, delimiter);
+  for (let i = 1; i < rows.length; i++) {
+    const rowValues = rows[i];
     
     // Normalize values: ensure we have the correct number of fields
-    // If we have fewer values than headers, pad with empty strings
-    // If we have more values than headers, truncate (shouldn't happen but handle it)
-    while (values.length < headers.length) {
-      values.push("");
+    while (rowValues.length < headers.length) {
+      rowValues.push("");
     }
-    if (values.length > headers.length) {
+    if (rowValues.length > headers.length) {
       // Log warning but don't fail - just truncate
       console.warn(
-        `Row ${i + 1}: Found ${values.length} columns, expected ${headers.length}. Truncating extra columns.`
+        `Row ${i + 1}: Found ${rowValues.length} columns, expected ${headers.length}. Truncating extra columns.`
       );
-      values.splice(headers.length);
+      rowValues.splice(headers.length);
     }
 
     const row = {};
     headers.forEach((header, index) => {
-      let value = values[index] || "";
+      let value = rowValues[index] || "";
       if (trimValues) {
         value = value.trim();
       }

@@ -10,47 +10,16 @@ import Definition from "@/models/Definition";
 import { requireAuth } from "@/middleware/authMiddleware";
 import { arrayToCSV } from "@/utils/csvParser";
 
-// Prevent Next.js from generating metadata for this route
-export const dynamic = 'force-dynamic';
-export const runtime = 'nodejs';
-
 export async function GET(request) {
   try {
-    // Log request for debugging
-    console.log("Template route called:", request.url);
-    
     const authCheck = await requireAuth(request);
     if (authCheck.error) {
-      console.log("Auth check failed:", authCheck);
-      return NextResponse.json(authCheck, { 
-        status: 401,
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      return NextResponse.json(authCheck, { status: 401 });
     }
 
     await connectDB();
-    
-    let searchParams;
-    let level;
-    try {
-      const url = new URL(request.url);
-      searchParams = url.searchParams;
-      level = searchParams.get("level") || "exam";
-      console.log("Template level:", level);
-    } catch (urlError) {
-      console.error("Error parsing URL:", urlError);
-      return NextResponse.json(
-        { success: false, message: "Invalid request URL" },
-        { 
-          status: 400,
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-    }
+    const { searchParams } = new URL(request.url);
+    const level = searchParams.get("level") || "exam";
 
     // Get selected entity names for template
     let examName = "";
@@ -61,45 +30,39 @@ export async function GET(request) {
     let subtopicName = "";
     let definitionName = "";
 
-    // Safely fetch entity names (don't fail if not found)
-    try {
-      if (searchParams.get("examId")) {
-        const exam = await Exam.findById(searchParams.get("examId")).lean().catch(() => null);
-        examName = exam?.name || "";
-      }
+    if (searchParams.get("examId")) {
+      const exam = await Exam.findById(searchParams.get("examId")).lean();
+      examName = exam?.name || "";
+    }
 
-      if (searchParams.get("subjectId")) {
-        const subject = await Subject.findById(searchParams.get("subjectId")).lean().catch(() => null);
-        subjectName = subject?.name || "";
-      }
+    if (searchParams.get("subjectId")) {
+      const subject = await Subject.findById(searchParams.get("subjectId")).lean();
+      subjectName = subject?.name || "";
+    }
 
-      if (searchParams.get("unitId")) {
-        const unit = await Unit.findById(searchParams.get("unitId")).lean().catch(() => null);
-        unitName = unit?.name || "";
-      }
+    if (searchParams.get("unitId")) {
+      const unit = await Unit.findById(searchParams.get("unitId")).lean();
+      unitName = unit?.name || "";
+    }
 
-      if (searchParams.get("chapterId")) {
-        const chapter = await Chapter.findById(searchParams.get("chapterId")).lean().catch(() => null);
-        chapterName = chapter?.name || "";
-      }
+    if (searchParams.get("chapterId")) {
+      const chapter = await Chapter.findById(searchParams.get("chapterId")).lean();
+      chapterName = chapter?.name || "";
+    }
 
-      if (searchParams.get("topicId")) {
-        const topic = await Topic.findById(searchParams.get("topicId")).lean().catch(() => null);
-        topicName = topic?.name || "";
-      }
+    if (searchParams.get("topicId")) {
+      const topic = await Topic.findById(searchParams.get("topicId")).lean();
+      topicName = topic?.name || "";
+    }
 
-      if (searchParams.get("subTopicId")) {
-        const subtopic = await SubTopic.findById(searchParams.get("subTopicId")).lean().catch(() => null);
-        subtopicName = subtopic?.name || "";
-      }
+    if (searchParams.get("subTopicId")) {
+      const subtopic = await SubTopic.findById(searchParams.get("subTopicId")).lean();
+      subtopicName = subtopic?.name || "";
+    }
 
-      if (searchParams.get("definitionId")) {
-        const definition = await Definition.findById(searchParams.get("definitionId")).lean().catch(() => null);
-        definitionName = definition?.name || "";
-      }
-    } catch (fetchError) {
-      // Log but don't fail - we can still generate template with defaults
-      console.warn("Error fetching entity names for template:", fetchError.message);
+    if (searchParams.get("definitionId")) {
+      const definition = await Definition.findById(searchParams.get("definitionId")).lean();
+      definitionName = definition?.name || "";
     }
 
     // Build headers based on level - only include hierarchy fields up to selected level
@@ -177,69 +140,22 @@ export async function GET(request) {
     sampleRow.reply2_date = ""; // Empty - will be random date
 
     // Generate CSV
-    let csvContent;
-    try {
-      csvContent = arrayToCSV([sampleRow], headers);
-      
-      if (!csvContent || csvContent.trim().length === 0) {
-        console.error("Generated CSV content is empty");
-        return NextResponse.json(
-          { success: false, message: "Failed to generate template CSV" },
-          { 
-            status: 500,
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
-      }
-    } catch (csvError) {
-      console.error("CSV generation error:", csvError);
-      return NextResponse.json(
-        { success: false, message: "Failed to generate CSV content: " + csvError.message },
-        { 
-          status: 500,
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-    }
+    const csvContent = arrayToCSV([sampleRow], headers);
 
-    // Add UTF-8 BOM for Excel compatibility (handles emojis, Unicode, Hindi, Arabic, etc.)
-    const BOM = "\uFEFF";
-    const csvWithBOM = BOM + csvContent;
-
-    // Log for debugging
-    console.log("Template CSV generated successfully, length:", csvWithBOM.length);
-    console.log("Template CSV preview:", csvWithBOM.substring(0, 100));
-
-    // Return CSV directly (not JSON) to match export behavior
-    const response = new NextResponse(csvWithBOM, {
-      status: 200,
-      headers: {
-        "Content-Type": "text/csv;charset=utf-8",
-        "Content-Disposition": `attachment; filename="discussion_import_template_${level}_${new Date().toISOString().split('T')[0]}.csv"`,
-        "Cache-Control": "no-cache",
-        "X-Content-Type-Options": "nosniff", // Prevent MIME type sniffing
+    return NextResponse.json({
+      success: true,
+      data: {
+        csvContent,
+        level,
+        headers,
       },
     });
 
-    console.log("Template response headers:", Object.fromEntries(response.headers.entries()));
-    return response;
-
   } catch (error) {
     console.error("Template error:", error);
-    console.error("Template error stack:", error.stack);
-    // Ensure we always return JSON, never HTML
     return NextResponse.json(
       { success: false, message: error.message || "Failed to generate template" },
-      { 
-        status: 500,
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
+      { status: 500 }
     );
   }
 }
