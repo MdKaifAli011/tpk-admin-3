@@ -56,6 +56,8 @@ export async function PUT(request, { params }) {
     if (body.description !== undefined)
       form.description = body.description.trim();
     if (body.status) form.status = body.status;
+    if (typeof body.highlightInLeads === "boolean")
+      form.highlightInLeads = body.highlightInLeads;
 
     if (body.fields && Array.isArray(body.fields)) {
       // Validate fields

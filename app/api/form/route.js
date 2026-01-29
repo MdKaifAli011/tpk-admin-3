@@ -97,6 +97,7 @@ export async function POST(request) {
             : true,
       },
       status: body.status || "active",
+      highlightInLeads: body.highlightInLeads === true,
       submissionCount: 0,
     });
 

@@ -78,6 +78,9 @@ const LeadManagement = () => {
     totalPages: 0,
   });
 
+  // Form IDs marked "highlight in leads" (black badge in lead table)
+  const [highlightedFormIds, setHighlightedFormIds] = useState([]);
+
   // Check session storage for existing verification on mount
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -97,6 +100,19 @@ const LeadManagement = () => {
       const t = setTimeout(() => passwordInputRef.current?.focus(), 100);
       return () => clearTimeout(t);
     }
+  }, [isVerified]);
+
+  // Fetch form IDs that are highlighted for lead table (black badge)
+  useEffect(() => {
+    if (!isVerified) return;
+    api
+      .get("/form/highlighted-ids")
+      .then((res) => {
+        if (res.data?.success && Array.isArray(res.data?.data?.formIds)) {
+          setHighlightedFormIds(res.data.data.formIds);
+        }
+      })
+      .catch(() => {});
   }, [isVerified]);
 
   const handleVerifyPassword = (e) => {
@@ -778,6 +794,7 @@ const LeadManagement = () => {
                 selectedLeads={selectedLeads}
                 onSelectionChange={setSelectedLeads}
                 totalLeads={pagination.total}
+                highlightedFormIds={new Set(highlightedFormIds)}
                 onExportEmailSent={(ok, msg) => {
                   if (ok) success("Export email sent to configured address.");
                   else showError(msg || "Failed to send export email.");
@@ -890,7 +907,11 @@ const LeadManagement = () => {
                 {selectedLead.form_id && (
                   <div>
                     <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider">Form ID</label>
-                    <p className="mt-1"><code className="text-xs bg-slate-100 text-slate-800 px-2 py-1 rounded font-mono">{selectedLead.form_id}</code></p>
+                    <p className="mt-1">
+                      <code className={`text-xs px-2 py-1 rounded font-mono ${highlightedFormIds.includes(selectedLead.form_id) ? "bg-black text-white" : "bg-slate-100 text-slate-800"}`}>
+                        {selectedLead.form_id}
+                      </code>
+                    </p>
                   </div>
                 )}
                 {selectedLead.source && (

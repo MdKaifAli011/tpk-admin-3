@@ -72,11 +72,14 @@ const getSourceDisplayText = (source) => {
   }
 };
 
-const LeadTable = forwardRef(({ leads, onView, onDelete, selectedLeads: selectedLeadsProp, onSelectionChange, totalLeads: totalLeadsProp, onExportEmailSent }, ref) => {
+const LeadTable = forwardRef(({ leads, onView, onDelete, selectedLeads: selectedLeadsProp, onSelectionChange, totalLeads: totalLeadsProp, onExportEmailSent, highlightedFormIds: highlightedFormIdsProp }, ref) => {
   const { canDelete, role } = usePermissions();
   const [internalSelected, setInternalSelected] = useState(new Set());
   const selectedLeads = selectedLeadsProp !== undefined ? selectedLeadsProp : internalSelected;
   const setSelectedLeads = onSelectionChange || setInternalSelected;
+  const highlightedFormIds = highlightedFormIdsProp instanceof Set ? highlightedFormIdsProp : new Set(Array.isArray(highlightedFormIdsProp) ? highlightedFormIdsProp : []);
+
+  const isHighlightFormId = (formId) => formId && highlightedFormIds.has(String(formId).trim());
 
   // Helper function to get the display date (updatedAt if updated, otherwise createdAt)
   const getDisplayDate = (lead) => {
@@ -422,7 +425,13 @@ const LeadTable = forwardRef(({ leads, onView, onDelete, selectedLeads: selected
                   </td>
                   <td className="px-2 py-2 whitespace-nowrap">
                     {lead.form_id || lead.form_name ? (
-                      <code className="text-xs bg-gray-100 px-2 py-1 rounded text-gray-700 font-mono">
+                      <code
+                        className={`text-xs px-2 py-1 rounded font-mono ${
+                          isHighlightFormId(lead.form_id || lead.form_name)
+                            ? "bg-black text-white"
+                            : "bg-gray-100 text-gray-700"
+                        }`}
+                      >
                         {lead.form_id || lead.form_name || "N/A"}
                       </code>
                     ) : (
@@ -612,7 +621,13 @@ const LeadTable = forwardRef(({ leads, onView, onDelete, selectedLeads: selected
                 {(lead.form_id || lead.form_name) && (
                   <div className="col-span-2">
                     <div className="text-xs text-gray-500 mb-0.5">Form ID</div>
-                    <code className="text-xs bg-gray-100 px-2 py-1 rounded text-gray-700 font-mono block w-fit">
+                    <code
+                      className={`text-xs px-2 py-1 rounded font-mono block w-fit ${
+                        isHighlightFormId(lead.form_id || lead.form_name)
+                          ? "bg-black text-white"
+                          : "bg-gray-100 text-gray-700"
+                      }`}
+                    >
                       {lead.form_id || lead.form_name}
                     </code>
                   </div>

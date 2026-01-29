@@ -11,6 +11,7 @@ const FormBuilder = ({ form, onClose }) => {
   const [formData, setFormData] = useState({
     formId: "",
     description: "",
+    highlightInLeads: false,
     fields: [],
     settings: {
       title: "",
@@ -35,6 +36,7 @@ const FormBuilder = ({ form, onClose }) => {
       setFormData({
         formId: form.formId || "",
         description: form.description || "",
+        highlightInLeads: form.highlightInLeads === true,
         fields: form.fields || [],
         settings: {
           title: form.settings?.title || form.formId || "",
@@ -60,6 +62,7 @@ const FormBuilder = ({ form, onClose }) => {
       setFormData({
         formId: "",
         description: "",
+        highlightInLeads: false,
         fields: getDefaultRequiredFields(),
         settings: {
           title: "",
@@ -188,6 +191,7 @@ const FormBuilder = ({ form, onClose }) => {
       const payload = {
         formId: formData.formId.trim().toLowerCase(),
         description: formData.description.trim(),
+        highlightInLeads: formData.highlightInLeads,
         fields: formData.fields.map((field) => ({
           fieldId: field.fieldId,
           type: field.type,
@@ -276,6 +280,25 @@ const FormBuilder = ({ form, onClose }) => {
               <p className="mt-1 text-xs text-gray-500">
                 Lowercase letters, numbers, and hyphens only. This will be used as the form name. Cannot be changed after creation.
               </p>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.highlightInLeads}
+                  onChange={(e) =>
+                    setFormData({ ...formData, highlightInLeads: e.target.checked })
+                  }
+                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                />
+                <span className="text-sm font-medium text-gray-700">
+                  Highlight this form ID in lead table
+                </span>
+              </label>
+              <span className="text-xs text-gray-500" title="Shows as black background with white text in Leads">
+                (black badge in Leads)
+              </span>
             </div>
 
             {form && (

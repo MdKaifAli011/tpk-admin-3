@@ -110,6 +110,11 @@ const formSchema = new mongoose.Schema(
       enum: ["active", "inactive"],
       default: "active",
     },
+    /** When true, this form ID is shown with black bg and white text in the lead table */
+    highlightInLeads: {
+      type: Boolean,
+      default: false,
+    },
     submissionCount: {
       type: Number,
       default: 0,
