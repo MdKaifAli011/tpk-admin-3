@@ -45,6 +45,11 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen, showSidebar }) => {
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const router = useRouter();
   const { student, isLoading, isAuthenticated, logout } = useStudent();
+  
+  // Refs for hover delay management
+  const hoverTimeoutRef = React.useRef(null);
+  const leaveTimeoutRef = React.useRef(null);
+  const isHoveringMegaMenuRef = React.useRef(false);
 
   // Handle default props
   const handleMenuToggle = onMenuToggle || (() => {});
@@ -158,12 +163,80 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen, showSidebar }) => {
     { name: "Contact", key: "contact" },
   ];
 
+  // Cleanup timeouts on unmount
+  React.useEffect(() => {
+    return () => {
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current);
+      }
+      if (leaveTimeoutRef.current) {
+        clearTimeout(leaveTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Handle megamenu hover with delay
   const handleMegaMenuHover = (key) => {
-    setActiveMegaMenu(key);
+    // Clear any pending leave timeout
+    if (leaveTimeoutRef.current) {
+      clearTimeout(leaveTimeoutRef.current);
+      leaveTimeoutRef.current = null;
+    }
+    
+    // If already showing this menu, do nothing
+    if (activeMegaMenu === key) {
+      return;
+    }
+    
+    // Clear any existing hover timeout
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+    }
+    
+    // Set delay before opening (300ms delay)
+    hoverTimeoutRef.current = setTimeout(() => {
+      setActiveMegaMenu(key);
+      hoverTimeoutRef.current = null;
+    }, 300);
   };
 
+  // Handle megamenu leave with delay
   const handleMegaMenuLeave = () => {
-    setActiveMegaMenu(null);
+    // Clear any pending hover timeout
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+      hoverTimeoutRef.current = null;
+    }
+    
+    // Only close if not hovering over the megamenu itself
+    if (!isHoveringMegaMenuRef.current) {
+      // Small delay before closing to allow moving to megamenu
+      leaveTimeoutRef.current = setTimeout(() => {
+        if (!isHoveringMegaMenuRef.current) {
+          setActiveMegaMenu(null);
+        }
+        leaveTimeoutRef.current = null;
+      }, 200);
+    }
+  };
+
+  // Handle megamenu container hover (the actual megamenu content)
+  const handleMegaMenuContentEnter = () => {
+    isHoveringMegaMenuRef.current = true;
+    // Clear any leave timeout since we're hovering over the menu
+    if (leaveTimeoutRef.current) {
+      clearTimeout(leaveTimeoutRef.current);
+      leaveTimeoutRef.current = null;
+    }
+  };
+
+  const handleMegaMenuContentLeave = () => {
+    isHoveringMegaMenuRef.current = false;
+    // Close the menu after a short delay
+    leaveTimeoutRef.current = setTimeout(() => {
+      setActiveMegaMenu(null);
+      leaveTimeoutRef.current = null;
+    }, 200);
   };
 
   const toggleMobileMenu = (key) => {
@@ -297,17 +370,26 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen, showSidebar }) => {
                 {navLinks.map((link) => (
                   <div
                     key={link.key}
-                    className="relative mega-menu-container  after:content-[''] after:absolute after:left-0 after:right-0 after:top-full after:h-4 shrink-0"
+                    className="relative mega-menu-container shrink-0"
                     onMouseEnter={() => handleMegaMenuHover(link.key)}
                     onMouseLeave={handleMegaMenuLeave}
                   >
                     <button
                       type="button"
-                      onClick={() =>
+                      onClick={() => {
+                        // Clear any pending timeouts
+                        if (hoverTimeoutRef.current) {
+                          clearTimeout(hoverTimeoutRef.current);
+                          hoverTimeoutRef.current = null;
+                        }
+                        if (leaveTimeoutRef.current) {
+                          clearTimeout(leaveTimeoutRef.current);
+                          leaveTimeoutRef.current = null;
+                        }
                         setActiveMegaMenu(
                           activeMegaMenu === link.key ? null : link.key
-                        )
-                      }
+                        );
+                      }}
                       className="flex items-center justify-center gap-1 px-2 xl:px-3 py-2 rounded-lg text-xs xl:text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors group whitespace-nowrap"
                     >
                       <span className="truncate">{link.name}</span>
@@ -315,31 +397,60 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen, showSidebar }) => {
                     </button>
                     {activeMegaMenu === link.key && (
                       <>
-                        {link.key === "examinations" && (
-                          <ExaminationsMegaMenu
-                            onClose={() => setActiveMegaMenu(null)}
-                          />
-                        )}
-                        {link.key === "courses" && (
-                          <CoursesMegaMenu
-                            onClose={() => setActiveMegaMenu(null)}
-                          />
-                        )}
-                        {link.key === "utilities" && (
-                          <UtilitiesMegaMenu
-                            onClose={() => setActiveMegaMenu(null)}
-                          />
-                        )}
-                        {link.key === "downloads" && (
-                          <DownloadsMegaMenu
-                            onClose={() => setActiveMegaMenu(null)}
-                          />
-                        )}
-                        {link.key === "contact" && (
-                          <ContactMegaMenu
-                            onClose={() => setActiveMegaMenu(null)}
-                          />
-                        )}
+                        {/* Invisible bridge area to prevent menu from closing when moving to it */}
+                        <div
+                          onMouseEnter={handleMegaMenuContentEnter}
+                          onMouseLeave={handleMegaMenuContentLeave}
+                          className="absolute left-0 right-0 top-full h-4 z-[99]"
+                          aria-hidden="true"
+                        />
+                        {/* Megamenu content */}
+                        <div
+                          onMouseEnter={handleMegaMenuContentEnter}
+                          onMouseLeave={handleMegaMenuContentLeave}
+                          className="absolute left-0 right-0 top-full pt-4 z-[100] pointer-events-auto"
+                        >
+                          {link.key === "examinations" && (
+                            <ExaminationsMegaMenu
+                              onClose={() => {
+                                isHoveringMegaMenuRef.current = false;
+                                setActiveMegaMenu(null);
+                              }}
+                            />
+                          )}
+                          {link.key === "courses" && (
+                            <CoursesMegaMenu
+                              onClose={() => {
+                                isHoveringMegaMenuRef.current = false;
+                                setActiveMegaMenu(null);
+                              }}
+                            />
+                          )}
+                          {link.key === "utilities" && (
+                            <UtilitiesMegaMenu
+                              onClose={() => {
+                                isHoveringMegaMenuRef.current = false;
+                                setActiveMegaMenu(null);
+                              }}
+                            />
+                          )}
+                          {link.key === "downloads" && (
+                            <DownloadsMegaMenu
+                              onClose={() => {
+                                isHoveringMegaMenuRef.current = false;
+                                setActiveMegaMenu(null);
+                              }}
+                            />
+                          )}
+                          {link.key === "contact" && (
+                            <ContactMegaMenu
+                              onClose={() => {
+                                isHoveringMegaMenuRef.current = false;
+                                setActiveMegaMenu(null);
+                              }}
+                            />
+                          )}
+                        </div>
                       </>
                     )}
                   </div>

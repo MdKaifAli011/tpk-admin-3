@@ -6,7 +6,7 @@ import {
   SkeletonPageContent,
   LoadingSpinner,
 } from "../ui/SkeletonLoader";
-import { FaTimes, FaClipboardList, FaEye } from "react-icons/fa";
+import { FaTimes, FaClipboardList, FaEye, FaLock, FaUnlock } from "react-icons/fa";
 import { ToastContainer, useToast } from "../ui/Toast";
 import api from "@/lib/api";
 import {
@@ -14,9 +14,26 @@ import {
   getPermissionMessage,
 } from "../../hooks/usePermissions";
 import Pagination from "@/components/shared/Pagination";
+import { useRouter } from "next/navigation";
+import { config } from "@/config/config";
+
+const LEAD_ACCESS_STORAGE_KEY = "lead-management-access-verified";
+const LEAD_ACCESS_PASSWORD =
+  config.leadAccessPassword ||
+  process.env.NEXT_PUBLIC_LEAD_ACCESS_PASSWORD ||
+  "tpk-admin-pass";
 
 const LeadManagement = () => {
+  const router = useRouter();
   const { canDelete, role } = usePermissions();
+
+  // Password gate: show modal until verified (persists in session)
+  const [isVerified, setIsVerified] = useState(false);
+  const [passwordInput, setPasswordInput] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [isVerifying, setIsVerifying] = useState(false);
+  const passwordInputRef = useRef(null);
+
   const [isDataLoading, setIsDataLoading] = useState(false);
   const [error, setError] = useState(null);
   const [leads, setLeads] = useState([]);
@@ -41,6 +58,61 @@ const LeadManagement = () => {
     total: 0,
     totalPages: 0,
   });
+
+  // Check session storage for existing verification on mount
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const stored = sessionStorage.getItem(LEAD_ACCESS_STORAGE_KEY);
+      if (stored === "true") {
+        setIsVerified(true);
+      }
+    } catch (e) {
+      // ignore
+    }
+  }, []);
+
+  // Focus password input when modal is shown
+  useEffect(() => {
+    if (!isVerified && passwordInputRef.current) {
+      const t = setTimeout(() => passwordInputRef.current?.focus(), 100);
+      return () => clearTimeout(t);
+    }
+  }, [isVerified]);
+
+  const handleVerifyPassword = (e) => {
+    e?.preventDefault();
+    setPasswordError("");
+    const trimmed = passwordInput.trim();
+    if (!trimmed) {
+      setPasswordError("Please enter the access password.");
+      passwordInputRef.current?.focus();
+      return;
+    }
+    setIsVerifying(true);
+    // Simulate a brief check for UX (optional)
+    setTimeout(() => {
+      if (trimmed === LEAD_ACCESS_PASSWORD) {
+        try {
+          sessionStorage.setItem(LEAD_ACCESS_STORAGE_KEY, "true");
+        } catch (e) {
+          // ignore
+        }
+        setIsVerified(true);
+        setPasswordInput("");
+        setPasswordError("");
+      } else {
+        setPasswordError("Incorrect password. Please try again.");
+        setPasswordInput("");
+        passwordInputRef.current?.focus();
+      }
+      setIsVerifying(false);
+    }, 200);
+  };
+
+  const handleCancelAccess = () => {
+    router.push("/admin");
+  };
 
   // Fetch leads with filters and pagination
   const fetchLeads = async (page = 1, limit = 10) => {
@@ -207,6 +279,116 @@ const LeadManagement = () => {
       setIsDataLoading(false);
     }
   };
+
+  // Escape key to cancel when password modal is open
+  useEffect(() => {
+    if (!isVerified) {
+      const onKey = (e) => {
+        if (e.key === "Escape") handleCancelAccess();
+      };
+      window.addEventListener("keydown", onKey);
+      return () => window.removeEventListener("keydown", onKey);
+    }
+  }, [isVerified]);
+
+  // Password gate modal: show until verified
+  if (!isVerified) {
+    return (
+      <>
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-gray-900/60 backdrop-blur-sm p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="lead-access-title"
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-200 animate-in fade-in zoom-in-95 duration-300"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="px-6 pt-8 pb-4 text-center border-b border-gray-100">
+              <div className="mx-auto w-16 h-16 rounded-full bg-indigo-100 flex items-center justify-center mb-4">
+                <FaLock className="w-8 h-8 text-indigo-600" />
+              </div>
+              <h2 id="lead-access-title" className="text-xl font-semibold text-gray-900">
+                Lead Management Access
+              </h2>
+              <p className="mt-2 text-sm text-gray-500">
+                This area is protected. Enter the access password to continue.
+              </p>
+            </div>
+
+            {/* Body */}
+            <form onSubmit={handleVerifyPassword} className="p-6 space-y-4">
+              <div>
+                <label
+                  htmlFor="lead-access-password"
+                  className="block text-sm font-medium text-gray-700 mb-1.5"
+                >
+                  Access Password
+                </label>
+                <input
+                  ref={passwordInputRef}
+                  id="lead-access-password"
+                  type="password"
+                  value={passwordInput}
+                  onChange={(e) => {
+                    setPasswordInput(e.target.value);
+                    setPasswordError("");
+                  }}
+                  placeholder="Enter password"
+                  autoComplete="current-password"
+                  disabled={isVerifying}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm placeholder-gray-400 disabled:bg-gray-50 disabled:cursor-not-allowed"
+                  autoFocus
+                />
+                {passwordError && (
+                  <p className="mt-2 text-sm text-red-600 flex items-center gap-1.5">
+                    <span className="inline-flex w-4 h-4 shrink-0 rounded-full bg-red-100 text-red-600 items-center justify-center text-xs font-bold">!</span>
+                    {passwordError}
+                  </p>
+                )}
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={handleCancelAccess}
+                  className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isVerifying}
+                  className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {isVerifying ? (
+                    <>
+                      <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Verifying…
+                    </>
+                  ) : (
+                    <>
+                      <FaUnlock className="w-4 h-4" />
+                      Verify &amp; Open
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+
+            {/* Footer hint */}
+            <div className="px-6 pb-6 text-center">
+              <p className="text-xs text-gray-400">
+                Contact your administrator if you don’t have the password.
+              </p>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>

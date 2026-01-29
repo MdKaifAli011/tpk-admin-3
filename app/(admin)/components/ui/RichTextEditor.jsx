@@ -827,14 +827,19 @@ const RichTextEditor = ({
     }
   };
 
-  // Extract YouTube video ID from URL
+  // Extract YouTube video ID from URL (including YouTube Shorts)
   const extractYouTubeId = (url) => {
     if (!url) return null;
 
-    // Handle various YouTube URL formats
+    // Handle various YouTube URL formats including Shorts
     const patterns = [
+      // YouTube Shorts: youtube.com/shorts/VIDEO_ID
+      /youtube\.com\/shorts\/([^&\n?#\/]+)/,
+      // Standard watch URL: youtube.com/watch?v=VIDEO_ID
       /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/,
+      // Embed URL: youtube.com/embed/VIDEO_ID
       /youtube\.com\/embed\/([^&\n?#]+)/,
+      // Old format: youtube.com/v/VIDEO_ID
       /youtube\.com\/v\/([^&\n?#]+)/,
     ];
 
@@ -856,7 +861,7 @@ const RichTextEditor = ({
     const videoId = extractYouTubeId(youtubeUrl);
 
     if (!videoId) {
-      setVideoError("Invalid YouTube URL. Please enter a valid YouTube video link.");
+      setVideoError("Invalid YouTube URL. Please enter a valid YouTube video or Shorts link (e.g., youtube.com/watch?v=..., youtube.com/shorts/..., or youtu.be/...).");
       return;
     }
 
@@ -1781,18 +1786,18 @@ const RichTextEditor = ({
                         setYoutubeUrl(e.target.value);
                         setVideoError("");
                       }}
-                      placeholder="https://www.youtube.com/watch?v=..."
+                      placeholder="https://www.youtube.com/watch?v=... or https://www.youtube.com/shorts/..."
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm"
                     />
                     <p className="mt-1.5 text-xs text-gray-500">
-                      Paste any YouTube video URL (watch, share, or embed link)
+                      Paste any YouTube video URL (watch, shorts, share, or embed link)
                     </p>
                   </div>
 
                   {/* YouTube Info */}
                   <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
                     <p className="text-xs text-red-700">
-                      <strong>📺 YouTube:</strong> The video will be embedded as a responsive iframe with full YouTube player features.
+                      <strong>📺 YouTube:</strong> Supports regular videos and YouTube Shorts. The video will be embedded as a responsive iframe with full YouTube player features.
                     </p>
                   </div>
 

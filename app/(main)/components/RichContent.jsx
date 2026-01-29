@@ -124,6 +124,55 @@ const isInlineContent = (html) => {
   return !blockLevelTags.some((tag) => trimmed.startsWith(tag));
 };
 
+// Helper function to extract YouTube video ID from URL (including YouTube Shorts)
+const extractYouTubeId = (url) => {
+  if (!url) return null;
+
+  // Handle various YouTube URL formats including Shorts
+  const patterns = [
+    // YouTube Shorts: youtube.com/shorts/VIDEO_ID
+    /youtube\.com\/shorts\/([^&\n?#\/]+)/,
+    // Standard watch URL: youtube.com/watch?v=VIDEO_ID
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/,
+    // Embed URL: youtube.com/embed/VIDEO_ID
+    /youtube\.com\/embed\/([^&\n?#]+)/,
+    // Old format: youtube.com/v/VIDEO_ID
+    /youtube\.com\/v\/([^&\n?#]+)/,
+  ];
+
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match && match[1]) {
+      return match[1];
+    }
+  }
+
+  return null;
+};
+
+// Helper function to normalize YouTube URL to embed format (supports Shorts)
+const normalizeYouTubeUrl = (url) => {
+  if (!url) return url;
+
+  // If already an embed URL, return as is (after cleaning query params)
+  if (url.includes("youtube.com/embed/")) {
+    const videoId = extractYouTubeId(url);
+    if (videoId) {
+      return `https://www.youtube.com/embed/${videoId}`;
+    }
+    return url;
+  }
+
+  // Extract video ID from any YouTube URL format (including Shorts)
+  const videoId = extractYouTubeId(url);
+  if (videoId) {
+    return `https://www.youtube.com/embed/${videoId}`;
+  }
+
+  // If we can't extract, return original URL
+  return url;
+};
+
 const RichContent = ({ html }) => {
   const containerRef = useRef(null);
   const mathJaxTimerRef = useRef(null);
@@ -189,7 +238,12 @@ const RichContent = ({ html }) => {
         const mimeType = videoContainer.getAttribute("data-mime-type");
 
         if (url) {
-          setActiveVideo({ url, type, mimeType });
+          // Normalize YouTube URLs (including Shorts) to embed format
+          let normalizedUrl = url;
+          if (type === "youtube" || url.includes("youtube.com") || url.includes("youtu.be")) {
+            normalizedUrl = normalizeYouTubeUrl(url);
+          }
+          setActiveVideo({ url: normalizedUrl, type: type || "youtube", mimeType });
         } else {
           // Fallback for older content: find video/iframe
           const videoEl = videoContainer.querySelector("video source");
@@ -202,8 +256,11 @@ const RichContent = ({ html }) => {
               mimeType: videoEl.type,
             });
           } else if (iframeEl) {
+            // Normalize YouTube URLs from iframe src (including Shorts)
+            const iframeSrc = iframeEl.src;
+            const normalizedUrl = normalizeYouTubeUrl(iframeSrc);
             setActiveVideo({
-              url: iframeEl.src,
+              url: normalizedUrl,
               type: "youtube",
             });
           }
@@ -847,11 +904,22 @@ const VideoModal = ({ video, onClose }) => {
         <div className="w-full h-full">
           {video.type === "youtube" ? (
             <iframe
-              src={video.url.includes("?") ? `${video.url}&autoplay=1&rel=0&modestbranding=1` : `${video.url}?autoplay=1&rel=0&modestbranding=1`}
+              src={(() => {
+                // Ensure URL is normalized to embed format (supports Shorts)
+                const normalizedUrl = normalizeYouTubeUrl(video.url);
+                // Add autoplay and other parameters
+                const separator = normalizedUrl.includes("?") ? "&" : "?";
+                return `${normalizedUrl}${separator}autoplay=1&rel=0&modestbranding=1&playsinline=1`;
+              })()}
               className="w-full h-full border-none"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               allowFullScreen
+              title="YouTube video player"
               onLoad={() => setLoading(false)}
+              onError={() => {
+                setLoading(false);
+                console.error("Failed to load YouTube video:", video.url);
+              }}
             ></iframe>
           ) : (
             <video
@@ -861,6 +929,10 @@ const VideoModal = ({ video, onClose }) => {
               autoPlay
               playsInline
               onLoadedData={() => setLoading(false)}
+              onError={() => {
+                setLoading(false);
+                console.error("Failed to load video:", video.url);
+              }}
             >
               <source src={video.url} type={video.mimeType} />
               Your browser does not support the video tag.
