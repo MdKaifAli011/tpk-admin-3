@@ -30,12 +30,12 @@ const HIERARCHY_LEVELS = [
 ];
 
 const DiscussionImportExport = () => {
-    const [isImporting, setIsImporting] = useState(false);
-    const [isExporting, setIsExporting] = useState(false);
-    const [importStats, setImportStats] = useState(null);
-    const fileInputRef = useRef(null);
-    const { toasts, removeToast, success, error: showError } = useToast();
-    const { role } = usePermissions();
+  const [isImporting, setIsImporting] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const [importStats, setImportStats] = useState(null);
+  const fileInputRef = useRef(null);
+  const { toasts, removeToast, success, error: showError } = useToast();
+  const { role } = usePermissions();
 
     // Preview state
     const [previewData, setPreviewData] = useState(null);
@@ -306,13 +306,13 @@ const DiscussionImportExport = () => {
 
     // Handle file selection and parse for preview
     const handleFileSelect = async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
+    const file = e.target.files[0];
+    if (!file) return;
 
-        if (!file.name.endsWith('.csv')) {
-            showError("Please upload a CSV file");
-            return;
-        }
+    if (!file.name.endsWith('.csv')) {
+      showError("Please upload a CSV file");
+      return;
+    }
 
         if (!isSelectionComplete) {
             showError("Please complete the level selection first");
@@ -359,12 +359,12 @@ const DiscussionImportExport = () => {
             return;
         }
 
-        setIsImporting(true);
-        setImportStats(null);
+    setIsImporting(true);
+    setImportStats(null);
         setShowConfirmModal(false);
 
-        try {
-            const formData = new FormData();
+    try {
+      const formData = new FormData();
             formData.append("file", selectedFile);
             const selectedIds = getSelectedIds();
             Object.keys(selectedIds).forEach(key => {
@@ -372,14 +372,14 @@ const DiscussionImportExport = () => {
             });
             formData.append("level", selectedLevel);
 
-            const response = await api.post("/admin/discussion/import", formData, {
-                headers: {
-                    "Content-Type": "multipart/form-data",
-                },
-            });
+      const response = await api.post("/admin/discussion/import", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
 
-            if (response.data.success) {
-                setImportStats(response.data.data);
+      if (response.data.success) {
+        setImportStats(response.data.data);
                 const stats = response.data.data;
                 const createdMsg = stats.threadsCreated > 0 ? `${stats.threadsCreated} threads created` : "";
                 const updatedMsg = stats.threadsUpdated > 0 ? `${stats.threadsUpdated} threads updated` : "";
@@ -397,20 +397,20 @@ const DiscussionImportExport = () => {
 
                 if (stats.errors && stats.errors.length > 0) {
                     console.warn("Import errors:", stats.errors);
-                }
-            } else {
-                showError(response.data.message || "Import failed");
-            }
-        } catch (err) {
-            console.error("Import error:", err);
-            showError(err.response?.data?.message || "Failed to import discussions");
-        } finally {
-            setIsImporting(false);
-            if (fileInputRef.current) {
-                fileInputRef.current.value = "";
-            }
         }
-    };
+      } else {
+        showError(response.data.message || "Import failed");
+      }
+    } catch (err) {
+      console.error("Import error:", err);
+      showError(err.response?.data?.message || "Failed to import discussions");
+    } finally {
+      setIsImporting(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
 
     // Cancel preview
     const handleCancelPreview = () => {
@@ -423,7 +423,7 @@ const DiscussionImportExport = () => {
         }
     };
 
-    const handleExport = async () => {
+  const handleExport = async () => {
         if (!isSelectionComplete) {
             showError("Please complete the level selection first");
             return;
@@ -434,8 +434,8 @@ const DiscussionImportExport = () => {
             return;
         }
 
-        setIsExporting(true);
-        try {
+    setIsExporting(true);
+    try {
             const selectedIds = getSelectedIds();
             const params = new URLSearchParams();
             Object.keys(selectedIds).forEach(key => {
@@ -444,28 +444,28 @@ const DiscussionImportExport = () => {
             params.append("level", selectedLevel);
 
             const response = await api.get(`/admin/discussion/export?${params.toString()}`, {
-                responseType: "blob",
-            });
+        responseType: "blob",
+      });
 
-            const blob = new Blob([response.data], { type: "text/csv" });
-            const url = window.URL.createObjectURL(blob);
-            const link = document.createElement("a");
-            link.href = url;
+      const blob = new Blob([response.data], { type: "text/csv" });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
             const levelName = selectedLevel.charAt(0).toUpperCase() + selectedLevel.slice(1);
             link.download = `discussions_export_${levelName}_${new Date().toISOString().split('T')[0]}.csv`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            window.URL.revokeObjectURL(url);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
 
-            success("Discussions exported successfully");
-        } catch (err) {
-            console.error("Export error:", err);
-            showError(err.response?.data?.message || "Failed to export discussions");
-        } finally {
-            setIsExporting(false);
-        }
-    };
+      success("Discussions exported successfully");
+    } catch (err) {
+      console.error("Export error:", err);
+      showError(err.response?.data?.message || "Failed to export discussions");
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
     const downloadTemplate = async () => {
         if (!isSelectionComplete) {
@@ -485,16 +485,16 @@ const DiscussionImportExport = () => {
 
             if (response.data.success) {
                 const csvContent = response.data.data.csvContent;
-                const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-                const url = URL.createObjectURL(blob);
-                const link = document.createElement("a");
-                link.setAttribute("href", url);
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
                 const levelName = selectedLevel.charAt(0).toUpperCase() + selectedLevel.slice(1);
                 link.setAttribute("download", `discussion_import_template_${levelName}.csv`);
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                URL.revokeObjectURL(url);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
                 success("Template downloaded successfully");
             } else {
                 showError(response.data.message || "Failed to generate template");
@@ -536,12 +536,12 @@ const DiscussionImportExport = () => {
             return definition?.name || "";
         }
         return "";
-    };
+  };
 
-    return (
+  return (
         <div className="max-w-full mx-auto p-4 space-y-6 animate-in fade-in duration-500">
-            <ToastContainer toasts={toasts} removeToast={removeToast} />
-
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
+      
             {/* Header Section */}
             <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 rounded-lg border border-gray-200 p-4 shadow-sm">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
@@ -551,8 +551,8 @@ const DiscussionImportExport = () => {
                         </h1>
                         <p className="text-xs text-gray-600">
                             Bulk manage discussion threads and replies across all levels of your educational platform.
-                        </p>
-                    </div>
+        </p>
+      </div>
                 </div>
             </div>
 
@@ -800,24 +800,24 @@ const DiscussionImportExport = () => {
                                 No data available to export
                             </div>
                         )}
-                    </div>
+          </div>
 
-                    <button
-                        onClick={downloadTemplate}
+            <button
+              onClick={downloadTemplate}
                         disabled={!isSelectionComplete}
                         className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2 disabled:opacity-50"
-                    >
+            >
                         <FaDownload />
                         Download Template
-                    </button>
+            </button>
 
                     <div className="flex items-center gap-2">
-                        <input
+              <input
                             type="file"
-                            ref={fileInputRef}
+                ref={fileInputRef}
                             onChange={handleFileSelect}
-                            accept=".csv"
-                            className="hidden"
+                accept=".csv"
+                className="hidden"
                         />
                         <button
                             onClick={() => fileInputRef.current?.click()}
@@ -850,7 +850,7 @@ const DiscussionImportExport = () => {
 
             {/* Results / Preview Section */}
             <div className="grid grid-cols-1 gap-6">
-                {importStats && (
+            {importStats && (
                     <motion.div
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
@@ -880,7 +880,7 @@ const DiscussionImportExport = () => {
                             </div>
                         </div>
 
-                        {importStats.errors && importStats.errors.length > 0 && (
+                  {importStats.errors && importStats.errors.length > 0 && (
                             <div className="bg-red-50 p-4 rounded-lg border border-red-100">
                                 <h5 className="text-sm font-bold text-red-700 mb-2 flex items-center gap-2">
                                     <FaExclamationCircle /> Errors Found ({importStats.errors.length})
@@ -1019,10 +1019,10 @@ const DiscussionImportExport = () => {
                             <div className="flex items-center gap-3 mb-4">
                                 <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
                                     <FaExclamationCircle className="text-blue-600" size={20} />
-                                </div>
+          </div>
                                 <h3 className="text-lg font-semibold text-gray-900">Confirm Import</h3>
-                            </div>
-                            
+        </div>
+
                             <div className="mb-6">
                                 <p className="text-sm text-gray-700 mb-3">
                                     You are about to import <strong>{previewData?.length || 0} discussion(s)</strong> at the <strong>{selectedLevel}</strong> level.
@@ -1031,8 +1031,8 @@ const DiscussionImportExport = () => {
                                     <p className="text-xs text-amber-800">
                                         <strong>Important:</strong> If a discussion with the same title already exists at this level, it will be <strong>updated</strong>. Otherwise, a <strong>new</strong> discussion will be created.
                                     </p>
-                                </div>
-                            </div>
+            </div>
+          </div>
 
                             <div className="flex items-center gap-3 justify-end">
                                 <button
@@ -1041,7 +1041,7 @@ const DiscussionImportExport = () => {
                                 >
                                     Cancel
                                 </button>
-                                <button
+            <button
                                     onClick={handleConfirmImport}
                                     disabled={isImporting}
                                     className="px-4 py-2 bg-[#0056FF] hover:bg-[#0044CC] text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -1050,21 +1050,21 @@ const DiscussionImportExport = () => {
                                         <>
                                             <FaSpinner className="animate-spin" />
                                             Importing...
-                                        </>
-                                    ) : (
-                                        <>
+                </>
+              ) : (
+                <>
                                             <FaCheckCircle size={14} />
                                             Confirm & Import
-                                        </>
-                                    )}
-                                </button>
-                            </div>
+                </>
+              )}
+            </button>
+            </div>
                         </motion.div>
                     </motion.div>
                 )}
             </AnimatePresence>
-        </div>
-    );
+    </div>
+  );
 };
 
 export default DiscussionImportExport;

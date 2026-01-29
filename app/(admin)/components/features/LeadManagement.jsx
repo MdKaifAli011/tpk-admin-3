@@ -6,14 +6,13 @@ import {
   SkeletonPageContent,
   LoadingSpinner,
 } from "../ui/SkeletonLoader";
-import { FaTimes, FaClipboardList, FaEye, FaLock, FaUnlock } from "react-icons/fa";
+import { FaTimes, FaClipboardList, FaEye, FaLock, FaUnlock, FaDownload, FaFilter, FaSearch, FaEnvelope } from "react-icons/fa";
 import { ToastContainer, useToast } from "../ui/Toast";
 import api from "@/lib/api";
 import {
   usePermissions,
   getPermissionMessage,
 } from "../../hooks/usePermissions";
-import Pagination from "@/components/shared/Pagination";
 import { useRouter } from "next/navigation";
 import { config } from "@/config/config";
 
@@ -22,6 +21,21 @@ const LEAD_ACCESS_PASSWORD =
   config.leadAccessPassword ||
   process.env.NEXT_PUBLIC_LEAD_ACCESS_PASSWORD ||
   "tpk-admin-pass";
+
+// Highlight: United States, UAE, Oman, Qatar, Kuwait, Saudi Arabia (same as LeadTable)
+const HIGHLIGHT_COUNTRIES_SET = new Set([
+  "United States",
+  "UAE",
+  "Oman",
+  "Qatar",
+  "Kuwait",
+  "Saudi Arabia",
+]);
+const isHighlightCountry = (country) =>
+  country && HIGHLIGHT_COUNTRIES_SET.has(String(country).trim());
+
+const PER_PAGE_OPTIONS = [10, 20, 50, 100, 1000];
+const DEFAULT_LIMIT = 50;
 
 const LeadManagement = () => {
   const router = useRouter();
@@ -35,8 +49,13 @@ const LeadManagement = () => {
   const passwordInputRef = useRef(null);
 
   const [isDataLoading, setIsDataLoading] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [error, setError] = useState(null);
   const [leads, setLeads] = useState([]);
+  const [selectedLeads, setSelectedLeads] = useState(new Set());
+  const leadTableRef = useRef(null);
+  const loadMoreSentinelRef = useRef(null);
+  const paginationRef = useRef(null);
   const [showFilters, setShowFilters] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedLead, setSelectedLead] = useState(null);
@@ -51,10 +70,10 @@ const LeadManagement = () => {
   const [filterDateFrom, setFilterDateFrom] = useState("");
   const [filterDateTo, setFilterDateTo] = useState("");
 
-  // Pagination state
+  // Pagination state (infinite scroll: page 1 loads first, scroll loads more pages)
   const [pagination, setPagination] = useState({
     page: 1,
-    limit: 10,
+    limit: DEFAULT_LIMIT,
     total: 0,
     totalPages: 0,
   });
@@ -114,54 +133,48 @@ const LeadManagement = () => {
     router.push("/admin");
   };
 
-  // Fetch leads with filters and pagination
-  const fetchLeads = async (page = 1, limit = 10) => {
+  // Fetch leads: replace (page 1) or append (next page on scroll)
+  const fetchLeads = async (page = 1, limit = DEFAULT_LIMIT, append = false) => {
     if (isFetchingRef.current) return;
     isFetchingRef.current = true;
     try {
-      setIsDataLoading(true);
+      if (append) {
+        setIsLoadingMore(true);
+      } else {
+        setIsDataLoading(true);
+      }
       setError(null);
 
-      // Build query parameters
       const params = new URLSearchParams();
       params.append("page", page.toString());
       params.append("limit", limit.toString());
-
-      if (filterCountry) {
-        params.append("country", filterCountry);
-      }
-      if (filterClassName) {
-        params.append("className", filterClassName);
-      }
-      if (filterStatus && filterStatus !== "all") {
-        params.append("status", filterStatus);
-      }
-      if (filterSearch) {
-        params.append("search", filterSearch);
-      }
-      if (filterDateFrom) {
-        params.append("dateFrom", filterDateFrom);
-      }
-      if (filterDateTo) {
-        params.append("dateTo", filterDateTo);
-      }
+      if (filterCountry) params.append("country", filterCountry);
+      if (filterClassName) params.append("className", filterClassName);
+      if (filterStatus && filterStatus !== "all") params.append("status", filterStatus);
+      if (filterSearch) params.append("search", filterSearch);
+      if (filterDateFrom) params.append("dateFrom", filterDateFrom);
+      if (filterDateTo) params.append("dateTo", filterDateTo);
 
       const response = await api.get(`/lead?${params.toString()}`);
 
       if (response.data?.success) {
-        setLeads(response.data.data || []);
-        // Update pagination from response
-        if (response.data.pagination) {
-          setPagination({
-            page: response.data.pagination.page || page,
-            limit: response.data.pagination.limit || limit,
-            total: response.data.pagination.total || 0,
-            totalPages: response.data.pagination.totalPages || 0,
-          });
+        const data = response.data.data || [];
+        const pag = response.data.pagination || {};
+        if (append) {
+          setLeads((prev) => [...prev, ...data]);
+        } else {
+          setLeads(data);
         }
+        setPagination((prev) => ({
+          ...prev,
+          page: pag.page ?? page,
+          limit: pag.limit ?? limit,
+          total: pag.total ?? 0,
+          totalPages: pag.totalPages ?? 0,
+        }));
       } else {
         setError(response.data?.message || "Failed to fetch leads");
-        setLeads([]);
+        if (!append) setLeads([]);
       }
     } catch (err) {
       console.error("❌ Error fetching leads:", err);
@@ -170,26 +183,54 @@ const LeadManagement = () => {
         err?.message ||
         "Failed to fetch leads. Please check your connection.";
       setError(errorMessage);
-      setLeads([]);
+      if (!append) setLeads([]);
     } finally {
-      setIsDataLoading(false);
+      if (append) {
+        setIsLoadingMore(false);
+      } else {
+        setIsDataLoading(false);
+      }
       isFetchingRef.current = false;
     }
   };
 
-  // Load leads on component mount and when filters/pagination change
+  paginationRef.current = pagination;
+
+  // Initial load and when filters or per-page limit change: fetch page 1 (replace)
   useEffect(() => {
-    fetchLeads(pagination.page, pagination.limit);
+    setPagination((prev) => ({ ...prev, page: 1 }));
+    fetchLeads(1, pagination.limit, false);
   }, [
-    pagination.page,
-    pagination.limit,
     filterCountry,
     filterClassName,
     filterStatus,
     filterSearch,
     filterDateFrom,
     filterDateTo,
+    pagination.limit,
   ]);
+
+  // Infinite scroll: when sentinel is visible, load next page (append)
+  useEffect(() => {
+    const sentinel = loadMoreSentinelRef.current;
+    if (!sentinel) return;
+    const pag = paginationRef.current;
+    const hasMore = pag.totalPages > 0 && pag.page < pag.totalPages;
+    if (!hasMore) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        if (!entry?.isIntersecting) return;
+        const { page, limit, totalPages } = paginationRef.current;
+        if (page >= totalPages || isFetchingRef.current) return;
+        fetchLeads(page + 1, limit, true);
+      },
+      { root: null, rootMargin: "400px 0px", threshold: 0 }
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [leads.length, pagination.page, pagination.totalPages]);
 
   // Get unique countries and class names for filter dropdowns
   const uniqueCountries = useMemo(() => {
@@ -265,8 +306,8 @@ const LeadManagement = () => {
 
       if (response.data?.success) {
         success("Lead deleted successfully!");
-        // Refresh leads
-        await fetchLeads(pagination.page, pagination.limit);
+        setPagination((prev) => ({ ...prev, page: 1 }));
+        await fetchLeads(1, pagination.limit, false);
       } else {
         throw new Error(response.data?.message || "Failed to delete lead");
       }
@@ -395,73 +436,168 @@ const LeadManagement = () => {
       <ToastContainer toasts={toasts} removeToast={removeToast} />
 
       {/* Page Header */}
-      <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 rounded-lg border border-gray-200 p-4 shadow-sm">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <div>
-            <h1 className="text-xl font-semibold text-gray-900 mb-1">
-              Lead Management
-            </h1>
-            <p className="text-xs text-gray-600">
-              Manage and organize your leads, track lead performance across your
-              educational platform.
-            </p>
+      <div className="bg-gradient-to-r from-slate-50 via-blue-50/80 to-indigo-50 rounded-xl border border-slate-200/80 p-5 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-blue-600">
+              <FaClipboardList className="h-5 w-5" />
+            </div>
+            <div>
+              <h1 className="text-xl font-semibold text-slate-900">
+                Lead Management
+              </h1>
+              <p className="mt-0.5 text-sm text-slate-600">
+                Manage and organize leads, track performance across your educational platform.
+              </p>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Leads Table */}
-      <div className="mt-6 bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
-        <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900">
-                Leads List
-                {pagination.total > 0 && ` (${pagination.total})`}
-              </h2>
-              <p className="text-sm text-gray-600 mt-1">
-                View and manage all submitted leads
-              </p>
+      {/* Leads Table Card */}
+      <div className="mt-6 bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+        <div className="px-4 sm:px-6 py-4 border-b border-slate-200 bg-slate-50/80">
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h2 className="text-lg font-semibold text-slate-900">
+                  Leads List
+                  {pagination.total > 0 && (
+                    <span className="font-normal text-slate-500 ml-1">({pagination.total})</span>
+                  )}
+                </h2>
+                <p className="text-sm text-slate-600 mt-0.5">
+                  View and manage all submitted leads
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-3">
+                {selectedLeads.size > 0 && (
+                  <>
+                    <span className="text-sm font-semibold text-blue-600">
+                      {selectedLeads.size} lead{selectedLeads.size !== 1 ? "s" : ""} selected
+                    </span>
+                    <div className="inline-flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => leadTableRef.current?.sendOnly(pagination.total)}
+                        className="inline-flex items-center gap-2 px-3 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-lg text-sm font-medium transition-colors shadow-sm"
+                        title="Send CSV to configured email only"
+                      >
+                        <FaEnvelope className="w-4 h-4" />
+                        Send
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => leadTableRef.current?.exportOnly()}
+                        className="inline-flex items-center gap-2 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium transition-colors shadow-sm"
+                        title="Download CSV file only"
+                      >
+                        <FaDownload className="w-4 h-4" />
+                        Export
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => leadTableRef.current?.exportAndSend(pagination.total)}
+                        className="inline-flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors shadow-sm"
+                        title="Download CSV and send to email"
+                      >
+                        <FaDownload className="w-4 h-4" />
+                        <FaEnvelope className="w-3.5 h-3.5" />
+                        Export &amp; Send
+                      </button>
+                    </div>
+                  </>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setShowFilters(!showFilters)}
+                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    showFilters
+                      ? "bg-blue-600 text-white hover:bg-blue-700"
+                      : "bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 hover:border-slate-400"
+                  }`}
+                >
+                  <FaFilter className="w-4 h-4" />
+                  Filters
+                  {activeFilterCount > 0 && (
+                    <span className={`min-w-5 h-5 px-1.5 inline-flex items-center justify-center rounded-full text-xs font-semibold ${
+                      showFilters ? "bg-white text-blue-600" : "bg-blue-100 text-blue-700"
+                    }`}>
+                      {activeFilterCount}
+                    </span>
+                  )}
+                </button>
+              </div>
             </div>
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-medium transition-colors"
-            >
-              Filter Leads
-              {activeFilterCount > 0 && (
-                <span className="bg-white text-blue-600 px-1.5 py-0.5 rounded-full text-xs font-medium ml-1.5">
-                  {activeFilterCount}
-                </span>
-              )}
-            </button>
+            {/* Top bar: count + per page (like YouTube/Instagram) */}
+            {!isDataLoading && !error && leads.length > 0 && pagination.total > 0 && (
+              <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-200/80">
+                <p className="text-sm text-slate-600">
+                  {pagination.page >= pagination.totalPages ? (
+                    <>Showing all <span className="font-medium text-slate-800">{pagination.total}</span> leads</>
+                  ) : (
+                    <>
+                      <span className="font-medium text-slate-800">{leads.length}</span>
+                      {" of "}
+                      <span className="font-medium text-slate-800">{pagination.total}</span>
+                      {" — scroll down for more"}
+                    </>
+                  )}
+                </p>
+                <div className="flex items-center gap-2">
+                  <label htmlFor="lead-per-page" className="text-sm text-slate-600 whitespace-nowrap">Per page</label>
+                  <select
+                    id="lead-per-page"
+                    value={pagination.limit}
+                    onChange={(e) => {
+                      setPagination((prev) => ({
+                        ...prev,
+                        limit: parseInt(e.target.value, 10),
+                        page: 1,
+                      }));
+                    }}
+                    className="px-3 py-1.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white cursor-pointer"
+                  >
+                    {PER_PAGE_OPTIONS.map((n) => (
+                      <option key={n} value={n}>{n}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
         {/* Filter Section */}
         {showFilters && (
-          <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
+          <div className="px-4 sm:px-6 py-4 bg-slate-50/60 border-b border-slate-200">
+            <div className="flex items-center gap-2 mb-4">
+              <FaFilter className="h-4 w-4 text-slate-500" />
+              <h3 className="text-sm font-semibold text-slate-700">Filter leads</h3>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
               {/* Search */}
-              <div className="lg:col-span-3 space-y-2">
-                <label className="block text-sm font-medium text-gray-700">
+              <div className="lg:col-span-3">
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">
                   Search (Name, Email, or Phone)
                 </label>
-                <input
-                  type="text"
-                  value={filterSearch}
-                  onChange={(e) => {
-                    setFilterSearch(e.target.value);
-                    setPagination((prev) => ({ ...prev, page: 1 }));
-                  }}
-                  placeholder="Search by name, email, or phone number..."
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-all"
-                />
+                <div className="relative">
+                  <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+                  <input
+                    type="text"
+                    value={filterSearch}
+                    onChange={(e) => {
+                      setFilterSearch(e.target.value);
+                      setPagination((prev) => ({ ...prev, page: 1 }));
+                    }}
+                    placeholder="Search by name, email, or phone..."
+                    className="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white transition-all"
+                  />
+                </div>
               </div>
 
-              {/* Filter by Country */}
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  Filter by Country
-                </label>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">Country</label>
                 <input
                   type="text"
                   value={filterCountry}
@@ -470,15 +606,12 @@ const LeadManagement = () => {
                     setPagination((prev) => ({ ...prev, page: 1 }));
                   }}
                   placeholder="Enter country..."
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-all"
+                  className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white transition-all"
                 />
               </div>
 
-              {/* Filter by Class Name */}
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  Filter by Class Name
-                </label>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">Class Name</label>
                 <input
                   type="text"
                   value={filterClassName}
@@ -487,22 +620,19 @@ const LeadManagement = () => {
                     setPagination((prev) => ({ ...prev, page: 1 }));
                   }}
                   placeholder="Enter class name..."
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-all"
+                  className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white transition-all"
                 />
               </div>
 
-              {/* Filter by Status */}
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  Filter by Status
-                </label>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">Status</label>
                 <select
                   value={filterStatus}
                   onChange={(e) => {
                     setFilterStatus(e.target.value);
                     setPagination((prev) => ({ ...prev, page: 1 }));
                   }}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-all"
+                  className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white transition-all"
                 >
                   <option value="all">All Status</option>
                   <option value="new">New</option>
@@ -513,11 +643,8 @@ const LeadManagement = () => {
                 </select>
               </div>
 
-              {/* Date From */}
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  Date From
-                </label>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">Date From</label>
                 <input
                   type="date"
                   value={filterDateFrom}
@@ -525,15 +652,12 @@ const LeadManagement = () => {
                     setFilterDateFrom(e.target.value);
                     setPagination((prev) => ({ ...prev, page: 1 }));
                   }}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-all"
+                  className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white transition-all"
                 />
               </div>
 
-              {/* Date To */}
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  Date To
-                </label>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">Date To</label>
                 <input
                   type="date"
                   value={filterDateTo}
@@ -541,378 +665,261 @@ const LeadManagement = () => {
                     setFilterDateTo(e.target.value);
                     setPagination((prev) => ({ ...prev, page: 1 }));
                   }}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-all"
+                  className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white transition-all"
                 />
               </div>
             </div>
 
-            {/* Active Filters */}
-            {activeFilterCount > 0 && (
-              <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-gray-200">
-                <span className="text-xs font-medium text-gray-600">
-                  Active Filters:
-                </span>
-                {filterCountry && (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
-                    Country: {filterCountry}
-                    <button
-                      onClick={() => {
-                        setFilterCountry("");
-                        setPagination((prev) => ({ ...prev, page: 1 }));
-                      }}
-                      className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"
-                    >
-                      <FaTimes className="w-3 h-3" />
-                    </button>
-                  </span>
-                )}
-                {filterClassName && (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
-                    Class: {filterClassName}
-                    <button
-                      onClick={() => {
-                        setFilterClassName("");
-                        setPagination((prev) => ({ ...prev, page: 1 }));
-                      }}
-                      className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"
-                    >
-                      <FaTimes className="w-3 h-3" />
-                    </button>
-                  </span>
-                )}
-                {filterStatus && filterStatus !== "all" && (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
-                    Status: {filterStatus}
-                    <button
-                      onClick={() => {
-                        setFilterStatus("all");
-                        setPagination((prev) => ({ ...prev, page: 1 }));
-                      }}
-                      className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"
-                    >
-                      <FaTimes className="w-3 h-3" />
-                    </button>
-                  </span>
-                )}
-                {filterSearch && (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
-                    Search: {filterSearch}
-                    <button
-                      onClick={() => {
-                        setFilterSearch("");
-                        setPagination((prev) => ({ ...prev, page: 1 }));
-                      }}
-                      className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"
-                    >
-                      <FaTimes className="w-3 h-3" />
-                    </button>
-                  </span>
-                )}
-                {(filterDateFrom || filterDateTo) && (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
-                    Date: {filterDateFrom || "..."} to {filterDateTo || "..."}
-                    <button
-                      onClick={() => {
-                        setFilterDateFrom("");
-                        setFilterDateTo("");
-                        setPagination((prev) => ({ ...prev, page: 1 }));
-                      }}
-                      className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"
-                    >
-                      <FaTimes className="w-3 h-3" />
-                    </button>
-                  </span>
-                )}
-                <button
-                  onClick={clearFilters}
-                  className="ml-auto px-3 py-1 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-full text-xs font-medium transition-colors"
-                >
-                  Clear All Filters
-                </button>
-              </div>
-            )}
+            {/* Active filters + Clear all */}
+            <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-slate-200">
+              {activeFilterCount > 0 ? (
+                <>
+                  <span className="text-xs font-medium text-slate-500">Active:</span>
+                  {filterCountry && (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 text-blue-700 rounded-lg text-xs font-medium border border-blue-200/60">
+                      Country: {filterCountry}
+                      <button type="button" onClick={() => { setFilterCountry(""); setPagination((p) => ({ ...p, page: 1 })); }} className="hover:bg-blue-200/60 rounded p-0.5 transition-colors" aria-label="Remove country filter"><FaTimes className="w-3 h-3" /></button>
+                    </span>
+                  )}
+                  {filterClassName && (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 text-blue-700 rounded-lg text-xs font-medium border border-blue-200/60">
+                      Class: {filterClassName}
+                      <button type="button" onClick={() => { setFilterClassName(""); setPagination((p) => ({ ...p, page: 1 })); }} className="hover:bg-blue-200/60 rounded p-0.5 transition-colors" aria-label="Remove class filter"><FaTimes className="w-3 h-3" /></button>
+                    </span>
+                  )}
+                  {filterStatus && filterStatus !== "all" && (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 text-blue-700 rounded-lg text-xs font-medium border border-blue-200/60">
+                      Status: {filterStatus}
+                      <button type="button" onClick={() => { setFilterStatus("all"); setPagination((p) => ({ ...p, page: 1 })); }} className="hover:bg-blue-200/60 rounded p-0.5 transition-colors" aria-label="Remove status filter"><FaTimes className="w-3 h-3" /></button>
+                    </span>
+                  )}
+                  {filterSearch && (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 text-blue-700 rounded-lg text-xs font-medium border border-blue-200/60">
+                      Search: {filterSearch}
+                      <button type="button" onClick={() => { setFilterSearch(""); setPagination((p) => ({ ...p, page: 1 })); }} className="hover:bg-blue-200/60 rounded p-0.5 transition-colors" aria-label="Clear search"><FaTimes className="w-3 h-3" /></button>
+                    </span>
+                  )}
+                  {(filterDateFrom || filterDateTo) && (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 text-blue-700 rounded-lg text-xs font-medium border border-blue-200/60">
+                      Date: {filterDateFrom || "…"} – {filterDateTo || "…"}
+                      <button type="button" onClick={() => { setFilterDateFrom(""); setFilterDateTo(""); setPagination((p) => ({ ...p, page: 1 })); }} className="hover:bg-blue-200/60 rounded p-0.5 transition-colors" aria-label="Clear date filter"><FaTimes className="w-3 h-3" /></button>
+                    </span>
+                  )}
+                  <button type="button" onClick={clearFilters} className="ml-auto inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg text-xs font-medium transition-colors">
+                    <FaTimes className="w-3 h-3" /> Clear all
+                  </button>
+                </>
+              ) : (
+                <p className="text-xs text-slate-500">No filters applied. Use the fields above to narrow results.</p>
+              )}
+            </div>
           </div>
         )}
 
         {/* Table Content */}
         <div>
           {isDataLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="text-center">
-                <LoadingSpinner size="medium" />
-                <p className="text-sm text-gray-500 mt-3">Loading leads...</p>
+            <div className="rounded-b-xl border-t border-slate-100 bg-slate-50/30 py-16 px-6">
+              <div className="flex flex-col items-center justify-center text-center">
+                <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-blue-100">
+                  <LoadingSpinner size="large" />
+                </div>
+                <p className="text-sm font-medium text-slate-700">Loading leads...</p>
+                <p className="text-xs text-slate-500 mt-1">Fetching your data</p>
               </div>
             </div>
           ) : error ? (
-            <div className="flex flex-col items-center justify-center py-12 text-center">
-              <div className="p-4 bg-red-100 rounded-full mb-4">
-                <FaClipboardList className="w-8 h-8 text-red-400" />
+            <div className="rounded-b-xl border-t border-slate-100 bg-red-50/50 py-16 px-6">
+              <div className="flex flex-col items-center justify-center text-center max-w-md mx-auto">
+                <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-red-100">
+                  <FaClipboardList className="h-7 w-7 text-red-500" />
+                </div>
+                <h3 className="text-lg font-semibold text-slate-900 mb-2">Error loading leads</h3>
+                <p className="text-sm text-slate-600 mb-5">{error}</p>
+                <button
+                  type="button"
+                  onClick={() => fetchLeads(1, pagination.limit, false)}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors shadow-sm"
+                >
+                  Try again
+                </button>
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Error Loading Leads
-              </h3>
-              <p className="text-sm text-gray-500 mb-4">{error}</p>
-              <button
-                onClick={() => fetchLeads(pagination.page, pagination.limit)}
-                className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
-              >
-                Retry
-              </button>
             </div>
           ) : leads.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 text-center">
-              <div className="p-4 bg-gray-100 rounded-full mb-4">
-                <FaClipboardList className="w-8 h-8 text-gray-400" />
+            <div className="rounded-b-xl border-t border-slate-100 bg-slate-50/30 py-16 px-6">
+              <div className="flex flex-col items-center justify-center text-center max-w-sm mx-auto">
+                <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-slate-200/80">
+                  <FaClipboardList className="h-7 w-7 text-slate-500" />
+                </div>
+                <h3 className="text-lg font-semibold text-slate-900 mb-2">No leads found</h3>
+                <p className="text-sm text-slate-600 leading-relaxed">
+                  {activeFilterCount > 0
+                    ? "No leads match your current filters. Try adjusting or clearing filters."
+                    : "Leads submitted from your forms will appear here. Share your forms to start collecting leads."}
+                </p>
+                {activeFilterCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={clearFilters}
+                    className="mt-5 inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors shadow-sm"
+                  >
+                    Clear filters
+                  </button>
+                )}
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                No Leads Found
-              </h3>
-              <p className="text-sm text-gray-500 mb-4 max-w-sm">
-                {activeFilterCount > 0
-                  ? "No leads match your current filters."
-                  : "Leads submitted from the frontend will appear here."}
-              </p>
-              {activeFilterCount > 0 && (
-                <button
-                  onClick={clearFilters}
-                  className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
-                >
-                  Clear Filters
-                </button>
-              )}
             </div>
           ) : (
             <>
               <LeadTable
+                ref={leadTableRef}
                 leads={leads}
                 onView={handleViewLead}
                 onDelete={handleDeleteLead}
+                selectedLeads={selectedLeads}
+                onSelectionChange={setSelectedLeads}
+                totalLeads={pagination.total}
+                onExportEmailSent={(ok, msg) => {
+                  if (ok) success("Export email sent to configured address.");
+                  else showError(msg || "Failed to send export email.");
+                }}
               />
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* Pagination Footer - Separate Card */}
-      {!isDataLoading && !error && leads.length > 0 && pagination.total > 0 && (
-        <>
-          <div className="mt-4 bg-white rounded-lg border border-gray-200 shadow-sm px-4 py-3">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                    <div className="text-sm text-gray-600">
-                      Showing {(pagination.page - 1) * pagination.limit + 1} to{" "}
-                      {Math.min(
-                        pagination.page * pagination.limit,
-                        pagination.total
-                      )}{" "}
-                      of {pagination.total} leads
+              {/* Scroll sentinel: load more when near bottom (YouTube/Instagram style) */}
+              {pagination.totalPages > 0 && pagination.page < pagination.totalPages && (
+                <div
+                  ref={loadMoreSentinelRef}
+                  className="min-h-px flex items-center justify-center py-6"
+                  aria-hidden="true"
+                >
+                  {isLoadingMore && (
+                    <div className="flex items-center gap-2 text-slate-400">
+                      <LoadingSpinner size="small" />
+                      <span className="text-xs">Loading more…</span>
                     </div>
-                      <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-600 whitespace-nowrap">
-                          Items per page:
-                </span>
-                        <select
-                          value={pagination.limit}
-                          onChange={(e) => {
-                            setPagination((prev) => ({
-                              ...prev,
-                              limit: parseInt(e.target.value),
-                              page: 1,
-                            }));
-                          }}
-                  className="px-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm bg-white cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 4 5%22><path fill=%22%23666%22 d=%22M2 0L0 2h4zm0 5L0 3h4z%22/></svg>')] bg-[length:12px] bg-[right:8px_center] bg-no-repeat pr-8"
-                        >
-                          <option value="10">10</option>
-                          <option value="25">25</option>
-                          <option value="50">50</option>
-                          <option value="100">100</option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-                  {pagination.totalPages > 1 && (
-            <div className="mt-3 flex justify-center">
-                    <Pagination
-                      currentPage={pagination.page}
-                      totalPages={pagination.totalPages}
-                      onPageChange={(newPage) => {
-                        setPagination((prev) => ({ ...prev, page: newPage }));
-                      }}
-                      showPrevNext={true}
-                      maxVisible={5}
-                    />
+                  )}
                 </div>
               )}
             </>
           )}
-
-      {/* View Lead Modal */}
-   {showViewModal && selectedLead && (
-  <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
-    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden border border-gray-200">
-
-      {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b bg-white sticky top-0">
-        <h2 className="text-xl font-semibold text-gray-900">Lead Details</h2>
-        <button
-          onClick={() => {
-            setShowViewModal(false);
-            setSelectedLead(null);
-          }}
-          className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-2 rounded-lg transition"
-        >
-          <FaTimes className="w-5 h-5" />
-        </button>
-      </div>
-
-      {/* Body */}
-      <div className="p-6 space-y-6 overflow-y-auto">
-
-        {/* Grid Info */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-
-          {/* Field */}
-          <div>
-            <label className="text-sm font-medium text-gray-600">Name</label>
-            <p className="mt-1 text-sm text-gray-900 font-semibold">
-              {selectedLead.name}
-            </p>
-          </div>
-
-          <div>
-            <label className="text-sm font-medium text-gray-600">Email</label>
-            <p className="mt-1 text-sm text-gray-900 font-semibold break-all">
-              {selectedLead.email}
-            </p>
-          </div>
-
-          <div>
-            <label className="text-sm font-medium text-gray-600">Country</label>
-            <p className="mt-1 text-sm text-gray-900 font-semibold">
-              {selectedLead.country}
-            </p>
-          </div>
-
-          <div>
-            <label className="text-sm font-medium text-gray-600">Class Name</label>
-            <p className="mt-1 text-sm text-gray-900 font-semibold">
-              {selectedLead.className}
-            </p>
-          </div>
-
-          <div>
-            <label className="text-sm font-medium text-gray-600">Phone Number</label>
-            <p className="mt-1 text-sm text-gray-900 font-semibold">
-              {selectedLead.phoneNumber || (
-                <span className="text-gray-400 italic">Not provided</span>
-              )}
-            </p>
-          </div>
-
-          <div>
-            <label className="text-sm font-medium text-gray-600">Status</label>
-            <span
-              className={`mt-1 inline-block px-3 py-1 rounded-full text-xs font-medium ${
-                selectedLead.status === "new"
-                  ? "bg-blue-100 text-blue-700"
-                  : selectedLead.status === "updated"
-                  ? "bg-purple-100 text-purple-700"
-                  : selectedLead.status === "contacted"
-                  ? "bg-yellow-100 text-yellow-700"
-                  : selectedLead.status === "converted"
-                  ? "bg-green-100 text-green-700"
-                  : "bg-gray-100 text-gray-700"
-              }`}
-            >
-              {selectedLead.status === "updated"
-                ? `Updated, ${selectedLead.updateCount > 0 ? selectedLead.updateCount : 1} time${(selectedLead.updateCount > 0 ? selectedLead.updateCount : 1) === 1 ? '' : 's'}`
-                : selectedLead.status || "new"}
-            </span>
-          </div>
-
-          <div>
-            <label className="text-sm font-medium text-gray-600">
-              {selectedLead.updatedAt && (selectedLead.status === "updated" || selectedLead.updateCount > 0)
-                ? "Last Updated"
-                : "Date Submitted"}
-            </label>
-            <p className="mt-1 text-sm text-gray-900 font-semibold">
-              {selectedLead.updatedAt && (selectedLead.status === "updated" || selectedLead.updateCount > 0)
-                ? new Date(selectedLead.updatedAt).toLocaleString("en-US", {
-                    year: "numeric",
-                    month: "short",
-                    day: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })
-                : new Date(selectedLead.createdAt).toLocaleString("en-US", {
-                    year: "numeric",
-                    month: "short",
-                    day: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-            </p>
-            {selectedLead.updatedAt && (selectedLead.status === "updated" || selectedLead.updateCount > 0) && (
-              <p className="mt-1 text-xs text-gray-500">
-                Originally submitted: {new Date(selectedLead.createdAt).toLocaleString("en-US", {
-                  year: "numeric",
-                  month: "short",
-                  day: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </p>
-            )}
-          </div>
-
-          {selectedLead.form_id && (
-            <div>
-              <label className="text-sm font-medium text-gray-600">
-                Form ID
-              </label>
-              <p className="mt-1 text-sm text-gray-900 font-semibold">
-                <code className="bg-gray-100 px-2 py-1 rounded text-xs">
-                  {selectedLead.form_id}
-                </code>
-              </p>
-            </div>
-          )}
-
-          {selectedLead.source && (
-            <div className="sm:col-span-2">
-              <label className="text-sm font-medium text-gray-600">
-                Source URL
-              </label>
-              <p className="mt-1 text-sm text-gray-900 font-semibold break-all">
-                <code className="bg-gray-100 px-2 py-1 rounded text-xs">
-                  {selectedLead.source}
-                </code>
-              </p>
-              <p className="mt-1 text-xs text-gray-500">
-                {selectedLead.status === "updated"
-                  ? "Latest submission location"
-                  : "Submission location"}
-              </p>
-            </div>
-          )}
         </div>
       </div>
 
-      {/* Footer */}
-      <div className="px-6 py-4 bg-gray-50 border-t sticky bottom-0 flex justify-end">
-        <button
-          onClick={() => {
-            setShowViewModal(false);
-            setSelectedLead(null);
-          }}
-          className="px-5 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-sm font-medium transition"
-        >
-          Close
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+
+      {/* View Lead Modal */}
+      {showViewModal && selectedLead && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden border border-slate-200">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-slate-50/80 sticky top-0">
+              <h2 className="text-lg font-semibold text-slate-900">Lead details</h2>
+              <button
+                type="button"
+                onClick={() => { setShowViewModal(false); setSelectedLead(null); }}
+                className="p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-200/80 transition-colors"
+                aria-label="Close"
+              >
+                <FaTimes className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-6 space-y-6 overflow-y-auto">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div>
+                  <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider">Name</label>
+                  <p className="mt-1 text-sm font-semibold text-slate-900">{selectedLead.name}</p>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider">Email</label>
+                  <p className="mt-1 text-sm font-semibold text-slate-900 break-all">{selectedLead.email}</p>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider">Country</label>
+                  {isHighlightCountry(selectedLead.country) ? (
+                    <span className="mt-1 inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-yellow-400/90 text-yellow-900 border border-yellow-500/60 shadow-sm">
+                      {selectedLead.country}
+                    </span>
+                  ) : (
+                    <p className="mt-1 text-sm font-semibold text-slate-900">{selectedLead.country}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider">Class Name</label>
+                  <p className="mt-1 text-sm font-semibold text-slate-900">{selectedLead.className}</p>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider">Phone</label>
+                  <p className="mt-1 text-sm font-semibold text-slate-900">
+                    {selectedLead.phoneNumber || <span className="text-slate-400 italic font-normal">Not provided</span>}
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider">Status</label>
+                  <span
+                    className={`mt-1 inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium ${
+                      selectedLead.status === "new"
+                        ? "bg-blue-50 text-blue-700"
+                        : selectedLead.status === "updated"
+                          ? "bg-purple-50 text-purple-700"
+                          : selectedLead.status === "contacted"
+                            ? "bg-amber-50 text-amber-700"
+                            : selectedLead.status === "converted"
+                              ? "bg-green-50 text-green-700"
+                              : "bg-slate-100 text-slate-700"
+                    }`}
+                  >
+                    {selectedLead.status === "updated"
+                      ? `Updated ${selectedLead.updateCount > 0 ? selectedLead.updateCount : 1}×`
+                      : selectedLead.status || "new"}
+                  </span>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider">
+                    {selectedLead.updatedAt && (selectedLead.status === "updated" || selectedLead.updateCount > 0) ? "Last updated" : "Date submitted"}
+                  </label>
+                  <p className="mt-1 text-sm font-semibold text-slate-900">
+                    {selectedLead.updatedAt && (selectedLead.status === "updated" || selectedLead.updateCount > 0)
+                      ? new Date(selectedLead.updatedAt).toLocaleString("en-US", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
+                      : new Date(selectedLead.createdAt).toLocaleString("en-US", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                  </p>
+                  {selectedLead.updatedAt && (selectedLead.status === "updated" || selectedLead.updateCount > 0) && (
+                    <p className="mt-1 text-xs text-slate-500">
+                      Originally: {new Date(selectedLead.createdAt).toLocaleString("en-US", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                    </p>
+                  )}
+                </div>
+                {selectedLead.form_id && (
+                  <div>
+                    <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider">Form ID</label>
+                    <p className="mt-1"><code className="text-xs bg-slate-100 text-slate-800 px-2 py-1 rounded font-mono">{selectedLead.form_id}</code></p>
+                  </div>
+                )}
+                {selectedLead.source && (
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider">Source URL</label>
+                    <p className="mt-1 text-sm font-semibold text-slate-900 break-all">
+                      <code className="bg-slate-100 px-2 py-1 rounded text-xs font-mono">{selectedLead.source}</code>
+                    </p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      {selectedLead.status === "updated" ? "Latest submission location" : "Submission location"}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => { setShowViewModal(false); setSelectedLead(null); }}
+                className="px-4 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg text-sm font-medium transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </>
   );

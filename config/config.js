@@ -41,7 +41,19 @@ export const config = {
   jwtRefreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || "7d",
   sessionSecret: process.env.SESSION_SECRET,
 
-  // Email
+  // Email (MAIL_* preferred, fallback to EMAIL_*)
+  mailMailer: process.env.MAIL_MAILER || process.env.EMAIL_SERVICE || "smtp",
+  mailHost: process.env.MAIL_HOST || process.env.EMAIL_HOST,
+  mailPort: parseInt(process.env.MAIL_PORT || process.env.EMAIL_PORT || "465", 10),
+  mailUsername: process.env.MAIL_USERNAME || process.env.EMAIL_USER,
+  mailPassword: process.env.MAIL_PASSWORD || process.env.EMAIL_PASS,
+  mailEncryption: process.env.MAIL_ENCRYPTION || (process.env.EMAIL_SECURE === "true" ? "ssl" : null),
+  mailFromAddress: process.env.MAIL_FROM_ADDRESS || process.env.MAIL_USERNAME || process.env.EMAIL_USER,
+  mailFromName: process.env.MAIL_FROM_NAME || "TestPrepKart",
+  // Lead export: email to send CSV when leads are exported
+  leadExportMailTo: process.env.LEAD_EXPORT_MAIL_TO || "hellomdkaifali@gmail.com",
+
+  // Legacy email (kept for backward compatibility)
   emailService: process.env.EMAIL_SERVICE,
   emailHost: process.env.EMAIL_HOST,
   emailPort: process.env.EMAIL_PORT,
