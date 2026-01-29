@@ -57,6 +57,10 @@ const RichTextEditor = ({
   const editorRef = useRef(null);
   const [isReady, setIsReady] = useState(false);
   const [showFormModal, setShowFormModal] = useState(false);
+  const [showFormLinkModal, setShowFormLinkModal] = useState(false);
+  const [formLinkText, setFormLinkText] = useState("");
+  const [formLinkFormId, setFormLinkFormId] = useState(null);
+  const [formLinkRedirect, setFormLinkRedirect] = useState("");
   const [showButtonModal, setShowButtonModal] = useState(false);
   const [showImageModal, setShowImageModal] = useState(false);
   const [showVideoModal, setShowVideoModal] = useState(false);
@@ -361,12 +365,12 @@ const RichTextEditor = ({
     editor.config.placeholder = placeholder;
   }, [placeholder]);
 
-  // Fetch forms when modal opens
+  // Fetch forms when form modal or form-link modal opens
   useEffect(() => {
-    if (showFormModal) {
+    if (showFormModal || showFormLinkModal) {
       fetchForms();
     }
-  }, [showFormModal]);
+  }, [showFormModal, showFormLinkModal]);
 
   const fetchForms = async () => {
     try {
@@ -392,6 +396,47 @@ const RichTextEditor = ({
       buttonLink: form.settings?.redirectLink || "",
       imageUrl: form.settings?.imageUrl || "",
     });
+  };
+
+  const openFormLinkModal = () => {
+    const editor = editorRef.current;
+    if (!editor) return;
+    try {
+      const sel = editor.getSelection();
+      const text = sel ? sel.getSelectedText() : "";
+      if (!text || !String(text).trim()) {
+        alert("Please select some text first. The selected text will become a clickable link that opens the form.");
+        return;
+      }
+      setFormLinkText(String(text).trim());
+      setFormLinkFormId(null);
+      setFormLinkRedirect("");
+      setShowFormLinkModal(true);
+    } catch (e) {
+      alert("Please select some text first.");
+    }
+  };
+
+  const insertFormLink = () => {
+    const editor = editorRef.current;
+    if (!editor || !formLinkFormId || !formLinkText.trim()) return;
+    const formId = formLinkFormId;
+    const escapeHtml = (str) => {
+      if (!str) return "";
+      return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    };
+    const redirectAttr = formLinkRedirect.trim() ? ` data-redirect-after="${escapeHtml(formLinkRedirect.trim())}"` : "";
+    const linkHtml = `<a href="#form-modal:${escapeHtml(formId)}" class="form-modal-link" data-form-id="${escapeHtml(formId)}"${redirectAttr}>${escapeHtml(formLinkText)}</a>`;
+    editor.insertHtml(linkHtml);
+    setShowFormLinkModal(false);
+    setFormLinkText("");
+    setFormLinkFormId(null);
+    setFormLinkRedirect("");
   };
 
   const insertFormCode = () => {
@@ -951,6 +996,27 @@ const RichTextEditor = ({
               </svg>
               Insert Form
             </button>
+            <button
+              onClick={openFormLinkModal}
+              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+              type="button"
+              title="Select text, then click to make it a link that opens a form modal"
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+                />
+              </svg>
+              Form link
+            </button>
           </div>
         )}
 
@@ -967,6 +1033,83 @@ const RichTextEditor = ({
           aria-label="Rich text editor"
         />
       </div>
+
+      {/* Form link modal: make selected text a link that opens form modal on click */}
+      {showFormLinkModal && typeof document !== "undefined" && createPortal(
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-200">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h2 className="text-lg font-semibold text-gray-900">Form link</h2>
+              <p className="text-sm text-gray-500 mt-0.5">
+                The selected text will become a clickable link. When users click it, the form modal will open.
+              </p>
+            </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Link text</label>
+                <input
+                  type="text"
+                  value={formLinkText}
+                  onChange={(e) => setFormLinkText(e.target.value)}
+                  placeholder="Text for the link"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Form to open</label>
+                <select
+                  value={formLinkFormId || ""}
+                  onChange={(e) => setFormLinkFormId(e.target.value || null)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm bg-white"
+                >
+                  <option value="">Select a form</option>
+                  {forms.map((form) => (
+                    <option key={form._id} value={form.formId}>{form.formId}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  After submission go to <span className="text-gray-500 font-normal">(optional)</span>
+                </label>
+                <input
+                  type="text"
+                  value={formLinkRedirect}
+                  onChange={(e) => setFormLinkRedirect(e.target.value)}
+                  placeholder="e.g. /thank-you or https://example.com"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  Leave empty to just close the modal. Use a path (e.g. /thank-you) or full URL.
+                </p>
+              </div>
+            </div>
+            <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowFormLinkModal(false);
+                  setFormLinkText("");
+                  setFormLinkFormId(null);
+                  setFormLinkRedirect("");
+                }}
+                className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-sm font-medium transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={insertFormLink}
+                disabled={!formLinkText.trim() || !formLinkFormId}
+                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Insert link
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
 
       {/* Form Selection Modal */}
       {showFormModal && typeof document !== "undefined" && createPortal(

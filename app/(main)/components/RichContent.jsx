@@ -180,6 +180,7 @@ const RichContent = ({ html }) => {
   const [mathJaxError, setMathJaxError] = useState(false);
   const [formStates, setFormStates] = useState({});
   const [formConfigs, setFormConfigs] = useState({});
+  const [formLinkModal, setFormLinkModal] = useState({ open: false, formId: null, redirectAfter: "" });
   const [activeVideo, setActiveVideo] = useState(null); // { url, type, mimeType }
   const router = useRouter();
 
@@ -198,6 +199,18 @@ const RichContent = ({ html }) => {
     if (!containerRef.current || !html) return;
 
     const handleContainerClick = (e) => {
+      // 0. Form link: link that opens form modal on click
+      const formLink = e.target.closest("a.form-modal-link");
+      if (formLink) {
+        const formId = formLink.getAttribute("data-form-id");
+        if (formId) {
+          e.preventDefault();
+          const redirectAfter = formLink.getAttribute("data-redirect-after") || "";
+          setFormLinkModal({ open: true, formId, redirectAfter });
+        }
+        return;
+      }
+
       // 1. Handle Button Clicks
       const buttonLink = e.target.closest(
         ".inline-button-wrapper a, .inline-button"
@@ -856,6 +869,19 @@ const RichContent = ({ html }) => {
           video={activeVideo}
           onClose={() => setActiveVideo(null)}
         />
+      )}
+
+      {/* Form link modal: opened when user clicks a "form link" in content */}
+      {formLinkModal.open && formLinkModal.formId && (
+        <Suspense fallback={null}>
+          <FormRenderer
+            formId={formLinkModal.formId}
+            isOpen={formLinkModal.open}
+            onClose={() => setFormLinkModal({ open: false, formId: null, redirectAfter: "" })}
+            prepared=""
+            buttonLink={formLinkModal.redirectAfter || ""}
+          />
+        </Suspense>
       )}
     </>
   );

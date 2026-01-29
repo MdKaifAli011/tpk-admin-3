@@ -354,10 +354,10 @@ const LeadTable = forwardRef(({ leads, onView, onDelete, selectedLeads: selected
                   className={`transition-all duration-150 cursor-pointer select-none ${
                     isSelected
                       ? isHighlightRow
-                        ? "bg-yellow-400 hover:bg-yellow-200"
-                        : "bg-red-400 hover:bg-red-200"
+                        ? "bg-green-400 hover:bg-green-200"
+                        : "bg-green-400 hover:bg-green-200"
                       : isHighlightRow
-                        ? "bg-yellow-400/80 hover:bg-yellow-100"
+                        ? "bg-yellow-400/80 hover:bg-green-100"
                         : "bg-white hover:bg-gray-50/80"
                   }`}
                 >

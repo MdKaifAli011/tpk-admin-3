@@ -81,6 +81,9 @@ const LeadManagement = () => {
   // Form IDs marked "highlight in leads" (black badge in lead table)
   const [highlightedFormIds, setHighlightedFormIds] = useState([]);
 
+  // Loading state for Send / Export / Export & Send (shows spinner on button)
+  const [actionLoading, setActionLoading] = useState(null); // null | "send" | "export" | "exportAndSend"
+
   // Check session storage for existing verification on mount
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -495,31 +498,71 @@ const LeadManagement = () => {
                     <div className="inline-flex flex-wrap items-center gap-2">
                       <button
                         type="button"
-                        onClick={() => leadTableRef.current?.sendOnly(pagination.total)}
-                        className="inline-flex items-center gap-2 px-3 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-lg text-sm font-medium transition-colors shadow-sm"
+                        disabled={!!actionLoading}
+                        onClick={() => {
+                          setActionLoading("send");
+                          leadTableRef.current?.sendOnly(pagination.total);
+                        }}
+                        className="inline-flex items-center gap-2 px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors shadow-sm disabled:opacity-70 disabled:cursor-wait"
                         title="Send CSV to configured email only"
                       >
-                        <FaEnvelope className="w-4 h-4" />
-                        Send
+                        {actionLoading === "send" ? (
+                          <>
+                            <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            Sending…
+                          </>
+                        ) : (
+                          <>
+                            <FaEnvelope className="w-4 h-4" />
+                            Send
+                          </>
+                        )}
                       </button>
                       <button
                         type="button"
-                        onClick={() => leadTableRef.current?.exportOnly()}
-                        className="inline-flex items-center gap-2 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium transition-colors shadow-sm"
+                        disabled={!!actionLoading}
+                        onClick={() => {
+                          setActionLoading("export");
+                          leadTableRef.current?.exportOnly();
+                          setTimeout(() => setActionLoading(null), 600);
+                        }}
+                        className="inline-flex items-center gap-2 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium transition-colors shadow-sm disabled:opacity-70 disabled:cursor-wait"
                         title="Download CSV file only"
                       >
-                        <FaDownload className="w-4 h-4" />
-                        Export
+                        {actionLoading === "export" ? (
+                          <>
+                            <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            Exporting…
+                          </>
+                        ) : (
+                          <>
+                            <FaDownload className="w-4 h-4" />
+                            Export
+                          </>
+                        )}
                       </button>
                       <button
                         type="button"
-                        onClick={() => leadTableRef.current?.exportAndSend(pagination.total)}
-                        className="inline-flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors shadow-sm"
+                        disabled={!!actionLoading}
+                        onClick={() => {
+                          setActionLoading("exportAndSend");
+                          leadTableRef.current?.exportAndSend(pagination.total);
+                        }}
+                        className="inline-flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors shadow-sm disabled:opacity-70 disabled:cursor-wait"
                         title="Download CSV and send to email"
                       >
-                        <FaDownload className="w-4 h-4" />
-                        <FaEnvelope className="w-3.5 h-3.5" />
-                        Export &amp; Send
+                        {actionLoading === "exportAndSend" ? (
+                          <>
+                            <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            Exporting &amp; sending…
+                          </>
+                        ) : (
+                          <>
+                            <FaDownload className="w-4 h-4" />
+                            <FaEnvelope className="w-3.5 h-3.5" />
+                            Export &amp; Send
+                          </>
+                        )}
                       </button>
                     </div>
                   </>
@@ -796,6 +839,7 @@ const LeadManagement = () => {
                 totalLeads={pagination.total}
                 highlightedFormIds={new Set(highlightedFormIds)}
                 onExportEmailSent={(ok, msg) => {
+                  setActionLoading(null);
                   if (ok) success("Export email sent to configured address.");
                   else showError(msg || "Failed to send export email.");
                 }}
