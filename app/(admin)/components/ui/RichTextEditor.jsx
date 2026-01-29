@@ -92,6 +92,12 @@ const RichTextEditor = ({
   const onChangeRef = useRef(onChange);
   const valueRef = useRef(value);
   const placeholderRef = useRef(placeholder);
+  /** After we emit onChange (e.g. when leaving Source mode), skip one value→editor sync so we don't overwrite with stale parent value */
+  const lastEmittedDataRef = useRef(null);
+  /** Interval for syncing source textarea to parent while in source mode (so Save works without switching back) */
+  const sourceSyncIntervalRef = useRef(null);
+  /** Last raw source we pushed, to avoid duplicate onChange while in source mode */
+  const lastSourcePushRef = useRef(null);
 
   const instanceId = useMemo(
     () => `rte-${Math.random().toString(36).slice(2, 10)}`,
@@ -327,7 +333,41 @@ const RichTextEditor = ({
 
       editor.on("change", () => {
         const data = editor.getData();
+        lastEmittedDataRef.current = data;
         onChangeRef.current?.(data);
+      });
+
+      // When leaving Source mode, CKEditor updates content but "change" may not fire — sync to parent and mark emitted so value effect doesn't overwrite
+      // While in Source mode, periodically push source textarea content so Save works without having to click back to WYSIWYG
+      editor.on("mode", () => {
+        if (editor.mode === "wysiwyg") {
+          if (sourceSyncIntervalRef.current) {
+            clearInterval(sourceSyncIntervalRef.current);
+            sourceSyncIntervalRef.current = null;
+          }
+          lastSourcePushRef.current = null;
+          const data = editor.getData();
+          lastEmittedDataRef.current = data;
+          onChangeRef.current?.(data);
+        } else if (editor.mode === "source") {
+          lastSourcePushRef.current = null;
+          const pushSourceToParent = () => {
+            try {
+              const editable = editor.editable();
+              if (!editable || editor.mode !== "source") return;
+              const raw = typeof editable.getValue === "function" ? editable.getValue() : (editable.$ && editable.$.value);
+              if (raw == null) return;
+              if (lastSourcePushRef.current === raw) return;
+              lastSourcePushRef.current = raw;
+              lastEmittedDataRef.current = raw;
+              onChangeRef.current?.(raw);
+            } catch (e) {
+              // ignore if editable not ready
+            }
+          };
+          pushSourceToParent();
+          sourceSyncIntervalRef.current = setInterval(pushSourceToParent, 350);
+        }
       });
     };
 
@@ -337,6 +377,10 @@ const RichTextEditor = ({
 
     return () => {
       isMounted = false;
+      if (sourceSyncIntervalRef.current) {
+        clearInterval(sourceSyncIntervalRef.current);
+        sourceSyncIntervalRef.current = null;
+      }
       if (editorRef.current) {
         editorRef.current.destroy(true);
         editorRef.current = null;
@@ -348,8 +392,16 @@ const RichTextEditor = ({
     const editor = editorRef.current;
     if (!editor) return;
     const currentData = editor.getData();
+    if (value === currentData) {
+      lastEmittedDataRef.current = null;
+      return;
+    }
     if (value !== undefined && value !== currentData) {
+      if (lastEmittedDataRef.current != null) {
+        return;
+      }
       editor.setData(value || "");
+      lastEmittedDataRef.current = value;
     }
   }, [value]);
 
