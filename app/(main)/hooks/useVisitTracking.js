@@ -1,20 +1,53 @@
 'use client';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 
-// Base path for API calls
-const BASE_PATH = '/self-study';
+const IP_CHECK_KEY = 'visit_ip_check';
+const IP_CHECK_TTL_MS = 5 * 60 * 1000; // 5 minutes – one check per session window
+
+function getBasePath() {
+  if (typeof window === 'undefined') return '/self-study';
+  return (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_BASE_PATH) || '/self-study';
+}
+
+function getCachedIpCheck() {
+  if (typeof sessionStorage === 'undefined') return null;
+  try {
+    const raw = sessionStorage.getItem(IP_CHECK_KEY);
+    if (!raw) return null;
+    const { isBlocked, ts } = JSON.parse(raw);
+    if (Date.now() - ts > IP_CHECK_TTL_MS) return null;
+    return { isBlocked: !!isBlocked };
+  } catch {
+    return null;
+  }
+}
+
+function setCachedIpCheck(isBlocked) {
+  if (typeof sessionStorage === 'undefined') return;
+  try {
+    sessionStorage.setItem(IP_CHECK_KEY, JSON.stringify({ isBlocked, ts: Date.now() }));
+  } catch {}
+}
+
+const isDev = typeof process !== 'undefined' && process.env?.NODE_ENV === 'development';
 
 export const useVisitTracking = (level, itemId, itemSlug) => {
-  console.log('🔥 useVisitTracking HOOK CALLED with:', { level, itemId, itemSlug });
-  
   const [isTracked, setIsTracked] = useState(false);
   const [isBlocked, setIsBlocked] = useState(false);
-  const [trackingStatus, setTrackingStatus] = useState('idle');
+  const [trackingStatus, setTrackingStatus] = useState('idle'); // idle | checking | tracking | saved | blocked | error
+  const [saveStatus, setSaveStatus] = useState(null); // { saved: boolean, at?: string } for instant feedback
+  const didRunRef = useRef(false);
+  const lastKeyRef = useRef('');
 
-  // Helper function to get/create session ID
+  // Reset run flag when page (level/itemId) changes so each URL is tracked
+  const key = `${level}:${itemId}`;
+  if (lastKeyRef.current !== key) {
+    lastKeyRef.current = key;
+    didRunRef.current = false;
+  }
+
   const getSessionId = useCallback(() => {
     if (typeof window === 'undefined') return null;
-    
     let sessionId = sessionStorage.getItem('visit_session_id');
     if (!sessionId) {
       sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
@@ -23,66 +56,69 @@ export const useVisitTracking = (level, itemId, itemSlug) => {
     return sessionId;
   }, []);
 
-  // Helper function to get user ID
   const getUserId = useCallback(() => {
     if (typeof window === 'undefined') return null;
-    
     try {
       const user = localStorage.getItem('user');
       if (user) {
         const userData = JSON.parse(user);
         return userData._id || userData.id || null;
       }
-    } catch (error) {
-      console.error('Error getting user ID:', error);
-    }
+    } catch {}
     return null;
   }, []);
 
-  // Track visit function
   const trackVisit = useCallback(async () => {
-    if (!level || !itemId || isTracked) {
-      console.log('Track visit skipped:', { level, itemId, isTracked });
-      return;
+    const id = itemId != null ? String(itemId) : '';
+    if (!level || !id || isTracked) return;
+
+    const BASE_PATH = getBasePath();
+    const pageUrl = typeof window !== 'undefined' ? window.location.href : '';
+
+    if (isDev) {
+      console.log('[VisitTracking] Page visit – URL:', pageUrl, '| level:', level, '| itemId:', id);
     }
 
     try {
-      console.log('Starting visit tracking for:', { level, itemId, itemSlug });
       setTrackingStatus('checking');
 
-      // Check if IP is blocked
-      const checkResponse = await fetch(`${BASE_PATH}/api/analytics/check-ip`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
-
-      if (!checkResponse.ok) {
-        console.error('IP check failed:', checkResponse.status);
-        // Continue with tracking even if IP check fails
+      // One check-ip per session: use cache first
+      let isBlocked = false;
+      const cached = getCachedIpCheck();
+      if (cached !== null) {
+        isBlocked = cached.isBlocked;
       } else {
-        const checkData = await checkResponse.json();
-        
-        if (checkData.isBlocked) {
-          setIsBlocked(true);
-          setTrackingStatus('blocked');
-          console.log('Visit tracking blocked for IP:', checkData.ipAddress);
-          return;
+        const checkResponse = await fetch(`${BASE_PATH}/api/analytics/check-ip`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        });
+        if (checkResponse.ok) {
+          const checkData = await checkResponse.json();
+          isBlocked = !!checkData.isBlocked;
+          setCachedIpCheck(isBlocked);
         }
       }
 
-      // Proceed with visit tracking
+      if (isBlocked) {
+        setIsBlocked(true);
+        setTrackingStatus('blocked');
+        setSaveStatus({ saved: false, reason: 'blocked' });
+        if (isDev) console.log('[VisitTracking] Blocked – IP not allowed');
+        return;
+      }
+
       setTrackingStatus('tracking');
 
       const trackingData = {
         level,
-        itemId,
-        itemSlug,
+        itemId: id,
+        itemSlug: itemSlug != null ? String(itemSlug) : undefined,
         referrer: typeof document !== 'undefined' ? document.referrer : 'direct',
         sessionId: getSessionId(),
         userId: getUserId(),
         metadata: {
           pageInfo: {
-            url: typeof window !== 'undefined' ? window.location.href : '',
+            url: pageUrl,
             title: typeof document !== 'undefined' ? document.title : '',
             referrer: typeof document !== 'undefined' ? document.referrer : '',
             timestamp: new Date().toISOString()
@@ -95,59 +131,57 @@ export const useVisitTracking = (level, itemId, itemSlug) => {
         }
       };
 
-      const response = await fetch(`${BASE_PATH}/api/analytics/track-visit`, {
+      const trackUrl = `${BASE_PATH}/api/analytics/track-visit`;
+      if (isDev) console.log('[VisitTracking] POST', trackUrl, '→ level:', level, 'itemId:', id);
+
+      const response = await fetch(trackUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(trackingData)
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to track visit');
-      }
-
       const result = await response.json();
-      
-      if (result.success) {
+
+      if (response.ok && result.success) {
         setIsTracked(true);
-        setTrackingStatus('tracking');
-        
-        console.log('Visit tracked successfully:', {
-          level,
-          itemId,
-          itemSlug,
-          result
-        });
+        setTrackingStatus('saved');
+        setSaveStatus({ saved: true, at: new Date().toISOString() });
+        if (isDev) {
+          if (result.existing) {
+            console.log('[VisitTracking] Same page already counted (same IP, last hour) – no new count');
+          } else {
+            console.log('[VisitTracking] Count increased – visit saved for', pageUrl);
+          }
+        }
+      } else if (result.blocked) {
+        setIsBlocked(true);
+        setTrackingStatus('blocked');
+        setSaveStatus({ saved: false, reason: 'blocked' });
+        if (isDev) console.log('[VisitTracking] Blocked – IP not allowed');
       } else {
         setTrackingStatus('error');
-        console.error('Visit tracking failed:', result.message);
+        setSaveStatus({ saved: false, reason: result.message || 'tracking_failed' });
+        if (isDev) console.log('[VisitTracking] Error –', response.status, result.message || result.error);
       }
-
     } catch (error) {
       setTrackingStatus('error');
-      console.error('Error tracking visit:', error);
+      setSaveStatus({ saved: false, reason: 'network_error' });
+      if (isDev) console.log('[VisitTracking] Network error –', error?.message || error);
     }
   }, [level, itemId, itemSlug, isTracked, getSessionId, getUserId]);
 
   useEffect(() => {
-    console.log('useVisitTracking useEffect called:', { level, itemId, isTracked, trackingStatus });
-    
-    if (!level || !itemId || isTracked) {
-      console.log('useVisitTracking early return:', { level, itemId, isTracked });
-      return;
-    }
-
-    console.log('useVisitTracking proceeding with trackVisit');
-
-    // Add small delay to avoid immediate tracking on page load
-    const timeoutId = setTimeout(trackVisit, 1000);
-
+    if (!level || !itemId || isTracked || didRunRef.current) return;
+    didRunRef.current = true;
+    const timeoutId = setTimeout(trackVisit, 800);
     return () => clearTimeout(timeoutId);
-  }, [level, itemId, isTracked, trackVisit, trackingStatus]);
+  }, [level, itemId, isTracked, trackVisit]);
 
-  return { 
-    isTracked, 
-    isBlocked, 
+  return {
+    isTracked,
+    isBlocked,
     trackingStatus,
+    saveStatus,
     sessionId: getSessionId()
   };
 };
@@ -167,7 +201,7 @@ export const useVisitStats = (level, itemId) => {
         setError(null);
 
         const response = await fetch(
-          `${BASE_PATH}/api/analytics/track-visit?level=${level}&itemId=${itemId}`
+          `${getBasePath()}/api/analytics/track-visit?level=${level}&itemId=${itemId}`
         );
 
         if (!response.ok) {
@@ -210,7 +244,7 @@ export const useRealtimeVisits = (level, itemId) => {
     const interval = setInterval(async () => {
       try {
         const response = await fetch(
-          `${BASE_PATH}/api/analytics/track-visit?level=${level}&itemId=${itemId}`
+          `${getBasePath()}/api/analytics/track-visit?level=${level}&itemId=${itemId}`
         );
 
         if (response.ok) {

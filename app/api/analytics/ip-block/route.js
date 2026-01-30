@@ -31,9 +31,11 @@ export async function POST(request) {
 
     const db = await connectDB();
     
+    const normalizedIp = String(ipAddress).trim().toLowerCase();
+
     // Check if IP is already blocked
     const existingBlock = await db.collection('ip_blocks').findOne({ 
-      ipAddress: ipAddress.toLowerCase(),
+      ipAddress: normalizedIp,
       isActive: true,
       $or: [
         { expiresAt: null },
@@ -48,12 +50,12 @@ export async function POST(request) {
     }
 
     const ipBlock = {
-      ipAddress: ipAddress.toLowerCase(),
+      ipAddress: normalizedIp,
       reason,
       description: description || '',
       isActive: isActive !== false,
       expiresAt: expiresAt ? new Date(expiresAt) : null,
-      blockedBy: admin.userId,
+      blockedBy: new ObjectId(admin.userId),
       blockedAt: new Date(),
       accessAttempts: 0,
       lastAccessAttempt: null,
@@ -248,14 +250,14 @@ export async function PUT(request) {
 
     // Build update object
     const updateData = {};
-    if (ipAddress) updateData.ipAddress = ipAddress;
+    if (ipAddress) updateData.ipAddress = String(ipAddress).trim().toLowerCase();
     if (reason) updateData.reason = reason;
     if (description !== undefined) updateData.description = description;
     if (expiresAt !== undefined) updateData.expiresAt = expiresAt ? new Date(expiresAt) : null;
     if (isActive !== undefined) updateData.isActive = isActive;
-    
+
     updateData.updatedAt = new Date();
-    updateData.updatedBy = admin._id;
+    updateData.updatedBy = new ObjectId(admin.userId);
 
     const result = await db.collection('ip_blocks').updateOne(
       { _id: new ObjectId(id) },

@@ -87,7 +87,7 @@ export async function GET(request) {
         .sort({ orderNumber: 1, createdAt: -1 })
         .skip(skip)
         .limit(limit)
-        .select("name slug status orderNumber image description createdAt")
+        .select("name slug status orderNumber image description createdAt visitStats")
         .lean()
         .exec(),
     ]);

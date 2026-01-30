@@ -58,7 +58,8 @@ const IPBlockForm = ({ ip, onSave, onCancel }) => {
 
       onSave(response.data);
     } catch (err) {
-      setError(err.message);
+      const msg = err.response?.data?.error || err.response?.data?.message || err.message;
+      setError(typeof msg === 'string' ? msg : 'Failed to save');
     } finally {
       setIsSubmitting(false);
     }

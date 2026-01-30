@@ -7,14 +7,12 @@ import {
   usePermissions,
   getPermissionMessage,
 } from "../../hooks/usePermissions";
-import { useMultipleVisitStats } from "../../hooks/useVisitStats";
 
 const SubjectTable = ({ subjects, onEdit, onDelete, onToggleStatus, onTogglePractice }) => {
   const { canEdit, canDelete, canReorder, role } = usePermissions();
   const router = useRouter();
-  
-  // Fetch visit statistics for all subjects
-  const { statsMap, loading: statsLoading } = useMultipleVisitStats(subjects, 'subject');
+
+  const getVisitStats = (subject) => subject?.visitStats;
 
   // Helper function to format content date
   const formatContentDate = (contentInfo) => {
@@ -184,26 +182,26 @@ const SubjectTable = ({ subjects, onEdit, onDelete, onToggleStatus, onTogglePrac
                       )}
                     </td>
                     <td className="px-2 py-1 whitespace-nowrap text-center">
-                      {statsLoading ? (
-                        <div className="animate-pulse bg-gray-200 h-4 w-12 rounded mx-auto"></div>
-                      ) : (
-                        <div className="flex flex-col">
-                          <span className="text-sm font-medium text-gray-900">
-                            {statsMap[subject._id]?.totalVisits || 0}
-                          </span>
-                          <span className="text-xs text-gray-500">
-                            ({statsMap[subject._id]?.uniqueVisits || 0} unique)
-                          </span>
-                        </div>
-                      )}
+                      {getVisitStats(subject) ? (
+<div className="flex flex-col">
+                      <span className="text-sm font-medium text-gray-900">
+                        {getVisitStats(subject).totalVisits ?? 0}
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        ({getVisitStats(subject).uniqueVisits ?? 0} unique)
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="text-xs text-gray-400">—</span>
+                  )}
                     </td>
                     <td className="px-2 py-1 whitespace-nowrap text-center">
-                      {statsLoading ? (
-                        <div className="animate-pulse bg-gray-200 h-4 w-8 rounded mx-auto"></div>
-                      ) : (
+                      {getVisitStats(subject) ? (
                         <span className="text-sm text-gray-900">
-                          {statsMap[subject._id]?.todayVisits || 0}
+                          {getVisitStats(subject).todayVisits ?? 0}
                         </span>
+                      ) : (
+                        <span className="text-xs text-gray-400">—</span>
                       )}
                     </td>
                     <td className="px-2 py-1 whitespace-nowrap text-right w-32">
@@ -370,22 +368,22 @@ const SubjectTable = ({ subjects, onEdit, onDelete, onToggleStatus, onTogglePrac
                       </div>
                       <div className="flex items-center gap-1">
                         <span className="text-[10px] text-gray-500">Visits:</span>
-                        {statsLoading ? (
-                          <div className="animate-pulse bg-gray-200 h-3 w-8 rounded"></div>
-                        ) : (
+                        {getVisitStats(subject) ? (
                           <span className="text-sm text-gray-900">
-                            {statsMap[subject._id]?.totalVisits || 0}
+                            {getVisitStats(subject).totalVisits ?? 0}
                           </span>
+                        ) : (
+                          <span className="text-xs text-gray-400">—</span>
                         )}
                       </div>
                       <div className="flex items-center gap-1">
                         <span className="text-[10px] text-gray-500">Today:</span>
-                        {statsLoading ? (
-                          <div className="animate-pulse bg-gray-200 h-3 w-6 rounded"></div>
-                        ) : (
+                        {getVisitStats(subject) ? (
                           <span className="text-sm text-gray-900">
-                            {statsMap[subject._id]?.todayVisits || 0}
+                            {getVisitStats(subject).todayVisits ?? 0}
                           </span>
+                        ) : (
+                          <span className="text-xs text-gray-400">—</span>
                         )}
                       </div>
                     </div>

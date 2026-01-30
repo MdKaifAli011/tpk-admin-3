@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 
-// Base path for API calls
-const BASE_PATH = '/self-study';
+const BASE_PATH = typeof process !== 'undefined' && process.env.NEXT_PUBLIC_BASE_PATH
+  ? process.env.NEXT_PUBLIC_BASE_PATH
+  : '/self-study';
 
 export const useVisitStats = (level, itemId) => {
   const [stats, setStats] = useState(null);

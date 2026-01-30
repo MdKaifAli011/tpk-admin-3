@@ -1,14 +1,17 @@
 import { NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
+import { logger } from '@/utils/logger';
 
 export const dynamic = 'force-dynamic';
 
 // POST - Check if IP is blocked
 export async function POST(request) {
+  logger.info('VisitTracking check-ip hit');
   try {
-    // Get client IP
+    // Get client IP (normalize for comparison with stored blocks)
     const forwarded = request.headers.get('x-forwarded-for');
-    const ip = forwarded ? forwarded.split(',')[0] : request.headers.get('x-real-ip') || 'unknown';
+    const rawIp = forwarded ? forwarded.split(',')[0].trim() : request.headers.get('x-real-ip') || 'unknown';
+    const ip = String(rawIp).trim().toLowerCase();
 
     const db = await connectDB();
 
@@ -37,7 +40,9 @@ export async function POST(request) {
         isBlocked: true,
         ipAddress: ip,
         blockedReason: blockedIP.reason,
-        message: 'IP is blocked from visit tracking' 
+        message: 'IP is blocked from visit tracking',
+        saved: true,
+        checked: true
       });
     }
 
@@ -45,11 +50,13 @@ export async function POST(request) {
       success: true,
       isBlocked: false,
       ipAddress: ip,
-      message: 'IP is allowed for visit tracking' 
+      message: 'IP is allowed for visit tracking',
+      saved: true,
+      checked: true
     });
 
   } catch (error) {
-    console.error('Error checking IP:', error);
+    logger.error('Error checking IP', { error: error?.message });
     return NextResponse.json({ 
       success: false,
       error: 'Failed to check IP status' 

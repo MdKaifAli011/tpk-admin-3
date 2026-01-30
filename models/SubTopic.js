@@ -47,6 +47,12 @@ const subTopicSchema = new mongoose.Schema(
       enum: ["active", "inactive"],
       default: "active",
     },
+    visitStats: {
+      totalVisits: { type: Number, default: 0 },
+      todayVisits: { type: Number, default: 0 },
+      uniqueVisits: { type: Number, default: 0 },
+      lastUpdated: { type: Date },
+    },
   },
   { timestamps: true }
 );

@@ -15,6 +15,7 @@ import {
   FaChevronDown,
   FaChevronRight,
   FaComments,
+  FaChartLine,
 } from "react-icons/fa";
 
 const ALL_MENU_ITEMS = [
@@ -67,7 +68,7 @@ const ALL_MENU_ITEMS = [
   },
   {
     name: "Analytics",
-    icon: FaClipboardList,
+    icon: FaChartLine,
     children: [
       { name: "IP Management", href: "/admin/analytics/ip-management" },
     ],

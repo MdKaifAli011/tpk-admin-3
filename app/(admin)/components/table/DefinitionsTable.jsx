@@ -18,6 +18,9 @@ const DefinitionsTable = ({
   const { canEdit, canDelete, canReorder, role } = usePermissions();
   const router = useRouter();
 
+  // Use embedded visitStats (cron 3–4am); if missing show "—"
+  const getVisitStats = (definition) => definition?.visitStats;
+
   // Helper function to format content date
   const formatContentDate = (contentInfo) => {
     if (!contentInfo || !contentInfo.hasContent || !contentInfo.contentDate) {
@@ -183,26 +186,29 @@ const DefinitionsTable = ({
             </div>
 
             {/* Desktop Table */}
-            <div className="hidden lg:block overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200 table-fixed">
+            <div className="hidden lg:block overflow-x-auto rounded-b-lg">
+              <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16">
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-14">
                       Order
                     </th>
-                    <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[180px]">
                       Definition Name
                     </th>
-                    <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
-                      Preview
-                    </th>
-                    <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-40">
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-36">
                       Content
                     </th>
-                    <th className="px-2 py-1 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-16">
+                    <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-14">
                       Meta
                     </th>
-                    <th className="px-2 py-1 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
+                    <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
+                      Visits
+                    </th>
+                    <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-16">
+                      Today
+                    </th>
+                    <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-28">
                       Actions
                     </th>
                   </tr>
@@ -212,18 +218,17 @@ const DefinitionsTable = ({
                     return (
                       <tr
                         key={definition._id || definitionIndex}
-                        className={`hover:bg-gray-50 transition-colors ${definition.status === "inactive" ? "opacity-60" : ""
-                          }`}
+                        className={`hover:bg-gray-50/80 transition-colors ${definition.status === "inactive" ? "opacity-60" : ""}`}
                       >
-                        <td className="px-2 py-1 whitespace-nowrap">
+                        <td className="px-3 py-2 whitespace-nowrap">
                           <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-gray-100 text-gray-700 font-medium text-sm">
                             {definition.orderNumber || definitionIndex + 1}
                           </span>
                         </td>
-                        <td className="px-2 py-1">
+                        <td className="px-3 py-2">
                           <span
                             onClick={() => handleDefinitionClick(definition._id)}
-                            className={`cursor-pointer text-sm font-medium hover:text-blue-600 transition-colors ${definition.status === "inactive"
+                            className={`cursor-pointer text-sm font-medium hover:text-blue-600 transition-colors truncate block max-w-[240px] ${definition.status === "inactive"
                               ? "text-gray-500 line-through"
                               : "text-gray-900"
                               }`}
@@ -232,10 +237,7 @@ const DefinitionsTable = ({
                             {definition.name}
                           </span>
                         </td>
-                        <td className="px-2 py-1 whitespace-nowrap w-24">
-                          <span className="text-[10px] text-gray-400">No Image</span>
-                        </td>
-                        <td className="px-2 py-1 whitespace-nowrap w-40">
+                        <td className="px-3 py-2 whitespace-nowrap w-36">
                           <span className={`text-sm ${definition.contentInfo?.hasContent
                             ? "text-gray-700"
                             : "text-gray-400 italic"
@@ -243,7 +245,7 @@ const DefinitionsTable = ({
                             {formatContentDate(definition.contentInfo)}
                           </span>
                         </td>
-                        <td className="px-2 py-1 whitespace-nowrap w-16 text-center">
+                        <td className="px-3 py-2 whitespace-nowrap text-center w-14">
                           {definition.contentInfo?.hasMeta ? (
                             <div className="flex justify-center">
                               <FiCheck className="text-green-600 w-5 h-5 font-black" style={{ strokeWidth: 5 }} title="Meta data filled" />
@@ -252,7 +254,30 @@ const DefinitionsTable = ({
                             <span className="text-gray-300">-</span>
                           )}
                         </td>
-                        <td className="px-2 py-1 whitespace-nowrap text-right w-32">
+                        <td className="px-3 py-2 whitespace-nowrap text-center w-24">
+                          {getVisitStats(definition) ? (
+                            <div className="flex flex-col items-center">
+                              <span className="text-sm font-medium text-gray-900">
+                                {getVisitStats(definition).totalVisits ?? 0}
+                              </span>
+                              <span className="text-xs text-gray-500">
+                                ({getVisitStats(definition).uniqueVisits ?? 0} unique)
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-xs text-gray-400">—</span>
+                          )}
+                        </td>
+                        <td className="px-3 py-2 whitespace-nowrap text-center w-16">
+                          {getVisitStats(definition) ? (
+                            <span className="text-sm text-gray-900">
+                              {getVisitStats(definition).todayVisits ?? 0}
+                            </span>
+                          ) : (
+                            <span className="text-xs text-gray-400">—</span>
+                          )}
+                        </td>
+                        <td className="px-3 py-2 whitespace-nowrap text-right w-28">
                           <div className="flex items-center justify-end gap-1">
                             <button
                               onClick={(e) => {
@@ -379,9 +404,21 @@ const DefinitionsTable = ({
                               <span className="text-gray-400 text-[10px]">-</span>
                             )}
                           </div>
+                          <div className="flex items-center gap-1 mt-1">
+                            <span className="text-[10px] text-gray-500">Visits:</span>
+                            <span className="text-sm text-gray-900">
+                              {getVisitStats(definition)?.totalVisits ?? "—"}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1 mt-1">
+                            <span className="text-[10px] text-gray-500">Today:</span>
+                            <span className="text-sm text-gray-900">
+                              {getVisitStats(definition)?.todayVisits ?? "—"}
+                            </span>
+                          </div>
                         </div>
                       </div>
-                      <div className="flex items-center gap-1 flex-shrink-0">
+                      <div className="flex items-center gap-1 shrink-0">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();

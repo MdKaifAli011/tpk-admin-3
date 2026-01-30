@@ -21,6 +21,7 @@ Copy these into your `.env` file and fill in the values. Never commit real secre
 | `PORT` | Server port | `3000` |
 | `NODE_ENV` | `development` or `production` | `development` |
 | `CORS_ORIGIN` | Allowed CORS origin | `*` |
+| `LOG_LEVEL` | Logger level: `error`, `warn`, `info`, `debug` | prod: `info`, dev: `debug` |
 
 ---
 

@@ -1,22 +1,44 @@
 import { NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
+import { logger } from '@/utils/logger';
 
 export const dynamic = 'force-dynamic';
 
-// POST - Track a visit
+// Every level that has a page – store visit count per (level, itemId)
+const ALLOWED_LEVELS = ['exam', 'subject', 'unit', 'chapter', 'topic', 'subtopic', 'definition'];
+
+function normalizeLevel(level) {
+  if (!level || typeof level !== 'string') return null;
+  return level.trim().toLowerCase();
+}
+
+function normalizeItemId(itemId) {
+  if (itemId == null) return null;
+  return String(itemId).trim();
+}
+
+// POST - Track a visit (every level, same IP = one count per page per hour to avoid refresh spam)
 export async function POST(request) {
+  logger.info('VisitTracking track-visit hit');
   try {
-    const { level, itemId, itemSlug, referrer, sessionId, userId, metadata } = await request.json();
+    const body = await request.json();
+    const { level: rawLevel, itemId: rawItemId, itemSlug, referrer, sessionId, userId, metadata } = body;
+
+    const level = normalizeLevel(rawLevel);
+    const itemId = normalizeItemId(rawItemId);
 
     if (!level || !itemId) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+      return NextResponse.json({ error: 'Missing required fields: level, itemId' }, { status: 400 });
+    }
+    if (!ALLOWED_LEVELS.includes(level)) {
+      return NextResponse.json({ error: `Invalid level. Allowed: ${ALLOWED_LEVELS.join(', ')}` }, { status: 400 });
     }
 
-    // Get client IP
+    // Get client IP (normalize for comparison with stored blocks)
     const forwarded = request.headers.get('x-forwarded-for');
-    const ip = forwarded ? forwarded.split(',')[0] : request.headers.get('x-real-ip') || 'unknown';
+    const rawIp = forwarded ? forwarded.split(',')[0].trim() : request.headers.get('x-real-ip') || 'unknown';
+    const ip = String(rawIp).trim().toLowerCase();
 
-    // Get user agent
     const userAgent = request.headers.get('user-agent') || 'unknown';
 
     const db = await connectDB();
@@ -32,7 +54,6 @@ export async function POST(request) {
     });
 
     if (blockedIP) {
-      // Update access attempt for blocked IP
       await db.collection('ip_blocks').updateOne(
         { _id: blockedIP._id },
         {
@@ -40,15 +61,14 @@ export async function POST(request) {
           $set: { lastAccessAttempt: new Date() }
         }
       );
-
-      return NextResponse.json({ 
-        success: false, 
+      return NextResponse.json({
+        success: false,
         blocked: true,
-        message: 'IP is blocked from visit tracking' 
+        message: 'IP is blocked from visit tracking'
       });
     }
 
-    // Check for existing visit from same IP in last hour (to avoid counting refreshes)
+    // Same IP + same page: count once per hour (avoids refresh spam; each new page or same page after 1h is counted)
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
     const existingVisit = await db.collection('visits').findOne({
       level,
@@ -58,24 +78,25 @@ export async function POST(request) {
     });
 
     if (existingVisit) {
-      return NextResponse.json({ 
-        success: true, 
-        message: 'Visit already tracked recently',
-        existing: true 
+      return NextResponse.json({
+        success: true,
+        saved: true,
+        message: 'Visit already tracked recently (same IP, same page, within last hour)',
+        existing: true
       });
     }
 
-    // Create new visit record
+    // Store visit: every level, every page – count stored in visits + visit_stats
     const visit = {
       level,
       itemId,
-      itemSlug,
+      itemSlug: itemSlug != null ? String(itemSlug) : undefined,
       ipAddress: ip,
       userAgent,
       referrer: referrer || 'direct',
       visitDate: new Date(),
       sessionId: sessionId || `session_${Date.now()}`,
-      userId: userId || null,
+      userId: userId != null ? String(userId) : null,
       isActive: true,
       metadata: metadata || {},
       createdAt: new Date()
@@ -83,17 +104,20 @@ export async function POST(request) {
 
     const result = await db.collection('visits').insertOne(visit);
 
-    // Update visit statistics (for faster querying)
+    // Update visit_stats so counts are available (total + today)
     await updateVisitStats(db, level, itemId);
+
+    logger.info('VisitTracking count increased', { level, itemId });
 
     return NextResponse.json({ 
       success: true, 
+      saved: true,
       data: { ...visit, _id: result.insertedId },
       message: 'Visit tracked successfully'
     });
 
   } catch (error) {
-    console.error('Error tracking visit:', error);
+    logger.error('Error tracking visit', { error: error?.message });
     return NextResponse.json({ 
       error: 'Failed to track visit' 
     }, { status: 500 });
@@ -104,11 +128,14 @@ export async function POST(request) {
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
-    const level = searchParams.get('level');
-    const itemId = searchParams.get('itemId');
+    const level = normalizeLevel(searchParams.get('level'));
+    const itemId = normalizeItemId(searchParams.get('itemId'));
 
     if (!level || !itemId) {
       return NextResponse.json({ error: 'Missing level or itemId' }, { status: 400 });
+    }
+    if (!ALLOWED_LEVELS.includes(level)) {
+      return NextResponse.json({ error: `Invalid level` }, { status: 400 });
     }
 
     const db = await connectDB();

@@ -7,7 +7,6 @@ import {
   usePermissions,
   getPermissionMessage,
 } from "../../hooks/usePermissions";
-import { useMultipleVisitStats } from "../../hooks/useVisitStats";
 
 const ChaptersTable = ({
   chapters,
@@ -18,9 +17,9 @@ const ChaptersTable = ({
 }) => {
   const { canEdit, canDelete, canReorder, role } = usePermissions();
   const router = useRouter();
-  
-  // Fetch visit statistics for all chapters
-  const { statsMap, loading: statsLoading } = useMultipleVisitStats(chapters, 'chapter');
+
+  // Use embedded visitStats (cron 3–4am); if missing show "—"
+  const getVisitStats = (chapter) => chapter?.visitStats;
 
   // Helper function to format content date
   const formatContentDate = (contentInfo) => {
@@ -234,26 +233,26 @@ const ChaptersTable = ({
                           )}
                         </td>
                         <td className="px-2 py-1 whitespace-nowrap text-center">
-                          {statsLoading ? (
-                            <div className="animate-pulse bg-gray-200 h-4 w-12 rounded mx-auto"></div>
-                          ) : (
+                          {getVisitStats(chapter) ? (
                             <div className="flex flex-col">
                               <span className="text-sm font-medium text-gray-900">
-                                {statsMap[chapter._id]?.totalVisits || 0}
+                                {getVisitStats(chapter).totalVisits ?? 0}
                               </span>
                               <span className="text-xs text-gray-500">
-                                ({statsMap[chapter._id]?.uniqueVisits || 0} unique)
+                                ({getVisitStats(chapter).uniqueVisits ?? 0} unique)
                               </span>
                             </div>
+                          ) : (
+                            <span className="text-xs text-gray-400">—</span>
                           )}
                         </td>
                         <td className="px-2 py-1 whitespace-nowrap text-center">
-                          {statsLoading ? (
-                            <div className="animate-pulse bg-gray-200 h-4 w-8 rounded mx-auto"></div>
-                          ) : (
+                          {getVisitStats(chapter) ? (
                             <span className="text-sm text-gray-900">
-                              {statsMap[chapter._id]?.todayVisits || 0}
+                              {getVisitStats(chapter).todayVisits ?? 0}
                             </span>
+                          ) : (
+                            <span className="text-xs text-gray-400">—</span>
                           )}
                         </td>
                         <td className="px-2 py-1 whitespace-nowrap text-right w-32">
@@ -387,23 +386,15 @@ const ChaptersTable = ({
                           </div>
                           <div className="flex items-center gap-1 mt-1">
                             <span className="text-[10px] text-gray-500">Visits:</span>
-                            {statsLoading ? (
-                              <div className="animate-pulse bg-gray-200 h-3 w-8 rounded"></div>
-                            ) : (
-                              <span className="text-sm text-gray-900">
-                                {statsMap[chapter._id]?.totalVisits || 0}
-                              </span>
-                            )}
+                            <span className="text-sm text-gray-900">
+                              {getVisitStats(chapter)?.totalVisits ?? "—"}
+                            </span>
                           </div>
                           <div className="flex items-center gap-1 mt-1">
                             <span className="text-[10px] text-gray-500">Today:</span>
-                            {statsLoading ? (
-                              <div className="animate-pulse bg-gray-200 h-3 w-6 rounded"></div>
-                            ) : (
-                              <span className="text-sm text-gray-900">
-                                {statsMap[chapter._id]?.todayVisits || 0}
-                              </span>
-                            )}
+                            <span className="text-sm text-gray-900">
+                              {getVisitStats(chapter)?.todayVisits ?? "—"}
+                            </span>
                           </div>
                         </div>
                       </div>

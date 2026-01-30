@@ -44,8 +44,8 @@ const IPManagementPage = () => {
       setPagination(prev => response.data?.pagination || prev);
       setError('');
     } catch (err) {
-      setError(err.message);
-      console.error('Error fetching blocked IPs:', err);
+      const msg = err.response?.data?.error || err.response?.data?.message || err.message || 'Failed to load blocked IPs';
+      setError(typeof msg === 'string' ? msg : 'Failed to load blocked IPs');
     } finally {
       setLoading(false);
     }
@@ -62,41 +62,38 @@ const IPManagementPage = () => {
   };
 
   const handleEdit = (ip) => {
-    console.log('🔍 Edit button clicked for IP:', ip);
     setEditingIP(ip);
     setShowForm(true);
   };
 
+  const getApiErrorMessage = (err) => {
+    const msg = err.response?.data?.error || err.response?.data?.message || err.message;
+    return typeof msg === 'string' ? msg : 'Something went wrong';
+  };
+
   const handleDelete = async (id) => {
-    console.log('🔍 Delete button clicked for ID:', id);
     if (!confirm('Are you sure you want to delete this IP block?')) {
       return;
     }
-
     try {
-      const response = await api.delete(`/analytics/ip-block?id=${id}`);
-      console.log('🔍 Delete response:', response);
-
+      setError('');
+      await api.delete(`/analytics/ip-block?id=${id}`);
       fetchBlockedIPs();
     } catch (err) {
-      setError(err.message);
-      console.error('Error deleting IP block:', err);
+      setError(getApiErrorMessage(err));
     }
   };
 
   const handleToggleStatus = async (ip) => {
-    console.log('🔍 Toggle status button clicked for IP:', ip);
     try {
-      const response = await api.put(`/analytics/ip-block?id=${ip._id}`, {
+      setError('');
+      await api.put(`/analytics/ip-block?id=${ip._id}`, {
         ...ip,
         isActive: !ip.isActive,
       });
-      console.log('🔍 Toggle response:', response);
-
       fetchBlockedIPs();
     } catch (err) {
-      setError(err.message);
-      console.error('Error updating IP block:', err);
+      setError(getApiErrorMessage(err));
     }
   };
 
@@ -219,7 +216,7 @@ const IPManagementPage = () => {
           onClick={() => setStatus('inactive')}
           className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
             status === 'inactive'
-              ? 'bg-gray-100 text-gray-700'
+              ? 'bg-gray-200 text-gray-900 ring-1 ring-gray-300'
               : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
           }`}
         >

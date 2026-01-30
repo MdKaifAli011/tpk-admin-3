@@ -15,14 +15,13 @@ import {
   usePermissions,
   getPermissionMessage,
 } from "../../hooks/usePermissions";
-import { useMultipleVisitStats } from "../../hooks/useVisitStats";
 
 const ExamTable = ({ exams, onEdit, onDelete, onView, onToggleStatus, onManageInfo }) => {
   const { canEdit, canDelete, canReorder, role } = usePermissions();
   const router = useRouter();
-  
-  // Fetch visit statistics for all exams
-  const { statsMap, loading: statsLoading } = useMultipleVisitStats(exams, 'exam');
+
+  // Use embedded visitStats (cron 3–4am); if missing show "—"
+  const getVisitStats = (exam) => exam?.visitStats;
 
   // Helper function to format content date
   const formatContentDate = (contentInfo) => {
@@ -166,26 +165,26 @@ const ExamTable = ({ exams, onEdit, onDelete, onView, onToggleStatus, onManageIn
                   )}
                 </td>
                 <td className="px-2 py-1 whitespace-nowrap text-center">
-                  {statsLoading ? (
-                    <div className="animate-pulse bg-gray-200 h-4 w-12 rounded mx-auto"></div>
-                  ) : (
+                  {getVisitStats(exam) ? (
                     <div className="flex flex-col">
                       <span className="text-sm font-medium text-gray-900">
-                        {statsMap[exam._id]?.totalVisits || 0}
+                        {getVisitStats(exam).totalVisits ?? 0}
                       </span>
                       <span className="text-xs text-gray-500">
-                        ({statsMap[exam._id]?.uniqueVisits || 0} unique)
+                        ({getVisitStats(exam).uniqueVisits ?? 0} unique)
                       </span>
                     </div>
+                  ) : (
+                    <span className="text-xs text-gray-400">—</span>
                   )}
                 </td>
                 <td className="px-2 py-1 whitespace-nowrap text-center">
-                  {statsLoading ? (
-                    <div className="animate-pulse bg-gray-200 h-4 w-8 rounded mx-auto"></div>
-                  ) : (
+                  {getVisitStats(exam) ? (
                     <span className="text-sm text-gray-900">
-                      {statsMap[exam._id]?.todayVisits || 0}
+                      {getVisitStats(exam).todayVisits ?? 0}
                     </span>
+                  ) : (
+                    <span className="text-xs text-gray-400">—</span>
                   )}
                 </td>
                 <td className="px-2 py-1 whitespace-nowrap text-right w-32">

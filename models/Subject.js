@@ -32,6 +32,12 @@ const subjectSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    visitStats: {
+      totalVisits: { type: Number, default: 0 },
+      todayVisits: { type: Number, default: 0 },
+      uniqueVisits: { type: Number, default: 0 },
+      lastUpdated: { type: Date },
+    },
   },
   { timestamps: true }
 );

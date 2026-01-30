@@ -2,23 +2,9 @@
 import React from 'react';
 import { useVisitTracking } from '../hooks/useVisitTracking';
 
-// Generic visit tracker component for all levels
-const VisitTracker = ({ level, itemId, itemSlug, itemName }) => {
-  console.log('VisitTracker component called with:', { level, itemId, itemSlug, itemName });
-  
-  const { isTracked, isBlocked, trackingStatus } = useVisitTracking(level, itemId, itemSlug);
-  
-  // Debug logging in development
-  if (process.env.NODE_ENV === 'development') {
-    console.log(`${level.charAt(0).toUpperCase() + level.slice(1)} Page Visit Tracking:`, {
-      itemName,
-      itemId,
-      isTracked,
-      isBlocked,
-      trackingStatus
-    });
-  }
-  
+// Generic visit tracker – one check-ip per session (cached 5 min), then track-visit per page
+const VisitTracker = ({ level, itemId, itemSlug }) => {
+  const { isTracked, isBlocked, trackingStatus, saveStatus } = useVisitTracking(level, itemId, itemSlug);
   return null;
 };
 

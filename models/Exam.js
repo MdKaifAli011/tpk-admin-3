@@ -38,6 +38,13 @@ const examSchema = new mongoose.Schema(
       ],
       default: [],
     },
+    // Cached visit stats (updated by cron 3–4am); avoids N API calls on list load
+    visitStats: {
+      totalVisits: { type: Number, default: 0 },
+      todayVisits: { type: Number, default: 0 },
+      uniqueVisits: { type: Number, default: 0 },
+      lastUpdated: { type: Date },
+    },
   },
   { timestamps: true }
 );
