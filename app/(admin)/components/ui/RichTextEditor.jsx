@@ -98,6 +98,13 @@ const RichTextEditor = ({
   const sourceSyncIntervalRef = useRef(null);
   /** Last raw source we pushed, to avoid duplicate onChange while in source mode */
   const lastSourcePushRef = useRef(null);
+  /** Refs for custom toolbar buttons so CKEditor commands can open our modals (always current) */
+  const openVideoModalRef = useRef(null);
+  const openImageModalRef = useRef(null);
+  const openButtonModalRef = useRef(null);
+  const openFormModalRef = useRef(null);
+  const openFormLinkModalRef = useRef(null);
+  const customToolbarStyleRef = useRef(null);
 
   const instanceId = useMemo(
     () => `rte-${Math.random().toString(36).slice(2, 10)}`,
@@ -115,6 +122,15 @@ const RichTextEditor = ({
   useEffect(() => {
     placeholderRef.current = placeholder;
   }, [placeholder]);
+
+  // Keep insert-modal callbacks current so CKEditor toolbar commands can open modals
+  useEffect(() => {
+    openVideoModalRef.current = () => setShowVideoModal(true);
+    openImageModalRef.current = () => setShowImageModal(true);
+    openButtonModalRef.current = () => setShowButtonModal(true);
+    openFormModalRef.current = () => setShowFormModal(true);
+    openFormLinkModalRef.current = openFormLinkModal;
+  });
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -142,59 +158,93 @@ const RichTextEditor = ({
     };
   }, []);
 
+  // Icon base URL for toolbar (file-based so CKEditor and CSS always load them)
+  const RTE_ICON_BASE = useMemo(() => {
+    if (typeof window === "undefined") return "";
+    return `${window.location.origin}${basePath}/icons`;
+  }, []);
+
+  const RTE_ICON_URLS = useMemo(
+    () => ({
+      video: `${RTE_ICON_BASE}/rte-video.svg`,
+      image: `${RTE_ICON_BASE}/rte-image.svg`,
+      button: `${RTE_ICON_BASE}/rte-button.svg`,
+      form: `${RTE_ICON_BASE}/rte-form.svg`,
+      formLink: `${RTE_ICON_BASE}/rte-formlink.svg`,
+    }),
+    [RTE_ICON_BASE]
+  );
+
   const toolbarConfig = useMemo(
-    () => [
-      {
-        name: "document",
-        items: ["Source", "NewPage", "Preview", "Print", "Templates"],
-      },
-      { name: "clipboard", items: ["Cut", "Copy", "Paste", "Undo", "Redo"] },
-      { name: "editing", items: ["Find", "Replace", "SelectAll", "Scayt"] },
-      { name: "styles", items: ["Format", "Font", "FontSize"] },
-      {
-        name: "basicstyles",
-        items: [
-          "Bold",
-          "Italic",
-          "Underline",
-          "Strike",
-          "Subscript",
-          "Superscript",
-          "RemoveFormat",
-        ],
-      },
-      { name: "colors", items: ["TextColor", "BGColor"] },
-      {
-        name: "paragraph",
-        items: [
-          "NumberedList",
-          "BulletedList",
-          "Outdent",
-          "Indent",
-          "Blockquote",
-          "JustifyLeft",
-          "JustifyCenter",
-          "JustifyRight",
-          "JustifyBlock",
-        ],
-      },
-      {
-        name: "insert",
-        items: [
-          "Image",
-          "Table",
-          "HorizontalRule",
-          "Smiley",
-          "SpecialChar",
-          "Iframe",
-          "Mathjax",
-        ],
-      },
-      { name: "links", items: ["Link", "Unlink", "Anchor"] },
-      { name: "tools", items: ["Maximize", "ShowBlocks"] },
-      { name: "about", items: ["About"] },
-    ],
-    []
+    () => {
+      const base = [
+        {
+          name: "document",
+          items: ["Source", "NewPage", "Preview", "Print", "Templates"],
+        },
+        { name: "clipboard", items: ["Cut", "Copy", "Paste", "Undo", "Redo"] },
+        { name: "editing", items: ["Find", "Replace", "SelectAll", "Scayt"] },
+        { name: "styles", items: ["Format", "Font", "FontSize"] },
+        {
+          name: "basicstyles",
+          items: [
+            "Bold",
+            "Italic",
+            "Underline",
+            "Strike",
+            "Subscript",
+            "Superscript",
+            "RemoveFormat",
+          ],
+        },
+        { name: "colors", items: ["TextColor", "BGColor"] },
+        {
+          name: "paragraph",
+          items: [
+            "NumberedList",
+            "BulletedList",
+            "Outdent",
+            "Indent",
+            "Blockquote",
+            "JustifyLeft",
+            "JustifyCenter",
+            "JustifyRight",
+            "JustifyBlock",
+          ],
+        },
+        {
+          name: "insert",
+          items: [
+            "Image",
+            "Table",
+            "HorizontalRule",
+            "Smiley",
+            "SpecialChar",
+            "Iframe",
+            "Mathjax",
+          ],
+        },
+        { name: "links", items: ["Link", "Unlink", "Anchor"] },
+        { name: "tools", items: ["Maximize", "ShowBlocks"] },
+        { name: "about", items: ["About"] },
+      ];
+      if (hideAdminTools) return base;
+      return [
+        ...base.slice(0, base.findIndex((g) => g.name === "insert") + 1),
+        {
+          name: "insertCustom",
+          items: [
+            "RTEInsertVideo",
+            "RTEInsertImage",
+            "RTEInsertButton",
+            "RTEInsertForm",
+            "RTEFormLink",
+          ],
+        },
+        ...base.slice(base.findIndex((g) => g.name === "insert") + 1),
+      ];
+    },
+    [hideAdminTools]
   );
 
   useEffect(() => {
@@ -267,11 +317,84 @@ const RichTextEditor = ({
         CKEDITOR.instances[instanceId].destroy(true);
       }
 
+      const iconUrls = RTE_ICON_URLS;
+      if (!CKEDITOR.plugins.registered.rteInsertTools) {
+        CKEDITOR.plugins.add("rteInsertTools", {
+          init(editor) {
+            editor.addCommand("RTEInsertVideo", {
+              exec(edt) {
+                edt._openVideoModal?.();
+              },
+            });
+            editor.addCommand("RTEInsertImage", {
+              exec(edt) {
+                edt._openImageModal?.();
+              },
+            });
+            editor.addCommand("RTEInsertButton", {
+              exec(edt) {
+                edt._openButtonModal?.();
+              },
+            });
+            editor.addCommand("RTEInsertForm", {
+              exec(edt) {
+                edt._openFormModal?.();
+              },
+            });
+            editor.addCommand("RTEFormLink", {
+              exec(edt) {
+                edt._openFormLinkModal?.();
+              },
+            });
+            editor.ui.addButton("RTEInsertVideo", {
+              label: "Insert Video",
+              command: "RTEInsertVideo",
+              toolbar: "insertCustom",
+              icon: iconUrls.video,
+            });
+            editor.ui.addButton("RTEInsertImage", {
+              label: "Insert Image",
+              command: "RTEInsertImage",
+              toolbar: "insertCustom",
+              icon: iconUrls.image,
+            });
+            editor.ui.addButton("RTEInsertButton", {
+              label: "Insert Button",
+              command: "RTEInsertButton",
+              toolbar: "insertCustom",
+              icon: iconUrls.button,
+            });
+            editor.ui.addButton("RTEInsertForm", {
+              label: "Insert Form",
+              command: "RTEInsertForm",
+              toolbar: "insertCustom",
+              icon: iconUrls.form,
+            });
+            editor.ui.addButton("RTEFormLink", {
+              label: "Form link",
+              command: "RTEFormLink",
+              toolbar: "insertCustom",
+              icon: iconUrls.formLink,
+            });
+          },
+        });
+      }
+
+      const extraPluginsList = [
+        "mathjax",
+        "colorbutton",
+        "colordialog",
+        "justify",
+        "font",
+        "clipboard",
+        "smiley",
+      ];
+      if (!hideAdminTools) extraPluginsList.push("rteInsertTools");
+
       const editor = CKEDITOR.replace(textareaRef.current, {
         height: 420,
         removePlugins: "resize",
-        extraPlugins:
-          "mathjax,colorbutton,colordialog,justify,font,clipboard,smiley",
+        extraPlugins: extraPluginsList.join(","),
         mathJaxLib: MATHJAX_SCRIPT,
         // Make the iframe content match the site typography + responsive tables.
         contentsCss: [CKEDITOR_CONTENTS_CSS],
@@ -289,6 +412,13 @@ const RichTextEditor = ({
       editor.on("instanceReady", () => {
         if (!isMounted) return;
         setIsReady(true);
+        if (!hideAdminTools) {
+          editor._openVideoModal = () => openVideoModalRef.current?.();
+          editor._openImageModal = () => openImageModalRef.current?.();
+          editor._openButtonModal = () => openButtonModalRef.current?.();
+          editor._openFormModal = () => openFormModalRef.current?.();
+          editor._openFormLinkModal = () => openFormLinkModalRef.current?.();
+        }
         if (valueRef.current) {
           editor.setData(valueRef.current);
         }
@@ -386,7 +516,65 @@ const RichTextEditor = ({
         editorRef.current = null;
       }
     };
-  }, [toolbarConfig, instanceId, disabled]);
+  }, [toolbarConfig, instanceId, disabled, hideAdminTools, RTE_ICON_URLS]);
+
+  // Inject CSS so custom toolbar buttons show icon + label (file URLs so they always load)
+  useEffect(() => {
+    if (!isReady || hideAdminTools || !RTE_ICON_BASE) return;
+    const esc = (s) => (s || "").replace(/(["\\])/g, "\\$1");
+    const ic = RTE_ICON_URLS;
+    const labelSel = (name) => `.cke_button_${name} .cke_label`;
+    const btnSel = (name) => `.cke_button_${name}`;
+    const css = `
+      /* Icon + label on the button element so it always shows */
+      ${btnSel("RTEInsertVideo")} { background-image: url("${esc(ic.video)}") !important; background-repeat: no-repeat !important; background-position: 6px center !important; background-size: 16px 16px !important; padding-left: 26px !important; min-width: 82px !important; }
+      ${btnSel("RTEInsertImage")} { background-image: url("${esc(ic.image)}") !important; background-repeat: no-repeat !important; background-position: 6px center !important; background-size: 16px 16px !important; padding-left: 26px !important; min-width: 82px !important; }
+      ${btnSel("RTEInsertButton")} { background-image: url("${esc(ic.button)}") !important; background-repeat: no-repeat !important; background-position: 6px center !important; background-size: 16px 16px !important; padding-left: 26px !important; min-width: 82px !important; }
+      ${btnSel("RTEInsertForm")} { background-image: url("${esc(ic.form)}") !important; background-repeat: no-repeat !important; background-position: 6px center !important; background-size: 16px 16px !important; padding-left: 26px !important; min-width: 82px !important; }
+      ${btnSel("RTEFormLink")} { background-image: url("${esc(ic.formLink)}") !important; background-repeat: no-repeat !important; background-position: 6px center !important; background-size: 16px 16px !important; padding-left: 26px !important; min-width: 82px !important; }
+      /* Hide empty icon span so only our button background + label show */
+      ${btnSel("RTEInsertVideo")} .cke_icon, ${btnSel("RTEInsertVideo")} .cke_button_icon, .cke_button_RTEInsertVideo_icon,
+      ${btnSel("RTEInsertImage")} .cke_icon, ${btnSel("RTEInsertImage")} .cke_button_icon, .cke_button_RTEInsertImage_icon,
+      ${btnSel("RTEInsertButton")} .cke_icon, ${btnSel("RTEInsertButton")} .cke_button_icon, .cke_button_RTEInsertButton_icon,
+      ${btnSel("RTEInsertForm")} .cke_icon, ${btnSel("RTEInsertForm")} .cke_button_icon, .cke_button_RTEInsertForm_icon,
+      ${btnSel("RTEFormLink")} .cke_icon, ${btnSel("RTEFormLink")} .cke_button_icon, .cke_button_RTEFormLink_icon { background: none !important; width: 0 !important; min-width: 0 !important; overflow: hidden !important; padding: 0 !important; }
+      /* Always show label text */
+      ${labelSel("RTEInsertVideo")}, ${labelSel("RTEInsertImage")}, ${labelSel("RTEInsertButton")}, ${labelSel("RTEInsertForm")}, ${labelSel("RTEFormLink")} { display: inline !important; visibility: visible !important; }
+    `;
+    const inject = () => {
+      if (!document.querySelector("style[data-rte-custom-toolbar='true']")) {
+        const el = document.createElement("style");
+        el.setAttribute("data-rte-custom-toolbar", "true");
+        el.textContent = css;
+        document.head.appendChild(el);
+        customToolbarStyleRef.current = el;
+      }
+      const editor = editorRef.current;
+      if (editor?.container?.$ && !editor.container.$.querySelector("style[data-rte-custom-toolbar='inline']")) {
+        const el2 = document.createElement("style");
+        el2.setAttribute("data-rte-custom-toolbar", "inline");
+        el2.textContent = css;
+        editor.container.$.appendChild(el2);
+      }
+    };
+    inject();
+    const t = setTimeout(() => {
+      if (!customToolbarStyleRef.current) inject();
+    }, 150);
+    const t2 = setTimeout(() => {
+      if (!customToolbarStyleRef.current) inject();
+    }, 500);
+    return () => {
+      clearTimeout(t);
+      clearTimeout(t2);
+      document.querySelectorAll("style[data-rte-custom-toolbar='true']").forEach((n) => n.remove());
+      const editor = editorRef.current;
+      if (editor?.container?.$) {
+        editor.container.$.querySelectorAll("style[data-rte-custom-toolbar='inline']").forEach((n) => n.remove());
+      }
+      customToolbarStyleRef.current = null;
+    };
+  }, [isReady, hideAdminTools, RTE_ICON_BASE, RTE_ICON_URLS]);
 
   useEffect(() => {
     const editor = editorRef.current;
@@ -989,89 +1177,6 @@ const RichTextEditor = ({
         className={`rounded-lg border border-gray-200 bg-white shadow-sm ${disabled ? "opacity-90" : ""
           } ${className}`}
       >
-        {/* Insert Form, Button, Image, and Video */}
-        {isReady && !disabled && !hideAdminTools && (
-          <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50 flex items-center justify-end gap-2">
-            <button
-              onClick={() => setShowVideoModal(true)}
-              className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
-              type="button"
-            >
-              <FaVideo className="w-4 h-4" />
-              Insert Video
-            </button>
-            <button
-              onClick={() => setShowImageModal(true)}
-              className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
-              type="button"
-            >
-              <FaImage className="w-4 h-4" />
-              Insert Image
-            </button>
-            <button
-              onClick={() => setShowButtonModal(true)}
-              className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
-              type="button"
-            >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"
-                />
-              </svg>
-              Insert Button
-            </button>
-            <button
-              onClick={() => setShowFormModal(true)}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
-              type="button"
-            >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                />
-              </svg>
-              Insert Form
-            </button>
-            <button
-              onClick={openFormLinkModal}
-              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
-              type="button"
-              title="Select text, then click to make it a link that opens a form modal"
-            >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
-                />
-              </svg>
-              Form link
-            </button>
-          </div>
-        )}
-
         {!isReady && (
           <div className="flex min-h-[240px] items-center justify-center text-sm text-gray-500">
             Loading editor...
