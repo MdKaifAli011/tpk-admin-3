@@ -97,7 +97,7 @@ export async function generateMetadata({ params, searchParams }) {
     }
 
     if (!topic) {
-      return generateSEO({}, { type: "topic", name: topicSlug || "Topic" });
+      return generateSEO({}, { type: "topic", name: topicSlug || "Topic", indexable: false });
     }
 
     // Build path for canonical URL
@@ -125,7 +125,7 @@ export async function generateMetadata({ params, searchParams }) {
   } catch (error) {
     // Always return valid metadata even on error
     logger.warn("Error generating metadata:", error.message);
-    return generateSEO({}, { type: "topic", name: topicSlug || "Topic" });
+    return generateSEO({}, { type: "topic", name: topicSlug || "Topic", indexable: false });
   }
 }
 

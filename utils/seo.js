@@ -8,11 +8,13 @@ import { logger } from "@/utils/logger";
 /**
  * Generate SEO metadata for pages
  * @param {Object} data - Entity data with title, metaDescription, keywords
- * @param {Object} options - Additional options like type, name, path
+ * @param {Object} options - Additional options like type, name, path, indexable
+ * @param {boolean} options.indexable - If true: index, follow. If false: noindex, nofollow (default true).
+ *   Driven by *Details status: only "publish" → index,follow; "unpublish" | "draft" | missing → noindex,nofollow (see tabSeo).
  * @returns {Object} SEO metadata object
  */
 export function generateMetadata(data, options = {}) {
-  const { type = "", name = "", path = "" } = options;
+  const { type = "", name = "", path = "", indexable = true } = options;
 
   // Debug logging (only in development)
   if (process.env.NODE_ENV === "development") {
@@ -129,17 +131,26 @@ export function generateMetadata(data, options = {}) {
       creator: "@testprepkart",
       site: "@testprepkart",
     },
-    robots: {
-      index: true,
-      follow: true,
-      googleBot: {
-        index: true,
-        follow: true,
-        "max-video-preview": -1,
-        "max-image-preview": "large",
-        "max-snippet": -1,
-      },
-    },
+    robots: indexable
+      ? {
+          index: true,
+          follow: true,
+          googleBot: {
+            index: true,
+            follow: true,
+            "max-video-preview": -1,
+            "max-image-preview": "large",
+            "max-snippet": -1,
+          },
+        }
+      : {
+          index: false,
+          follow: false,
+          googleBot: {
+            index: false,
+            follow: false,
+          },
+        },
   };
 }
 

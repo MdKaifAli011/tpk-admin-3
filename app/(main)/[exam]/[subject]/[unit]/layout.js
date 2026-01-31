@@ -124,7 +124,7 @@ export async function generateMetadata({ params, searchParams }) {
     }
 
     if (!unit) {
-      return generateSEO({}, { type: "unit", name: unitSlug || "Unit" });
+      return generateSEO({}, { type: "unit", name: unitSlug || "Unit", indexable: false });
     }
 
     // Build path for canonical URL
@@ -150,7 +150,7 @@ export async function generateMetadata({ params, searchParams }) {
   } catch (error) {
     // Always return valid metadata even on error
     logger.warn("Error generating metadata:", error.message);
-    return generateSEO({}, { type: "unit", name: unitSlug || "Unit" });
+    return generateSEO({}, { type: "unit", name: unitSlug || "Unit", indexable: false });
   }
 }
 

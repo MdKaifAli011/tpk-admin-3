@@ -42,7 +42,7 @@ export async function generateMetadata({ params, searchParams }) {
     }
 
     if (!exam) {
-      return generateSEO({}, { type: "exam", name: examSlug || "Exam" });
+      return generateSEO({}, { type: "exam", name: examSlug || "Exam", indexable: false });
     }
 
     // Build path for canonical URL
@@ -66,7 +66,7 @@ export async function generateMetadata({ params, searchParams }) {
   } catch (error) {
     // Always return valid metadata even on error
     logger.warn("Error generating metadata:", error.message);
-    return generateSEO({}, { type: "exam", name: examSlug || "Exam" });
+    return generateSEO({}, { type: "exam", name: examSlug || "Exam", indexable: false });
   }
 }
 

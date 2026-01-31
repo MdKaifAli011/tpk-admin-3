@@ -55,7 +55,7 @@ export async function generateMetadata({ params, searchParams }) {
       if (!examData) {
         return generateSEO(
           {},
-          { type: "definition", name: definitionSlug || "Definition" }
+          { type: "definition", name: definitionSlug || "Definition", indexable: false }
         );
       }
 
@@ -64,7 +64,7 @@ export async function generateMetadata({ params, searchParams }) {
       if (!foundSubject) {
         return generateSEO(
           {},
-          { type: "definition", name: definitionSlug || "Definition" }
+          { type: "definition", name: definitionSlug || "Definition", indexable: false }
         );
       }
 
@@ -76,7 +76,7 @@ export async function generateMetadata({ params, searchParams }) {
       if (!foundUnit) {
         return generateSEO(
           {},
-          { type: "definition", name: definitionSlug || "Definition" }
+          { type: "definition", name: definitionSlug || "Definition", indexable: false }
         );
       }
 
@@ -96,7 +96,7 @@ export async function generateMetadata({ params, searchParams }) {
       if (!foundTopic) {
         return generateSEO(
           {},
-          { type: "definition", name: definitionSlug || "Definition" }
+          { type: "definition", name: definitionSlug || "Definition", indexable: false }
         );
       }
 
@@ -107,7 +107,7 @@ export async function generateMetadata({ params, searchParams }) {
       if (!foundSubtopic) {
         return generateSEO(
           {},
-          { type: "definition", name: definitionSlug || "Definition" }
+          { type: "definition", name: definitionSlug || "Definition", indexable: false }
         );
       }
 
@@ -171,7 +171,7 @@ export async function generateMetadata({ params, searchParams }) {
     logger.warn("Error generating metadata:", error.message);
     return generateSEO(
       {},
-      { type: "definition", name: definitionSlug || "Definition" }
+      { type: "definition", name: definitionSlug || "Definition", indexable: false }
     );
   }
 }

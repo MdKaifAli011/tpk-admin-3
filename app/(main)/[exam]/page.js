@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import { notFound } from "next/navigation";
 import { FaGraduationCap } from "react-icons/fa";
 import ListItem from "../components/ListItem";
@@ -19,6 +19,7 @@ import { getNextExam, getPreviousExam } from "../lib/hierarchicalNavigation";
 import Link from "next/link";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { generateTabAwareMetadata, extractSearchParams } from "@/utils/tabSeo";
+import { generateMetadata as generateSEO } from "@/utils/seo";
 import { logger } from "@/utils/logger";
 
 export const dynamic = "force-dynamic";
@@ -43,7 +44,7 @@ export async function generateMetadata({ params, searchParams }) {
   try {
     const { fetchExamById, fetchExamDetailsById, createSlug } = await import("../lib/api");
     const exam = await fetchExamById(examSlug).catch(() => null);
-    if (!exam) return { title: `${examSlug || "Exam"} | TestPrepKart` };
+    if (!exam) return generateSEO({}, { type: "exam", name: examSlug || "Exam", indexable: false });
 
     const examDetails = await fetchExamDetailsById(exam._id).catch(() => null);
     const path = `/${createSlug(exam.name)}`;
@@ -61,7 +62,7 @@ export async function generateMetadata({ params, searchParams }) {
     );
   } catch (error) {
     logger.warn("Error generating exam page metadata:", error);
-    return { title: `${examSlug || "Exam"} | TestPrepKart` };
+    return generateSEO({}, { type: "exam", name: examSlug || "Exam", indexable: false });
   }
 }
 

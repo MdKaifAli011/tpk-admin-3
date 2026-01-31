@@ -95,7 +95,7 @@ export async function generateMetadata({ params, searchParams }) {
     }
 
     if (!chapter) {
-      return generateSEO({}, { type: "chapter", name: chapterSlug || "Chapter" });
+      return generateSEO({}, { type: "chapter", name: chapterSlug || "Chapter", indexable: false });
     }
 
     // Build path for canonical URL
@@ -122,7 +122,7 @@ export async function generateMetadata({ params, searchParams }) {
   } catch (error) {
     // Always return valid metadata even on error
     logger.warn("Error generating metadata:", error.message);
-    return generateSEO({}, { type: "chapter", name: chapterSlug || "Chapter" });
+    return generateSEO({}, { type: "chapter", name: chapterSlug || "Chapter", indexable: false });
   }
 }
 

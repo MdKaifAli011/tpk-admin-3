@@ -110,7 +110,7 @@ export async function generateMetadata({ params, searchParams }) {
     }
 
     if (!subtopic) {
-      return generateSEO({}, { type: "subtopic", name: subtopicSlug || "SubTopic" });
+      return generateSEO({}, { type: "subtopic", name: subtopicSlug || "SubTopic", indexable: false });
     }
 
     // Build path for canonical URL
@@ -139,7 +139,7 @@ export async function generateMetadata({ params, searchParams }) {
   } catch (error) {
     // Always return valid metadata even on error
     logger.warn("Error generating metadata:", error.message);
-    return generateSEO({}, { type: "subtopic", name: subtopicSlug || "SubTopic" });
+    return generateSEO({}, { type: "subtopic", name: subtopicSlug || "SubTopic", indexable: false });
   }
 }
 

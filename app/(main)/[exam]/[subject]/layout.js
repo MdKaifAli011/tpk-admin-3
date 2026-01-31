@@ -65,7 +65,7 @@ export async function generateMetadata({ params, searchParams }) {
     if (!subject) {
       return generateSEO(
         {},
-        { type: "subject", name: subjectSlug || "Subject" }
+        { type: "subject", name: subjectSlug || "Subject", indexable: false }
       );
     }
 
@@ -91,7 +91,7 @@ export async function generateMetadata({ params, searchParams }) {
   } catch (error) {
     // Always return valid metadata even on error
     logger.warn("Error generating metadata:", error.message);
-    return generateSEO({}, { type: "subject", name: subjectSlug || "Subject" });
+    return generateSEO({}, { type: "subject", name: subjectSlug || "Subject", indexable: false });
   }
 }
 

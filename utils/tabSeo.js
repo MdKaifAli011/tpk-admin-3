@@ -1,24 +1,33 @@
 // ============================================
 // Tab-Aware SEO Metadata Utility
 // ============================================
-// 
+//
 // PURPOSE:
 // - Generate SEO metadata that respects tab context (overview, discussion, practice, performance)
 // - Handle searchParams in generateMetadata (Next.js App Router supports this)
 // - Ensure Performance tab is non-indexable (user-specific analytics)
-// - Provide consistent metadata across all 7 route levels
+// - Provide consistent metadata across all 7 route levels (exam, subject, unit, chapter, topic, subtopic, definition)
+//
+// DETAILS STATUS (all 7 *Details models: ExamDetails, SubjectDetails, UnitDetails, ChapterDetails, TopicDetails, SubTopicDetails, DefinitionDetails):
+// - status: "publish" | "unpublish" | "draft" → only "publish" gets index,follow; "unpublish" and "draft" get noindex,nofollow
 //
 // IMPORTANT NOTES:
 // - View-source shows INITIAL SSR metadata only (this is CORRECT and SEO-safe)
 // - Client-side metadata updates (via DiscussionMetadata, PracticeTestList) enhance UX but don't affect view-source
 // - Google crawls the INITIAL HTML (view-source), which is why SSR metadata is critical
-// - Client-side updates help with social sharing and browser history, but don't affect SEO crawling
 
 import { generateMetadata as generateBaseMetadata } from "@/utils/seo";
 import { generateDiscussionForumMetadata, generateThreadMetadata, fetchThreadBySlug } from "@/utils/discussionSeo";
 import { APP_CONFIG } from "@/constants";
 import { logger } from "@/utils/logger";
 import { createSlug } from "@/utils/slug";
+
+/** Status values used by all *Details models (ExamDetails, SubjectDetails, UnitDetails, ChapterDetails, TopicDetails, SubTopicDetails, DefinitionDetails) */
+export const DETAILS_STATUS = {
+  PUBLISH: "publish",
+  UNPUBLISH: "unpublish",
+  DRAFT: "draft",
+};
 
 /**
  * Tab types and their SEO characteristics
@@ -29,6 +38,15 @@ export const TAB_TYPES = {
   PRACTICE: "practice",
   PERFORMANCE: "performance",
 };
+
+/**
+ * Whether entity details are published (index,follow). Only "publish" is indexable; "unpublish", "draft", or missing → noindex,nofollow.
+ * @param {Object|null} entityDetails - ExamDetails, SubjectDetails, UnitDetails, ChapterDetails, TopicDetails, SubTopicDetails, or DefinitionDetails
+ * @returns {boolean}
+ */
+export function isDetailsPublished(entityDetails) {
+  return entityDetails?.status === DETAILS_STATUS.PUBLISH;
+}
 
 /**
  * Determine if a tab should be SEO-indexable
@@ -94,6 +112,10 @@ export async function generateTabAwareMetadata(
   options = {}
 ) {
   const { path = "", hierarchy = {} } = options;
+
+  // All 7 levels: ExamDetails, SubjectDetails, UnitDetails, ChapterDetails, TopicDetails, SubTopicDetails, DefinitionDetails
+  // Only status === "publish" → index,follow; "unpublish" | "draft" | missing → noindex,nofollow
+  const isPublish = isDetailsPublished(entityDetails);
   
   // Extract tab and other search params
   // In Next.js 16, searchParams is a plain object { tab: "discussion", ... }
@@ -104,14 +126,16 @@ export async function generateTabAwareMetadata(
   
   // Debug logging (only in development)
   if (process.env.NODE_ENV === "development") {
-    logger.debug("generateTabAwareMetadata - Tab:", tab, "SearchParams:", searchParams);
+    logger.debug("generateTabAwareMetadata - Tab:", tab, "SearchParams:", searchParams, "isPublish:", isPublish);
   }
 
-  // Check if tab is indexable
-  const isIndexable = isTabIndexable(tab);
+  // Check if tab is indexable (e.g. Performance tab is never indexable)
+  const isTabIndexableFlag = isTabIndexable(tab);
+  // Page is index,follow only when entity is published AND tab is indexable
+  const indexable = isPublish && isTabIndexableFlag;
 
   // If Performance tab, return non-indexable metadata
-  if (!isIndexable) {
+  if (!isTabIndexableFlag) {
     const baseMetadata = generateBaseMetadata(
       {
         title: `${entityData.name} - Performance Analytics | ${APP_CONFIG.name}`,
@@ -121,6 +145,7 @@ export async function generateTabAwareMetadata(
         type: entityData.type || "page",
         name: `${entityData.name} - Performance`,
         path: path,
+        indexable: false,
       }
     );
 
@@ -137,14 +162,26 @@ export async function generateTabAwareMetadata(
     return baseMetadata;
   }
 
+  // Helper: apply indexable to metadata (for generators that don't support it)
+  const applyRobots = (metadata, indexableFlag) => {
+    if (indexableFlag) return metadata;
+    metadata.robots = {
+      index: false,
+      follow: false,
+      googleBot: { index: false, follow: false },
+    };
+    return metadata;
+  };
+
   // Handle Discussion Forum tab with thread detail
   if (tab === TAB_TYPES.DISCUSSION && threadSlug) {
     try {
       const thread = await fetchThreadBySlug(threadSlug);
       if (thread) {
-        return generateThreadMetadata(thread, entityData, {
+        const meta = generateThreadMetadata(thread, entityData, {
           path: `${path}?tab=discussion&thread=${threadSlug}`,
         });
+        return applyRobots(meta, indexable);
       }
     } catch (error) {
       logger.warn("Failed to fetch thread for metadata:", error);
@@ -153,11 +190,12 @@ export async function generateTabAwareMetadata(
 
   // Handle Discussion Forum tab (list view)
   if (tab === TAB_TYPES.DISCUSSION && !threadSlug) {
-    return generateDiscussionForumMetadata(entityData, {
+    const meta = generateDiscussionForumMetadata(entityData, {
       type: entityData.type || "page",
       name: entityData.name,
       path: `${path}?tab=discussion`,
     });
+    return applyRobots(meta, indexable);
   }
 
   // Handle Practice Test tab with specific test
@@ -186,6 +224,7 @@ export async function generateTabAwareMetadata(
       type: "practice_test",
       name: `${entityData.name} - Practice Test`,
       path: `${path}?tab=practice${testSlug ? `&test=${testSlug}` : ""}`,
+      indexable,
     });
   }
 
@@ -212,6 +251,7 @@ export async function generateTabAwareMetadata(
       type: "practice_tests",
       name: `${entityData.name} - Practice Tests`,
       path: `${path}?tab=practice`,
+      indexable,
     });
   }
 
@@ -267,6 +307,7 @@ export async function generateTabAwareMetadata(
     type: entityData.type || "page",
     name: entityData.name,
     path: path,
+    indexable,
   });
 }
 
