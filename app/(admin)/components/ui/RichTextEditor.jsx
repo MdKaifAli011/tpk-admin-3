@@ -85,10 +85,12 @@ const RichTextEditor = ({
     link: "",
   });
   const [youtubeUrl, setYoutubeUrl] = useState("");
+  const [youtubeUrlList, setYoutubeUrlList] = useState([""]); // multiple YouTube URLs
   const [videoTab, setVideoTab] = useState("upload"); // "upload" or "youtube"
   const [videoAlign, setVideoAlign] = useState("center"); // "left", "center", "right"
   const [customWidth, setCustomWidth] = useState("640");
   const [customHeight, setCustomHeight] = useState("360");
+  const [videoGridColumns, setVideoGridColumns] = useState("auto"); // "auto" | "2" | "3"
   const onChangeRef = useRef(onChange);
   const valueRef = useRef(value);
   const placeholderRef = useRef(placeholder);
@@ -990,26 +992,28 @@ const RichTextEditor = ({
     }
   };
 
-  // Handle video upload
+  // Handle video upload (single or multiple files)
   const handleVideoUpload = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const fileList = e.target.files;
+    if (!fileList?.length) return;
 
-    // Validate file type
     const allowedTypes = ["video/mp4", "video/webm", "video/ogg", "video/quicktime"];
-    if (!allowedTypes.includes(file.type)) {
-      setVideoError("Invalid file type. Only MP4, WebM, OGG, and MOV are allowed.");
-      return;
-    }
-
-    // Validate file size (max 100MB)
     const maxSize = 100 * 1024 * 1024;
-    if (file.size > maxSize) {
-      setVideoError("File size exceeds 100MB limit.");
-      return;
+    const files = Array.from(fileList);
+
+    for (const file of files) {
+      if (!allowedTypes.includes(file.type)) {
+        setVideoError(`Invalid file type: ${file.name}. Only MP4, WebM, OGG, and MOV are allowed.`);
+        return;
+      }
+      if (file.size > maxSize) {
+        setVideoError(`File too large: ${file.name}. Max 100MB.`);
+        return;
+      }
     }
 
-    await uploadAndInsertVideo(file);
+    await uploadMultipleAndInsertVideo(files);
+    e.target.value = "";
   };
 
   // Get video dimensions and alignment based on selection
@@ -1048,57 +1052,89 @@ const RichTextEditor = ({
     return { ...dims, margin, textAlign, parentStyle, w, h };
   };
 
-  // Upload video and insert into editor
-  const uploadAndInsertVideo = async (file) => {
+  // Grid columns CSS: auto (responsive), 2, or 3
+  const getGridColumnsStyle = () => {
+    if (videoGridColumns === "2") return "repeat(2, 1fr)";
+    if (videoGridColumns === "3") return "repeat(3, 1fr)";
+    return "repeat(auto-fill, minmax(min(100%, 280px), 1fr))";
+  };
+
+  // Build one video block HTML (upload or youtube) for grid cell
+  const buildOneVideoBlock = (dims, videoUrl, type = "upload", mimeType = "video/mp4") => {
+    const containerStyle = `display: block; position: relative; width: 100%; height: 0; padding-bottom: ${(dims.h / dims.w) * 100}%; max-width: 100%; cursor: pointer; border-radius: 8px; overflow: hidden; background: #000;`;
+    const overlayStyle = "position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.2); z-index: 10; pointer-events: none;";
+    const playBtnStyle = "width: 60px; height: 60px; background: rgba(239, 68, 68, 0.9); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3);";
+    const arrowStyle = "width: 0; height: 0; border-top: 12px solid transparent; border-bottom: 12px solid transparent; border-left: 20px solid white; margin-left: 5px;";
+    const innerStyle = "position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; background: #000; pointer-events: none; display: block;";
+
+    if (type === "youtube") {
+      const embedUrl = videoUrl.startsWith("http") ? videoUrl : `https://www.youtube.com/embed/${videoUrl}`;
+      const iframeStyle = innerStyle + " border: none;";
+      return `<span class="video-container" data-video-url="${embedUrl}" data-video-type="youtube" style="${containerStyle}"><span class="video-play-overlay" style="${overlayStyle}"><span style="${playBtnStyle}"><span style="${arrowStyle}"></span></span></span><iframe style="${iframeStyle}" src="${embedUrl}?controls=0&showinfo=0&rel=0&modestbranding=1" title="YouTube" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></span>`;
+    }
+    return `<span class="video-container" data-video-url="${videoUrl}" data-video-type="upload" data-mime-type="${mimeType}" style="${containerStyle}"><span class="video-play-overlay" style="${overlayStyle}"><span style="${playBtnStyle}"><span style="${arrowStyle}"></span></span></span><video style="${innerStyle}" preload="metadata"><source src="${videoUrl}" type="${mimeType}" />Your browser does not support the video tag.</video></span>`;
+  };
+
+  // Build full grid HTML and insert into editor
+  const insertVideoGrid = (items) => {
+    if (!items.length) return;
+    const editor = editorRef.current;
+    if (!editor) return;
+    const dims = getVideoDimensions();
+    const gridStyle = `display: grid; grid-template-columns: ${getGridColumnsStyle()}; gap: 1rem; width: 100%; margin: 20px 0; align-items: start;`;
+    const alignWrap = videoAlign === "left" ? "text-align: left;" : videoAlign === "right" ? "text-align: right;" : "text-align: center;";
+    const cells = items.map((item) => {
+      const block = buildOneVideoBlock(dims, item.url, item.type, item.mimeType);
+      return `<div class="video-parent-container" style="width: 100%; max-width: 100%;">${block}</div>`;
+    }).join("");
+    const gridHtml = `<div class="video-grid-container" style="${alignWrap}"><div style="${gridStyle}">${cells}</div></div>`;
+    editor.focus();
+    editor.insertHtml(gridHtml);
+  };
+
+  // Upload multiple videos and insert as grid
+  const uploadMultipleAndInsertVideo = async (files) => {
+    if (!files?.length) return;
     try {
       setUploadingVideo(true);
       setVideoError("");
+      const items = [];
 
-      const formData = new FormData();
-      formData.append("video", file);
+      for (const file of files) {
+        const formData = new FormData();
+        formData.append("video", file);
+        if (examId) formData.append("examId", examId);
+        if (subjectId) formData.append("subjectId", subjectId);
+        if (unitId) formData.append("unitId", unitId);
+        if (chapterId) formData.append("chapterId", chapterId);
+        if (topicId) formData.append("topicId", topicId);
+        if (subtopicId) formData.append("subtopicId", subtopicId);
+        if (definitionId) formData.append("definitionId", definitionId);
 
-      // Add context IDs if available
-      if (examId) formData.append("examId", examId);
-      if (subjectId) formData.append("subjectId", subjectId);
-      if (unitId) formData.append("unitId", unitId);
-      if (chapterId) formData.append("chapterId", chapterId);
-      if (topicId) formData.append("topicId", topicId);
-      if (subtopicId) formData.append("subtopicId", subtopicId);
-      if (definitionId) formData.append("definitionId", definitionId);
+        const response = await api.post("/upload/video", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
 
-      const response = await api.post("/upload/video", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
-
-      if (response.data?.success && response.data?.data?.url) {
-        const videoUrl = response.data.data.url;
-        const editor = editorRef.current;
-        const dims = getVideoDimensions();
-
-        if (editor) {
-          try {
-            editor.focus();
-            // Insert responsive video into editor
-            const parentStyle = dims.parentStyle;
-            const containerStyle = `display: inline-block; vertical-align: middle; position: relative; width: ${dims.width}; height: auto; aspect-ratio: ${dims.aspectRatio}; max-width: 100%; cursor: pointer; border-radius: 8px; overflow: hidden; background: #000;`;
-            const videoHtml = `<div class="video-parent-container" style="${parentStyle}"><span class="video-container" data-video-url="${videoUrl}" data-video-type="upload" data-mime-type="${file.type}" style="${containerStyle}"><span class="video-play-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.2); z-index: 10; pointer-events: none;"><span style="width: 60px; height: 60px; background: rgba(239, 68, 68, 0.9); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3);"><span style="width: 0; height: 0; border-top: 12px solid transparent; border-bottom: 12px solid transparent; border-left: 20px solid white; margin-left: 5px;"></span></span></span><video style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; background: #000; pointer-events: none; display: block;" preload="metadata"><source src="${videoUrl}" type="${file.type}" />Your browser does not support the video tag.</video></span></div>`;
-            editor.insertHtml(videoHtml);
-          } catch (err) {
-            console.error("Error inserting video:", err);
-          }
+        if (response.data?.success && response.data?.data?.url) {
+          items.push({ url: response.data.data.url, type: "upload", mimeType: file.type });
+        } else {
+          setVideoError(response.data?.message || "Failed to upload one or more videos.");
+          setUploadingVideo(false);
+          return;
         }
+      }
 
+      if (items.length) {
+        insertVideoGrid(items);
         setShowVideoModal(false);
         setVideoError("");
         setYoutubeUrl("");
+        setYoutubeUrlList([""]);
         setVideoTab("upload");
         setVideoAlign("center");
         setCustomWidth("640");
         setCustomHeight("360");
-      } else {
-        setVideoError(response.data?.message || "Failed to upload video");
+        setVideoGridColumns("auto");
       }
     } catch (error) {
       console.error("Video upload error:", error);
@@ -1138,38 +1174,51 @@ const RichTextEditor = ({
     return null;
   };
 
-  // Insert YouTube video
-  const insertYouTubeVideo = () => {
-    const editor = editorRef.current;
-    if (!editor || !youtubeUrl.trim()) return;
-
-    const videoId = extractYouTubeId(youtubeUrl);
-
-    if (!videoId) {
-      setVideoError("Invalid YouTube URL. Please enter a valid YouTube video or Shorts link (e.g., youtube.com/watch?v=..., youtube.com/shorts/..., or youtu.be/...).");
+  // Insert one or more YouTube videos as grid
+  const insertYouTubeVideos = () => {
+    const urls = youtubeUrlList.filter((u) => u?.trim());
+    if (!urls.length) {
+      setVideoError("Add at least one YouTube URL.");
       return;
     }
 
-    const dims = getVideoDimensions();
-
-    try {
-      editor.focus();
-      const parentStyle = dims.parentStyle;
-      const containerStyle = `display: inline-block; vertical-align: middle; position: relative; width: ${dims.width}; height: auto; aspect-ratio: ${dims.aspectRatio}; max-width: 100%; cursor: pointer; border-radius: 8px; overflow: hidden; background: #000;`;
-      const youtubeHtml = `<div class="video-parent-container" style="${parentStyle}"><span class="video-container" data-video-url="https://www.youtube.com/embed/${videoId}" data-video-type="youtube" style="${containerStyle}"><span class="video-play-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.2); z-index: 10; pointer-events: none;"><span style="width: 60px; height: 60px; background: rgba(239, 68, 68, 0.9); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3);"><span style="width: 0; height: 0; border-top: 12px solid transparent; border-bottom: 12px solid transparent; border-left: 20px solid white; margin-left: 5px;"></span></span></span><iframe style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; background: #000; pointer-events: none; display: block;" src="https://www.youtube.com/embed/${videoId}?controls=0&showinfo=0&rel=0&modestbranding=1" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></span></div>`;
-
-      editor.insertHtml(youtubeHtml);
-    } catch (err) {
-      console.error("Error inserting youtube video:", err);
+    const ids = [];
+    for (const url of urls) {
+      const id = extractYouTubeId(url);
+      if (!id) {
+        setVideoError(`Invalid YouTube URL: "${url.slice(0, 50)}...". Use watch, shorts, or youtu.be links.`);
+        return;
+      }
+      ids.push(id);
     }
+
+    const items = ids.map((id) => ({
+      url: `https://www.youtube.com/embed/${id}`,
+      type: "youtube",
+      mimeType: "",
+    }));
+    insertVideoGrid(items);
+
     setShowVideoModal(false);
     setVideoError("");
     setYoutubeUrl("");
+    setYoutubeUrlList([""]);
     setVideoTab("upload");
     setVideoAlign("center");
     setCustomWidth("640");
     setCustomHeight("360");
+    setVideoGridColumns("auto");
   };
+
+  const addYoutubeUrlRow = () => setYoutubeUrlList((prev) => [...prev, ""]);
+  const removeYoutubeUrlRow = (index) =>
+    setYoutubeUrlList((prev) => prev.filter((_, i) => i !== index));
+  const setYoutubeUrlAt = (index, value) =>
+    setYoutubeUrlList((prev) => {
+      const next = [...prev];
+      next[index] = value;
+      return next;
+    });
 
   return (
     <>
@@ -1920,7 +1969,9 @@ const RichTextEditor = ({
                   setShowVideoModal(false);
                   setVideoError("");
                   setYoutubeUrl("");
+                  setYoutubeUrlList([""]);
                   setVideoTab("upload");
+                  setVideoGridColumns("auto");
                 }}
                 className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-2 rounded-lg transition"
               >
@@ -1973,16 +2024,17 @@ const RichTextEditor = ({
               {/* Upload Tab Content */}
               {videoTab === "upload" && (
                 <>
-                  {/* File Input */}
+                  {/* File Input - multiple */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Select Video File
+                      Select Video File(s)
                     </label>
                     <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-red-400 transition-colors">
                       <input
                         type="file"
                         id="video-upload"
                         accept="video/mp4,video/webm,video/ogg,video/quicktime"
+                        multiple
                         onChange={handleVideoUpload}
                         className="hidden"
                         disabled={uploadingVideo}
@@ -1993,12 +2045,35 @@ const RichTextEditor = ({
                       >
                         <FaVideo className="w-8 h-8 text-gray-400 mb-2" />
                         <span className="text-sm text-gray-600">
-                          Click to select video file
+                          Click to select one or more videos
                         </span>
                         <span className="text-xs text-gray-500 mt-1">
-                          MP4, WebM, OGG, MOV (max 100MB)
+                          MP4, WebM, OGG, MOV (max 100MB each)
                         </span>
                       </label>
+                    </div>
+                  </div>
+
+                  {/* Grid columns */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Grid layout
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      {[
+                        { id: "auto", label: "Auto (responsive)" },
+                        { id: "2", label: "2 columns" },
+                        { id: "3", label: "3 columns" },
+                      ].map((opt) => (
+                        <button
+                          key={opt.id}
+                          type="button"
+                          onClick={() => setVideoGridColumns(opt.id)}
+                          className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${videoGridColumns === opt.id ? "bg-red-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
                     </div>
                   </div>
 
@@ -2065,7 +2140,7 @@ const RichTextEditor = ({
                   {/* Info Message */}
                   <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                     <p className="text-xs text-blue-700">
-                      <strong>💡 Tip:</strong> Videos will be embedded as responsive players. The dimensions you set act as the maximum size.
+                      <strong>💡 Tip:</strong> Select multiple files to insert several videos at once. They will appear in a responsive grid. Width and height set the size of each video.
                     </p>
                   </div>
                 </>
@@ -2074,51 +2149,77 @@ const RichTextEditor = ({
               {/* YouTube Tab Content */}
               {videoTab === "youtube" && (
                 <>
-                  {/* YouTube URL Input */}
+                  {/* Multiple YouTube URLs */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      YouTube Video URL
+                      YouTube Video URL(s)
                     </label>
-                    <input
-                      type="url"
-                      value={youtubeUrl}
-                      onChange={(e) => {
-                        setYoutubeUrl(e.target.value);
-                        setVideoError("");
-                      }}
-                      placeholder="https://www.youtube.com/watch?v=... or https://www.youtube.com/shorts/..."
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm"
-                    />
-                    <p className="mt-1.5 text-xs text-gray-500">
-                      Paste any YouTube video URL (watch, shorts, share, or embed link)
+                    <p className="text-xs text-gray-500 mb-2">
+                      Add one or more URLs (watch, Shorts, or youtu.be). They will be inserted in a responsive grid.
                     </p>
+                    <div className="space-y-2">
+                      {youtubeUrlList.map((url, index) => (
+                        <div key={index} className="flex gap-2 items-center">
+                          <input
+                            type="url"
+                            value={url}
+                            onChange={(e) => {
+                              setYoutubeUrlAt(index, e.target.value);
+                              setVideoError("");
+                            }}
+                            placeholder="https://www.youtube.com/watch?v=... or youtube.com/shorts/..."
+                            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeYoutubeUrlRow(index)}
+                            disabled={youtubeUrlList.length <= 1}
+                            className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed"
+                            title="Remove URL"
+                          >
+                            <FaTimes className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={addYoutubeUrlRow}
+                      className="mt-2 text-sm text-red-600 hover:text-red-700 font-medium"
+                    >
+                      + Add another URL
+                    </button>
+                  </div>
+
+                  {/* Grid columns */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Grid layout
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      {[
+                        { id: "auto", label: "Auto (responsive)" },
+                        { id: "2", label: "2 columns" },
+                        { id: "3", label: "3 columns" },
+                      ].map((opt) => (
+                        <button
+                          key={opt.id}
+                          type="button"
+                          onClick={() => setVideoGridColumns(opt.id)}
+                          className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${videoGridColumns === opt.id ? "bg-red-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
                   </div>
 
                   {/* YouTube Info */}
                   <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
                     <p className="text-xs text-red-700">
-                      <strong>📺 YouTube:</strong> Supports regular videos and YouTube Shorts. The video will be embedded as a responsive iframe with full YouTube player features.
+                      <strong>📺 YouTube:</strong> Supports regular videos and Shorts. Multiple videos are inserted in a responsive grid with the height you set below.
                     </p>
                   </div>
-
-                  {/* Preview */}
-                  {youtubeUrl && extractYouTubeId(youtubeUrl) && (
-                    <div className="mt-4">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Preview
-                      </label>
-                      <div className="relative" style={{ paddingBottom: `${(parseInt(customHeight) / parseInt(customWidth)) * 100 || 56.25}%`, height: 0, overflow: "hidden", borderRadius: "8px", background: "#000" }}>
-                        <iframe
-                          className="absolute inset-0 w-full h-full border-none rounded-lg"
-                          src={`https://www.youtube.com/embed/${extractYouTubeId(youtubeUrl)}`}
-                          title="YouTube video preview"
-                          frameBorder="0"
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                          allowFullScreen
-                        ></iframe>
-                      </div>
-                    </div>
-                  )}
 
                   {/* Dimensions & Alignment */}
                   <div className="pt-4 border-t border-gray-100 space-y-4">
@@ -2206,21 +2307,23 @@ const RichTextEditor = ({
                     setShowVideoModal(false);
                     setVideoError("");
                     setYoutubeUrl("");
+                    setYoutubeUrlList([""]);
                     setVideoTab("upload");
+                    setVideoGridColumns("auto");
                   }}
                   className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-900 rounded-lg text-sm font-medium transition-colors"
                 >
                   Cancel
                 </button>
                 <button
-                  onClick={insertYouTubeVideo}
-                  disabled={!youtubeUrl.trim()}
+                  onClick={insertYouTubeVideos}
+                  disabled={!youtubeUrlList.some((u) => u?.trim())}
                   className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
                   </svg>
-                  Insert YouTube Video
+                  Insert YouTube Video(s)
                 </button>
               </div>
             )}

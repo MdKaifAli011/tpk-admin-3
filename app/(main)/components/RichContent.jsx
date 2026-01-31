@@ -844,6 +844,15 @@ const RichContent = ({ html }) => {
       )}
       <div ref={containerRef} className="rich-text-content wrap-anywhere">
         <style jsx global>{`
+        .video-grid-container {
+          width: 100%;
+          max-width: 100%;
+          box-sizing: border-box;
+        }
+        .video-grid-container > div {
+          width: 100%;
+          max-width: 100%;
+        }
         .video-container {
           transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
         }
