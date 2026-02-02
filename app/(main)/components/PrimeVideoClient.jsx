@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import {
   FaPlay,
   FaFilm,
@@ -97,7 +98,11 @@ function getLevelName(pathLabel) {
 
 // --- Components ---
 
-function VideoCard({ video, pathLabel, level, onPlay }) {
+/**
+ * VideoCard: lazy-loads thumbnail only when card is in viewport (Intersection Observer).
+ * No img request until visible — saves bandwidth. "View more" only reveals more cards; their images load when scrolled into view.
+ */
+function VideoCard({ video, pathLabel, level, onPlay, priority = false }) {
   const id = getYouTubeVideoId(video);
   const embedUrl = video?.embedUrl && /youtube|youtu\.be/i.test(video.embedUrl)
     ? video.embedUrl
@@ -106,8 +111,28 @@ function VideoCard({ video, pathLabel, level, onPlay }) {
       : "";
   const [imgLoaded, setImgLoaded] = useState(false);
   const [thumbSrc, setThumbSrc] = useState(() => (id ? YOUTUBE_THUMB_HQ(id) : ""));
+  const [inView, setInView] = useState(priority);
+  const cardRef = useRef(null);
+
   const config = LEVEL_CONFIG[level] || LEVEL_CONFIG.topic;
   const displayName = getLevelName(pathLabel);
+
+  // Lazy: only load thumbnail when card is in viewport (or priority = first 8)
+  useEffect(() => {
+    if (priority || !cardRef.current || !id) return;
+    const el = cardRef.current;
+    const io = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        if (entry?.isIntersecting) {
+          setInView(true);
+        }
+      },
+      { rootMargin: "100px", threshold: 0.01 }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [priority, id]);
 
   const handlePlay = useCallback(() => {
     if (embedUrl) onPlay?.({ embedUrl, title: pathLabel });
@@ -122,31 +147,34 @@ function VideoCard({ video, pathLabel, level, onPlay }) {
 
   if (!id) return null;
 
+  const shouldLoadImage = inView;
+
   return (
     <div
+      ref={cardRef}
       className="group relative flex flex-col w-full min-w-0 cursor-pointer"
       onClick={handlePlay}
     >
-      {/* Thumbnail Container */}
+      {/* Thumbnail Container - image only requested when inView (or priority) */}
       <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-gray-100 shadow-sm transition-all duration-300 group-hover:shadow-md ring-1 ring-black/5">
+        {shouldLoadImage ? (
+          <img
+            src={thumbSrc || YOUTUBE_THUMB_HQ(id)}
+            alt={displayName}
+            onError={(e) => {
+              e.target.onerror = null;
+              handleThumbError();
+            }}
+            onLoad={() => setImgLoaded(true)}
+            loading={priority ? "eager" : "lazy"}
+            decoding="async"
+            className={`h-full w-full object-cover transition-transform duration-500 will-change-transform group-hover:scale-105 ${!imgLoaded ? "opacity-0" : "opacity-100"
+              }`}
+          />
+        ) : null}
 
-        {/* Image - hqdefault first (reliable); fallback to mqdefault on error */}
-        <img
-          src={thumbSrc || YOUTUBE_THUMB_HQ(id)}
-          alt={displayName}
-          onError={(e) => {
-            e.target.onerror = null;
-            handleThumbError();
-          }}
-          onLoad={() => setImgLoaded(true)}
-          loading="lazy"
-          decoding="async"
-          className={`h-full w-full object-cover transition-transform duration-500 will-change-transform group-hover:scale-105 ${!imgLoaded ? "opacity-0" : "opacity-100"
-            }`}
-        />
-
-        {/* Skeleton Loader */}
-        {!imgLoaded && (
+        {/* Skeleton until in view or image loaded */}
+        {(!shouldLoadImage || !imgLoaded) && (
           <div className="absolute inset-0 animate-pulse bg-gray-200" />
         )}
 
@@ -221,7 +249,7 @@ function VideoRow({ pathLabel, videos, level, onPlay }) {
         </span>
       </div>
 
-      {/* Grid - responsive columns, 8 initially then all when "View more" */}
+      {/* Grid - only first 8 (or all after View more) are in DOM; thumbnails load when in viewport (priority for first 8) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
         {displayVideos.map((video, i) => (
           <div key={video.youtubeVideoId || i} className="w-full min-w-0">
@@ -230,6 +258,7 @@ function VideoRow({ pathLabel, videos, level, onPlay }) {
               pathLabel={pathLabel}
               level={level}
               onPlay={onPlay}
+              priority={i < INITIAL_VIDEOS_PER_ROW}
             />
           </div>
         ))}
@@ -285,7 +314,7 @@ function LevelGroup({ level, rows, onPlay }) {
           </span>
           <span className="hidden text-gray-300 sm:block">|</span>
           <span className="text-xs text-gray-500 sm:text-sm">
-            {rows.length} Section{rows.length !== 1 ? 's' : ''} • {totalVideos} Video{totalVideos !== 1 ? 's' : ''}
+            {rows.length} Section{rows.length !== 1 ? "s" : ""} • {totalVideos} Video{totalVideos !== 1 ? "s" : ""}
           </span>
         </div>
 
@@ -319,7 +348,6 @@ function LevelGroup({ level, rows, onPlay }) {
 function ExamContent({ exam, onPlay }) {
   const rows = useMemo(() => collectRows(exam), [exam]);
 
-  // Memoize grouped rows
   const groupedRows = useMemo(() => {
     const groups = {};
     LEVEL_ORDER.forEach(l => groups[l] = []);
@@ -399,15 +427,34 @@ function VideoModal({ embedUrl, title, onClose }) {
   );
 }
 
-export default function PrimeVideoClient({ exams }) {
+/** Normalize slug for comparison (lowercase, trim). */
+function normalizeSlug(s) {
+  return (s ?? "").toLowerCase().trim();
+}
+
+/**
+ * Prime Video client – used only at /[examSlug]/prime-video.
+ * Receives exams and currentExamSlug (from URL); dropdown navigates to /{slug}/prime-video.
+ */
+export default function PrimeVideoClient({ exams, currentExamSlug }) {
+  const router = useRouter();
   const [modal, setModal] = useState(null);
-  const [activeExamIndex, setActiveExamIndex] = useState(0);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
+  const slugFromUrl = normalizeSlug(currentExamSlug);
+
+  const activeExam = useMemo(() => {
+    if (!exams?.length) return null;
+    if (slugFromUrl) {
+      const found = exams.find((e) => normalizeSlug(e.slug) === slugFromUrl);
+      if (found) return found;
+    }
+    return exams[0];
+  }, [exams, slugFromUrl]);
+
   const hasContent = exams?.length > 0 && exams.some((e) => collectRows(e).length > 0);
 
-  // Calculate stats
   const totalStats = useMemo(() => {
     if (!exams) return { videos: 0, exams: 0 };
     const videos = exams.reduce((acc, exam) =>
@@ -420,7 +467,16 @@ export default function PrimeVideoClient({ exams }) {
     setModal({ embedUrl, title });
   }, []);
 
-  // Close dropdown on outside click
+  const onExamSelect = useCallback(
+    (exam) => {
+      setDropdownOpen(false);
+      const targetSlug = exam?.slug ?? "";
+      if (!targetSlug) return;
+      router.push(`/${targetSlug}/prime-video`);
+    },
+    [router]
+  );
+
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
@@ -433,7 +489,6 @@ export default function PrimeVideoClient({ exams }) {
     }
   }, [dropdownOpen]);
 
-  const activeExam = exams?.[activeExamIndex];
   const activeExamVideoCount = activeExam
     ? collectRows(activeExam).reduce((a, r) => a + (r.videos?.length || 0), 0)
     : 0;
@@ -465,7 +520,6 @@ export default function PrimeVideoClient({ exams }) {
           <div className="absolute inset-0 bg-gradient-to-r from-indigo-50/40 via-transparent to-purple-50/40" />
           <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-4 min-w-0">
-              
               <div className="min-w-0">
                 <h1 className="text-xl font-bold text-blue-900 tracking-tight">Prime Video</h1>
                 <p className="text-sm font-medium text-gray-500">
@@ -485,7 +539,7 @@ export default function PrimeVideoClient({ exams }) {
                   aria-haspopup="listbox"
                   aria-label="Select exam"
                 >
-                   <span className="truncate text-sm font-medium text-gray-900">
+                  <span className="truncate text-sm font-medium text-gray-900">
                     {activeExam?.name ?? "Select exam"}
                   </span>
                   <span className="ml-auto shrink-0 rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-semibold text-indigo-700">
@@ -504,23 +558,19 @@ export default function PrimeVideoClient({ exams }) {
                   >
                     {exams.map((exam, index) => {
                       const count = collectRows(exam).reduce((a, r) => a + (r.videos?.length || 0), 0);
-                      const isActive = index === activeExamIndex;
+                      const isActive = activeExam && (exam.slug === activeExam.slug || exam.id?.toString() === activeExam.id?.toString());
                       return (
                         <button
                           key={exam.id?.toString() ?? exam.name ?? index}
                           type="button"
                           role="option"
-                          aria-selected={isActive}
-                          onClick={() => {
-                            setActiveExamIndex(index);
-                            setDropdownOpen(false);
-                          }}
+                          aria-selected={!!isActive}
+                          onClick={() => onExamSelect(exam)}
                           className={`flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm transition-colors duration-150 ${isActive
                               ? "bg-blue-50 text-blue-900"
                               : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
                             }`}
                         >
-                         
                           <span className="truncate flex-1 font-medium">{exam.name}</span>
                           <span
                             className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${isActive ? "bg-indigo-200 text-indigo-800" : "bg-gray-100 text-gray-600"
@@ -540,11 +590,13 @@ export default function PrimeVideoClient({ exams }) {
 
         {/* Content Area */}
         <div className="bg-gray-50/30 px-4 py-4 sm:px-6 sm:py-6">
-          <ExamContent
-            key={activeExamIndex}
-            exam={exams[activeExamIndex]}
-            onPlay={onPlay}
-          />
+          {activeExam && (
+            <ExamContent
+              key={activeExam.slug ?? activeExam.id}
+              exam={activeExam}
+              onPlay={onPlay}
+            />
+          )}
         </div>
       </div>
 

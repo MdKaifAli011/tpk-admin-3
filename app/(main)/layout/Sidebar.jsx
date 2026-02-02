@@ -135,7 +135,7 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
     }
   }, [tree]);
 
-  // path segments for prime-video
+  // Prime Video only at /{examSlug}/prime-video (no /prime-video path)
   const isPrimeVideoPath = pathname?.includes("/prime-video");
 
   // path segments for auto open
@@ -160,6 +160,14 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
   const activeExamSlug = activeExam
     ? activeExam.slug || createSlug(activeExam.name)
     : "";
+
+  // Prime Video only at /{examSlug}/prime-video — link uses exam from path or first exam
+  const primeVideoSlug = useMemo(() => {
+    const nonExamSegments = ["blog", "download", "contact", "login", "register", "calculator"];
+    if (examSlugFromPath && !nonExamSegments.includes(examSlugFromPath)) return examSlugFromPath;
+    const first = exams[0];
+    return first ? (first.slug || createSlug(first.name)) : "";
+  }, [examSlugFromPath, exams]);
 
   // close on mobile helper - closes sidebar when navigating on mobile
   const closeOnMobile = useCallback(() => {
@@ -904,16 +912,17 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
                   </li>
                 )}
 
-                {/* Prime Video — all exams, single URL */}
+                {/* Prime Video only at /{examSlug}/prime-video (no /prime-video path) */}
                 <li>
                   <Link
-                    href="/prime-video"
+                    href={primeVideoSlug ? `/${primeVideoSlug}/prime-video` : "#"}
                     className={`w-full flex items-center justify-between px-3 py-2 font-semibold rounded-lg transition-all duration-200 ${
                       isPrimeVideoPath
                         ? "bg-indigo-100/60 shadow-sm text-indigo-900"
                         : "text-black hover:text-indigo-600 hover:bg-gray-50"
-                    }`}
+                    } ${!primeVideoSlug ? "pointer-events-none opacity-60" : ""}`}
                     onClick={closeOnMobile}
+                    aria-disabled={!primeVideoSlug}
                   >
                     <span>Prime Video</span>
                   </Link>
