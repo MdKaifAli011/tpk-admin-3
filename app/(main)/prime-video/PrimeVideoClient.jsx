@@ -5,17 +5,29 @@ import {
   FaPlay,
   FaFilm,
   FaGraduationCap,
-  FaChevronLeft,
-  FaChevronRight,
   FaChevronDown,
+  FaChevronUp,
   FaYoutube,
-  FaLayerGroup
+  FaLayerGroup,
 } from "react-icons/fa";
 
 // --- Configuration ---
 
-const YOUTUBE_THUMB = (id) => `https://img.youtube.com/vi/${id}/mqdefault.jpg`;
-const YOUTUBE_THUMB_HD = (id) => `https://img.youtube.com/vi/${id}/maxresdefault.jpg`;
+/** YouTube thumbnail URLs. hqdefault (480x360) exists for almost all videos; maxresdefault often 404s. */
+const YOUTUBE_THUMB_HQ = (id) => (id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : "");
+const YOUTUBE_THUMB_MQ = (id) => (id ? `https://img.youtube.com/vi/${id}/mqdefault.jpg` : "");
+const YOUTUBE_THUMB_HD = (id) => (id ? `https://img.youtube.com/vi/${id}/maxresdefault.jpg` : "");
+
+/** Extract 11-char YouTube video ID from video object (youtubeVideoId or from embedUrl). */
+function getYouTubeVideoId(video) {
+  if (!video) return null;
+  const raw = video.youtubeVideoId || "";
+  const idFromRaw = String(raw).trim();
+  if (/^[a-zA-Z0-9_-]{11}$/.test(idFromRaw)) return idFromRaw;
+  const embed = video.embedUrl || "";
+  const m = String(embed).match(/(?:youtube\.com\/embed\/|youtube\.com\/shorts\/|youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/i);
+  return m ? m[1] : (idFromRaw || null);
+}
 
 const LEVEL_ORDER = [
   "exam",
@@ -36,6 +48,9 @@ const LEVEL_CONFIG = {
   subtopic: { label: "SubTopic", color: "bg-emerald-600", text: "text-emerald-600", bgLight: "bg-emerald-50" },
   definition: { label: "Definition", color: "bg-green-600", text: "text-green-600", bgLight: "bg-green-50" },
 };
+
+/** Number of videos shown per level row before "View more" */
+const INITIAL_VIDEOS_PER_ROW = 8;
 
 // --- Helpers ---
 
@@ -83,33 +98,49 @@ function getLevelName(pathLabel) {
 // --- Components ---
 
 function VideoCard({ video, pathLabel, level, onPlay }) {
-  const id = video.youtubeVideoId;
-  const embedUrl = video.embedUrl || `https://www.youtube.com/embed/${id}`;
+  const id = getYouTubeVideoId(video);
+  const embedUrl = video?.embedUrl && /youtube|youtu\.be/i.test(video.embedUrl)
+    ? video.embedUrl
+    : id
+      ? `https://www.youtube.com/embed/${id}`
+      : "";
   const [imgLoaded, setImgLoaded] = useState(false);
+  const [thumbSrc, setThumbSrc] = useState(() => (id ? YOUTUBE_THUMB_HQ(id) : ""));
   const config = LEVEL_CONFIG[level] || LEVEL_CONFIG.topic;
   const displayName = getLevelName(pathLabel);
 
   const handlePlay = useCallback(() => {
-    onPlay?.({ embedUrl, title: pathLabel });
+    if (embedUrl) onPlay?.({ embedUrl, title: pathLabel });
   }, [onPlay, embedUrl, pathLabel]);
+
+  const handleThumbError = useCallback(() => {
+    setThumbSrc((prev) => {
+      if (prev === YOUTUBE_THUMB_HQ(id)) return YOUTUBE_THUMB_MQ(id);
+      return prev;
+    });
+  }, [id]);
+
+  if (!id) return null;
 
   return (
     <div
-      className="group relative flex flex-col w-[260px] shrink-0 cursor-pointer"
+      className="group relative flex flex-col w-full min-w-0 cursor-pointer"
       onClick={handlePlay}
     >
       {/* Thumbnail Container */}
       <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-gray-100 shadow-sm transition-all duration-300 group-hover:shadow-md ring-1 ring-black/5">
 
-        {/* Image */}
+        {/* Image - hqdefault first (reliable); fallback to mqdefault on error */}
         <img
-          src={YOUTUBE_THUMB_HD(id)}
+          src={thumbSrc || YOUTUBE_THUMB_HQ(id)}
           alt={displayName}
           onError={(e) => {
             e.target.onerror = null;
-            e.target.src = YOUTUBE_THUMB(id);
+            handleThumbError();
           }}
           onLoad={() => setImgLoaded(true)}
+          loading="lazy"
+          decoding="async"
           className={`h-full w-full object-cover transition-transform duration-500 will-change-transform group-hover:scale-105 ${!imgLoaded ? "opacity-0" : "opacity-100"
             }`}
         />
@@ -157,40 +188,16 @@ function VideoCard({ video, pathLabel, level, onPlay }) {
 }
 
 function VideoRow({ pathLabel, videos, level, onPlay }) {
-  const scrollRef = useRef(null);
-  const [showLeftArrow, setShowLeftArrow] = useState(false);
-  const [showRightArrow, setShowRightArrow] = useState(false);
+  const [expanded, setExpanded] = useState(false);
 
-  const checkScroll = useCallback(() => {
-    if (scrollRef.current) {
-      const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
-      setShowLeftArrow(scrollLeft > 10);
-      setShowRightArrow(scrollLeft < scrollWidth - clientWidth - 10);
-    }
-  }, []);
-
-  useEffect(() => {
-    checkScroll();
-    const ref = scrollRef.current;
-    if (ref) {
-      ref.addEventListener("scroll", checkScroll);
-      window.addEventListener("resize", checkScroll);
-      return () => {
-        ref.removeEventListener("scroll", checkScroll);
-        window.removeEventListener("resize", checkScroll);
-      };
-    }
-  }, [checkScroll]);
-
-  const scroll = (direction) => {
-    if (scrollRef.current) {
-      const scrollAmount = 600;
-      scrollRef.current.scrollBy({
-        left: direction === "left" ? -scrollAmount : scrollAmount,
-        behavior: "smooth",
-      });
-    }
-  };
+  const totalCount = videos?.length ?? 0;
+  const displayVideos = useMemo(() => {
+    if (!videos?.length) return [];
+    if (expanded || totalCount <= INITIAL_VIDEOS_PER_ROW) return videos;
+    return videos.slice(0, INITIAL_VIDEOS_PER_ROW);
+  }, [videos, expanded, totalCount]);
+  const hasMore = totalCount > INITIAL_VIDEOS_PER_ROW;
+  const moreCount = totalCount - INITIAL_VIDEOS_PER_ROW;
 
   if (!videos?.length) return null;
 
@@ -210,49 +217,46 @@ function VideoRow({ pathLabel, videos, level, onPlay }) {
           </h3>
         </div>
         <span className="shrink-0 rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600">
-          {videos.length}
+          {totalCount} video{totalCount !== 1 ? "s" : ""}
         </span>
       </div>
 
-      {/* Scroll Controls */}
-      <div className="relative -mx-4 sm:mx-0">
-        {showLeftArrow && (
-          <button
-            onClick={() => scroll("left")}
-            className="absolute -left-3 top-[35%] z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-gray-100 bg-white/90 text-gray-700 shadow-lg backdrop-blur-sm transition-all hover:scale-110 hover:text-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 md:-left-5"
-          >
-            <FaChevronLeft className="text-sm" />
-          </button>
-        )}
-
-        {showRightArrow && (
-          <button
-            onClick={() => scroll("right")}
-            className="absolute -right-3 top-[35%] z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-gray-100 bg-white/90 text-gray-700 shadow-lg backdrop-blur-sm transition-all hover:scale-110 hover:text-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 md:-right-5"
-          >
-            <FaChevronRight className="text-sm" />
-          </button>
-        )}
-
-        {/* Carousel */}
-        <div
-          ref={scrollRef}
-          className="flex gap-4 overflow-x-auto px-4 pb-4 pt-1 sm:px-1 scrollbar-hide"
-          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-        >
-          {videos.map((video, i) => (
+      {/* Grid - responsive columns, 8 initially then all when "View more" */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
+        {displayVideos.map((video, i) => (
+          <div key={video.youtubeVideoId || i} className="w-full min-w-0">
             <VideoCard
-              key={video.youtubeVideoId || i}
               video={video}
               pathLabel={pathLabel}
               level={level}
               onPlay={onPlay}
             />
-          ))}
-          {/* Spacer for right padding */}
-          <div className="w-1 shrink-0 sm:w-0" />
-        </div>
+          </div>
+        ))}
       </div>
+
+      {/* View more / Show less - when this level has more than 8 videos */}
+      {hasMore && (
+        <div className="mt-5 flex justify-center">
+          <button
+            type="button"
+            onClick={() => setExpanded((e) => !e)}
+            className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+          >
+            {expanded ? (
+              <>
+                <FaChevronUp className="text-xs" />
+                Show less
+              </>
+            ) : (
+              <>
+                <FaChevronDown className="text-xs" />
+                View more ({moreCount} more video{moreCount !== 1 ? "s" : ""})
+              </>
+            )}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -265,11 +269,11 @@ function LevelGroup({ level, rows, onPlay }) {
   const totalVideos = rows.reduce((a, r) => a + (r.videos?.length || 0), 0);
 
   return (
-    <div className="mb-6 rounded-2xl border border-gray-100 bg-white p-1 shadow-sm transition-shadow duration-300 hover:shadow-md sm:mb-8">
+    <div className="mb-6 rounded-md border border-gray-100 bg-white shadow-sm transition-shadow duration-300 hover:shadow-md ">
       <button
         type="button"
         onClick={() => setCollapsed(!collapsed)}
-        className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition-colors hover:bg-gray-50 sm:px-4"
+        className="flex w-full items-center gap-3 rounded px-1 py-2 text-left transition-colors hover:bg-gray-50 sm:px-4"
       >
         <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${config.bgLight} ${config.text}`}>
           <FaLayerGroup className="text-sm" />
@@ -327,8 +331,8 @@ function ExamContent({ exam, onPlay }) {
 
   if (rows.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 bg-gray-50/50 py-16 text-center">
-        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-indigo-50 shadow-sm">
+      <div className="flex flex-col items-center justify-center rounded border border-dashed border-gray-200 bg-gray-50/50 py-16 text-center">
+          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded bg-indigo-50 shadow-sm">
           <FaFilm className="text-2xl text-indigo-400" />
         </div>
         <h3 className="text-base font-semibold text-gray-900">No videos available</h3>
@@ -454,18 +458,16 @@ export default function PrimeVideoClient({ exams }) {
 
   return (
     <section className="space-y-6 bg-transparent font-sans antialiased">
-      <div className="overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm">
+      <div className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
 
         {/* Modern Header */}
         <div className="relative border-b border-gray-100 bg-white px-6 py-6 sm:px-8">
           <div className="absolute inset-0 bg-gradient-to-r from-indigo-50/40 via-transparent to-purple-50/40" />
           <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-4 min-w-0">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-lg shadow-indigo-200">
-                <FaFilm className="text-xl" />
-              </div>
+              
               <div className="min-w-0">
-                <h1 className="text-xl font-bold text-gray-900 tracking-tight">Prime Video</h1>
+                <h1 className="text-xl font-bold text-blue-900 tracking-tight">Prime Video</h1>
                 <p className="text-sm font-medium text-gray-500">
                   {totalStats.videos} Videos • {totalStats.exams} Exam{totalStats.exams !== 1 ? "s" : ""}
                 </p>
@@ -478,13 +480,12 @@ export default function PrimeVideoClient({ exams }) {
                 <button
                   type="button"
                   onClick={() => setDropdownOpen((o) => !o)}
-                  className="flex items-center gap-2.5 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-left shadow-sm transition-all duration-200 hover:border-indigo-200 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 min-w-[180px] sm:min-w-[220px]"
+                  className="flex items-center gap-2.5 rounded-md border border-gray-200 bg-white px-4 py-2.5 text-left shadow-sm transition-all duration-200 hover:border-blue-200 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 min-w-[180px] sm:min-w-[220px]"
                   aria-expanded={dropdownOpen}
                   aria-haspopup="listbox"
                   aria-label="Select exam"
                 >
-                  <FaGraduationCap className="h-4 w-4 shrink-0 text-indigo-600" />
-                  <span className="truncate text-sm font-medium text-gray-900">
+                   <span className="truncate text-sm font-medium text-gray-900">
                     {activeExam?.name ?? "Select exam"}
                   </span>
                   <span className="ml-auto shrink-0 rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-semibold text-indigo-700">
@@ -497,7 +498,7 @@ export default function PrimeVideoClient({ exams }) {
 
                 {dropdownOpen && (
                   <div
-                    className="absolute right-0 top-full z-20 mt-2 w-full min-w-[220px] overflow-hidden rounded-xl border border-gray-200 bg-white py-1 shadow-lg ring-1 ring-black/5"
+                    className="absolute right-0 top-full z-20 mt-1 w-full min-w-[220px] overflow-hidden rounded-md border border-gray-200 bg-white py-1 shadow-lg ring-1 ring-black/5"
                     role="listbox"
                     aria-label="Exam list"
                   >
@@ -515,13 +516,11 @@ export default function PrimeVideoClient({ exams }) {
                             setDropdownOpen(false);
                           }}
                           className={`flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm transition-colors duration-150 ${isActive
-                              ? "bg-indigo-50 text-indigo-900"
+                              ? "bg-blue-50 text-blue-900"
                               : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
                             }`}
                         >
-                          <FaGraduationCap
-                            className={`h-4 w-4 shrink-0 ${isActive ? "text-indigo-600" : "text-gray-400"}`}
-                          />
+                         
                           <span className="truncate flex-1 font-medium">{exam.name}</span>
                           <span
                             className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${isActive ? "bg-indigo-200 text-indigo-800" : "bg-gray-100 text-gray-600"
@@ -540,7 +539,7 @@ export default function PrimeVideoClient({ exams }) {
         </div>
 
         {/* Content Area */}
-        <div className="bg-gray-50/30 px-4 py-6 sm:px-6 sm:py-8">
+        <div className="bg-gray-50/30 px-4 py-4 sm:px-6 sm:py-6">
           <ExamContent
             key={activeExamIndex}
             exam={exams[activeExamIndex]}
