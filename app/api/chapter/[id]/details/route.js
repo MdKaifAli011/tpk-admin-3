@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import ChapterDetails from "@/models/ChapterDetails";
 import Chapter from "@/models/Chapter";
+import Unit from "@/models/Unit";
+import Subject from "@/models/Subject";
+import Exam from "@/models/Exam";
 import mongoose from "mongoose";
 import {
   successResponse,
@@ -10,6 +13,7 @@ import {
   notFoundResponse,
 } from "@/utils/apiResponse";
 import { ERROR_MESSAGES } from "@/constants";
+import { syncContentVideosForDetails } from "@/lib/syncContentVideos";
 
 // ---------- GET CHAPTER DETAILS ----------
 export async function GET(request, { params }) {
@@ -83,6 +87,23 @@ export async function PUT(request, { params }) {
       { $set: updateData },
       { new: true, upsert: true, runValidators: true }
     ).lean();
+
+    const [unit, subject, exam] = await Promise.all([
+      Unit.findById(chapter.unitId).select("name").lean(),
+      Subject.findById(chapter.subjectId).select("name").lean(),
+      Exam.findById(chapter.examId).select("name").lean(),
+    ]);
+    const hierarchy = {
+      examId: chapter.examId,
+      examName: exam?.name ?? "",
+      subjectId: chapter.subjectId,
+      subjectName: subject?.name ?? "",
+      unitId: chapter.unitId,
+      unitName: unit?.name ?? "",
+      chapterId: id,
+      chapterName: chapter.name ?? "",
+    };
+    await syncContentVideosForDetails("chapter", id, updateData.content || "", hierarchy).catch(() => {});
 
     return successResponse(details, "Chapter details saved successfully");
   } catch (error) {

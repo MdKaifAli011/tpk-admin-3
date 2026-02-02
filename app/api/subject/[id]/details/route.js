@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import SubjectDetails from "@/models/SubjectDetails";
 import Subject from "@/models/Subject";
+import Exam from "@/models/Exam";
 import mongoose from "mongoose";
 import {
   successResponse,
@@ -10,6 +11,7 @@ import {
   notFoundResponse,
 } from "@/utils/apiResponse";
 import { ERROR_MESSAGES } from "@/constants";
+import { syncContentVideosForDetails } from "@/lib/syncContentVideos";
 
 // ---------- GET SUBJECT DETAILS ----------
 export async function GET(request, { params }) {
@@ -83,6 +85,15 @@ export async function PUT(request, { params }) {
       { $set: updateData },
       { new: true, upsert: true, runValidators: true }
     ).lean();
+
+    const exam = await Exam.findById(subject.examId).select("name").lean();
+    const hierarchy = {
+      examId: subject.examId,
+      examName: exam?.name ?? "",
+      subjectId: id,
+      subjectName: subject.name ?? "",
+    };
+    await syncContentVideosForDetails("subject", id, updateData.content || "", hierarchy).catch(() => {});
 
     return successResponse(details, "Subject details saved successfully");
   } catch (error) {

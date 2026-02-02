@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import UnitDetails from "@/models/UnitDetails";
 import Unit from "@/models/Unit";
+import Subject from "@/models/Subject";
+import Exam from "@/models/Exam";
 import mongoose from "mongoose";
 import {
   successResponse,
@@ -10,6 +12,7 @@ import {
   notFoundResponse,
 } from "@/utils/apiResponse";
 import { ERROR_MESSAGES } from "@/constants";
+import { syncContentVideosForDetails } from "@/lib/syncContentVideos";
 
 // ---------- GET UNIT DETAILS ----------
 export async function GET(request, { params }) {
@@ -83,6 +86,20 @@ export async function PUT(request, { params }) {
       { $set: updateData },
       { new: true, upsert: true, runValidators: true }
     ).lean();
+
+    const [subject, exam] = await Promise.all([
+      Subject.findById(unit.subjectId).select("name").lean(),
+      Exam.findById(unit.examId).select("name").lean(),
+    ]);
+    const hierarchy = {
+      examId: unit.examId,
+      examName: exam?.name ?? "",
+      subjectId: unit.subjectId,
+      subjectName: subject?.name ?? "",
+      unitId: id,
+      unitName: unit.name ?? "",
+    };
+    await syncContentVideosForDetails("unit", id, updateData.content || "", hierarchy).catch(() => {});
 
     return successResponse(details, "Unit details saved successfully");
   } catch (error) {

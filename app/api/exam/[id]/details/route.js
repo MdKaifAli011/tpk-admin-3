@@ -11,6 +11,7 @@ import {
 } from "@/utils/apiResponse";
 import { ERROR_MESSAGES } from "@/constants";
 import { requireAuth, requireAction } from "@/middleware/authMiddleware";
+import { syncContentVideosForDetails } from "@/lib/syncContentVideos";
 
 // ---------- GET EXAM DETAILS ----------
 export async function GET(request, { params }) {
@@ -96,6 +97,9 @@ export async function PUT(request, { params }) {
       { $set: updateData },
       { new: true, upsert: true, runValidators: true }
     ).lean();
+
+    const hierarchy = { examId: id, examName: exam.name || "" };
+    await syncContentVideosForDetails("exam", id, updateData.content || "", hierarchy).catch(() => {});
 
     return successResponse(details, "Exam details saved successfully");
   } catch (error) {

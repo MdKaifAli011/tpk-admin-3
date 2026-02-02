@@ -2,6 +2,11 @@ import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import SubTopicDetails from "@/models/SubTopicDetails";
 import SubTopic from "@/models/SubTopic";
+import Topic from "@/models/Topic";
+import Chapter from "@/models/Chapter";
+import Unit from "@/models/Unit";
+import Subject from "@/models/Subject";
+import Exam from "@/models/Exam";
 import mongoose from "mongoose";
 import {
   successResponse,
@@ -10,6 +15,7 @@ import {
   notFoundResponse,
 } from "@/utils/apiResponse";
 import { ERROR_MESSAGES } from "@/constants";
+import { syncContentVideosForDetails } from "@/lib/syncContentVideos";
 
 // ---------- GET SUBTOPIC DETAILS ----------
 export async function GET(request, { params }) {
@@ -83,6 +89,29 @@ export async function PUT(request, { params }) {
       { $set: updateData },
       { new: true, upsert: true, runValidators: true }
     ).lean();
+
+    const [topic, chapter, unit, subject, exam] = await Promise.all([
+      Topic.findById(subTopic.topicId).select("name").lean(),
+      Chapter.findById(subTopic.chapterId).select("name").lean(),
+      Unit.findById(subTopic.unitId).select("name").lean(),
+      Subject.findById(subTopic.subjectId).select("name").lean(),
+      Exam.findById(subTopic.examId).select("name").lean(),
+    ]);
+    const hierarchy = {
+      examId: subTopic.examId,
+      examName: exam?.name ?? "",
+      subjectId: subTopic.subjectId,
+      subjectName: subject?.name ?? "",
+      unitId: subTopic.unitId,
+      unitName: unit?.name ?? "",
+      chapterId: subTopic.chapterId,
+      chapterName: chapter?.name ?? "",
+      topicId: subTopic.topicId,
+      topicName: topic?.name ?? "",
+      subTopicId: id,
+      subTopicName: subTopic.name ?? "",
+    };
+    await syncContentVideosForDetails("subtopic", id, updateData.content || "", hierarchy).catch(() => {});
 
     return successResponse(details, "SubTopic details saved successfully");
   } catch (error) {

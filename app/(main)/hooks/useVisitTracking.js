@@ -68,9 +68,17 @@ export const useVisitTracking = (level, itemId, itemSlug) => {
     return null;
   }, []);
 
+  // Paths where we never call analytics (no check-ip, no track-visit)
+  const isNoTrackPath = useCallback(() => {
+    if (typeof window === 'undefined') return false;
+    const path = window.location.pathname || '';
+    return /\/prime-video(\/|$)/.test(path) || /\/blog(\/|$)/.test(path) || /\/download(\/|$)/.test(path);
+  }, []);
+
   const trackVisit = useCallback(async () => {
     const id = itemId != null ? String(itemId) : '';
     if (!level || !id || isTracked) return;
+    if (isNoTrackPath()) return; // no analytics on prime-video, blog, download
 
     const BASE_PATH = getBasePath();
     const pageUrl = typeof window !== 'undefined' ? window.location.href : '';
@@ -168,7 +176,7 @@ export const useVisitTracking = (level, itemId, itemSlug) => {
       setSaveStatus({ saved: false, reason: 'network_error' });
       if (isDev) console.log('[VisitTracking] Network error –', error?.message || error);
     }
-  }, [level, itemId, itemSlug, isTracked, getSessionId, getUserId]);
+  }, [level, itemId, itemSlug, isTracked, getSessionId, getUserId, isNoTrackPath]);
 
   useEffect(() => {
     if (!level || !itemId || isTracked || didRunRef.current) return;

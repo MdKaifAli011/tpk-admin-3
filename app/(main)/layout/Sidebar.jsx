@@ -135,6 +135,9 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
     }
   }, [tree]);
 
+  // path segments for prime-video
+  const isPrimeVideoPath = pathname?.includes("/prime-video");
+
   // path segments for auto open
   const pathSegments = useMemo(
     () => (pathname ? pathname.split("/").filter(Boolean) : []),
@@ -470,6 +473,8 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
       setActiveMenu('blog');
     } else if (pathname.includes("/download")) {
       setActiveMenu('download');
+    } else if (pathname.includes("/prime-video")) {
+      setActiveMenu('prime-video');
     } else {
       setActiveMenu('subjects');
     }
@@ -898,6 +903,21 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
                     Download
                   </li>
                 )}
+
+                {/* Prime Video — all exams, single URL */}
+                <li>
+                  <Link
+                    href="/prime-video"
+                    className={`w-full flex items-center justify-between px-3 py-2 font-semibold rounded-lg transition-all duration-200 ${
+                      isPrimeVideoPath
+                        ? "bg-indigo-100/60 shadow-sm text-indigo-900"
+                        : "text-black hover:text-indigo-600 hover:bg-gray-50"
+                    }`}
+                    onClick={closeOnMobile}
+                  >
+                    <span>Prime Video</span>
+                  </Link>
+                </li>
               </ul>
             </div>
           </div>

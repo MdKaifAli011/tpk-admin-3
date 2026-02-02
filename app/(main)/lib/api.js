@@ -204,6 +204,26 @@ export const fetchExamById = async (examId) => {
   }
 };
 
+// Fetch prime video tree (YouTube videos from editor content, one call)
+export const fetchPrimeVideo = async () => {
+  const isServer = typeof window === "undefined";
+  const baseUrl = getBaseUrl();
+  const url = `${baseUrl}/api/prime-video`;
+  try {
+    if (isServer) {
+      const response = await fetch(url, { cache: "no-store" });
+      if (!response.ok) return { success: false, data: { exams: [], nodes: [] } };
+      const json = await response.json();
+      return json.success ? json : { success: false, data: { exams: [], nodes: [] } };
+    }
+    const response = await api.get("/prime-video");
+    return response.data?.success ? response.data : { success: false, data: { exams: [], nodes: [] } };
+  } catch (err) {
+    logger.warn("fetchPrimeVideo error:", err?.message);
+    return { success: false, data: { exams: [], nodes: [] } };
+  }
+};
+
 // Fetch subjects by exam ID (optimized with pagination)
 export const fetchSubjectsByExam = async (examId, options = {}) => {
   if (!examId) {

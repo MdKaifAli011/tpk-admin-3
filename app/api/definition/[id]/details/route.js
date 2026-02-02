@@ -2,6 +2,12 @@ import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import DefinitionDetails from "@/models/DefinitionDetails";
 import Definition from "@/models/Definition";
+import SubTopic from "@/models/SubTopic";
+import Topic from "@/models/Topic";
+import Chapter from "@/models/Chapter";
+import Unit from "@/models/Unit";
+import Subject from "@/models/Subject";
+import Exam from "@/models/Exam";
 import mongoose from "mongoose";
 import {
   successResponse,
@@ -11,6 +17,7 @@ import {
 } from "@/utils/apiResponse";
 import { ERROR_MESSAGES } from "@/constants";
 import { requireAuth, requireAction } from "@/middleware/authMiddleware";
+import { syncContentVideosForDetails } from "@/lib/syncContentVideos";
 
 // ---------- GET DEFINITION DETAILS ----------
 export async function GET(request, { params }) {
@@ -96,6 +103,32 @@ export async function PUT(request, { params }) {
       { $set: updateData },
       { new: true, upsert: true, runValidators: true }
     ).lean();
+
+    const [subTopic, topic, chapter, unit, subject, exam] = await Promise.all([
+      SubTopic.findById(definition.subTopicId).select("name").lean(),
+      Topic.findById(definition.topicId).select("name").lean(),
+      Chapter.findById(definition.chapterId).select("name").lean(),
+      Unit.findById(definition.unitId).select("name").lean(),
+      Subject.findById(definition.subjectId).select("name").lean(),
+      Exam.findById(definition.examId).select("name").lean(),
+    ]);
+    const hierarchy = {
+      examId: definition.examId,
+      examName: exam?.name ?? "",
+      subjectId: definition.subjectId,
+      subjectName: subject?.name ?? "",
+      unitId: definition.unitId,
+      unitName: unit?.name ?? "",
+      chapterId: definition.chapterId,
+      chapterName: chapter?.name ?? "",
+      topicId: definition.topicId,
+      topicName: topic?.name ?? "",
+      subTopicId: definition.subTopicId,
+      subTopicName: subTopic?.name ?? "",
+      definitionId: id,
+      definitionName: definition.name ?? "",
+    };
+    await syncContentVideosForDetails("definition", id, updateData.content || "", hierarchy).catch(() => {});
 
     return successResponse(details, "Definition details saved successfully");
   } catch (error) {

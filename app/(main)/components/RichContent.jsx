@@ -849,9 +849,26 @@ const RichContent = ({ html }) => {
           max-width: 100%;
           box-sizing: border-box;
         }
-        .video-grid-container > div {
+        .video-grid-container .video-grid-inner {
           width: 100%;
           max-width: 100%;
+          box-sizing: border-box;
+        }
+        .video-grid-container .video-parent-container {
+          max-width: 100%;
+          box-sizing: border-box;
+        }
+        .video-grid-cols-2.video-grid-inner {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .video-grid-cols-3.video-grid-inner {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+        @media (max-width: 768px) {
+          .video-grid-cols-2.video-grid-inner,
+          .video-grid-cols-3.video-grid-inner {
+            grid-template-columns: 1fr;
+          }
         }
         .video-container {
           transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;

@@ -12,6 +12,10 @@ const CKEDITOR_SCRIPT = `${basePath}/vendor/ckeditor/ckeditor.js`;
 const MATHJAX_SCRIPT = `${basePath}/vendor/mathjax/MathJax.js?config=TeX-AMS_HTML`;
 const CKEDITOR_CONTENTS_CSS = `${basePath}/vendor/ckeditor/contents.css`;
 
+// Shared toolbar style: only remove from document when last RichTextEditor unmounts (avoids toolbar glitch when multiple editors or re-mounts).
+let globalToolbarStyleRefCount = 0;
+let globalToolbarStyleEl = null;
+
 const RichTextEditor = ({
   value = "",
   onChange,
@@ -520,7 +524,8 @@ const RichTextEditor = ({
     };
   }, [toolbarConfig, instanceId, disabled, hideAdminTools, RTE_ICON_URLS]);
 
-  // Inject CSS so custom toolbar buttons show icon + label (file URLs so they always load)
+  // Inject CSS so custom toolbar buttons show icon + label (file URLs so they always load).
+  // Global style is ref-counted so it's only removed when the last RichTextEditor unmounts (prevents toolbar glitch when multiple editors or re-mounts).
   useEffect(() => {
     if (!isReady || hideAdminTools || !RTE_ICON_BASE) return;
     const esc = (s) => (s || "").replace(/(["\\])/g, "\\$1");
@@ -543,14 +548,18 @@ const RichTextEditor = ({
       /* Always show label text */
       ${labelSel("RTEInsertVideo")}, ${labelSel("RTEInsertImage")}, ${labelSel("RTEInsertButton")}, ${labelSel("RTEInsertForm")}, ${labelSel("RTEFormLink")} { display: inline !important; visibility: visible !important; }
     `;
+    const injectGlobal = () => {
+      if (globalToolbarStyleEl && globalToolbarStyleEl.parentNode) return;
+      const el = document.createElement("style");
+      el.setAttribute("data-rte-custom-toolbar", "true");
+      el.textContent = css;
+      document.head.appendChild(el);
+      globalToolbarStyleEl = el;
+    };
     const inject = () => {
-      if (!document.querySelector("style[data-rte-custom-toolbar='true']")) {
-        const el = document.createElement("style");
-        el.setAttribute("data-rte-custom-toolbar", "true");
-        el.textContent = css;
-        document.head.appendChild(el);
-        customToolbarStyleRef.current = el;
-      }
+      globalToolbarStyleRefCount += 1;
+      injectGlobal();
+      customToolbarStyleRef.current = globalToolbarStyleEl;
       const editor = editorRef.current;
       if (editor?.container?.$ && !editor.container.$.querySelector("style[data-rte-custom-toolbar='inline']")) {
         const el2 = document.createElement("style");
@@ -561,20 +570,24 @@ const RichTextEditor = ({
     };
     inject();
     const t = setTimeout(() => {
-      if (!customToolbarStyleRef.current) inject();
+      if (!globalToolbarStyleEl?.parentNode) injectGlobal();
     }, 150);
     const t2 = setTimeout(() => {
-      if (!customToolbarStyleRef.current) inject();
+      if (!globalToolbarStyleEl?.parentNode) injectGlobal();
     }, 500);
     return () => {
       clearTimeout(t);
       clearTimeout(t2);
-      document.querySelectorAll("style[data-rte-custom-toolbar='true']").forEach((n) => n.remove());
+      globalToolbarStyleRefCount = Math.max(0, globalToolbarStyleRefCount - 1);
+      if (globalToolbarStyleRefCount === 0 && globalToolbarStyleEl?.parentNode) {
+        globalToolbarStyleEl.remove();
+        globalToolbarStyleEl = null;
+      }
+      customToolbarStyleRef.current = null;
       const editor = editorRef.current;
       if (editor?.container?.$) {
         editor.container.$.querySelectorAll("style[data-rte-custom-toolbar='inline']").forEach((n) => n.remove());
       }
-      customToolbarStyleRef.current = null;
     };
   }, [isReady, hideAdminTools, RTE_ICON_BASE, RTE_ICON_URLS]);
 
@@ -1052,16 +1065,24 @@ const RichTextEditor = ({
     return { ...dims, margin, textAlign, parentStyle, w, h };
   };
 
-  // Grid columns CSS: auto (responsive), 2, or 3
-  const getGridColumnsStyle = () => {
-    if (videoGridColumns === "2") return "repeat(2, 1fr)";
-    if (videoGridColumns === "3") return "repeat(3, 1fr)";
-    return "repeat(auto-fill, minmax(min(100%, 280px), 1fr))";
+  // Grid columns: responsive and respect user width; 2/3 col use equal fr, auto uses minmax
+  const getGridColumnsStyle = (userWidth) => {
+    const w = Math.max(160, Math.min(1920, userWidth || 640));
+    if (videoGridColumns === "2") return "repeat(2, minmax(0, 1fr))";
+    if (videoGridColumns === "3") return "repeat(3, minmax(0, 1fr))";
+    return `repeat(auto-fill, minmax(min(100%, ${w}px), 1fr))`;
   };
 
-  // Build one video block HTML (upload or youtube) for grid cell
+  const getGridColsClass = () => {
+    if (videoGridColumns === "2") return "video-grid-cols-2";
+    if (videoGridColumns === "3") return "video-grid-cols-3";
+    return "video-grid-cols-auto";
+  };
+
+  // Build one video block HTML (upload or youtube) for grid cell; dims.w/dims.h set aspect ratio
   const buildOneVideoBlock = (dims, videoUrl, type = "upload", mimeType = "video/mp4") => {
-    const containerStyle = `display: block; position: relative; width: 100%; height: 0; padding-bottom: ${(dims.h / dims.w) * 100}%; max-width: 100%; cursor: pointer; border-radius: 8px; overflow: hidden; background: #000;`;
+    const aspectPct = dims.w && dims.h ? (dims.h / dims.w) * 100 : 56.25;
+    const containerStyle = `display: block; position: relative; width: 100%; height: 0; padding-bottom: ${aspectPct}%; max-width: 100%; cursor: pointer; border-radius: 8px; overflow: hidden; background: #000; box-sizing: border-box;`;
     const overlayStyle = "position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.2); z-index: 10; pointer-events: none;";
     const playBtnStyle = "width: 60px; height: 60px; background: rgba(239, 68, 68, 0.9); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3);";
     const arrowStyle = "width: 0; height: 0; border-top: 12px solid transparent; border-bottom: 12px solid transparent; border-left: 20px solid white; margin-left: 5px;";
@@ -1075,19 +1096,23 @@ const RichTextEditor = ({
     return `<span class="video-container" data-video-url="${videoUrl}" data-video-type="upload" data-mime-type="${mimeType}" style="${containerStyle}"><span class="video-play-overlay" style="${overlayStyle}"><span style="${playBtnStyle}"><span style="${arrowStyle}"></span></span></span><video style="${innerStyle}" preload="metadata"><source src="${videoUrl}" type="${mimeType}" />Your browser does not support the video tag.</video></span>`;
   };
 
-  // Build full grid HTML and insert into editor
+  // Build full grid HTML and insert into editor; width/height/alignment and auto/2/3 col work on frontend
   const insertVideoGrid = (items) => {
     if (!items.length) return;
     const editor = editorRef.current;
     if (!editor) return;
     const dims = getVideoDimensions();
-    const gridStyle = `display: grid; grid-template-columns: ${getGridColumnsStyle()}; gap: 1rem; width: 100%; margin: 20px 0; align-items: start;`;
-    const alignWrap = videoAlign === "left" ? "text-align: left;" : videoAlign === "right" ? "text-align: right;" : "text-align: center;";
+    const w = dims.w || 640;
+    const h = dims.h || 360;
+    const justify = videoAlign === "left" ? "flex-start" : videoAlign === "right" ? "flex-end" : "center";
+    const outerStyle = `display: flex; justify-content: ${justify}; margin: 20px 0; width: 100%; box-sizing: border-box;`;
+    const gridStyle = `display: grid; grid-template-columns: ${getGridColumnsStyle(w)}; gap: 1rem; width: 100%; max-width: 100%; margin: 0; align-items: start; box-sizing: border-box;`;
+    const colsClass = getGridColsClass();
     const cells = items.map((item) => {
       const block = buildOneVideoBlock(dims, item.url, item.type, item.mimeType);
-      return `<div class="video-parent-container" style="width: 100%; max-width: 100%;">${block}</div>`;
+      return `<div class="video-parent-container" style="width: 100%; min-width: 0; max-width: ${w}px; box-sizing: border-box;">${block}</div>`;
     }).join("");
-    const gridHtml = `<div class="video-grid-container" style="${alignWrap}"><div style="${gridStyle}">${cells}</div></div>`;
+    const gridHtml = `<div class="video-grid-container" data-video-width="${w}" data-video-height="${h}" data-video-align="${videoAlign}" style="${outerStyle}"><div class="video-grid-inner ${colsClass}" style="${gridStyle}">${cells}</div></div>`;
     editor.focus();
     editor.insertHtml(gridHtml);
   };
