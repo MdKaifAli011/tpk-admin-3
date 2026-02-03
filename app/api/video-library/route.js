@@ -5,7 +5,7 @@ import ContentVideo from "@/models/ContentVideo";
 export const dynamic = "force-dynamic";
 
 /**
- * GET /api/prime-video
+ * GET /api/video-library
  * Returns all YouTube/Shorts videos from editor content, grouped by hierarchy.
  * One call, no parsing of long content (videos are synced at save time).
  */
@@ -72,9 +72,9 @@ export async function GET() {
     const exams = buildTree(nodes);
     return NextResponse.json({ success: true, data: { exams, nodes } });
   } catch (error) {
-    console.error("[prime-video]", error);
+    console.error("[video-library]", error);
     return NextResponse.json(
-      { success: false, error: error?.message ?? "Failed to fetch prime video" },
+      { success: false, error: error?.message ?? "Failed to fetch video library" },
       { status: 500 }
     );
   }

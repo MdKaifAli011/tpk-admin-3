@@ -208,7 +208,7 @@ export const fetchExamById = async (examId) => {
 export const fetchPrimeVideo = async () => {
   const isServer = typeof window === "undefined";
   const baseUrl = getBaseUrl();
-  const url = `${baseUrl}/api/prime-video`;
+  const url = `${baseUrl}/api/video-library`;
   try {
     if (isServer) {
       const response = await fetch(url, { cache: "no-store" });
@@ -216,7 +216,7 @@ export const fetchPrimeVideo = async () => {
       const json = await response.json();
       return json.success ? json : { success: false, data: { exams: [], nodes: [] } };
     }
-    const response = await api.get("/prime-video");
+    const response = await api.get("/video-library");
     return response.data?.success ? response.data : { success: false, data: { exams: [], nodes: [] } };
   } catch (err) {
     logger.warn("fetchPrimeVideo error:", err?.message);

@@ -7,11 +7,11 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 /**
- * Prime Video page at /{examSlug}/prime-video only (no /prime-video path).
- * With basePath /self-study: /self-study/{examSlug}/prime-video.
+ * Video Library page at /{examSlug}/video-library only (no /video-library path).
+ * With basePath /self-study: /self-study/{examSlug}/video-library.
  * No redirects: always render for the URL slug; empty state if no match.
  */
-export default async function ExamPrimeVideoPage({ params }) {
+export default async function ExamVideoLibraryPage({ params }) {
   const resolvedParams = await params;
   const examSlugFromUrl = (resolvedParams?.exam || "").toString().trim();
   const slug = examSlugFromUrl.toLowerCase();

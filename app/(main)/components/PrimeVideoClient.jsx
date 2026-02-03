@@ -236,7 +236,7 @@ function SectionBlock({ pathLabel, videos, level, onPlay, currentExamSlug, isCur
     return parts.map((label, i) => {
       const prefixPath = parts.slice(0, i + 1).join(" → ");
       const pathSlug = getPathSlug(prefixPath);
-      const href = currentExamSlug ? `/${currentExamSlug}/prime-video/${pathSlug}` : "#";
+      const href = currentExamSlug ? `/${currentExamSlug}/video-library/${pathSlug}` : "#";
       return { label, pathSlug, href };
     });
   }, [pathLabel, currentExamSlug]);
@@ -252,7 +252,7 @@ function SectionBlock({ pathLabel, videos, level, onPlay, currentExamSlug, isCur
 
   if (!videos?.length) return null;
 
-  const homeHref = currentExamSlug ? `/${currentExamSlug}/prime-video` : "#";
+  const homeHref = currentExamSlug ? `/${currentExamSlug}/video-library` : "#";
 
   return (
     <div className="mb-10 last:mb-0">
@@ -266,8 +266,8 @@ function SectionBlock({ pathLabel, videos, level, onPlay, currentExamSlug, isCur
                 <Link
                   href={homeHref}
                   className="flex items-center justify-center rounded-md p-1.5 text-gray-500 transition-colors hover:bg-blue-50 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
-                  title="Back to Prime Video home"
-                  aria-label="Back to Prime Video home"
+                  title="Back to Video Library home"
+                  aria-label="Back to Video Library home"
                 >
                   <FaHome className="text-lg" />
                 </Link>
@@ -294,7 +294,7 @@ function SectionBlock({ pathLabel, videos, level, onPlay, currentExamSlug, isCur
               );
             })}
           </nav>
-          
+
         </div>
         <span className="shrink-0 text-sm font-medium text-gray-500">
           {totalCount} video{totalCount !== 1 ? "s" : ""}
@@ -443,8 +443,8 @@ function normalizeSlug(s) {
 }
 
 /**
- * Prime Video client – used only at /[examSlug]/prime-video.
- * Receives exams and currentExamSlug (from URL); dropdown navigates to /{slug}/prime-video.
+ * Video Library client – used only at /[examSlug]/video-library.
+ * Receives exams and currentExamSlug (from URL); dropdown navigates to /{slug}/video-library.
  */
 export default function PrimeVideoClient({ exams, currentExamSlug, filterLevel, filterPathSlug }) {
   const router = useRouter();
@@ -489,7 +489,7 @@ export default function PrimeVideoClient({ exams, currentExamSlug, filterLevel, 
       setSubjectFilter({ examKey: null, pathSlug: null });
       const targetSlug = exam?.slug ?? "";
       if (!targetSlug) return;
-      router.push(`/${targetSlug}/prime-video`);
+      router.push(`/${targetSlug}/video-library`);
     },
     [router]
   );
@@ -553,7 +553,7 @@ export default function PrimeVideoClient({ exams, currentExamSlug, filterLevel, 
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-gray-100">
               <FaFilm className="text-3xl text-indigo-600" />
             </div>
-            <h1 className="text-xl font-bold text-gray-900">Prime Video Library</h1>
+            <h1 className="text-xl font-bold text-gray-900">Video Library</h1>
             <p className="mx-auto mt-2 max-w-md text-sm text-gray-500">
               Your comprehensive video library across all learning levels. Content will appear here once populated.
             </p>
@@ -577,7 +577,7 @@ export default function PrimeVideoClient({ exams, currentExamSlug, filterLevel, 
                 <FaFilm className="text-lg" aria-hidden />
               </div>
               <div className="min-w-0">
-                <h1 className="text-xl font-bold tracking-tight text-blue-900 sm:text-2xl">Prime Video</h1>
+                <h1 className="text-xl font-bold tracking-tight text-blue-900 sm:text-2xl">Video Library</h1>
                 <p className="mt-0.5 text-sm text-gray-500">
                   <span className="font-medium text-gray-700">{totalStats.videos}</span> videos
                   <span className="mx-1.5 text-gray-300">·</span>
@@ -602,7 +602,7 @@ export default function PrimeVideoClient({ exams, currentExamSlug, filterLevel, 
                     <span className="truncate flex-1 text-sm font-medium text-gray-900">
                       {activeExam?.name ?? "Select exam"}
                     </span>
-                   
+
                     <FaChevronDown
                       className={`h-3.5 w-3.5 shrink-0 text-gray-400 transition-transform duration-200 ${dropdownOpen ? "rotate-180" : ""}`}
                     />
@@ -629,7 +629,7 @@ export default function PrimeVideoClient({ exams, currentExamSlug, filterLevel, 
                               }`}
                           >
                             <span className="truncate flex-1 font-medium">{exam.name}</span>
-                            
+
                           </button>
                         );
                       })}
@@ -689,7 +689,7 @@ export default function PrimeVideoClient({ exams, currentExamSlug, filterLevel, 
                               }`}
                           >
                             <span className="truncate flex-1 font-medium">{opt.label}</span>
-                           
+
                           </button>
                         );
                       })}

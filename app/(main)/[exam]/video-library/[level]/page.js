@@ -9,13 +9,13 @@ export const revalidate = 0;
 const VALID_LEVELS = ["exam", "subject", "unit", "chapter", "topic", "subtopic", "definition"];
 
 /**
- * Hierarchy path or level Prime Video page: /{examSlug}/prime-video/{pathSlug}
+ * Hierarchy path or level Video Library page: /{examSlug}/video-library/{pathSlug}
  * - pathSlug = "neet" → only exam-level videos
  * - pathSlug = "neet-subject-1" → only that subject's videos
  * - pathSlug = "neet-subject-1-unit-1" → only that unit's videos (through definition)
  * - pathSlug = "subject" (single level name) → all sections of that level (filterLevel)
  */
-export default async function PrimeVideoPathPage({ params }) {
+export default async function VideoLibraryPathPage({ params }) {
   const resolved = await params;
   const examSlugFromUrl = (resolved?.exam || "").toString().trim();
   const segment = (resolved?.level || "").toString().trim();

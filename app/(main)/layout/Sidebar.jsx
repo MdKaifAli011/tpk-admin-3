@@ -135,8 +135,8 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
     }
   }, [tree]);
 
-  // Prime Video only at /{examSlug}/prime-video (no /prime-video path)
-  const isPrimeVideoPath = pathname?.includes("/prime-video");
+  // Video Library only at /{examSlug}/video-library (no /video-library path)
+  const isVideoLibraryPath = pathname?.includes("/video-library");
 
   // path segments for auto open
   const pathSegments = useMemo(
@@ -161,8 +161,8 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
     ? activeExam.slug || createSlug(activeExam.name)
     : "";
 
-  // Prime Video only at /{examSlug}/prime-video — link uses exam from path or first exam
-  const primeVideoSlug = useMemo(() => {
+  // Video Library only at /{examSlug}/video-library — link uses exam from path or first exam
+  const videoLibrarySlug = useMemo(() => {
     const nonExamSegments = ["blog", "download", "contact", "login", "register", "calculator"];
     if (examSlugFromPath && !nonExamSegments.includes(examSlugFromPath)) return examSlugFromPath;
     const first = exams[0];
@@ -481,8 +481,8 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
       setActiveMenu('blog');
     } else if (pathname.includes("/download")) {
       setActiveMenu('download');
-    } else if (pathname.includes("/prime-video")) {
-      setActiveMenu('prime-video');
+    } else if (pathname.includes("/video-library")) {
+      setActiveMenu('video-library');
     } else {
       setActiveMenu('subjects');
     }
@@ -912,17 +912,17 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
                   </li>
                 )}
 
-                {/* Prime Video only at /{examSlug}/prime-video (no /prime-video path) */}
+                {/* Video Library only at /{examSlug}/video-library (no /video-library path) */}
                 <li>
                   <Link
-                    href={primeVideoSlug ? `/${primeVideoSlug}/prime-video` : "#"}
+                    href={videoLibrarySlug ? `/${videoLibrarySlug}/video-library` : "#"}
                     className={`w-full flex items-center justify-between px-3 py-2 font-semibold rounded-lg transition-all duration-200 ${
-                      isPrimeVideoPath
+                      isVideoLibraryPath
                         ? "bg-indigo-100/60 shadow-sm text-indigo-900"
                         : "text-black hover:text-indigo-600 hover:bg-gray-50"
-                    } ${!primeVideoSlug ? "pointer-events-none opacity-60" : ""}`}
+                    } ${!videoLibrarySlug ? "pointer-events-none opacity-60" : ""}`}
                     onClick={closeOnMobile}
-                    aria-disabled={!primeVideoSlug}
+                    aria-disabled={!videoLibrarySlug}
                   >
                     <span>Prime Video</span>
                   </Link>

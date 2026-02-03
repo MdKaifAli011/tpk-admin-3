@@ -72,13 +72,13 @@ export const useVisitTracking = (level, itemId, itemSlug) => {
   const isNoTrackPath = useCallback(() => {
     if (typeof window === 'undefined') return false;
     const path = window.location.pathname || '';
-    return /\/prime-video(\/|$)/.test(path) || /\/blog(\/|$)/.test(path) || /\/download(\/|$)/.test(path);
+    return /\/video-library(\/|$)/.test(path) || /\/blog(\/|$)/.test(path) || /\/download(\/|$)/.test(path);
   }, []);
 
   const trackVisit = useCallback(async () => {
     const id = itemId != null ? String(itemId) : '';
     if (!level || !id || isTracked) return;
-    if (isNoTrackPath()) return; // no analytics on prime-video, blog, download
+    if (isNoTrackPath()) return; // no analytics on video-library, blog, download
 
     const BASE_PATH = getBasePath();
     const pageUrl = typeof window !== 'undefined' ? window.location.href : '';
