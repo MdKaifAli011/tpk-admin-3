@@ -54,7 +54,14 @@ export async function GET(request) {
     const isTestRun = searchParams.get("test") === "1" || searchParams.get("dryRun") === "1";
 
     if (!CRON_SECRET || token !== CRON_SECRET) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json(
+        {
+          error: "Unauthorized",
+          message:
+            "Missing or invalid secret. Send CRON_SECRET via header: Authorization: Bearer <secret> or query: ?secret=<secret>. Use ?test=1 to run outside 3–4 AM.",
+        },
+        { status: 401 }
+      );
     }
 
     if (!isTestRun && !isWithinCronWindow()) {
@@ -66,7 +73,9 @@ export async function GET(request) {
       return NextResponse.json(
         {
           ok: false,
-          message: "Cron only runs between 3:00 AM and 3:59 AM (server time). Use ?test=1 with secret to run now.",
+          message:
+            "Cron only runs between 3:00 AM and 3:59 AM (server time). To run now, add &test=1 to your URL.",
+          runNowHint: "Use: .../update-visit-stats?secret=YOUR_SECRET&test=1",
           serverTime: serverNow.toISOString(),
           serverHour: serverNow.getHours(),
         },

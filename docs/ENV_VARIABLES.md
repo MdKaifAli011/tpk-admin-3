@@ -90,6 +90,22 @@ Copy these into your `.env` file and fill in the values. Never commit real secre
 
 ---
 
+## Cron (VPS visit-stats job)
+
+| Variable | Description |
+|----------|-------------|
+| `CRON_SECRET` | Secret for authenticating cron request; use the same value in crontab when calling `/self-study/api/cron/update-visit-stats`. |
+
+---
+
+## Admin
+
+| Variable | Description |
+|----------|-------------|
+| `ADMIN_REGISTRATION_CODE` | Code required to register a new admin user (auth/register). |
+
+---
+
 ## Build / Dev
 
 | Variable | Description | Default |
@@ -98,35 +114,91 @@ Copy these into your `.env` file and fill in the values. Never commit real secre
 
 ---
 
-## Example `.env` (minimal + mail + lead)
+## Example: Test / Development
+
+Copy into `.env` or `.env.local` for local/test. Replace placeholder values.
 
 ```env
+NODE_ENV=development
+PORT=3000
+
 # Required
 MONGODB_URI=mongodb://localhost:27017/tpk
-JWT_SECRET=your_jwt_secret_here
-SESSION_SECRET=your_session_secret_here
+JWT_SECRET=dev_jwt_secret_change_in_production
+SESSION_SECRET=dev_session_secret_change_in_production
 
-# Optional server
-PORT=3000
-NODE_ENV=development
-
-# Public (optional)
+# Public (dev)
 NEXT_PUBLIC_BASE_PATH=/self-study
-NEXT_PUBLIC_APP_URL=https://testprepkart.com
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+NEXT_PUBLIC_API_URL=http://localhost:3000/self-study/api
 
-# Mail
-MAIL_MAILER=smtp
-MAIL_HOST=smtp.hostinger.com
-MAIL_PORT=465
-MAIL_USERNAME=donot-reply@testprepkart.in
-MAIL_PASSWORD=your_mail_password
-MAIL_ENCRYPTION=ssl
-MAIL_FROM_ADDRESS=donot-reply@testprepkart.in
-MAIL_FROM_NAME=TestPrepKart
+# Admin + Cron (dev)
+ADMIN_REGISTRATION_CODE=dev_admin_code
+CRON_SECRET=dev_cron_secret_change_in_production
 
-# Lead export notification
-LEAD_EXPORT_MAIL_TO=hellomdkaifali@gmail.com
+# Optional
+CORS_ORIGIN=*
+LOG_LEVEL=debug
+JWT_EXPIRES_IN=24h
+JWT_REFRESH_EXPIRES_IN=7d
+
+# Mail (optional in dev)
+# MAIL_MAILER=smtp
+# MAIL_HOST=smtp.example.com
+# MAIL_PORT=465
+# MAIL_USERNAME=...
+# MAIL_PASSWORD=...
+# MAIL_ENCRYPTION=ssl
+# MAIL_FROM_ADDRESS=...
+# MAIL_FROM_NAME=TestPrepKart
+# LEAD_EXPORT_MAIL_TO=you@example.com
 ```
+
+---
+
+## Example: Production (VPS)
+
+Copy into `.env` on the VPS. Use strong random secrets; do not commit this file.
+
+```env
+NODE_ENV=production
+PORT=3000
+
+# Required
+MONGODB_URI=mongodb+srv://user:password@cluster.mongodb.net/tpk?retryWrites=true&w=majority
+JWT_SECRET=REPLACE_WITH_STRONG_RANDOM_SECRET_32_CHARS_OR_MORE
+SESSION_SECRET=REPLACE_WITH_ANOTHER_STRONG_RANDOM_SECRET
+
+# Public (production domain)
+NEXT_PUBLIC_BASE_PATH=/self-study
+NEXT_PUBLIC_APP_URL=https://yourdomain.com
+NEXT_PUBLIC_API_URL=https://yourdomain.com/self-study/api
+
+# Admin + Cron (production)
+ADMIN_REGISTRATION_CODE=REPLACE_WITH_SECURE_ADMIN_CODE
+CRON_SECRET=REPLACE_WITH_STRONG_CRON_SECRET_FOR_VPS_CRONTAB
+
+# Optional
+CORS_ORIGIN=https://yourdomain.com
+LOG_LEVEL=info
+MONGO_DB_NAME=tpk
+MAX_CONNECTIONS=20
+JWT_EXPIRES_IN=24h
+JWT_REFRESH_EXPIRES_IN=7d
+
+# Mail (production SMTP)
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.yourprovider.com
+MAIL_PORT=465
+MAIL_USERNAME=noreply@yourdomain.com
+MAIL_PASSWORD=REPLACE_WITH_MAIL_PASSWORD
+MAIL_ENCRYPTION=ssl
+MAIL_FROM_ADDRESS=noreply@yourdomain.com
+MAIL_FROM_NAME=TestPrepKart
+LEAD_EXPORT_MAIL_TO=admin@yourdomain.com
+```
+
+On the VPS, use the same `CRON_SECRET` value in your crontab when calling the visit-stats endpoint (see `docs/VISIT_TRACKING_AND_CRON_VERIFICATION.md`).
 
 ---
 

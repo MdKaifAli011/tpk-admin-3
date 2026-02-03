@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   FaPlay,
@@ -9,8 +10,10 @@ import {
   FaChevronDown,
   FaChevronUp,
   FaYoutube,
-  FaLayerGroup,
+  FaExternalLinkAlt,
+  FaHome,
 } from "react-icons/fa";
+import { createSlug } from "@/utils/slug";
 
 // --- Configuration ---
 
@@ -94,6 +97,13 @@ function getLevelName(pathLabel) {
   if (!pathLabel) return "";
   const parts = pathLabel.split(" → ");
   return parts[parts.length - 1]?.trim() || pathLabel;
+}
+
+/** Build URL path slug from full hierarchy path: "NEET → Subject 1 → Unit 1" → "neet-subject-1-unit-1" */
+function getPathSlug(pathLabel) {
+  if (!pathLabel || typeof pathLabel !== "string") return "";
+  const parts = pathLabel.split(" → ").map((p) => p.trim()).filter(Boolean);
+  return parts.map((p) => createSlug(p)).join("-");
 }
 
 // --- Components ---
@@ -206,17 +216,30 @@ function VideoCard({ video, pathLabel, level, onPlay, priority = false }) {
         >
           {displayName}
         </h4>
-        <div className="mt-1 flex items-center gap-2">
-          <FaYoutube className="text-xs text-gray-400" />
-          <span className="truncate text-xs text-gray-500">Video Lesson</span>
+        <div className="mt-1 flex items-center gap-1.5 text-xs text-gray-500">
+          <span className="text-gray-400">►</span>
+          <span>Video Lesson</span>
         </div>
       </div>
     </div>
   );
 }
 
-function VideoRow({ pathLabel, videos, level, onPlay }) {
+/**
+ * Section block: direct show (no accordion). Breadcrumb (each segment links to its path page) + video count + grid + View more.
+ */
+function SectionBlock({ pathLabel, videos, level, onPlay, currentExamSlug, isCurrentSection, showHomeInBreadcrumb }) {
   const [expanded, setExpanded] = useState(false);
+
+  const breadcrumbSegments = useMemo(() => {
+    const parts = (pathLabel || "").split(" → ").map((p) => p.trim()).filter(Boolean);
+    return parts.map((label, i) => {
+      const prefixPath = parts.slice(0, i + 1).join(" → ");
+      const pathSlug = getPathSlug(prefixPath);
+      const href = currentExamSlug ? `/${currentExamSlug}/prime-video/${pathSlug}` : "#";
+      return { label, pathSlug, href };
+    });
+  }, [pathLabel, currentExamSlug]);
 
   const totalCount = videos?.length ?? 0;
   const displayVideos = useMemo(() => {
@@ -229,27 +252,56 @@ function VideoRow({ pathLabel, videos, level, onPlay }) {
 
   if (!videos?.length) return null;
 
-  const config = LEVEL_CONFIG[level];
+  const homeHref = currentExamSlug ? `/${currentExamSlug}/prime-video` : "#";
 
   return (
-    <div className="group/row relative mb-8 last:mb-0">
-      {/* Row Header */}
-      <div className="mb-4 flex items-center justify-between px-1">
-        <div className="flex items-center gap-3 overflow-hidden">
-          <div className={`h-8 w-1 shrink-0 rounded-full ${config.color}`} />
-          <h3
-            className="truncate text-base font-bold text-gray-900"
-            title={pathLabel}
-          >
-            {pathLabel}
-          </h3>
+    <div className="mb-10 last:mb-0">
+      {/* Breadcrumb: home (when on hierarchy page) + each segment links to its hierarchy page */}
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+        <div className="flex min-w-0 flex-1 items-center gap-3 overflow-hidden">
+          <div className="h-8 w-1 shrink-0 bg-blue-600" aria-hidden />
+          <nav className="flex min-w-0 flex-1 flex-wrap items-center gap-x-1.5 gap-y-1 text-base font-bold text-blue-900 sm:text-lg" aria-label="Breadcrumb">
+            {showHomeInBreadcrumb && (
+              <span className="inline-flex items-center gap-1.5 shrink-0">
+                <Link
+                  href={homeHref}
+                  className="flex items-center justify-center rounded-md p-1.5 text-gray-500 transition-colors hover:bg-blue-50 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+                  title="Back to Prime Video home"
+                  aria-label="Back to Prime Video home"
+                >
+                  <FaHome className="text-lg" />
+                </Link>
+                {breadcrumbSegments.length > 0 && <span className="text-blue-900/60">→</span>}
+              </span>
+            )}
+            {breadcrumbSegments.map((seg, i) => {
+              const isLast = i === breadcrumbSegments.length - 1;
+              return (
+                <span key={`${seg.pathSlug}-${i}`} className="inline-flex items-center gap-1.5 shrink-0">
+                  {i > 0 && <span className="text-blue-900/60">→</span>}
+                  {isLast && isCurrentSection ? (
+                    <span className="truncate" title={seg.label}>{seg.label}</span>
+                  ) : (
+                    <Link
+                      href={seg.href}
+                      className="truncate hover:underline focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1 rounded"
+                      title={seg.label}
+                    >
+                      {seg.label}
+                    </Link>
+                  )}
+                </span>
+              );
+            })}
+          </nav>
+          
         </div>
-        <span className="shrink-0 rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600">
+        <span className="shrink-0 text-sm font-medium text-gray-500">
           {totalCount} video{totalCount !== 1 ? "s" : ""}
         </span>
       </div>
 
-      {/* Grid - only first 8 (or all after View more) are in DOM; thumbnails load when in viewport (priority for first 8) */}
+      {/* Grid of video cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
         {displayVideos.map((video, i) => (
           <div key={video.youtubeVideoId || i} className="w-full min-w-0">
@@ -264,13 +316,13 @@ function VideoRow({ pathLabel, videos, level, onPlay }) {
         ))}
       </div>
 
-      {/* View more / Show less - when this level has more than 8 videos */}
+      {/* View more - same as image */}
       {hasMore && (
-        <div className="mt-5 flex justify-center">
+        <div className="mt-6 flex justify-center">
           <button
             type="button"
             onClick={() => setExpanded((e) => !e)}
-            className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+            className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
           >
             {expanded ? (
               <>
@@ -290,77 +342,31 @@ function VideoRow({ pathLabel, videos, level, onPlay }) {
   );
 }
 
-function LevelGroup({ level, rows, onPlay }) {
-  const [collapsed, setCollapsed] = useState(false);
-  if (!rows?.length) return null;
-
-  const config = LEVEL_CONFIG[level];
-  const totalVideos = rows.reduce((a, r) => a + (r.videos?.length || 0), 0);
-
-  return (
-    <div className="mb-6 rounded-md border border-gray-100 bg-white shadow-sm transition-shadow duration-300 hover:shadow-md ">
-      <button
-        type="button"
-        onClick={() => setCollapsed(!collapsed)}
-        className="flex w-full items-center gap-3 rounded px-1 py-2 text-left transition-colors hover:bg-gray-50 sm:px-4"
-      >
-        <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${config.bgLight} ${config.text}`}>
-          <FaLayerGroup className="text-sm" />
-        </div>
-
-        <div className="flex flex-1 flex-col sm:flex-row sm:items-center sm:gap-3">
-          <span className="text-sm font-bold text-gray-900 sm:text-base">
-            {config.label} Level
-          </span>
-          <span className="hidden text-gray-300 sm:block">|</span>
-          <span className="text-xs text-gray-500 sm:text-sm">
-            {rows.length} Section{rows.length !== 1 ? "s" : ""} • {totalVideos} Video{totalVideos !== 1 ? "s" : ""}
-          </span>
-        </div>
-
-        <div className={`flex h-6 w-6 transform items-center justify-center rounded-full text-gray-400 transition-transform duration-300 ${collapsed ? "rotate-0" : "rotate-180"}`}>
-          <FaChevronDown className="text-xs" />
-        </div>
-      </button>
-
-      <div
-        className={`grid transition-[grid-template-rows] duration-300 ease-out ${collapsed ? "grid-rows-[0fr]" : "grid-rows-[1fr]"
-          }`}
-      >
-        <div className="overflow-hidden">
-          <div className="px-4 pb-2 pt-4 sm:px-6">
-            {rows.map((row, i) => (
-              <VideoRow
-                key={`${row.pathLabel}-${i}`}
-                pathLabel={row.pathLabel}
-                videos={row.videos}
-                level={row.level}
-                onPlay={onPlay}
-              />
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function ExamContent({ exam, onPlay }) {
+function ExamContent({ exam, onPlay, currentExamSlug, filterLevel, filterPathSlug, filterSubjectSlug }) {
   const rows = useMemo(() => collectRows(exam), [exam]);
 
-  const groupedRows = useMemo(() => {
-    const groups = {};
-    LEVEL_ORDER.forEach(l => groups[l] = []);
-    rows.forEach(r => {
-      if (LEVEL_ORDER.includes(r.level)) groups[r.level].push(r);
-    });
-    return groups;
-  }, [rows]);
+  const rowsToShow = useMemo(() => {
+    if (filterPathSlug) {
+      const normalized = filterPathSlug.toLowerCase().trim();
+      return rows.filter((r) => getPathSlug(r.pathLabel) === normalized);
+    }
+    if (filterLevel && LEVEL_ORDER.includes(filterLevel)) {
+      return rows.filter((r) => r.level === filterLevel);
+    }
+    if (filterSubjectSlug) {
+      const slug = filterSubjectSlug.toLowerCase().trim();
+      return rows.filter((r) => {
+        const rowSlug = getPathSlug(r.pathLabel);
+        return rowSlug === slug || rowSlug.startsWith(slug + "-");
+      });
+    }
+    return rows;
+  }, [rows, filterLevel, filterPathSlug, filterSubjectSlug]);
 
   if (rows.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center rounded border border-dashed border-gray-200 bg-gray-50/50 py-16 text-center">
-          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded bg-indigo-50 shadow-sm">
+        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded bg-indigo-50 shadow-sm">
           <FaFilm className="text-2xl text-indigo-400" />
         </div>
         <h3 className="text-base font-semibold text-gray-900">No videos available</h3>
@@ -373,12 +379,16 @@ function ExamContent({ exam, onPlay }) {
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
-      {LEVEL_ORDER.map((level) => (
-        <LevelGroup
-          key={level}
-          level={level}
-          rows={groupedRows[level]}
+      {rowsToShow.map((row, i) => (
+        <SectionBlock
+          key={`${row.pathLabel}-${row.level}-${i}`}
+          pathLabel={row.pathLabel}
+          videos={row.videos}
+          level={row.level}
           onPlay={onPlay}
+          currentExamSlug={currentExamSlug}
+          isCurrentSection={!!filterPathSlug && getPathSlug(row.pathLabel) === filterPathSlug.toLowerCase().trim()}
+          showHomeInBreadcrumb={!!(filterPathSlug || filterLevel)}
         />
       ))}
     </div>
@@ -436,11 +446,15 @@ function normalizeSlug(s) {
  * Prime Video client – used only at /[examSlug]/prime-video.
  * Receives exams and currentExamSlug (from URL); dropdown navigates to /{slug}/prime-video.
  */
-export default function PrimeVideoClient({ exams, currentExamSlug }) {
+export default function PrimeVideoClient({ exams, currentExamSlug, filterLevel, filterPathSlug }) {
   const router = useRouter();
   const [modal, setModal] = useState(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [subjectDropdownOpen, setSubjectDropdownOpen] = useState(false);
+  /** { examKey, pathSlug } so subject filter auto-clears when exam changes (no setState in effect). */
+  const [subjectFilter, setSubjectFilter] = useState({ examKey: null, pathSlug: null });
   const dropdownRef = useRef(null);
+  const subjectDropdownRef = useRef(null);
 
   const slugFromUrl = normalizeSlug(currentExamSlug);
 
@@ -467,9 +481,12 @@ export default function PrimeVideoClient({ exams, currentExamSlug }) {
     setModal({ embedUrl, title });
   }, []);
 
+  const activeExamKey = activeExam?.slug ?? activeExam?.id ?? null;
+
   const onExamSelect = useCallback(
     (exam) => {
       setDropdownOpen(false);
+      setSubjectFilter({ examKey: null, pathSlug: null });
       const targetSlug = exam?.slug ?? "";
       if (!targetSlug) return;
       router.push(`/${targetSlug}/prime-video`);
@@ -477,17 +494,52 @@ export default function PrimeVideoClient({ exams, currentExamSlug }) {
     [router]
   );
 
+  const subjectOptions = useMemo(() => {
+    if (!activeExam) return [];
+    const rows = collectRows(activeExam);
+    const subjectRows = rows.filter((r) => r.level === "subject");
+    return subjectRows.map((r) => ({
+      pathLabel: r.pathLabel,
+      pathSlug: getPathSlug(r.pathLabel),
+      label: getLevelName(r.pathLabel),
+      videoCount: r.videos?.length ?? 0,
+    }));
+  }, [activeExam]);
+
+  /** Subject slug only applies when we're still on the same exam (clears when exam changes). */
+  const selectedSubjectSlug = useMemo(() => {
+    if (subjectFilter.examKey !== activeExamKey) return null;
+    return subjectFilter.pathSlug;
+  }, [subjectFilter, activeExamKey]);
+
+  const selectedSubjectLabel = useMemo(() => {
+    if (!selectedSubjectSlug) return null;
+    const opt = subjectOptions.find((o) => o.pathSlug === selectedSubjectSlug);
+    return opt?.label ?? selectedSubjectSlug;
+  }, [selectedSubjectSlug, subjectOptions]);
+
+  const onSubjectSelect = useCallback(
+    (pathSlug) => {
+      setSubjectDropdownOpen(false);
+      setSubjectFilter({ examKey: activeExamKey, pathSlug });
+    },
+    [activeExamKey]
+  );
+
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
         setDropdownOpen(false);
       }
+      if (subjectDropdownRef.current && !subjectDropdownRef.current.contains(e.target)) {
+        setSubjectDropdownOpen(false);
+      }
     };
-    if (dropdownOpen) {
+    if (dropdownOpen || subjectDropdownOpen) {
       document.addEventListener("mousedown", handleClickOutside);
       return () => document.removeEventListener("mousedown", handleClickOutside);
     }
-  }, [dropdownOpen]);
+  }, [dropdownOpen, subjectDropdownOpen]);
 
   const activeExamVideoCount = activeExam
     ? collectRows(activeExam).reduce((a, r) => a + (r.videos?.length || 0), 0)
@@ -515,76 +567,137 @@ export default function PrimeVideoClient({ exams, currentExamSlug }) {
     <section className="space-y-6 bg-transparent font-sans antialiased">
       <div className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
 
-        {/* Modern Header */}
-        <div className="relative border-b border-gray-100 bg-white px-6 py-6 sm:px-8">
-          <div className="absolute inset-0 bg-gradient-to-r from-indigo-50/40 via-transparent to-purple-50/40" />
-          <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-4 min-w-0">
+        {/* Header: title + stats, then exam/subject controls grouped */}
+        <div className="relative border-b border-gray-200/80 bg-white px-4 py-5 sm:px-6 sm:py-6">
+          <div className="absolute inset-0 bg-gradient-to-r from-indigo-50/30 via-white to-purple-50/30 pointer-events-none" aria-hidden />
+          <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+            {/* Title block: icon + text + stats */}
+            <div className="flex min-w-0 flex-1 items-start gap-3 sm:items-center">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm ring-2 ring-blue-500/20">
+                <FaFilm className="text-lg" aria-hidden />
+              </div>
               <div className="min-w-0">
-                <h1 className="text-xl font-bold text-blue-900 tracking-tight">Prime Video</h1>
-                <p className="text-sm font-medium text-gray-500">
-                  {totalStats.videos} Videos • {totalStats.exams} Exam{totalStats.exams !== 1 ? "s" : ""}
+                <h1 className="text-xl font-bold tracking-tight text-blue-900 sm:text-2xl">Prime Video</h1>
+                <p className="mt-0.5 text-sm text-gray-500">
+                  <span className="font-medium text-gray-700">{totalStats.videos}</span> videos
+                  <span className="mx-1.5 text-gray-300">·</span>
+                  <span className="font-medium text-gray-700">{totalStats.exams}</span> exam{totalStats.exams !== 1 ? "s" : ""}
                 </p>
               </div>
             </div>
 
-            {/* Exam dropdown - only when multiple exams */}
-            {exams.length > 1 && (
-              <div className="relative shrink-0" ref={dropdownRef}>
-                <button
-                  type="button"
-                  onClick={() => setDropdownOpen((o) => !o)}
-                  className="flex items-center gap-2.5 rounded-md border border-gray-200 bg-white px-4 py-2.5 text-left shadow-sm transition-all duration-200 hover:border-blue-200 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 min-w-[180px] sm:min-w-[220px]"
-                  aria-expanded={dropdownOpen}
-                  aria-haspopup="listbox"
-                  aria-label="Select exam"
-                >
-                  <span className="truncate text-sm font-medium text-gray-900">
-                    {activeExam?.name ?? "Select exam"}
-                  </span>
-                  <span className="ml-auto shrink-0 rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-semibold text-indigo-700">
-                    {activeExamVideoCount} video{activeExamVideoCount !== 1 ? "s" : ""}
-                  </span>
-                  <FaChevronDown
-                    className={`h-4 w-4 shrink-0 text-gray-400 transition-transform duration-200 ${dropdownOpen ? "rotate-180" : ""}`}
-                  />
-                </button>
-
-                {dropdownOpen && (
-                  <div
-                    className="absolute right-0 top-full z-20 mt-1 w-full min-w-[220px] overflow-hidden rounded-md border border-gray-200 bg-white py-1 shadow-lg ring-1 ring-black/5"
-                    role="listbox"
-                    aria-label="Exam list"
+            {/* Controls: exam + subject dropdowns grouped */}
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+              {/* Exam dropdown - only when multiple exams */}
+              {exams.length > 1 && (
+                <div className="relative" ref={dropdownRef}>
+                  <button
+                    type="button"
+                    onClick={() => setDropdownOpen((o) => !o)}
+                    className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3.5 py-2.5 text-left shadow-sm transition-all duration-200 hover:border-blue-300 hover:bg-blue-50/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 min-w-[160px] sm:min-w-[200px]"
+                    aria-expanded={dropdownOpen}
+                    aria-haspopup="listbox"
+                    aria-label="Select exam"
                   >
-                    {exams.map((exam, index) => {
-                      const count = collectRows(exam).reduce((a, r) => a + (r.videos?.length || 0), 0);
-                      const isActive = activeExam && (exam.slug === activeExam.slug || exam.id?.toString() === activeExam.id?.toString());
-                      return (
-                        <button
-                          key={exam.id?.toString() ?? exam.name ?? index}
-                          type="button"
-                          role="option"
-                          aria-selected={!!isActive}
-                          onClick={() => onExamSelect(exam)}
-                          className={`flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm transition-colors duration-150 ${isActive
+                    <span className="truncate flex-1 text-sm font-medium text-gray-900">
+                      {activeExam?.name ?? "Select exam"}
+                    </span>
+                   
+                    <FaChevronDown
+                      className={`h-3.5 w-3.5 shrink-0 text-gray-400 transition-transform duration-200 ${dropdownOpen ? "rotate-180" : ""}`}
+                    />
+                  </button>
+                  {dropdownOpen && (
+                    <div
+                      className="absolute right-0 top-full z-20 mt-1.5 w-full min-w-[200px] overflow-hidden rounded-lg border border-gray-200 bg-white py-1 shadow-xl ring-1 ring-black/5"
+                      role="listbox"
+                      aria-label="Exam list"
+                    >
+                      {exams.map((exam, index) => {
+                        const count = collectRows(exam).reduce((a, r) => a + (r.videos?.length || 0), 0);
+                        const isActive = activeExam && (exam.slug === activeExam.slug || exam.id?.toString() === activeExam.id?.toString());
+                        return (
+                          <button
+                            key={exam.id?.toString() ?? exam.name ?? index}
+                            type="button"
+                            role="option"
+                            aria-selected={!!isActive}
+                            onClick={() => onExamSelect(exam)}
+                            className={`flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-sm transition-colors ${isActive
                               ? "bg-blue-50 text-blue-900"
                               : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
-                            }`}
-                        >
-                          <span className="truncate flex-1 font-medium">{exam.name}</span>
-                          <span
-                            className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${isActive ? "bg-indigo-200 text-indigo-800" : "bg-gray-100 text-gray-600"
                               }`}
                           >
-                            {count} video{count !== 1 ? "s" : ""}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            )}
+                            <span className="truncate flex-1 font-medium">{exam.name}</span>
+                            
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Subject filter - that exam's subjects with videos */}
+              {activeExam && subjectOptions.length > 0 && !filterPathSlug && (
+                <div className="relative" ref={subjectDropdownRef}>
+                  <button
+                    type="button"
+                    onClick={() => setSubjectDropdownOpen((o) => !o)}
+                    className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3.5 py-2.5 text-left shadow-sm transition-all duration-200 hover:border-blue-300 hover:bg-blue-50/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 min-w-[140px] sm:min-w-[180px]"
+                    aria-expanded={subjectDropdownOpen}
+                    aria-haspopup="listbox"
+                    aria-label="Filter by subject"
+                  >
+                    <span className="truncate flex-1 text-sm font-medium text-gray-900">
+                      {selectedSubjectLabel ?? "All subjects"}
+                    </span>
+                    <FaChevronDown
+                      className={`h-3.5 w-3.5 shrink-0 text-gray-400 transition-transform duration-200 ${subjectDropdownOpen ? "rotate-180" : ""}`}
+                    />
+                  </button>
+                  {subjectDropdownOpen && (
+                    <div
+                      className="absolute right-0 top-full z-20 mt-1.5 w-full min-w-[180px] overflow-hidden rounded-lg border border-gray-200 bg-white py-1 shadow-xl ring-1 ring-black/5"
+                      role="listbox"
+                      aria-label="Subject list"
+                    >
+                      <button
+                        type="button"
+                        role="option"
+                        aria-selected={!selectedSubjectSlug}
+                        onClick={() => onSubjectSelect(null)}
+                        className={`flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-sm transition-colors ${!selectedSubjectSlug
+                          ? "bg-blue-50 text-blue-900"
+                          : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+                          }`}
+                      >
+                        <span className="font-medium">All subjects</span>
+                      </button>
+                      {subjectOptions.map((opt) => {
+                        const isActive = selectedSubjectSlug === opt.pathSlug;
+                        return (
+                          <button
+                            key={opt.pathSlug}
+                            type="button"
+                            role="option"
+                            aria-selected={isActive}
+                            onClick={() => onSubjectSelect(opt.pathSlug)}
+                            className={`flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-sm transition-colors ${isActive
+                              ? "bg-blue-50 text-blue-900"
+                              : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+                              }`}
+                          >
+                            <span className="truncate flex-1 font-medium">{opt.label}</span>
+                           
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -595,6 +708,10 @@ export default function PrimeVideoClient({ exams, currentExamSlug }) {
               key={activeExam.slug ?? activeExam.id}
               exam={activeExam}
               onPlay={onPlay}
+              currentExamSlug={slugFromUrl || activeExam.slug || createSlug(activeExam.name)}
+              filterLevel={filterLevel}
+              filterPathSlug={filterPathSlug}
+              filterSubjectSlug={selectedSubjectSlug ?? undefined}
             />
           )}
         </div>
