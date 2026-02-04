@@ -2231,11 +2231,12 @@ export const fetchSubfoldersByFolder = async (folderId, options = {}) => {
   }
 };
 
-// Fetch files by folder ID (subfolder)
+// Fetch files by folder ID (subfolder). Supports pagination.
+// Options: status, limit, page. If returnFullResponse: true, returns { data, pagination }.
 export const fetchFilesByFolder = async (folderId, options = {}) => {
-  if (!folderId) return [];
+  if (!folderId) return options.returnFullResponse ? { data: [], pagination: { total: 0 } } : [];
 
-  const { status = STATUS.ACTIVE, limit = 100 } = options;
+  const { status = STATUS.ACTIVE, limit = 100, page = 1, returnFullResponse = false } = options;
   const isServer = typeof window === "undefined";
   const baseUrl = getBaseUrl();
 
@@ -2244,6 +2245,7 @@ export const fetchFilesByFolder = async (folderId, options = {}) => {
     params.append("folderId", folderId);
     params.append("status", status);
     params.append("limit", limit.toString());
+    params.append("page", String(page));
 
     const url = `${baseUrl}/api/download/file?${params.toString()}`;
 
@@ -2253,25 +2255,39 @@ export const fetchFilesByFolder = async (folderId, options = {}) => {
       });
 
       if (!response.ok) {
-        return [];
+        return returnFullResponse ? { data: [], pagination: { total: 0 } } : [];
       }
 
       const data = await response.json();
       if (data.success && data.data) {
-        return data.data || [];
+        const list = data.data || [];
+        if (returnFullResponse) {
+          return {
+            data: list,
+            pagination: data.pagination || { total: list.length, page: 1, limit },
+          };
+        }
+        return list;
       }
-      return [];
+      return returnFullResponse ? { data: [], pagination: { total: 0 } } : [];
     } else {
       const response = await api.get(`/download/file?${params.toString()}`);
 
       if (response.data.success && response.data.data) {
-        return response.data.data || [];
+        const list = response.data.data || [];
+        if (returnFullResponse) {
+          return {
+            data: list,
+            pagination: response.data.pagination || { total: list.length, page: 1, limit },
+          };
+        }
+        return list;
       }
-      return [];
+      return returnFullResponse ? { data: [], pagination: { total: 0 } } : [];
     }
   } catch (error) {
     logger.error("Error fetching files:", error);
-    return [];
+    return returnFullResponse ? { data: [], pagination: { total: 0 } } : [];
   }
 };
 

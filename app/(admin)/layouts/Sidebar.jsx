@@ -84,6 +84,7 @@ const ALL_MENU_ITEMS = [
       { name: "Role Management", href: "/admin/user-role" },
       { name: "Import Self Study Data", href: "/admin/bulk-import" },
       { name: "Meta Import", href: "/admin/seo-import" },
+      { name: "URL Export", href: "/admin/url-export" },
     ],
   },
 ];
