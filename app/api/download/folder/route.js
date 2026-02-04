@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import DownloadFolder from "@/models/DownloadFolder";
+import DownloadFile from "@/models/DownloadFile";
 import mongoose from "mongoose";
 import { parsePagination, createPaginationResponse } from "@/utils/pagination";
 import {
@@ -14,27 +15,33 @@ import { requireAuth, requireAction } from "@/middleware/authMiddleware";
 // GET: Fetch all download folders with optional filters
 export async function GET(request) {
   try {
-    // Check authentication
-    const authCheck = await requireAuth(request);
-    if (authCheck.error) {
-      return NextResponse.json(authCheck, { status: authCheck.status || 401 });
+    const { searchParams } = new URL(request.url);
+    const statusFilterParam = searchParams.get("status") || "all";
+    const statusFilter = statusFilterParam.toLowerCase();
+
+    // Allow public access for active folders only (main app download pages)
+    // Require auth for inactive/all (admin)
+    if (statusFilter !== STATUS.ACTIVE) {
+      const authCheck = await requireAuth(request);
+      if (authCheck.error) {
+        return NextResponse.json(authCheck, { status: authCheck.status || 401 });
+      }
     }
 
     await connectDB();
-    const { searchParams } = new URL(request.url);
 
     // Parse pagination
     const { page, limit, skip } = parsePagination(searchParams);
+    const includeCounts = searchParams.get("includeCounts") === "1";
+    const onlyWithFiles = searchParams.get("onlyWithFiles") === "1";
 
     // Get filters
     const parentFolderId = searchParams.get("parentFolderId");
     const examId = searchParams.get("examId");
-    const statusFilterParam = searchParams.get("status") || "all";
-    const statusFilter = statusFilterParam.toLowerCase();
 
     // Build query
     const query = {};
-    
+
     // Filter by parent folder (null for root folders)
     if (parentFolderId === "null" || parentFolderId === null || parentFolderId === "undefined") {
       query.parentFolderId = null;
@@ -52,17 +59,103 @@ export async function GET(request) {
       query.status = statusFilter; // Direct match instead of regex
     }
 
-    // Execute both count and find in parallel for better performance
-    const [folders, total] = await Promise.all([
-      DownloadFolder.find(query)
+    let folders;
+    let total;
+
+    // When fetching subfolders with onlyWithFiles, get full list then filter and paginate
+    if (onlyWithFiles && query.parentFolderId) {
+      const allSubfolders = await DownloadFolder.find(query)
         .populate("parentFolderId", "name slug")
         .populate("examId", "name slug")
         .sort({ orderNumber: 1, createdAt: -1 })
-        .skip(skip)
-        .limit(limit)
-        .lean(),
-      DownloadFolder.countDocuments(query)
-    ]);
+        .limit(500)
+        .lean();
+      if (allSubfolders.length === 0) {
+        folders = [];
+        total = 0;
+      } else {
+        const subfolderIds = allSubfolders.map((f) => f._id);
+        const idsWithFiles = await DownloadFile.distinct("folderId", {
+          folderId: { $in: subfolderIds },
+          status: { $regex: /^active$/i },
+        });
+        const idSet = new Set(idsWithFiles.map((id) => id.toString()));
+        const filtered = allSubfolders.filter((f) => idSet.has(f._id.toString()));
+        total = filtered.length;
+        folders = filtered.slice(skip, skip + limit);
+      }
+    } else {
+      [folders, total] = await Promise.all([
+        DownloadFolder.find(query)
+          .populate("parentFolderId", "name slug")
+          .populate("examId", "name slug")
+          .sort({ orderNumber: 1, createdAt: -1 })
+          .skip(skip)
+          .limit(limit)
+          .lean(),
+        DownloadFolder.countDocuments(query)
+      ]);
+    }
+
+    // Optionally add subfolderCount and fileCount for root folders (exam download listing)
+    if (includeCounts && folders.length > 0 && query.parentFolderId === null) {
+      const folderIds = folders.map((f) => f._id);
+
+      const subfolders = await DownloadFolder.find({
+        parentFolderId: { $in: folderIds },
+        status: statusFilter !== "all" ? statusFilter : "active",
+      })
+        .select("_id parentFolderId")
+        .lean();
+
+      const allFolderIdsForFiles = [
+        ...folderIds,
+        ...subfolders.map((s) => s._id),
+      ];
+
+      const fileCounts =
+        allFolderIdsForFiles.length > 0
+          ? await DownloadFile.aggregate([
+              {
+                $match: {
+                  folderId: { $in: allFolderIdsForFiles },
+                  status: { $regex: /^active$/i },
+                },
+              },
+              { $group: { _id: "$folderId", count: { $sum: 1 } } },
+            ])
+          : [];
+
+      const rootMap = {};
+      folderIds.forEach((id) => {
+        rootMap[id.toString()] = id.toString();
+      });
+      subfolders.forEach((s) => {
+        rootMap[s._id.toString()] = s.parentFolderId?.toString();
+      });
+
+      const fileCountByRoot = {};
+      fileCounts.forEach((fc) => {
+        const rootId = rootMap[fc._id?.toString()];
+        if (rootId) {
+          fileCountByRoot[rootId] = (fileCountByRoot[rootId] || 0) + fc.count;
+        }
+      });
+
+      const subfolderCountByRoot = {};
+      subfolders.forEach((s) => {
+        const rootId = s.parentFolderId?.toString();
+        if (rootId) {
+          subfolderCountByRoot[rootId] = (subfolderCountByRoot[rootId] || 0) + 1;
+        }
+      });
+
+      folders = folders.map((f) => ({
+        ...f,
+        subfolderCount: subfolderCountByRoot[f._id.toString()] || 0,
+        fileCount: fileCountByRoot[f._id.toString()] || 0,
+      }));
+    }
 
     return NextResponse.json(
       createPaginationResponse(folders, total, page, limit)

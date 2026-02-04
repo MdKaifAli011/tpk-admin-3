@@ -6,33 +6,27 @@ import {
   fetchSubfoldersByFolder,
   fetchFilesByFolder,
   createSlug,
-} from "../../../../lib/api";
+} from "../../../../../lib/api";
 import { createSlug as createSlugUtil } from "@/utils/slug";
-import DownloadSubfolderPageClient from "./DownloadSubfolderPageClient";
+import DownloadFilePageClient from "./DownloadFilePageClient";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-const DownloadSubfolderPage = async ({ params }) => {
-  const { exam: examIdOrSlug, folder: folderIdOrSlug, subfolder: subfolderIdOrSlug } = await params;
+/**
+ * Single file page: /{examSlug}/download/{folderSlug}/{subfolderSlug}/{fileSlug}
+ * Shows only this file (name, description, download).
+ */
+const DownloadFilePage = async ({ params }) => {
+  const { exam: examIdOrSlug, folder: folderIdOrSlug, subfolder: subfolderIdOrSlug, file: fileIdOrSlug } = await params;
 
-  // Fetch exam data
   const exam = await fetchExamById(examIdOrSlug);
-  if (!exam) {
-    notFound();
-  }
+  if (!exam) notFound();
 
   const examSlug = createSlug(exam.name);
   const examName = exam.name ? exam.name.toUpperCase() : "EXAM";
 
-  // Fetch all folders with counts so we can hide empty folders in accordion
-  const allFolders = await fetchDownloadFolders(exam._id, {
-    status: "active",
-    limit: 100,
-    includeCounts: true,
-  });
-
-  // Find current folder by ID or slug
+  const allFolders = await fetchDownloadFolders(exam._id, { status: "active", limit: 100, includeCounts: true });
   let currentFolder = null;
   if (/^[0-9a-fA-F]{24}$/.test(folderIdOrSlug)) {
     currentFolder = allFolders.find((f) => f._id === folderIdOrSlug);
@@ -41,18 +35,9 @@ const DownloadSubfolderPage = async ({ params }) => {
       (f) => f.slug === folderIdOrSlug || createSlugUtil(f.name) === folderIdOrSlug
     );
   }
+  if (!currentFolder) notFound();
 
-  if (!currentFolder) {
-    notFound();
-  }
-
-  // Fetch all subfolders first so we can resolve current (even if it has no files)
-  const allSubfolders = await fetchSubfoldersByFolder(currentFolder._id, {
-    status: "active",
-    limit: 100,
-  });
-
-  // Find current subfolder by ID or slug
+  const allSubfolders = await fetchSubfoldersByFolder(currentFolder._id, { status: "active", limit: 100 });
   let currentSubfolder = null;
   if (/^[0-9a-fA-F]{24}$/.test(subfolderIdOrSlug)) {
     currentSubfolder = allSubfolders.find((sf) => sf._id === subfolderIdOrSlug);
@@ -61,42 +46,38 @@ const DownloadSubfolderPage = async ({ params }) => {
       (sf) => sf.slug === subfolderIdOrSlug || createSlugUtil(sf.name) === subfolderIdOrSlug
     );
   }
+  if (!currentSubfolder) notFound();
 
-  if (!currentSubfolder) {
-    notFound();
-  }
-
-  // For UI only show topics that have at least one file (empty topics hidden)
   const subfolders = await fetchSubfoldersByFolder(currentFolder._id, {
     status: "active",
     limit: 100,
     onlyWithFiles: true,
   });
 
-  // Fetch first 10 files for this subfolder (Load more loads 20 at a time on client)
-  const filesResult = await fetchFilesByFolder(currentSubfolder._id, {
-    status: "active",
-    limit: 10,
-    page: 1,
-    returnFullResponse: true,
-  });
-  const files = filesResult?.data || [];
-  const totalFiles = filesResult?.pagination?.total ?? files.length;
+  const files = await fetchFilesByFolder(currentSubfolder._id, { status: "active", limit: 100 });
+  let currentFile = null;
+  if (/^[0-9a-fA-F]{24}$/.test(fileIdOrSlug)) {
+    currentFile = files.find((f) => f._id === fileIdOrSlug);
+  } else {
+    currentFile = files.find(
+      (f) => (f.slug || createSlugUtil(f.name)) === fileIdOrSlug
+    );
+  }
+  if (!currentFile) notFound();
 
   return (
-    <DownloadSubfolderPageClient
+    <DownloadFilePageClient
       exam={exam}
       examSlug={examSlug}
       examName={examName}
       currentFolder={currentFolder}
       currentSubfolder={currentSubfolder}
+      file={currentFile}
+      files={files}
       allFolders={allFolders}
       subfolders={subfolders}
-      files={files}
-      totalFiles={totalFiles}
     />
   );
 };
 
-export default DownloadSubfolderPage;
-
+export default DownloadFilePage;

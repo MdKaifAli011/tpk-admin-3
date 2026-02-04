@@ -64,11 +64,21 @@ export async function PUT(request, { params }) {
       return errorResponse("Download file not found", 404);
     }
 
-    // Update name
+    // Update name (duplicate name not allowed in same folder)
     if (body.name !== undefined) {
       const trimmedName = body.name?.trim();
       if (!trimmedName) {
         return errorResponse("File name cannot be empty", 400);
+      }
+      const folderId = file.folderId?.toString?.() || file.folderId;
+      const escapedName = trimmedName.replace(new RegExp("[.*+?^\\${}()|[\\]\\\\]", "g"), "\\$&");
+      const existingByName = await DownloadFile.findOne({
+        folderId,
+        name: { $regex: new RegExp("^" + escapedName + "$", "i") },
+        _id: { $ne: id },
+      });
+      if (existingByName) {
+        return errorResponse("A file with this name already exists in this subfolder. Use a different name.", 400);
       }
       file.name = trimmedName;
     }

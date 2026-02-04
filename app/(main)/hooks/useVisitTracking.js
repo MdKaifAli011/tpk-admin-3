@@ -96,14 +96,19 @@ export const useVisitTracking = (level, itemId, itemSlug) => {
       if (cached !== null) {
         isBlocked = cached.isBlocked;
       } else {
-        const checkResponse = await fetch(`${BASE_PATH}/api/analytics/check-ip`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-        });
-        if (checkResponse.ok) {
-          const checkData = await checkResponse.json();
-          isBlocked = !!checkData.isBlocked;
-          setCachedIpCheck(isBlocked);
+        try {
+          const checkResponse = await fetch(`${BASE_PATH}/api/analytics/check-ip`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+          });
+          const checkData = await checkResponse.json().catch(() => ({}));
+          if (checkResponse.ok && checkData && typeof checkData.isBlocked === 'boolean') {
+            isBlocked = checkData.isBlocked;
+            setCachedIpCheck(isBlocked);
+          }
+          // On non-ok or invalid response: fail open (isBlocked stays false)
+        } catch {
+          // Network or parse error: fail open so tracking can proceed
         }
       }
 

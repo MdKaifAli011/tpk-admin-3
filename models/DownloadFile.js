@@ -1,10 +1,15 @@
 import mongoose from "mongoose";
+import { createSlug, generateUniqueSlug } from "../utils/serverSlug.js";
 
 const downloadFileSchema = new mongoose.Schema(
   {
     name: {
       type: String,
       required: true,
+      trim: true,
+    },
+    slug: {
+      type: String,
       trim: true,
     },
     folderId: {
@@ -93,6 +98,29 @@ downloadFileSchema.index(
 
 // Compound index for better query performance
 downloadFileSchema.index({ folderId: 1, status: 1 });
+
+// Compound index for unique slug per folder (for URL-friendly file links)
+downloadFileSchema.index(
+  { folderId: 1, slug: 1 },
+  { unique: true, sparse: true }
+);
+
+// Pre-save: auto-generate slug from name (unique per folder); backfill when missing
+downloadFileSchema.pre("save", async function (next) {
+  const needsSlug = !this.slug || this.isModified("name") || this.isNew;
+  if (needsSlug) {
+    const baseSlug = createSlug(this.name);
+    const folderId = this.folderId?._id || this.folderId;
+    const checkExists = async (slug, excludeId) => {
+      const query = { folderId, slug };
+      if (excludeId) query._id = { $ne: excludeId };
+      const existing = await mongoose.models.DownloadFile.findOne(query);
+      return !!existing;
+    };
+    this.slug = await generateUniqueSlug(baseSlug, checkExists, this._id || null);
+  }
+  next();
+});
 
 // Pre-save validation: Ensure either fileUrl or uploadedFile is provided based on fileType
 downloadFileSchema.pre("save", function (next) {

@@ -163,16 +163,21 @@ const StatusBadge = ({ status, onClick }) => {
                             <td className="px-4 py-3">
                               <div className="flex items-center gap-2">
                                 {file.fileType === "url" ? (
-                                  <FaLink className="w-4 h-4 text-blue-500" />
+                                  <FaLink className="w-4 h-4 text-blue-500 shrink-0" />
                                 ) : (
-                                  <FaFile className="w-4 h-4 text-gray-500" />
+                                  <FaFile className="w-4 h-4 text-gray-500 shrink-0" />
                                 )}
-                                <div>
+                                <div className="min-w-0">
                                   <div className="text-sm font-medium text-gray-900">
                                     {file.name}
                                   </div>
+                                  {file.slug && (
+                                    <div className="text-xs text-gray-500 mt-0.5 font-mono truncate" title={file.slug}>
+                                      /{file.slug}
+                                    </div>
+                                  )}
                                   {file.description && (
-                                    <div className="text-xs text-gray-500 mt-0.5">
+                                    <div className="text-xs text-gray-500 mt-0.5 line-clamp-1">
                                       {file.description}
                                     </div>
                                   )}
@@ -277,16 +282,21 @@ const StatusBadge = ({ status, onClick }) => {
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
                           {file.fileType === "url" ? (
-                            <FaLink className="w-4 h-4 text-blue-500" />
+                            <FaLink className="w-4 h-4 text-blue-500 shrink-0" />
                           ) : (
-                            <FaFile className="w-4 h-4 text-gray-500" />
+                            <FaFile className="w-4 h-4 text-gray-500 shrink-0" />
                           )}
-                          <div>
+                          <div className="min-w-0">
                             <div className="text-sm font-medium text-gray-900">
                               {file.name}
                             </div>
+                            {file.slug && (
+                              <div className="text-xs text-gray-500 mt-0.5 font-mono truncate" title={file.slug}>
+                                /{file.slug}
+                              </div>
+                            )}
                             {file.description && (
-                              <div className="text-xs text-gray-500 mt-0.5">
+                              <div className="text-xs text-gray-500 mt-0.5 line-clamp-1">
                                 {file.description}
                               </div>
                             )}
@@ -370,11 +380,22 @@ const DownloadFileManagement = () => {
   const [isDataLoading, setIsDataLoading] = useState(false);
   const [isFormLoading, setIsFormLoading] = useState(false);
   const [files, setFiles] = useState([]);
+  const [totalFiles, setTotalFiles] = useState(0);
+  const [filePage, setFilePage] = useState(1);
+  const [loadingMoreFiles, setLoadingMoreFiles] = useState(false);
   const [folders, setFolders] = useState([]);
+  const [totalFolders, setTotalFolders] = useState(0);
+  const [folderPage, setFolderPage] = useState(1);
+  const [loadingMoreFolders, setLoadingMoreFolders] = useState(false);
   const [subfolders, setSubfolders] = useState([]);
+  const [totalSubfolders, setTotalSubfolders] = useState(0);
+  const [subfolderPage, setSubfolderPage] = useState(1);
+  const [loadingMoreSubfolders, setLoadingMoreSubfolders] = useState(false);
   const [selectedFolderId, setSelectedFolderId] = useState("");
   const [selectedSubfolderId, setSelectedSubfolderId] = useState("");
   const [error, setError] = useState(null);
+
+  const PAGE_SIZE = 50;
 
   const [formData, setFormData] = useState({
     name: "",
@@ -392,64 +413,106 @@ const DownloadFileManagement = () => {
   const { toasts, removeToast, success, error: showError } = useToast();
   const isFetchingRef = useRef(false);
 
-  const fetchData = async () => {
-    if (isFetchingRef.current) return;
-    isFetchingRef.current = true;
+  const fetchData = async (append = false) => {
+    if (isFetchingRef.current && !append) return;
+    if (append) setLoadingMoreFolders(true);
+    else { isFetchingRef.current = true; setIsDataLoading(true); setError(null); }
+    const page = append ? folderPage + 1 : 1;
     try {
-      setIsDataLoading(true);
-      setError(null);
-
-      const foldersRes = await api.get("/download/folder?status=all&parentFolderId=null");
-
+      const foldersRes = await api.get(`/download/folder?status=all&parentFolderId=null&limit=${PAGE_SIZE}&page=${page}`);
       if (foldersRes.data?.success) {
-        setFolders(foldersRes.data.data || []);
+        const list = foldersRes.data.data || [];
+        const total = foldersRes.data.pagination?.total ?? list.length;
+        if (append) {
+          setFolders((prev) => [...prev, ...list]);
+          setFolderPage(page);
+        } else {
+          setFolders(list);
+          setFolderPage(1);
+        }
+        setTotalFolders(total);
       }
-    } catch (error) {
-      console.error("Error fetching data:", error);
+    } catch (err) {
+      console.error("Error fetching data:", err);
       setError("Failed to fetch data");
     } finally {
       setIsDataLoading(false);
+      setLoadingMoreFolders(false);
       isFetchingRef.current = false;
     }
   };
 
-  const fetchSubfolders = async (folderId) => {
+  const fetchSubfolders = async (folderId, append = false) => {
     if (!folderId) {
       setSubfolders([]);
+      setTotalSubfolders(0);
+      setSubfolderPage(1);
       setSelectedSubfolderId("");
       setFiles([]);
       return;
     }
+    if (append) setLoadingMoreSubfolders(true);
+    else setIsDataLoading(true);
+    const page = append ? subfolderPage + 1 : 1;
     try {
-      const response = await api.get(`/download/folder?status=all&parentFolderId=${folderId}`);
+      const response = await api.get(`/download/folder?status=all&parentFolderId=${folderId}&limit=${PAGE_SIZE}&page=${page}`);
       if (response.data?.success) {
-        setSubfolders(response.data.data || []);
+        const list = response.data.data || [];
+        const total = response.data.pagination?.total ?? list.length;
+        if (append) {
+          setSubfolders((prev) => [...prev, ...list]);
+          setSubfolderPage(page);
+        } else {
+          setSubfolders(list);
+          setSubfolderPage(1);
+        }
+        setTotalSubfolders(total);
       }
-    } catch (error) {
-      console.error("Error fetching subfolders:", error);
+    } catch (err) {
+      console.error("Error fetching subfolders:", err);
       showError("Failed to fetch subfolders");
+    } finally {
+      setIsDataLoading(false);
+      setLoadingMoreSubfolders(false);
     }
   };
 
-  const fetchFiles = async (subfolderId) => {
+  const fetchFiles = async (subfolderId, append = false) => {
     if (!subfolderId) {
       setFiles([]);
+      setTotalFiles(0);
+      setFilePage(1);
       return;
     }
+    if (append) setLoadingMoreFiles(true);
+    else setIsDataLoading(true);
+    const page = append ? filePage + 1 : 1;
     try {
-      setIsDataLoading(true);
-      // Fetch all files for the selected subfolder
-      const response = await api.get(`/download/file?status=all&folderId=${subfolderId}`);
+      const response = await api.get(`/download/file?status=all&folderId=${subfolderId}&limit=${PAGE_SIZE}&page=${page}`);
       if (response.data?.success) {
-        setFiles(response.data.data || []);
+        const list = response.data.data || [];
+        const total = response.data.pagination?.total ?? list.length;
+        if (append) {
+          setFiles((prev) => [...prev, ...list]);
+          setFilePage(page);
+        } else {
+          setFiles(list);
+          setFilePage(1);
+        }
+        setTotalFiles(total);
       }
-    } catch (error) {
-      console.error("Error fetching files:", error);
+    } catch (err) {
+      console.error("Error fetching files:", err);
       showError("Failed to fetch files");
     } finally {
       setIsDataLoading(false);
+      setLoadingMoreFiles(false);
     }
   };
+
+  const hasMoreFolders = folders.length < totalFolders;
+  const hasMoreSubfolders = subfolders.length < totalSubfolders;
+  const hasMoreFiles = files.length < totalFiles;
 
   // Fetch all files when folder is selected (to show all files in all subfolders)
   const fetchAllFilesForFolder = async (folderId) => {
@@ -532,6 +595,15 @@ const DownloadFileManagement = () => {
     if (formData.fileType === "upload" && !formData.uploadedFile.trim()) {
       return setFormError("Please provide uploaded file path");
     }
+    const sameFolderFiles = files.filter(
+      (f) => (f.folderId?._id || f.folderId) === formData.folderId
+    );
+    const nameExists = sameFolderFiles.some(
+      (f) => f.name.trim().toLowerCase() === formData.name.trim().toLowerCase()
+    );
+    if (nameExists) {
+      return setFormError("A file with this name already exists in this subfolder. Use a different name.");
+    }
 
     try {
       setIsFormLoading(true);
@@ -589,6 +661,17 @@ const DownloadFileManagement = () => {
     }
     if (formData.fileType === "upload" && !formData.uploadedFile.trim()) {
       return setFormError("Please provide uploaded file path");
+    }
+    const sameFolderFiles = files.filter(
+      (f) => (f.folderId?._id || f.folderId) === formData.folderId
+    );
+    const nameExists = sameFolderFiles.some(
+      (f) =>
+        f._id !== editingFile?._id &&
+        f.name.trim().toLowerCase() === formData.name.trim().toLowerCase()
+    );
+    if (nameExists) {
+      return setFormError("A file with this name already exists in this subfolder. Use a different name.");
     }
 
     try {
@@ -845,6 +928,16 @@ const DownloadFileManagement = () => {
                 </option>
               ))}
             </select>
+            {hasMoreFolders && (
+              <button
+                type="button"
+                onClick={() => fetchData(true)}
+                disabled={loadingMoreFolders}
+                className="px-3 py-2 text-sm font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 disabled:opacity-60 transition-colors shrink-0"
+              >
+                {loadingMoreFolders ? "Loading…" : `View more (${folders.length} of ${totalFolders})`}
+              </button>
+            )}
           </div>
           {selectedFolderId && (
             <div className="flex flex-col sm:flex-row sm:items-center gap-4">
@@ -868,6 +961,16 @@ const DownloadFileManagement = () => {
                   </option>
                 ))}
               </select>
+              {hasMoreSubfolders && (
+                <button
+                  type="button"
+                  onClick={() => fetchSubfolders(selectedFolderId, true)}
+                  disabled={loadingMoreSubfolders}
+                  className="px-3 py-2 text-sm font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 disabled:opacity-60 transition-colors shrink-0"
+                >
+                  {loadingMoreSubfolders ? "Loading…" : `View more (${subfolders.length} of ${totalSubfolders})`}
+                </button>
+              )}
             </div>
           )}
           {!selectedFolderId && (
@@ -930,6 +1033,14 @@ const DownloadFileManagement = () => {
                     required
                     disabled={isFormLoading}
                   />
+                  <p className="text-xs text-gray-500">
+                    URL slug is auto-generated from the name. Duplicate names in the same subfolder are not allowed.
+                  </p>
+                  {showEditForm && editingFile?.slug && (
+                    <p className="text-xs text-gray-600 font-mono mt-1">
+                      Current slug: /{editingFile.slug}
+                    </p>
+                  )}
                 </div>
 
                 {/* Subfolder (read-only, based on selection) */}
@@ -1182,14 +1293,35 @@ const DownloadFileManagement = () => {
                   </div>
                 </div>
               ) : (
-                <FileTable
-                  files={files}
-                  folders={folders}
-                  subfolders={subfolders}
-                  onEdit={handleEdit}
-                  onDelete={handleDeleteFile}
-                  onToggleStatus={handleToggleStatus}
-                />
+                <>
+                  <FileTable
+                    files={files}
+                    folders={folders}
+                    subfolders={subfolders}
+                    onEdit={handleEdit}
+                    onDelete={handleDeleteFile}
+                    onToggleStatus={handleToggleStatus}
+                  />
+                  {selectedSubfolderId && hasMoreFiles && (
+                    <div className="mt-4 flex justify-center">
+                      <button
+                        type="button"
+                        onClick={() => fetchFiles(selectedSubfolderId, true)}
+                        disabled={loadingMoreFiles}
+                        className="px-4 py-2.5 text-sm font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 disabled:opacity-60 disabled:cursor-not-allowed transition-colors inline-flex items-center gap-2"
+                      >
+                        {loadingMoreFiles ? (
+                          <>
+                            <LoadingSpinner size="small" />
+                            Loading…
+                          </>
+                        ) : (
+                          <>View more ({files.length} of {totalFiles})</>
+                        )}
+                      </button>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>

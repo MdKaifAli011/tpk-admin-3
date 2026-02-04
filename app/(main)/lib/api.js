@@ -18,9 +18,18 @@ const getBaseUrl = () => {
     // Client-side: use basePath for relative URLs
     return basePath;
   }
-  // Server-side: Always prefer localhost to avoid network loopback issues (public IP not reachable from inside)
+  // Server-side (e.g. SSR, server components): use deployment URL in production so fetch() reaches the same app
+  const vercelUrl = process.env.VERCEL_URL;
+  if (vercelUrl) {
+    return `https://${vercelUrl}${basePath}`;
+  }
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+  if (appUrl) {
+    const base = appUrl.replace(/\/$/, "");
+    return `${base}${basePath}`;
+  }
+  // Development or same-host production: localhost
   const port = process.env.PORT || 3000;
-  // If we are in production, we still prioritize localhost for internal API calls
   return `http://localhost:${port}${basePath}`;
 };
 
@@ -2106,10 +2115,17 @@ export const fetchBlogCategories = async (options = {}) => {
 
 // ========== DOWNLOAD API FUNCTIONS ==========
 
-// Fetch download folders by exam ID
+// Fetch download folders by exam ID.
+// Options: status, limit, page, includeCounts. If returnFullResponse: true, returns { data, pagination }.
 export const fetchDownloadFolders = async (examId, options = {}) => {
   try {
-    const { status = STATUS.ACTIVE, limit = 100 } = options;
+    const {
+      status = STATUS.ACTIVE,
+      limit = 100,
+      page = 1,
+      includeCounts = false,
+      returnFullResponse = false,
+    } = options;
 
     const isServer = typeof window === "undefined";
     const baseUrl = getBaseUrl();
@@ -2118,8 +2134,12 @@ export const fetchDownloadFolders = async (examId, options = {}) => {
     params.append("parentFolderId", "null");
     params.append("status", status);
     params.append("limit", limit.toString());
+    params.append("page", String(page));
     if (examId) {
       params.append("examId", examId);
+    }
+    if (includeCounts) {
+      params.append("includeCounts", "1");
     }
 
     const url = `${baseUrl}/api/download/folder?${params.toString()}`;
@@ -2130,25 +2150,40 @@ export const fetchDownloadFolders = async (examId, options = {}) => {
       });
 
       if (!response.ok) {
-        return [];
+        return returnFullResponse ? { data: [], pagination: { total: 0 } } : [];
       }
 
       const data = await response.json();
       if (data.success && data.data) {
-        return data.data || [];
+        const list = data.data || [];
+        if (returnFullResponse) {
+          return {
+            data: list,
+            pagination: data.pagination || { total: list.length, page: 1, limit },
+          };
+        }
+        return list;
       }
-      return [];
+      return returnFullResponse ? { data: [], pagination: { total: 0 } } : [];
     } else {
       const response = await api.get(`/download/folder?${params.toString()}`);
 
       if (response.data.success && response.data.data) {
-        return response.data.data || [];
+        const list = response.data.data || [];
+        if (returnFullResponse) {
+          return {
+            data: list,
+            pagination:
+              response.data.pagination || { total: list.length, page: 1, limit },
+          };
+        }
+        return list;
       }
-      return [];
+      return returnFullResponse ? { data: [], pagination: { total: 0 } } : [];
     }
   } catch (error) {
     logger.error("Error fetching download folders:", error);
-    return [];
+    return options.returnFullResponse ? { data: [], pagination: { total: 0 } } : [];
   }
 };
 
@@ -2187,11 +2222,18 @@ export const fetchDownloadFolderById = async (folderId) => {
   }
 };
 
-// Fetch subfolders by parent folder ID
+// Fetch subfolders by parent folder ID.
+// Options: status, limit, page, onlyWithFiles, returnFullResponse (returns { data, pagination }).
 export const fetchSubfoldersByFolder = async (folderId, options = {}) => {
-  if (!folderId) return [];
+  if (!folderId) return options.returnFullResponse ? { data: [], pagination: { total: 0 } } : [];
 
-  const { status = STATUS.ACTIVE, limit = 100 } = options;
+  const {
+    status = STATUS.ACTIVE,
+    limit = 100,
+    page = 1,
+    onlyWithFiles = false,
+    returnFullResponse = false,
+  } = options;
   const isServer = typeof window === "undefined";
   const baseUrl = getBaseUrl();
 
@@ -2200,6 +2242,10 @@ export const fetchSubfoldersByFolder = async (folderId, options = {}) => {
     params.append("parentFolderId", folderId);
     params.append("status", status);
     params.append("limit", limit.toString());
+    params.append("page", String(page));
+    if (onlyWithFiles) {
+      params.append("onlyWithFiles", "1");
+    }
 
     const url = `${baseUrl}/api/download/folder?${params.toString()}`;
 
@@ -2209,34 +2255,50 @@ export const fetchSubfoldersByFolder = async (folderId, options = {}) => {
       });
 
       if (!response.ok) {
-        return [];
+        return returnFullResponse ? { data: [], pagination: { total: 0 } } : [];
       }
 
       const data = await response.json();
       if (data.success && data.data) {
-        return data.data || [];
+        const list = data.data || [];
+        if (returnFullResponse) {
+          return {
+            data: list,
+            pagination: data.pagination || { total: list.length, page, limit },
+          };
+        }
+        return list;
       }
-      return [];
+      return returnFullResponse ? { data: [], pagination: { total: 0 } } : [];
     } else {
       const response = await api.get(`/download/folder?${params.toString()}`);
 
       if (response.data.success && response.data.data) {
-        return response.data.data || [];
+        const list = response.data.data || [];
+        if (returnFullResponse) {
+          return {
+            data: list,
+            pagination:
+              response.data.pagination || { total: list.length, page, limit },
+          };
+        }
+        return list;
       }
-      return [];
+      return returnFullResponse ? { data: [], pagination: { total: 0 } } : [];
     }
   } catch (error) {
     logger.error("Error fetching subfolders:", error);
-    return [];
+    return options.returnFullResponse ? { data: [], pagination: { total: 0 } } : [];
   }
 };
 
 // Fetch files by folder ID (subfolder). Supports pagination.
-// Options: status, limit, page. If returnFullResponse: true, returns { data, pagination }.
+// Options: status, limit, page, skip. Use skip for load-more (next N items); when skip is set it overrides page.
+// If returnFullResponse: true, returns { data, pagination }.
 export const fetchFilesByFolder = async (folderId, options = {}) => {
   if (!folderId) return options.returnFullResponse ? { data: [], pagination: { total: 0 } } : [];
 
-  const { status = STATUS.ACTIVE, limit = 100, page = 1, returnFullResponse = false } = options;
+  const { status = STATUS.ACTIVE, limit = 100, page = 1, skip: skipOption, returnFullResponse = false } = options;
   const isServer = typeof window === "undefined";
   const baseUrl = getBaseUrl();
 
@@ -2245,7 +2307,11 @@ export const fetchFilesByFolder = async (folderId, options = {}) => {
     params.append("folderId", folderId);
     params.append("status", status);
     params.append("limit", limit.toString());
-    params.append("page", String(page));
+    if (skipOption !== undefined && skipOption !== null && Number.isInteger(skipOption) && skipOption >= 0) {
+      params.append("skip", String(skipOption));
+    } else {
+      params.append("page", String(page));
+    }
 
     const url = `${baseUrl}/api/download/file?${params.toString()}`;
 

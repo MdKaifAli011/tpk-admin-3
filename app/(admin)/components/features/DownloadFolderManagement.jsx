@@ -109,9 +109,14 @@ const DownloadFolderManagement = () => {
   const [isDataLoading, setIsDataLoading] = useState(false);
   const [isFormLoading, setIsFormLoading] = useState(false);
   const [folders, setFolders] = useState([]);
+  const [totalFolders, setTotalFolders] = useState(0);
+  const [folderPage, setFolderPage] = useState(1);
+  const [loadingMoreFolders, setLoadingMoreFolders] = useState(false);
   const [exams, setExams] = useState([]);
   const [selectedExam, setSelectedExam] = useState("");
   const [error, setError] = useState(null);
+
+  const FOLDER_PAGE_SIZE = 50;
 
   const [formData, setFormData] = useState({
     name: "",
@@ -124,32 +129,48 @@ const DownloadFolderManagement = () => {
   const { toasts, removeToast, success, error: showError } = useToast();
   const isFetchingRef = useRef(false);
 
-  const fetchData = async () => {
-    if (isFetchingRef.current) return;
-    isFetchingRef.current = true;
+  const fetchData = async (append = false) => {
+    if (isFetchingRef.current && !append) return;
+    if (append) setLoadingMoreFolders(true);
+    else { isFetchingRef.current = true; setIsDataLoading(true); }
+    setError(null);
+    const page = append ? folderPage + 1 : 1;
     try {
-      setIsDataLoading(true);
-      setError(null);
-
-      const [foldersRes, examsRes] = await Promise.all([
-        api.get("/download/folder?status=all&parentFolderId=null"),
-        api.get("/exam?status=active"),
-      ]);
-
-      if (foldersRes.data?.success) {
-        setFolders(foldersRes.data.data || []);
+      if (append) {
+        const foldersRes = await api.get(`/download/folder?status=all&parentFolderId=null&limit=${FOLDER_PAGE_SIZE}&page=${page}`);
+        if (foldersRes.data?.success) {
+          const list = foldersRes.data.data || [];
+          const total = foldersRes.data.pagination?.total ?? 0;
+          setFolders((prev) => [...prev, ...list]);
+          setFolderPage(page);
+          setTotalFolders(total);
+        }
+      } else {
+        const [foldersRes, examsRes] = await Promise.all([
+          api.get(`/download/folder?status=all&parentFolderId=null&limit=${FOLDER_PAGE_SIZE}&page=1`),
+          api.get("/exam?status=active"),
+        ]);
+        if (foldersRes.data?.success) {
+          const list = foldersRes.data.data || [];
+          const total = foldersRes.data.pagination?.total ?? list.length;
+          setFolders(list);
+          setFolderPage(1);
+          setTotalFolders(total);
+        }
+        if (examsRes?.data?.success) setExams(examsRes.data.data || []);
       }
-      if (examsRes.data?.success) {
-        setExams(examsRes.data.data || []);
-      }
-    } catch (error) {
-      console.error("Error fetching data:", error);
+    } catch (err) {
+      console.error("Error fetching data:", err);
       setError("Failed to fetch data");
     } finally {
       setIsDataLoading(false);
+      setLoadingMoreFolders(false);
       isFetchingRef.current = false;
     }
   };
+
+  const handleViewMoreFolders = () => fetchData(true);
+  const hasMoreFolders = folders.length < totalFolders;
 
   // Filter folders by selected exam
   const filteredFolders = selectedExam
@@ -548,12 +569,33 @@ const DownloadFolderManagement = () => {
                 </div>
               </div>
             ) : (
-              <FolderList
-                folders={filteredFolders}
-                onEdit={handleEdit}
-                onDelete={handleDeleteFolder}
-                onToggleStatus={handleToggleStatus}
-              />
+              <>
+                <FolderList
+                  folders={filteredFolders}
+                  onEdit={handleEdit}
+                  onDelete={handleDeleteFolder}
+                  onToggleStatus={handleToggleStatus}
+                />
+                {hasMoreFolders && (
+                  <div className="mt-4 flex justify-center">
+                    <button
+                      type="button"
+                      onClick={handleViewMoreFolders}
+                      disabled={loadingMoreFolders}
+                      className="px-4 py-2.5 text-sm font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 disabled:opacity-60 disabled:cursor-not-allowed transition-colors inline-flex items-center gap-2"
+                    >
+                      {loadingMoreFolders ? (
+                        <>
+                          <LoadingSpinner size="small" />
+                          Loading…
+                        </>
+                      ) : (
+                        <>View more ({folders.length} of {totalFolders})</>
+                      )}
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>

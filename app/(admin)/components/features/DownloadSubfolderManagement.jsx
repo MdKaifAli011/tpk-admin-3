@@ -126,7 +126,13 @@ const DownloadSubfolderManagement = () => {
   const [isDataLoading, setIsDataLoading] = useState(false);
   const [isFormLoading, setIsFormLoading] = useState(false);
   const [subfolders, setSubfolders] = useState([]);
+  const [totalSubfolders, setTotalSubfolders] = useState(0);
+  const [subfolderPage, setSubfolderPage] = useState(1);
+  const [loadingMoreSubfolders, setLoadingMoreSubfolders] = useState(false);
   const [folders, setFolders] = useState([]);
+  const [totalFolders, setTotalFolders] = useState(0);
+  const [folderPage, setFolderPage] = useState(1);
+  const [loadingMoreFolders, setLoadingMoreFolders] = useState(false);
   const [selectedFolderId, setSelectedFolderId] = useState("");
   const [error, setError] = useState(null);
 
@@ -142,45 +148,74 @@ const DownloadSubfolderManagement = () => {
   const { role } = usePermissions();
   const isFetchingRef = useRef(false);
 
-  const fetchData = async () => {
-    if (isFetchingRef.current) return;
-    isFetchingRef.current = true;
+  const SUBFOLDER_PAGE_SIZE = 50;
+
+  const FOLDER_PAGE_SIZE = 50;
+
+  const fetchData = async (append = false) => {
+    if (isFetchingRef.current && !append) return;
+    if (append) setLoadingMoreFolders(true);
+    else { isFetchingRef.current = true; setIsDataLoading(true); setError(null); }
+    const page = append ? folderPage + 1 : 1;
     try {
-      setIsDataLoading(true);
-      setError(null);
-
-      const foldersRes = await api.get("/download/folder?status=all&parentFolderId=null");
-
+      const foldersRes = await api.get(`/download/folder?status=all&parentFolderId=null&limit=${FOLDER_PAGE_SIZE}&page=${page}`);
       if (foldersRes.data?.success) {
-        setFolders(foldersRes.data.data || []);
+        const list = foldersRes.data.data || [];
+        const total = foldersRes.data.pagination?.total ?? list.length;
+        if (append) {
+          setFolders((prev) => [...prev, ...list]);
+          setFolderPage(page);
+        } else {
+          setFolders(list);
+          setFolderPage(1);
+        }
+        setTotalFolders(total);
       }
-    } catch (error) {
-      console.error("Error fetching data:", error);
+    } catch (err) {
+      console.error("Error fetching data:", err);
       setError("Failed to fetch data");
     } finally {
       setIsDataLoading(false);
+      setLoadingMoreFolders(false);
       isFetchingRef.current = false;
     }
   };
 
-  const fetchSubfolders = async (folderId) => {
+  const fetchSubfolders = async (folderId, append = false) => {
     if (!folderId) {
       setSubfolders([]);
+      setTotalSubfolders(0);
+      setSubfolderPage(1);
       return;
     }
+    if (append) setLoadingMoreSubfolders(true);
+    else setIsDataLoading(true);
+    const page = append ? subfolderPage + 1 : 1;
     try {
-      setIsDataLoading(true);
-      const response = await api.get(`/download/folder?status=all&parentFolderId=${folderId}`);
+      const response = await api.get(`/download/folder?status=all&parentFolderId=${folderId}&limit=${SUBFOLDER_PAGE_SIZE}&page=${page}`);
       if (response.data?.success) {
-        setSubfolders(response.data.data || []);
+        const list = response.data.data || [];
+        const total = response.data.pagination?.total ?? list.length;
+        if (append) {
+          setSubfolders((prev) => [...prev, ...list]);
+          setSubfolderPage(page);
+        } else {
+          setSubfolders(list);
+          setSubfolderPage(1);
+        }
+        setTotalSubfolders(total);
       }
-    } catch (error) {
-      console.error("Error fetching subfolders:", error);
+    } catch (err) {
+      console.error("Error fetching subfolders:", err);
       showError("Failed to fetch subfolders");
     } finally {
       setIsDataLoading(false);
+      setLoadingMoreSubfolders(false);
     }
   };
+
+  const hasMoreFolders = folders.length < totalFolders;
+  const hasMoreSubfolders = subfolders.length < totalSubfolders;
 
   useEffect(() => {
     fetchData();
@@ -421,6 +456,16 @@ const DownloadSubfolderManagement = () => {
                 </option>
               ))}
             </select>
+            {hasMoreFolders && (
+              <button
+                type="button"
+                onClick={() => fetchData(true)}
+                disabled={loadingMoreFolders}
+                className="px-3 py-2 text-sm font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 disabled:opacity-60 transition-colors shrink-0"
+              >
+                {loadingMoreFolders ? "Loading…" : `View more (${folders.length} of ${totalFolders})`}
+              </button>
+            )}
           </div>
           {!selectedFolderId && (
             <p className="text-xs text-gray-500 mt-2">
@@ -604,13 +649,34 @@ const DownloadSubfolderManagement = () => {
                   </div>
                 </div>
               ) : (
-                <SubfolderList
-                  subfolders={subfolders}
-                  onEdit={handleEdit}
-                  onDelete={handleDeleteSubfolder}
-                  onToggleStatus={handleToggleStatus}
-                  role={role}
-                />
+                <>
+                  <SubfolderList
+                    subfolders={subfolders}
+                    onEdit={handleEdit}
+                    onDelete={handleDeleteSubfolder}
+                    onToggleStatus={handleToggleStatus}
+                    role={role}
+                  />
+                  {hasMoreSubfolders && (
+                    <div className="mt-4 flex justify-center">
+                      <button
+                        type="button"
+                        onClick={() => fetchSubfolders(selectedFolderId, true)}
+                        disabled={loadingMoreSubfolders}
+                        className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 disabled:opacity-60 transition-colors"
+                      >
+                        {loadingMoreSubfolders ? (
+                          <>
+                            <LoadingSpinner size="small" />
+                            Loading…
+                          </>
+                        ) : (
+                          <>View more ({subfolders.length} of {totalSubfolders})</>
+                        )}
+                      </button>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>

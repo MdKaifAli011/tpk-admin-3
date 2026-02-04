@@ -58,9 +58,10 @@ downloadFolderSchema.index(
   { unique: true, partialFilterExpression: { orderNumber: { $exists: true } } }
 );
 
-// Pre-save hook to auto-generate slug
+// Pre-save hook to auto-generate slug; backfill when missing
 downloadFolderSchema.pre("save", async function (next) {
-  if (this.isModified("name") || this.isNew) {
+  const needsSlug = !this.slug || this.isModified("name") || this.isNew;
+  if (needsSlug) {
     const baseSlug = createSlug(this.name);
 
     // Check if slug exists within the same parent folder (excluding current document for updates)

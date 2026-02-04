@@ -57,9 +57,12 @@ export async function POST(request) {
 
   } catch (error) {
     logger.error('Error checking IP', { error: error?.message });
-    return NextResponse.json({ 
-      success: false,
-      error: 'Failed to check IP status' 
-    }, { status: 500 });
+    // Fail open: return 200 with isBlocked: false so visit tracking can continue
+    return NextResponse.json({
+      success: true,
+      isBlocked: false,
+      message: 'IP check unavailable; allowing tracking',
+      checked: false
+    });
   }
 }

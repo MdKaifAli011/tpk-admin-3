@@ -14,23 +14,34 @@ import { requireAuth, requireAction } from "@/middleware/authMiddleware";
 // GET: Fetch all download files with optional filters
 export async function GET(request) {
   try {
-    // Check authentication
-    const authCheck = await requireAuth(request);
-    if (authCheck.error) {
-      return NextResponse.json(authCheck, { status: authCheck.status || 401 });
+    const { searchParams } = new URL(request.url);
+    const statusFilterParam = searchParams.get("status") || "all";
+    const statusFilter = statusFilterParam.toLowerCase();
+
+    // Allow public access for active files only (main app download pages)
+    // Require auth for inactive/all (admin)
+    if (statusFilter !== STATUS.ACTIVE) {
+      const authCheck = await requireAuth(request);
+      if (authCheck.error) {
+        return NextResponse.json(authCheck, { status: authCheck.status || 401 });
+      }
     }
 
     await connectDB();
-    const { searchParams } = new URL(request.url);
 
-    // Parse pagination
-    const { page, limit, skip } = parsePagination(searchParams);
+    // Parse pagination (page + limit). Support optional skip for load-more (skip overrides page-based skip).
+    const { page, limit, skip: skipFromPage } = parsePagination(searchParams);
+    const skipParam = searchParams.get("skip");
+    const skip =
+      skipParam !== null &&
+      skipParam !== "" &&
+      !Number.isNaN(parseInt(skipParam, 10))
+        ? Math.max(0, parseInt(skipParam, 10))
+        : skipFromPage;
 
     // Get filters
     const folderId = searchParams.get("folderId");
     const fileType = searchParams.get("fileType");
-    const statusFilterParam = searchParams.get("status") || "all";
-    const statusFilter = statusFilterParam.toLowerCase();
 
     // Build query
     const query = {};
@@ -60,9 +71,10 @@ export async function GET(request) {
 
     // Get total count for pagination
     const total = await DownloadFile.countDocuments(query);
+    const effectivePage = skip > 0 ? Math.floor(skip / limit) + 1 : page;
 
     return NextResponse.json(
-      createPaginationResponse(files, total, page, limit)
+      createPaginationResponse(files, total, effectivePage, limit)
     );
   } catch (error) {
     return handleApiError(error, "Failed to fetch download files");
@@ -110,6 +122,17 @@ export async function POST(request) {
     const folder = await DownloadFolder.findById(body.folderId);
     if (!folder) {
       return errorResponse("Folder not found", 404);
+    }
+
+    // Duplicate name not allowed in same folder
+    const nameForCheck = (body.name || "").trim();
+    const escapedName = nameForCheck.replace(new RegExp("[.*+?^\\${}()|[\\]\\\\]", "g"), "\\$&");
+    const existingByName = await DownloadFile.findOne({
+      folderId: body.folderId,
+      name: { $regex: new RegExp("^" + escapedName + "$", "i") },
+    });
+    if (existingByName) {
+      return errorResponse("A file with this name already exists in this subfolder. Use a different name.", 400);
     }
 
     // Auto-generate orderNumber if not provided

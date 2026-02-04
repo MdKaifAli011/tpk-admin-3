@@ -28,10 +28,11 @@ const DownloadFolderPage = async ({ params }) => {
   const examSlug = createSlug(exam.name);
   const examName = exam.name ? exam.name.toUpperCase() : "EXAM";
 
-  // Fetch all folders to find the current folder and allow switching
+  // Fetch all folders with counts so we can hide empty folders in accordion
   const allFolders = await fetchDownloadFolders(exam._id, {
     status: "active",
     limit: 100,
+    includeCounts: true,
   });
 
   // Find current folder by ID or slug
@@ -48,40 +49,59 @@ const DownloadFolderPage = async ({ params }) => {
     notFound();
   }
 
-  // Fetch subfolders
-  const subfolders = await fetchSubfoldersByFolder(currentFolder._id, {
+  // Fetch first 10 subfolders that have at least one file (View more loads 10 more on client)
+  const subfoldersRes = await fetchSubfoldersByFolder(currentFolder._id, {
     status: "active",
-    limit: 100,
+    limit: 10,
+    page: 1,
+    onlyWithFiles: true,
+    returnFullResponse: true,
   });
+  const subfolders = subfoldersRes?.data || [];
+  const totalSubfolders = subfoldersRes?.pagination?.total ?? subfolders.length;
 
-  // Fetch files for each subfolder, or files directly in folder if no subfolders
+  // Fetch first 10 files per subfolder (with total for "View more"), or all files if no subfolders
   let files = [];
+  let filesBySubfolder = {}; // { subfolderId: { files: [], total } }
   if (subfolders.length > 0) {
-    // If there are subfolders, fetch files for each subfolder
-    const subfolderIds = subfolders.map((sf) => sf._id);
-    const allFilesArrays = await Promise.all(
-      subfolderIds.map((subfolderId) =>
-        fetchFilesByFolder(subfolderId, {
+    const results = await Promise.all(
+      subfolders.map(async (sf) => {
+        const result = await fetchFilesByFolder(sf._id, {
           status: "active",
-          limit: 100,
-        })
-      )
+          limit: 10,
+          page: 1,
+          returnFullResponse: true,
+        });
+        const list = result?.data || [];
+        const total = result?.pagination?.total ?? list.length;
+        return {
+          subfolderId: sf._id,
+          files: list.map((f) => ({
+            ...f,
+            folderId: f.folderId?._id || f.folderId,
+          })),
+          total,
+        };
+      })
     );
-    // Flatten and ensure folderId is set correctly
-    files = allFilesArrays.flat().map((file) => ({
-      ...file,
-      folderId: file.folderId?._id || file.folderId,
-    }));
-  } else {
-    // If no subfolders, fetch files directly in the folder
-    const directFiles = await fetchFilesByFolder(currentFolder._id, {
-      status: "active",
-      limit: 100,
+    results.forEach(({ subfolderId, files: list, total }) => {
+      filesBySubfolder[String(subfolderId)] = { files: list, total };
     });
-    files = directFiles.map((file) => ({
-      ...file,
-      folderId: file.folderId?._id || file.folderId,
+    files = results.flatMap((r) => r.files);
+  } else {
+    const result = await fetchFilesByFolder(currentFolder._id, {
+      status: "active",
+      limit: 10,
+      page: 1,
+      returnFullResponse: true,
+    });
+    const list = result?.data || [];
+    const total = result?.pagination?.total ?? list.length;
+    files = list.map((f) => ({
+      ...f,
+      folderId: f.folderId?._id || f.folderId,
     }));
+    filesBySubfolder.direct = { files, total };
   }
 
   return (
@@ -92,7 +112,9 @@ const DownloadFolderPage = async ({ params }) => {
       currentFolder={currentFolder}
       allFolders={allFolders}
       subfolders={subfolders}
+      totalSubfolders={totalSubfolders}
       files={files}
+      filesBySubfolder={filesBySubfolder}
     />
   );
 };
