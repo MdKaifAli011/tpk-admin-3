@@ -106,17 +106,6 @@ export async function POST(request) {
       return errorResponse("File type must be 'url' or 'upload'", 400);
     }
 
-    // Validate fileUrl or uploadedFile based on fileType
-    if (body.fileType === "url") {
-      if (!body.fileUrl || body.fileUrl.trim() === "") {
-        return errorResponse("File URL is required when file type is URL", 400);
-      }
-    } else if (body.fileType === "upload") {
-      if (!body.uploadedFile || body.uploadedFile.trim() === "") {
-        return errorResponse("Uploaded file path is required when file type is upload", 400);
-      }
-    }
-
     // Check if folder exists
     const DownloadFolder = (await import("@/models/DownloadFolder")).default;
     const folder = await DownloadFolder.findById(body.folderId);

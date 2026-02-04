@@ -589,12 +589,6 @@ const DownloadFileManagement = () => {
     e.preventDefault();
     if (!formData.name.trim()) return setFormError("Please enter a file name");
     if (!formData.folderId) return setFormError("Please select a subfolder");
-    if (formData.fileType === "url" && !formData.fileUrl.trim()) {
-      return setFormError("Please enter a file URL");
-    }
-    if (formData.fileType === "upload" && !formData.uploadedFile.trim()) {
-      return setFormError("Please provide uploaded file path");
-    }
     const sameFolderFiles = files.filter(
       (f) => (f.folderId?._id || f.folderId) === formData.folderId
     );
@@ -656,12 +650,6 @@ const DownloadFileManagement = () => {
     e.preventDefault();
     if (!formData.name.trim()) return setFormError("Please enter a file name");
     if (!formData.folderId) return setFormError("File must belong to a subfolder");
-    if (formData.fileType === "url" && !formData.fileUrl.trim()) {
-      return setFormError("Please enter a file URL");
-    }
-    if (formData.fileType === "upload" && !formData.uploadedFile.trim()) {
-      return setFormError("Please provide uploaded file path");
-    }
     const sameFolderFiles = files.filter(
       (f) => (f.folderId?._id || f.folderId) === formData.folderId
     );
@@ -1103,7 +1091,7 @@ const DownloadFileManagement = () => {
                       htmlFor="fileUrl"
                       className="block text-sm font-medium text-gray-700"
                     >
-                      File URL <span className="text-red-500">*</span>
+                      File URL <span className="text-gray-400">(optional)</span>
                     </label>
                     <div className="relative">
                       <FaLink className="absolute left-3 top-3.5 text-gray-400 w-4 h-4" />
@@ -1115,7 +1103,6 @@ const DownloadFileManagement = () => {
                         onChange={handleFormChange}
                         placeholder="https://example.com/file.pdf"
                         className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm placeholder-gray-400 transition-all"
-                        required
                         disabled={isFormLoading}
                       />
                     </div>
@@ -1129,7 +1116,7 @@ const DownloadFileManagement = () => {
                       htmlFor="uploadedFile"
                       className="block text-sm font-medium text-gray-700"
                     >
-                      File Path <span className="text-red-500">*</span>
+                      File Path <span className="text-gray-400">(optional)</span>
                     </label>
                     <div className="relative">
                       <FaUpload className="absolute left-3 top-3.5 text-gray-400 w-4 h-4" />
@@ -1141,7 +1128,6 @@ const DownloadFileManagement = () => {
                         onChange={handleFormChange}
                         placeholder="/uploads/files/document.pdf"
                         className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm placeholder-gray-400 transition-all"
-                        required
                         disabled={isFormLoading}
                       />
                     </div>

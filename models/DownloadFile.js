@@ -25,30 +25,12 @@ const downloadFileSchema = new mongoose.Schema(
     fileUrl: {
       type: String,
       trim: true,
-      // Required if fileType is "url"
-      validate: {
-        validator: function (v) {
-          if (this.fileType === "url") {
-            return v && v.trim().length > 0;
-          }
-          return true;
-        },
-        message: "File URL is required when file type is URL",
-      },
+      // Optional when fileType is "url"
     },
     uploadedFile: {
       type: String,
       trim: true,
-      // Required if fileType is "upload"
-      validate: {
-        validator: function (v) {
-          if (this.fileType === "upload") {
-            return v && v.trim().length > 0;
-          }
-          return true;
-        },
-        message: "Uploaded file path is required when file type is upload",
-      },
+      // Optional when fileType is "upload"
     },
     fileSize: {
       type: Number,
@@ -118,17 +100,6 @@ downloadFileSchema.pre("save", async function (next) {
       return !!existing;
     };
     this.slug = await generateUniqueSlug(baseSlug, checkExists, this._id || null);
-  }
-  next();
-});
-
-// Pre-save validation: Ensure either fileUrl or uploadedFile is provided based on fileType
-downloadFileSchema.pre("save", function (next) {
-  if (this.fileType === "url" && !this.fileUrl) {
-    return next(new Error("File URL is required when file type is URL"));
-  }
-  if (this.fileType === "upload" && !this.uploadedFile) {
-    return next(new Error("Uploaded file path is required when file type is upload"));
   }
   next();
 });

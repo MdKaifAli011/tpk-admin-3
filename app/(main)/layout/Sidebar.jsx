@@ -135,9 +135,6 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
     }
   }, [tree]);
 
-  // Video Library only at /{examSlug}/video-library (no /video-library path)
-  const isVideoLibraryPath = pathname?.includes("/video-library");
-
   // path segments for auto open
   const pathSegments = useMemo(
     () => (pathname ? pathname.split("/").filter(Boolean) : []),
@@ -152,6 +149,11 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
     pathSegments[2] === "blog" && pathSegments[3] === "category"
       ? pathSegments[4]
       : null;
+
+  // Only treat as Download/Blog/Video when the segment is exact (e.g. /neet/download), not when "download" appears inside a segment (e.g. .../download-neet-scorecard)
+  const isDownloadPath = pathSegments[1] === "download";
+  const isBlogPath = pathSegments[1] === "blog";
+  const isVideoLibraryPath = pathSegments[1] === "video-library";
 
   const activeExam = useMemo(
     () => exams.find((e) => e._id === activeExamId) || null,
@@ -475,18 +477,18 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
     };
   }, [activeExamId, loadTree]);
 
-  // Auto-expand menu based on path
+  // Auto-expand menu based on path (use exact segment match so .../download-neet-scorecard does not open Download menu)
   useEffect(() => {
-    if (pathname.includes("/blog")) {
+    if (isBlogPath) {
       setActiveMenu('blog');
-    } else if (pathname.includes("/download")) {
+    } else if (isDownloadPath) {
       setActiveMenu('download');
-    } else if (pathname.includes("/video-library")) {
+    } else if (isVideoLibraryPath) {
       setActiveMenu('video-library');
     } else {
       setActiveMenu('subjects');
     }
-  }, [pathname]);
+  }, [pathname, isBlogPath, isDownloadPath, isVideoLibraryPath]);
 
   // debounced query filtered tree
   const normalizedQuery = debouncedQuery.trim().toLowerCase();
@@ -774,7 +776,7 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
                       <button
                         onClick={() => toggleMenu('blog')}
                         className={`w-full flex items-center justify-between px-3 py-2 font-semibold rounded-lg cursor-pointer transition-all duration-200 ${
-                          pathname.includes("/blog")
+                          isBlogPath
                             ? "bg-indigo-100/60 shadow-sm text-indigo-900"
                             : "text-black hover:text-indigo-600 hover:bg-gray-50"
                         }`}
@@ -845,7 +847,7 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
                       <button
                         onClick={() => toggleMenu('download')}
                         className={`w-full flex items-center justify-between px-3 py-2 font-semibold rounded-lg cursor-pointer transition-all duration-200 ${
-                          pathname.includes("/download")
+                          isDownloadPath
                             ? "text-indigo-600 bg-indigo-50"
                             : "text-black hover:text-indigo-600 hover:bg-gray-50"
                         }`}
