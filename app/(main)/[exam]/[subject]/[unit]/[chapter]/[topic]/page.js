@@ -322,6 +322,13 @@ const TopicPage = async ({ params }) => {
           chapterSlug={chapterSlugValue}
           topicSlug={topicSlugValue}
         />
+        {/* Navigation */}
+        <NavigationClient
+          backUrl={`/${examSlug}/${subjectSlugValue}/${unitSlugValue}/${chapterSlugValue}`}
+          backLabel={`Back to ${chapter.name}`}
+          prevNav={prevNav}
+          nextNav={nextNav}
+        />
 
         {/* Test List Table */}
         <ConditionalTestListTable
@@ -346,13 +353,7 @@ const TopicPage = async ({ params }) => {
           practiceDisabled={subject.practiceDisabled || false}
         />
 
-        {/* Navigation */}
-        <NavigationClient
-          backUrl={`/${examSlug}/${subjectSlugValue}/${unitSlugValue}/${chapterSlugValue}`}
-          backLabel={`Back to ${chapter.name}`}
-          prevNav={prevNav}
-          nextNav={nextNav}
-        />
+        
       </div>
     </div>
   );

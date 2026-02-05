@@ -353,6 +353,14 @@ const SubTopicPage = async ({ params }) => {
           practiceDisabled={subject.practiceDisabled || false}
         />
 
+         {/* Navigation */}
+         <NavigationClient
+          backUrl={`/${examSlug}/${subjectSlugValue}/${unitSlugValue}/${chapterSlugValue}/${topicSlugValue}`}
+          backLabel={`Back to ${topic.name}`}
+          prevNav={prevNav}
+          nextNav={nextNav}
+        />
+
         {/* Test List Table */}
         <ConditionalTestListTable
           examId={fetchedExam._id}
@@ -377,13 +385,7 @@ const SubTopicPage = async ({ params }) => {
           practiceDisabled={subject.practiceDisabled || false}
         />
 
-        {/* Navigation */}
-        <NavigationClient
-          backUrl={`/${examSlug}/${subjectSlugValue}/${unitSlugValue}/${chapterSlugValue}/${topicSlugValue}`}
-          backLabel={`Back to ${topic.name}`}
-          prevNav={prevNav}
-          nextNav={nextNav}
-        />
+       
       </div>
     </div>
   );

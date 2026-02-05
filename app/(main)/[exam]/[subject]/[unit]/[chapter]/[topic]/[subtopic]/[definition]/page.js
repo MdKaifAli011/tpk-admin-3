@@ -360,6 +360,13 @@ const DefinitionPage = async ({ params }) => {
           subTopicSlug={subTopicSlugValue}
           practiceDisabled={subject.practiceDisabled || false}
         />
+         {/* Navigation */}
+         <NavigationClient
+          backUrl={`/${examSlug}/${subjectSlugValue}/${unitSlugValue}/${chapterSlugValue}/${topicSlugValue}/${subTopicSlugValue}`}
+          backLabel={`Back to ${subTopic.name}`}
+          prevNav={prevNav}
+          nextNav={nextNav}
+        />
 
         {/* Test List Table */}
         <ConditionalTestListTable
@@ -385,13 +392,7 @@ const DefinitionPage = async ({ params }) => {
           practiceDisabled={subject.practiceDisabled || false}
         />
 
-        {/* Navigation */}
-        <NavigationClient
-          backUrl={`/${examSlug}/${subjectSlugValue}/${unitSlugValue}/${chapterSlugValue}/${topicSlugValue}/${subTopicSlugValue}`}
-          backLabel={`Back to ${subTopic.name}`}
-          prevNav={prevNav}
-          nextNav={nextNav}
-        />
+       
       </div>
     </div>
   );

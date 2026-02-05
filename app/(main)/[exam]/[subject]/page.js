@@ -221,6 +221,13 @@ const SubjectPage = async ({ params }) => {
         units={fetchedUnits}
         practiceDisabled={subject.practiceDisabled || false}
       />
+         {/* Navigation */}
+         <NavigationClient
+        backUrl={`/${examSlug}`}
+        backLabel={`Back to ${fetchedExam.name}`}
+        prevNav={prevNav}
+        nextNav={nextNav}
+      />
 
       {/* Test List Table */}
       <ConditionalTestListTable examId={fetchedExam._id} subjectId={subject._id} practiceDisabled={subject.practiceDisabled || false} />
@@ -235,13 +242,7 @@ const SubjectPage = async ({ params }) => {
         subjectName={subject.name}
       />
 
-      {/* Navigation */}
-      <NavigationClient
-        backUrl={`/${examSlug}`}
-        backLabel={`Back to ${fetchedExam.name}`}
-        prevNav={prevNav}
-        nextNav={nextNav}
-      />
+   
 
       {/* Subject Completion Tracker */}
       <SubjectCompletionTracker

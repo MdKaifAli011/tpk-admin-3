@@ -241,6 +241,14 @@ const UnitPage = async ({ params }) => {
         unitName={unit.name}
         practiceDisabled={subject.practiceDisabled || false}
       />
+      
+      {/* Navigation */}
+      <NavigationClient
+        backUrl={`/${examSlug}/${subjectSlugValue}`}
+        backLabel={`Back to ${subject.name}`}
+        prevNav={prevNav}
+        nextNav={nextNav}
+      />
 
       {/* Test List Table */}
       <ConditionalTestListTable
@@ -263,13 +271,6 @@ const UnitPage = async ({ params }) => {
         practiceDisabled={subject.practiceDisabled || false}
       />
 
-      {/* Navigation */}
-      <NavigationClient
-        backUrl={`/${examSlug}/${subjectSlugValue}`}
-        backLabel={`Back to ${subject.name}`}
-        prevNav={prevNav}
-        nextNav={nextNav}
-      />
 
       {/* Unit Completion Tracker */}
       <UnitCompletionTracker unitId={unit._id} unitName={unit.name} />
