@@ -5,17 +5,16 @@ import { usePathname } from "next/navigation";
 import {
   FaUser,
   FaBook,
-  FaLayerGroup,
   FaRegFolderOpen,
   FaClipboardList,
-  FaUserTag,
   FaTimes,
-  FaUserGraduate,
   FaNewspaper,
   FaChevronDown,
   FaChevronRight,
   FaComments,
   FaChartLine,
+  FaFileAlt,
+  FaUserCog,
 } from "react-icons/fa";
 
 const ALL_MENU_ITEMS = [
@@ -58,6 +57,13 @@ const ALL_MENU_ITEMS = [
     ],
   },
   {
+    name: "Pages",
+    icon: FaFileAlt,
+    children: [
+      { name: "Manage Pages", href: "/admin/pages" },
+    ],
+  },
+  {
     name: "Discussion",
     icon: FaComments,
     children: [
@@ -75,13 +81,15 @@ const ALL_MENU_ITEMS = [
   },
   {
     name: "Admin",
-    icon: FaUser,
+    icon: FaUserCog,
     adminOnly: true,
+    sectionStart: true,
     children: [
       { name: "Lead Management", href: "/admin/lead" },
       { name: "Students", href: "/admin/student" },
       { name: "Forms", href: "/admin/form" },
       { name: "Role Management", href: "/admin/user-role" },
+      { name: "Overview Comments", href: "/admin/overview-comments" },
       { name: "Import Self Study Data", href: "/admin/bulk-import" },
       { name: "Meta Import", href: "/admin/seo-import" },
       { name: "URL Export", href: "/admin/url-export" },
@@ -197,14 +205,17 @@ const Sidebar = memo(({ isOpen, onClose }) => {
         {/* Navigation Links */}
         <nav className="flex-1 px-4 pt-2 overflow-y-auto hide-scrollbar">
           <div className="flex flex-col gap-1">
-            {MENU_ITEMS.map(({ name, href, icon: Icon, children }, index) => {
+            {MENU_ITEMS.map(({ name, href, icon: Icon, children, sectionStart }, index) => {
               const active = isActive(href);
               const isExpanded = expandedMenus[name] || false;
               const hasActiveChild = children?.some((child) => isActive(child.href));
 
               if (children) {
                 return (
-                  <div key={name}>
+                  <div
+                    key={name}
+                    className={sectionStart ? "mt-4 pt-4 border-t border-gray-200" : ""}
+                  >
                     <button
                       onClick={() => toggleMenu(name)}
                       className={`

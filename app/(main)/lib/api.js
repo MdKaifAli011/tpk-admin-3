@@ -2053,6 +2053,47 @@ export const fetchBlogDetails = async (blogId, options = {}) => {
   }
 };
 
+// Fetch page by slug (public access for active pages only)
+export const fetchPageBySlug = async (slug) => {
+  if (!slug) return null;
+
+  const isServer = typeof window === "undefined";
+  const baseUrl = getBaseUrl();
+
+  try {
+    const url = `${baseUrl}/api/page/${slug}`;
+
+    if (isServer) {
+      const response = await fetch(url, { cache: "no-store" });
+      if (!response.ok) return null;
+      const data = await response.json();
+      if (data.success && data.data) return data.data;
+      return null;
+    }
+
+    try {
+      const response = await fetch(url);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.data) return data.data;
+      }
+    } catch (err) {
+      try {
+        const response = await api.get(`/page/${slug}`);
+        if (response.data?.success && response.data?.data) {
+          return response.data.data;
+        }
+      } catch (apiErr) {
+        logger.error("Error fetching page by slug:", apiErr);
+      }
+    }
+    return null;
+  } catch (error) {
+    logger.error("Error fetching page by slug:", error);
+    return null;
+  }
+};
+
 // Fetch blog categories (public access for active categories)
 export const fetchBlogCategories = async (options = {}) => {
   try {

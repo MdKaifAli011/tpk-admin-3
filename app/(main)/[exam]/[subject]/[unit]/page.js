@@ -26,7 +26,7 @@ import {
 } from "../../../lib/hierarchicalNavigation";
 import { generateTabAwareMetadata, extractSearchParams } from "@/utils/tabSeo";
 import { logger } from "@/utils/logger";
-
+import OverviewCommentSection from "@/app/(main)/components/OverviewCommentSection";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
@@ -274,6 +274,7 @@ const UnitPage = async ({ params }) => {
 
       {/* Unit Completion Tracker */}
       <UnitCompletionTracker unitId={unit._id} unitName={unit.name} />
+      <OverviewCommentSection entityType="unit" entityId={unit._id} />
     </div>
   );
 };

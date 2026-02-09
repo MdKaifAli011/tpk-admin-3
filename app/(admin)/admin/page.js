@@ -224,6 +224,15 @@ const AdminDashboard = () => {
         textColor: "text-purple-600",
         count: 0, // We can add banner stats later
       },
+      {
+        name: "Page Management",
+        href: "/admin/pages",
+        icon: FaClipboardList,
+        color: "from-teal-500 to-teal-600",
+        bgColor: "bg-teal-50",
+        textColor: "text-teal-600",
+        count: 0,
+      },
     ],
     [stats]
   );

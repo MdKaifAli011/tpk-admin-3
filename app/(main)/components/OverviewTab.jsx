@@ -7,18 +7,17 @@ import { FaBook, FaChartLine, FaTrophy, FaChevronDown } from "react-icons/fa";
 import RichContent from "./RichContent";
 import Card from "./Card";
 import { createSlug } from "../lib/api";
-import { truncateHtmlContent, hasMoreContent } from "../lib/utils/contentUtils";
+import { hasMoreContent } from "../lib/utils/contentUtils";
 
 
 // Lazy load DefinitionPreviewClient - only needed for subtopic pages
 const DefinitionPreviewClient = lazy(() => import("./DefinitionPreviewClient"));
 
-// SubTopic Preview Component with Fixed 300px Height
+// SubTopic Preview Component with Fixed 400px Height
 const SubTopicPreview = ({
   subTopic,
   subTopicUrl,
-  truncatedHtml,
-  fullHtml,
+  contentHtml,
   showReadMore,
   activeTab,
 }) => {
@@ -61,17 +60,15 @@ const SubTopicPreview = ({
       )}
       {subTopic.content && (
         <div className="space-y-0">
-          {/* Premium Content Container with Max 300px Height */}
+          {/* Premium Content Container with Max 400px Height - full HTML, clipped by CSS (no string truncation so editor HTML stays valid) */}
           <div className="subtopic-container bg-gradient-to-br from-indigo-50/40 via-white to-purple-50/30 rounded-xl border border-indigo-100/60 shadow-[0_2px_12px_rgba(100,70,200,0.08)] overflow-hidden transition-all duration-300 hover:shadow-[0_4px_16px_rgba(100,70,200,0.12)] hover:border-indigo-200/80 relative">
-            {/* Content Wrapper - Max 300px Height, Auto when content is less */}
             <div className="relative max-h-[300px] min-h-0 overflow-hidden">
-              <div className="max-h-[300px] min-h-0 overflow-y-auto p-5 sm:p-6 md:p-7 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+              <div className="max-h-[300px] min-h-0 overflow-hidden p-5 sm:p-6 md:p-7">
                 <div className="prose prose-sm sm:prose max-w-none prose-headings:text-gray-900 prose-headings:font-semibold prose-p:text-gray-700 prose-p:leading-relaxed prose-a:text-indigo-600 prose-a:no-underline hover:prose-a:underline prose-strong:text-gray-900 prose-code:text-indigo-700 prose-pre:bg-gray-50 prose-pre:border prose-pre:border-gray-200 prose-pre:rounded-lg prose-ul:text-gray-700 prose-ol:text-gray-700 prose-li:text-gray-700">
                   <RichContent
-                    key={`subtopic-preview-${
-                      subTopic._id || "unknown"
-                    }-${activeTab}`}
-                    html={truncatedHtml}
+                    key={`subtopic-preview-${subTopic._id || "unknown"
+                      }-${activeTab}`}
+                    html={contentHtml}
                   />
                 </div>
               </div>
@@ -121,10 +118,11 @@ const OverviewTab = ({
   topicSlug,
   subTopicSlug,
   activeTab,
+  overviewEntityId,
 }) => {
   return (
     <div className="space-y-2 px-3 sm:px-4 py-3 sm:py-4">
-     
+
 
       <div className="prose prose-sm sm:prose max-w-none prose-headings:text-gray-900 prose-headings:font-bold prose-p:text-gray-700 prose-p:leading-normal prose-a:text-indigo-600 prose-a:no-underline hover:prose-a:underline prose-strong:text-gray-900 prose-code:text-indigo-700 prose-pre:bg-gray-50">
         {content ? (
@@ -353,18 +351,14 @@ const OverviewTab = ({
                   subTopic.slug || createSlug(subTopic.name);
                 const subTopicUrl =
                   examSlug &&
-                  subjectSlug &&
-                  unitSlug &&
-                  chapterSlug &&
-                  topicSlug
+                    subjectSlug &&
+                    unitSlug &&
+                    chapterSlug &&
+                    topicSlug
                     ? `/${examSlug}/${subjectSlug}/${unitSlug}/${chapterSlug}/${topicSlug}/${subTopicSlugValue}`
                     : null;
 
-                // Get truncated HTML content (show preview, preserving HTML structure)
-                // Shows 200-400 words, truncating at natural break points
-                const truncatedHtml = subTopic.content
-                  ? truncateHtmlContent(subTopic.content, 200, 400)
-                  : "";
+                // Use full HTML; preview is limited by CSS max-height (no string truncation - editor HTML stays valid)
                 const showReadMore = subTopic.content
                   ? hasMoreContent(subTopic.content, 200)
                   : false;
@@ -374,8 +368,7 @@ const OverviewTab = ({
                     key={subTopic._id || index}
                     subTopic={subTopic}
                     subTopicUrl={subTopicUrl}
-                    truncatedHtml={truncatedHtml}
-                    fullHtml={subTopic.content}
+                    contentHtml={subTopic.content || ""}
                     showReadMore={showReadMore}
                     activeTab={activeTab}
                   />
@@ -398,10 +391,10 @@ const OverviewTab = ({
                   subTopic.slug || createSlug(subTopic.name);
                 const subTopicUrl =
                   examSlug &&
-                  subjectSlug &&
-                  unitSlug &&
-                  chapterSlug &&
-                  topicSlug
+                    subjectSlug &&
+                    unitSlug &&
+                    chapterSlug &&
+                    topicSlug
                     ? `/${examSlug}/${subjectSlug}/${unitSlug}/${chapterSlug}/${topicSlug}/${subTopicSlugValue}`
                     : null;
 
@@ -596,11 +589,11 @@ const OverviewTab = ({
                   definition.slug || createSlug(definition.name);
                 const definitionUrl =
                   examSlug &&
-                  subjectSlug &&
-                  unitSlug &&
-                  chapterSlug &&
-                  topicSlug &&
-                  subTopicSlug
+                    subjectSlug &&
+                    unitSlug &&
+                    chapterSlug &&
+                    topicSlug &&
+                    subTopicSlug
                     ? `/${examSlug}/${subjectSlug}/${unitSlug}/${chapterSlug}/${topicSlug}/${subTopicSlug}/${definitionSlug}`
                     : null;
 
@@ -639,11 +632,11 @@ const OverviewTab = ({
                   definition.slug || createSlug(definition.name);
                 const definitionUrl =
                   examSlug &&
-                  subjectSlug &&
-                  unitSlug &&
-                  chapterSlug &&
-                  topicSlug &&
-                  subTopicSlug
+                    subjectSlug &&
+                    unitSlug &&
+                    chapterSlug &&
+                    topicSlug &&
+                    subTopicSlug
                     ? `/${examSlug}/${subjectSlug}/${unitSlug}/${chapterSlug}/${topicSlug}/${subTopicSlug}/${definitionSlug}`
                     : null;
 
@@ -697,6 +690,7 @@ const OverviewTab = ({
           </div>
         </>
       )}
+
     </div>
   );
 };

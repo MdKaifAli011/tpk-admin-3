@@ -27,7 +27,8 @@ export default function MainLayoutClient({ children }) {
       pathname !== "/" &&
       pathname !== "/contact" &&
       !pathname?.startsWith("/calculator") &&
-      !pathname?.startsWith("/store")
+      !pathname?.startsWith("/store") &&
+      !pathname?.startsWith("/pages")
     );
   }, [pathname]);
 

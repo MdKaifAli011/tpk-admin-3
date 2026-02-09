@@ -28,7 +28,7 @@ import {
 } from "../../../../lib/hierarchicalNavigation";
 import { generateTabAwareMetadata, extractSearchParams } from "@/utils/tabSeo";
 import { logger } from "@/utils/logger";
-
+import OverviewCommentSection from "@/app/(main)/components/OverviewCommentSection";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
@@ -317,7 +317,7 @@ const ChapterPage = async ({ params }) => {
           practiceDisabled={subject.practiceDisabled || false}
         />
 
-     
+        <OverviewCommentSection entityType="chapter" entityId={chapter._id} />
       </div>
     </div>
   );

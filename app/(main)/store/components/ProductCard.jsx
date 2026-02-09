@@ -1,115 +1,124 @@
-
 "use client";
+
 import React from "react";
 import { FaStar, FaCartPlus, FaEye } from "react-icons/fa";
 import { useStore } from "../StoreContext";
 import Link from "next/link";
 
 export default function ProductCard({ product }) {
-    const { addToCart } = useStore();
+  const { addToCart } = useStore();
 
-    const formatPrice = (price) => {
-        return new Intl.NumberFormat('en-IN', {
-            style: 'currency',
-            currency: 'INR',
-            maximumFractionDigits: 0
-        }).format(price);
-    };
+  const formatPrice = (price) => {
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+      maximumFractionDigits: 0,
+    }).format(price);
+  };
 
-    const discount = Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100);
+  const discount =
+    product.originalPrice > 0
+      ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
+      : 0;
 
-    return (
-        <div className="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col h-full">
-            {/* Image Section */}
-            <div className="relative aspect-video overflow-hidden pt-4 px-4 pb-0">
-                <div className="w-full h-full rounded-xl overflow-hidden relative group-hover:scale-105 transition-transform duration-500">
-                    <img
-                        src={product.image}
-                        alt={product.name}
-                        className="w-full h-full object-cover"
-                    />
-                    {product.badge && (
-                        <div className="absolute top-3 left-3 bg-indigo-600 text-white text-[10px] font-bold px-2 py-1 rounded shadow-lg uppercase tracking-wider">
-                            {product.badge}
-                        </div>
-                    )}
-                    {discount > 0 && (
-                        <div className="absolute top-3 right-3 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded shadow-lg uppercase tracking-wider">
-                            {discount}% OFF
-                        </div>
-                    )}
+  const categoryLabel =
+    product.category === "course"
+      ? "Course"
+      : product.category === "ebook"
+        ? "eBook"
+        : "Paper";
 
-                    {/* Overlay Actions */}
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-3">
-                        <Link
-                            href={`/store/${product.id}`}
-                            className="w-10 h-10 rounded-full bg-white text-gray-900 flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-colors duration-300"
-                            title="View Details"
-                        >
-                            <FaEye />
-                        </Link>
-                        <button
-                            onClick={() => addToCart(product)}
-                            className="w-10 h-10 rounded-full bg-white text-gray-900 flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-colors duration-300"
-                            title="Add to Cart"
-                        >
-                            <FaCartPlus />
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            {/* Content Section */}
-            <div className="p-5 flex flex-col flex-1">
-                <div className="flex items-center gap-2 mb-2">
-                    <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest px-2 py-0.5 bg-indigo-50 rounded">
-                        {product.category}
-                    </span>
-                    <span className="text-[10px] font-medium text-gray-400 uppercase tracking-widest">
-                        {product.subject}
-                    </span>
-                </div>
-
-                <Link href={`/store/${product.id}`} className="block">
-                    <h3 className="text-gray-900 font-bold text-lg mb-2 line-clamp-2 hover:text-indigo-600 transition-colors">
-                        {product.name}
-                    </h3>
-                </Link>
-
-                <p className="text-gray-500 text-sm line-clamp-2 mb-4 flex-1">
-                    {product.description}
-                </p>
-
-                <div className="flex items-center gap-2 mb-4">
-                    <div className="flex text-yellow-400 text-xs">
-                        {[...Array(5)].map((_, i) => (
-                            <FaStar key={i} className={i < Math.floor(product.rating) ? "fill-current" : "text-gray-200"} />
-                        ))}
-                    </div>
-                    <span className="text-xs font-semibold text-gray-700">{product.rating}</span>
-                    <span className="text-xs text-gray-400">({product.reviews})</span>
-                </div>
-
-                <div className="flex items-center justify-between pt-4 border-t border-gray-50 mt-auto">
-                    <div className="flex flex-col">
-                        <span className="text-2xl font-black text-gray-900 leading-none">
-                            {formatPrice(product.price)}
-                        </span>
-                        {product.originalPrice > product.price && (
-                            <span className="text-xs text-gray-400 line-through mt-1">
-                                {formatPrice(product.originalPrice)}
-                            </span>
-                        )}
-                    </div>
-                    <button
-                        onClick={() => addToCart(product)}
-                        className="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-700 transition-colors flex items-center gap-2 shadow-lg shadow-indigo-200"
-                    >
-                        <FaCartPlus className="text-xs" />
-                        Buy Now
-                    </button>
-                </div>
-            </div>
+  return (
+    <article className="group flex flex-col h-full bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm hover:shadow-xl hover:shadow-indigo-500/10 transition-all duration-300">
+      {/* Image */}
+      <div className="relative aspect-video overflow-hidden bg-slate-100">
+        <img
+          src={product.image}
+          alt={product.name}
+          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+        />
+        <div className="absolute top-4 left-4 flex gap-2">
+          {product.badge && (
+            <span className="bg-indigo-600 text-white text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider">
+              {String(product.badge).toUpperCase()}
+            </span>
+          )}
         </div>
-    );
+        <div className="absolute top-4 right-4">
+          {discount > 0 && (
+            <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider">
+              {discount}% OFF
+            </span>
+          )}
+        </div>
+        {/* Hover overlay */}
+        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+          <Link
+            href={`/store/${product.id}`}
+            className="p-2.5 rounded-xl bg-white text-slate-800 hover:bg-indigo-600 hover:text-white transition-colors shadow-lg"
+            title="View details"
+          >
+            <FaEye className="w-4 h-4" />
+          </Link>
+          <button
+            type="button"
+            onClick={() => addToCart(product)}
+            className="p-2.5 rounded-xl bg-white text-slate-800 hover:bg-indigo-600 hover:text-white transition-colors shadow-lg"
+            title="Add to cart"
+          >
+            <FaCartPlus className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* Content — two-line description, premium spacing */}
+      <div className="p-6 flex flex-col flex-1">
+        <div className="flex gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">
+          <span className="text-indigo-600">{categoryLabel.toUpperCase()}</span>
+          <span>•</span>
+          <span>{product.subject.toUpperCase()}</span>
+        </div>
+        <Link href={`/store/${product.id}`} className="block mb-3">
+          <h3 className="text-xl font-bold text-slate-900 line-clamp-2 leading-snug group-hover:text-indigo-600 transition-colors">
+            {product.name}
+          </h3>
+        </Link>
+        <p className="text-slate-500 text-sm line-clamp-2 leading-relaxed mb-4 flex-1 min-h-[2.5rem]">
+          {product.description}
+        </p>
+        <div className="flex items-center gap-1.5 mb-6">
+          <div className="flex text-amber-400 text-sm">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <FaStar
+                key={i}
+                className={i <= Math.floor(product.rating) ? "fill-current" : "text-slate-300 fill-slate-300"}
+              />
+            ))}
+          </div>
+          <span className="text-sm font-bold text-slate-900 ml-1">{product.rating}</span>
+          <span className="text-xs text-slate-400">({product.reviews.toLocaleString()})</span>
+        </div>
+        <div className="flex items-center justify-between mt-auto">
+          <div className="flex items-baseline gap-2">
+            <span className="text-2xl font-black text-slate-900 tracking-tight">
+              {formatPrice(product.price)}
+            </span>
+            {product.originalPrice > product.price && (
+              <span className="text-sm text-slate-400 line-through">
+                {formatPrice(product.originalPrice)}
+              </span>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={() => addToCart(product)}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white shadow-lg shadow-indigo-500/25 hover:opacity-90 transition-opacity bg-gradient-to-r from-indigo-600 to-indigo-500"
+          >
+            <FaCartPlus className="w-4 h-4" />
+            Buy Now
+          </button>
+        </div>
+      </div>
+    </article>
+  );
 }

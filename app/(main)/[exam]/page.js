@@ -21,6 +21,7 @@ import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { generateTabAwareMetadata, extractSearchParams } from "@/utils/tabSeo";
 import { generateMetadata as generateSEO } from "@/utils/seo";
 import { logger } from "@/utils/logger";
+import OverviewCommentSection from "@/app/(main)/components/OverviewCommentSection";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -192,7 +193,11 @@ const ExamPage = async ({ params }) => {
           prevNav={prevNav}
           nextNav={nextNav}
         />
+
+
+        <OverviewCommentSection entityType="exam" entityId={exam._id} />
       </div>
+      
   );
 };
 

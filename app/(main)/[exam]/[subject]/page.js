@@ -23,7 +23,7 @@ import {
 } from "../../lib/hierarchicalNavigation";
 import { generateTabAwareMetadata, extractSearchParams } from "@/utils/tabSeo";
 import { logger } from "@/utils/logger";
-
+import OverviewCommentSection from "@/app/(main)/components/OverviewCommentSection";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
@@ -250,6 +250,7 @@ const SubjectPage = async ({ params }) => {
         subjectName={subject.name}
         unitIds={fetchedUnits.map((unit) => unit._id)}
       />
+      <OverviewCommentSection entityType="subject" entityId={subject._id} />
     </div>
   );
 };
