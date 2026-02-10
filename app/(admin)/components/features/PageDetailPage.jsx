@@ -9,11 +9,12 @@ import { FaArrowLeft, FaSave, FaGlobe, FaEye } from "react-icons/fa";
 
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
 
-const PageDetailPage = ({ pageSlug }) => {
+const PageDetailPage = ({ pageSlug, examSlug: initialExamSlug }) => {
   const router = useRouter();
   const { toasts, removeToast, success, error: showError } = useToast();
   const isFetchingRef = useRef(false);
   const isCreate = !pageSlug;
+  const examSlug = initialExamSlug || null;
 
   const [page, setPage] = useState(null);
   const [isLoading, setIsLoading] = useState(!isCreate);
@@ -27,13 +28,16 @@ const PageDetailPage = ({ pageSlug }) => {
     keywords: "",
   });
 
+  const effectiveExamSlug = page?.exam?.slug ?? examSlug;
+
   const fetchPage = useCallback(async () => {
     if (isFetchingRef.current) return;
     isFetchingRef.current = true;
     try {
       setIsLoading(true);
       setError(null);
-      const res = await api.get(`/page/${pageSlug}`);
+      const examParam = examSlug ? `?exam=${encodeURIComponent(examSlug)}` : "";
+      const res = await api.get(`/page/${pageSlug}${examParam}`);
       if (res.data?.success && res.data.data) {
         const p = res.data.data;
         setPage(p);
@@ -53,7 +57,7 @@ const PageDetailPage = ({ pageSlug }) => {
       setIsLoading(false);
       isFetchingRef.current = false;
     }
-  }, [pageSlug]);
+  }, [pageSlug, examSlug]);
 
   useEffect(() => {
     if (pageSlug) fetchPage();
@@ -66,7 +70,14 @@ const PageDetailPage = ({ pageSlug }) => {
 
   const getPublicPageUrl = () => {
     if (isCreate || !page?.slug) return null;
+    if (effectiveExamSlug) return `${basePath}/${effectiveExamSlug}/pages/${page.slug}`;
     return `${basePath}/pages/${page.slug}`;
+  };
+
+  const getPathLabel = () => {
+    if (!page?.slug) return null;
+    if (effectiveExamSlug) return `/${effectiveExamSlug}/pages/${page.slug}`;
+    return `/pages/${page.slug}`;
   };
 
   const handleViewPublic = () => {
@@ -74,6 +85,15 @@ const PageDetailPage = ({ pageSlug }) => {
     if (url) window.open(url, "_blank", "noopener,noreferrer");
     else showError("Page must be saved with a slug to view.");
   };
+
+  const buildPutBody = () => ({
+    title: formData.title.trim(),
+    content: formData.content,
+    status: formData.status,
+    metaDescription: formData.metaDescription.trim(),
+    keywords: formData.keywords.trim(),
+    exam: effectiveExamSlug || "site",
+  });
 
   const handleSave = async () => {
     try {
@@ -89,21 +109,17 @@ const PageDetailPage = ({ pageSlug }) => {
           status: formData.status,
           metaDescription: formData.metaDescription.trim(),
           keywords: formData.keywords.trim(),
+          ...(examSlug && { exam: examSlug }),
         });
         if (res.data?.success) {
           success("Page created. Redirecting to edit...");
-          router.replace(`/admin/pages/${res.data.data.slug}`);
+          const slug = res.data.data.slug;
+          router.replace(examSlug ? `/admin/pages/${slug}?exam=${encodeURIComponent(examSlug)}` : `/admin/pages/${slug}`);
         } else {
           showError(res.data?.message || "Failed to create page");
         }
       } else {
-        const res = await api.put(`/page/${page.slug}`, {
-          title: formData.title.trim(),
-          content: formData.content,
-          status: formData.status,
-          metaDescription: formData.metaDescription.trim(),
-          keywords: formData.keywords.trim(),
-        });
+        const res = await api.put(`/page/${page.slug}`, buildPutBody());
         if (res.data?.success) {
           setPage(res.data.data);
           success("Page saved.");
@@ -132,6 +148,7 @@ const PageDetailPage = ({ pageSlug }) => {
           status: formData.status,
           metaDescription: formData.metaDescription.trim(),
           keywords: formData.keywords.trim(),
+          ...(examSlug && { exam: examSlug }),
         });
         if (res.data?.success) {
           success("Page created.");
@@ -140,13 +157,7 @@ const PageDetailPage = ({ pageSlug }) => {
           showError(res.data?.message || "Failed to create page");
         }
       } else {
-        const res = await api.put(`/page/${page.slug}`, {
-          title: formData.title.trim(),
-          content: formData.content,
-          status: formData.status,
-          metaDescription: formData.metaDescription.trim(),
-          keywords: formData.keywords.trim(),
-        });
+        const res = await api.put(`/page/${page.slug}`, buildPutBody());
         if (res.data?.success) {
           success("Page saved.");
           router.push("/admin/pages");
@@ -317,9 +328,9 @@ const PageDetailPage = ({ pageSlug }) => {
                     placeholder="e.g. About Us, Privacy Policy"
                     className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                   />
-                  {!isCreate && page?.slug && (
+                  {!isCreate && getPathLabel() && (
                     <p className="text-xs text-gray-500 mt-1.5">
-                      URL: <span className="font-mono">/pages/{page.slug}</span> (auto-generated from title)
+                      URL: <span className="font-mono">{getPathLabel()}</span> (auto-generated from title)
                     </p>
                   )}
                 </div>

@@ -101,13 +101,8 @@ export default function AdminLayout({ children }) {
     <AuthGuard>
       <ErrorBoundary>
         <div className="min-h-screen bg-gray-50">
-          {/* Persistent Header - won't re-render on navigation */}
           <Header onMenuToggle={toggleSidebar} />
-          
-          {/* Persistent Sidebar - won't re-render on navigation */}
           <Sidebar isOpen={sidebarOpen} onClose={closeSidebar} />
-
-          {/* Main content area - only this changes on navigation */}
           <main className="pt-16 lg:ml-64 px-6 py-8 transition-all duration-300 ease-in-out">
             <div className="w-full max-w-7xl mx-auto">
               <div className="space-y-6">{children}</div>

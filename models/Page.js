@@ -10,9 +10,13 @@ const pageSchema = new mongoose.Schema(
     },
     slug: {
       type: String,
-      unique: true,
-      sparse: true,
       trim: true,
+    },
+    // When set, page is under /self-study/[exam]/pages/[slug]; when null, under /self-study/pages/[slug]
+    exam: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Exam",
+      default: null,
     },
     content: {
       type: String,
@@ -34,20 +38,28 @@ const pageSchema = new mongoose.Schema(
       trim: true,
       default: "",
     },
+    // Soft delete: when set, page is hidden from public and can be restored in admin
+    deletedAt: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true }
 );
 
-pageSchema.index({ slug: 1 });
+// Unique slug per scope: one (null, slug) for site-level, one (examId, slug) per exam
+pageSchema.index({ exam: 1, slug: 1 }, { unique: true, sparse: true });
 pageSchema.index({ status: 1 });
+pageSchema.index({ deletedAt: 1 });
 
-// Pre-save hook to auto-generate slug from title
+// Pre-save hook to auto-generate slug from title (scoped by exam)
 pageSchema.pre("save", async function (next) {
   if (this.isModified("title") || this.isNew) {
     const baseSlug = createSlug(this.title);
+    const examId = this.exam || null;
 
     const checkExists = async (slug, excludeId) => {
-      const query = { slug };
+      const query = { slug, exam: examId };
       if (excludeId) {
         query._id = { $ne: excludeId };
       }

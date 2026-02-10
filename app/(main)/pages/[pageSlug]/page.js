@@ -9,16 +9,18 @@ import RichContent from "../../components/RichContent";
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
 
 /**
- * Fetch page by slug for public UI.
- * - active: show, index + follow
- * - draft: show, noindex + nofollow
- * - inactive: do not show (404)
+ * Fetch site-level page by slug for public UI.
+ * - exam must be null (site-level)
+ * - deletedAt must be null
+ * - active: show, index + follow | draft: show, noindex + nofollow
  */
 async function getPageBySlug(slug) {
   if (!slug) return null;
   await connectDB();
   const page = await Page.findOne({
-    slug: slug,
+    slug,
+    exam: null,
+    deletedAt: null,
     status: { $in: ["active", "draft"] },
   }).lean();
   return page ? { ...page, _id: page._id?.toString() } : null;

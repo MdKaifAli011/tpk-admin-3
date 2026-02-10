@@ -23,12 +23,15 @@ export default function MainLayoutClient({ children }) {
 
   // Memoize showSidebar to prevent unnecessary recalculations
   const showSidebar = useMemo(() => {
+    // No sidebar on: home, contact, calculator, store, site-level pages, or exam-level pages (e.g. /neet/pages/landing)
+    const isExamPagesRoute = pathname?.match(/^\/[^/]+\/pages(\/|$)/);
     return (
       pathname !== "/" &&
       pathname !== "/contact" &&
       !pathname?.startsWith("/calculator") &&
       !pathname?.startsWith("/store") &&
-      !pathname?.startsWith("/pages")
+      !pathname?.startsWith("/pages") &&
+      !isExamPagesRoute
     );
   }, [pathname]);
 
