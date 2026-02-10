@@ -10,6 +10,7 @@ import {
 } from "react-icons/fa";
 import Link from "next/link";
 import { useSearchContext } from "../context/SearchContext";
+import { tokenizeQuery, textMatchesTokens, getSearchableText } from "../utils/searchTokens";
 
 const SearchModal = ({ isOpen, onClose }) => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -96,29 +97,46 @@ const SearchModal = ({ isOpen, onClose }) => {
     return () => document.removeEventListener("keydown", handleCtrlK);
   }, [isOpen, onClose]);
 
-  /* ----------------------------- Tree Filter ------------------------------ */
+  /* ----------------------------- Tree Filter (token-based / bag-of-words) ------------------------------ */
   const normalizedQuery = debouncedQuery.trim().toLowerCase();
+  const tokens = useMemo(() => tokenizeQuery(normalizedQuery), [normalizedQuery]);
 
   const filteredTree = useMemo(() => {
-    if (!normalizedQuery) return tree;
+    if (!normalizedQuery || !tokens.length) return tree;
 
-    const match = (v) => v?.toLowerCase().includes(normalizedQuery);
+    const nodeMatches = (searchableText) =>
+      textMatchesTokens(searchableText, tokens);
 
     return tree
       .map((subject) => {
-        const subjectMatch = match(subject.name);
+        const subjectText = getSearchableText(subject);
+        const subjectMatch = nodeMatches(subjectText);
 
         const units = subject.units
           ?.map((unit) => {
-            const unitMatch = subjectMatch || match(unit.name);
+            const unitText = getSearchableText(unit, subject.name);
+            const unitMatch = subjectMatch || nodeMatches(unitText);
 
             const chapters = unit.chapters
               ?.map((chapter) => {
-                const chapterMatch = unitMatch || match(chapter.name);
-
-                const topics = chapter.topics?.filter((topic) =>
-                  chapterMatch ? true : match(topic.name)
+                const chapterText = getSearchableText(
+                  chapter,
+                  subject.name,
+                  unit.name
                 );
+                const chapterMatch =
+                  unitMatch || nodeMatches(chapterText);
+
+                const topics = chapter.topics?.filter((topic) => {
+                  if (chapterMatch) return true;
+                  const topicText = getSearchableText(
+                    topic,
+                    subject.name,
+                    unit.name,
+                    chapter.name
+                  );
+                  return nodeMatches(topicText);
+                });
 
                 if (chapterMatch || topics?.length)
                   return { ...chapter, topics };
@@ -140,14 +158,19 @@ const SearchModal = ({ isOpen, onClose }) => {
         return null;
       })
       .filter(Boolean);
-  }, [tree, normalizedQuery]);
+  }, [tree, normalizedQuery, tokens]);
 
-  /* --------------------------- Search Results ----------------------------- */
+  /* --------------------------- Search Results (token-based match) ----------------------------- */
   const searchResults = useMemo(() => {
     const results = [];
+    if (!tokens.length) return results;
+
+    const nodeMatches = (searchableText) =>
+      textMatchesTokens(searchableText, tokens);
 
     filteredTree.forEach((subject) => {
-      if (subject.name.toLowerCase().includes(normalizedQuery)) {
+      const subjectText = getSearchableText(subject);
+      if (nodeMatches(subjectText)) {
         results.push({
           type: "subject",
           name: subject.name,
@@ -156,7 +179,8 @@ const SearchModal = ({ isOpen, onClose }) => {
       }
 
       subject.units?.forEach((unit) => {
-        if (unit.name.toLowerCase().includes(normalizedQuery)) {
+        const unitText = getSearchableText(unit, subject.name);
+        if (nodeMatches(unitText)) {
           results.push({
             type: "unit",
             name: unit.name,
@@ -166,7 +190,12 @@ const SearchModal = ({ isOpen, onClose }) => {
         }
 
         unit.chapters?.forEach((chapter) => {
-          if (chapter.name.toLowerCase().includes(normalizedQuery)) {
+          const chapterText = getSearchableText(
+            chapter,
+            subject.name,
+            unit.name
+          );
+          if (nodeMatches(chapterText)) {
             results.push({
               type: "chapter",
               name: chapter.name,
@@ -176,7 +205,13 @@ const SearchModal = ({ isOpen, onClose }) => {
           }
 
           chapter.topics?.forEach((topic) => {
-            if (topic.name.toLowerCase().includes(normalizedQuery)) {
+            const topicText = getSearchableText(
+              topic,
+              subject.name,
+              unit.name,
+              chapter.name
+            );
+            if (nodeMatches(topicText)) {
               results.push({
                 type: "topic",
                 name: topic.name,
@@ -190,7 +225,7 @@ const SearchModal = ({ isOpen, onClose }) => {
     });
 
     return results;
-  }, [filteredTree, normalizedQuery, currentExamSlug]);
+  }, [filteredTree, tokens, currentExamSlug]);
 
   const icons = {
     subject: <FaBook className="text-blue-600" />,

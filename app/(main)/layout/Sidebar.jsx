@@ -21,6 +21,7 @@ import {
 import { logger } from "@/utils/logger";
 import ExamDropdown from "../components/ExamDropdown";
 import SidebarNavigationTree from "../components/SidebarNavigationTree";
+import { tokenizeQuery, textMatchesTokens, getSearchableText } from "./utils/searchTokens";
 
 // Helper: build node (same as your original)
 const buildNode = (item) => ({
@@ -490,24 +491,36 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
     }
   }, [pathname, isBlogPath, isDownloadPath, isVideoLibraryPath]);
 
-  // debounced query filtered tree
+  // debounced query filtered tree (token-based / bag-of-words: "laws of motion class 9" matches any combination)
   const normalizedQuery = debouncedQuery.trim().toLowerCase();
+  const searchTokens = useMemo(() => tokenizeQuery(normalizedQuery), [normalizedQuery]);
   const filteredTree = useMemo(() => {
-    if (!normalizedQuery) return tree;
-    const match = (t) => t && t.toLowerCase().includes(normalizedQuery);
+    if (!normalizedQuery || !searchTokens.length) return tree;
+    const nodeMatches = (searchableText) =>
+      textMatchesTokens(searchableText, searchTokens);
 
     return tree
       .map((subject) => {
-        const subjectMatches = match(subject.name);
+        const subjectText = getSearchableText(subject);
+        const subjectMatches = nodeMatches(subjectText);
         const units = (subject.units || [])
           .map((u) => {
-            const um = subjectMatches || match(u.name);
+            const unitText = getSearchableText(u, subject.name);
+            const um = subjectMatches || nodeMatches(unitText);
             const chapters = (u.chapters || [])
               .map((c) => {
-                const cm = um || match(c.name);
-                const topics = (c.topics || []).filter((t) =>
-                  cm ? true : match(t.name)
-                );
+                const chapterText = getSearchableText(c, subject.name, u.name);
+                const cm = um || nodeMatches(chapterText);
+                const topics = (c.topics || []).filter((t) => {
+                  if (cm) return true;
+                  const topicText = getSearchableText(
+                    t,
+                    subject.name,
+                    u.name,
+                    c.name
+                  );
+                  return nodeMatches(topicText);
+                });
                 if (cm || topics.length) return { ...c, topics };
                 return null;
               })
@@ -520,7 +533,7 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
         return null;
       })
       .filter(Boolean);
-  }, [tree, normalizedQuery]);
+  }, [tree, normalizedQuery, searchTokens]);
 
   // auto-open based on path
   useEffect(() => {
