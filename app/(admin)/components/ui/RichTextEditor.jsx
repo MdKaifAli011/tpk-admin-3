@@ -111,6 +111,7 @@ const RichTextEditor = ({
   const openFormModalRef = useRef(null);
   const openFormLinkModalRef = useRef(null);
   const customToolbarStyleRef = useRef(null);
+  const imageModalFocusRef = useRef(null);
 
   const instanceId = useMemo(
     () => `rte-${Math.random().toString(36).slice(2, 10)}`,
@@ -132,7 +133,11 @@ const RichTextEditor = ({
   // Keep insert-modal callbacks current so CKEditor toolbar commands can open modals
   useEffect(() => {
     openVideoModalRef.current = () => setShowVideoModal(true);
-    openImageModalRef.current = () => setShowImageModal(true);
+    openImageModalRef.current = () => {
+      const editor = editorRef.current;
+      if (editor?.focusManager) editor.focusManager.blur();
+      setShowImageModal(true);
+    };
     openButtonModalRef.current = () => setShowButtonModal(true);
     openFormModalRef.current = () => setShowFormModal(true);
     openFormLinkModalRef.current = openFormLinkModal;
@@ -953,6 +958,16 @@ const RichTextEditor = ({
       document.removeEventListener("paste", handlePaste);
     };
   }, [isReady, disabled, showImageModal]);
+
+  // When Insert Image modal opens, move focus into the modal so paste goes to modal not editor
+  useEffect(() => {
+    if (!showImageModal) return;
+    const moveFocus = () => {
+      imageModalFocusRef.current?.focus();
+    };
+    const t = setTimeout(moveFocus, 50);
+    return () => clearTimeout(t);
+  }, [showImageModal]);
 
   // Upload image and insert into editor
   const uploadAndInsertImage = async (file) => {
@@ -1902,11 +1917,18 @@ const RichTextEditor = ({
       {/* Image Upload Modal */}
       {showImageModal && typeof document !== "undefined" && createPortal(
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-200 max-h-[90vh] flex flex-col">
+          <div
+            ref={imageModalFocusRef}
+            tabIndex={-1}
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-200 max-h-[90vh] flex flex-col outline-none"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="insert-image-modal-title"
+          >
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b bg-white">
               <div>
-                <h2 className="text-xl font-semibold text-gray-900">
+                <h2 id="insert-image-modal-title" className="text-xl font-semibold text-gray-900">
                   Insert Image
                 </h2>
                 <p className="text-xs text-gray-500 mt-0.5">
