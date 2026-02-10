@@ -4,7 +4,7 @@ const overviewCommentSchema = new mongoose.Schema(
   {
     entityType: {
       type: String,
-      enum: ["exam", "subject", "unit", "chapter", "topic", "subtopic"],
+      enum: ["exam", "subject", "unit", "chapter", "topic", "subtopic", "definition"],
       required: true,
       index: true,
     },

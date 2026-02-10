@@ -9,8 +9,74 @@ import {
 } from "@/utils/apiResponse";
 import { verifyStudentToken } from "@/lib/studentAuth";
 import { requireAuth } from "@/middleware/authMiddleware";
+import Exam from "@/models/Exam";
+import Subject from "@/models/Subject";
+import Unit from "@/models/Unit";
+import Chapter from "@/models/Chapter";
+import Topic from "@/models/Topic";
+import SubTopic from "@/models/SubTopic";
+import Definition from "@/models/Definition";
 
-const ENTITY_TYPES = ["exam", "subject", "unit", "chapter", "topic", "subtopic"];
+const ENTITY_TYPES = ["exam", "subject", "unit", "chapter", "topic", "subtopic", "definition"];
+
+const LABELS = { exam: "Exam", subject: "Subject", unit: "Unit", chapter: "Chapter", topic: "Topic", subtopic: "SubTopic", definition: "Definition" };
+
+async function attachHierarchyPaths(comments) {
+  if (!comments?.length) return comments;
+  const byType = {};
+  comments.forEach((c) => {
+    if (!c.entityType || !c.entityId) return;
+    const id = c.entityId._id ? c.entityId._id.toString() : c.entityId.toString();
+    if (!byType[c.entityType]) byType[c.entityType] = new Set();
+    byType[c.entityType].add(id);
+  });
+  const pathMap = {};
+  const ids = (set) => Array.from(set).filter((id) => mongoose.Types.ObjectId.isValid(id));
+
+  for (const entityType of ENTITY_TYPES) {
+    const idList = ids(byType[entityType] || new Set());
+    if (idList.length === 0) continue;
+    let entities = [];
+    switch (entityType) {
+      case "exam":
+        entities = await Exam.find({ _id: { $in: idList } }).select("name").lean();
+        entities.forEach((e) => { pathMap[`exam:${e._id}`] = [{ label: "Exam", name: e.name || "—" }]; });
+        break;
+      case "subject":
+        entities = await Subject.find({ _id: { $in: idList } }).populate("examId", "name").lean();
+        entities.forEach((s) => { pathMap[`subject:${s._id}`] = [{ label: "Exam", name: s.examId?.name || "—" }, { label: "Subject", name: s.name || "—" }]; });
+        break;
+      case "unit":
+        entities = await Unit.find({ _id: { $in: idList } }).populate("subjectId examId", "name").lean();
+        entities.forEach((u) => { pathMap[`unit:${u._id}`] = [{ label: "Exam", name: u.examId?.name || "—" }, { label: "Subject", name: u.subjectId?.name || "—" }, { label: "Unit", name: u.name || "—" }]; });
+        break;
+      case "chapter":
+        entities = await Chapter.find({ _id: { $in: idList } }).populate("unitId subjectId examId", "name").lean();
+        entities.forEach((c) => { pathMap[`chapter:${c._id}`] = [{ label: "Exam", name: c.examId?.name || "—" }, { label: "Subject", name: c.subjectId?.name || "—" }, { label: "Unit", name: c.unitId?.name || "—" }, { label: "Chapter", name: c.name || "—" }]; });
+        break;
+      case "topic":
+        entities = await Topic.find({ _id: { $in: idList } }).populate("chapterId unitId subjectId examId", "name").lean();
+        entities.forEach((t) => { pathMap[`topic:${t._id}`] = [{ label: "Exam", name: t.examId?.name || "—" }, { label: "Subject", name: t.subjectId?.name || "—" }, { label: "Unit", name: t.unitId?.name || "—" }, { label: "Chapter", name: t.chapterId?.name || "—" }, { label: "Topic", name: t.name || "—" }]; });
+        break;
+      case "subtopic":
+        entities = await SubTopic.find({ _id: { $in: idList } }).populate("topicId chapterId unitId subjectId examId", "name").lean();
+        entities.forEach((s) => { pathMap[`subtopic:${s._id}`] = [{ label: "Exam", name: s.examId?.name || "—" }, { label: "Subject", name: s.subjectId?.name || "—" }, { label: "Unit", name: s.unitId?.name || "—" }, { label: "Chapter", name: s.chapterId?.name || "—" }, { label: "Topic", name: s.topicId?.name || "—" }, { label: "SubTopic", name: s.name || "—" }]; });
+        break;
+      case "definition":
+        entities = await Definition.find({ _id: { $in: idList } }).populate("subTopicId topicId chapterId unitId subjectId examId", "name").lean();
+        entities.forEach((d) => { pathMap[`definition:${d._id}`] = [{ label: "Exam", name: d.examId?.name || "—" }, { label: "Subject", name: d.subjectId?.name || "—" }, { label: "Unit", name: d.unitId?.name || "—" }, { label: "Chapter", name: d.chapterId?.name || "—" }, { label: "Topic", name: d.topicId?.name || "—" }, { label: "SubTopic", name: d.subTopicId?.name || "—" }, { label: "Definition", name: d.name || d.term || "—" }]; });
+        break;
+      default:
+        break;
+    }
+  }
+
+  return comments.map((c) => {
+    const id = c.entityId?._id ? c.entityId._id.toString() : c.entityId?.toString();
+    const path = pathMap[`${c.entityType}:${id}`] || [{ label: LABELS[c.entityType] || c.entityType, name: "—" }];
+    return { ...c, hierarchyPath: path };
+  });
+}
 
 export async function GET(request) {
   try {
@@ -33,17 +99,21 @@ export async function GET(request) {
           { status: 401 }
         );
       }
+      const includeHierarchy = searchParams.get("includeHierarchy") === "true";
       const query = {};
       if (status !== "all") query.status = status;
       const comments = await OverviewComment.find(query)
         .populate("studentId", "firstName lastName email")
         .sort({ createdAt: -1 })
         .lean();
-      const formatted = comments.map((c) => ({
+      let formatted = comments.map((c) => ({
         ...c,
         anonymousName: c.studentId ? null : c.name,
         anonymousEmail: c.studentId ? null : c.email,
       }));
+      if (includeHierarchy && formatted.length > 0) {
+        formatted = await attachHierarchyPaths(formatted);
+      }
       return successResponse(formatted);
     }
 
