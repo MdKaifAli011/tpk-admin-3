@@ -24,83 +24,59 @@ export async function GET(request) {
 
     await connectDB();
 
-    // ✅ Parallel count queries (much faster than fetching all documents)
-    // Each count query is independent and can run in parallel
+    // Count-only queries (no documents loaded – fast, no limit)
     const [
+      examsTotal,
       examsActive,
       examsInactive,
+      subjectsTotal,
       subjectsActive,
       subjectsInactive,
+      unitsTotal,
       unitsActive,
       unitsInactive,
+      chaptersTotal,
       chaptersActive,
       chaptersInactive,
+      topicsTotal,
       topicsActive,
       topicsInactive,
+      subtopicsTotal,
       subtopicsActive,
       subtopicsInactive,
     ] = await Promise.all([
+      Exam.countDocuments({}),
       Exam.countDocuments({ status: "active" }),
       Exam.countDocuments({ status: "inactive" }),
+      Subject.countDocuments({}),
       Subject.countDocuments({ status: "active" }),
       Subject.countDocuments({ status: "inactive" }),
+      Unit.countDocuments({}),
       Unit.countDocuments({ status: "active" }),
       Unit.countDocuments({ status: "inactive" }),
+      Chapter.countDocuments({}),
       Chapter.countDocuments({ status: "active" }),
       Chapter.countDocuments({ status: "inactive" }),
+      Topic.countDocuments({}),
       Topic.countDocuments({ status: "active" }),
       Topic.countDocuments({ status: "inactive" }),
+      SubTopic.countDocuments({}),
       SubTopic.countDocuments({ status: "active" }),
       SubTopic.countDocuments({ status: "inactive" }),
     ]);
 
-    // Calculate totals
     const stats = {
-      exams: {
-        active: examsActive,
-        inactive: examsInactive,
-        total: examsActive + examsInactive,
-      },
-      subjects: {
-        active: subjectsActive,
-        inactive: subjectsInactive,
-        total: subjectsActive + subjectsInactive,
-      },
-      units: {
-        active: unitsActive,
-        inactive: unitsInactive,
-        total: unitsActive + unitsInactive,
-      },
-      chapters: {
-        active: chaptersActive,
-        inactive: chaptersInactive,
-        total: chaptersActive + chaptersInactive,
-      },
-      topics: {
-        active: topicsActive,
-        inactive: topicsInactive,
-        total: topicsActive + topicsInactive,
-      },
-      subtopics: {
-        active: subtopicsActive,
-        inactive: subtopicsInactive,
-        total: subtopicsActive + subtopicsInactive,
-      },
+      exams: { active: examsActive, inactive: examsInactive, total: examsTotal },
+      subjects: { active: subjectsActive, inactive: subjectsInactive, total: subjectsTotal },
+      units: { active: unitsActive, inactive: unitsInactive, total: unitsTotal },
+      chapters: { active: chaptersActive, inactive: chaptersInactive, total: chaptersTotal },
+      topics: { active: topicsActive, inactive: topicsInactive, total: topicsTotal },
+      subtopics: { active: subtopicsActive, inactive: subtopicsInactive, total: subtopicsTotal },
       summary: {
         totalActive:
-          examsActive +
-          subjectsActive +
-          unitsActive +
-          chaptersActive +
-          topicsActive +
-          subtopicsActive,
+          examsActive + subjectsActive + unitsActive + chaptersActive + topicsActive + subtopicsActive,
         totalInactive:
-          examsInactive +
-          subjectsInactive +
-          unitsInactive +
-          chaptersInactive +
-          topicsInactive +
-          subtopicsInactive,
+          examsInactive + subjectsInactive + unitsInactive + chaptersInactive + topicsInactive + subtopicsInactive,
       },
     };
 

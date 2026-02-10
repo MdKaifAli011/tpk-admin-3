@@ -37,109 +37,35 @@ const AdminDashboard = () => {
   const [error, setError] = useState(null);
   const [recentActivity, setRecentActivity] = useState([]);
 
-  // Fetch all stats
+  // Fetch dashboard stats (counts only – no limit, fast)
   useEffect(() => {
     const fetchStats = async () => {
       try {
         setIsLoading(true);
         setError(null);
 
-        // Fetch all data in parallel
-        const [
-          examsRes,
-          subjectsRes,
-          unitsRes,
-          chaptersRes,
-          topicsRes,
-          subtopicsRes,
-        ] = await Promise.all([
-          api
-            .get("/exam?limit=1000&status=all")
-            .catch(() => ({ data: { data: [] } })),
-          api
-            .get("/subject?limit=1000&status=all")
-            .catch(() => ({ data: { data: [] } })),
-          api
-            .get("/unit?limit=1000&status=all")
-            .catch(() => ({ data: { data: [] } })),
-          api
-            .get("/chapter?limit=1000&status=all")
-            .catch(() => ({ data: { data: [] } })),
-          api
-            .get("/topic?limit=1000&status=all")
-            .catch(() => ({ data: { data: [] } })),
-          api
-            .get("/subtopic?limit=1000&status=all")
-            .catch(() => ({ data: { data: [] } })),
-        ]);
+        const res = await api.get("/stats");
+        if (!res.data?.success || !res.data?.data) {
+          setError("Failed to load dashboard data");
+          return;
+        }
 
-        const exams = examsRes.data?.data || [];
-        const subjects = subjectsRes.data?.data || [];
-        const units = unitsRes.data?.data || [];
-        const chapters = chaptersRes.data?.data || [];
-        const topics = topicsRes.data?.data || [];
-        const subtopics = subtopicsRes.data?.data || [];
-
-        const activeExams = exams.filter((e) => e.status === "active").length;
-        const activeSubjects = subjects.filter(
-          (s) => s.status === "active"
-        ).length;
-        const activeUnits = units.filter((u) => u.status === "active").length;
-        const activeChapters = chapters.filter(
-          (c) => c.status === "active"
-        ).length;
-        const activeTopics = topics.filter((t) => t.status === "active").length;
-        const activeSubtopics = subtopics.filter(
-          (st) => st.status === "active"
-        ).length;
-
-        const totalActive =
-          activeExams +
-          activeSubjects +
-          activeUnits +
-          activeChapters +
-          activeTopics +
-          activeSubtopics;
-        const totalInactive =
-          exams.length +
-          subjects.length +
-          units.length +
-          chapters.length +
-          topics.length +
-          subtopics.length -
-          totalActive;
-
+        const d = res.data.data;
         setStats({
-          exams: exams.length,
-          subjects: subjects.length,
-          units: units.length,
-          chapters: chapters.length,
-          topics: topics.length,
-          subtopics: subtopics.length,
-          active: totalActive,
-          inactive: totalInactive,
+          exams: d.exams?.total ?? 0,
+          subjects: d.subjects?.total ?? 0,
+          units: d.units?.total ?? 0,
+          chapters: d.chapters?.total ?? 0,
+          topics: d.topics?.total ?? 0,
+          subtopics: d.subtopics?.total ?? 0,
+          active: d.summary?.totalActive ?? 0,
+          inactive: d.summary?.totalInactive ?? 0,
         });
 
-        // Generate recent activity (mock data for now)
         setRecentActivity([
-          {
-            type: "exam",
-            action: "created",
-            name: exams[0]?.name || "New Exam",
-            time: "2 hours ago",
-          },
-          {
-            type: "subject",
-            action: "updated",
-            name: subjects[0]?.name || "Updated Subject",
-            time: "5 hours ago",
-          },
-          {
-            type: "unit",
-            action: "created",
-            name: units[0]?.name || "New Unit",
-            time: "1 day ago",
-          },
+          { type: "exam", action: "overview", name: "Content stats", time: "Just now" },
+          { type: "subject", action: "overview", name: "All counts loaded", time: "Just now" },
+          { type: "unit", action: "overview", name: "Dashboard ready", time: "Just now" },
         ]);
       } catch (err) {
         console.error("Error fetching stats:", err);
