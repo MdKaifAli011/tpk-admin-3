@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import api from "@/lib/api";
+import { canAccessRoute, normalizeRole } from "../../config/adminRoutes";
 
 const AuthGuard = ({ children }) => {
   const router = useRouter();
@@ -42,6 +43,13 @@ const AuthGuard = ({ children }) => {
               pathname?.endsWith("/admin/register")
             ) {
               router.push("/admin");
+              return;
+            }
+
+            // Route permission: redirect to dashboard if user cannot access this path
+            const role = normalizeRole(userData.role);
+            if (!canAccessRoute(pathname, role)) {
+              router.replace("/admin");
               return;
             }
           } else {
@@ -107,7 +115,12 @@ const AuthGuard = ({ children }) => {
     return null;
   }
 
-  // Render children if authenticated
+  // If authenticated but no permission for this route, don't render (useEffect will redirect)
+  if (user && !canAccessRoute(pathname, normalizeRole(user.role))) {
+    return null;
+  }
+
+  // Render children if authenticated and allowed for this route
   return <>{children}</>;
 };
 

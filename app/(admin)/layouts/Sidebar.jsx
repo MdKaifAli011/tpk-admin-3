@@ -16,6 +16,7 @@ import {
   FaFileAlt,
   FaUserCog,
 } from "react-icons/fa";
+import { canAccessRoute, normalizeRole } from "../config/adminRoutes";
 
 const ALL_MENU_ITEMS = [
   {
@@ -82,7 +83,6 @@ const ALL_MENU_ITEMS = [
   {
     name: "Admin",
     icon: FaUserCog,
-    adminOnly: true,
     sectionStart: true,
     children: [
       { name: "Lead Management", href: "/admin/lead" },
@@ -129,15 +129,23 @@ const Sidebar = memo(({ isOpen, onClose }) => {
     return () => window.removeEventListener("storage", handleStorageChange);
   }, [pathname]); // Update when pathname changes
 
-  // Filter menu items based on user role (memoized)
+  // Filter menu items by route permission: show section only if user can access at least one child
   const MENU_ITEMS = useMemo(() => {
+    const role = normalizeRole(userRole);
     return ALL_MENU_ITEMS.filter((item) => {
-      // Show admin-only items only if user is admin
-      if (item.adminOnly) {
-        return userRole === "admin";
-      }
-      // Show all other items to all users
-      return true;
+      if (!item.children) return canAccessRoute(item.href, role);
+      const allowedChildren = item.children.filter((child) =>
+        canAccessRoute(child.href, role)
+      );
+      return allowedChildren.length > 0;
+    }).map((item) => {
+      if (!item.children) return item;
+      return {
+        ...item,
+        children: item.children.filter((child) =>
+          canAccessRoute(child.href, role)
+        ),
+      };
     });
   }, [userRole]);
 
@@ -151,16 +159,9 @@ const Sidebar = memo(({ isOpen, onClose }) => {
     }));
   };
 
-  // Auto-expand menu if current path matches
+  // Auto-expand menu if current path matches (use filtered MENU_ITEMS)
   useEffect(() => {
-    const filteredItems = ALL_MENU_ITEMS.filter((item) => {
-      if (item.adminOnly) {
-        return userRole === "admin";
-      }
-      return true;
-    });
-
-    filteredItems.forEach((item) => {
+    MENU_ITEMS.forEach((item) => {
       if (item.children) {
         const hasActiveChild = item.children.some((child) =>
           isActive(child.href)
@@ -170,7 +171,7 @@ const Sidebar = memo(({ isOpen, onClose }) => {
         }
       }
     });
-  }, [pathname, userRole]);
+  }, [pathname, userRole, MENU_ITEMS]);
 
   return (
     <>

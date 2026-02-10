@@ -18,8 +18,11 @@ import {
 } from "react-icons/fa";
 import { LoadingSpinner } from "../components/ui/SkeletonLoader";
 import api from "@/lib/api";
+import { usePermissions } from "../hooks/usePermissions";
+import { canAccessRoute } from "../config/adminRoutes";
 
 const AdminDashboard = () => {
+  const { role } = usePermissions();
   const [stats, setStats] = useState({
     exams: 0,
     subjects: 0,
@@ -149,9 +152,9 @@ const AdminDashboard = () => {
     fetchStats();
   }, []);
 
-  // Quick links menu items
-  const quickLinks = useMemo(
-    () => [
+  // Quick links menu items (only routes the user has permission to access)
+  const quickLinks = useMemo(() => {
+    const all = [
       {
         name: "Exam Management",
         href: "/admin/exam",
@@ -213,7 +216,7 @@ const AdminDashboard = () => {
         color: "from-blue-500 to-blue-600",
         bgColor: "bg-blue-50",
         textColor: "text-blue-600",
-        count: 0, // We can add discussion stats later
+        count: 0,
       },
       {
         name: "Banner Upload",
@@ -222,7 +225,7 @@ const AdminDashboard = () => {
         color: "from-purple-500 to-purple-600",
         bgColor: "bg-purple-50",
         textColor: "text-purple-600",
-        count: 0, // We can add banner stats later
+        count: 0,
       },
       {
         name: "Page Management",
@@ -233,9 +236,10 @@ const AdminDashboard = () => {
         textColor: "text-teal-600",
         count: 0,
       },
-    ],
-    [stats]
-  );
+    ];
+    const normalizedRole = role || "viewer";
+    return all.filter((link) => canAccessRoute(link.href, normalizedRole));
+  }, [stats, role]);
 
   // Stats cards data
   const statsCards = useMemo(
