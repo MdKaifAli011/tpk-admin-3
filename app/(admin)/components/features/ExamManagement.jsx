@@ -14,6 +14,8 @@ import {
   FaClipboardList,
   FaLock,
   FaSearch,
+  FaGripVertical,
+  FaCheck,
 } from "react-icons/fa";
 import { ToastContainer, useToast } from "../ui/Toast";
 import api from "@/lib/api";
@@ -41,6 +43,8 @@ const ExamManagement = () => {
   const isFetchingRef = useRef(false);
   const [metaFilter, setMetaFilter] = useState("all"); // all, filled, notFilled
   const [searchQuery, setSearchQuery] = useState("");
+  const [isReorderMode, setIsReorderMode] = useState(false);
+  const [reorderDraft, setReorderDraft] = useState(null);
 
   // Fetch exams from API using Axios
   const fetchExams = async () => {
@@ -296,6 +300,48 @@ const ExamManagement = () => {
 
   const handleManageInfo = (exam) => {
     router.push(`/admin/exam-info/${exam._id}`);
+  };
+
+  const saveReorderForExams = async (newOrderedExams) => {
+    const payload = {
+      exams: newOrderedExams.map((exam, i) => ({
+        id: exam._id,
+        orderNumber: i + 1,
+      })),
+    };
+    const response = await api.post("/exam/reorder", payload);
+    if (!response.data?.success) {
+      throw new Error(response.data?.message || "Failed to reorder exams");
+    }
+  };
+
+  const handleReorderDraft = (newOrderedExams) => {
+    setReorderDraft(newOrderedExams);
+  };
+
+  const handleDoneReorder = async () => {
+    if (!canReorder) {
+      showError(getPermissionMessage("reorder", role));
+      return;
+    }
+    if (reorderDraft === null) {
+      setIsReorderMode(false);
+      return;
+    }
+    try {
+      setIsFormLoading(true);
+      setError(null);
+      await saveReorderForExams(reorderDraft);
+      await fetchExams();
+      setReorderDraft(null);
+      setIsReorderMode(false);
+      success("Exam order updated successfully.");
+    } catch (err) {
+      const msg = err?.response?.data?.message || err?.message || "Failed to reorder exams. Please try again.";
+      showError(msg);
+    } finally {
+      setIsFormLoading(false);
+    }
   };
 
   const handleToggleStatus = async (exam) => {
@@ -554,9 +600,45 @@ const ExamManagement = () => {
                 </h2>
                 <p className="text-sm text-gray-600 mt-1">
                   Manage your exams, view details, and perform actions
+                  {isReorderMode && (
+                    <span className="ml-1.5 text-blue-600 font-medium">— Drag rows to change order, then click Done to save</span>
+                  )}
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-3">
+                {canReorder && filteredExams.length > 1 && !searchQuery.trim() && (
+                  isReorderMode ? (
+                    <button
+                      type="button"
+                      onClick={handleDoneReorder}
+                      disabled={isFormLoading}
+                      className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+                      title="Save order and exit reorder mode"
+                    >
+                      {isFormLoading ? (
+                        <>
+                          <LoadingSpinner size="small" />
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <FaCheck className="w-4 h-4" />
+                          Done
+                        </>
+                      )}
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => { setIsReorderMode(true); setReorderDraft(null); }}
+                      className="inline-flex items-center gap-2 px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-sm font-medium transition-colors"
+                      title="Enable drag and drop to reorder exams"
+                    >
+                      <FaGripVertical className="w-4 h-4" />
+                      Reorder position
+                    </button>
+                  )
+                )}
                 {/* Search Input */}
                 <div className="relative min-w-[200px] sm:min-w-[240px]">
                   <input
@@ -643,6 +725,9 @@ const ExamManagement = () => {
                 onDelete={handleDeleteExam}
                 onToggleStatus={handleToggleStatus}
                 onManageInfo={handleManageInfo}
+                onReorderDraft={handleReorderDraft}
+                reorderDraft={reorderDraft}
+                isReorderAllowed={isReorderMode && !searchQuery.trim()}
               />
             )}
           </div>

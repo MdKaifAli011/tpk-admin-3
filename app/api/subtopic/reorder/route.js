@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import SubTopic from "@/models/SubTopic";
 import { logger } from "@/utils/logger";
+import { requireAction } from "@/middleware/authMiddleware";
 
 export async function POST(request) {
   return handleReorder(request);
@@ -13,6 +14,11 @@ export async function PATCH(request) {
 
 async function handleReorder(request) {
   try {
+    const authCheck = await requireAction(request, "PATCH");
+    if (authCheck.error) {
+      return NextResponse.json(authCheck, { status: authCheck.status || 403 });
+    }
+
     await connectDB();
     const { subTopics } = await request.json();
 
@@ -85,6 +91,8 @@ async function handleReorder(request) {
     }));
 
     await SubTopic.bulkWrite(finalUpdates);
+
+    logger.info("SubTopic reorder: same topic, count=" + subTopics.length);
 
     return NextResponse.json({
       success: true,

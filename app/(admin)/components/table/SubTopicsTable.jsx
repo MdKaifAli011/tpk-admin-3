@@ -1,6 +1,6 @@
 "use client";
-import React, { useMemo } from "react";
-import { FaEdit, FaTrash, FaEye, FaPowerOff, FaLock } from "react-icons/fa";
+import React, { useMemo, useState } from "react";
+import { FaEdit, FaTrash, FaEye, FaPowerOff, FaLock, FaGripVertical } from "react-icons/fa";
 import { FiCheck } from "react-icons/fi";
 import { useRouter } from "next/navigation";
 import {
@@ -12,11 +12,17 @@ const SubTopicsTable = ({
   subTopics,
   onEdit,
   onDelete,
-  onDragEnd,
   onToggleStatus,
+  onReorderDraft,
+  reorderDraft = {},
+  isReorderAllowed = true,
 }) => {
   const { canEdit, canDelete, canReorder, role } = usePermissions();
   const router = useRouter();
+  const [dragged, setDragged] = useState({ topicId: null, index: null });
+  const [dragOver, setDragOver] = useState({ topicId: null, index: null });
+
+  const canDrag = Boolean(canReorder && onReorderDraft && isReorderAllowed);
 
   // Use embedded visitStats (cron 3–4am); if missing show "—"
   const getVisitStats = (subTopic) => subTopic?.visitStats;
@@ -36,6 +42,59 @@ const SubTopicsTable = ({
 
   const handleSubTopicClick = (subTopicId) => {
     router.push(`/admin/sub-topic/${subTopicId}`);
+  };
+
+  const handleDragStart = (e, topicId, index) => {
+    if (!canDrag) return;
+    setDragged({ topicId, index });
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", String(index));
+    e.dataTransfer.setData("application/json", JSON.stringify({ topicId, index }));
+    try { e.target.closest("tr")?.classList.add("opacity-50", "ring-2", "ring-blue-400"); } catch (_) {}
+  };
+
+  const handleDragOver = (e, topicId, index) => {
+    if (!canDrag || dragged.topicId === null || dragged.topicId !== topicId) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    setDragOver({ topicId, index });
+  };
+
+  const handleDragLeave = (e) => {
+    if (!e.currentTarget.contains(e.relatedTarget)) setDragOver({ topicId: null, index: null });
+  };
+
+  const handleDrop = (e, topicId, toIndex) => {
+    if (!canDrag) return;
+    e.preventDefault();
+    const fromIndex = parseInt(e.dataTransfer.getData("text/plain"), 10);
+    const payload = e.dataTransfer.getData("application/json");
+    let payloadTopicId = topicId;
+    try {
+      const parsed = JSON.parse(payload || "{}");
+      if (parsed.topicId) payloadTopicId = parsed.topicId;
+    } catch (_) {}
+    if (payloadTopicId !== topicId || Number.isNaN(fromIndex) || fromIndex === toIndex) {
+      setDragOver({ topicId: null, index: null });
+      setDragged({ topicId: null, index: null });
+      return;
+    }
+    setDragOver({ topicId: null, index: null });
+    setDragged({ topicId: null, index: null });
+    try { e.target.closest("tr")?.classList.remove("opacity-50", "ring-2", "ring-blue-400"); } catch (_) {}
+    const group = groupedSubTopics.find((g) => g.topicId === topicId);
+    if (!group) return;
+    const currentList = reorderDraft[topicId] ?? [...group.subTopics].sort((a, b) => (a.orderNumber || 0) - (b.orderNumber || 0));
+    const newOrder = [...currentList];
+    const [removed] = newOrder.splice(fromIndex, 1);
+    newOrder.splice(toIndex, 0, removed);
+    onReorderDraft(topicId, newOrder);
+  };
+
+  const handleDragEnd = (e) => {
+    setDragged({ topicId: null, index: null });
+    setDragOver({ topicId: null, index: null });
+    try { e.target.closest("tr")?.classList.remove("opacity-50", "ring-2", "ring-blue-400"); } catch (_) {}
   };
 
   // Group subTopics by Exam → Subject → Unit → Chapter → Topic
@@ -95,6 +154,15 @@ const SubTopicsTable = ({
     });
   }, [subTopics]);
 
+  const displayGroups = useMemo(
+    () =>
+      groupedSubTopics.map((g) => ({
+        ...g,
+        subTopics: reorderDraft[g.topicId] ?? [...g.subTopics].sort((a, b) => (a.orderNumber || 0) - (b.orderNumber || 0)),
+      })),
+    [groupedSubTopics, reorderDraft]
+  );
+
   if (!subTopics || subTopics.length === 0) {
     return (
       <div className="text-center py-12 bg-white rounded-lg border border-gray-200 shadow-sm">
@@ -111,13 +179,8 @@ const SubTopicsTable = ({
 
   return (
     <div className="space-y-6">
-      {groupedSubTopics.map((group, groupIndex) => {
-        // Sort subTopics by orderNumber within each group
-        const sortedSubTopics = [...group.subTopics].sort((a, b) => {
-          const ao = a.orderNumber || Number.MAX_SAFE_INTEGER;
-          const bo = b.orderNumber || Number.MAX_SAFE_INTEGER;
-          return ao - bo;
-        });
+      {displayGroups.map((group, groupIndex) => {
+        const sortedSubTopics = group.subTopics;
 
         return (
           <div
@@ -178,6 +241,11 @@ const SubTopicsTable = ({
               <table className="min-w-full divide-y divide-gray-200 table-fixed">
                 <thead className="bg-gray-50">
                   <tr>
+                    {canDrag && (
+                      <th className="px-1 py-1 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-10">
+                        Move
+                      </th>
+                    )}
                     <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16">
                       Order
                     </th>
@@ -201,14 +269,38 @@ const SubTopicsTable = ({
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody
+                  className="bg-white divide-y divide-gray-200"
+                  onDragLeave={handleDragLeave}
+                >
                   {sortedSubTopics.map((subTopic, subTopicIndex) => {
+                    const rowCanDrag = canDrag && sortedSubTopics.length > 1;
+                    const isDraggedRow = dragged.topicId === group.topicId && dragged.index === subTopicIndex;
+                    const isDragOverRow = dragOver.topicId === group.topicId && dragOver.index === subTopicIndex && !isDraggedRow;
                     return (
                       <tr
                         key={subTopic._id || subTopicIndex}
-                        className={`hover:bg-gray-50 transition-colors ${subTopic.status === "inactive" ? "opacity-60" : ""
-                          }`}
+                        draggable={rowCanDrag}
+                        onDragStart={(e) => handleDragStart(e, group.topicId, subTopicIndex)}
+                        onDragOver={(e) => handleDragOver(e, group.topicId, subTopicIndex)}
+                        onDrop={(e) => handleDrop(e, group.topicId, subTopicIndex)}
+                        onDragEnd={handleDragEnd}
+                        className={`hover:bg-gray-50 transition-colors ${subTopic.status === "inactive" ? "opacity-60" : ""} ${
+                          isDraggedRow ? "opacity-50 ring-2 ring-blue-400" : ""
+                        } ${isDragOverRow ? "bg-blue-50 border-y-2 border-blue-200" : ""}`}
                       >
+                        {canDrag && (
+                          <td
+                            className="px-1 py-2 text-center w-10 cursor-grab active:cursor-grabbing"
+                            onClick={(e) => e.stopPropagation()}
+                            title="Drag to reorder"
+                          >
+                            <span className="inline-flex text-gray-400 hover:text-gray-600" aria-hidden>
+                              <FaGripVertical className="w-4 h-4" />
+                            </span>
+                            <span className="sr-only">Drag to reorder position {subTopicIndex + 1}</span>
+                          </td>
+                        )}
                         {/* Order Number */}
                         <td className="px-2 py-1 whitespace-nowrap">
                           <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-gray-100 text-gray-700 font-medium text-sm">
@@ -365,14 +457,31 @@ const SubTopicsTable = ({
             {/* Mobile/Tablet View */}
             <div className="lg:hidden divide-y divide-gray-200">
               {sortedSubTopics.map((subTopic, subTopicIndex) => {
-                const dragKey = `${groupIndex}-${subTopicIndex}`;
+                const rowCanDrag = canDrag && sortedSubTopics.length > 1;
+                const isDraggedRow = dragged.topicId === group.topicId && dragged.index === subTopicIndex;
+                const isDragOverRow = dragOver.topicId === group.topicId && dragOver.index === subTopicIndex && !isDraggedRow;
                 return (
                   <div
                     key={subTopic._id || subTopicIndex}
-                    className={`p-1.5 hover:bg-gray-50 transition-colors ${subTopic.status === "inactive" ? "opacity-60" : ""
-                      }`}
+                    draggable={rowCanDrag}
+                    onDragStart={(e) => handleDragStart(e, group.topicId, subTopicIndex)}
+                    onDragOver={(e) => handleDragOver(e, group.topicId, subTopicIndex)}
+                    onDrop={(e) => handleDrop(e, group.topicId, subTopicIndex)}
+                    onDragEnd={handleDragEnd}
+                    className={`p-1.5 hover:bg-gray-50 transition-colors ${subTopic.status === "inactive" ? "opacity-60" : ""} ${
+                      isDraggedRow ? "opacity-50 ring-2 ring-blue-400 rounded" : ""
+                    } ${isDragOverRow ? "bg-blue-50 border-2 border-blue-200 rounded" : ""}`}
                   >
                     <div className="flex justify-between items-start gap-2">
+                      {canDrag && (
+                        <div
+                          className="shrink-0 pt-0.5 cursor-grab active:cursor-grabbing text-gray-400"
+                          onClick={(e) => e.stopPropagation()}
+                          title="Drag to reorder"
+                        >
+                          <FaGripVertical className="w-4 h-4" />
+                        </div>
+                      )}
                       <div className="flex-1 min-w-0 pr-2">
                         <h3
                           onClick={() => handleSubTopicClick(subTopic._id)}
@@ -416,7 +525,7 @@ const SubTopicsTable = ({
                           </div>
                         </div>
                       </div>
-                      <div className="flex items-center gap-1 flex-shrink-0">
+                      <div className="flex items-center gap-1 shrink-0">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();

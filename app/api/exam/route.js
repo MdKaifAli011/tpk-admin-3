@@ -182,16 +182,16 @@ export async function POST(request) {
       return errorResponse("Exam with this name already exists", 409);
     }
 
-    // Auto-generate orderNumber if not provided
+    // Auto-generate orderNumber: unique, incremental (max + 1)
     let orderNumber = body.orderNumber;
-    if (!orderNumber || orderNumber < 1) {
-      // Find the maximum orderNumber and add 1
+    if (!orderNumber || orderNumber < 1 || !Number.isInteger(Number(orderNumber))) {
       const maxOrderExam = await Exam.findOne()
         .sort({ orderNumber: -1 })
         .select("orderNumber")
         .lean();
-      orderNumber = maxOrderExam?.orderNumber ? maxOrderExam.orderNumber + 1 : 1;
+      orderNumber = maxOrderExam?.orderNumber != null ? maxOrderExam.orderNumber + 1 : 1;
     }
+    orderNumber = Math.max(1, Number(orderNumber));
 
     // Debug logging
     console.log("Creating Exam with payload:", {

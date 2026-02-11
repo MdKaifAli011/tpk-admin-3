@@ -22,6 +22,8 @@ import {
   FaClipboardList,
   FaLock,
   FaSearch,
+  FaCheck,
+  FaGripVertical,
 } from "react-icons/fa";
 import { ToastContainer, useToast } from "../ui/Toast";
 import api from "@/lib/api";
@@ -60,6 +62,8 @@ const UnitsManagement = () => {
   const [filterExam, setFilterExam] = useState("");
   const [filterSubject, setFilterSubject] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [isReorderMode, setIsReorderMode] = useState(false);
+  const [reorderDraft, setReorderDraft] = useState({});
   const { toasts, removeToast, success, error: showError } = useToast();
   const isFetchingRef = useRef(false);
   const [metaFilter, setMetaFilter] = useState("all"); // all, filled, notFilled
@@ -538,104 +542,48 @@ const UnitsManagement = () => {
     }
   };
 
-  const handleDragEnd = async (result) => {
-    // Check permissions
+  const saveReorderForSubject = async (subjectId, newOrderedUnits) => {
+    const payload = {
+      units: newOrderedUnits.map((u, i) => ({
+        id: u._id,
+        orderNumber: i + 1,
+      })),
+    };
+    const response = await api.patch("/unit/reorder", payload);
+    if (!response.data?.success) {
+      throw new Error(response.data?.message || "Failed to reorder units");
+    }
+  };
+
+  const handleReorderDraft = (subjectId, newOrderedUnits) => {
+    setReorderDraft((prev) => ({ ...prev, [subjectId]: newOrderedUnits }));
+  };
+
+  const handleDoneReorder = async () => {
     if (!canReorder) {
       showError(getPermissionMessage("reorder", role));
       return;
     }
-
-    if (!result.destination) return;
-
-    const sourceIndex = result.source.index;
-    const destinationIndex = result.destination.index;
-
-    // Don't do anything if dropped in the same position
-    if (sourceIndex === destinationIndex) return;
-
-    const items = Array.from(units);
-    const reorderedItem = items[sourceIndex];
-
-    // Get the subject ID to identify the group
-    const subjectId = reorderedItem.subjectId?._id || reorderedItem.subjectId;
-    const examId = reorderedItem.examId?._id || reorderedItem.examId;
-
-    // Find all units in the same group (same exam and subject)
-    const groupUnits = items.filter((unit) => {
-      const unitSubjectId = unit.subjectId?._id || unit.subjectId;
-      const unitExamId = unit.examId?._id || unit.examId;
-      return unitSubjectId === subjectId && unitExamId === examId;
-    });
-
-    // Find indices within the group
-    const groupSourceIndex = groupUnits.findIndex(
-      (u) => (u._id || u.id) === (reorderedItem._id || reorderedItem.id)
-    );
-
-    // Create a reordered group array
-    const reorderedGroup = Array.from(groupUnits);
-    const [movedUnit] = reorderedGroup.splice(groupSourceIndex, 1);
-
-    // Calculate destination index within the group
-    const groupDestIndex = groupUnits.findIndex((unit, idx) => {
-      if (idx === groupSourceIndex) return false;
-      const flatIndex = items.findIndex(
-        (u) => (u._id || u.id) === (unit._id || unit.id)
-      );
-      return flatIndex >= destinationIndex;
-    });
-    const finalDestIndex = groupDestIndex === -1 ? reorderedGroup.length : groupDestIndex;
-    reorderedGroup.splice(finalDestIndex, 0, movedUnit);
-
-    // Update order numbers only for units in this group
-    const updatedGroupUnits = reorderedGroup.map((unit, index) => ({
-      ...unit,
-      orderNumber: index + 1,
-    }));
-
-    // Update the full units array, preserving other units
-    const updatedItems = items.map((unit) => {
-      const updatedUnit = updatedGroupUnits.find(
-        (u) => (u._id || u.id) === (unit._id || unit.id)
-      );
-      return updatedUnit || unit;
-    });
-
-    // Optimistically update the UI first
-    setUnits(updatedItems);
-
-    // Update all affected units in the database using the reorder endpoint
+    const subjectIds = Object.keys(reorderDraft);
+    if (subjectIds.length === 0) {
+      setIsReorderMode(false);
+      return;
+    }
     try {
-      // Prepare units data for the reorder endpoint
-      const unitsData = updatedGroupUnits.map((unit) => ({
-        id: unit._id,
-        orderNumber: unit.orderNumber,
-      }));
-
-      // Use the dedicated reorder endpoint
-      const response = await api.patch("/unit/reorder", {
-        units: unitsData,
-      });
-
-      if (response.data.success) {
-        console.log(
-          `✅ Unit "${reorderedItem.name}" moved to position ${finalDestIndex + 1}`
-        );
-      } else {
-        throw new Error(response.data.message || "Failed to reorder units");
-      }
-    } catch (error) {
-      console.error("❌ Error updating unit order:", error);
-
-      // Revert the local state if API call fails
-      console.log("🔄 Reverting unit order due to API error");
-      fetchUnits();
-
-      // Show user-friendly error message
-      setError(
-        `Failed to update unit order: ${error.response?.data?.message || error.message
-        }`
+      setIsFormLoading(true);
+      setError(null);
+      await Promise.all(
+        subjectIds.map((subjectId) => saveReorderForSubject(subjectId, reorderDraft[subjectId]))
       );
+      await fetchUnits();
+      setReorderDraft({});
+      setIsReorderMode(false);
+      success("Unit order updated successfully.");
+    } catch (err) {
+      const msg = err?.response?.data?.message || err?.message || "Failed to reorder units. Please try again.";
+      showError(msg);
+    } finally {
+      setIsFormLoading(false);
     }
   };
 
@@ -1050,11 +998,46 @@ const UnitsManagement = () => {
                   Units List
                 </h2>
                 <p className="text-sm text-gray-600 mt-1">
-                  Manage your units, view details, and perform actions. You can
-                  drag to reorder units.
+                  Manage your units, view details, and perform actions
+                  {isReorderMode && (
+                    <span className="ml-1.5 text-blue-600 font-medium">— Drag rows within each subject, then click Done to save</span>
+                  )}
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-3">
+                {canReorder && !searchQuery.trim() && (
+                  isReorderMode ? (
+                    <button
+                      type="button"
+                      onClick={handleDoneReorder}
+                      disabled={isFormLoading}
+                      className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+                      title="Save order and exit reorder mode"
+                    >
+                      {isFormLoading ? (
+                        <>
+                          <LoadingSpinner size="small" />
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <FaCheck className="w-4 h-4" />
+                          Done
+                        </>
+                      )}
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => { setIsReorderMode(true); setReorderDraft({}); }}
+                      className="inline-flex items-center gap-2 px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-sm font-medium transition-colors"
+                      title="Enable drag and drop to reorder units per subject"
+                    >
+                      <FaGripVertical className="w-4 h-4" />
+                      Reorder position
+                    </button>
+                  )
+                )}
                 {/* Search Input */}
                 <div className="relative min-w-[200px] sm:min-w-[240px]">
                   <input
@@ -1267,8 +1250,10 @@ const UnitsManagement = () => {
                   units={filteredUnits}
                   onEdit={handleEditUnit}
                   onDelete={handleDeleteUnit}
-                  onDragEnd={handleDragEnd}
                   onToggleStatus={handleToggleStatus}
+                  onReorderDraft={handleReorderDraft}
+                  reorderDraft={reorderDraft}
+                  isReorderAllowed={isReorderMode && !searchQuery.trim()}
                 />
               </Suspense>
             )}

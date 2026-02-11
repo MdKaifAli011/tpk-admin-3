@@ -1,16 +1,20 @@
 "use client";
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { FaEdit, FaTrash, FaEye, FaPowerOff, FaLock, FaGraduationCap } from "react-icons/fa";
+import { FaEdit, FaTrash, FaEye, FaPowerOff, FaLock, FaGraduationCap, FaGripVertical } from "react-icons/fa";
 import { FiCheck } from "react-icons/fi";
 import {
   usePermissions,
   getPermissionMessage,
 } from "../../hooks/usePermissions";
 
-const SubjectTable = ({ subjects, onEdit, onDelete, onToggleStatus, onTogglePractice }) => {
+const SubjectTable = ({ subjects, onEdit, onDelete, onToggleStatus, onTogglePractice, onReorderDraft, reorderDraft = {}, isReorderAllowed = true }) => {
   const { canEdit, canDelete, canReorder, role } = usePermissions();
   const router = useRouter();
+  const [dragged, setDragged] = useState({ examId: null, index: null });
+  const [dragOver, setDragOver] = useState({ examId: null, index: null });
+
+  const canDrag = Boolean(canReorder && onReorderDraft && isReorderAllowed);
 
   const getVisitStats = (subject) => subject?.visitStats;
 
@@ -29,6 +33,59 @@ const SubjectTable = ({ subjects, onEdit, onDelete, onToggleStatus, onTogglePrac
 
   const handleSubjectClick = (subject) => {
     router.push(`/admin/subject/${subject._id}`);
+  };
+
+  const handleDragStart = (e, examId, index) => {
+    if (!canDrag) return;
+    setDragged({ examId, index });
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", String(index));
+    e.dataTransfer.setData("application/json", JSON.stringify({ examId, index }));
+    try { e.target.closest("tr")?.classList.add("opacity-50", "ring-2", "ring-blue-400"); } catch (_) {}
+  };
+
+  const handleDragOver = (e, examId, index) => {
+    if (!canDrag || dragged.examId === null || dragged.examId !== examId) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    setDragOver({ examId, index });
+  };
+
+  const handleDragLeave = (e) => {
+    if (!e.currentTarget.contains(e.relatedTarget)) setDragOver({ examId: null, index: null });
+  };
+
+  const handleDrop = (e, examId, toIndex) => {
+    if (!canDrag) return;
+    e.preventDefault();
+    const fromIndex = parseInt(e.dataTransfer.getData("text/plain"), 10);
+    const payload = e.dataTransfer.getData("application/json");
+    let payloadExamId = examId;
+    try {
+      const parsed = JSON.parse(payload || "{}");
+      if (parsed.examId) payloadExamId = parsed.examId;
+    } catch (_) {}
+    if (payloadExamId !== examId || Number.isNaN(fromIndex) || fromIndex === toIndex) {
+      setDragOver({ examId: null, index: null });
+      setDragged({ examId: null, index: null });
+      return;
+    }
+    setDragOver({ examId: null, index: null });
+    setDragged({ examId: null, index: null });
+    try { e.target.closest("tr")?.classList.remove("opacity-50", "ring-2", "ring-blue-400"); } catch (_) {}
+    const group = groupedSubjects.find((g) => g.examId === examId);
+    if (!group) return;
+    const currentList = reorderDraft[examId] ?? group.subjects;
+    const newOrder = [...currentList];
+    const [removed] = newOrder.splice(fromIndex, 1);
+    newOrder.splice(toIndex, 0, removed);
+    onReorderDraft(examId, newOrder);
+  };
+
+  const handleDragEnd = (e) => {
+    setDragged({ examId: null, index: null });
+    setDragOver({ examId: null, index: null });
+    try { e.target.closest("tr")?.classList.remove("opacity-50", "ring-2", "ring-blue-400"); } catch (_) {}
   };
 
   // Group subjects by Exam
@@ -77,6 +134,15 @@ const SubjectTable = ({ subjects, onEdit, onDelete, onToggleStatus, onTogglePrac
     );
   }, [subjects]);
 
+  const displayGroups = useMemo(
+    () =>
+      groupedSubjects.map((g) => ({
+        ...g,
+        subjects: reorderDraft[g.examId] ?? g.subjects,
+      })),
+    [groupedSubjects, reorderDraft]
+  );
+
   if (!subjects || subjects.length === 0) {
     return (
       <div className="text-center py-12 bg-white rounded-lg border border-gray-200 shadow-sm">
@@ -93,7 +159,7 @@ const SubjectTable = ({ subjects, onEdit, onDelete, onToggleStatus, onTogglePrac
 
   return (
     <div className="space-y-6">
-      {groupedSubjects.map((group, groupIndex) => (
+      {displayGroups.map((group, groupIndex) => (
         <div
           key={group.examId}
           className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm"
@@ -125,6 +191,11 @@ const SubjectTable = ({ subjects, onEdit, onDelete, onToggleStatus, onTogglePrac
             <table className="min-w-full divide-y divide-gray-200 table-fixed">
               <thead className="bg-gray-50">
                 <tr>
+                  {canDrag && (
+                    <th className="px-1 py-1 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-10">
+                      Order
+                    </th>
+                  )}
                   <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Subject Name
                   </th>
@@ -145,13 +216,38 @@ const SubjectTable = ({ subjects, onEdit, onDelete, onToggleStatus, onTogglePrac
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {group.subjects.map((subject, index) => (
+              <tbody
+                className="bg-white divide-y divide-gray-200"
+                onDragLeave={handleDragLeave}
+              >
+                {group.subjects.map((subject, index) => {
+                  const rowCanDrag = canDrag && group.subjects.length > 1;
+                  const isDragged = dragged.examId === group.examId && dragged.index === index;
+                  const isDragOver = dragOver.examId === group.examId && dragOver.index === index && !isDragged;
+                  return (
                   <tr
                     key={subject._id || subject.id || index}
-                    className={`hover:bg-gray-50 transition-colors ${subject.status === "inactive" ? "opacity-60" : ""
-                      }`}
+                    draggable={rowCanDrag}
+                    onDragStart={(e) => handleDragStart(e, group.examId, index)}
+                    onDragOver={(e) => handleDragOver(e, group.examId, index)}
+                    onDrop={(e) => handleDrop(e, group.examId, index)}
+                    onDragEnd={handleDragEnd}
+                    className={`hover:bg-gray-50 transition-colors ${subject.status === "inactive" ? "opacity-60" : ""} ${
+                      isDragged ? "opacity-50 ring-2 ring-blue-400" : ""
+                    } ${isDragOver ? "bg-blue-50 border-y-2 border-blue-200" : ""}`}
                   >
+                    {canDrag && (
+                      <td
+                        className="px-1 py-2 text-center w-10 cursor-grab active:cursor-grabbing"
+                        onClick={(e) => e.stopPropagation()}
+                        title="Drag to reorder"
+                      >
+                        <span className="inline-flex text-gray-400 hover:text-gray-600" aria-hidden>
+                          <FaGripVertical className="w-4 h-4" />
+                        </span>
+                        <span className="sr-only">Drag to reorder position {index + 1}</span>
+                      </td>
+                    )}
                     <td
                       className={`px-2 py-1 whitespace-nowrap text-sm font-medium cursor-pointer hover:text-blue-600 transition-colors ${subject.status === "inactive"
                         ? "text-gray-500 line-through"
@@ -314,20 +410,40 @@ const SubjectTable = ({ subjects, onEdit, onDelete, onToggleStatus, onTogglePrac
                       </div>
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>
 
           {/* Tablet/Mobile View */}
           <div className="lg:hidden divide-y divide-gray-200">
-            {group.subjects.map((subject, index) => (
+            {group.subjects.map((subject, index) => {
+              const rowCanDrag = canDrag && group.subjects.length > 1;
+              const isDragged = dragged.examId === group.examId && dragged.index === index;
+              const isDragOver = dragOver.examId === group.examId && dragOver.index === index && !isDragged;
+              return (
               <div
                 key={subject._id || subject.id || index}
-                className={`p-1.5 hover:bg-gray-50 transition-colors ${subject.status === "inactive" ? "opacity-60" : ""
-                  }`}
+                draggable={rowCanDrag}
+                onDragStart={(e) => handleDragStart(e, group.examId, index)}
+                onDragOver={(e) => handleDragOver(e, group.examId, index)}
+                onDrop={(e) => handleDrop(e, group.examId, index)}
+                onDragEnd={handleDragEnd}
+                className={`p-1.5 hover:bg-gray-50 transition-colors ${subject.status === "inactive" ? "opacity-60" : ""} ${
+                  isDragged ? "opacity-50 ring-2 ring-blue-400 rounded" : ""
+                } ${isDragOver ? "bg-blue-50 border-2 border-blue-200 rounded" : ""}`}
               >
                 <div className="flex items-start justify-between gap-2">
+                  {canDrag && (
+                    <div
+                      className="shrink-0 pt-0.5 cursor-grab active:cursor-grabbing text-gray-400"
+                      onClick={(e) => e.stopPropagation()}
+                      title="Drag to reorder"
+                    >
+                      <FaGripVertical className="w-4 h-4" />
+                    </div>
+                  )}
                   <div
                     className="flex-1 min-w-0 pr-2 cursor-pointer hover:text-blue-600 transition-colors"
                     onClick={() => handleSubjectClick(subject)}
@@ -388,7 +504,7 @@ const SubjectTable = ({ subjects, onEdit, onDelete, onToggleStatus, onTogglePrac
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1 flex-shrink-0">
+                  <div className="flex items-center gap-1 shrink-0">
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -497,7 +613,8 @@ const SubjectTable = ({ subjects, onEdit, onDelete, onToggleStatus, onTogglePrac
                   </div>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       ))}

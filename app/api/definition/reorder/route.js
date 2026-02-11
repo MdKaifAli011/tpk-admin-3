@@ -93,6 +93,8 @@ async function handleReorder(request) {
 
     await Definition.bulkWrite(finalUpdates);
 
+    logger.info("Definition reorder: same subtopic, count=" + definitions.length);
+
     return NextResponse.json({
       success: true,
       message: "Definitions reordered successfully",

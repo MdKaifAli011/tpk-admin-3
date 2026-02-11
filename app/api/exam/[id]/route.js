@@ -250,6 +250,25 @@ export async function DELETE(request, { params }) {
       return notFoundResponse(ERROR_MESSAGES.EXAM_NOT_FOUND);
     }
 
+    // Re-sequence orderNumber to 1, 2, 3, ... (unique, no gaps)
+    const remaining = await Exam.find({}).sort({ orderNumber: 1, createdAt: 1 }).select("_id").lean();
+    if (remaining.length > 0) {
+      const tempUpdates = remaining.map((exam, index) => ({
+        updateOne: {
+          filter: { _id: exam._id },
+          update: { $set: { orderNumber: 100000 + index } },
+        },
+      }));
+      await Exam.bulkWrite(tempUpdates);
+      const finalUpdates = remaining.map((exam, index) => ({
+        updateOne: {
+          filter: { _id: exam._id },
+          update: { $set: { orderNumber: index + 1 } },
+        },
+      }));
+      await Exam.bulkWrite(finalUpdates);
+    }
+
     // Clear cache when exam is deleted
     cacheManager.clear("exam");
 

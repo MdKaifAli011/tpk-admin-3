@@ -3,10 +3,17 @@ import connectDB from "@/lib/mongodb";
 import Unit from "@/models/Unit";
 import mongoose from "mongoose";
 import { logger } from "@/utils/logger";
+import { requireAction } from "@/middleware/authMiddleware";
+import cacheManager from "@/utils/cacheManager";
 
-// ---------- REORDER UNITS ----------
-export async function PATCH(request) {
+// ---------- REORDER UNITS (per subject): POST or PATCH ----------
+async function handleReorder(request) {
   try {
+    const authCheck = await requireAction(request, "PATCH");
+    if (authCheck.error) {
+      return NextResponse.json(authCheck, { status: authCheck.status || 403 });
+    }
+
     await connectDB();
     const body = await request.json();
     const { units } = body;
@@ -79,6 +86,9 @@ export async function PATCH(request) {
       });
     }
 
+    logger.info("Unit reorder: same subject, count=" + units.length);
+    cacheManager?.clear?.("units-");
+
     return NextResponse.json({
       success: true,
       message: "Units reordered successfully",
@@ -90,5 +100,13 @@ export async function PATCH(request) {
       { status: 500 }
     );
   }
+}
+
+export async function PATCH(request) {
+  return handleReorder(request);
+}
+
+export async function POST(request) {
+  return handleReorder(request);
 }
 

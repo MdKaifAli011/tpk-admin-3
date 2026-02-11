@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import Chapter from "@/models/Chapter";
 import { logger } from "@/utils/logger";
+import { requireAction } from "@/middleware/authMiddleware";
 
 export async function POST(request) {
   return handleReorder(request);
@@ -13,6 +14,11 @@ export async function PATCH(request) {
 
 async function handleReorder(request) {
   try {
+    const authCheck = await requireAction(request, "PATCH");
+    if (authCheck.error) {
+      return NextResponse.json(authCheck, { status: authCheck.status || 403 });
+    }
+
     await connectDB();
 
     const { chapters } = await request.json();
@@ -90,6 +96,8 @@ async function handleReorder(request) {
     }));
 
     const result = await Chapter.bulkWrite(finalUpdates);
+
+    logger.info("Chapter reorder: same unit, count=" + chapters.length);
 
     return NextResponse.json({
       success: true,
