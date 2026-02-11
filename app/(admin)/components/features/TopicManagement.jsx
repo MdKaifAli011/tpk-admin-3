@@ -62,7 +62,7 @@ const TopicManagement = () => {
   const isFetchingRef = useRef(false);
   const [metaFilter, setMetaFilter] = useState("all"); // all, filled, notFilled
 
-  // Fetch topics from API using Axios
+  // Fetch topics from API using Axios (and update cache)
   const fetchTopics = useCallback(async () => {
     if (isFetchingRef.current) return;
     try {
@@ -72,7 +72,9 @@ const TopicManagement = () => {
       const response = await api.get(`/topic?status=all&limit=10000&metaStatus=${metaFilter}`);
 
       if (response.data.success) {
-        setTopics(response.data.data);
+        const fetchedTopics = response.data.data || [];
+        setTopics(fetchedTopics);
+        setTopicListCache(fetchedTopics, metaFilter);
       } else {
         throw new Error(response.data.message || "Failed to fetch topics");
       }
@@ -88,6 +90,18 @@ const TopicManagement = () => {
       isFetchingRef.current = false;
     }
   }, [metaFilter]);
+
+  // Load topics: use cache when returning from detail (no API call), otherwise fetch once
+  useEffect(() => {
+    const cached = getTopicListCache(metaFilter);
+    if (cached != null && Array.isArray(cached)) {
+      setTopics(cached);
+      setIsDataLoading(false);
+      setError(null);
+      return;
+    }
+    fetchTopics();
+  }, [metaFilter, fetchTopics]);
 
   // Fetch exams from API
   const fetchExams = useCallback(async () => {
