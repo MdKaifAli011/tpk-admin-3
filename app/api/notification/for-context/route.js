@@ -137,7 +137,13 @@ export async function GET(request) {
     const context = await resolveContextFromSlugs(searchParams);
 
     const conditions = [];
-    if (context.examId) conditions.push({ entityType: "exam", entityId: context.examId });
+    // General: show on every page (all exams and all their children)
+    conditions.push({ entityType: "general" });
+    // Exam (page only): show only on that exam's own page, not on subject/unit/... under it
+    const isExamPageOnly = context.examId && !context.subjectId && !context.unitId && !context.chapterId && !context.topicId && !context.subTopicId && !context.definitionId;
+    if (isExamPageOnly) conditions.push({ entityType: "exam", entityId: context.examId });
+    // Exam with children: show on that exam page AND on all its children (subject, unit, chapter, topic, subtopic, definition under that exam)
+    if (context.examId) conditions.push({ entityType: "exam_with_children", entityId: context.examId });
     if (context.subjectId) conditions.push({ entityType: "subject", entityId: context.subjectId });
     if (context.unitId) conditions.push({ entityType: "unit", entityId: context.unitId });
     if (context.chapterId) conditions.push({ entityType: "chapter", entityId: context.chapterId });
@@ -147,11 +153,11 @@ export async function GET(request) {
 
     const limit = Math.min(parseInt(searchParams.get("limit") || "50", 10), 100);
 
-    // No context (e.g. main/landing page): return exam-level notifications so strip can show on homepage
-    if (conditions.length === 0) {
+    // No context (e.g. main/landing page): return general only (no exam selected yet)
+    if (context.examId == null && context.subjectId == null && context.unitId == null && context.chapterId == null && context.topicId == null && context.subTopicId == null && context.definitionId == null) {
       const list = await Notification.find({
         status: "active",
-        entityType: "exam",
+        entityType: "general",
       })
         .sort({ orderNumber: 1, createdAt: -1 })
         .limit(limit)

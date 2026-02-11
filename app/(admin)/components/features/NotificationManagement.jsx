@@ -25,6 +25,16 @@ import api from "@/lib/api";
 
 const LIMIT = 500;
 
+import { config } from "@/config/config";
+
+/** Frontend base URL for View links (strip /api from config.baseUrl so link opens the (main) app page with basePath). */
+const getFrontendBaseUrl = () => {
+  const base = (config.baseUrl || "").replace(/\/api\/?$/, "");
+  if (base) return base;
+  const path = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
+  return typeof window !== "undefined" ? `${window.location.origin}${path}` : "";
+};
+
 const parseListResponse = (res) => {
   const d = res?.data?.data;
   if (Array.isArray(d)) return d;
@@ -33,7 +43,9 @@ const parseListResponse = (res) => {
 };
 
 const ENTITY_LABELS = {
-  exam: "Exam",
+  general: "General (every exam and all their children)",
+  exam: "Exam (this exam page only)",
+  exam_with_children: "Exam (this exam + all its children pages)",
   subject: "Subject",
   unit: "Unit",
   chapter: "Chapter",
@@ -51,7 +63,9 @@ const ICON_OPTIONS = [
 ];
 
 const HIERARCHY_PILL_COLORS = {
+  General: "bg-slate-600 text-white",
   Exam: "bg-emerald-600 text-white",
+  "Exam (and children)": "bg-emerald-700 text-white",
   Subject: "bg-purple-600 text-white",
   Unit: "bg-blue-600 text-white",
   Chapter: "bg-red-600 text-white",
@@ -122,6 +136,7 @@ const NotificationManagement = () => {
   const [showFilters, setShowFilters] = useState(false);
   const fetchRef = useRef(false);
 
+  const [filterLevel, setFilterLevel] = useState("all"); // "all" | "general" | "hierarchy"
   const [examId, setExamId] = useState("");
   const [subjectId, setSubjectId] = useState("");
   const [unitId, setUnitId] = useState("");
@@ -172,6 +187,8 @@ const NotificationManagement = () => {
   const [formHierarchyLoading, setFormHierarchyLoading] = useState({});
 
   const getEffectiveHierarchy = useCallback(() => {
+    if (filterLevel === "general") return { entityType: "general" };
+    if (filterLevel !== "hierarchy") return null;
     if (definitionId) return { entityType: "definition", entityId: definitionId };
     if (subTopicId) return { entityType: "subtopic", entityId: subTopicId };
     if (topicId) return { entityType: "topic", entityId: topicId };
@@ -180,7 +197,7 @@ const NotificationManagement = () => {
     if (subjectId) return { entityType: "subject", entityId: subjectId };
     if (examId) return { entityType: "exam", entityId: examId };
     return null;
-  }, [examId, subjectId, unitId, chapterId, topicId, subTopicId, definitionId]);
+  }, [filterLevel, examId, subjectId, unitId, chapterId, topicId, subTopicId, definitionId]);
 
   const fetchNotifications = useCallback(async () => {
     if (fetchRef.current) return;
@@ -191,7 +208,7 @@ const NotificationManagement = () => {
       const hierarchy = getEffectiveHierarchy();
       if (hierarchy) {
         params.set("entityType", hierarchy.entityType);
-        params.set("entityId", hierarchy.entityId);
+        if (hierarchy.entityId) params.set("entityId", hierarchy.entityId);
       }
       const res = await api.get(`/notification?${params.toString()}`);
       const payload = res?.data?.data;
@@ -255,6 +272,7 @@ const NotificationManagement = () => {
   };
 
   const activeFilterCount =
+    (filterLevel !== "all" ? 1 : 0) +
     (examId ? 1 : 0) +
     (subjectId ? 1 : 0) +
     (unitId ? 1 : 0) +
@@ -264,6 +282,7 @@ const NotificationManagement = () => {
     (definitionId ? 1 : 0);
 
   const clearFilters = () => {
+    setFilterLevel("all");
     setExamId("");
     setSubjectId("");
     setUnitId("");
@@ -502,6 +521,7 @@ const NotificationManagement = () => {
   }, [showForm, editingId, formSubTopicId]);
 
   const getFormEntityId = () => {
+    if (formEntityType === "general") return null;
     if (editingId) return formEntityId;
     if (formEntityType === "definition") return formDefinitionId;
     if (formEntityType === "subtopic") return formSubTopicId;
@@ -509,7 +529,7 @@ const NotificationManagement = () => {
     if (formEntityType === "chapter") return formChapterId;
     if (formEntityType === "unit") return formUnitId;
     if (formEntityType === "subject") return formSubjectId;
-    if (formEntityType === "exam") return formExamId;
+    if (formEntityType === "exam" || formEntityType === "exam_with_children") return formExamId;
     return formEntityId;
   };
 
@@ -550,7 +570,7 @@ const NotificationManagement = () => {
     setEditingId(n._id);
     setEditingNotification(n);
     setFormEntityType(n.entityType || "exam");
-    setFormEntityId(n.entityId?._id ? n.entityId._id : n.entityId);
+    setFormEntityId(n.entityType === "general" ? "" : (n.entityId?._id ? n.entityId._id : n.entityId));
     setFormTitle(n.title || "");
     setFormMessage(n.message || "");
     setFormStripMessage(n.stripMessage || "");
@@ -567,8 +587,8 @@ const NotificationManagement = () => {
 
   const saveForm = async () => {
     const entityId = getFormEntityId();
-    if (!entityId) {
-      showError("Please select the full hierarchy for the chosen level (e.g. for Topic: select Exam → Subject → Unit → Chapter → Topic).");
+    if (formEntityType !== "general" && !entityId) {
+      showError("Please select the full hierarchy for the chosen level (e.g. for Exam: select Exam; for Topic: select Exam → Subject → Unit → Chapter → Topic).");
       return;
     }
     if (!formTitle.trim()) {
@@ -579,7 +599,7 @@ const NotificationManagement = () => {
     try {
       const payload = {
         entityType: formEntityType,
-        entityId,
+        entityId: formEntityType === "general" ? null : entityId,
         title: formTitle.trim(),
         message: formMessage.trim(),
         stripMessage: formStripMessage.trim(),
@@ -629,7 +649,7 @@ const NotificationManagement = () => {
         status: next,
         iconType: n.iconType ?? "announcement",
         entityType: n.entityType,
-        entityId: n.entityId?._id || n.entityId,
+        entityId: n.entityType === "general" ? null : (n.entityId?._id || n.entityId),
       });
       success(`Notification ${next === "active" ? "activated" : "deactivated"}`);
       fetchNotifications();
@@ -687,39 +707,51 @@ const NotificationManagement = () => {
                         <option key={k} value={k}>{v}</option>
                       ))}
                     </select>
-                    <p className="text-xs text-gray-500 mt-1.5">Select level, then choose Exam → Subject → … up to that level.</p>
+                    {formEntityType === "general" ? (
+                      <p className="text-xs text-gray-500 mt-1.5">Shows on every page: all exams (NEET, JEE, SAT, etc.) and all their children pages.</p>
+                    ) : formEntityType === "exam" ? (
+                      <p className="text-xs text-gray-500 mt-1.5">Shows only on the selected exam’s own page (not on subject/unit/chapter/… under it).</p>
+                    ) : formEntityType === "exam_with_children" ? (
+                      <p className="text-xs text-gray-500 mt-1.5">Shows on the selected exam page and all its children (subjects, units, chapters, topics, subtopics, definitions under that exam).</p>
+                    ) : (
+                      <p className="text-xs text-gray-500 mt-1.5">Select level, then choose Exam → Subject → … up to that level.</p>
+                    )}
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                    {["exam", "subject", "unit", "chapter", "topic", "subtopic", "definition"].map((level, idx) => {
-                      const levels = ["exam", "subject", "unit", "chapter", "topic", "subtopic", "definition"];
-                      if (levels.indexOf(formEntityType) < idx) return null;
-                      const valueMap = { exam: formExamId, subject: formSubjectId, unit: formUnitId, chapter: formChapterId, topic: formTopicId, subtopic: formSubTopicId, definition: formDefinitionId };
-                      const setValueMap = { exam: setFormExamId, subject: setFormSubjectId, unit: setFormUnitId, chapter: setFormChapterId, topic: setFormTopicId, subtopic: setFormSubTopicId, definition: setFormDefinitionId };
-                      const optionsMap = { exam: formExams, subject: formSubjects, unit: formUnits, chapter: formChapters, topic: formTopics, subtopic: formSubtopics, definition: formDefinitions };
-                      const disabled = level === "exam" ? formHierarchyLoading.exam : (level === "subject" ? !formExamId || formHierarchyLoading.subject : level === "unit" ? !formSubjectId || formHierarchyLoading.unit : level === "chapter" ? !formUnitId || formHierarchyLoading.chapter : level === "topic" ? !formChapterId || formHierarchyLoading.topic : level === "subtopic" ? !formTopicId || formHierarchyLoading.subtopic : !formSubTopicId || formHierarchyLoading.definition);
-                      const value = valueMap[level];
-                      const setValue = setValueMap[level];
-                      const options = optionsMap[level] || [];
-                      const label = level === "subtopic" ? "SubTopic" : ENTITY_LABELS[level];
-                      const placeholder = level === "exam" ? "Select Exam" : level === "subject" ? (formExamId ? "Select Subject" : "Select Exam first") : level === "unit" ? (formSubjectId ? "Select Unit" : "Select Subject first") : level === "chapter" ? (formUnitId ? "Select Chapter" : "Select Unit first") : level === "topic" ? (formChapterId ? "Select Topic" : "Select Chapter first") : level === "subtopic" ? (formTopicId ? "Select SubTopic" : "Select Topic first") : (formSubTopicId ? "Select Definition" : "Select SubTopic first");
-                      return (
-                        <div key={level}>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
-                          <select
-                            value={value}
-                            onChange={(e) => setValue(e.target.value)}
-                            disabled={disabled}
-                            className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white disabled:bg-gray-100 disabled:text-gray-400"
-                          >
-                            <option value="">{placeholder}</option>
-                            {options.map((o) => (
-                              <option key={o._id} value={o._id}>{o.name || o.title || o.term || String(o._id).slice(-6)}</option>
-                            ))}
-                          </select>
-                        </div>
-                      );
-                    })}
-                  </div>
+                  {formEntityType !== "general" && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                      {["exam", "subject", "unit", "chapter", "topic", "subtopic", "definition"].map((level, idx) => {
+                        const levels = ["exam", "subject", "unit", "chapter", "topic", "subtopic", "definition"];
+                        if (formEntityType === "exam" || formEntityType === "exam_with_children") {
+                          if (level !== "exam") return null;
+                        } else if (levels.indexOf(formEntityType) < idx) return null;
+                        const valueMap = { exam: formExamId, subject: formSubjectId, unit: formUnitId, chapter: formChapterId, topic: formTopicId, subtopic: formSubTopicId, definition: formDefinitionId };
+                        const setValueMap = { exam: setFormExamId, subject: setFormSubjectId, unit: setFormUnitId, chapter: setFormChapterId, topic: setFormTopicId, subtopic: setFormSubTopicId, definition: setFormDefinitionId };
+                        const optionsMap = { exam: formExams, subject: formSubjects, unit: formUnits, chapter: formChapters, topic: formTopics, subtopic: formSubtopics, definition: formDefinitions };
+                        const disabled = level === "exam" ? formHierarchyLoading.exam : (level === "subject" ? !formExamId || formHierarchyLoading.subject : level === "unit" ? !formSubjectId || formHierarchyLoading.unit : level === "chapter" ? !formUnitId || formHierarchyLoading.chapter : level === "topic" ? !formChapterId || formHierarchyLoading.topic : level === "subtopic" ? !formTopicId || formHierarchyLoading.subtopic : !formSubTopicId || formHierarchyLoading.definition);
+                        const value = valueMap[level];
+                        const setValue = setValueMap[level];
+                        const options = optionsMap[level] || [];
+                        const label = level === "subtopic" ? "SubTopic" : ENTITY_LABELS[level];
+                        const placeholder = level === "exam" ? "Select Exam" : level === "subject" ? (formExamId ? "Select Subject" : "Select Exam first") : level === "unit" ? (formSubjectId ? "Select Unit" : "Select Subject first") : level === "chapter" ? (formUnitId ? "Select Chapter" : "Select Unit first") : level === "topic" ? (formChapterId ? "Select Topic" : "Select Chapter first") : level === "subtopic" ? (formTopicId ? "Select SubTopic" : "Select Topic first") : (formSubTopicId ? "Select Definition" : "Select SubTopic first");
+                        return (
+                          <div key={level}>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+                            <select
+                              value={value}
+                              onChange={(e) => setValue(e.target.value)}
+                              disabled={disabled}
+                              className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white disabled:bg-gray-100 disabled:text-gray-400"
+                            >
+                              <option value="">{placeholder}</option>
+                              {options.map((o) => (
+                                <option key={o._id} value={o._id}>{o.name || o.title || o.term || String(o._id).slice(-6)}</option>
+                              ))}
+                            </select>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </>
               )}
 
@@ -876,149 +908,180 @@ const NotificationManagement = () => {
 
           {showFilters && (
             <div className="px-4 py-4 sm:px-6 bg-gray-50 border-b border-gray-200">
-              <p className="text-xs text-gray-500 mb-4">
-                Select hierarchy (Exam → Subject → Unit → Chapter → Topic → SubTopic → Definition) to filter notifications for that level.
-              </p>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-4 mb-4">
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">Filter by Exam</label>
-                  <select
-                    value={examId}
-                    onChange={(e) => { setExamId(e.target.value); setSubjectId(""); setUnitId(""); setChapterId(""); setTopicId(""); setSubTopicId(""); setDefinitionId(""); setUnits([]); setChapters([]); setTopics([]); setSubtopics([]); setDefinitions([]); }}
-                    disabled={hierarchyLoading.exam}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-60 bg-white disabled:bg-gray-100"
-                  >
-                    <option value="">All Exams</option>
-                    {exams.map((e) => (
-                      <option key={e._id} value={e._id}>{e.name || e.title || String(e._id).slice(-6)}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">Filter by Subject</label>
-                  <select
-                    value={subjectId}
-                    onChange={(e) => { setSubjectId(e.target.value); setUnitId(""); setChapterId(""); setTopicId(""); setSubTopicId(""); setDefinitionId(""); setChapters([]); setTopics([]); setSubtopics([]); setDefinitions([]); }}
-                    disabled={!examId || hierarchyLoading.subject}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white disabled:bg-gray-100 disabled:text-gray-400"
-                  >
-                    <option value="">{examId ? "All Subjects" : "Select Exam First"}</option>
-                    {subjects.map((s) => (
-                      <option key={s._id} value={s._id}>{s.name || s.title || String(s._id).slice(-6)}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">Filter by Unit</label>
-                  <select
-                    value={unitId}
-                    onChange={(e) => { setUnitId(e.target.value); setChapterId(""); setTopicId(""); setSubTopicId(""); setDefinitionId(""); setTopics([]); setSubtopics([]); setDefinitions([]); }}
-                    disabled={!subjectId || hierarchyLoading.unit}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white disabled:bg-gray-100 disabled:text-gray-400"
-                  >
-                    <option value="">{subjectId ? "All Units" : "Select Subject First"}</option>
-                    {units.map((u) => (
-                      <option key={u._id} value={u._id}>{u.name || u.title || String(u._id).slice(-6)}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">Filter by Chapter</label>
-                  <select
-                    value={chapterId}
-                    onChange={(e) => { setChapterId(e.target.value); setTopicId(""); setSubTopicId(""); setDefinitionId(""); setSubtopics([]); setDefinitions([]); }}
-                    disabled={!unitId || hierarchyLoading.chapter}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white disabled:bg-gray-100 disabled:text-gray-400"
-                  >
-                    <option value="">{unitId ? "All Chapters" : "Select Unit First"}</option>
-                    {chapters.map((c) => (
-                      <option key={c._id} value={c._id}>{c.name || c.title || String(c._id).slice(-6)}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">Filter by Topic</label>
-                  <select
-                    value={topicId}
-                    onChange={(e) => { setTopicId(e.target.value); setSubTopicId(""); setDefinitionId(""); setDefinitions([]); }}
-                    disabled={!chapterId || hierarchyLoading.topic}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white disabled:bg-gray-100 disabled:text-gray-400"
-                  >
-                    <option value="">{chapterId ? "All Topics" : "Select Chapter First"}</option>
-                    {topics.map((t) => (
-                      <option key={t._id} value={t._id}>{t.name || t.title || String(t._id).slice(-6)}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">Filter by SubTopic</label>
-                  <select
-                    value={subTopicId}
-                    onChange={(e) => { setSubTopicId(e.target.value); setDefinitionId(""); }}
-                    disabled={!topicId || hierarchyLoading.subtopic}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white disabled:bg-gray-100 disabled:text-gray-400"
-                  >
-                    <option value="">{topicId ? "All SubTopics" : "Select Topic First"}</option>
-                    {subtopics.map((s) => (
-                      <option key={s._id} value={s._id}>{s.name || s.title || String(s._id).slice(-6)}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">Filter by Definition</label>
-                  <select
-                    value={definitionId}
-                    onChange={(e) => setDefinitionId(e.target.value)}
-                    disabled={!subTopicId || hierarchyLoading.definition}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white disabled:bg-gray-100 disabled:text-gray-400"
-                  >
-                    <option value="">{subTopicId ? "All Definitions" : "Select SubTopic First"}</option>
-                    {definitions.map((d) => (
-                      <option key={d._id} value={d._id}>{d.name || d.title || d.term || String(d._id).slice(-6)}</option>
-                    ))}
-                  </select>
-                </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Show notifications</label>
+                <select
+                  value={filterLevel}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setFilterLevel(v);
+                    if (v !== "hierarchy") {
+                      setExamId(""); setSubjectId(""); setUnitId(""); setChapterId(""); setTopicId(""); setSubTopicId(""); setDefinitionId("");
+                    }
+                  }}
+                  className="min-w-[200px] px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
+                >
+                  <option value="all">All (general + exam + hierarchy)</option>
+                  <option value="general">General only (all pages)</option>
+                  <option value="hierarchy">By hierarchy (select Exam → … below)</option>
+                </select>
+                <p className="text-xs text-gray-500 mt-1.5">
+                  General = every page. Exam = that exam and all its children. Use hierarchy to filter by specific exam/subject/unit/….
+                </p>
               </div>
+              {filterLevel === "hierarchy" && (
+                <>
+                  <p className="text-xs text-gray-500 mb-4">
+                    Select hierarchy (Exam → Subject → Unit → Chapter → Topic → SubTopic → Definition) to filter notifications for that level.
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-4 mb-4">
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700">Filter by Exam</label>
+                      <select
+                        value={examId}
+                        onChange={(e) => { setExamId(e.target.value); setSubjectId(""); setUnitId(""); setChapterId(""); setTopicId(""); setSubTopicId(""); setDefinitionId(""); setUnits([]); setChapters([]); setTopics([]); setSubtopics([]); setDefinitions([]); }}
+                        disabled={hierarchyLoading.exam}
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-60 bg-white disabled:bg-gray-100"
+                      >
+                        <option value="">All Exams</option>
+                        {exams.map((e) => (
+                          <option key={e._id} value={e._id}>{e.name || e.title || String(e._id).slice(-6)}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700">Filter by Subject</label>
+                      <select
+                        value={subjectId}
+                        onChange={(e) => { setSubjectId(e.target.value); setUnitId(""); setChapterId(""); setTopicId(""); setSubTopicId(""); setDefinitionId(""); setChapters([]); setTopics([]); setSubtopics([]); setDefinitions([]); }}
+                        disabled={!examId || hierarchyLoading.subject}
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white disabled:bg-gray-100 disabled:text-gray-400"
+                      >
+                        <option value="">{examId ? "All Subjects" : "Select Exam First"}</option>
+                        {subjects.map((s) => (
+                          <option key={s._id} value={s._id}>{s.name || s.title || String(s._id).slice(-6)}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700">Filter by Unit</label>
+                      <select
+                        value={unitId}
+                        onChange={(e) => { setUnitId(e.target.value); setChapterId(""); setTopicId(""); setSubTopicId(""); setDefinitionId(""); setTopics([]); setSubtopics([]); setDefinitions([]); }}
+                        disabled={!subjectId || hierarchyLoading.unit}
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white disabled:bg-gray-100 disabled:text-gray-400"
+                      >
+                        <option value="">{subjectId ? "All Units" : "Select Subject First"}</option>
+                        {units.map((u) => (
+                          <option key={u._id} value={u._id}>{u.name || u.title || String(u._id).slice(-6)}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700">Filter by Chapter</label>
+                      <select
+                        value={chapterId}
+                        onChange={(e) => { setChapterId(e.target.value); setTopicId(""); setSubTopicId(""); setDefinitionId(""); setSubtopics([]); setDefinitions([]); }}
+                        disabled={!unitId || hierarchyLoading.chapter}
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white disabled:bg-gray-100 disabled:text-gray-400"
+                      >
+                        <option value="">{unitId ? "All Chapters" : "Select Unit First"}</option>
+                        {chapters.map((c) => (
+                          <option key={c._id} value={c._id}>{c.name || c.title || String(c._id).slice(-6)}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700">Filter by Topic</label>
+                      <select
+                        value={topicId}
+                        onChange={(e) => { setTopicId(e.target.value); setSubTopicId(""); setDefinitionId(""); setDefinitions([]); }}
+                        disabled={!chapterId || hierarchyLoading.topic}
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white disabled:bg-gray-100 disabled:text-gray-400"
+                      >
+                        <option value="">{chapterId ? "All Topics" : "Select Chapter First"}</option>
+                        {topics.map((t) => (
+                          <option key={t._id} value={t._id}>{t.name || t.title || String(t._id).slice(-6)}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700">Filter by SubTopic</label>
+                      <select
+                        value={subTopicId}
+                        onChange={(e) => { setSubTopicId(e.target.value); setDefinitionId(""); }}
+                        disabled={!topicId || hierarchyLoading.subtopic}
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white disabled:bg-gray-100 disabled:text-gray-400"
+                      >
+                        <option value="">{topicId ? "All SubTopics" : "Select Topic First"}</option>
+                        {subtopics.map((s) => (
+                          <option key={s._id} value={s._id}>{s.name || s.title || String(s._id).slice(-6)}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700">Filter by Definition</label>
+                      <select
+                        value={definitionId}
+                        onChange={(e) => setDefinitionId(e.target.value)}
+                        disabled={!subTopicId || hierarchyLoading.definition}
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white disabled:bg-gray-100 disabled:text-gray-400"
+                      >
+                        <option value="">{subTopicId ? "All Definitions" : "Select SubTopic First"}</option>
+                        {definitions.map((d) => (
+                          <option key={d._id} value={d._id}>{d.name || d.title || d.term || String(d._id).slice(-6)}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </>
+              )}
               {activeFilterCount > 0 && (
-                <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-gray-200">
+                <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-gray-200 mt-4">
                   <span className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Active Filters</span>
-                  {examId && (
+                  {filterLevel === "general" && (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-100 text-slate-700 rounded-full text-xs font-medium">
+                      General only (all pages)
+                      <button type="button" onClick={() => setFilterLevel("all")} className="hover:bg-slate-200 rounded-full p-0.5 transition-colors" aria-label="Clear"><FaTimes className="w-3 h-3" /></button>
+                    </span>
+                  )}
+                  {filterLevel === "hierarchy" && examId && (
                     <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
                       Exam: {exams.find((e) => String(e._id) === String(examId))?.name || exams.find((e) => String(e._id) === String(examId))?.title || "—"}
                       <button type="button" onClick={() => { setExamId(""); setSubjectId(""); setUnitId(""); setChapterId(""); setTopicId(""); setSubTopicId(""); setDefinitionId(""); }} className="hover:bg-blue-200 rounded-full p-0.5 transition-colors" aria-label="Clear exam"><FaTimes className="w-3 h-3" /></button>
                     </span>
                   )}
-                  {subjectId && (
+                  {filterLevel === "hierarchy" && subjectId && (
                     <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
                       Subject: {subjects.find((s) => String(s._id) === String(subjectId))?.name || subjects.find((s) => String(s._id) === String(subjectId))?.title || "—"}
                       <button type="button" onClick={() => { setSubjectId(""); setUnitId(""); setChapterId(""); setTopicId(""); setSubTopicId(""); setDefinitionId(""); }} className="hover:bg-blue-200 rounded-full p-0.5 transition-colors" aria-label="Clear subject"><FaTimes className="w-3 h-3" /></button>
                     </span>
                   )}
-                  {unitId && (
+                  {filterLevel === "hierarchy" && unitId && (
                     <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
                       Unit: {units.find((u) => String(u._id) === String(unitId))?.name || units.find((u) => String(u._id) === String(unitId))?.title || "—"}
                       <button type="button" onClick={() => { setUnitId(""); setChapterId(""); setTopicId(""); setSubTopicId(""); setDefinitionId(""); }} className="hover:bg-blue-200 rounded-full p-0.5 transition-colors" aria-label="Clear unit"><FaTimes className="w-3 h-3" /></button>
                     </span>
                   )}
-                  {chapterId && (
+                  {filterLevel === "hierarchy" && chapterId && (
                     <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
                       Chapter: {chapters.find((c) => String(c._id) === String(chapterId))?.name || chapters.find((c) => String(c._id) === String(chapterId))?.title || "—"}
                       <button type="button" onClick={() => { setChapterId(""); setTopicId(""); setSubTopicId(""); setDefinitionId(""); }} className="hover:bg-blue-200 rounded-full p-0.5 transition-colors" aria-label="Clear chapter"><FaTimes className="w-3 h-3" /></button>
                     </span>
                   )}
-                  {topicId && (
+                  {filterLevel === "hierarchy" && topicId && (
                     <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
                       Topic: {topics.find((t) => String(t._id) === String(topicId))?.name || topics.find((t) => String(t._id) === String(topicId))?.title || "—"}
                       <button type="button" onClick={() => { setTopicId(""); setSubTopicId(""); setDefinitionId(""); }} className="hover:bg-blue-200 rounded-full p-0.5 transition-colors" aria-label="Clear topic"><FaTimes className="w-3 h-3" /></button>
                     </span>
                   )}
-                  {subTopicId && (
+                  {filterLevel === "hierarchy" && subTopicId && (
                     <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
                       SubTopic: {subtopics.find((s) => String(s._id) === String(subTopicId))?.name || subtopics.find((s) => String(s._id) === String(subTopicId))?.title || "—"}
                       <button type="button" onClick={() => { setSubTopicId(""); setDefinitionId(""); }} className="hover:bg-blue-200 rounded-full p-0.5 transition-colors" aria-label="Clear subtopic"><FaTimes className="w-3 h-3" /></button>
                     </span>
                   )}
-                  {definitionId && (
+                  {filterLevel === "hierarchy" && definitionId && (
                     <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
                       Definition: {definitions.find((d) => String(d._id) === String(definitionId))?.name || definitions.find((d) => String(d._id) === String(definitionId))?.title || definitions.find((d) => String(d._id) === String(definitionId))?.term || "—"}
                       <button type="button" onClick={() => setDefinitionId("")} className="hover:bg-blue-200 rounded-full p-0.5 transition-colors" aria-label="Clear definition"><FaTimes className="w-3 h-3" /></button>
@@ -1095,7 +1158,7 @@ const NotificationManagement = () => {
                                 <div className="inline-flex items-center gap-0.5">
                                   {n.slug && (
                                     <a
-                                      href={`/notification/${n.slug}`}
+                                      href={`${getFrontendBaseUrl()}/notification/${n.slug}`}
                                       target="_blank"
                                       rel="noopener noreferrer"
                                       className="text-green-600 hover:text-green-800 p-1.5 rounded-lg hover:bg-green-50 transition-colors"

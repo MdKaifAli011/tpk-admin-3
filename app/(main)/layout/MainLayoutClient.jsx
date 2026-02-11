@@ -30,7 +30,7 @@ export default function MainLayoutClient({ children }) {
       pathname !== "/contact" &&
       !pathname?.startsWith("/calculator") &&
       !pathname?.startsWith("/store") &&
-      !pathname?.startsWith("/notification") &&
+      
       !pathname?.startsWith("/pages") &&
       !isExamPagesRoute
     );

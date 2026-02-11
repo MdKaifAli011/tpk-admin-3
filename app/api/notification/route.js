@@ -18,12 +18,13 @@ import SubTopic from "@/models/SubTopic";
 import Definition from "@/models/Definition";
 import { createSlug } from "@/utils/serverSlug";
 
-const ENTITY_TYPES = ["exam", "subject", "unit", "chapter", "topic", "subtopic", "definition"];
+const ENTITY_TYPES = ["general", "exam", "exam_with_children", "subject", "unit", "chapter", "topic", "subtopic", "definition"];
 
 async function attachHierarchyPaths(notifications) {
   if (!notifications?.length) return notifications;
   const byType = {};
   notifications.forEach((n) => {
+    if (n.entityType === "general") return; // handled below
     if (!n.entityType || !n.entityId) return;
     const id = n.entityId?._id ? n.entityId._id.toString() : n.entityId?.toString();
     if (!byType[n.entityType]) byType[n.entityType] = new Set();
@@ -40,6 +41,10 @@ async function attachHierarchyPaths(notifications) {
       case "exam":
         entities = await Exam.find({ _id: { $in: idList } }).select("name").lean();
         entities.forEach((e) => { pathMap[`exam:${e._id}`] = [{ label: "Exam", name: e.name || "—" }]; });
+        break;
+      case "exam_with_children":
+        entities = await Exam.find({ _id: { $in: idList } }).select("name").lean();
+        entities.forEach((e) => { pathMap[`exam_with_children:${e._id}`] = [{ label: "Exam (and children)", name: e.name || "—" }]; });
         break;
       case "subject":
         entities = await Subject.find({ _id: { $in: idList } }).populate("examId", "name").lean();
@@ -71,6 +76,9 @@ async function attachHierarchyPaths(notifications) {
   }
 
   return notifications.map((n) => {
+    if (n.entityType === "general") {
+      return { ...n, hierarchyPath: [{ label: "General", name: "All pages" }] };
+    }
     const id = n.entityId?._id ? n.entityId._id.toString() : n.entityId?.toString();
     const path = pathMap[`${n.entityType}:${id}`] || [{ label: n.entityType, name: "—" }];
     return { ...n, hierarchyPath: path };
@@ -96,9 +104,13 @@ export async function GET(request) {
     if (statusFilter !== "all") {
       query.status = { $regex: new RegExp(`^${statusFilter}$`, "i") };
     }
-    if (entityType && ENTITY_TYPES.includes(entityType) && entityId && mongoose.Types.ObjectId.isValid(entityId)) {
+    if (entityType && ENTITY_TYPES.includes(entityType)) {
       query.entityType = entityType;
-      query.entityId = new mongoose.Types.ObjectId(entityId);
+      if (entityType === "general") {
+        query.$or = [{ entityId: null }, { entityId: { $exists: false } }];
+      } else if (entityId && mongoose.Types.ObjectId.isValid(entityId)) {
+        query.entityId = new mongoose.Types.ObjectId(entityId);
+      }
     }
 
     const [list, total] = await Promise.all([
@@ -130,19 +142,22 @@ export async function POST(request) {
     const body = await request.json();
     const { entityType, entityId, title, message, stripMessage, link, linkLabel, slug, status, iconType, orderNumber } = body;
 
-    if (!ENTITY_TYPES.includes(entityType) || !entityId) {
-      return errorResponse("entityType and entityId are required", 400);
+    if (!ENTITY_TYPES.includes(entityType)) {
+      return errorResponse("entityType is required", 400);
+    }
+    if (entityType !== "general" && !entityId) {
+      return errorResponse("entityId is required when entityType is not general", 400);
     }
     if (!title?.trim()) {
       return errorResponse("title is required", 400);
     }
-    if (!mongoose.Types.ObjectId.isValid(entityId)) {
+    if (entityType !== "general" && !mongoose.Types.ObjectId.isValid(entityId)) {
       return errorResponse("Invalid entityId", 400);
     }
 
     const doc = await Notification.create({
       entityType,
-      entityId: new mongoose.Types.ObjectId(entityId),
+      entityId: entityType === "general" ? null : new mongoose.Types.ObjectId(entityId),
       title: title.trim(),
       message: message?.trim() ?? "",
       stripMessage: stripMessage?.trim() ?? "",

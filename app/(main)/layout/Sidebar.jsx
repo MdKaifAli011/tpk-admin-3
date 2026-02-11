@@ -9,7 +9,7 @@ import React, {
 } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
-import { FaSearch, FaChevronDown, FaChevronRight } from "react-icons/fa";
+import { FaSearch, FaChevronDown, FaChevronRight, FaBell } from "react-icons/fa";
 import {
   fetchExams,
   fetchTree,
@@ -155,6 +155,7 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
   const isDownloadPath = pathSegments[1] === "download";
   const isBlogPath = pathSegments[1] === "blog";
   const isVideoLibraryPath = pathSegments[1] === "video-library";
+  const isNotificationPath = pathSegments[0] === "notification";
 
   const activeExam = useMemo(
     () => exams.find((e) => e._id === activeExamId) || null,
@@ -166,7 +167,7 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
 
   // Video Library only at /{examSlug}/video-library — link uses exam from path or first exam
   const videoLibrarySlug = useMemo(() => {
-    const nonExamSegments = ["blog", "download", "contact", "login", "register", "calculator"];
+    const nonExamSegments = ["blog", "download", "contact", "login", "register", "calculator", "notification"];
     if (examSlugFromPath && !nonExamSegments.includes(examSlugFromPath)) return examSlugFromPath;
     const first = exams[0];
     return first ? (first.slug || createSlug(first.name)) : "";
@@ -940,6 +941,21 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
                     aria-disabled={!videoLibrarySlug}
                   >
                     <span>Prime Video</span>
+                  </Link>
+                </li>
+
+                {/* Notifications — /notification */}
+                <li>
+                  <Link
+                    href="/notification"
+                    className={`w-full flex items-center gap-2 px-3 py-2 font-semibold rounded-lg transition-all duration-200 ${
+                      isNotificationPath
+                        ? "bg-indigo-100/60 shadow-sm text-indigo-900"
+                        : "text-black hover:text-indigo-600 hover:bg-gray-50"
+                    }`}
+                    onClick={closeOnMobile}
+                  >
+                    <span>Notifications</span>
                   </Link>
                 </li>
               </ul>

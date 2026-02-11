@@ -1,12 +1,13 @@
 import mongoose from "mongoose";
 import { createSlug, generateUniqueSlug } from "../utils/serverSlug.js";
 
-const NOTIFICATION_LEVELS = ["exam", "subject", "unit", "chapter", "topic", "subtopic", "definition"];
+const NOTIFICATION_LEVELS = ["general", "exam", "exam_with_children", "subject", "unit", "chapter", "topic", "subtopic", "definition"];
 const ICON_TYPES = ["comment", "trophy", "document", "info", "announcement"];
 
 const notificationSchema = new mongoose.Schema(
   {
     // Level: which page(s) this notification shows on
+    // general = all pages; exam = that exam page only; exam_with_children = that exam page + all its children pages
     entityType: {
       type: String,
       enum: NOTIFICATION_LEVELS,
@@ -15,7 +16,8 @@ const notificationSchema = new mongoose.Schema(
     },
     entityId: {
       type: mongoose.Schema.Types.ObjectId,
-      required: true,
+      required: false,
+      default: null,
       index: true,
     },
     title: {
@@ -75,6 +77,13 @@ const notificationSchema = new mongoose.Schema(
 
 notificationSchema.index({ entityType: 1, entityId: 1, status: 1 });
 notificationSchema.index({ status: 1, createdAt: -1 });
+
+notificationSchema.pre("validate", function (next) {
+  if (this.entityType !== "general" && (this.entityId == null || this.entityId === "")) {
+    this.invalidate("entityId", "entityId is required when entityType is not general");
+  }
+  next();
+});
 
 notificationSchema.pre("save", async function (next) {
   if (this.isModified("title") && !this.slug) {

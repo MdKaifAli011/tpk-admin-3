@@ -17,10 +17,14 @@ import Topic from "@/models/Topic";
 import SubTopic from "@/models/SubTopic";
 import Definition from "@/models/Definition";
 
-const ENTITY_TYPES = ["exam", "subject", "unit", "chapter", "topic", "subtopic", "definition"];
+const ENTITY_TYPES = ["general", "exam", "exam_with_children", "subject", "unit", "chapter", "topic", "subtopic", "definition"];
 
 async function attachHierarchyPath(notification) {
-  if (!notification?.entityType || !notification?.entityId) return notification;
+  if (!notification?.entityType) return notification;
+  if (notification.entityType === "general") {
+    return { ...notification, hierarchyPath: [{ label: "General", name: "All pages" }] };
+  }
+  if (!notification.entityId) return { ...notification, hierarchyPath: [{ label: notification.entityType, name: "—" }] };
   const id = notification.entityId?._id ? notification.entityId._id.toString() : notification.entityId?.toString();
   const entityType = notification.entityType;
   let path = [];
@@ -29,6 +33,10 @@ async function attachHierarchyPath(notification) {
       case "exam":
         const exam = await Exam.findById(id).select("name").lean();
         path = [{ label: "Exam", name: exam?.name || "—" }];
+        break;
+      case "exam_with_children":
+        const examWc = await Exam.findById(id).select("name").lean();
+        path = [{ label: "Exam (and children)", name: examWc?.name || "—" }];
         break;
       case "subject":
         const subject = await Subject.findById(id).populate("examId", "name").lean();
@@ -111,8 +119,8 @@ export async function PUT(request, { params }) {
     const allowed = ["title", "message", "stripMessage", "link", "linkLabel", "slug", "status", "iconType", "orderNumber", "entityType", "entityId"];
     for (const key of allowed) {
       if (body[key] !== undefined) {
-        if (key === "entityId" && body[key]) {
-          notification.entityId = new mongoose.Types.ObjectId(body[key]);
+        if (key === "entityId") {
+          notification.entityId = body[key] == null || body[key] === "" ? null : new mongoose.Types.ObjectId(body[key]);
         } else {
           notification[key] = body[key];
         }

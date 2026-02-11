@@ -15,9 +15,13 @@ const ICON_MAP = {
   announcement: FaBullhorn,
 };
 
+/** Get hierarchy slugs from pathname for notification for-context API. Strips basePath so exam/subject/... match route. */
 function getPathSegments(pathname) {
-  const p = pathname?.replace(/^\/+/, "") || "";
-  const parts = p.split("/").filter(Boolean);
+  let p = (pathname || "").trim();
+  const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
+  if (basePath && p.startsWith(basePath)) p = p.slice(basePath.length).trim() || "/";
+  p = p.replace(/^\/+/, "");
+  const parts = p ? p.split("/").filter(Boolean) : [];
   return {
     exam: parts[0] || "",
     subject: parts[1] || "",
@@ -90,6 +94,7 @@ export default function NotificationDropdown() {
     setLoading(true);
     const token = typeof window !== "undefined" ? localStorage.getItem("student_token") : null;
     const isContentPage = segments.exam && !["notification", "login", "register", "contact", "pages"].includes(segments.exam);
+    // On content pages: for-context returns general + exam (page only) + exam_with_children + exact match for level
     const url = isContentPage
       ? `${basePath}/api/notification/for-context?${new URLSearchParams({
         ...(segments.exam && { exam: segments.exam }),

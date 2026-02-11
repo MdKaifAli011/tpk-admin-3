@@ -14,6 +14,13 @@ import {
 
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
 
+/** True if link is a full URL (use <a> and open as-is); false for paths (use Next Link). */
+function isFullUrl(url) {
+  if (!url || typeof url !== "string") return false;
+  const t = url.trim();
+  return t.startsWith("http://") || t.startsWith("https://");
+}
+
 // --- CONFIGURATION: whole strip bg = icon/type color (same to same), no slate ---
 const ICON_CONFIG = {
   comment: {
@@ -71,9 +78,13 @@ function getConfig(iconType) {
   return ICON_CONFIG[iconType] || DEFAULT_CONFIG;
 }
 
+/** Get hierarchy slugs from pathname for notification for-context API. Strips basePath so exam/subject/... match route. */
 function getPathSegments(pathname) {
-  const p = pathname?.replace(/^\/+/, "") || "";
-  const parts = p.split("/").filter(Boolean);
+  let p = (pathname || "").trim();
+  const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
+  if (basePath && p.startsWith(basePath)) p = p.slice(basePath.length).trim() || "/";
+  p = p.replace(/^\/+/, "");
+  const parts = p ? p.split("/").filter(Boolean) : [];
   return {
     exam: parts[0] || "",
     subject: parts[1] || "",
@@ -119,6 +130,7 @@ export default function NotificationStrip() {
   useEffect(() => {
     if (!shouldShowStrip) return;
     let cancelled = false;
+    // Pass hierarchy slugs so API returns: general (everywhere) + exam (page only) + exam_with_children (exam + children) + exact match for subject/unit/...
     const params = new URLSearchParams();
     if (segments.exam) params.set("exam", segments.exam);
     if (segments.subject) params.set("subject", segments.subject);
@@ -216,9 +228,11 @@ function SingleStripItem({ item, onDismiss }) {
   const config = getConfig(item.iconType);
   const { Icon } = config;
   const stripText = item.stripMessage?.trim() || item.title;
-  const href = item.slug ? `/notification/${item.slug}` : item.link || "#";
+  const href = item.slug ? `/notification/${item.slug}` : (item.link || "#");
   const hasLink = item.slug || item.link;
   const actionLabel = item.linkLabel || "View";
+  const external = hasLink && isFullUrl(item.link);
+  const pillClass = `inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold shadow-sm transition-all duration-200 active:scale-95 ${config.pill} focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent`;
 
   return (
     <div
@@ -237,11 +251,18 @@ function SingleStripItem({ item, onDismiss }) {
       </div>
 
       <div className="shrink-0 flex items-center gap-2">
-        {hasLink && (
-          <Link
-            href={href}
-            className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold shadow-sm transition-all duration-200 active:scale-95 ${config.pill} focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent`}
+        {hasLink && external && (
+          <a
+            href={item.link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={pillClass}
           >
+            {actionLabel}
+          </a>
+        )}
+        {hasLink && !external && (
+          <Link href={href} className={pillClass}>
             {actionLabel}
           </Link>
         )}
@@ -281,9 +302,11 @@ function ToastCarousel({ items, onDismiss }) {
   const config = getConfig(item.iconType);
   const { Icon } = config;
   const stripText = item.stripMessage?.trim() || item.title;
-  const href = item.slug ? `/notification/${item.slug}` : item.link || "#";
+  const href = item.slug ? `/notification/${item.slug}` : (item.link || "#");
   const hasLink = item.slug || item.link;
   const actionLabel = item.linkLabel || "View";
+  const external = hasLink && isFullUrl(item.link);
+  const linkClass = "inline-flex underline text-white/90 hover:text-white";
 
   return (
     <div
@@ -301,11 +324,13 @@ function ToastCarousel({ items, onDismiss }) {
         <p className="text-sm sm:text-base font-medium truncate text-white/95">
           {stripText}
         </p>
-        {hasLink && (
-          <Link
-            href={href}
-            className={`inline-flex underline text-white/90 hover:text-white `}
-          >
+        {hasLink && external && (
+          <a href={item.link} target="_blank" rel="noopener noreferrer" className={linkClass}>
+            {actionLabel}
+          </a>
+        )}
+        {hasLink && !external && (
+          <Link href={href} className={linkClass}>
             {actionLabel}
           </Link>
         )}
