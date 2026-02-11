@@ -15,6 +15,8 @@ import {
   FaFileAlt,
   FaInfoCircle,
   FaBullhorn,
+  FaEye,
+  FaPowerOff,
 } from "react-icons/fa";
 import { ToastContainer, useToast } from "../ui/Toast";
 import { LoadingSpinner } from "../ui/SkeletonLoader";
@@ -64,15 +66,42 @@ const HierarchyPills = ({ path }) => {
     <div className="flex flex-wrap items-center gap-1 text-xs">
       {path.map((item, i) => (
         <span key={i} className="inline-flex items-center gap-1">
-          {i > 0 && <FaChevronRight className="w-3 h-3 text-gray-400 shrink-0" />}
+          {i > 0 && <span className="text-gray-400 font-normal"> &gt; </span>}
           <span
-            className={`inline-flex items-center px-2 py-1 rounded-full font-medium whitespace-nowrap max-w-[180px] truncate ${HIERARCHY_PILL_COLORS[item.label] || "bg-gray-500 text-white"}`}
+            className={`inline-flex items-center px-2 py-1 rounded-full font-medium whitespace-nowrap max-w-[200px] truncate ${HIERARCHY_PILL_COLORS[item.label] || "bg-gray-500 text-white"}`}
             title={item.name}
           >
             {item.name}
           </span>
         </span>
       ))}
+    </div>
+  );
+};
+
+/** Path as table heading: pills + count pill (e.g. "2 Notifications") */
+const PathHeadingWithCount = ({ path, count }) => {
+  const pillClass = (label) => HIERARCHY_PILL_COLORS[label] || "bg-gray-500 text-white";
+  return (
+    <div className="flex flex-wrap items-center gap-1.5 text-xs font-medium">
+      {path?.map((item, i) => (
+        <span key={i} className="inline-flex items-center gap-1.5">
+          {i > 0 && <span className="text-gray-400"> &gt; </span>}
+          <span
+            className={`inline-flex items-center px-2.5 py-1 rounded-full text-white whitespace-nowrap max-w-[220px] truncate ${pillClass(item.label)}`}
+            title={item.name}
+          >
+            {item.name}
+          </span>
+        </span>
+      ))}
+      {path?.length > 0 && <span className="text-gray-400"> &gt; </span>}
+      <span
+        className="inline-flex items-center px-2.5 py-1 rounded-full bg-gray-700 text-white whitespace-nowrap"
+        title={`${count} notification(s) at this level`}
+      >
+        {count} {count === 1 ? "Notification" : "Notifications"}
+      </span>
     </div>
   );
 };
@@ -198,6 +227,32 @@ const NotificationManagement = () => {
     }
     return result;
   }, [notifications, searchQuery]);
+
+  // Group by level path so each path has its own table (like Definition Management)
+  const groupedByPath = useMemo(() => {
+    if (!filteredNotifications?.length) return [];
+    const map = new Map();
+    filteredNotifications.forEach((n) => {
+      const path = n.hierarchyPath || [];
+      const key = path.map((p) => `${p.label || ""}:${p.name || ""}`).join("|") || `no-path-${n.entityType}-${n.entityId}`;
+      if (!map.has(key)) {
+        map.set(key, { path, notifications: [] });
+      }
+      map.get(key).notifications.push(n);
+    });
+    return Array.from(map.values()).sort((a, b) => {
+      const aStr = a.path.map((p) => p.name).join(" ");
+      const bStr = b.path.map((p) => p.name).join(" ");
+      return aStr.localeCompare(bStr);
+    });
+  }, [filteredNotifications]);
+
+  const hasContent = (n) => (n.message && n.message.trim()) || (n.stripMessage && n.stripMessage.trim());
+  const contentDate = (n) => {
+    if (!hasContent(n)) return null;
+    const d = n.updatedAt || n.createdAt;
+    return d ? new Date(d).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }) : null;
+  };
 
   const activeFilterCount =
     (examId ? 1 : 0) +
@@ -561,6 +616,28 @@ const NotificationManagement = () => {
     }
   };
 
+  const handleToggleStatus = async (n) => {
+    const next = n.status === "active" ? "inactive" : "active";
+    try {
+      await api.put(`/notification/${n._id}`, {
+        title: n.title,
+        message: n.message ?? "",
+        stripMessage: n.stripMessage ?? "",
+        link: n.link ?? "",
+        linkLabel: n.linkLabel ?? "View",
+        slug: n.slug,
+        status: next,
+        iconType: n.iconType ?? "announcement",
+        entityType: n.entityType,
+        entityId: n.entityId?._id || n.entityId,
+      });
+      success(`Notification ${next === "active" ? "activated" : "deactivated"}`);
+      fetchNotifications();
+    } catch (err) {
+      showError(err?.response?.data?.message || "Failed to update status");
+    }
+  };
+
   const formatDate = (d) =>
     d ? new Date(d).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "—";
 
@@ -570,161 +647,161 @@ const NotificationManagement = () => {
         <ToastContainer toasts={toasts} removeToast={removeToast} />
 
         {showForm && (
-        <div ref={formSectionRef} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-          <div className="px-6 py-5 border-b border-gray-200 bg-gradient-to-b from-indigo-50/60 to-white">
-            <div className="flex items-center justify-between gap-4">
-              <h2 className="text-xl font-bold text-gray-900">
-                {editingId ? "Edit Notification" : "Create Notification"}
-              </h2>
-              <button
-                type="button"
-                onClick={() => setShowForm(false)}
-                className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-                aria-label="Close form"
-              >
-                <FaTimes className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-          <div className="p-6 space-y-6">
-            {editingId ? (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Target (read-only)</label>
-                <div className="px-4 py-3 bg-gray-50 rounded-xl border border-gray-200">
-                  <HierarchyPills path={editingNotification?.hierarchyPath} />
-                </div>
+          <div ref={formSectionRef} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+            <div className="px-6 py-5 border-b border-gray-200 bg-gradient-to-b from-indigo-50/60 to-white">
+              <div className="flex items-center justify-between gap-4">
+                <h2 className="text-xl font-bold text-gray-900">
+                  {editingId ? "Edit Notification" : "Create Notification"}
+                </h2>
+                <button
+                  type="button"
+                  onClick={() => setShowForm(false)}
+                  className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                  aria-label="Close form"
+                >
+                  <FaTimes className="w-5 h-5" />
+                </button>
               </div>
-            ) : (
-              <>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Level (where this notification will show)</label>
-                  <select
-                    value={formEntityType}
-                    onChange={(e) => {
-                      setFormEntityType(e.target.value);
-                      setFormExamId(""); setFormSubjectId(""); setFormUnitId(""); setFormChapterId(""); setFormTopicId(""); setFormSubTopicId(""); setFormDefinitionId("");
-                    }}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
-                  >
-                    {Object.entries(ENTITY_LABELS).map(([k, v]) => (
-                      <option key={k} value={k}>{v}</option>
-                    ))}
-                  </select>
-                  <p className="text-xs text-gray-500 mt-1.5">Select level, then choose Exam → Subject → … up to that level.</p>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                  {["exam", "subject", "unit", "chapter", "topic", "subtopic", "definition"].map((level, idx) => {
-                    const levels = ["exam", "subject", "unit", "chapter", "topic", "subtopic", "definition"];
-                    if (levels.indexOf(formEntityType) < idx) return null;
-                    const valueMap = { exam: formExamId, subject: formSubjectId, unit: formUnitId, chapter: formChapterId, topic: formTopicId, subtopic: formSubTopicId, definition: formDefinitionId };
-                    const setValueMap = { exam: setFormExamId, subject: setFormSubjectId, unit: setFormUnitId, chapter: setFormChapterId, topic: setFormTopicId, subtopic: setFormSubTopicId, definition: setFormDefinitionId };
-                    const optionsMap = { exam: formExams, subject: formSubjects, unit: formUnits, chapter: formChapters, topic: formTopics, subtopic: formSubtopics, definition: formDefinitions };
-                    const disabled = level === "exam" ? formHierarchyLoading.exam : (level === "subject" ? !formExamId || formHierarchyLoading.subject : level === "unit" ? !formSubjectId || formHierarchyLoading.unit : level === "chapter" ? !formUnitId || formHierarchyLoading.chapter : level === "topic" ? !formChapterId || formHierarchyLoading.topic : level === "subtopic" ? !formTopicId || formHierarchyLoading.subtopic : !formSubTopicId || formHierarchyLoading.definition);
-                    const value = valueMap[level];
-                    const setValue = setValueMap[level];
-                    const options = optionsMap[level] || [];
-                    const label = level === "subtopic" ? "SubTopic" : ENTITY_LABELS[level];
-                    const placeholder = level === "exam" ? "Select Exam" : level === "subject" ? (formExamId ? "Select Subject" : "Select Exam first") : level === "unit" ? (formSubjectId ? "Select Unit" : "Select Subject first") : level === "chapter" ? (formUnitId ? "Select Chapter" : "Select Unit first") : level === "topic" ? (formChapterId ? "Select Topic" : "Select Chapter first") : level === "subtopic" ? (formTopicId ? "Select SubTopic" : "Select Topic first") : (formSubTopicId ? "Select Definition" : "Select SubTopic first");
-                    return (
-                      <div key={level}>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
-                        <select
-                          value={value}
-                          onChange={(e) => setValue(e.target.value)}
-                          disabled={disabled}
-                          className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white disabled:bg-gray-100 disabled:text-gray-400"
-                        >
-                          <option value="">{placeholder}</option>
-                          {options.map((o) => (
-                            <option key={o._id} value={o._id}>{o.name || o.title || o.term || String(o._id).slice(-6)}</option>
-                          ))}
-                        </select>
-                      </div>
-                    );
-                  })}
-                </div>
-              </>
-            )}
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Title *</label>
-              <input
-                type="text"
-                value={formTitle}
-                onChange={(e) => setFormTitle(e.target.value)}
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                placeholder="Notification title"
-              />
             </div>
+            <div className="p-6 space-y-6">
+              {editingId ? (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Target (read-only)</label>
+                  <div className="px-4 py-3 bg-gray-50 rounded-xl border border-gray-200">
+                    <HierarchyPills path={editingNotification?.hierarchyPath} />
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Level (where this notification will show)</label>
+                    <select
+                      value={formEntityType}
+                      onChange={(e) => {
+                        setFormEntityType(e.target.value);
+                        setFormExamId(""); setFormSubjectId(""); setFormUnitId(""); setFormChapterId(""); setFormTopicId(""); setFormSubTopicId(""); setFormDefinitionId("");
+                      }}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+                    >
+                      {Object.entries(ENTITY_LABELS).map(([k, v]) => (
+                        <option key={k} value={k}>{v}</option>
+                      ))}
+                    </select>
+                    <p className="text-xs text-gray-500 mt-1.5">Select level, then choose Exam → Subject → … up to that level.</p>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    {["exam", "subject", "unit", "chapter", "topic", "subtopic", "definition"].map((level, idx) => {
+                      const levels = ["exam", "subject", "unit", "chapter", "topic", "subtopic", "definition"];
+                      if (levels.indexOf(formEntityType) < idx) return null;
+                      const valueMap = { exam: formExamId, subject: formSubjectId, unit: formUnitId, chapter: formChapterId, topic: formTopicId, subtopic: formSubTopicId, definition: formDefinitionId };
+                      const setValueMap = { exam: setFormExamId, subject: setFormSubjectId, unit: setFormUnitId, chapter: setFormChapterId, topic: setFormTopicId, subtopic: setFormSubTopicId, definition: setFormDefinitionId };
+                      const optionsMap = { exam: formExams, subject: formSubjects, unit: formUnits, chapter: formChapters, topic: formTopics, subtopic: formSubtopics, definition: formDefinitions };
+                      const disabled = level === "exam" ? formHierarchyLoading.exam : (level === "subject" ? !formExamId || formHierarchyLoading.subject : level === "unit" ? !formSubjectId || formHierarchyLoading.unit : level === "chapter" ? !formUnitId || formHierarchyLoading.chapter : level === "topic" ? !formChapterId || formHierarchyLoading.topic : level === "subtopic" ? !formTopicId || formHierarchyLoading.subtopic : !formSubTopicId || formHierarchyLoading.definition);
+                      const value = valueMap[level];
+                      const setValue = setValueMap[level];
+                      const options = optionsMap[level] || [];
+                      const label = level === "subtopic" ? "SubTopic" : ENTITY_LABELS[level];
+                      const placeholder = level === "exam" ? "Select Exam" : level === "subject" ? (formExamId ? "Select Subject" : "Select Exam first") : level === "unit" ? (formSubjectId ? "Select Unit" : "Select Subject first") : level === "chapter" ? (formUnitId ? "Select Chapter" : "Select Unit first") : level === "topic" ? (formChapterId ? "Select Topic" : "Select Chapter first") : level === "subtopic" ? (formTopicId ? "Select SubTopic" : "Select Topic first") : (formSubTopicId ? "Select Definition" : "Select SubTopic first");
+                      return (
+                        <div key={level}>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+                          <select
+                            value={value}
+                            onChange={(e) => setValue(e.target.value)}
+                            disabled={disabled}
+                            className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white disabled:bg-gray-100 disabled:text-gray-400"
+                          >
+                            <option value="">{placeholder}</option>
+                            {options.map((o) => (
+                              <option key={o._id} value={o._id}>{o.name || o.title || o.term || String(o._id).slice(-6)}</option>
+                            ))}
+                          </select>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Message (body)</label>
-              <p className="text-xs text-gray-500 mb-2">Rich text content for the notification detail page.</p>
-              <div className="border border-gray-300 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-indigo-500 min-h-[280px]">
-                <RichTextEditor
-                  value={formMessage}
-                  onChange={setFormMessage}
-                  placeholder="Write the notification body content..."
-                  className="min-h-[260px]"
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Title *</label>
+                <input
+                  type="text"
+                  value={formTitle}
+                  onChange={(e) => setFormTitle(e.target.value)}
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="Notification title"
                 />
               </div>
-            </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Strip message (one line for banner)</label>
-              <input
-                type="text"
-                value={formStripMessage}
-                onChange={(e) => setFormStripMessage(e.target.value)}
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                placeholder="Optional; uses title if empty"
-              />
-            </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Message (body)</label>
+                <p className="text-xs text-gray-500 mb-2">Rich text content for the notification detail page.</p>
+                <div className="border border-gray-300 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-indigo-500 min-h-[280px]">
+                  <RichTextEditor
+                    value={formMessage}
+                    onChange={setFormMessage}
+                    placeholder="Write the notification body content..."
+                    className="min-h-[260px]"
+                  />
+                </div>
+              </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Link URL</label>
-                <input type="text" value={formLink} onChange={(e) => setFormLink(e.target.value)} className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="/path or full URL" />
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Strip message (one line for banner)</label>
+                <input
+                  type="text"
+                  value={formStripMessage}
+                  onChange={(e) => setFormStripMessage(e.target.value)}
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder="Optional; uses title if empty"
+                />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Link label</label>
-                <input type="text" value={formLinkLabel} onChange={(e) => setFormLinkLabel(e.target.value)} className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="View" />
-              </div>
-            </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Slug (for /notification/[slug])</label>
-                <input type="text" value={formSlug} onChange={(e) => setFormSlug(e.target.value)} className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Auto from title if empty" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Link URL</label>
+                  <input type="text" value={formLink} onChange={(e) => setFormLink(e.target.value)} className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="/path or full URL" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Link label</label>
+                  <input type="text" value={formLinkLabel} onChange={(e) => setFormLinkLabel(e.target.value)} className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="View" />
+                </div>
               </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Slug (for /notification/[slug])</label>
+                  <input type="text" value={formSlug} onChange={(e) => setFormSlug(e.target.value)} className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Auto from title if empty" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Status</label>
+                  <select value={formStatus} onChange={(e) => setFormStatus(e.target.value)} className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white">
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                    <option value="draft">Draft</option>
+                  </select>
+                </div>
+              </div>
+
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Status</label>
-                <select value={formStatus} onChange={(e) => setFormStatus(e.target.value)} className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white">
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                  <option value="draft">Draft</option>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Icon type</label>
+                <select value={formIconType} onChange={(e) => setFormIconType(e.target.value)} className="w-full max-w-xs px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white">
+                  {ICON_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
                 </select>
               </div>
-            </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Icon type</label>
-              <select value={formIconType} onChange={(e) => setFormIconType(e.target.value)} className="w-full max-w-xs px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white">
-                {ICON_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>{o.label}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="flex flex-wrap items-center justify-end gap-3 pt-4 border-t border-gray-200">
-              <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">Cancel</button>
-              <button type="button" onClick={saveForm} disabled={formLoading} className="px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 transition-colors inline-flex items-center gap-2">
-                {formLoading ? <LoadingSpinner size="small" /> : null}
-                {formLoading ? "Saving…" : editingId ? "Update" : "Create"}
-              </button>
+              <div className="flex flex-wrap items-center justify-end gap-3 pt-4 border-t border-gray-200">
+                <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">Cancel</button>
+                <button type="button" onClick={saveForm} disabled={formLoading} className="px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 transition-colors inline-flex items-center gap-2">
+                  {formLoading ? <LoadingSpinner size="small" /> : null}
+                  {formLoading ? "Saving…" : editingId ? "Update" : "Create"}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
         )}
 
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
@@ -960,57 +1037,98 @@ const NotificationManagement = () => {
           )}
 
           <div className="border-t border-gray-200">
-            <div className="px-4 py-3 sm:px-6 border-b border-gray-200 bg-gray-50 flex items-center gap-2">
-              <FaBell className="w-5 h-5 text-indigo-600 shrink-0" />
-              <h2 className="text-lg font-semibold text-gray-900">Notifications ({filteredNotifications.length})</h2>
-            </div>
-            <div className="overflow-x-auto">
-              {isLoading ? (
-                <div className="flex justify-center py-12">
-                  <LoadingSpinner size="large" />
-                </div>
-              ) : filteredNotifications.length === 0 ? (
-                <div className="text-center py-12 text-gray-500 text-sm px-4">
-                  No notifications found for the selected filters.
-                </div>
-              ) : (
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th scope="col" className="px-4 py-3 sm:px-6 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Level / Path</th>
-                      <th scope="col" className="px-4 py-3 sm:px-6 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Title</th>
-                      <th scope="col" className="px-4 py-3 sm:px-6 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider hidden xl:table-cell">Message</th>
-                      <th scope="col" className="px-4 py-3 sm:px-6 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Strip</th>
-                      <th scope="col" className="px-4 py-3 sm:px-6 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Status</th>
-                      <th scope="col" className="px-4 py-3 sm:px-6 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Created</th>
-                      <th scope="col" className="px-4 py-3 sm:px-6 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {filteredNotifications.map((n) => (
-                      <tr key={n._id} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-4 sm:px-6 py-4 align-top"><HierarchyPills path={n.hierarchyPath} /></td>
-                        <td className="px-4 sm:px-6 py-4 text-sm font-medium text-gray-900 max-w-[200px] truncate align-top" title={n.title}>{n.title}</td>
-                        <td className="px-4 sm:px-6 py-4 text-sm text-gray-600 max-w-[220px] hidden xl:table-cell align-top" title={stripHtmlPreview(n.message, 200)}>
-                          <span className="line-clamp-2">{stripHtmlPreview(n.message, 80)}</span>
-                        </td>
-                        <td className="px-4 sm:px-6 py-4 text-sm text-gray-600 max-w-[180px] truncate align-top" title={n.stripMessage || n.title}>{n.stripMessage || n.title || "—"}</td>
-                        <td className="px-4 sm:px-6 py-4 align-top">
-                          <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${n.status === "active" ? "bg-green-100 text-green-800" : n.status === "draft" ? "bg-yellow-100 text-yellow-800" : "bg-gray-100 text-gray-800"}`}>
-                            {n.status}
-                          </span>
-                        </td>
-                        <td className="px-4 sm:px-6 py-4 text-xs text-gray-500 whitespace-nowrap align-top">{formatDate(n.createdAt)}</td>
-                        <td className="px-4 sm:px-6 py-4 text-right align-top">
-                          <button type="button" onClick={() => openEdit(n)} className="text-indigo-600 hover:text-indigo-800 p-1.5 mr-1 rounded-lg hover:bg-indigo-50 transition-colors" title="Edit"><FaEdit className="w-4 h-4" /></button>
-                          <button type="button" onClick={() => handleDelete(n._id)} className="text-red-600 hover:text-red-800 p-1.5 rounded-lg hover:bg-red-50 transition-colors" title="Delete"><FaTrash className="w-4 h-4" /></button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </div>
+            {isLoading ? (
+              <div className="flex justify-center py-12">
+                <LoadingSpinner size="large" />
+              </div>
+            ) : groupedByPath.length === 0 ? (
+              <div className="text-center py-12 text-gray-500 text-sm px-4">
+                No notifications found for the selected filters.
+              </div>
+            ) : (
+              <div className="space-y-6 px-4 py-4 sm:px-6">
+                {groupedByPath.map((group, groupIndex) => (
+                  <div
+                    key={groupIndex}
+                    className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm"
+                  >
+                    {/* Level path as table heading (breadcrumb pills + count) */}
+                    <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
+                      <PathHeadingWithCount path={group.path} count={group.notifications.length} />
+                    </div>
+                    {/* Table for this level */}
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th scope="col" className="px-4 py-2.5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-16">Order</th>
+                            <th scope="col" className="px-4 py-2.5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider min-w-[180px]">Title</th>
+                            <th scope="col" className="px-4 py-2.5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider min-w-[200px]">Strip message (one line for banner)</th>
+                            <th scope="col" className="px-4 py-2.5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-36">Content</th>
+                            <th scope="col" className="px-4 py-2.5 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider w-24">Status</th>
+                            <th scope="col" className="px-4 py-2.5 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider w-32">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {group.notifications.map((n, idx) => (
+                            <tr key={n._id} className="hover:bg-gray-50/80 transition-colors">
+                              <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+                                {n.orderNumber ?? idx + 1}
+                              </td>
+                              <td className="px-4 py-3 text-sm font-medium text-gray-900 max-w-[240px] truncate" title={n.title}>
+                                {n.title}
+                              </td>
+                              <td className="px-4 py-3 text-sm text-gray-700 max-w-[280px] truncate" title={n.stripMessage || n.title || ""}>
+                                {n.stripMessage || n.title || "—"}
+                              </td>
+                              <td className="px-4 py-3 text-sm whitespace-nowrap">
+                                <span className={hasContent(n) ? "text-gray-700" : "text-gray-400 italic"}>
+                                  {contentDate(n) || "unavailable"}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3 text-center">
+                                <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${n.status === "active" ? "bg-green-100 text-green-800" : n.status === "draft" ? "bg-yellow-100 text-yellow-800" : "bg-gray-100 text-gray-800"}`}>
+                                  {n.status}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3 text-right">
+                                <div className="inline-flex items-center gap-0.5">
+                                  {n.slug && (
+                                    <a
+                                      href={`/notification/${n.slug}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-green-600 hover:text-green-800 p-1.5 rounded-lg hover:bg-green-50 transition-colors"
+                                      title="View"
+                                    >
+                                      <FaEye className="w-4 h-4" />
+                                    </a>
+                                  )}
+                                  <button type="button" onClick={() => openEdit(n)} className="text-blue-600 hover:text-blue-800 p-1.5 rounded-lg hover:bg-blue-50 transition-colors" title="Edit">
+                                    <FaEdit className="w-4 h-4" />
+                                  </button>
+                                  <button type="button" onClick={() => handleDelete(n._id)} className="text-red-600 hover:text-red-800 p-1.5 rounded-lg hover:bg-red-50 transition-colors" title="Delete">
+                                    <FaTrash className="w-4 h-4" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleToggleStatus(n)}
+                                    className={`p-1.5 rounded-lg transition-colors ${n.status === "active" ? "text-red-600 hover:text-red-800 hover:bg-red-50" : "text-green-600 hover:text-green-800 hover:bg-green-50"}`}
+                                    title={n.status === "active" ? "Deactivate" : "Activate"}
+                                  >
+                                    <FaPowerOff className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
