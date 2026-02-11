@@ -1508,7 +1508,7 @@ const ChaptersManagement = () => {
                     <button
                       type="button"
                       onClick={() => { setIsReorderMode(true); setReorderDraft({}); }}
-                      className="inline-flex items-center gap-2 px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-sm font-medium transition-colors"
+                      className="inline-flex items-center gap-2 px-2 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors"
                       title="Enable drag and drop to reorder chapters per unit"
                     >
                       <FaGripVertical className="w-4 h-4" />
