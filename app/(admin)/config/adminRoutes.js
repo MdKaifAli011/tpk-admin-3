@@ -19,6 +19,7 @@ export const ROLE_ORDER = [
 const ROUTE_PERMISSIONS = [
   { path: "/admin/user-role", minRole: "admin" },
   { path: "/admin/overview-comments", minRole: "moderator" },
+  { path: "/admin/notification", minRole: "moderator" },
   { path: "/admin/seo-import", minRole: "super_moderator" },
   { path: "/admin/bulk-import", minRole: "super_moderator" },
   { path: "/admin/url-export", minRole: "moderator" },

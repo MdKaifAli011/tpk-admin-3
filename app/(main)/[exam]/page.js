@@ -34,11 +34,10 @@ export const revalidate = 0;
 export async function generateMetadata({ params, searchParams }) {
   const { exam: examSlug } = await params;
   
-  // Pages receive searchParams correctly in Next.js App Router
+  // Pages receive searchParams correctly in Next.js App Router (searchParams is a Promise in Next.js 15+)
   const resolvedSearchParams = await extractSearchParams(searchParams);
-  
+
   if (process.env.NODE_ENV === "development") {
-    logger.debug("Exam Page - searchParams:", searchParams);
     logger.debug("Exam Page - Resolved searchParams:", resolvedSearchParams);
   }
 

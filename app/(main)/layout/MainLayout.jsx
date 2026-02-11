@@ -9,6 +9,7 @@ import Footer from "./Footer";
 import ServiceWorkerRegistration from "../components/ServiceWorkerRegistration";
 import ScrollToTop from "../components/ScrollToTop";
 import WhatsAppFloatButton from "../components/WhatsAppFloatButton";
+import NotificationStrip from "../components/NotificationStrip";
 import api from "../../../lib/api.js";
 
 const MainLayout = ({ children, showSidebar = true, fullWidth = false }) => {
@@ -115,6 +116,14 @@ const MainLayout = ({ children, showSidebar = true, fullWidth = false }) => {
           isMenuOpen={isSidebarOpen} 
           showSidebar={showSidebar}
         />
+        {/* Notification strip: on exam hierarchy ([exam]/[subject]/...) it's rendered inside [exam] layout at top of header; here only for root and non-exam routes */}
+        {(() => {
+          const segments = (pathname || "").replace(/^\/+/, "").split("/").filter(Boolean);
+          const first = segments[0] || "";
+          const excluded = ["notification", "login", "register", "contact", "pages", "blog", "download", "calculator", "store"];
+          const isExamHierarchy = first && !excluded.includes(first);
+          return !isExamHierarchy ? <NotificationStrip /> : null;
+        })()}
 
         <div className="flex flex-1 relative">
           {/* SIDEBAR (Premium 300px Glass UI) - Only show if showSidebar is true */}

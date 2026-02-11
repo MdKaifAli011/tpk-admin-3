@@ -2,6 +2,7 @@ import { generateMetadata as generateSEO } from "@/utils/seo";
 import { createSlug } from "@/utils/slug";
 import { logger } from "@/utils/logger";
 import { generateTabAwareMetadata, extractSearchParams } from "@/utils/tabSeo";
+import NotificationStrip from "../components/NotificationStrip";
 
 // Force dynamic rendering to ensure fresh metadata
 export const dynamic = 'force-dynamic';
@@ -71,5 +72,11 @@ export async function generateMetadata({ params, searchParams }) {
 }
 
 export default function ExamLayout({ children }) {
-  return <>{children}</>;
+  return (
+    <>
+      {/* Notification strip at top of header for all 7 levels: exam, subject, unit, chapter, topic, subtopic, definition */}
+      <NotificationStrip />
+      {children}
+    </>
+  );
 }

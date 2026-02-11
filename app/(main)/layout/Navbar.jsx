@@ -26,6 +26,7 @@ import UtilitiesMegaMenu from "./components/UtilitiesMegaMenu";
 import DownloadsMegaMenu from "./components/DownloadsMegaMenu";
 import ContactMegaMenu from "./components/ContactMegaMenu";
 import SearchModal from "./components/SearchModal";
+import NotificationDropdown from "../components/NotificationDropdown";
 import {
   ExaminationsMobileContent,
   CoursesMobileContent,
@@ -475,6 +476,9 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen, showSidebar }) => {
                   </div>
                 </button>
               )}
+
+              {/* Notifications - bell after search */}
+              {showSidebar && <NotificationDropdown />}
 
               {/* User Menu / Sign In */}
               {isAuthenticated && !isLoading ? (

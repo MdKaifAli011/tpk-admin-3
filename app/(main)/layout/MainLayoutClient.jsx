@@ -23,13 +23,14 @@ export default function MainLayoutClient({ children }) {
 
   // Memoize showSidebar to prevent unnecessary recalculations
   const showSidebar = useMemo(() => {
-    // No sidebar on: home, contact, calculator, store, site-level pages, or exam-level pages (e.g. /neet/pages/landing)
+    // No sidebar on: home, contact, calculator, store, notification, site-level pages, or exam-level pages (e.g. /neet/pages/landing)
     const isExamPagesRoute = pathname?.match(/^\/[^/]+\/pages(\/|$)/);
     return (
       pathname !== "/" &&
       pathname !== "/contact" &&
       !pathname?.startsWith("/calculator") &&
       !pathname?.startsWith("/store") &&
+      !pathname?.startsWith("/notification") &&
       !pathname?.startsWith("/pages") &&
       !isExamPagesRoute
     );
@@ -268,9 +269,9 @@ export default function MainLayoutClient({ children }) {
         <WhatsAppFloatButton />
         <div className="flex flex-col min-h-screen bg-gray-50">
           {/* Persistent Navbar - won't re-render on navigation */}
-          <Navbar 
-            onMenuToggle={toggleSidebar} 
-            isMenuOpen={isSidebarOpen} 
+          <Navbar
+            onMenuToggle={toggleSidebar}
+            isMenuOpen={isSidebarOpen}
             showSidebar={showSidebar}
           />
 
