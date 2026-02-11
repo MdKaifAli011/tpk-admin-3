@@ -7,8 +7,8 @@ import React, {
   useRef,
 } from "react";
 import TopicsTable from "../table/TopicsTable";
-import { LoadingWrapper, SkeletonChaptersTable } from "../ui/SkeletonLoader";
-import { FaEdit, FaPlus, FaTimes, FaLock, FaSearch } from "react-icons/fa";
+import { LoadingWrapper, SkeletonChaptersTable, LoadingSpinner } from "../ui/SkeletonLoader";
+import { FaEdit, FaPlus, FaTimes, FaLock, FaSearch, FaCheck, FaGripVertical } from "react-icons/fa";
 import { ToastContainer, useToast } from "../ui/Toast";
 import api from "@/lib/api";
 import { usePermissions, getPermissionMessage } from "../../hooks/usePermissions";
@@ -56,6 +56,8 @@ const TopicManagement = () => {
   const [filterUnit, setFilterUnit] = useState("");
   const [filterChapter, setFilterChapter] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [isReorderMode, setIsReorderMode] = useState(false);
+  const [reorderDraft, setReorderDraft] = useState({});
   const isFetchingRef = useRef(false);
   const [metaFilter, setMetaFilter] = useState("all"); // all, filled, notFilled
 
@@ -878,97 +880,48 @@ const TopicManagement = () => {
     }
   };
 
-  const handleDragEnd = async (result) => {
-    // Check permissions
+  const saveReorderForChapter = async (chapterId, newOrderedTopics) => {
+    const payload = {
+      topics: newOrderedTopics.map((t, i) => ({
+        id: t._id,
+        orderNumber: i + 1,
+      })),
+    };
+    const response = await api.patch("/topic/reorder", payload);
+    if (!response.data?.success) {
+      throw new Error(response.data?.message || "Failed to reorder topics");
+    }
+  };
+
+  const handleReorderDraft = (chapterId, newOrderedTopics) => {
+    setReorderDraft((prev) => ({ ...prev, [chapterId]: newOrderedTopics }));
+  };
+
+  const handleDoneReorder = async () => {
     if (!canReorder) {
-      setFormError(getPermissionMessage("reorder", role));
       showError(getPermissionMessage("reorder", role));
       return;
     }
-
-    if (!result.destination) return;
-
-    const sourceIndex = result.source.index;
-    const destinationIndex = result.destination.index;
-
-    if (sourceIndex === destinationIndex) return;
-
-    const items = Array.from(topics);
-    const reorderedItem = items[sourceIndex];
-
-    // Get the chapter ID to identify the group
-    const chapterId = reorderedItem.chapterId?._id || reorderedItem.chapterId;
-
-    // Find all topics in the same group (same chapter)
-    const groupTopics = items.filter((topic) => {
-      const topicChapterId = topic.chapterId?._id || topic.chapterId;
-      return topicChapterId === chapterId;
-    });
-
-    // Find indices within the group
-    const groupSourceIndex = groupTopics.findIndex(
-      (t) => (t._id || t.id) === (reorderedItem._id || reorderedItem.id)
-    );
-
-    // Create a reordered group array
-    const reorderedGroup = Array.from(groupTopics);
-    const [movedTopic] = reorderedGroup.splice(groupSourceIndex, 1);
-
-    // Calculate destination index within the group
-    const groupDestIndex = groupTopics.findIndex((topic, idx) => {
-      if (idx === groupSourceIndex) return false;
-      const flatIndex = items.findIndex(
-        (t) => (t._id || t.id) === (topic._id || topic.id)
-      );
-      return flatIndex >= destinationIndex;
-    });
-    const finalDestIndex = groupDestIndex === -1 ? reorderedGroup.length : groupDestIndex;
-    reorderedGroup.splice(finalDestIndex, 0, movedTopic);
-
-    // Update order numbers only for topics in this group
-    const updatedGroupTopics = reorderedGroup.map((topic, index) => ({
-      ...topic,
-      orderNumber: index + 1,
-    }));
-
-    // Update the full topics array, preserving other topics
-    const updatedItems = items.map((topic) => {
-      const updatedTopic = updatedGroupTopics.find(
-        (t) => (t._id || t.id) === (topic._id || topic.id)
-      );
-      return updatedTopic || topic;
-    });
-
-    setTopics(updatedItems);
-
+    const chapterIds = Object.keys(reorderDraft);
+    if (chapterIds.length === 0) {
+      setIsReorderMode(false);
+      return;
+    }
     try {
-      // Prepare topics data for the reorder endpoint
-      const topicsData = updatedGroupTopics.map((topic) => ({
-        id: topic._id,
-        orderNumber: topic.orderNumber,
-      }));
-
-      const response = await api.patch("/topic/reorder", {
-        topics: topicsData,
-      });
-
-      if (response.data.success) {
-        success(
-          `Topic "${reorderedItem.name}" moved to position ${finalDestIndex + 1}`
-        );
-      } else {
-        throw new Error(
-          response.data.message || "Failed to update topic order"
-        );
-      }
-    } catch (error) {
-      console.error("❌ Error updating topic order:", error);
-      console.log("🔄 Reverting topic order due to API error");
-      fetchTopics(); // Revert local state
-      setError(
-        `Failed to update topic order: ${error.response?.data?.message || error.message
-        }`
+      setIsFormLoading(true);
+      setError(null);
+      await Promise.all(
+        chapterIds.map((chapterId) => saveReorderForChapter(chapterId, reorderDraft[chapterId]))
       );
+      await fetchTopics();
+      setReorderDraft({});
+      setIsReorderMode(false);
+      success("Topic order updated successfully.");
+    } catch (err) {
+      const msg = err?.response?.data?.message || err?.message || "Failed to reorder topics. Please try again.";
+      showError(msg);
+    } finally {
+      setIsFormLoading(false);
     }
   };
 
@@ -1538,11 +1491,46 @@ const TopicManagement = () => {
                   Topics List
                 </h2>
                 <p className="text-sm text-gray-600 mt-1">
-                  Manage your topics, view details, and perform actions. You can
-                  drag to reorder topics.
+                  Manage your topics, view details, and perform actions
+                  {isReorderMode && (
+                    <span className="ml-1.5 text-blue-600 font-medium">— Drag rows within each chapter, then click Done to save</span>
+                  )}
                 </p>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
+                {canReorder && !searchQuery.trim() && (
+                  isReorderMode ? (
+                    <button
+                      type="button"
+                      onClick={handleDoneReorder}
+                      disabled={isFormLoading}
+                      className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+                      title="Save order and exit reorder mode"
+                    >
+                      {isFormLoading ? (
+                        <>
+                          <LoadingSpinner size="small" />
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <FaCheck className="w-4 h-4" />
+                          Done
+                        </>
+                      )}
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => { setIsReorderMode(true); setReorderDraft({}); }}
+                      className="inline-flex items-center gap-2 px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-sm font-medium transition-colors"
+                      title="Enable drag and drop to reorder topics per chapter"
+                    >
+                      <FaGripVertical className="w-4 h-4" />
+                      Reorder position
+                    </button>
+                  )
+                )}
                 {/* Search Bar */}
                 <div className="relative">
                   <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -1771,8 +1759,10 @@ const TopicManagement = () => {
               topics={filteredTopics}
               onEdit={handleEditTopic}
               onDelete={handleDeleteTopic}
-              onDragEnd={handleDragEnd}
               onToggleStatus={handleToggleStatus}
+              onReorderDraft={handleReorderDraft}
+              reorderDraft={reorderDraft}
+              isReorderAllowed={isReorderMode && !searchQuery.trim()}
             />
           </div>
         </div>

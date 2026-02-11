@@ -1,6 +1,6 @@
 "use client";
-import React, { useMemo } from "react";
-import { FaEdit, FaTrash, FaEye, FaPowerOff, FaLock } from "react-icons/fa";
+import React, { useMemo, useState } from "react";
+import { FaEdit, FaTrash, FaEye, FaPowerOff, FaLock, FaGripVertical } from "react-icons/fa";
 import { FiCheck } from "react-icons/fi";
 import { useRouter } from "next/navigation";
 import {
@@ -12,11 +12,17 @@ const ChaptersTable = ({
   chapters,
   onEdit,
   onDelete,
-  onDragEnd,
   onToggleStatus,
+  onReorderDraft,
+  reorderDraft = {},
+  isReorderAllowed = true,
 }) => {
   const { canEdit, canDelete, canReorder, role } = usePermissions();
   const router = useRouter();
+  const [dragged, setDragged] = useState({ unitId: null, index: null });
+  const [dragOver, setDragOver] = useState({ unitId: null, index: null });
+
+  const canDrag = Boolean(canReorder && onReorderDraft && isReorderAllowed);
 
   // Use embedded visitStats (cron 3–4am); if missing show "—"
   const getVisitStats = (chapter) => chapter?.visitStats;
@@ -36,6 +42,59 @@ const ChaptersTable = ({
 
   const handleChapterClick = (chapterId) => {
     router.push(`/admin/chapter/${chapterId}`);
+  };
+
+  const handleDragStart = (e, unitId, index) => {
+    if (!canDrag) return;
+    setDragged({ unitId, index });
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", String(index));
+    e.dataTransfer.setData("application/json", JSON.stringify({ unitId, index }));
+    try { e.target.closest("tr")?.classList.add("opacity-50", "ring-2", "ring-blue-400"); } catch (_) {}
+  };
+
+  const handleDragOver = (e, unitId, index) => {
+    if (!canDrag || dragged.unitId === null || dragged.unitId !== unitId) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    setDragOver({ unitId, index });
+  };
+
+  const handleDragLeave = (e) => {
+    if (!e.currentTarget.contains(e.relatedTarget)) setDragOver({ unitId: null, index: null });
+  };
+
+  const handleDrop = (e, unitId, toIndex) => {
+    if (!canDrag) return;
+    e.preventDefault();
+    const fromIndex = parseInt(e.dataTransfer.getData("text/plain"), 10);
+    const payload = e.dataTransfer.getData("application/json");
+    let payloadUnitId = unitId;
+    try {
+      const parsed = JSON.parse(payload || "{}");
+      if (parsed.unitId) payloadUnitId = parsed.unitId;
+    } catch (_) {}
+    if (payloadUnitId !== unitId || Number.isNaN(fromIndex) || fromIndex === toIndex) {
+      setDragOver({ unitId: null, index: null });
+      setDragged({ unitId: null, index: null });
+      return;
+    }
+    setDragOver({ unitId: null, index: null });
+    setDragged({ unitId: null, index: null });
+    try { e.target.closest("tr")?.classList.remove("opacity-50", "ring-2", "ring-blue-400"); } catch (_) {}
+    const group = groupedChapters.find((g) => g.unitId === unitId);
+    if (!group) return;
+    const currentList = reorderDraft[unitId] ?? [...group.chapters].sort((a, b) => (a.orderNumber || 0) - (b.orderNumber || 0));
+    const newOrder = [...currentList];
+    const [removed] = newOrder.splice(fromIndex, 1);
+    newOrder.splice(toIndex, 0, removed);
+    onReorderDraft(unitId, newOrder);
+  };
+
+  const handleDragEnd = (e) => {
+    setDragged({ unitId: null, index: null });
+    setDragOver({ unitId: null, index: null });
+    try { e.target.closest("tr")?.classList.remove("opacity-50", "ring-2", "ring-blue-400"); } catch (_) {}
   };
 
   // Group chapters by Exam → Subject → Unit
@@ -80,6 +139,15 @@ const ChaptersTable = ({
     });
   }, [chapters]);
 
+  const displayGroups = useMemo(
+    () =>
+      groupedChapters.map((g) => ({
+        ...g,
+        chapters: reorderDraft[g.unitId] ?? [...g.chapters].sort((a, b) => (a.orderNumber || 0) - (b.orderNumber || 0)),
+      })),
+    [groupedChapters, reorderDraft]
+  );
+
   if (!chapters || chapters.length === 0) {
     return (
       <div className="text-center py-12 bg-white rounded-lg border border-gray-200 shadow-sm">
@@ -96,13 +164,8 @@ const ChaptersTable = ({
 
   return (
     <div className="space-y-6">
-      {groupedChapters.map((group, groupIndex) => {
-        // Sort chapters by orderNumber within each group
-        const sortedChapters = [...group.chapters].sort((a, b) => {
-          const ao = a.orderNumber || Number.MAX_SAFE_INTEGER;
-          const bo = b.orderNumber || Number.MAX_SAFE_INTEGER;
-          return ao - bo;
-        });
+      {displayGroups.map((group, groupIndex) => {
+        const sortedChapters = group.chapters;
 
         return (
           <div
@@ -149,6 +212,11 @@ const ChaptersTable = ({
               <table className="min-w-full divide-y divide-gray-200 table-fixed">
                 <thead className="bg-gray-50">
                   <tr>
+                    {canDrag && (
+                      <th className="px-1 py-1 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-10">
+                        Move
+                      </th>
+                    )}
                     <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16">
                       Order
                     </th>
@@ -181,14 +249,38 @@ const ChaptersTable = ({
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody
+                  className="bg-white divide-y divide-gray-200"
+                  onDragLeave={handleDragLeave}
+                >
                   {sortedChapters.map((chapter, chapterIndex) => {
+                    const rowCanDrag = canDrag && sortedChapters.length > 1;
+                    const isDraggedRow = dragged.unitId === group.unitId && dragged.index === chapterIndex;
+                    const isDragOverRow = dragOver.unitId === group.unitId && dragOver.index === chapterIndex && !isDraggedRow;
                     return (
                       <tr
                         key={chapter._id || chapterIndex}
-                        className={`hover:bg-gray-50 transition-colors ${chapter.status === "inactive" ? "opacity-60" : ""
-                          }`}
+                        draggable={rowCanDrag}
+                        onDragStart={(e) => handleDragStart(e, group.unitId, chapterIndex)}
+                        onDragOver={(e) => handleDragOver(e, group.unitId, chapterIndex)}
+                        onDrop={(e) => handleDrop(e, group.unitId, chapterIndex)}
+                        onDragEnd={handleDragEnd}
+                        className={`hover:bg-gray-50 transition-colors ${chapter.status === "inactive" ? "opacity-60" : ""} ${
+                          isDraggedRow ? "opacity-50 ring-2 ring-blue-400" : ""
+                        } ${isDragOverRow ? "bg-blue-50 border-y-2 border-blue-200" : ""}`}
                       >
+                        {canDrag && (
+                          <td
+                            className="px-1 py-2 text-center w-10 cursor-grab active:cursor-grabbing"
+                            onClick={(e) => e.stopPropagation()}
+                            title="Drag to reorder"
+                          >
+                            <span className="inline-flex text-gray-400 hover:text-gray-600" aria-hidden>
+                              <FaGripVertical className="w-4 h-4" />
+                            </span>
+                            <span className="sr-only">Drag to reorder position {chapterIndex + 1}</span>
+                          </td>
+                        )}
                         <td className="px-2 py-1 whitespace-nowrap">
                           <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-gray-100 text-gray-700 font-medium text-sm">
                             {chapter.orderNumber || chapterIndex + 1}
@@ -332,14 +424,31 @@ const ChaptersTable = ({
             {/* Mobile/Tablet View */}
             <div className="lg:hidden divide-y divide-gray-200">
               {sortedChapters.map((chapter, chapterIndex) => {
-                const dragKey = `${groupIndex}-${chapterIndex}`;
+                const rowCanDrag = canDrag && sortedChapters.length > 1;
+                const isDraggedRow = dragged.unitId === group.unitId && dragged.index === chapterIndex;
+                const isDragOverRow = dragOver.unitId === group.unitId && dragOver.index === chapterIndex && !isDraggedRow;
                 return (
                   <div
                     key={chapter._id || chapterIndex}
-                    className={`p-1.5 hover:bg-gray-50 transition-colors ${chapter.status === "inactive" ? "opacity-60" : ""
-                      }`}
+                    draggable={rowCanDrag}
+                    onDragStart={(e) => handleDragStart(e, group.unitId, chapterIndex)}
+                    onDragOver={(e) => handleDragOver(e, group.unitId, chapterIndex)}
+                    onDrop={(e) => handleDrop(e, group.unitId, chapterIndex)}
+                    onDragEnd={handleDragEnd}
+                    className={`p-1.5 hover:bg-gray-50 transition-colors ${chapter.status === "inactive" ? "opacity-60" : ""} ${
+                      isDraggedRow ? "opacity-50 ring-2 ring-blue-400 rounded" : ""
+                    } ${isDragOverRow ? "bg-blue-50 border-2 border-blue-200 rounded" : ""}`}
                   >
                     <div className="flex justify-between items-start gap-2">
+                      {canDrag && (
+                        <div
+                          className="shrink-0 pt-0.5 cursor-grab active:cursor-grabbing text-gray-400"
+                          onClick={(e) => e.stopPropagation()}
+                          title="Drag to reorder"
+                        >
+                          <FaGripVertical className="w-4 h-4" />
+                        </div>
+                      )}
                       <div className="flex-1 min-w-0 pr-2">
                         <h3
                           onClick={() => handleChapterClick(chapter._id)}
@@ -398,7 +507,7 @@ const ChaptersTable = ({
                           </div>
                         </div>
                       </div>
-                      <div className="flex items-center gap-1 flex-shrink-0">
+                      <div className="flex items-center gap-1 shrink-0">
                         <button
                           onClick={() => handleChapterClick(chapter._id)}
                           className="p-1 bg-green-50 text-green-600 rounded-lg transition-colors hover:bg-green-100"

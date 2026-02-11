@@ -14,6 +14,8 @@ import {
   FaClipboardList,
   FaLock,
   FaSearch,
+  FaCheck,
+  FaGripVertical,
 } from "react-icons/fa";
 import { ToastContainer, useToast } from "../ui/Toast";
 import api from "@/lib/api";
@@ -37,6 +39,8 @@ const SubjectManagement = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [filterExam, setFilterExam] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [isReorderMode, setIsReorderMode] = useState(false);
+  const [reorderDraft, setReorderDraft] = useState({});
   const { toasts, removeToast, success, error: showError } = useToast();
   const isFetchingRef = useRef(false);
   const [metaFilter, setMetaFilter] = useState("all"); // all, filled, notFilled
@@ -415,6 +419,52 @@ const SubjectManagement = () => {
     }
   };
 
+  const saveReorderForExam = async (examId, newOrderedSubjects) => {
+    const payload = {
+      examId,
+      subjects: newOrderedSubjects.map((s, i) => ({
+        id: s._id,
+        orderNumber: i + 1,
+      })),
+    };
+    const response = await api.post("/subject/reorder", payload);
+    if (!response.data?.success) {
+      throw new Error(response.data?.message || "Failed to reorder subjects");
+    }
+  };
+
+  const handleReorderDraft = (examId, newOrderedSubjects) => {
+    setReorderDraft((prev) => ({ ...prev, [examId]: newOrderedSubjects }));
+  };
+
+  const handleDoneReorder = async () => {
+    if (!canReorder) {
+      showError(getPermissionMessage("reorder", role));
+      return;
+    }
+    const examIds = Object.keys(reorderDraft);
+    if (examIds.length === 0) {
+      setIsReorderMode(false);
+      return;
+    }
+    try {
+      setIsFormLoading(true);
+      setError(null);
+      await Promise.all(
+        examIds.map((examId) => saveReorderForExam(examId, reorderDraft[examId]))
+      );
+      await fetchSubjects();
+      setReorderDraft({});
+      setIsReorderMode(false);
+      success("Subject order updated successfully.");
+    } catch (err) {
+      const msg = err?.response?.data?.message || err?.message || "Failed to reorder subjects. Please try again.";
+      showError(msg);
+    } finally {
+      setIsFormLoading(false);
+    }
+  };
+
   return (
     <>
       <ToastContainer toasts={toasts} removeToast={removeToast} />
@@ -590,9 +640,45 @@ const SubjectManagement = () => {
                 </h2>
                 <p className="text-sm text-gray-600 mt-1">
                   Manage subjects, organize content, and configure learning paths
+                  {isReorderMode && (
+                    <span className="ml-1.5 text-blue-600 font-medium">— Drag rows within each exam to change order</span>
+                  )}
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-3">
+                {canReorder && !searchQuery.trim() && (
+                  isReorderMode ? (
+                    <button
+                      type="button"
+                      onClick={handleDoneReorder}
+                      disabled={isFormLoading}
+                      className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+                      title="Save order and exit reorder mode"
+                    >
+                      {isFormLoading ? (
+                        <>
+                          <LoadingSpinner size="small" />
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <FaCheck className="w-4 h-4" />
+                          Done
+                        </>
+                      )}
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => { setIsReorderMode(true); setReorderDraft({}); }}
+                      className="inline-flex items-center gap-2 px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-sm font-medium transition-colors"
+                      title="Enable drag and drop to reorder subjects per exam"
+                    >
+                      <FaGripVertical className="w-4 h-4" />
+                      Reorder position
+                    </button>
+                  )
+                )}
                 {/* Search Input */}
                 <div className="relative min-w-[200px] sm:min-w-[240px]">
                   <input
@@ -759,6 +845,9 @@ const SubjectManagement = () => {
                 onDelete={handleDeleteSubject}
                 onToggleStatus={handleToggleStatus}
                 onTogglePractice={handleTogglePractice}
+                onReorderDraft={handleReorderDraft}
+                reorderDraft={reorderDraft}
+                isReorderAllowed={isReorderMode && !searchQuery.trim()}
               />
             )}
           </div>

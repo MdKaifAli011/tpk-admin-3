@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   FaEdit,
@@ -9,6 +9,7 @@ import {
   FaPowerOff,
   FaLock,
   FaInfoCircle,
+  FaGripVertical,
 } from "react-icons/fa";
 import { FiCheck } from "react-icons/fi";
 import {
@@ -16,9 +17,58 @@ import {
   getPermissionMessage,
 } from "../../hooks/usePermissions";
 
-const ExamTable = ({ exams, onEdit, onDelete, onView, onToggleStatus, onManageInfo }) => {
+const ExamTable = ({ exams, onEdit, onDelete, onView, onToggleStatus, onManageInfo, onReorderDraft, reorderDraft = null, isReorderAllowed = true }) => {
   const { canEdit, canDelete, canReorder, role } = usePermissions();
   const router = useRouter();
+  const [draggedIndex, setDraggedIndex] = useState(null);
+  const [dragOverIndex, setDragOverIndex] = useState(null);
+
+  const displayExams = reorderDraft ?? exams;
+  const canDrag = canReorder && onReorderDraft && isReorderAllowed;
+
+  const handleDragStart = (e, index) => {
+    if (!canDrag) return;
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", String(index));
+    e.dataTransfer.setData("application/json", JSON.stringify({ index }));
+    try { e.target.classList.add("opacity-50", "ring-2", "ring-blue-400"); } catch (_) {}
+  };
+
+  const handleDragOver = (e, index) => {
+    if (!canDrag || draggedIndex === null) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    setDragOverIndex(index);
+  };
+
+  const handleDragLeave = (e) => {
+    if (!e.currentTarget.contains(e.relatedTarget)) setDragOverIndex(null);
+  };
+
+  const handleDrop = (e, toIndex) => {
+    if (!canDrag) return;
+    e.preventDefault();
+    const fromIndex = parseInt(e.dataTransfer.getData("text/plain"), 10);
+    if (Number.isNaN(fromIndex) || fromIndex === toIndex) {
+      setDragOverIndex(null);
+      setDraggedIndex(null);
+      return;
+    }
+    setDragOverIndex(null);
+    setDraggedIndex(null);
+    try { e.target.closest("tr")?.classList.remove("opacity-50", "ring-2", "ring-blue-400"); } catch (_) {}
+    const newOrder = [...displayExams];
+    const [removed] = newOrder.splice(fromIndex, 1);
+    newOrder.splice(toIndex, 0, removed);
+    onReorderDraft(newOrder);
+  };
+
+  const handleDragEnd = (e) => {
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+    try { e.target.classList.remove("opacity-50", "ring-2", "ring-blue-400"); } catch (_) {}
+  };
 
   // Use embedded visitStats (cron 3–4am); if missing show "—"
   const getVisitStats = (exam) => exam?.visitStats;
@@ -39,7 +89,7 @@ const ExamTable = ({ exams, onEdit, onDelete, onView, onToggleStatus, onManageIn
   const handleExamClick = (exam) => {
     router.push(`/admin/exam/${exam._id}`);
   };
-  if (!exams || exams.length === 0) {
+  if (!displayExams || displayExams.length === 0) {
     return (
       <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200 shadow-sm">
         <div className="text-5xl mb-3 animate-float">📝</div>
@@ -67,6 +117,11 @@ const ExamTable = ({ exams, onEdit, onDelete, onView, onToggleStatus, onManageIn
         <table className="min-w-full divide-y divide-gray-200 table-fixed">
           <thead className="bg-gray-50">
             <tr>
+              {canDrag && (
+                <th className="px-1 py-1 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-10">
+                  Order
+                </th>
+              )}
               <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Exam Details
               </th>
@@ -94,12 +149,31 @@ const ExamTable = ({ exams, onEdit, onDelete, onView, onToggleStatus, onManageIn
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {exams.map((exam, index) => (
+            {displayExams.map((exam, index) => (
               <tr
                 key={exam._id || exam.id || index}
-                className={`hover:bg-gray-50 transition-colors ${exam.status === "inactive" ? "opacity-60" : ""
-                  }`}
+                draggable={canDrag}
+                onDragStart={(e) => handleDragStart(e, index)}
+                onDragOver={(e) => handleDragOver(e, index)}
+                onDragLeave={handleDragLeave}
+                onDrop={(e) => handleDrop(e, index)}
+                onDragEnd={handleDragEnd}
+                className={`hover:bg-gray-50 transition-colors ${exam.status === "inactive" ? "opacity-60" : ""} ${
+                  draggedIndex === index ? "opacity-50 ring-2 ring-blue-400" : ""
+                } ${dragOverIndex === index && draggedIndex !== index ? "bg-blue-50 border-y-2 border-blue-200" : ""}`}
               >
+                {canDrag && (
+                  <td
+                    className="px-1 py-2 text-center w-10 cursor-grab active:cursor-grabbing"
+                    onClick={(e) => e.stopPropagation()}
+                    title="Drag to reorder"
+                  >
+                    <span className="inline-flex text-gray-400 hover:text-gray-600" aria-hidden>
+                      <FaGripVertical className="w-4 h-4" />
+                    </span>
+                    <span className="sr-only">Drag to reorder position {index + 1}</span>
+                  </td>
+                )}
                 <td className="px-3 py-2 whitespace-nowrap">
                   <div className="flex items-center gap-2">
                     <span
@@ -273,17 +347,29 @@ const ExamTable = ({ exams, onEdit, onDelete, onView, onToggleStatus, onManageIn
 
       {/* Mobile Card View */}
       <div className="md:hidden divide-y divide-gray-200">
-        {exams.map((exam, index) => (
+        {displayExams.map((exam, index) => (
           <div
             key={exam._id || exam.id || index}
-            className={`p-1.5 hover:bg-gray-50 transition-colors ${exam.status === "inactive" ? "opacity-60" : ""
-              }`}
+            draggable={canDrag}
+            onDragStart={(e) => handleDragStart(e, index)}
+            onDragOver={(e) => handleDragOver(e, index)}
+            onDragLeave={handleDragLeave}
+            onDrop={(e) => handleDrop(e, index)}
+            onDragEnd={handleDragEnd}
+            className={`p-1.5 hover:bg-gray-50 transition-colors ${exam.status === "inactive" ? "opacity-60" : ""} ${
+              draggedIndex === index ? "opacity-50 ring-2 ring-blue-400 rounded-lg" : ""
+            } ${dragOverIndex === index && draggedIndex !== index ? "bg-blue-50 border-2 border-blue-200 rounded-lg" : ""}`}
           >
             <div className="flex items-start justify-between">
+              {canDrag && (
+                <span className="inline-flex text-gray-400 mr-2 mt-1 shrink-0 touch-none" aria-hidden title="Drag to reorder">
+                  <FaGripVertical className="w-5 h-5" />
+                </span>
+              )}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-3 mb-2">
                   {exam.image && (
-                    <div className="w-12 h-12 rounded border border-gray-200 overflow-hidden bg-gray-50 flex-shrink-0 shadow-sm">
+                    <div className="w-12 h-12 rounded border border-gray-200 overflow-hidden bg-gray-50 shrink-0 shadow-sm">
                       <img src={exam.image} alt="" className="w-full h-full object-cover" />
                     </div>
                   )}

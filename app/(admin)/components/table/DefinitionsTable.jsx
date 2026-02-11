@@ -1,6 +1,6 @@
 "use client";
-import React, { useMemo } from "react";
-import { FaEdit, FaTrash, FaEye, FaPowerOff, FaLock } from "react-icons/fa";
+import React, { useMemo, useState } from "react";
+import { FaEdit, FaTrash, FaEye, FaPowerOff, FaLock, FaGripVertical } from "react-icons/fa";
 import { FiCheck } from "react-icons/fi";
 import { useRouter } from "next/navigation";
 import {
@@ -12,11 +12,17 @@ const DefinitionsTable = ({
   definitions,
   onEdit,
   onDelete,
-  onDragEnd,
   onToggleStatus,
+  onReorderDraft,
+  reorderDraft = {},
+  isReorderAllowed = true,
 }) => {
   const { canEdit, canDelete, canReorder, role } = usePermissions();
   const router = useRouter();
+  const [dragged, setDragged] = useState({ subTopicId: null, index: null });
+  const [dragOver, setDragOver] = useState({ subTopicId: null, index: null });
+
+  const canDrag = Boolean(canReorder && onReorderDraft && isReorderAllowed);
 
   // Use embedded visitStats (cron 3–4am); if missing show "—"
   const getVisitStats = (definition) => definition?.visitStats;
@@ -36,6 +42,59 @@ const DefinitionsTable = ({
 
   const handleDefinitionClick = (definitionId) => {
     router.push(`/admin/definitions/${definitionId}`);
+  };
+
+  const handleDragStart = (e, subTopicId, index) => {
+    if (!canDrag) return;
+    setDragged({ subTopicId, index });
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", String(index));
+    e.dataTransfer.setData("application/json", JSON.stringify({ subTopicId, index }));
+    try { e.target.closest("tr")?.classList.add("opacity-50", "ring-2", "ring-blue-400"); } catch (_) {}
+  };
+
+  const handleDragOver = (e, subTopicId, index) => {
+    if (!canDrag || dragged.subTopicId === null || dragged.subTopicId !== subTopicId) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    setDragOver({ subTopicId, index });
+  };
+
+  const handleDragLeave = (e) => {
+    if (!e.currentTarget.contains(e.relatedTarget)) setDragOver({ subTopicId: null, index: null });
+  };
+
+  const handleDrop = (e, subTopicId, toIndex) => {
+    if (!canDrag) return;
+    e.preventDefault();
+    const fromIndex = parseInt(e.dataTransfer.getData("text/plain"), 10);
+    const payload = e.dataTransfer.getData("application/json");
+    let payloadSubTopicId = subTopicId;
+    try {
+      const parsed = JSON.parse(payload || "{}");
+      if (parsed.subTopicId) payloadSubTopicId = parsed.subTopicId;
+    } catch (_) {}
+    if (payloadSubTopicId !== subTopicId || Number.isNaN(fromIndex) || fromIndex === toIndex) {
+      setDragOver({ subTopicId: null, index: null });
+      setDragged({ subTopicId: null, index: null });
+      return;
+    }
+    setDragOver({ subTopicId: null, index: null });
+    setDragged({ subTopicId: null, index: null });
+    try { e.target.closest("tr")?.classList.remove("opacity-50", "ring-2", "ring-blue-400"); } catch (_) {}
+    const group = groupedDefinitions.find((g) => g.subTopicId === subTopicId);
+    if (!group) return;
+    const currentList = reorderDraft[subTopicId] ?? [...group.definitions].sort((a, b) => (a.orderNumber || 0) - (b.orderNumber || 0));
+    const newOrder = [...currentList];
+    const [removed] = newOrder.splice(fromIndex, 1);
+    newOrder.splice(toIndex, 0, removed);
+    onReorderDraft(subTopicId, newOrder);
+  };
+
+  const handleDragEnd = (e) => {
+    setDragged({ subTopicId: null, index: null });
+    setDragOver({ subTopicId: null, index: null });
+    try { e.target.closest("tr")?.classList.remove("opacity-50", "ring-2", "ring-blue-400"); } catch (_) {}
   };
 
   // Group definitions by Exam → Subject → Unit → Chapter → Topic → SubTopic
@@ -100,6 +159,15 @@ const DefinitionsTable = ({
     });
   }, [definitions]);
 
+  const displayGroups = useMemo(
+    () =>
+      groupedDefinitions.map((g) => ({
+        ...g,
+        definitions: reorderDraft[g.subTopicId] ?? [...g.definitions].sort((a, b) => (a.orderNumber || 0) - (b.orderNumber || 0)),
+      })),
+    [groupedDefinitions, reorderDraft]
+  );
+
   if (!definitions || definitions.length === 0) {
     return (
       <div className="text-center py-12 bg-white rounded-lg border border-gray-200 shadow-sm">
@@ -116,13 +184,8 @@ const DefinitionsTable = ({
 
   return (
     <div className="space-y-6">
-      {groupedDefinitions.map((group, groupIndex) => {
-        // Sort definitions by orderNumber within each group
-        const sortedDefinitions = [...group.definitions].sort((a, b) => {
-          const ao = a.orderNumber || Number.MAX_SAFE_INTEGER;
-          const bo = b.orderNumber || Number.MAX_SAFE_INTEGER;
-          return ao - bo;
-        });
+      {displayGroups.map((group, groupIndex) => {
+        const sortedDefinitions = group.definitions;
 
         return (
           <div
@@ -190,6 +253,11 @@ const DefinitionsTable = ({
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
+                    {canDrag && (
+                      <th className="px-1 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-10">
+                        Move
+                      </th>
+                    )}
                     <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-14">
                       Order
                     </th>
@@ -213,13 +281,38 @@ const DefinitionsTable = ({
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody
+                  className="bg-white divide-y divide-gray-200"
+                  onDragLeave={handleDragLeave}
+                >
                   {sortedDefinitions.map((definition, definitionIndex) => {
+                    const rowCanDrag = canDrag && sortedDefinitions.length > 1;
+                    const isDraggedRow = dragged.subTopicId === group.subTopicId && dragged.index === definitionIndex;
+                    const isDragOverRow = dragOver.subTopicId === group.subTopicId && dragOver.index === definitionIndex && !isDraggedRow;
                     return (
                       <tr
                         key={definition._id || definitionIndex}
-                        className={`hover:bg-gray-50/80 transition-colors ${definition.status === "inactive" ? "opacity-60" : ""}`}
+                        draggable={rowCanDrag}
+                        onDragStart={(e) => handleDragStart(e, group.subTopicId, definitionIndex)}
+                        onDragOver={(e) => handleDragOver(e, group.subTopicId, definitionIndex)}
+                        onDrop={(e) => handleDrop(e, group.subTopicId, definitionIndex)}
+                        onDragEnd={handleDragEnd}
+                        className={`hover:bg-gray-50/80 transition-colors ${definition.status === "inactive" ? "opacity-60" : ""} ${
+                          isDraggedRow ? "opacity-50 ring-2 ring-blue-400" : ""
+                        } ${isDragOverRow ? "bg-blue-50 border-y-2 border-blue-200" : ""}`}
                       >
+                        {canDrag && (
+                          <td
+                            className="px-1 py-2 text-center w-10 cursor-grab active:cursor-grabbing"
+                            onClick={(e) => e.stopPropagation()}
+                            title="Drag to reorder"
+                          >
+                            <span className="inline-flex text-gray-400 hover:text-gray-600" aria-hidden>
+                              <FaGripVertical className="w-4 h-4" />
+                            </span>
+                            <span className="sr-only">Drag to reorder position {definitionIndex + 1}</span>
+                          </td>
+                        )}
                         <td className="px-3 py-2 whitespace-nowrap">
                           <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-gray-100 text-gray-700 font-medium text-sm">
                             {definition.orderNumber || definitionIndex + 1}
@@ -368,13 +461,31 @@ const DefinitionsTable = ({
             {/* Mobile/Tablet View */}
             <div className="lg:hidden divide-y divide-gray-200">
               {sortedDefinitions.map((definition, definitionIndex) => {
+                const rowCanDrag = canDrag && sortedDefinitions.length > 1;
+                const isDraggedRow = dragged.subTopicId === group.subTopicId && dragged.index === definitionIndex;
+                const isDragOverRow = dragOver.subTopicId === group.subTopicId && dragOver.index === definitionIndex && !isDraggedRow;
                 return (
                   <div
                     key={definition._id || definitionIndex}
-                    className={`p-1.5 hover:bg-gray-50 transition-colors ${definition.status === "inactive" ? "opacity-60" : ""
-                      }`}
+                    draggable={rowCanDrag}
+                    onDragStart={(e) => handleDragStart(e, group.subTopicId, definitionIndex)}
+                    onDragOver={(e) => handleDragOver(e, group.subTopicId, definitionIndex)}
+                    onDrop={(e) => handleDrop(e, group.subTopicId, definitionIndex)}
+                    onDragEnd={handleDragEnd}
+                    className={`p-1.5 hover:bg-gray-50 transition-colors ${definition.status === "inactive" ? "opacity-60" : ""} ${
+                      isDraggedRow ? "opacity-50 ring-2 ring-blue-400 rounded" : ""
+                    } ${isDragOverRow ? "bg-blue-50 border-2 border-blue-200 rounded" : ""}`}
                   >
                     <div className="flex justify-between items-start gap-2">
+                      {canDrag && (
+                        <div
+                          className="shrink-0 pt-0.5 cursor-grab active:cursor-grabbing text-gray-400"
+                          onClick={(e) => e.stopPropagation()}
+                          title="Drag to reorder"
+                        >
+                          <FaGripVertical className="w-4 h-4" />
+                        </div>
+                      )}
                       <div className="flex-1 min-w-0 pr-2">
                         <h3
                           onClick={() => handleDefinitionClick(definition._id)}

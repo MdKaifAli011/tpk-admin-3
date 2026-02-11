@@ -1,6 +1,6 @@
 "use client";
-import React, { useMemo } from "react";
-import { FaEdit, FaTrash, FaEye, FaPowerOff, FaLock } from "react-icons/fa";
+import React, { useMemo, useState } from "react";
+import { FaEdit, FaTrash, FaEye, FaPowerOff, FaLock, FaGripVertical } from "react-icons/fa";
 import { FiCheck } from "react-icons/fi";
 import { useRouter } from "next/navigation";
 import {
@@ -12,11 +12,17 @@ const TopicsTable = ({
   topics,
   onEdit,
   onDelete,
-  onDragEnd,
   onToggleStatus,
+  onReorderDraft,
+  reorderDraft = {},
+  isReorderAllowed = true,
 }) => {
   const { canEdit, canDelete, canReorder, role } = usePermissions();
   const router = useRouter();
+  const [dragged, setDragged] = useState({ chapterId: null, index: null });
+  const [dragOver, setDragOver] = useState({ chapterId: null, index: null });
+
+  const canDrag = Boolean(canReorder && onReorderDraft && isReorderAllowed);
 
   // Use embedded visitStats (cron 3–4am); if missing show "—"
   const getVisitStats = (topic) => topic?.visitStats;
@@ -36,6 +42,59 @@ const TopicsTable = ({
 
   const handleTopicClick = (topicId) => {
     router.push(`/admin/topic/${topicId}`);
+  };
+
+  const handleDragStart = (e, chapterId, index) => {
+    if (!canDrag) return;
+    setDragged({ chapterId, index });
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", String(index));
+    e.dataTransfer.setData("application/json", JSON.stringify({ chapterId, index }));
+    try { e.target.closest("tr")?.classList.add("opacity-50", "ring-2", "ring-blue-400"); } catch (_) {}
+  };
+
+  const handleDragOver = (e, chapterId, index) => {
+    if (!canDrag || dragged.chapterId === null || dragged.chapterId !== chapterId) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    setDragOver({ chapterId, index });
+  };
+
+  const handleDragLeave = (e) => {
+    if (!e.currentTarget.contains(e.relatedTarget)) setDragOver({ chapterId: null, index: null });
+  };
+
+  const handleDrop = (e, chapterId, toIndex) => {
+    if (!canDrag) return;
+    e.preventDefault();
+    const fromIndex = parseInt(e.dataTransfer.getData("text/plain"), 10);
+    const payload = e.dataTransfer.getData("application/json");
+    let payloadChapterId = chapterId;
+    try {
+      const parsed = JSON.parse(payload || "{}");
+      if (parsed.chapterId) payloadChapterId = parsed.chapterId;
+    } catch (_) {}
+    if (payloadChapterId !== chapterId || Number.isNaN(fromIndex) || fromIndex === toIndex) {
+      setDragOver({ chapterId: null, index: null });
+      setDragged({ chapterId: null, index: null });
+      return;
+    }
+    setDragOver({ chapterId: null, index: null });
+    setDragged({ chapterId: null, index: null });
+    try { e.target.closest("tr")?.classList.remove("opacity-50", "ring-2", "ring-blue-400"); } catch (_) {}
+    const group = groupedTopics.find((g) => g.chapterId === chapterId);
+    if (!group) return;
+    const currentList = reorderDraft[chapterId] ?? [...group.topics].sort((a, b) => (a.orderNumber || 0) - (b.orderNumber || 0));
+    const newOrder = [...currentList];
+    const [removed] = newOrder.splice(fromIndex, 1);
+    newOrder.splice(toIndex, 0, removed);
+    onReorderDraft(chapterId, newOrder);
+  };
+
+  const handleDragEnd = (e) => {
+    setDragged({ chapterId: null, index: null });
+    setDragOver({ chapterId: null, index: null });
+    try { e.target.closest("tr")?.classList.remove("opacity-50", "ring-2", "ring-blue-400"); } catch (_) {}
   };
 
   // Group topics by Exam → Subject → Unit → Chapter
@@ -86,6 +145,15 @@ const TopicsTable = ({
     });
   }, [topics]);
 
+  const displayGroups = useMemo(
+    () =>
+      groupedTopics.map((g) => ({
+        ...g,
+        topics: reorderDraft[g.chapterId] ?? [...g.topics].sort((a, b) => (a.orderNumber || 0) - (b.orderNumber || 0)),
+      })),
+    [groupedTopics, reorderDraft]
+  );
+
   if (!topics || topics.length === 0) {
     return (
       <div className="text-center py-12 bg-white rounded-lg border border-gray-200 shadow-sm">
@@ -102,13 +170,8 @@ const TopicsTable = ({
 
   return (
     <div className="space-y-6">
-      {groupedTopics.map((group, groupIndex) => {
-        // Sort topics by orderNumber within each group
-        const sortedTopics = [...group.topics].sort((a, b) => {
-          const ao = a.orderNumber || Number.MAX_SAFE_INTEGER;
-          const bo = b.orderNumber || Number.MAX_SAFE_INTEGER;
-          return ao - bo;
-        });
+      {displayGroups.map((group, groupIndex) => {
+        const sortedTopics = group.topics;
 
         return (
           <div
@@ -162,6 +225,11 @@ const TopicsTable = ({
               <table className="min-w-full divide-y divide-gray-200 table-fixed">
                 <thead className="bg-gray-50">
                   <tr>
+                    {canDrag && (
+                      <th className="px-1 py-1 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-10">
+                        Move
+                      </th>
+                    )}
                     <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16">
                       Order
                     </th>
@@ -185,14 +253,38 @@ const TopicsTable = ({
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody
+                  className="bg-white divide-y divide-gray-200"
+                  onDragLeave={handleDragLeave}
+                >
                   {sortedTopics.map((topic, topicIndex) => {
+                    const rowCanDrag = canDrag && sortedTopics.length > 1;
+                    const isDraggedRow = dragged.chapterId === group.chapterId && dragged.index === topicIndex;
+                    const isDragOverRow = dragOver.chapterId === group.chapterId && dragOver.index === topicIndex && !isDraggedRow;
                     return (
                       <tr
                         key={topic._id || topicIndex}
-                        className={`hover:bg-gray-50 transition-colors ${topic.status === "inactive" ? "opacity-60" : ""
-                          }`}
+                        draggable={rowCanDrag}
+                        onDragStart={(e) => handleDragStart(e, group.chapterId, topicIndex)}
+                        onDragOver={(e) => handleDragOver(e, group.chapterId, topicIndex)}
+                        onDrop={(e) => handleDrop(e, group.chapterId, topicIndex)}
+                        onDragEnd={handleDragEnd}
+                        className={`hover:bg-gray-50 transition-colors ${topic.status === "inactive" ? "opacity-60" : ""} ${
+                          isDraggedRow ? "opacity-50 ring-2 ring-blue-400" : ""
+                        } ${isDragOverRow ? "bg-blue-50 border-y-2 border-blue-200" : ""}`}
                       >
+                        {canDrag && (
+                          <td
+                            className="px-1 py-2 text-center w-10 cursor-grab active:cursor-grabbing"
+                            onClick={(e) => e.stopPropagation()}
+                            title="Drag to reorder"
+                          >
+                            <span className="inline-flex text-gray-400 hover:text-gray-600" aria-hidden>
+                              <FaGripVertical className="w-4 h-4" />
+                            </span>
+                            <span className="sr-only">Drag to reorder position {topicIndex + 1}</span>
+                          </td>
+                        )}
                         <td className="px-2 py-1 whitespace-nowrap">
                           <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-gray-100 text-gray-700 font-medium text-sm">
                             {topic.orderNumber || topicIndex + 1}
@@ -341,14 +433,31 @@ const TopicsTable = ({
             {/* Mobile/Tablet View */}
             <div className="lg:hidden divide-y divide-gray-200">
               {sortedTopics.map((topic, topicIndex) => {
-                const dragKey = `${groupIndex}-${topicIndex}`;
+                const rowCanDrag = canDrag && sortedTopics.length > 1;
+                const isDraggedRow = dragged.chapterId === group.chapterId && dragged.index === topicIndex;
+                const isDragOverRow = dragOver.chapterId === group.chapterId && dragOver.index === topicIndex && !isDraggedRow;
                 return (
                   <div
                     key={topic._id || topicIndex}
-                    className={`p-1.5 hover:bg-gray-50 transition-colors ${topic.status === "inactive" ? "opacity-60" : ""
-                      }`}
+                    draggable={rowCanDrag}
+                    onDragStart={(e) => handleDragStart(e, group.chapterId, topicIndex)}
+                    onDragOver={(e) => handleDragOver(e, group.chapterId, topicIndex)}
+                    onDrop={(e) => handleDrop(e, group.chapterId, topicIndex)}
+                    onDragEnd={handleDragEnd}
+                    className={`p-1.5 hover:bg-gray-50 transition-colors ${topic.status === "inactive" ? "opacity-60" : ""} ${
+                      isDraggedRow ? "opacity-50 ring-2 ring-blue-400 rounded" : ""
+                    } ${isDragOverRow ? "bg-blue-50 border-2 border-blue-200 rounded" : ""}`}
                   >
                     <div className="flex justify-between items-start gap-2">
+                      {canDrag && (
+                        <div
+                          className="shrink-0 pt-0.5 cursor-grab active:cursor-grabbing text-gray-400"
+                          onClick={(e) => e.stopPropagation()}
+                          title="Drag to reorder"
+                        >
+                          <FaGripVertical className="w-4 h-4" />
+                        </div>
+                      )}
                       <div className="flex-1 min-w-0 pr-2">
                         <h3
                           onClick={() => handleTopicClick(topic._id)}
@@ -392,7 +501,7 @@ const TopicsTable = ({
                           </div>
                         </div>
                       </div>
-                      <div className="flex items-center gap-1 flex-shrink-0">
+                      <div className="flex items-center gap-1 shrink-0">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();

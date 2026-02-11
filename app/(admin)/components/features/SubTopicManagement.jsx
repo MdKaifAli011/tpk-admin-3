@@ -7,8 +7,8 @@ import React, {
   useRef,
 } from "react";
 import SubTopicsTable from "../table/SubTopicsTable";
-import { LoadingWrapper, SkeletonChaptersTable } from "../ui/SkeletonLoader";
-import { FaEdit, FaPlus, FaTimes, FaLock, FaSearch } from "react-icons/fa";
+import { LoadingWrapper, SkeletonChaptersTable, LoadingSpinner } from "../ui/SkeletonLoader";
+import { FaEdit, FaPlus, FaTimes, FaLock, FaSearch, FaCheck, FaGripVertical } from "react-icons/fa";
 import { ToastContainer, useToast } from "../ui/Toast";
 import api from "@/lib/api";
 import { usePermissions, getPermissionMessage } from "../../hooks/usePermissions";
@@ -61,6 +61,8 @@ const SubTopicsManagement = () => {
   const [filterChapter, setFilterChapter] = useState("");
   const [filterTopic, setFilterTopic] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [isReorderMode, setIsReorderMode] = useState(false);
+  const [reorderDraft, setReorderDraft] = useState({});
   const isFetchingRef = useRef(false);
   const [metaFilter, setMetaFilter] = useState("all"); // all, filled, notFilled
 
@@ -1037,97 +1039,48 @@ const SubTopicsManagement = () => {
     }
   };
 
-  const handleDragEnd = async (result) => {
-    // Check permissions
+  const saveReorderForTopic = async (topicId, newOrderedSubTopics) => {
+    const payload = {
+      subTopics: newOrderedSubTopics.map((st, i) => ({
+        id: st._id,
+        orderNumber: i + 1,
+      })),
+    };
+    const response = await api.patch("/subtopic/reorder", payload);
+    if (!response.data?.success) {
+      throw new Error(response.data?.message || "Failed to reorder subtopics");
+    }
+  };
+
+  const handleReorderDraft = (topicId, newOrderedSubTopics) => {
+    setReorderDraft((prev) => ({ ...prev, [topicId]: newOrderedSubTopics }));
+  };
+
+  const handleDoneReorder = async () => {
     if (!canReorder) {
-      setFormError(getPermissionMessage("reorder", role));
       showError(getPermissionMessage("reorder", role));
       return;
     }
-
-    if (!result.destination) return;
-
-    const sourceIndex = result.source.index;
-    const destinationIndex = result.destination.index;
-
-    if (sourceIndex === destinationIndex) return;
-
-    const items = Array.from(subTopics);
-    const reorderedItem = items[sourceIndex];
-
-    // Get the topic ID to identify the group
-    const topicId = reorderedItem.topicId?._id || reorderedItem.topicId;
-
-    // Find all subTopics in the same group (same topic)
-    const groupSubTopics = items.filter((subTopic) => {
-      const subTopicTopicId = subTopic.topicId?._id || subTopic.topicId;
-      return subTopicTopicId === topicId;
-    });
-
-    // Find indices within the group
-    const groupSourceIndex = groupSubTopics.findIndex(
-      (st) => (st._id || st.id) === (reorderedItem._id || reorderedItem.id)
-    );
-
-    // Create a reordered group array
-    const reorderedGroup = Array.from(groupSubTopics);
-    const [movedSubTopic] = reorderedGroup.splice(groupSourceIndex, 1);
-
-    // Calculate destination index within the group
-    const groupDestIndex = groupSubTopics.findIndex((subTopic, idx) => {
-      if (idx === groupSourceIndex) return false;
-      const flatIndex = items.findIndex(
-        (st) => (st._id || st.id) === (subTopic._id || subTopic.id)
-      );
-      return flatIndex >= destinationIndex;
-    });
-    const finalDestIndex = groupDestIndex === -1 ? reorderedGroup.length : groupDestIndex;
-    reorderedGroup.splice(finalDestIndex, 0, movedSubTopic);
-
-    // Update order numbers only for subTopics in this group
-    const updatedGroupSubTopics = reorderedGroup.map((subTopic, index) => ({
-      ...subTopic,
-      orderNumber: index + 1,
-    }));
-
-    // Update the full subTopics array, preserving other subTopics
-    const updatedItems = items.map((subTopic) => {
-      const updatedSubTopic = updatedGroupSubTopics.find(
-        (st) => (st._id || st.id) === (subTopic._id || subTopic.id)
-      );
-      return updatedSubTopic || subTopic;
-    });
-
-    setSubTopics(updatedItems);
-
+    const topicIds = Object.keys(reorderDraft);
+    if (topicIds.length === 0) {
+      setIsReorderMode(false);
+      return;
+    }
     try {
-      // Prepare subTopics data for the reorder endpoint
-      const subTopicsData = updatedGroupSubTopics.map((subTopic) => ({
-        id: subTopic._id,
-        orderNumber: subTopic.orderNumber,
-      }));
-
-      const response = await api.patch("/subtopic/reorder", {
-        subTopics: subTopicsData,
-      });
-
-      if (response.data.success) {
-        success(
-          `Sub Topic "${reorderedItem.name}" moved to position ${finalDestIndex + 1}`
-        );
-      } else {
-        throw new Error(
-          response.data.message || "Failed to update sub topic order"
-        );
-      }
-    } catch (error) {
-      console.error("❌ Error updating sub topic order:", error);
-      console.log("🔄 Reverting sub topic order due to API error");
-      fetchSubTopics(); // Revert local state
-      setError(
-        `Failed to update sub topic order: ${error.response?.data?.message || error.message
-        }`
+      setIsFormLoading(true);
+      setError(null);
+      await Promise.all(
+        topicIds.map((topicId) => saveReorderForTopic(topicId, reorderDraft[topicId]))
       );
+      await fetchSubTopics();
+      setReorderDraft({});
+      setIsReorderMode(false);
+      success("SubTopic order updated successfully.");
+    } catch (err) {
+      const msg = err?.response?.data?.message || err?.message || "Failed to reorder subtopics. Please try again.";
+      showError(msg);
+    } finally {
+      setIsFormLoading(false);
     }
   };
 
@@ -1729,11 +1682,46 @@ const SubTopicsManagement = () => {
                   SubTopics List
                 </h2>
                 <p className="text-sm text-gray-600 mt-1">
-                  Manage your subtopics, view details, and perform actions. You can
-                  drag to reorder subtopics.
+                  Manage your subtopics, view details, and perform actions
+                  {isReorderMode && (
+                    <span className="ml-1.5 text-blue-600 font-medium">— Drag rows within each topic, then click Done to save</span>
+                  )}
                 </p>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
+                {canReorder && !searchQuery.trim() && (
+                  isReorderMode ? (
+                    <button
+                      type="button"
+                      onClick={handleDoneReorder}
+                      disabled={isFormLoading}
+                      className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+                      title="Save order and exit reorder mode"
+                    >
+                      {isFormLoading ? (
+                        <>
+                          <LoadingSpinner size="small" />
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <FaCheck className="w-4 h-4" />
+                          Done
+                        </>
+                      )}
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => { setIsReorderMode(true); setReorderDraft({}); }}
+                      className="inline-flex items-center gap-2 px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-sm font-medium transition-colors"
+                      title="Enable drag and drop to reorder subtopics per topic"
+                    >
+                      <FaGripVertical className="w-4 h-4" />
+                      Reorder position
+                    </button>
+                  )
+                )}
                 {/* Search Bar */}
                 <div className="relative">
                   <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -2018,8 +2006,10 @@ const SubTopicsManagement = () => {
               subTopics={filteredSubTopics}
               onEdit={handleEditSubTopic}
               onDelete={handleDeleteSubTopic}
-              onDragEnd={handleDragEnd}
               onToggleStatus={handleToggleStatus}
+              onReorderDraft={handleReorderDraft}
+              reorderDraft={reorderDraft}
+              isReorderAllowed={isReorderMode && !searchQuery.trim()}
             />
           </div>
         </div>

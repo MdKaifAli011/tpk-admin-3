@@ -21,6 +21,8 @@ import {
   FaClipboardList,
   FaLock,
   FaSearch,
+  FaCheck,
+  FaGripVertical,
 } from "react-icons/fa";
 import { ToastContainer, useToast } from "../ui/Toast";
 import api from "@/lib/api";
@@ -73,6 +75,8 @@ const ChaptersManagement = () => {
   const [filterSubject, setFilterSubject] = useState("");
   const [filterUnit, setFilterUnit] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [isReorderMode, setIsReorderMode] = useState(false);
+  const [reorderDraft, setReorderDraft] = useState({});
   const { toasts, removeToast, success, error: showError } = useToast();
   const isFetchingRef = useRef(false);
   const [metaFilter, setMetaFilter] = useState("all"); // all, filled, notFilled
@@ -808,102 +812,48 @@ const ChaptersManagement = () => {
     }
   };
 
-  const handleDragEnd = async (result) => {
-    // Check permissions
+  const saveReorderForUnit = async (unitId, newOrderedChapters) => {
+    const payload = {
+      chapters: newOrderedChapters.map((c, i) => ({
+        id: c._id,
+        orderNumber: i + 1,
+      })),
+    };
+    const response = await api.patch("/chapter/reorder", payload);
+    if (!response.data?.success) {
+      throw new Error(response.data?.message || "Failed to reorder chapters");
+    }
+  };
+
+  const handleReorderDraft = (unitId, newOrderedChapters) => {
+    setReorderDraft((prev) => ({ ...prev, [unitId]: newOrderedChapters }));
+  };
+
+  const handleDoneReorder = async () => {
     if (!canReorder) {
       showError(getPermissionMessage("reorder", role));
       return;
     }
-
-    if (!result.destination) return;
-
-    const sourceIndex = result.source.index;
-    const destinationIndex = result.destination.index;
-
-    // Don't do anything if dropped in the same position
-    if (sourceIndex === destinationIndex) return;
-
-    const items = Array.from(chapters);
-    const reorderedItem = items[sourceIndex];
-
-    // Get the unit ID to identify the group
-    const unitId = reorderedItem.unitId?._id || reorderedItem.unitId;
-
-    // Find all chapters in the same group (same unit)
-    const groupChapters = items.filter((chapter) => {
-      const chapterUnitId = chapter.unitId?._id || chapter.unitId;
-      return chapterUnitId === unitId;
-    });
-
-    // Find indices within the group
-    const groupSourceIndex = groupChapters.findIndex(
-      (c) => (c._id || c.id) === (reorderedItem._id || reorderedItem.id)
-    );
-
-    // Create a reordered group array
-    const reorderedGroup = Array.from(groupChapters);
-    const [movedChapter] = reorderedGroup.splice(groupSourceIndex, 1);
-
-    // Calculate destination index within the group
-    const groupDestIndex = groupChapters.findIndex((chapter, idx) => {
-      if (idx === groupSourceIndex) return false;
-      const flatIndex = items.findIndex(
-        (c) => (c._id || c.id) === (chapter._id || chapter.id)
-      );
-      return flatIndex >= destinationIndex;
-    });
-    const finalDestIndex = groupDestIndex === -1 ? reorderedGroup.length : groupDestIndex;
-    reorderedGroup.splice(finalDestIndex, 0, movedChapter);
-
-    // Update order numbers only for chapters in this group
-    const updatedGroupChapters = reorderedGroup.map((chapter, index) => ({
-      ...chapter,
-      orderNumber: index + 1,
-    }));
-
-    // Update the full chapters array, preserving other chapters
-    const updatedItems = items.map((chapter) => {
-      const updatedChapter = updatedGroupChapters.find(
-        (c) => (c._id || c.id) === (chapter._id || chapter.id)
-      );
-      return updatedChapter || chapter;
-    });
-
-    // Optimistically update the UI first
-    setChapters(updatedItems);
-
-    // Update all affected chapters in the database using the reorder endpoint
+    const unitIds = Object.keys(reorderDraft);
+    if (unitIds.length === 0) {
+      setIsReorderMode(false);
+      return;
+    }
     try {
-      // Prepare chapters data for the reorder endpoint
-      const chaptersData = updatedGroupChapters.map((chapter) => ({
-        id: chapter._id,
-        orderNumber: chapter.orderNumber,
-      }));
-
-      // Use the dedicated reorder endpoint
-      const response = await api.patch("/chapter/reorder", {
-        chapters: chaptersData,
-      });
-
-      if (response.data.success) {
-        console.log(
-          `✅ Chapter "${reorderedItem.name}" moved to position ${finalDestIndex + 1}`
-        );
-      } else {
-        throw new Error(response.data.message || "Failed to reorder chapters");
-      }
-    } catch (error) {
-      console.error("❌ Error updating chapter order:", error);
-
-      // Revert the local state if API call fails
-      console.log("🔄 Reverting chapter order due to API error");
-      fetchChapters();
-
-      // Show user-friendly error message
-      setError(
-        `Failed to update chapter order: ${error.response?.data?.message || error.message
-        }`
+      setIsFormLoading(true);
+      setError(null);
+      await Promise.all(
+        unitIds.map((unitId) => saveReorderForUnit(unitId, reorderDraft[unitId]))
       );
+      await fetchChapters();
+      setReorderDraft({});
+      setIsReorderMode(false);
+      success("Chapter order updated successfully.");
+    } catch (err) {
+      const msg = err?.response?.data?.message || err?.message || "Failed to reorder chapters. Please try again.";
+      showError(msg);
+    } finally {
+      setIsFormLoading(false);
     }
   };
 
@@ -1526,11 +1476,46 @@ const ChaptersManagement = () => {
                   Chapters List
                 </h2>
                 <p className="text-sm text-gray-600 mt-1">
-                  Manage your chapters, view details, and perform actions. You
-                  can drag to reorder chapters.
+                  Manage your chapters, view details, and perform actions
+                  {isReorderMode && (
+                    <span className="ml-1.5 text-blue-600 font-medium">— Drag rows within each unit, then click Done to save</span>
+                  )}
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-3">
+                {canReorder && !searchQuery.trim() && (
+                  isReorderMode ? (
+                    <button
+                      type="button"
+                      onClick={handleDoneReorder}
+                      disabled={isFormLoading}
+                      className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+                      title="Save order and exit reorder mode"
+                    >
+                      {isFormLoading ? (
+                        <>
+                          <LoadingSpinner size="small" />
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <FaCheck className="w-4 h-4" />
+                          Done
+                        </>
+                      )}
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => { setIsReorderMode(true); setReorderDraft({}); }}
+                      className="inline-flex items-center gap-2 px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-sm font-medium transition-colors"
+                      title="Enable drag and drop to reorder chapters per unit"
+                    >
+                      <FaGripVertical className="w-4 h-4" />
+                      Reorder position
+                    </button>
+                  )
+                )}
                 {/* Search Input */}
                 <div className="relative min-w-[200px] sm:min-w-[240px]">
                   <input
@@ -1781,8 +1766,10 @@ const ChaptersManagement = () => {
                 chapters={filteredChapters}
                 onEdit={handleEditChapter}
                 onDelete={handleDeleteChapter}
-                onDragEnd={handleDragEnd}
                 onToggleStatus={handleToggleStatus}
+                onReorderDraft={handleReorderDraft}
+                reorderDraft={reorderDraft}
+                isReorderAllowed={isReorderMode && !searchQuery.trim()}
               />
             )}
           </div>
