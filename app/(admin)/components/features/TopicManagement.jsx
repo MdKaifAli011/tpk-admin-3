@@ -11,6 +11,7 @@ import { LoadingWrapper, SkeletonChaptersTable, LoadingSpinner } from "../ui/Ske
 import { FaEdit, FaPlus, FaTimes, FaLock, FaSearch, FaCheck, FaGripVertical } from "react-icons/fa";
 import { ToastContainer, useToast } from "../ui/Toast";
 import api from "@/lib/api";
+import { getTopicListCache, setTopicListCache } from "@/lib/topicListCache";
 import { usePermissions, getPermissionMessage } from "../../hooks/usePermissions";
 
 const TopicManagement = () => {
@@ -157,11 +158,6 @@ const TopicManagement = () => {
       setChapters([]);
     }
   }, []);
-
-  // Load topics when component mounts or metaFilter changes
-  useEffect(() => {
-    fetchTopics();
-  }, [fetchTopics, metaFilter]);
 
   // Load exams and subjects once on component mount
   useEffect(() => {
@@ -693,7 +689,9 @@ const TopicManagement = () => {
         const newTopics = Array.isArray(response.data.data)
           ? response.data.data
           : [response.data.data];
-        setTopics((prevTopics) => [...prevTopics, ...newTopics]);
+        const newList = [...topics, ...newTopics];
+        setTopics(newList);
+        setTopicListCache(newList, metaFilter);
         handleCancelForm();
         success(
           `${newTopics.length} topic(s) created successfully for ${validChapters.length} chapter(s)`
@@ -767,11 +765,11 @@ const TopicManagement = () => {
       });
 
       if (response.data.success) {
-        setTopics((prevTopics) =>
-          prevTopics.map((t) =>
-            t._id === editingTopic._id ? response.data.data : t
-          )
+        const newList = topics.map((t) =>
+          t._id === editingTopic._id ? response.data.data : t
         );
+        setTopics(newList);
+        setTopicListCache(newList, metaFilter);
         handleCancelEditForm();
         success(
           `Topic "${response.data.data.name}" updated successfully`
@@ -815,9 +813,9 @@ const TopicManagement = () => {
       const response = await api.delete(`/topic/${topicToDelete._id}`);
 
       if (response.data.success) {
-        setTopics((prevTopics) =>
-          prevTopics.filter((t) => t._id !== topicToDelete._id)
-        );
+        const newList = topics.filter((t) => t._id !== topicToDelete._id);
+        setTopics(newList);
+        setTopicListCache(newList, metaFilter);
         success(`Topic "${topicToDelete.name}" deleted successfully`);
       } else {
         throw new Error(response.data.message || "Failed to delete topic");
@@ -854,12 +852,11 @@ const TopicManagement = () => {
         });
 
         if (response.data.success) {
-          // Update the topic status in the list
-          setTopics((prev) =>
-            prev.map((t) =>
-              t._id === topic._id ? { ...t, status: newStatus } : t
-            )
+          const newList = topics.map((t) =>
+            t._id === topic._id ? { ...t, status: newStatus } : t
           );
+          setTopics(newList);
+          setTopicListCache(newList, metaFilter);
           success(
             `Topic "${topic.name}" and all children ${action}d successfully`
           );

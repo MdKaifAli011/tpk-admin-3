@@ -19,6 +19,7 @@ import {
 } from "react-icons/fa";
 import { ToastContainer, useToast } from "../ui/Toast";
 import api from "@/lib/api";
+import { getExamListCache, setExamListCache } from "@/lib/examListCache";
 import { usePermissions, getPermissionMessage } from "../../hooks/usePermissions";
 import { useRouter } from "next/navigation";
 
@@ -46,18 +47,19 @@ const ExamManagement = () => {
   const [isReorderMode, setIsReorderMode] = useState(false);
   const [reorderDraft, setReorderDraft] = useState(null);
 
-  // Fetch exams from API using Axios
-  const fetchExams = async () => {
-    if (isFetchingRef.current) return; // prevent overlapping fetches
+  // Fetch exams from API (and update cache)
+  const fetchExams = React.useCallback(async () => {
+    if (isFetchingRef.current) return;
     isFetchingRef.current = true;
     try {
       setIsDataLoading(true);
       setError(null);
-      // Fetch all exams (active and inactive) to show correct status
       const response = await api.get(`/exam?status=all&metaStatus=${metaFilter}`);
 
       if (response.data?.success) {
-        setExams(response.data.data || []);
+        const data = response.data.data || [];
+        setExams(data);
+        setExamListCache(data, metaFilter);
       } else {
         setError(response.data?.message || "Failed to fetch exams");
       }
@@ -71,12 +73,19 @@ const ExamManagement = () => {
       setIsDataLoading(false);
       isFetchingRef.current = false;
     }
-  };
-
-  // Load exams when filter changes
-  useEffect(() => {
-    fetchExams();
   }, [metaFilter]);
+
+  // Load exams: use cache when returning from detail (no API call), otherwise fetch once
+  useEffect(() => {
+    const cached = getExamListCache(metaFilter);
+    if (cached != null && Array.isArray(cached) && cached.length >= 0) {
+      setExams(cached);
+      setIsDataLoading(false);
+      setError(null);
+      return;
+    }
+    fetchExams();
+  }, [metaFilter, fetchExams]);
 
   // Client-side filtering for search
   const filteredExams = useMemo(() => {
@@ -128,8 +137,9 @@ const ExamManagement = () => {
       const response = await api.post("/exam", payload);
 
       if (response.data.success) {
-        // Add the new exam to the list
-        setExams((prevExams) => [...prevExams, response.data.data]);
+        const newList = [...exams, response.data.data];
+        setExams(newList);
+        setExamListCache(newList, metaFilter);
         success(`Exam "${formData.name}" added successfully!`);
         // Reset form
         setFormData({
@@ -241,10 +251,9 @@ const ExamManagement = () => {
       const response = await api.put(`/exam/${editingExam._id}`, payload);
 
       if (response.data.success) {
-        // Update the exam in the list
-        setExams((prevExams) =>
-          prevExams.map((e) => (e._id === editingExam._id ? response.data.data : e))
-        );
+        const newList = exams.map((e) => (e._id === editingExam._id ? response.data.data : e));
+        setExams(newList);
+        setExamListCache(newList, metaFilter);
         success("Exam updated successfully!");
         handleCancelForm();
       } else {
@@ -278,8 +287,9 @@ const ExamManagement = () => {
         const response = await api.delete(`/exam/${exam._id}`);
 
         if (response.data.success) {
-          // Remove the exam from the list
-          setExams((prevExams) => prevExams.filter((e) => e._id !== exam._id));
+          const newList = exams.filter((e) => e._id !== exam._id);
+          setExams(newList);
+          setExamListCache(newList, metaFilter);
           success(`Exam "${exam.name}" deleted successfully!`);
         } else {
           setError(response.data.message || "Failed to delete exam");

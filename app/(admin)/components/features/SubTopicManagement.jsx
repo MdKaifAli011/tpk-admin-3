@@ -11,6 +11,7 @@ import { LoadingWrapper, SkeletonChaptersTable, LoadingSpinner } from "../ui/Ske
 import { FaEdit, FaPlus, FaTimes, FaLock, FaSearch, FaCheck, FaGripVertical } from "react-icons/fa";
 import { ToastContainer, useToast } from "../ui/Toast";
 import api from "@/lib/api";
+import { getSubTopicListCache, setSubTopicListCache } from "@/lib/subTopicListCache";
 import { usePermissions, getPermissionMessage } from "../../hooks/usePermissions";
 
 const SubTopicsManagement = () => {
@@ -66,7 +67,7 @@ const SubTopicsManagement = () => {
   const isFetchingRef = useRef(false);
   const [metaFilter, setMetaFilter] = useState("all"); // all, filled, notFilled
 
-  // Fetch sub topics from API using Axios
+  // Fetch sub topics from API using Axios (and update cache)
   const fetchSubTopics = useCallback(async () => {
     if (isFetchingRef.current) return;
     try {
@@ -76,7 +77,9 @@ const SubTopicsManagement = () => {
       const response = await api.get(`/subtopic?status=all&limit=10000&metaStatus=${metaFilter}`);
 
       if (response.data.success) {
-        setSubTopics(response.data.data);
+        const fetchedSubTopics = response.data.data || [];
+        setSubTopics(fetchedSubTopics);
+        setSubTopicListCache(fetchedSubTopics, metaFilter);
       } else {
         throw new Error(response.data.message || "Failed to fetch sub topics");
       }
@@ -92,6 +95,18 @@ const SubTopicsManagement = () => {
       isFetchingRef.current = false;
     }
   }, [metaFilter]);
+
+  // Load sub topics: use cache when returning from detail (no API call), otherwise fetch once
+  useEffect(() => {
+    const cached = getSubTopicListCache(metaFilter);
+    if (cached != null && Array.isArray(cached)) {
+      setSubTopics(cached);
+      setIsDataLoading(false);
+      setError(null);
+      return;
+    }
+    fetchSubTopics();
+  }, [metaFilter, fetchSubTopics]);
 
   // Fetch exams from API
   const fetchExams = useCallback(async () => {
@@ -184,11 +199,6 @@ const SubTopicsManagement = () => {
       setTopics([]);
     }
   }, []);
-
-  // Load sub topics when metaFilter or fetchSubTopics changes
-  useEffect(() => {
-    fetchSubTopics();
-  }, [fetchSubTopics, metaFilter]);
 
   // Load exams and subjects on component mount
   useEffect(() => {
@@ -843,7 +853,9 @@ const SubTopicsManagement = () => {
         const newSubTopics = Array.isArray(response.data.data)
           ? response.data.data
           : [response.data.data];
-        setSubTopics((prevSubTopics) => [...prevSubTopics, ...newSubTopics]);
+        const newList = [...subTopics, ...newSubTopics];
+        setSubTopics(newList);
+        setSubTopicListCache(newList, metaFilter);
         handleCancelForm();
         success(
           `${newSubTopics.length} sub topic(s) created successfully for ${validTopics.length} topic(s)`
@@ -972,9 +984,9 @@ const SubTopicsManagement = () => {
       const response = await api.delete(`/subtopic/${subTopicToDelete._id}`);
 
       if (response.data.success) {
-        setSubTopics((prevSubTopics) =>
-          prevSubTopics.filter((st) => st._id !== subTopicToDelete._id)
-        );
+        const newList = subTopics.filter((st) => st._id !== subTopicToDelete._id);
+        setSubTopics(newList);
+        setSubTopicListCache(newList, metaFilter);
         success(
           `Sub Topic "${subTopicToDelete.name}" deleted successfully`
         );
@@ -1013,12 +1025,11 @@ const SubTopicsManagement = () => {
         });
 
         if (response.data.success) {
-          // Update the subtopic status in the list
-          setSubTopics((prev) =>
-            prev.map((st) =>
-              st._id === subTopic._id ? { ...st, status: newStatus } : st
-            )
+          const newList = subTopics.map((st) =>
+            st._id === subTopic._id ? { ...st, status: newStatus } : st
           );
+          setSubTopics(newList);
+          setSubTopicListCache(newList, metaFilter);
           success(`SubTopic "${subTopic.name}" ${action}d successfully`);
         } else {
           throw new Error(
