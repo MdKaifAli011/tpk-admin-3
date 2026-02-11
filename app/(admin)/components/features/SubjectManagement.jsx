@@ -21,6 +21,7 @@ import { ToastContainer, useToast } from "../ui/Toast";
 import api from "@/lib/api";
 import { getSubjectListCache, setSubjectListCache } from "@/lib/subjectListCache";
 import { usePermissions, getPermissionMessage } from "../../hooks/usePermissions";
+import { IoFilterOutline } from "react-icons/io5";
 
 const SubjectManagement = () => {
   const { canCreate, canEdit, canDelete, canReorder, role } = usePermissions();
@@ -679,7 +680,7 @@ const SubjectManagement = () => {
                     <button
                       type="button"
                       onClick={() => { setIsReorderMode(true); setReorderDraft({}); }}
-                      className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors"
+                      className="inline-flex items-center gap-2 px-3 py-1.5 bg-gray-500 hover:bg-gray-600 text-white rounded-lg text-sm font-medium transition-colors"
                       title="Enable drag and drop to reorder subjects per exam"
                     >
                       <FaGripVertical className="w-4 h-4" />
@@ -726,7 +727,7 @@ const SubjectManagement = () => {
                     : "bg-white text-gray-600 border border-gray-200 hover:border-blue-400"
                     }`}
                 >
-                  <FaSearch className="w-4 h-4" />
+                  <IoFilterOutline className="w-4 h-4" />
                   Filters
                   {activeFilterCount > 0 && (
                     <span className="bg-white text-blue-600 px-1.5 py-0.5 rounded-full text-[10px] font-medium">

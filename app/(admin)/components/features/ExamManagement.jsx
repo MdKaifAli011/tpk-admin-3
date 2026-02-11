@@ -22,6 +22,7 @@ import api from "@/lib/api";
 import { getExamListCache, setExamListCache } from "@/lib/examListCache";
 import { usePermissions, getPermissionMessage } from "../../hooks/usePermissions";
 import { useRouter } from "next/navigation";
+import { IoFilterOutline } from "react-icons/io5";
 
 const ExamManagement = () => {
   const { canCreate, canEdit, canDelete, canReorder, role } = usePermissions();
@@ -641,7 +642,7 @@ const ExamManagement = () => {
                     <button
                       type="button"
                       onClick={() => { setIsReorderMode(true); setReorderDraft(null); }}
-                      className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors"
+                      className="inline-flex items-center gap-2 px-3 py-1.5 bg-gray-500 hover:bg-gray-600 text-white rounded-lg text-sm font-medium transition-colors"
                       title="Enable drag and drop to reorder exams"
                     >
                       <FaGripVertical className="w-4 h-4" />
