@@ -11,6 +11,7 @@ import { LoadingWrapper, SkeletonChaptersTable, LoadingSpinner } from "../ui/Ske
 import { FaEdit, FaPlus, FaTimes, FaLock, FaSearch, FaCheck, FaGripVertical } from "react-icons/fa";
 import { ToastContainer, useToast } from "../ui/Toast";
 import api from "@/lib/api";
+import { getDefinitionListCache, setDefinitionListCache } from "@/lib/definitionListCache";
 import { usePermissions, getPermissionMessage } from "../../hooks/usePermissions";
 
 const DefinitionManagement = () => {
@@ -71,7 +72,7 @@ const DefinitionManagement = () => {
   const isFetchingRef = useRef(false);
   const [metaFilter, setMetaFilter] = useState("all"); // all, filled, notFilled
 
-  // Fetch definitions from API using Axios
+  // Fetch definitions from API using Axios (and update cache)
   const fetchDefinitions = useCallback(async () => {
     if (isFetchingRef.current) return;
     try {
@@ -81,7 +82,9 @@ const DefinitionManagement = () => {
       const response = await api.get(`/definition?status=all&limit=10000&metaStatus=${metaFilter}`);
 
       if (response.data.success) {
-        setDefinitions(response.data.data);
+        const fetchedDefinitions = response.data.data || [];
+        setDefinitions(fetchedDefinitions);
+        setDefinitionListCache(fetchedDefinitions, metaFilter);
       } else {
         throw new Error(response.data.message || "Failed to fetch definitions");
       }
@@ -97,6 +100,18 @@ const DefinitionManagement = () => {
       isFetchingRef.current = false;
     }
   }, [metaFilter]);
+
+  // Load definitions: use cache when returning from detail (no API call), otherwise fetch once
+  useEffect(() => {
+    const cached = getDefinitionListCache(metaFilter);
+    if (cached != null && Array.isArray(cached)) {
+      setDefinitions(cached);
+      setIsDataLoading(false);
+      setError(null);
+      return;
+    }
+    fetchDefinitions();
+  }, [metaFilter, fetchDefinitions]);
 
   // Fetch exams from API
   const fetchExams = useCallback(async () => {
@@ -233,11 +248,6 @@ const DefinitionManagement = () => {
     }
   }, []);
 
-
-  // Load data on component mount
-  useEffect(() => {
-    fetchDefinitions();
-  }, [fetchDefinitions, metaFilter]);
 
   useEffect(() => {
     fetchExams();
@@ -1178,11 +1188,11 @@ const DefinitionManagement = () => {
       });
 
       if (response.data.success) {
-        setDefinitions((prevDefinitions) =>
-          prevDefinitions.map((d) =>
-            d._id === editingDefinition._id ? response.data.data : d
-          )
+        const newList = definitions.map((d) =>
+          d._id === editingDefinition._id ? response.data.data : d
         );
+        setDefinitions(newList);
+        setDefinitionListCache(newList, metaFilter);
         handleCancelEditForm();
         success(
           `Definition "${response.data.data.name}" updated successfully`
@@ -1265,12 +1275,11 @@ const DefinitionManagement = () => {
         });
 
         if (response.data.success) {
-          // Update the definition status in the list
-          setDefinitions((prev) =>
-            prev.map((d) =>
-              d._id === definition._id ? { ...d, status: newStatus } : d
-            )
+          const newList = definitions.map((d) =>
+            d._id === definition._id ? { ...d, status: newStatus } : d
           );
+          setDefinitions(newList);
+          setDefinitionListCache(newList, metaFilter);
           success(
             `Definition "${definition.name}" ${action}d successfully`
           );

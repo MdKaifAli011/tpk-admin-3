@@ -27,6 +27,7 @@ import {
 } from "react-icons/fa";
 import { ToastContainer, useToast } from "../ui/Toast";
 import api from "@/lib/api";
+import { getUnitListCache, setUnitListCache } from "@/lib/unitListCache";
 import { usePermissions, getPermissionMessage } from "../../hooks/usePermissions";
 
 // Lazy load heavy components
@@ -114,18 +115,19 @@ const UnitsManagement = () => {
     getNextOrderNumber,
   ]);
 
-  // Fetch units from API using Axios (fetch all units for admin management)
+  // Fetch units from API using Axios (and update cache)
   const fetchUnits = useCallback(async () => {
     if (isFetchingRef.current) return;
     isFetchingRef.current = true;
     try {
       setIsDataLoading(true);
       setError(null);
-      // Fetch all units including inactive ones for admin management
       const response = await api.get(`/unit?status=all&limit=10000&metaStatus=${metaFilter}`);
 
       if (response.data.success) {
-        setUnits(response.data.data || []);
+        const fetchedUnits = response.data.data || [];
+        setUnits(fetchedUnits);
+        setUnitListCache(fetchedUnits, metaFilter);
       } else {
         setError(response.data.message || "Failed to fetch units");
       }
@@ -140,6 +142,18 @@ const UnitsManagement = () => {
       isFetchingRef.current = false;
     }
   }, [metaFilter]);
+
+  // Load units: use cache when returning from detail (no API call), otherwise fetch once
+  useEffect(() => {
+    const cached = getUnitListCache(metaFilter);
+    if (cached != null && Array.isArray(cached)) {
+      setUnits(cached);
+      setIsDataLoading(false);
+      setError(null);
+      return;
+    }
+    fetchUnits();
+  }, [metaFilter, fetchUnits]);
 
   // Fetch exams from API using Axios
   const fetchExams = async () => {
@@ -172,11 +186,6 @@ const UnitsManagement = () => {
       console.error("Error fetching subjects:", error);
     }
   };
-
-  // Load data on component mount
-  useEffect(() => {
-    fetchUnits();
-  }, [fetchUnits, metaFilter]);
 
   useEffect(() => {
     fetchExams();
@@ -278,8 +287,9 @@ const UnitsManagement = () => {
       }
 
       if (createdUnits.length > 0) {
-        // Add the new units to the list
-        setUnits((prev) => [...prev, ...createdUnits]);
+        const newList = [...units, ...createdUnits];
+        setUnits(newList);
+        setUnitListCache(newList, metaFilter);
         success(`${createdUnits.length} unit(s) added successfully!`);
 
         // Reset form
@@ -429,10 +439,11 @@ const UnitsManagement = () => {
       });
 
       if (response.data.success) {
-        // Update the unit in the list
-        setUnits((prev) =>
-          prev.map((u) => (u._id === editingUnit._id ? response.data.data : u))
+        const newList = units.map((u) =>
+          u._id === editingUnit._id ? response.data.data : u
         );
+        setUnits(newList);
+        setUnitListCache(newList, metaFilter);
         success("Unit updated successfully!");
 
         // Reset form
@@ -477,8 +488,9 @@ const UnitsManagement = () => {
         const response = await api.delete(`/unit/${unitToDelete._id}`);
 
         if (response.data.success) {
-          // Remove the unit from the list
-          setUnits((prev) => prev.filter((u) => u._id !== unitToDelete._id));
+          const newList = units.filter((u) => u._id !== unitToDelete._id);
+          setUnits(newList);
+          setUnitListCache(newList, metaFilter);
           success(`Unit "${unitToDelete.name}" deleted successfully!`);
         } else {
           setError(response.data.message || "Failed to delete unit");
@@ -516,12 +528,11 @@ const UnitsManagement = () => {
         });
 
         if (response.data.success) {
-          // Update the unit status in the list
-          setUnits((prev) =>
-            prev.map((u) =>
-              u._id === unit._id ? { ...u, status: newStatus } : u
-            )
+          const newList = units.map((u) =>
+            u._id === unit._id ? { ...u, status: newStatus } : u
           );
+          setUnits(newList);
+          setUnitListCache(newList, metaFilter);
           success(
             `Unit "${unit.name}" and all children ${action}d successfully!`
           );

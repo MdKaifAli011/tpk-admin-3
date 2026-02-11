@@ -19,6 +19,7 @@ import {
 } from "react-icons/fa";
 import { ToastContainer, useToast } from "../ui/Toast";
 import api from "@/lib/api";
+import { getSubjectListCache, setSubjectListCache } from "@/lib/subjectListCache";
 import { usePermissions, getPermissionMessage } from "../../hooks/usePermissions";
 
 const SubjectManagement = () => {
@@ -45,22 +46,20 @@ const SubjectManagement = () => {
   const isFetchingRef = useRef(false);
   const [metaFilter, setMetaFilter] = useState("all"); // all, filled, notFilled
 
-  // ✅ Fetch Subjects using Axios
+  // ✅ Fetch Subjects using Axios (and update cache)
   const fetchSubjects = useCallback(async () => {
     if (isFetchingRef.current) return;
     isFetchingRef.current = true;
     try {
       setIsDataLoading(true);
       setError(null);
-      // Fetch all subjects (active and inactive) to show correct status
-      // Use a high limit to get all subjects at once (or use pagination if needed)
       const response = await api.get(`/subject?status=all&limit=1000&metaStatus=${metaFilter}`);
 
       if (response.data?.success) {
         const fetchedSubjects = response.data.data || [];
-        // Ensure we have an array
         if (Array.isArray(fetchedSubjects)) {
           setSubjects(fetchedSubjects);
+          setSubjectListCache(fetchedSubjects, metaFilter);
         } else {
           console.error("❌ Invalid subjects data format:", fetchedSubjects);
           setError("Invalid data format received from server");
@@ -83,6 +82,18 @@ const SubjectManagement = () => {
     }
   }, [metaFilter]);
 
+  // Load subjects: use cache when returning from detail (no API call), otherwise fetch once
+  useEffect(() => {
+    const cached = getSubjectListCache(metaFilter);
+    if (cached != null && Array.isArray(cached)) {
+      setSubjects(cached);
+      setIsDataLoading(false);
+      setError(null);
+      return;
+    }
+    fetchSubjects();
+  }, [metaFilter, fetchSubjects]);
+
   // ✅ Fetch Exams (for dropdown) using Axios
   const fetchExams = async () => {
     try {
@@ -98,10 +109,6 @@ const SubjectManagement = () => {
       console.error("❌ Error fetching exams:", err);
     }
   };
-
-  useEffect(() => {
-    fetchSubjects();
-  }, [fetchSubjects, metaFilter]);
 
   useEffect(() => {
     fetchExams();
@@ -192,8 +199,9 @@ const SubjectManagement = () => {
       const response = await api.post("/subject", payload);
 
       if (response.data?.success) {
-        // Add the new subject with populated exam data
-        setSubjects((prev) => [...prev, response.data.data]);
+        const newList = [...subjects, response.data.data];
+        setSubjects(newList);
+        setSubjectListCache(newList, metaFilter);
         success(`Subject "${formData.name}" added successfully!`);
         // Reset form
         setFormData({ name: "", examId: "", orderNumber: "" });
@@ -270,11 +278,11 @@ const SubjectManagement = () => {
       const response = await api.put(`/subject/${editingSubject._id}`, payload);
 
       if (response.data?.success) {
-        setSubjects((prev) =>
-          prev.map((s) =>
-            s._id === editingSubject._id ? response.data.data : s
-          )
+        const newList = subjects.map((s) =>
+          s._id === editingSubject._id ? response.data.data : s
         );
+        setSubjects(newList);
+        setSubjectListCache(newList, metaFilter);
         success("Subject updated successfully!");
         handleCancelForm();
       } else {
@@ -314,9 +322,9 @@ const SubjectManagement = () => {
       const response = await api.delete(`/subject/${subjectToDelete._id}`);
 
       if (response.data?.success) {
-        setSubjects((prev) =>
-          prev.filter((s) => s._id !== subjectToDelete._id)
-        );
+        const newList = subjects.filter((s) => s._id !== subjectToDelete._id);
+        setSubjects(newList);
+        setSubjectListCache(newList, metaFilter);
         success(`Subject "${subjectToDelete.name}" deleted successfully!`);
       } else {
         setError(response.data?.message || "Failed to delete subject");

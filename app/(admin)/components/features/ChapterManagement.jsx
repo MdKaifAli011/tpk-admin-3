@@ -26,6 +26,7 @@ import {
 } from "react-icons/fa";
 import { ToastContainer, useToast } from "../ui/Toast";
 import api from "@/lib/api";
+import { getChapterListCache, setChapterListCache } from "@/lib/chapterListCache";
 import { usePermissions, getPermissionMessage } from "../../hooks/usePermissions";
 
 const ChaptersManagement = () => {
@@ -81,18 +82,19 @@ const ChaptersManagement = () => {
   const isFetchingRef = useRef(false);
   const [metaFilter, setMetaFilter] = useState("all"); // all, filled, notFilled
 
-  // Fetch chapters from API using Axios
+  // Fetch chapters from API using Axios (and update cache)
   const fetchChapters = useCallback(async () => {
     if (isFetchingRef.current) return;
     isFetchingRef.current = true;
     try {
       setIsDataLoading(true);
       setError(null);
-      // Fetch all chapters (active and inactive) for admin management
       const response = await api.get(`/chapter?status=all&limit=10000&metaStatus=${metaFilter}`);
 
       if (response.data.success) {
-        setChapters(response.data.data || []);
+        const fetchedChapters = response.data.data || [];
+        setChapters(fetchedChapters);
+        setChapterListCache(fetchedChapters, metaFilter);
       } else {
         setError(response.data.message || "Failed to fetch chapters");
       }
@@ -107,6 +109,18 @@ const ChaptersManagement = () => {
       isFetchingRef.current = false;
     }
   }, [metaFilter]);
+
+  // Load chapters: use cache when returning from detail (no API call), otherwise fetch once
+  useEffect(() => {
+    const cached = getChapterListCache(metaFilter);
+    if (cached != null && Array.isArray(cached)) {
+      setChapters(cached);
+      setIsDataLoading(false);
+      setError(null);
+      return;
+    }
+    fetchChapters();
+  }, [metaFilter, fetchChapters]);
 
   // Fetch exams from API using Axios
   const fetchExams = async () => {
@@ -163,11 +177,6 @@ const ChaptersManagement = () => {
       setUnits([]);
     }
   };
-
-  // Load data on component mount
-  useEffect(() => {
-    fetchChapters();
-  }, [fetchChapters, metaFilter]);
 
   useEffect(() => {
     fetchExams();
@@ -688,12 +697,11 @@ const ChaptersManagement = () => {
       });
 
       if (response.data.success) {
-        // Update the chapter in the list
-        setChapters((prev) =>
-          prev.map((c) =>
-            c._id === editingChapter._id ? response.data.data : c
-          )
+        const newList = chapters.map((c) =>
+          c._id === editingChapter._id ? response.data.data : c
         );
+        setChapters(newList);
+        setChapterListCache(newList, metaFilter);
         success("Chapter updated successfully!");
 
         // Reset form
@@ -786,12 +794,11 @@ const ChaptersManagement = () => {
         });
 
         if (response.data.success) {
-          // Update the chapter status in the list
-          setChapters((prev) =>
-            prev.map((c) =>
-              c._id === chapter._id ? { ...c, status: newStatus } : c
-            )
+          const newList = chapters.map((c) =>
+            c._id === chapter._id ? { ...c, status: newStatus } : c
           );
+          setChapters(newList);
+          setChapterListCache(newList, metaFilter);
           success(
             `Chapter "${chapter.name}" and all children ${action}d successfully!`
           );
