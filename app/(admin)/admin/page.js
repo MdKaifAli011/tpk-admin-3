@@ -30,6 +30,7 @@ const AdminDashboard = () => {
     chapters: 0,
     topics: 0,
     subtopics: 0,
+    definitions: 0,
     active: 0,
     inactive: 0,
   });
@@ -58,6 +59,7 @@ const AdminDashboard = () => {
           chapters: d.chapters?.total ?? 0,
           topics: d.topics?.total ?? 0,
           subtopics: d.subtopics?.total ?? 0,
+          definitions: d.definitions?.total ?? 0,
           active: d.summary?.totalActive ?? 0,
           inactive: d.summary?.totalInactive ?? 0,
         });
@@ -134,6 +136,15 @@ const AdminDashboard = () => {
         bgColor: "bg-pink-50",
         textColor: "text-pink-600",
         count: stats.subtopics,
+      },
+      {
+        name: "Definition Management",
+        href: "/admin/definitions",
+        icon: FaBook,
+        color: "from-gray-600 to-gray-700",
+        bgColor: "bg-gray-50",
+        textColor: "text-gray-700",
+        count: stats.definitions,
       },
       {
         name: "Discussion Management",
@@ -245,6 +256,41 @@ const AdminDashboard = () => {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Content totals: Exam, Subject, Unit, Chapter, Topic, SubTopic, Definition */}
+        <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-5">
+          <h2 className="text-base font-semibold text-gray-900 mb-4">Content totals</h2>
+          <div className="flex flex-wrap gap-3">
+            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-50 text-blue-800 font-medium text-sm">
+              <span className="text-blue-500">Exam</span>
+              <span className="font-bold">{stats.exams}</span>
+            </span>
+            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-50 text-purple-800 font-medium text-sm">
+              <span className="text-purple-500">Subject</span>
+              <span className="font-bold">{stats.subjects}</span>
+            </span>
+            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-50 text-indigo-800 font-medium text-sm">
+              <span className="text-indigo-500">Unit</span>
+              <span className="font-bold">{stats.units}</span>
+            </span>
+            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-green-50 text-green-800 font-medium text-sm">
+              <span className="text-green-500">Chapter</span>
+              <span className="font-bold">{stats.chapters}</span>
+            </span>
+            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-50 text-amber-800 font-medium text-sm">
+              <span className="text-amber-500">Topic</span>
+              <span className="font-bold">{stats.topics}</span>
+            </span>
+            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-pink-50 text-pink-800 font-medium text-sm">
+              <span className="text-pink-500">SubTopic</span>
+              <span className="font-bold">{stats.subtopics}</span>
+            </span>
+            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-100 text-gray-800 font-medium text-sm">
+              <span className="text-gray-600">Definition</span>
+              <span className="font-bold">{stats.definitions}</span>
+            </span>
           </div>
         </div>
 

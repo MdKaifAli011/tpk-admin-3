@@ -68,7 +68,7 @@ const DiscussionManagement = () => {
             }
             const res = await api.get(url);
             if (res.data.success) setSubjects(res.data.data || []);
-        } catch (err) { 
+        } catch (err) {
             console.error("Error fetching subjects:", err);
             setSubjects([]);
         }
@@ -161,12 +161,12 @@ const DiscussionManagement = () => {
 
     // Reset dependents when parent changes
     const handleExamChange = (val) => {
-        setFilterExam(val); 
-        setFilterSubject(""); 
-        setFilterUnit(""); 
-        setFilterChapter(""); 
-        setFilterTopic(""); 
-        setFilterSubTopic(""); 
+        setFilterExam(val);
+        setFilterSubject("");
+        setFilterUnit("");
+        setFilterChapter("");
+        setFilterTopic("");
+        setFilterSubTopic("");
         setFilterDefinition("");
         // Clear subjects when exam is cleared, or let useEffect handle fetching
         if (!val) {
@@ -237,6 +237,9 @@ const DiscussionManagement = () => {
                     setStats(prev => ({ ...prev, total }));
                 } else if (statusFilter === "pending") {
                     setStats(prev => ({ ...prev, pending: total }));
+                    if (typeof window !== "undefined") {
+                        window.dispatchEvent(new CustomEvent("admin-discussion-pending-updated", { detail: { count: total } }));
+                    }
                 } else if (statusFilter === "approved") {
                     setStats(prev => ({ ...prev, approved: total }));
                 }
@@ -253,6 +256,22 @@ const DiscussionManagement = () => {
     useEffect(() => {
         fetchThreads();
     }, [page, search, statusFilter, sortByViews, filterExam, filterSubject, filterUnit, filterChapter, filterTopic, filterSubTopic, filterDefinition]);
+
+    // Fetch pending count once on mount so "Pending (N)" tab shows correct number before switching
+    useEffect(() => {
+        let cancelled = false;
+        (async () => {
+            try {
+                const res = await api.get("/discussion/threads/pending-count");
+                if (!cancelled && res?.data?.success && typeof res.data.count === "number") {
+                    setStats(prev => ({ ...prev, pending: res.data.count }));
+                }
+            } catch (err) {
+                if (!cancelled) { /* ignore */ }
+            }
+        })();
+        return () => { cancelled = true; };
+    }, []);
 
     const handleToggleApproval = async (thread) => {
         if (!discussionPerms.canApproveThreads) {
@@ -273,6 +292,9 @@ const DiscussionManagement = () => {
                     pending: newStatus ? prev.pending - 1 : prev.pending + 1,
                     approved: newStatus ? prev.approved + 1 : prev.approved - 1
                 }));
+                if (typeof window !== "undefined") {
+                    window.dispatchEvent(new CustomEvent("admin-discussion-pending-updated", { detail: { delta: newStatus ? -1 : 1 } }));
+                }
             }
         } catch (err) {
             showError("Moderation action failed");
@@ -291,6 +313,9 @@ const DiscussionManagement = () => {
             if (res.data.success) {
                 success("Discussion removed successfully");
                 setThreads(threads.filter((t) => t._id !== thread._id));
+                if (!thread.isApproved && typeof window !== "undefined") {
+                    window.dispatchEvent(new CustomEvent("admin-discussion-pending-updated", { detail: { delta: -1 } }));
+                }
             }
         } catch (err) {
             showError("Failed to delete discussion");
@@ -537,7 +562,7 @@ const DiscussionManagement = () => {
                     <div className="flex items-center gap-1 bg-gray-50 p-1 rounded-lg border border-gray-100 w-full md:w-auto">
                         {[
                             { id: "all", label: "All Posts", icon: <FaIcons.FaClipboardList size={10} /> },
-                            { id: "pending", label: "Pending", icon: <FaIcons.FaHistory size={10} /> },
+                            { id: "pending", label: "Pending", icon: <FaIcons.FaHistory size={10} />, count: stats.pending },
                             { id: "approved", label: "Approved", icon: <FaIcons.FaCheckCircle size={10} /> }
                         ].map(tab => (
                             <button
@@ -546,6 +571,11 @@ const DiscussionManagement = () => {
                                 className={`flex items-center gap-2 px-4 py-1.5 rounded-md text-[11px] font-bold uppercase tracking-wider transition-all flex-1 md:flex-none ${statusFilter === tab.id ? "bg-white text-blue-600 shadow-sm border border-gray-100" : "text-gray-500 hover:text-gray-900 hover:bg-gray-100/50"}`}
                             >
                                 {tab.icon} {tab.label}
+                                {tab.count != null && (
+                                    <span className={`inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold ${statusFilter === tab.id ? "bg-blue-100 text-blue-700" : "bg-gray-200 text-gray-600"}`}>
+                                        {tab.count > 99 ? "99+" : tab.count}
+                                    </span>
+                                )}
                             </button>
                         ))}
                     </div>

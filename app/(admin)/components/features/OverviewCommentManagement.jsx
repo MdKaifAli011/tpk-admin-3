@@ -129,7 +129,11 @@ const OverviewCommentManagement = () => {
       const params = new URLSearchParams({ listAll: "true", status: statusFilter, includeHierarchy: "true" });
       const res = await api.get(`/overview-comment?${params.toString()}`);
       if (res.data?.success) {
-        setComments(res.data.data || []);
+        const data = res.data.data || [];
+        setComments(data);
+        if (statusFilter === "pending" && typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("admin-overview-comment-pending-updated", { detail: { count: data.length } }));
+        }
       }
     } catch (err) {
       console.error("Error fetching overview comments:", err);
@@ -414,12 +418,21 @@ const OverviewCommentManagement = () => {
     return () => { cancelled = true; };
   }, [subTopicId]);
 
-  const handleStatusChange = async (commentId, newStatus) => {
+  const handleStatusChange = async (comment, newStatus) => {
     try {
-      const res = await api.put(`/overview-comment/${commentId}`, { status: newStatus });
+      const res = await api.put(`/overview-comment/${comment._id}`, { status: newStatus });
       if (res.data?.success) {
         success(`Comment ${newStatus} successfully`);
         fetchComments();
+        if (typeof window !== "undefined") {
+          const wasPending = comment.status === "pending";
+          const nowPending = newStatus === "pending";
+          if (wasPending && !nowPending) {
+            window.dispatchEvent(new CustomEvent("admin-overview-comment-pending-updated", { detail: { delta: -1 } }));
+          } else if (!wasPending && nowPending) {
+            window.dispatchEvent(new CustomEvent("admin-overview-comment-pending-updated", { detail: { delta: 1 } }));
+          }
+        }
       } else {
         showError(res.data?.message || "Failed to update");
       }
@@ -428,13 +441,16 @@ const OverviewCommentManagement = () => {
     }
   };
 
-  const handleDelete = async (commentId) => {
+  const handleDelete = async (comment) => {
     if (!window.confirm("Delete this comment permanently?")) return;
     try {
-      const res = await api.delete(`/overview-comment/${commentId}`);
+      const res = await api.delete(`/overview-comment/${comment._id}`);
       if (res.data?.success) {
         success("Comment deleted");
         fetchComments();
+        if (comment.status === "pending" && typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("admin-overview-comment-pending-updated", { detail: { delta: -1 } }));
+        }
       } else {
         showError(res.data?.message || "Failed to delete");
       }
@@ -505,7 +521,7 @@ const OverviewCommentManagement = () => {
                       className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all shadow-sm ${showFilters
                         ? "bg-indigo-600 text-white shadow-indigo-200 hover:bg-indigo-700"
                         : "bg-white text-gray-700 border border-gray-300 hover:border-indigo-400 hover:bg-indigo-50/50"
-                      }`}
+                        }`}
                     >
                       <FaFilter className="w-4 h-4 shrink-0" />
                       Filters
@@ -520,300 +536,300 @@ const OverviewCommentManagement = () => {
               </div>
             </div>
 
-          {showFilters && (
-            <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-4 mb-4">
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">Filter by Exam</label>
-                  <select
-                    value={examId}
-                    onChange={(e) => {
-                      setExamId(e.target.value);
-                      setSubjectId("");
-                      setUnitId("");
-                      setChapterId("");
-                      setTopicId("");
-                      setSubTopicId("");
-                      setDefinitionId("");
-                    }}
-                    disabled={hierarchyLoading.exam}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm disabled:opacity-60"
-                  >
-                    <option value="">All Exams</option>
-                    {exams.map((e) => (
-                      <option key={e._id} value={e._id}>{e.name || e.title || String(e._id).slice(-6)}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-700">Filter by Subject</label>
-                  <select
-                    value={subjectId}
-                    onChange={(e) => {
-                      setSubjectId(e.target.value);
-                      setUnitId("");
-                      setChapterId("");
-                      setTopicId("");
-                      setSubTopicId("");
-                      setDefinitionId("");
-                    }}
-                    disabled={!examId || hierarchyLoading.subject}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white disabled:bg-gray-100 disabled:text-gray-400"
-                  >
-                    <option value="">{examId ? "Select Exam First" : "All Subjects"}</option>
-                    {subjects.map((s) => (
-                      <option key={s._id} value={s._id}>{s.name || s.title || String(s._id).slice(-6)}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-700">Filter by Unit</label>
-                  <select
-                    value={unitId}
-                    onChange={(e) => {
-                      setUnitId(e.target.value);
-                      setChapterId("");
-                      setTopicId("");
-                      setSubTopicId("");
-                      setDefinitionId("");
-                    }}
-                    disabled={!subjectId || hierarchyLoading.unit}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white disabled:bg-gray-100 disabled:text-gray-400"
-                  >
-                    <option value="">{subjectId ? "Select Subject First" : "All Units"}</option>
-                    {units.map((u) => (
-                      <option key={u._id} value={u._id}>{u.name || u.title || String(u._id).slice(-6)}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-700">Filter by Chapter</label>
-                  <select
-                    value={chapterId}
-                    onChange={(e) => {
-                      setChapterId(e.target.value);
-                      setTopicId("");
-                      setSubTopicId("");
-                      setDefinitionId("");
-                    }}
-                    disabled={!unitId || hierarchyLoading.chapter}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white disabled:bg-gray-100 disabled:text-gray-400"
-                  >
-                    <option value="">{unitId ? "Select Unit First" : "All Chapters"}</option>
-                    {chapters.map((c) => (
-                      <option key={c._id} value={c._id}>{c.name || c.title || String(c._id).slice(-6)}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-700">Filter by Topic</label>
-                  <select
-                    value={topicId}
-                    onChange={(e) => {
-                      setTopicId(e.target.value);
-                      setSubTopicId("");
-                      setDefinitionId("");
-                    }}
-                    disabled={!chapterId || hierarchyLoading.topic}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white disabled:bg-gray-100 disabled:text-gray-400"
-                  >
-                    <option value="">{chapterId ? "Select Chapter First" : "All Topics"}</option>
-                    {topics.map((t) => (
-                      <option key={t._id} value={t._id}>{t.name || t.title || String(t._id).slice(-6)}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-700">Filter by SubTopic</label>
-                  <select
-                    value={subTopicId}
-                    onChange={(e) => {
-                      setSubTopicId(e.target.value);
-                      setDefinitionId("");
-                    }}
-                    disabled={!topicId || hierarchyLoading.subtopic}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white disabled:bg-gray-100 disabled:text-gray-400"
-                  >
-                    <option value="">{topicId ? "Select Topic First" : "All SubTopics"}</option>
-                    {subtopics.map((s) => (
-                      <option key={s._id} value={s._id}>{s.name || s.title || String(s._id).slice(-6)}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-700">Filter by Definition</label>
-                  <select
-                    value={definitionId}
-                    onChange={(e) => setDefinitionId(e.target.value)}
-                    disabled={!subTopicId || hierarchyLoading.definition}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white disabled:bg-gray-100 disabled:text-gray-400"
-                  >
-                    <option value="">{subTopicId ? "Select SubTopic First" : "All Definitions"}</option>
-                    {definitions.map((d) => (
-                      <option key={d._id} value={d._id}>{d.name || d.title || d.term || String(d._id).slice(-6)}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {activeFilterCount > 0 && (
-                <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-gray-200">
-                  <span className="text-xs font-semibold text-gray-600">Active Filters:</span>
-                  {examId && (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
-                      Exam: {exams.find((e) => String(e._id) === String(examId))?.name || exams.find((e) => String(e._id) === String(examId))?.title || "—"}
-                      <button type="button" onClick={() => { setExamId(""); setSubjectId(""); setUnitId(""); setChapterId(""); setTopicId(""); setSubTopicId(""); setDefinitionId(""); }} className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"><FaTimes className="w-3 h-3" /></button>
-                    </span>
-                  )}
-                  {subjectId && (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
-                      Subject: {subjects.find((s) => String(s._id) === String(subjectId))?.name || subjects.find((s) => String(s._id) === String(subjectId))?.title || "—"}
-                      <button type="button" onClick={() => { setSubjectId(""); setUnitId(""); setChapterId(""); setTopicId(""); setSubTopicId(""); setDefinitionId(""); }} className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"><FaTimes className="w-3 h-3" /></button>
-                    </span>
-                  )}
-                  {unitId && (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
-                      Unit: {units.find((u) => String(u._id) === String(unitId))?.name || units.find((u) => String(u._id) === String(unitId))?.title || "—"}
-                      <button type="button" onClick={() => { setUnitId(""); setChapterId(""); setTopicId(""); setSubTopicId(""); setDefinitionId(""); }} className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"><FaTimes className="w-3 h-3" /></button>
-                    </span>
-                  )}
-                  {chapterId && (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
-                      Chapter: {chapters.find((c) => String(c._id) === String(chapterId))?.name || chapters.find((c) => String(c._id) === String(chapterId))?.title || "—"}
-                      <button type="button" onClick={() => { setChapterId(""); setTopicId(""); setSubTopicId(""); setDefinitionId(""); }} className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"><FaTimes className="w-3 h-3" /></button>
-                    </span>
-                  )}
-                  {topicId && (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
-                      Topic: {topics.find((t) => String(t._id) === String(topicId))?.name || topics.find((t) => String(t._id) === String(topicId))?.title || "—"}
-                      <button type="button" onClick={() => { setTopicId(""); setSubTopicId(""); setDefinitionId(""); }} className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"><FaTimes className="w-3 h-3" /></button>
-                    </span>
-                  )}
-                  {subTopicId && (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
-                      SubTopic: {subtopics.find((s) => String(s._id) === String(subTopicId))?.name || subtopics.find((s) => String(s._id) === String(subTopicId))?.title || "—"}
-                      <button type="button" onClick={() => { setSubTopicId(""); setDefinitionId(""); }} className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"><FaTimes className="w-3 h-3" /></button>
-                    </span>
-                  )}
-                  {definitionId && (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
-                      Definition: {definitions.find((d) => String(d._id) === String(definitionId))?.name || definitions.find((d) => String(d._id) === String(definitionId))?.title || definitions.find((d) => String(d._id) === String(definitionId))?.term || "—"}
-                      <button type="button" onClick={() => setDefinitionId("")} className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"><FaTimes className="w-3 h-3" /></button>
-                    </span>
-                  )}
-                  <button
-                    type="button"
-                    onClick={clearFilters}
-                    className="ml-auto px-3 py-1 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-full text-xs font-medium transition-colors"
-                  >
-                    Clear All Filters
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-
-        <div className="border-t border-gray-200">
-          <div className="px-4 py-3 border-b border-gray-200 bg-gray-50 flex items-center gap-2">
-            <FaCommentDots className="text-indigo-600" />
-            <h2 className="text-lg font-semibold text-gray-900">Comments ({filteredComments.length})</h2>
-          </div>
-
-          <div>
-            {isLoading ? (
-              <div className="flex justify-center py-12">
-                <LoadingSpinner size="medium" />
-              </div>
-            ) : filteredComments.length === 0 ? (
-              <div className="text-center py-12 text-gray-500 text-sm">
-                No comments found for the selected filters.
-              </div>
-            ) : (
-              <div className="divide-y divide-gray-200">
-                {filteredComments.map((comment) => (
-                  <div key={comment._id} className="p-4 hover:bg-gray-50 transition-colors">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-3 mb-2 flex-wrap">
-                          <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center shrink-0">
-                              <FaUser className="text-indigo-600 text-xs" />
-                            </div>
-                            <div>
-                              <p className="text-sm font-semibold text-gray-900">
-                                {getAuthorName(comment)}
-                              </p>
-                              <p className="text-xs text-gray-500">
-                                {comment.studentId?.email || comment.email || comment.anonymousEmail || "—"}
-                                {!comment.studentId && (comment.name || comment.anonymousName) && (
-                                  <span className="ml-2 px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded text-[10px]">
-                                    Guest
-                                  </span>
-                                )}
-                              </p>
-                            </div>
-                          </div>
-                          <StatusBadge status={comment.status} />
-                        </div>
-                        {comment.hierarchyPath?.length > 0 && (
-                          <div className="mb-2">
-                            <HierarchyPills path={comment.hierarchyPath} />
-                          </div>
-                        )}
-                        <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap mb-2">
-                          {comment.comment}
-                        </p>
-                        <p className="text-xs text-gray-400">{formatDate(comment.createdAt)}</p>
-                      </div>
-
-                      <div className="flex items-center gap-2 shrink-0">
-                        {comment.status !== "approved" && (
-                          <PermissionButton
-                            action="edit"
-                            onClick={() => handleStatusChange(comment._id, "approved")}
-                            className="p-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors"
-                            title={getPermissionMessage("edit", role)}
-                          >
-                            <FaCheckCircle className="w-4 h-4" />
-                          </PermissionButton>
-                        )}
-                        {comment.status === "approved" && (
-                          <PermissionButton
-                            action="edit"
-                            onClick={() => handleStatusChange(comment._id, "pending")}
-                            className="p-2 bg-yellow-50 text-yellow-600 rounded-lg hover:bg-yellow-100 transition-colors"
-                            title="Unapprove (set to Pending)"
-                          >
-                            <FaBan className="w-4 h-4" />
-                          </PermissionButton>
-                        )}
-                        {comment.status !== "rejected" && (
-                          <PermissionButton
-                            action="edit"
-                            onClick={() => handleStatusChange(comment._id, "rejected")}
-                            className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
-                            title="Reject"
-                          >
-                            <FaTimesCircle className="w-4 h-4" />
-                          </PermissionButton>
-                        )}
-                        <PermissionButton
-                          action="delete"
-                          onClick={() => handleDelete(comment._id)}
-                          className="p-2 bg-gray-50 text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
-                          title={getPermissionMessage("delete", role)}
-                        >
-                          <FaTrash className="w-4 h-4" />
-                        </PermissionButton>
-                      </div>
-                    </div>
+            {showFilters && (
+              <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-4 mb-4">
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">Filter by Exam</label>
+                    <select
+                      value={examId}
+                      onChange={(e) => {
+                        setExamId(e.target.value);
+                        setSubjectId("");
+                        setUnitId("");
+                        setChapterId("");
+                        setTopicId("");
+                        setSubTopicId("");
+                        setDefinitionId("");
+                      }}
+                      disabled={hierarchyLoading.exam}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm disabled:opacity-60"
+                    >
+                      <option value="">All Exams</option>
+                      {exams.map((e) => (
+                        <option key={e._id} value={e._id}>{e.name || e.title || String(e._id).slice(-6)}</option>
+                      ))}
+                    </select>
                   </div>
-                ))}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-gray-700">Filter by Subject</label>
+                    <select
+                      value={subjectId}
+                      onChange={(e) => {
+                        setSubjectId(e.target.value);
+                        setUnitId("");
+                        setChapterId("");
+                        setTopicId("");
+                        setSubTopicId("");
+                        setDefinitionId("");
+                      }}
+                      disabled={!examId || hierarchyLoading.subject}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white disabled:bg-gray-100 disabled:text-gray-400"
+                    >
+                      <option value="">{examId ? "Select Exam First" : "All Subjects"}</option>
+                      {subjects.map((s) => (
+                        <option key={s._id} value={s._id}>{s.name || s.title || String(s._id).slice(-6)}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-gray-700">Filter by Unit</label>
+                    <select
+                      value={unitId}
+                      onChange={(e) => {
+                        setUnitId(e.target.value);
+                        setChapterId("");
+                        setTopicId("");
+                        setSubTopicId("");
+                        setDefinitionId("");
+                      }}
+                      disabled={!subjectId || hierarchyLoading.unit}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white disabled:bg-gray-100 disabled:text-gray-400"
+                    >
+                      <option value="">{subjectId ? "Select Subject First" : "All Units"}</option>
+                      {units.map((u) => (
+                        <option key={u._id} value={u._id}>{u.name || u.title || String(u._id).slice(-6)}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-gray-700">Filter by Chapter</label>
+                    <select
+                      value={chapterId}
+                      onChange={(e) => {
+                        setChapterId(e.target.value);
+                        setTopicId("");
+                        setSubTopicId("");
+                        setDefinitionId("");
+                      }}
+                      disabled={!unitId || hierarchyLoading.chapter}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white disabled:bg-gray-100 disabled:text-gray-400"
+                    >
+                      <option value="">{unitId ? "Select Unit First" : "All Chapters"}</option>
+                      {chapters.map((c) => (
+                        <option key={c._id} value={c._id}>{c.name || c.title || String(c._id).slice(-6)}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-gray-700">Filter by Topic</label>
+                    <select
+                      value={topicId}
+                      onChange={(e) => {
+                        setTopicId(e.target.value);
+                        setSubTopicId("");
+                        setDefinitionId("");
+                      }}
+                      disabled={!chapterId || hierarchyLoading.topic}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white disabled:bg-gray-100 disabled:text-gray-400"
+                    >
+                      <option value="">{chapterId ? "Select Chapter First" : "All Topics"}</option>
+                      {topics.map((t) => (
+                        <option key={t._id} value={t._id}>{t.name || t.title || String(t._id).slice(-6)}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-gray-700">Filter by SubTopic</label>
+                    <select
+                      value={subTopicId}
+                      onChange={(e) => {
+                        setSubTopicId(e.target.value);
+                        setDefinitionId("");
+                      }}
+                      disabled={!topicId || hierarchyLoading.subtopic}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white disabled:bg-gray-100 disabled:text-gray-400"
+                    >
+                      <option value="">{topicId ? "Select Topic First" : "All SubTopics"}</option>
+                      {subtopics.map((s) => (
+                        <option key={s._id} value={s._id}>{s.name || s.title || String(s._id).slice(-6)}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-gray-700">Filter by Definition</label>
+                    <select
+                      value={definitionId}
+                      onChange={(e) => setDefinitionId(e.target.value)}
+                      disabled={!subTopicId || hierarchyLoading.definition}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white disabled:bg-gray-100 disabled:text-gray-400"
+                    >
+                      <option value="">{subTopicId ? "Select SubTopic First" : "All Definitions"}</option>
+                      {definitions.map((d) => (
+                        <option key={d._id} value={d._id}>{d.name || d.title || d.term || String(d._id).slice(-6)}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {activeFilterCount > 0 && (
+                  <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-gray-200">
+                    <span className="text-xs font-semibold text-gray-600">Active Filters:</span>
+                    {examId && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
+                        Exam: {exams.find((e) => String(e._id) === String(examId))?.name || exams.find((e) => String(e._id) === String(examId))?.title || "—"}
+                        <button type="button" onClick={() => { setExamId(""); setSubjectId(""); setUnitId(""); setChapterId(""); setTopicId(""); setSubTopicId(""); setDefinitionId(""); }} className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"><FaTimes className="w-3 h-3" /></button>
+                      </span>
+                    )}
+                    {subjectId && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
+                        Subject: {subjects.find((s) => String(s._id) === String(subjectId))?.name || subjects.find((s) => String(s._id) === String(subjectId))?.title || "—"}
+                        <button type="button" onClick={() => { setSubjectId(""); setUnitId(""); setChapterId(""); setTopicId(""); setSubTopicId(""); setDefinitionId(""); }} className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"><FaTimes className="w-3 h-3" /></button>
+                      </span>
+                    )}
+                    {unitId && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
+                        Unit: {units.find((u) => String(u._id) === String(unitId))?.name || units.find((u) => String(u._id) === String(unitId))?.title || "—"}
+                        <button type="button" onClick={() => { setUnitId(""); setChapterId(""); setTopicId(""); setSubTopicId(""); setDefinitionId(""); }} className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"><FaTimes className="w-3 h-3" /></button>
+                      </span>
+                    )}
+                    {chapterId && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
+                        Chapter: {chapters.find((c) => String(c._id) === String(chapterId))?.name || chapters.find((c) => String(c._id) === String(chapterId))?.title || "—"}
+                        <button type="button" onClick={() => { setChapterId(""); setTopicId(""); setSubTopicId(""); setDefinitionId(""); }} className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"><FaTimes className="w-3 h-3" /></button>
+                      </span>
+                    )}
+                    {topicId && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
+                        Topic: {topics.find((t) => String(t._id) === String(topicId))?.name || topics.find((t) => String(t._id) === String(topicId))?.title || "—"}
+                        <button type="button" onClick={() => { setTopicId(""); setSubTopicId(""); setDefinitionId(""); }} className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"><FaTimes className="w-3 h-3" /></button>
+                      </span>
+                    )}
+                    {subTopicId && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
+                        SubTopic: {subtopics.find((s) => String(s._id) === String(subTopicId))?.name || subtopics.find((s) => String(s._id) === String(subTopicId))?.title || "—"}
+                        <button type="button" onClick={() => { setSubTopicId(""); setDefinitionId(""); }} className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"><FaTimes className="w-3 h-3" /></button>
+                      </span>
+                    )}
+                    {definitionId && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
+                        Definition: {definitions.find((d) => String(d._id) === String(definitionId))?.name || definitions.find((d) => String(d._id) === String(definitionId))?.title || definitions.find((d) => String(d._id) === String(definitionId))?.term || "—"}
+                        <button type="button" onClick={() => setDefinitionId("")} className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"><FaTimes className="w-3 h-3" /></button>
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={clearFilters}
+                      className="ml-auto px-3 py-1 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-full text-xs font-medium transition-colors"
+                    >
+                      Clear All Filters
+                    </button>
+                  </div>
+                )}
               </div>
             )}
+
+            <div className="border-t border-gray-200">
+              <div className="px-4 py-3 border-b border-gray-200 bg-gray-50 flex items-center gap-2">
+                <FaCommentDots className="text-indigo-600" />
+                <h2 className="text-lg font-semibold text-gray-900">Comments ({filteredComments.length})</h2>
+              </div>
+
+              <div>
+                {isLoading ? (
+                  <div className="flex justify-center py-12">
+                    <LoadingSpinner size="medium" />
+                  </div>
+                ) : filteredComments.length === 0 ? (
+                  <div className="text-center py-12 text-gray-500 text-sm">
+                    No comments found for the selected filters.
+                  </div>
+                ) : (
+                  <div className="divide-y divide-gray-200">
+                    {filteredComments.map((comment) => (
+                      <div key={comment._id} className="p-4 hover:bg-gray-50 transition-colors">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-3 mb-2 flex-wrap">
+                              <div className="flex items-center gap-2">
+                                <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center shrink-0">
+                                  <FaUser className="text-indigo-600 text-xs" />
+                                </div>
+                                <div>
+                                  <p className="text-sm font-semibold text-gray-900">
+                                    {getAuthorName(comment)}
+                                  </p>
+                                  <p className="text-xs text-gray-500">
+                                    {comment.studentId?.email || comment.email || comment.anonymousEmail || "—"}
+                                    {!comment.studentId && (comment.name || comment.anonymousName) && (
+                                      <span className="ml-2 px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded text-[10px]">
+                                        Guest
+                                      </span>
+                                    )}
+                                  </p>
+                                </div>
+                              </div>
+                              <StatusBadge status={comment.status} />
+                            </div>
+                            {comment.hierarchyPath?.length > 0 && (
+                              <div className="mb-2">
+                                <HierarchyPills path={comment.hierarchyPath} />
+                              </div>
+                            )}
+                            <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap mb-2">
+                              {comment.comment}
+                            </p>
+                            <p className="text-xs text-gray-400">{formatDate(comment.createdAt)}</p>
+                          </div>
+
+                          <div className="flex items-center gap-2 shrink-0">
+                            {comment.status !== "approved" && (
+                              <PermissionButton
+                                action="edit"
+                                onClick={() => handleStatusChange(comment._id, "approved")}
+                                className="p-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors"
+                                title={getPermissionMessage("edit", role)}
+                              >
+                                <FaCheckCircle className="w-4 h-4" />
+                              </PermissionButton>
+                            )}
+                            {comment.status === "approved" && (
+                              <PermissionButton
+                                action="edit"
+                                onClick={() => handleStatusChange(comment, "pending")}
+                                className="p-2 bg-yellow-50 text-yellow-600 rounded-lg hover:bg-yellow-100 transition-colors"
+                                title="Unapprove (set to Pending)"
+                              >
+                                <FaBan className="w-4 h-4" />
+                              </PermissionButton>
+                            )}
+                            {comment.status !== "rejected" && (
+                              <PermissionButton
+                                action="edit"
+                                onClick={() => handleStatusChange(comment, "rejected")}
+                                className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
+                                title="Reject"
+                              >
+                                <FaTimesCircle className="w-4 h-4" />
+                              </PermissionButton>
+                            )}
+                            <PermissionButton
+                              action="delete"
+                              onClick={() => handleDelete(comment)}
+                              className="p-2 bg-gray-50 text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
+                              title={getPermissionMessage("delete", role)}
+                            >
+                              <FaTrash className="w-4 h-4" />
+                            </PermissionButton>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
         </div>
       </div>
     </>

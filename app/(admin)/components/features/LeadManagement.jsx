@@ -115,7 +115,7 @@ const LeadManagement = () => {
           setHighlightedFormIds(res.data.data.formIds);
         }
       })
-      .catch(() => {});
+      .catch(() => { });
   }, [isVerified]);
 
   const handleVerifyPassword = (e) => {
@@ -570,18 +570,16 @@ const LeadManagement = () => {
                 <button
                   type="button"
                   onClick={() => setShowFilters(!showFilters)}
-                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    showFilters
+                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${showFilters
                       ? "bg-blue-600 text-white hover:bg-blue-700"
                       : "bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 hover:border-slate-400"
-                  }`}
+                    }`}
                 >
                   <FaFilter className="w-4 h-4" />
                   Filters
                   {activeFilterCount > 0 && (
-                    <span className={`min-w-5 h-5 px-1.5 inline-flex items-center justify-center rounded-full text-xs font-semibold ${
-                      showFilters ? "bg-white text-blue-600" : "bg-blue-100 text-blue-700"
-                    }`}>
+                    <span className={`min-w-5 h-5 px-1.5 inline-flex items-center justify-center rounded-full text-xs font-semibold ${showFilters ? "bg-white text-blue-600" : "bg-blue-100 text-blue-700"
+                      }`}>
                       {activeFilterCount}
                     </span>
                   )}
@@ -916,8 +914,7 @@ const LeadManagement = () => {
                 <div>
                   <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider">Status</label>
                   <span
-                    className={`mt-1 inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium ${
-                      selectedLead.status === "new"
+                    className={`mt-1 inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium ${selectedLead.status === "new"
                         ? "bg-blue-50 text-blue-700"
                         : selectedLead.status === "updated"
                           ? "bg-purple-50 text-purple-700"
@@ -926,7 +923,7 @@ const LeadManagement = () => {
                             : selectedLead.status === "converted"
                               ? "bg-green-50 text-green-700"
                               : "bg-slate-100 text-slate-700"
-                    }`}
+                      }`}
                   >
                     {selectedLead.status === "updated"
                       ? `Updated ${selectedLead.updateCount > 0 ? selectedLead.updateCount : 1}×`

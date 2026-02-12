@@ -27,8 +27,9 @@ const LIMIT = 500;
 
 import { config } from "@/config/config";
 
-/** Frontend base URL for View links (strip /api from config.baseUrl so link opens the (main) app page with basePath). */
+/** Frontend base URL for View links. Prefer NEXT_PUBLIC_SITE_URL in production so links use your domain, not localhost. */
 const getFrontendBaseUrl = () => {
+  if (config.siteUrl) return config.siteUrl.replace(/\/$/, "");
   const base = (config.baseUrl || "").replace(/\/api\/?$/, "");
   if (base) return base;
   const path = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
@@ -1156,7 +1157,7 @@ const NotificationManagement = () => {
                               </td>
                               <td className="px-4 py-3 text-right">
                                 <div className="inline-flex items-center gap-0.5">
-                                  {n.slug && (
+                                  {/* {n.slug && (
                                     <a
                                       href={`${getFrontendBaseUrl()}/notification/${n.slug}`}
                                       target="_blank"
@@ -1166,7 +1167,7 @@ const NotificationManagement = () => {
                                     >
                                       <FaEye className="w-4 h-4" />
                                     </a>
-                                  )}
+                                  )} */}
                                   <button type="button" onClick={() => openEdit(n)} className="text-blue-600 hover:text-blue-800 p-1.5 rounded-lg hover:bg-blue-50 transition-colors" title="Edit">
                                     <FaEdit className="w-4 h-4" />
                                   </button>

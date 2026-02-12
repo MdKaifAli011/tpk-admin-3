@@ -34,6 +34,8 @@ export const config = {
 
   // API
   baseUrl: process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/self-study/api",
+  // Public (main) site URL for links from admin (e.g. View notification). Set in production: NEXT_PUBLIC_SITE_URL=https://yourdomain.com/self-study
+  siteUrl: process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL,
 
   // JWT / Session
   jwtSecret: process.env.JWT_SECRET,

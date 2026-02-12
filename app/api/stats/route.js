@@ -6,6 +6,7 @@ import Unit from "@/models/Unit";
 import Chapter from "@/models/Chapter";
 import Topic from "@/models/Topic";
 import SubTopic from "@/models/SubTopic";
+import Definition from "@/models/Definition";
 import { requireAuth } from "@/middleware/authMiddleware";
 import { errorResponse, handleApiError } from "@/utils/apiResponse";
 
@@ -44,6 +45,9 @@ export async function GET(request) {
       subtopicsTotal,
       subtopicsActive,
       subtopicsInactive,
+      definitionsTotal,
+      definitionsActive,
+      definitionsInactive,
     ] = await Promise.all([
       Exam.countDocuments({}),
       Exam.countDocuments({ status: "active" }),
@@ -63,6 +67,9 @@ export async function GET(request) {
       SubTopic.countDocuments({}),
       SubTopic.countDocuments({ status: "active" }),
       SubTopic.countDocuments({ status: "inactive" }),
+      Definition.countDocuments({}),
+      Definition.countDocuments({ status: "active" }),
+      Definition.countDocuments({ status: "inactive" }),
     ]);
 
     const stats = {
@@ -72,11 +79,12 @@ export async function GET(request) {
       chapters: { active: chaptersActive, inactive: chaptersInactive, total: chaptersTotal },
       topics: { active: topicsActive, inactive: topicsInactive, total: topicsTotal },
       subtopics: { active: subtopicsActive, inactive: subtopicsInactive, total: subtopicsTotal },
+      definitions: { active: definitionsActive, inactive: definitionsInactive, total: definitionsTotal },
       summary: {
         totalActive:
-          examsActive + subjectsActive + unitsActive + chaptersActive + topicsActive + subtopicsActive,
+          examsActive + subjectsActive + unitsActive + chaptersActive + topicsActive + subtopicsActive + definitionsActive,
         totalInactive:
-          examsInactive + subjectsInactive + unitsInactive + chaptersInactive + topicsInactive + subtopicsInactive,
+          examsInactive + subjectsInactive + unitsInactive + chaptersInactive + topicsInactive + subtopicsInactive + definitionsInactive,
       },
     };
 

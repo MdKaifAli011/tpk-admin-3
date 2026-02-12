@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, memo, useMemo } from "react";
+import React, { useState, useEffect, memo, useMemo, useCallback } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -17,6 +17,7 @@ import {
   FaUserCog,
 } from "react-icons/fa";
 import { canAccessRoute, normalizeRole } from "../config/adminRoutes";
+import api from "@/lib/api";
 
 const ALL_MENU_ITEMS = [
   {
@@ -102,6 +103,92 @@ const Sidebar = memo(({ isOpen, onClose }) => {
   const pathname = usePathname();
   const [userRole, setUserRole] = useState(null);
   const [expandedMenus, setExpandedMenus] = useState({});
+  const [discussionPendingCount, setDiscussionPendingCount] = useState(0);
+  const [overviewCommentPendingCount, setOverviewCommentPendingCount] = useState(0);
+
+  // Single fetch for discussion pending count (admin only)
+  const fetchDiscussionPendingCount = useCallback(async () => {
+    try {
+      const res = await api.get("/discussion/threads/pending-count");
+      if (res?.data?.success && typeof res.data.count === "number") {
+        setDiscussionPendingCount(res.data.count);
+      }
+    } catch (err) {
+      // Silently ignore (e.g. not logged in or no permission)
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchDiscussionPendingCount();
+  }, [fetchDiscussionPendingCount]);
+
+  // Update count when discussion page approves/unapproves/deletes (no extra API call)
+  useEffect(() => {
+    const handleUpdate = (e) => {
+      const d = e?.detail;
+      if (d && typeof d.count === "number") {
+        setDiscussionPendingCount(Math.max(0, d.count));
+      } else if (d && typeof d.delta === "number") {
+        setDiscussionPendingCount((prev) => Math.max(0, prev + d.delta));
+      }
+    };
+    const handleRefetch = () => {
+      fetchDiscussionPendingCount();
+    };
+    window.addEventListener("admin-discussion-pending-updated", handleUpdate);
+    window.addEventListener("admin-discussion-pending-refetch", handleRefetch);
+    return () => {
+      window.removeEventListener("admin-discussion-pending-updated", handleUpdate);
+      window.removeEventListener("admin-discussion-pending-refetch", handleRefetch);
+    };
+  }, [fetchDiscussionPendingCount]);
+
+  // Refetch on window focus so new pending (e.g. from student) shows
+  useEffect(() => {
+    const onFocus = () => fetchDiscussionPendingCount();
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, [fetchDiscussionPendingCount]);
+
+  // Overview Comments pending count (single fetch + event updates)
+  const fetchOverviewCommentPendingCount = useCallback(async () => {
+    try {
+      const res = await api.get("/overview-comment/pending-count");
+      if (res?.data?.success && typeof res.data.count === "number") {
+        setOverviewCommentPendingCount(res.data.count);
+      }
+    } catch (err) {
+      // Silently ignore
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchOverviewCommentPendingCount();
+  }, [fetchOverviewCommentPendingCount]);
+
+  useEffect(() => {
+    const handleUpdate = (e) => {
+      const d = e?.detail;
+      if (d && typeof d.count === "number") {
+        setOverviewCommentPendingCount(Math.max(0, d.count));
+      } else if (d && typeof d.delta === "number") {
+        setOverviewCommentPendingCount((c) => Math.max(0, c + d.delta));
+      }
+    };
+    const handleRefetch = () => fetchOverviewCommentPendingCount();
+    window.addEventListener("admin-overview-comment-pending-updated", handleUpdate);
+    window.addEventListener("admin-overview-comment-pending-refetch", handleRefetch);
+    return () => {
+      window.removeEventListener("admin-overview-comment-pending-updated", handleUpdate);
+      window.removeEventListener("admin-overview-comment-pending-refetch", handleRefetch);
+    };
+  }, [fetchOverviewCommentPendingCount]);
+
+  useEffect(() => {
+    const onFocus = () => fetchOverviewCommentPendingCount();
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, [fetchOverviewCommentPendingCount]);
 
   // Get user role from localStorage (memoized)
   useEffect(() => {
@@ -150,8 +237,33 @@ const Sidebar = memo(({ isOpen, onClose }) => {
     });
   }, [userRole]);
 
-  const isActive = (href) =>
-    pathname === href || pathname.startsWith(href + "/");
+  const normalizedPath = pathname?.replace(/\/$/, "") || "";
+
+  /** Match for top-level or non-sibling links (exact or prefix). */
+  const isActive = (href) => {
+    if (!href) return false;
+    const h = href.replace(/\/$/, "");
+    return normalizedPath === h || normalizedPath.startsWith(h + "/");
+  };
+
+  /**
+   * Among sibling children, only the most specific (longest) href that matches pathname is active.
+   * Fixes "double active" e.g. /admin/download/file making both "Folder" and "Files" active.
+   */
+  const getActiveChildHref = (children) => {
+    if (!children?.length) return null;
+    let best = null;
+    let bestLen = 0;
+    for (const child of children) {
+      const h = (child.href || "").replace(/\/$/, "");
+      if (normalizedPath !== h && !normalizedPath.startsWith(h + "/")) continue;
+      if (h.length > bestLen) {
+        bestLen = h.length;
+        best = child.href;
+      }
+    }
+    return best;
+  };
 
   const toggleMenu = (name) => {
     setExpandedMenus((prev) => ({
@@ -221,7 +333,7 @@ const Sidebar = memo(({ isOpen, onClose }) => {
                     <button
                       onClick={() => toggleMenu(name)}
                       className={`
-                        group w-full flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-colors
+                        group relative w-full flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-colors
                         ${hasActiveChild || active
                           ? "bg-blue-600 text-white font-medium"
                           : "text-gray-700 font-normal hover:bg-gray-50 hover:text-gray-900"
@@ -236,15 +348,41 @@ const Sidebar = memo(({ isOpen, onClose }) => {
                           : {}
                       }
                     >
-                      <Icon
-                        className={`text-base flex-shrink-0 ${hasActiveChild || active
-                          ? "text-white"
-                          : "text-gray-500 group-hover:text-gray-700"
-                          }`}
-                      />
+                      <span className="relative shrink-0">
+                        <Icon
+                          className={`text-base block ${hasActiveChild || active
+                            ? "text-white"
+                            : "text-gray-500 group-hover:text-gray-700"
+                            }`}
+                        />
+                        {name === "Discussion" && discussionPendingCount > 0 && (
+                          <span
+                            className="absolute -top-0.5 -left-0.5 w-2.5 h-2.5 rounded-full bg-green-500 ring-2 ring-white animate-pulse"
+                            title={`${discussionPendingCount} pending`}
+                            aria-hidden
+                          />
+                        )}
+                        {name === "Admin" && overviewCommentPendingCount > 0 && (
+                          <span
+                            className="absolute -top-0.5 -left-0.5 w-2.5 h-2.5 rounded-full bg-green-500 ring-2 ring-white animate-pulse"
+                            title={`${overviewCommentPendingCount} pending`}
+                            aria-hidden
+                          />
+                        )}
+                      </span>
                       <span className="flex-1 whitespace-nowrap overflow-hidden text-ellipsis text-left">
                         {name}
                       </span>
+                      {name === "Discussion" && discussionPendingCount > 0 && (
+                        <span className="shrink-0 inline-flex items-center justify-center min-w-5 h-5 px-2 rounded-full text-[10px] font-bold bg-green-500 text-white" title={`${discussionPendingCount} pending`}>
+                          {discussionPendingCount > 99 ? "99+" : discussionPendingCount}
+                        </span>
+                      )}
+                      {name === "Admin" && overviewCommentPendingCount > 0 && (
+                        <span className="shrink-0 inline-flex items-center justify-center min-w-5 h-5 px-2 rounded-full text-[10px] font-bold bg-green-500 text-white" title={`${overviewCommentPendingCount} pending`}>
+                          {overviewCommentPendingCount > 99 ? "99+" : overviewCommentPendingCount}
+                        </span>
+                      )}
                       {isExpanded ? (
                         <FaChevronDown className={`text-xs flex-shrink-0 ${hasActiveChild || active ? "text-white" : "text-gray-500"}`} />
                       ) : (
@@ -254,7 +392,8 @@ const Sidebar = memo(({ isOpen, onClose }) => {
                     {isExpanded && (
                       <div className="ml-4 mt-1 space-y-1">
                         {children.map((child) => {
-                          const childActive = isActive(child.href);
+                          const activeChildHref = getActiveChildHref(children);
+                          const childActive = activeChildHref !== null && child.href === activeChildHref;
                           return (
                             <Link
                               key={child.name}
@@ -268,9 +407,35 @@ const Sidebar = memo(({ isOpen, onClose }) => {
                                 }
                               `}
                             >
-                              <span className="w-2 h-2 rounded-full bg-current opacity-50"></span>
-                              <span className="flex-1 whitespace-nowrap overflow-hidden text-ellipsis">
+                              <span className="relative shrink-0">
+                                <span className="w-2 h-2 rounded-full bg-current opacity-50 block" />
+                                {child.name === "Threads" && discussionPendingCount > 0 && (
+                                  <span
+                                    className="absolute -top-0.5 -left-0.5 w-2.5 h-2.5 rounded-full bg-green-500 ring-2 ring-white animate-pulse"
+                                    title={`${discussionPendingCount} pending`}
+                                    aria-hidden
+                                  />
+                                )}
+                                {child.name === "Overview Comments" && overviewCommentPendingCount > 0 && (
+                                  <span
+                                    className="absolute -top-0.5 -left-0.5 w-2.5 h-2.5 rounded-full bg-green-500 ring-2 ring-white animate-pulse"
+                                    title={`${overviewCommentPendingCount} pending`}
+                                    aria-hidden
+                                  />
+                                )}
+                              </span>
+                              <span className="flex-1 whitespace-nowrap overflow-hidden text-ellipsis flex items-center gap-1.5">
                                 {child.name}
+                                {child.name === "Threads" && discussionPendingCount > 0 && (
+                                  <span className="shrink-0 inline-flex items-center justify-center min-w-5 h-5 px-2 rounded-full text-[10px] font-bold bg-green-500 text-white" title={`${discussionPendingCount} pending`}>
+                                    {discussionPendingCount > 99 ? "99+" : discussionPendingCount}
+                                  </span>
+                                )}
+                                {child.name === "Overview Comments" && overviewCommentPendingCount > 0 && (
+                                  <span className="shrink-0 inline-flex items-center justify-center min-w-5 h-5 px-2 rounded-full text-[10px] font-bold bg-green-500 text-white" title={`${overviewCommentPendingCount} pending`}>
+                                    {overviewCommentPendingCount > 99 ? "99+" : overviewCommentPendingCount}
+                                  </span>
+                                )}
                               </span>
                             </Link>
                           );
@@ -317,33 +482,7 @@ const Sidebar = memo(({ isOpen, onClose }) => {
           </div>
         </nav>
 
-        {/* Footer Section */}
-        <div className="p-4 mt-auto border-t border-gray-200">
-          <Link
-            href="/admin/profile"
-            onClick={onClose}
-            className={`group flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-colors mb-4 ${pathname === "/admin/profile"
-              ? "bg-blue-600 text-white font-medium"
-              : "text-gray-700 font-normal hover:bg-gray-50 hover:text-gray-900"
-              }`}
-          >
-            <FaUser
-              className={`text-base flex-shrink-0 ${pathname === "/admin/profile"
-                ? "text-white"
-                : "text-gray-500 group-hover:text-gray-700"
-                }`}
-            />
-            <span className="flex-1 whitespace-nowrap overflow-hidden text-ellipsis">
-              Profile Settings
-            </span>
-          </Link>
-          <div className="px-3 py-2 bg-gray-50 rounded-lg">
-            <div className="text-xs text-center font-medium text-gray-900">
-              Admin Panel
-            </div>
-            <div className="text-xs text-center text-gray-500 mt-0.5">v1.0</div>
-          </div>
-        </div>
+      
       </aside>
     </>
   );

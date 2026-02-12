@@ -641,11 +641,10 @@ const StudentManagement = () => {
                 <div>
                   <label className="text-sm font-medium text-gray-600">Status</label>
                   <span
-                    className={`mt-1 inline-block px-3 py-1 rounded-full text-xs font-medium ${
-                      selectedStudent.status === "active"
+                    className={`mt-1 inline-block px-3 py-1 rounded-full text-xs font-medium ${selectedStudent.status === "active"
                         ? "bg-green-100 text-green-700"
                         : "bg-gray-100 text-gray-700"
-                    }`}
+                      }`}
                   >
                     {selectedStudent.status || "active"}
                   </span>
@@ -656,12 +655,12 @@ const StudentManagement = () => {
                   <p className="mt-1 text-sm text-gray-900 font-semibold">
                     {selectedStudent.lastLogin
                       ? new Date(selectedStudent.lastLogin).toLocaleString("en-US", {
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })
                       : "Never"}
                   </p>
                 </div>

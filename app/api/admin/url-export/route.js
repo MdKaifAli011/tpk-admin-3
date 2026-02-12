@@ -11,7 +11,7 @@ import Definition from "@/models/Definition";
 const BASE_URL =
   (process.env.NEXT_PUBLIC_APP_URL ||
     process.env.NEXT_PUBLIC_ORIGIN ||
-    "http://194.238.17.203:3001") +
+    "http://app.testprepkart.in") +
   (process.env.NEXT_PUBLIC_BASE_PATH || "/self-study");
 
 function buildUnitPipeline(examId) {
