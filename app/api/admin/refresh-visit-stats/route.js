@@ -25,9 +25,9 @@ export async function POST(request) {
     }
 
     const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
-    const url = new URL(request.url);
-    const origin = url.origin;
-    const cronUrl = `${origin}${basePath}/api/cron/update-visit-stats?secret=${encodeURIComponent(secret)}&test=1`;
+    const port = process.env.PORT || 3000;
+    // Call cron on local HTTP to avoid SSL errors (VPS: Nginx terminates SSL; Node is HTTP only)
+    const cronUrl = `http://127.0.0.1:${port}${basePath}/api/cron/update-visit-stats?secret=${encodeURIComponent(secret)}&test=1`;
 
     const res = await fetch(cronUrl, { method: "GET" });
     const data = await res.json().catch(() => ({}));

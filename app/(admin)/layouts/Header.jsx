@@ -114,19 +114,19 @@ const Header = memo(({ onMenuToggle }) => {
 
           {/* User Info */}
           <Link href="/admin/profile">
-          <div className="hidden md:flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
-            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 text-white">
-              <FaUser className="text-sm" />
+            <div className="hidden md:flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
+              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 text-white">
+                <FaUser className="text-sm" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-sm font-medium text-gray-900">
+                  {user?.role === "admin" ? "Admin" : user?.role || "User"}
+                </span>
+                <span className="text-xs text-gray-500">
+                  {user?.name || "Administrator"}
+                </span>
+              </div>
             </div>
-            <div className="flex flex-col">
-              <span className="text-sm font-medium text-gray-900">
-                {user?.role === "admin" ? "Admin" : user?.role || "User"}
-              </span>
-              <span className="text-xs text-gray-500">
-                {user?.name || "Administrator"}
-              </span>
-            </div>
-          </div>
           </Link>
 
           {/* Logout Button */}

@@ -12,6 +12,7 @@ const Collapsible = ({ isOpen, children, className = "" }) => {
   const ref = useRef(null);
   const [maxHeight, setMaxHeight] = useState("0px");
 
+  // Only depend on isOpen so parent re-renders (new children reference) don't re-run and cause remount/flicker
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
@@ -28,19 +29,19 @@ const Collapsible = ({ isOpen, children, className = "" }) => {
         setMaxHeight("0px");
       }
     }
-  }, [isOpen, children]);
+  }, [isOpen]);
 
   const style =
     maxHeight === "none"
       ? {
-          overflowY: "visible",
-          transition: "max-height 200ms cubic-bezier(.2,.9,.2,1)",
-        }
+        overflowY: "visible",
+        transition: "max-height 200ms cubic-bezier(.2,.9,.2,1)",
+      }
       : {
-          maxHeight,
-          overflow: "hidden",
-          transition: "max-height 200ms cubic-bezier(.2,.9,.2,1)",
-        };
+        maxHeight,
+        overflow: "hidden",
+        transition: "max-height 200ms cubic-bezier(.2,.9,.2,1)",
+      };
 
   return (
     <div ref={ref} style={style} className={className}>

@@ -1,13 +1,15 @@
 "use client";
 
-import React from "react";
+import React, { memo } from "react";
+import Link from "next/link";
 import { FaChevronDown } from "react-icons/fa";
 import TextEllipsis from "./TextEllipsis";
 import Collapsible from "./Collapsible";
 
-const SidebarNavigationTree = ({
+const SidebarNavigationTree = memo(function SidebarNavigationTree({
   tree,
-  navigateTo,
+  activeExamSlug,
+  closeOnMobile,
   openSubjectId,
   openUnitId,
   openChapterId,
@@ -19,12 +21,13 @@ const SidebarNavigationTree = ({
   chapterSlugFromPath,
   topicSlugFromPath,
   activeItemRef,
-}) => {
+}) {
   return (
     <div className="space-y-1">
       {tree.map((subject) => {
         const isActive = subject.slug === subjectSlugFromPath;
         const isOpen = openSubjectId === subject.id;
+        const subjectHref = activeExamSlug ? `/${activeExamSlug}/${subject.slug}` : "#";
 
         return (
           <div key={subject.id} ref={isActive ? activeItemRef : null}>
@@ -41,9 +44,10 @@ const SidebarNavigationTree = ({
                 }
               `}
             >
-              <button
-                onClick={() => navigateTo([subject.slug])}
-                className="flex-1 overflow-hidden text-left cursor-pointer hover:opacity-80 transition-opacity pr-2"
+              <Link
+                href={subjectHref}
+                onClick={closeOnMobile}
+                className="flex-1 overflow-hidden text-left cursor-pointer hover:opacity-80 transition-opacity pr-2 min-w-0"
               >
                 <TextEllipsis
                   maxW="max-w-full"
@@ -51,15 +55,18 @@ const SidebarNavigationTree = ({
                 >
                   {subject.name}
                 </TextEllipsis>
-              </button>
+              </Link>
 
               {subject.units?.length > 0 && (
                 <button
+                  type="button"
                   onClick={(e) => {
+                    e.preventDefault();
                     e.stopPropagation();
                     toggleSubject(subject.id);
                   }}
                   className="flex-shrink-0 p-1 ml-1 cursor-pointer hover:opacity-70 transition-opacity"
+                  aria-label={isOpen ? "Collapse subject" : "Expand subject"}
                 >
                   <FaChevronDown
                     className={`
@@ -98,11 +105,10 @@ const SidebarNavigationTree = ({
                           }
                         `}
                       >
-                        <button
-                          onClick={() =>
-                            navigateTo([subject.slug, unit.slug])
-                          }
-                          className="flex-1 overflow-hidden text-left cursor-pointer hover:opacity-80 transition-opacity pr-2"
+                        <Link
+                          href={activeExamSlug ? `/${activeExamSlug}/${subject.slug}/${unit.slug}` : "#"}
+                          onClick={closeOnMobile}
+                          className="flex-1 overflow-hidden text-left cursor-pointer hover:opacity-80 transition-opacity pr-2 min-w-0"
                         >
                           <TextEllipsis
                             maxW="max-w-full"
@@ -110,15 +116,18 @@ const SidebarNavigationTree = ({
                           >
                             {unit.name}
                           </TextEllipsis>
-                        </button>
+                        </Link>
 
                         {unit.chapters?.length > 0 && (
                           <button
+                            type="button"
                             onClick={(e) => {
+                              e.preventDefault();
                               e.stopPropagation();
                               toggleUnit(unit.id, subject.id);
                             }}
                             className="flex-shrink-0 p-1 ml-1 cursor-pointer hover:opacity-70 transition-opacity"
+                            aria-label={isUnitOpen ? "Collapse unit" : "Expand unit"}
                           >
                             <FaChevronDown
                               className={`
@@ -159,15 +168,10 @@ const SidebarNavigationTree = ({
                                     }
                                   `}
                                 >
-                                  <button
-                                    onClick={() =>
-                                      navigateTo([
-                                        subject.slug,
-                                        unit.slug,
-                                        chapter.slug,
-                                      ])
-                                    }
-                                    className="flex-1 overflow-hidden text-left cursor-pointer hover:opacity-80 transition-opacity pr-2"
+                                  <Link
+                                    href={activeExamSlug ? `/${activeExamSlug}/${subject.slug}/${unit.slug}/${chapter.slug}` : "#"}
+                                    onClick={closeOnMobile}
+                                    className="flex-1 overflow-hidden text-left cursor-pointer hover:opacity-80 transition-opacity pr-2 min-w-0"
                                   >
                                     <TextEllipsis
                                       maxW="max-w-full"
@@ -175,11 +179,13 @@ const SidebarNavigationTree = ({
                                     >
                                       {chapter.name}
                                     </TextEllipsis>
-                                  </button>
+                                  </Link>
 
                                   {chapter.topics?.length > 0 && (
                                     <button
+                                      type="button"
                                       onClick={(e) => {
+                                        e.preventDefault();
                                         e.stopPropagation();
                                         toggleChapter(
                                           chapter.id,
@@ -188,6 +194,7 @@ const SidebarNavigationTree = ({
                                         );
                                       }}
                                       className="flex-shrink-0 p-1 ml-1 cursor-pointer hover:opacity-70 transition-opacity"
+                                      aria-label={isChapterOpen ? "Collapse chapter" : "Expand chapter"}
                                     >
                                       <FaChevronDown
                                         className={`
@@ -210,23 +217,20 @@ const SidebarNavigationTree = ({
                                       const isTopicActive =
                                         isChapterActive &&
                                         topic.slug === topicSlugFromPath;
+                                      const topicHref = activeExamSlug
+                                        ? `/${activeExamSlug}/${subject.slug}/${unit.slug}/${chapter.slug}/${topic.slug}`
+                                        : "#";
 
                                       return (
-                                        <button
+                                        <Link
                                           key={topic.id}
                                           ref={
                                             isTopicActive ? activeItemRef : null
                                           }
-                                          onClick={() =>
-                                            navigateTo([
-                                              subject.slug,
-                                              unit.slug,
-                                              chapter.slug,
-                                              topic.slug,
-                                            ])
-                                          }
+                                          href={topicHref}
+                                          onClick={closeOnMobile}
                                           className={`
-                                            w-full text-left px-2 py-1.5 rounded-md
+                                            block w-full text-left px-2 py-1.5 rounded-md
                                             transition-all duration-200 truncate cursor-pointer
                                             hover:opacity-80
                                             ${
@@ -239,7 +243,7 @@ const SidebarNavigationTree = ({
                                           <TextEllipsis maxW="max-w-full">
                                             {topic.name}
                                           </TextEllipsis>
-                                        </button>
+                                        </Link>
                                       );
                                     })}
                                   </div>
@@ -259,6 +263,8 @@ const SidebarNavigationTree = ({
       })}
     </div>
   );
-};
+});
+
+SidebarNavigationTree.displayName = "SidebarNavigationTree";
 
 export default SidebarNavigationTree;

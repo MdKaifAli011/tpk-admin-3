@@ -6,8 +6,7 @@ const examInfoSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Exam",
       required: true,
-      unique: true, // One ExamInfo per Exam
-      index: true,
+      unique: true, // One ExamInfo per Exam; index created via schema.index() below
     },
     examDate: {
       type: Date,

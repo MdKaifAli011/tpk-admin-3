@@ -105,18 +105,18 @@ export async function generateMetadata({ params, searchParams }) {
                 hasMetaDescription: !!unitDetails.metaDescription,
                 hasKeywords: !!unitDetails.keywords,
               });
-            } else {
-              console.warn(`[METADATA] No unit details found for unitId: ${unit._id}`);
-              logger.warn(`No unit details found for unitId: ${unit._id}`);
+            } else if (!unitDetails) {
+              // Missing unit details is expected for some units; only log in dev to avoid log flood
+              if (process.env.NODE_ENV === "development") {
+                logger.debug(`No unit details for unitId: ${unit._id} (metadata will use defaults)`);
+              }
             }
           } catch (detailsError) {
-            console.error(`[METADATA] Error fetching unit details:`, detailsError);
             logger.warn("Could not fetch unit details:", detailsError.message);
             unitDetails = null;
           }
-        } else {
-          console.warn(`[METADATA] Unit found but no _id available:`, unit);
-          logger.warn("Unit found but no _id available:", unit);
+        } else if (unit && process.env.NODE_ENV === "development") {
+          logger.debug("Unit found but no _id available for unit details lookup");
         }
     } catch (fetchError) {
       // Silently fail - we'll use defaults

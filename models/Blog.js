@@ -52,8 +52,7 @@ const blogSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Index for slug
-blogSchema.index({ slug: 1 });
+// slug already has unique: true (creates index); avoid duplicate index
 blogSchema.index({ examId: 1 });
 
 // Pre-save hook to auto-generate slug

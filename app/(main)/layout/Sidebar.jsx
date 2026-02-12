@@ -479,9 +479,11 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
     };
   }, [activeExamId, loadTree]);
 
-  // Auto-expand menu based on path (use exact segment match so .../download-neet-scorecard does not open Download menu)
+  // Auto-expand menu based on path: on notification only Notifications is active; others stay collapsed
   useEffect(() => {
-    if (isBlogPath) {
+    if (isNotificationPath) {
+      setActiveMenu('notification');
+    } else if (isBlogPath) {
       setActiveMenu('blog');
     } else if (isDownloadPath) {
       setActiveMenu('download');
@@ -490,7 +492,7 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
     } else {
       setActiveMenu('subjects');
     }
-  }, [pathname, isBlogPath, isDownloadPath, isVideoLibraryPath]);
+  }, [pathname, isNotificationPath, isBlogPath, isDownloadPath, isVideoLibraryPath]);
 
   // debounced query filtered tree (token-based / bag-of-words: "laws of motion class 9" matches any combination)
   const normalizedQuery = debouncedQuery.trim().toLowerCase();
@@ -758,25 +760,25 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
                   </div>
                 )}
                 
-                {activeMenu === 'subjects' && (
-                  <div className="mb-4 space-y-0.5 ">
-                    <SidebarNavigationTree
-                      tree={listToRender}
-                      navigateTo={navigateTo}
-                      openSubjectId={openSubjectId}
-                      openUnitId={openUnitId}
-                      openChapterId={openChapterId}
-                      toggleSubject={toggleSubject}
-                      toggleUnit={toggleUnit}
-                      toggleChapter={toggleChapter}
-                      subjectSlugFromPath={subjectSlugFromPath}
-                      unitSlugFromPath={unitSlugFromPath}
-                      chapterSlugFromPath={chapterSlugFromPath}
-                      topicSlugFromPath={topicSlugFromPath}
-                      activeItemRef={activeItemRef}
-                    />
-                  </div>
-                )}
+                {/* Keep tree mounted; hide with CSS when another menu is active to avoid remounting */}
+                <div className={`mb-4 space-y-0.5 ${activeMenu !== 'subjects' ? 'hidden' : ''}`}>
+                  <SidebarNavigationTree
+                    tree={listToRender}
+                    activeExamSlug={activeExamSlug}
+                    closeOnMobile={closeOnMobile}
+                    openSubjectId={openSubjectId}
+                    openUnitId={openUnitId}
+                    openChapterId={openChapterId}
+                    toggleSubject={toggleSubject}
+                    toggleUnit={toggleUnit}
+                    toggleChapter={toggleChapter}
+                    subjectSlugFromPath={subjectSlugFromPath}
+                    unitSlugFromPath={unitSlugFromPath}
+                    chapterSlugFromPath={chapterSlugFromPath}
+                    topicSlugFromPath={topicSlugFromPath}
+                    activeItemRef={activeItemRef}
+                  />
+                </div>
               </>
             )}
 
