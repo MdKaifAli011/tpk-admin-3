@@ -19,6 +19,10 @@ const nextConfig = {
   experimental: {
     optimizeCss: true,
     optimizePackageImports: ["react-icons", "framer-motion"],
+    // Allow larger uploads (e.g. RichTextEditor images) to avoid 413 Payload Too Large
+    serverActions: {
+      bodySizeLimit: "10mb",
+    },
   },
 
   images: {

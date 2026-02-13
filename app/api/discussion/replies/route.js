@@ -52,7 +52,7 @@ export async function POST(request) {
             parentReplyId: parentReplyId || null,
             author: user.type === "Guest" ? null : user.id,
             authorType: user.type,
-            guestName: user.type === "Guest" ? user.name : undefined,
+            guestName: user.type === "Guest" ? user.name : user.type === "User" ? "TestPrepKart" : undefined,
             isApproved: user.type === "User", // Only Admin/User replies are auto-approved, Students and Guests need approval
         });
 

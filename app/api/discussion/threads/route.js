@@ -3,7 +3,6 @@ import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import Thread from "@/models/Thread";
 import Reply from "@/models/Reply";
-import Student from "@/models/Student";
 import Exam from "@/models/Exam";
 import Subject from "@/models/Subject";
 import Unit from "@/models/Unit";
@@ -11,8 +10,14 @@ import Chapter from "@/models/Chapter";
 import Topic from "@/models/Topic";
 import SubTopic from "@/models/SubTopic";
 import Definition from "@/models/Definition";
-import { verifyToken } from "@/lib/auth"; // For admin
-import { verifyStudentToken } from "@/lib/studentAuth"; // For student
+import { verifyToken } from "@/lib/auth";
+import { verifyStudentToken } from "@/lib/studentAuth";
+import {
+    getCurrentLevel,
+    buildThreadQueryAtLevel,
+    getParentLevel,
+    getParentIds,
+} from "@/lib/discussionListFallback";
 
 // Helper to get user from request (either Student, Admin, or Guest)
 async function getUser(request) {
@@ -44,25 +49,189 @@ async function getUser(request) {
     return null;
 }
 
+const LEVEL_TO_CHILD = {
+    exam: "subject",
+    subject: "unit",
+    unit: "chapter",
+    chapter: "topic",
+    topic: "subtopic",
+    subtopic: "definition",
+    definition: null,
+};
+
+const CHILD_MODELS = {
+    subject: { model: Subject, parentKey: "examId" },
+    unit: { model: Unit, parentKey: "subjectId" },
+    chapter: { model: Chapter, parentKey: "unitId" },
+    topic: { model: Topic, parentKey: "chapterId" },
+    subtopic: { model: SubTopic, parentKey: "topicId" },
+    definition: { model: Definition, parentKey: "subTopicId" },
+};
+
+function getSortOption(sort) {
+    if (sort === "hot") return { isPinned: -1, views: -1, replyCount: -1 };
+    if (sort === "views") return { isPinned: -1, views: -1, createdAt: -1 };
+    if (sort === "date_asc") return { isPinned: -1, createdAt: 1 };
+    if (sort === "date_desc") return { isPinned: -1, createdAt: -1 };
+    return { isPinned: -1, createdAt: -1 };
+}
+
+/** Children of current node only (e.g. Unit1 → only Unit1's chapters). */
+async function getOrderedChildren(level, ids) {
+    const childLevel = LEVEL_TO_CHILD[level];
+    if (!childLevel || !CHILD_MODELS[childLevel]) return [];
+    const { model, parentKey } = CHILD_MODELS[childLevel];
+    const parentId = ids[parentKey];
+    if (!parentId) return [];
+    return model.find({ [parentKey]: parentId }).sort({ orderNumber: 1, name: 1 }).select("_id name").lean();
+}
+
+/** One API call: current → parent (same branch) → first child with threads. */
+async function runListCascade(searchParams, params) {
+    const { level, ids } = getCurrentLevel(searchParams);
+    const page = parseInt(searchParams.get("page") || "1", 10);
+    const limit = parseInt(searchParams.get("limit") || "10", 10);
+    const skip = (page - 1) * limit;
+    const sortOption = getSortOption(params.sort);
+
+    const baseQuery = { isApproved: true };
+    if (params.search) {
+        baseQuery.$or = [
+            { title: { $regex: params.search, $options: "i" } },
+            { content: { $regex: params.search, $options: "i" } },
+        ];
+    }
+    if (params.tag && params.tag !== "All Topics" && params.tag !== "All") baseQuery.tags = params.tag;
+    if (params.dateFrom || params.dateTo) {
+        baseQuery.createdAt = {};
+        if (params.dateFrom) baseQuery.createdAt.$gte = new Date(params.dateFrom + "T00:00:00.000Z");
+        if (params.dateTo) baseQuery.createdAt.$lte = new Date(params.dateTo + "T23:59:59.999Z");
+    }
+
+    const runQuery = (levelQuery) => ({ ...baseQuery, ...levelQuery });
+
+    const populateOptions = [
+        { path: "author", select: "firstName lastName avatar email role" },
+        { path: "examId", select: "name slug" },
+        { path: "subjectId", select: "name slug" },
+        { path: "unitId", select: "name slug" },
+        { path: "chapterId", select: "name slug" },
+        { path: "topicId", select: "name slug" },
+        { path: "subTopicId", select: "name slug" },
+        { path: "definitionId", select: "name slug" },
+    ];
+
+    // 1) Current level
+    const currentLevelQuery = buildThreadQueryAtLevel(level, ids);
+    let total = await Thread.countDocuments(runQuery(currentLevelQuery));
+    if (total > 0) {
+        const threads = await Thread.find(runQuery(currentLevelQuery))
+            .sort(sortOption)
+            .skip(skip)
+            .limit(limit)
+            .populate(populateOptions)
+            .lean();
+        return {
+            success: true,
+            data: threads,
+            listSource: "current",
+            pagination: { total, page, limit, pages: Math.ceil(total / limit) },
+        };
+    }
+
+    // 2) Parent (same branch: e.g. chapter → unit that contains this chapter; topic → chapter that contains this topic)
+    const parentLevel = getParentLevel(level);
+    const parentIds = getParentIds(level, ids);
+    if (parentLevel && parentIds) {
+        const parentLevelQuery = buildThreadQueryAtLevel(parentLevel, parentIds);
+        total = await Thread.countDocuments(runQuery(parentLevelQuery));
+        if (total > 0) {
+            const threads = await Thread.find(runQuery(parentLevelQuery))
+                .sort(sortOption)
+                .skip(skip)
+                .limit(limit)
+                .populate(populateOptions)
+                .lean();
+            return {
+                success: true,
+                data: threads,
+                listSource: "parent",
+                pagination: { total, page, limit, pages: Math.ceil(total / limit) },
+            };
+        }
+    }
+
+    // 3) First child that has threads (same branch only)
+    const children = await getOrderedChildren(level, ids);
+    const childLevel = LEVEL_TO_CHILD[level];
+    const keys = ["examId", "subjectId", "unitId", "chapterId", "topicId", "subTopicId", "definitionId"];
+    const childKey = childLevel === "subtopic" ? "subTopicId" : childLevel + "Id";
+    const childLevelIdx = keys.indexOf(childKey);
+
+    for (const child of children) {
+        const childIds = { ...ids };
+        childIds[childKey] = child._id.toString();
+        for (let i = childLevelIdx + 1; i < keys.length; i++) childIds[keys[i]] = null;
+        const childLevelQuery = buildThreadQueryAtLevel(childLevel, childIds);
+        total = await Thread.countDocuments(runQuery(childLevelQuery));
+        if (total > 0) {
+            const threads = await Thread.find(runQuery(childLevelQuery))
+                .sort(sortOption)
+                .skip(skip)
+                .limit(limit)
+                .populate(populateOptions)
+                .lean();
+            return {
+                success: true,
+                data: threads,
+                listSource: "child",
+                fallbackChildId: child._id.toString(),
+                fallbackChildName: child.name || "",
+                pagination: { total, page, limit, pages: Math.ceil(total / limit) },
+            };
+        }
+    }
+
+    return {
+        success: true,
+        data: [],
+        listSource: "none",
+        pagination: { total: 0, page, limit, pages: 0 },
+    };
+}
+
 // GET: List threads (filtered)
 export async function GET(request) {
     try {
         await connectDB();
         const { searchParams } = new URL(request.url);
 
-        // Filters
         const examId = searchParams.get("examId");
         const subjectId = searchParams.get("subjectId");
         const unitId = searchParams.get("unitId");
         const chapterId = searchParams.get("chapterId");
         const topicId = searchParams.get("topicId");
         const subTopicId = searchParams.get("subTopicId");
+        const definitionId = searchParams.get("definitionId");
 
-        const sort = searchParams.get("sort") || "new"; // new, hot, views, date_asc, date_desc
+        const sort = searchParams.get("sort") || "new";
         const search = searchParams.get("search");
-        const tag = searchParams.get("tag"); // e.g., Urgent
-        const dateFrom = searchParams.get("dateFrom"); // YYYY-MM-DD
-        const dateTo = searchParams.get("dateTo"); // YYYY-MM-DD
+        const tag = searchParams.get("tag");
+        const dateFrom = searchParams.get("dateFrom");
+        const dateTo = searchParams.get("dateTo");
+
+        const user = await getUser(request);
+        const isAdmin = user?.type === "User";
+        const status = searchParams.get("status");
+        const hasHierarchy = !!(examId || subjectId || unitId || chapterId || topicId || subTopicId || definitionId);
+
+        if (!isAdmin && hasHierarchy) {
+            const result = await runListCascade(searchParams, {
+                examId, subjectId, unitId, chapterId, topicId, subTopicId, definitionId,
+                search, tag, dateFrom, dateTo, sort,
+            });
+            return NextResponse.json(result);
+        }
 
         const query = {};
 
@@ -73,11 +242,7 @@ export async function GET(request) {
         if (chapterId) query.chapterId = chapterId;
         if (topicId) query.topicId = topicId;
         if (subTopicId) query.subTopicId = subTopicId;
-
-        // Moderation filter
-        const user = await getUser(request);
-        const isAdmin = user?.type === "User";
-        const status = searchParams.get("status"); // 'all', 'approved', 'pending'
+        if (definitionId) query.definitionId = definitionId;
 
         if (!isAdmin) {
             // For students/guests, show ONLY approved content

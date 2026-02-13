@@ -180,8 +180,8 @@ const ThreadCard = ({ thread, onClick }) => {
               <div className="flex items-center flex-wrap gap-x-4 gap-y-2 text-xs text-gray-500">
                 <div className="flex items-center gap-2">
                   <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center overflow-hidden border border-gray-200">
-                    {thread.contributorDisplayName ? (
-                      <img src={BRAND_AVATAR_URL} alt="" className="w-full h-full object-cover" />
+                    {(thread.contributorDisplayName || thread.authorType === "User") ? (
+                      <img src={BRAND_AVATAR_URL} alt="TestPrepKart" className="w-full h-full object-cover" />
                     ) : thread.author?.avatar ? (
                       <img src={thread.author.avatar} alt="av" className="w-full h-full object-cover" />
                     ) : (
@@ -189,7 +189,7 @@ const ThreadCard = ({ thread, onClick }) => {
                     )}
                   </div>
                   <span className="font-semibold text-gray-700">
-                    {thread.contributorDisplayName || (thread.author?.firstName ? `${thread.author.firstName} ${thread.author.lastName}` : (thread.guestName || "Contributor"))}
+                    {(thread.contributorDisplayName || thread.authorType === "User") ? "TestPrepKart" : (thread.author?.firstName ? `${thread.author.firstName} ${thread.author.lastName}` : (thread.guestName || "Contributor"))}
                   </span>
                 </div>
                 <span className="text-gray-300 hidden sm:block">•</span>
@@ -729,8 +729,8 @@ const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal, examImage,
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-5">
                     <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center overflow-hidden border border-white shadow-sm ring-2 ring-gray-50">
-                      {thread.contributorDisplayName ? (
-                        <img src={BRAND_AVATAR_URL} alt="" className="w-full h-full object-cover" />
+                      {(thread.contributorDisplayName || thread.authorType === "User") ? (
+                        <img src={BRAND_AVATAR_URL} alt="TestPrepKart" className="w-full h-full object-cover" />
                       ) : thread.author?.avatar ? (
                         <img src={thread.author.avatar} alt="av" className="w-full h-full object-cover" />
                       ) : (
@@ -740,10 +740,10 @@ const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal, examImage,
                     <div>
                       <div className="flex items-center gap-2">
                         <h4 className="font-bold text-sm text-gray-900 leading-none">
-                          {thread.contributorDisplayName || (thread.author?.firstName ? `${thread.author.firstName} ${thread.author.lastName}` : (thread.guestName || "Contributor"))}
+                          {(thread.contributorDisplayName || thread.authorType === "User") ? "TestPrepKart" : (thread.author?.firstName ? `${thread.author.firstName} ${thread.author.lastName}` : (thread.guestName || "Contributor"))}
                         </h4>
-                        <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider ${thread.contributorDisplayName ? "bg-indigo-100 text-indigo-700" : "bg-gray-100 text-gray-400"}`}>
-                          {thread.contributorDisplayName ? "ADMIN" : (thread.author?.role || "Student")}
+                        <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider ${(thread.contributorDisplayName || thread.authorType === "User") ? "bg-indigo-100 text-indigo-700" : "bg-gray-100 text-gray-400"}`}>
+                          {(thread.contributorDisplayName || thread.authorType === "User") ? "TestPrepKart" : (thread.author?.role || "Student")}
                         </span>
                       </div>
                       <p className="text-[10px] text-gray-400 font-medium mt-1">Posted {timeAgo(thread.createdAt)} • <FaEye size={8} className="inline mr-1" /> {thread.views || 0}</p>
@@ -1035,6 +1035,16 @@ const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal, examImage,
   );
 };
 
+/* Helpers: admin/moderation replies show as TestPrepKart */
+const getReplyDisplayName = (reply) => {
+  if (reply.authorType === "User") return "TestPrepKart";
+  return reply.author?.firstName ? `${reply.author.firstName} ${reply.author.lastName}` : (reply.guestName || "Contributor");
+};
+const getReplyDisplayInitial = (reply) => {
+  if (reply.authorType === "User") return "T";
+  return reply.author?.firstName?.[0] || reply.guestName?.[0] || "U";
+};
+
 /* ---------- Recursive Comment Item ---------- */
 const CommentItem = ({ reply, onVote, onReply, onReport, onShare, depth = 0, onShowAuthModal }) => {
   const [showReplyForm, setShowReplyForm] = useState(false);
@@ -1067,19 +1077,21 @@ const CommentItem = ({ reply, onVote, onReply, onReport, onShare, depth = 0, onS
     return (
       <div className="mt-5 pl-5 border-l-2 border-gray-100 animate-in fade-in slide-in-from-left-2 duration-300">
         <div className="flex items-center gap-2 mb-2">
-          <div className="w-6 h-6 rounded-full bg-gray-50 flex items-center justify-center overflow-hidden border border-gray-100 shadow-xs">
-            {reply.author?.avatar ? (
+          <div className={`w-6 h-6 rounded-full flex items-center justify-center overflow-hidden border shadow-xs ${reply.authorType === "User" ? "bg-blue-100 border-blue-200" : "bg-gray-50 border-gray-100"}`}>
+            {reply.authorType === "User" ? (
+              <img src={BRAND_AVATAR_URL} alt="TestPrepKart" className="w-full h-full object-cover" />
+            ) : reply.author?.avatar ? (
               <img src={reply.author.avatar} alt="av" className="w-full h-full object-cover" />
             ) : (
-              <span className="text-[10px] font-bold text-gray-400">{reply.author?.firstName?.[0] || reply.guestName?.[0] || "U"}</span>
+              <span className="text-[10px] font-bold text-gray-400">{getReplyDisplayInitial(reply)}</span>
             )}
           </div>
           <span className="text-[12px] font-bold text-gray-900 leading-none">
-            {reply.author?.firstName ? `${reply.author.firstName} ${reply.author.lastName}` : (reply.guestName || "Contributor")}
+            {getReplyDisplayName(reply)}
           </span>
-          {reply.author?.role && (
-            <span className={`text-[7px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider ${reply.author.role === 'admin' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-400'}`}>
-              {reply.author.role === 'admin' ? 'Author' : 'Student'}
+          {(reply.authorType === "User" || reply.author?.role) && (
+            <span className={`text-[7px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider ${reply.authorType === "User" || reply.author?.role === "admin" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-400"}`}>
+              {reply.authorType === "User" ? "TestPrepKart" : (reply.author?.role === "admin" ? "TestPrepKart" : "Student")}
             </span>
           )}
           <span className="text-gray-300">•</span>
@@ -1173,20 +1185,22 @@ const CommentItem = ({ reply, onVote, onReply, onReport, onShare, depth = 0, onS
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center overflow-hidden border border-gray-100 shadow-sm ring-2 ring-white">
-              {reply.author?.avatar ? (
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center overflow-hidden border shadow-sm ring-2 ring-white ${reply.authorType === "User" ? "bg-blue-100 border-blue-200" : "bg-gray-50 border-gray-100"}`}>
+              {reply.authorType === "User" ? (
+                <img src={BRAND_AVATAR_URL} alt="TestPrepKart" className="w-full h-full object-cover" />
+              ) : reply.author?.avatar ? (
                 <img src={reply.author.avatar} alt="av" className="w-full h-full object-cover" />
               ) : (
-                <span className="text-sm font-bold text-gray-400">{reply.author?.firstName?.[0] || reply.guestName?.[0] || "U"}</span>
+                <span className="text-sm font-bold text-gray-400">{getReplyDisplayInitial(reply)}</span>
               )}
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-sm font-bold text-gray-900 leading-none">
-                  {reply.author?.firstName ? `${reply.author.firstName} ${reply.author.lastName}` : (reply.guestName || "Contributor")}
+                  {getReplyDisplayName(reply)}
                 </span>
-                <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider ${reply.author?.role === 'admin' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-400'}`}>
-                  {reply.author?.role === 'admin' ? 'Teacher' : (reply.author?.role || 'Student')}
+                <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider ${reply.authorType === "User" || reply.author?.role === "admin" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-400"}`}>
+                  {reply.authorType === "User" ? "TestPrepKart" : (reply.author?.role === "admin" ? "TestPrepKart" : (reply.author?.role || "Student"))}
                 </span>
               </div>
               <p className="text-[10px] text-gray-400 font-medium mt-1">Answered {timeAgo(reply.createdAt)}</p>
@@ -1260,7 +1274,7 @@ const CommentItem = ({ reply, onVote, onReply, onReport, onShare, depth = 0, onS
 
 /* ---------- Main Discussion Forum Tab ---------- */
 
-const DiscussionForumTab = ({ entityName, entityType, examId, examSlug, subjectId, unitId, chapterId, topicId, subTopicId }) => {
+const DiscussionForumTab = ({ entityName, entityType, examId, examSlug, subjectId, unitId, chapterId, topicId, subTopicId, currentDefinitionId: definitionId }) => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
@@ -1356,6 +1370,7 @@ const DiscussionForumTab = ({ entityName, entityType, examId, examSlug, subjectI
       if (chapterId) params.append("chapterId", chapterId);
       if (topicId) params.append("topicId", topicId);
       if (subTopicId) params.append("subTopicId", subTopicId);
+      if (definitionId) params.append("definitionId", definitionId);
 
       if (search) params.append("search", search);
       if (filter === "New") params.append("sort", "new");
@@ -1374,7 +1389,7 @@ const DiscussionForumTab = ({ entityName, entityType, examId, examSlug, subjectI
     } finally {
       setLoading(false);
     }
-  }, [examId, subjectId, unitId, chapterId, topicId, subTopicId, search, filter, selectedTag, listPage]);
+  }, [examId, subjectId, unitId, chapterId, topicId, subTopicId, definitionId, search, filter, selectedTag, listPage]);
 
   useEffect(() => {
     if (isListView) fetchThreads();
@@ -1432,7 +1447,7 @@ const DiscussionForumTab = ({ entityName, entityType, examId, examSlug, subjectI
     setIsCreating(true);
     try {
       const headers = { "x-guest-id": guestIdentity.id, "x-guest-name": guestIdentity.name };
-      const hierarchyParams = { examId, subjectId, unitId, chapterId, topicId, subTopicId };
+      const hierarchyParams = { examId, subjectId, unitId, chapterId, topicId, subTopicId, definitionId };
       const res = await api.post("/discussion/threads", {
         title: newTitle,
         content: newContent,
@@ -1476,6 +1491,7 @@ const DiscussionForumTab = ({ entityName, entityType, examId, examSlug, subjectI
     chapterId,
     topicId,
     subTopicId,
+    definitionId,
   };
 
   return (
@@ -1612,7 +1628,7 @@ const DiscussionForumTab = ({ entityName, entityType, examId, examSlug, subjectI
                 setShowAuthModal(true);
               }}
               examImage={getExamImage}
-              hierarchy={{ examId, subjectId, unitId, chapterId, topicId, subTopicId }}
+              hierarchy={{ examId, subjectId, unitId, chapterId, topicId, subTopicId, definitionId }}
             />
           )
         }

@@ -922,10 +922,10 @@ const RichTextEditor = ({
       return;
     }
 
-    // Validate file size (max 10MB)
+    // Validate file size (max 10MB); larger files will be compressed before upload
     const maxSize = 10 * 1024 * 1024;
     if (file.size > maxSize) {
-      setImageError("File size exceeds 10MB limit.");
+      setImageError("File size exceeds 10MB limit. Please choose a smaller image.");
       return;
     }
 
@@ -969,14 +969,56 @@ const RichTextEditor = ({
     return () => clearTimeout(t);
   }, [showImageModal]);
 
+  // Compress image client-side to reduce size and avoid 413 (Payload Too Large)
+  const compressImageIfNeeded = (file, maxSizeBytes = 2 * 1024 * 1024, maxWidth = 1920) => {
+    return new Promise((resolve) => {
+      if (!file.type.startsWith("image/") || file.size <= maxSizeBytes) {
+        resolve(file);
+        return;
+      }
+      const img = document.createElement("img");
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        let { width, height } = img;
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        }
+        canvas.width = width;
+        canvas.height = height;
+        ctx?.drawImage(img, 0, 0, width, height);
+        canvas.toBlob(
+          (blob) => {
+            if (blob && blob.size < file.size) {
+              resolve(new File([blob], file.name.replace(/\.[^.]+$/, ".jpg") || "image.jpg", { type: "image/jpeg" }));
+            } else {
+              resolve(file);
+            }
+          },
+          "image/jpeg",
+          0.85
+        );
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        resolve(file);
+      };
+      img.src = url;
+    });
+  };
+
   // Upload image and insert into editor
   const uploadAndInsertImage = async (file) => {
     try {
       setUploadingImage(true);
       setImageError("");
 
+      const fileToUpload = await compressImageIfNeeded(file);
       const formData = new FormData();
-      formData.append("image", file);
+      formData.append("image", fileToUpload);
 
       // Add context IDs if available
       if (examId) formData.append("examId", examId);

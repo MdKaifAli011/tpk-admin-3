@@ -10,6 +10,10 @@ import RichContent from "../../../../../(main)/components/RichContent";
 import RichTextEditor from "../../../../components/ui/RichTextEditor";
 import Link from "next/link";
 import { usePermissions, getDiscussionPermissions, getDiscussionPermissionMessage } from "../../../../hooks/usePermissions";
+import { SEO_DEFAULTS } from "@/constants";
+
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
+const BRAND_LOGO_URL = SEO_DEFAULTS?.FAVICON || `${basePath}/logo.png`;
 
 const timeAgo = (date) => {
     const seconds = Math.floor((new Date() - new Date(date)) / 1000);
@@ -25,6 +29,18 @@ const timeAgo = (date) => {
     if (interval > 1) return Math.floor(interval) + "m ago";
     return Math.floor(seconds) + "s ago";
 };
+
+const getReplyAuthorDisplayName = (reply) => {
+    if (reply.authorType === "User") return "TestPrepKart";
+    return reply.author?.firstName ? `${reply.author.firstName} ${reply.author.lastName}` : (reply.guestName || "Guest User");
+};
+
+const getReplyAuthorInitial = (reply) => {
+    if (reply.authorType === "User") return "T";
+    return reply.author?.firstName?.[0] || reply.guestName?.[0] || "G";
+};
+
+const isThreadAdmin = (thread) => thread?.contributorDisplayName || thread?.authorType === "User";
 
 const ThreadDetailModeration = () => {
     const { slug } = useParams();
@@ -45,6 +61,13 @@ const ThreadDetailModeration = () => {
     const [editContent, setEditContent] = useState("");
     const [originalContent, setOriginalContent] = useState("");
     const [isSaving, setIsSaving] = useState(false);
+
+    // Admin Create Reply
+    const [adminReplyContent, setAdminReplyContent] = useState("");
+    const [isSubmittingReply, setIsSubmittingReply] = useState(false);
+    const [replyingToReplyId, setReplyingToReplyId] = useState(null);
+    const [replyingToName, setReplyingToName] = useState("");
+    const replyComposerRef = React.useRef(null);
 
     // Permissions
     const { role } = usePermissions();
@@ -262,6 +285,44 @@ const ThreadDetailModeration = () => {
         }
     };
 
+    const handleCreateReply = async () => {
+        const content = (adminReplyContent || "").trim();
+        if (!content || !thread?._id) return;
+        setIsSubmittingReply(true);
+        try {
+            const res = await api.post("/discussion/replies", {
+                threadId: thread._id,
+                content,
+                parentReplyId: replyingToReplyId || null
+            });
+            if (res.data.success) {
+                success("Reply posted successfully");
+                setAdminReplyContent("");
+                setReplyingToReplyId(null);
+                setReplyingToName("");
+                fetchDetail(replySearch);
+            } else {
+                showError(res.data.message || "Failed to post reply");
+            }
+        } catch (err) {
+            console.error(err);
+            showError("Failed to post reply");
+        } finally {
+            setIsSubmittingReply(false);
+        }
+    };
+
+    const handleCancelReplyTo = () => {
+        setReplyingToReplyId(null);
+        setReplyingToName("");
+    };
+
+    const handleReplyToReply = (replyId, name) => {
+        setReplyingToReplyId(replyId);
+        setReplyingToName(name || "this reply");
+        replyComposerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    };
+
     const getLiveUrl = () => {
         if (!thread) return "/";
         let path = "";
@@ -403,7 +464,7 @@ const ThreadDetailModeration = () => {
                 <FaIcons.FaExclamationTriangle size={24} />
             </div>
             <h2 className="text-xl font-semibold text-gray-900">Discussion Not Found</h2>
-            <p className="text-sm text-gray-500 mt-1 mb-6">The topic you're looking for might have been deleted or is unavailable.</p>
+            <p className="text-sm text-gray-500 mt-1 mb-6">{"The topic you're looking for might have been deleted or is unavailable."}</p>
             <button onClick={() => router.back()} className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition-colors">
                 Back to List
             </button>
@@ -477,11 +538,19 @@ const ThreadDetailModeration = () => {
                         <div className="p-6 border-b border-gray-100">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 bg-gray-50 rounded-lg flex items-center justify-center text-gray-400 border border-gray-100 overflow-hidden shadow-sm">
-                                        {thread.author?.avatar ? <img src={thread.author.avatar} alt="avatar" className="w-full h-full object-cover" /> : <FaIcons.FaUserCircle size={20} />}
+                                    <div className="w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden border border-gray-100 shadow-sm bg-gray-50">
+                                        {isThreadAdmin(thread) ? (
+                                            <img src={BRAND_LOGO_URL} alt="TestPrepKart" className="w-full h-full object-cover" />
+                                        ) : thread.author?.avatar ? (
+                                            <img src={thread.author.avatar} alt="avatar" className="w-full h-full object-cover" />
+                                        ) : (
+                                            <FaIcons.FaUserCircle size={20} className="text-gray-400" />
+                                        )}
                                     </div>
                                     <div>
-                                        <p className="text-sm font-bold text-gray-900 leading-none">{thread.author?.firstName ? `${thread.author.firstName} ${thread.author.lastName}` : (thread.guestName || "Guest User")}</p>
+                                        <p className="text-sm font-bold text-gray-900 leading-none">
+                                            {isThreadAdmin(thread) ? "TestPrepKart" : (thread.author?.firstName ? `${thread.author.firstName} ${thread.author.lastName}` : (thread.guestName || "Guest User"))}
+                                        </p>
                                         <p className="text-[11px] text-gray-500 font-medium mt-1">
                                             Posted {timeAgo(thread.createdAt)}
                                         </p>
@@ -561,6 +630,64 @@ const ThreadDetailModeration = () => {
                                 </div>
                             </div>
                         )}
+                    </div>
+
+                    {/* Admin Post Reply */}
+                    <div ref={replyComposerRef} className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+                        <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-indigo-50/80 to-blue-50/80">
+                            <div className="flex items-center gap-2 flex-wrap">
+                                <FaIcons.FaReply className="text-indigo-600" size={14} />
+                                <h3 className="text-sm font-bold text-gray-900">
+                                    {replyingToReplyId ? `Replying to ${replyingToName}` : "Post a reply as moderator"}
+                                </h3>
+                                {replyingToReplyId && (
+                                    <button
+                                        type="button"
+                                        onClick={handleCancelReplyTo}
+                                        className="ml-2 px-2.5 py-1 text-xs font-medium text-gray-500 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+                                    >
+                                        Cancel
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                        <div className="p-6 space-y-4">
+                            <RichTextEditor
+                                value={adminReplyContent}
+                                onChange={setAdminReplyContent}
+                                placeholder="Write your reply... (Admin replies are auto-approved)"
+                                examId={thread.examId?._id}
+                                subjectId={thread.subjectId?._id}
+                                unitId={thread.unitId?._id}
+                                chapterId={thread.chapterId?._id}
+                                topicId={thread.topicId?._id}
+                                subtopicId={thread.subTopicId?._id}
+                                definitionId={thread.definitionId?._id}
+                            />
+                            <div className="flex items-center justify-between gap-3 pt-2 border-t border-gray-100">
+                                <p className="text-[10px] text-gray-500 font-medium">
+                                    Your reply will appear as a moderator and is visible immediately.
+                                </p>
+                                <button
+                                    type="button"
+                                    onClick={handleCreateReply}
+                                    disabled={!adminReplyContent.trim() || isSubmittingReply}
+                                    className="px-5 py-2.5 bg-indigo-600 text-white rounded-lg text-sm font-bold hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 shadow-sm"
+                                >
+                                    {isSubmittingReply ? (
+                                        <>
+                                            <FaIcons.FaSpinner className="animate-spin" size={14} />
+                                            Posting...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <FaIcons.FaPaperPlane size={14} />
+                                            Post reply
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        </div>
                     </div>
 
                     {/* Replies Section */}
@@ -666,6 +793,7 @@ const ThreadDetailModeration = () => {
                                             handleEditReply={handleEditReply}
                                             handleSaveReply={handleSaveReply}
                                             handleCancelEditReply={handleCancelEditReply}
+                                            onReplyToReply={handleReplyToReply}
                                             editingReplyId={editingReplyId}
                                             editContent={editContent}
                                             setEditContent={setEditContent}
@@ -793,7 +921,7 @@ const ThreadDetailModeration = () => {
     );
 };
 
-const ReplyItem = ({ reply, handleToggleReplyApproval, handleDeleteReply, handleEditReply, handleSaveReply, handleCancelEditReply, editingReplyId, editContent, setEditContent, isSaving, discussionPerms, thread, depth = 0, isNewReply }) => {
+const ReplyItem = ({ reply, handleToggleReplyApproval, handleDeleteReply, handleEditReply, handleSaveReply, handleCancelEditReply, onReplyToReply, editingReplyId, editContent, setEditContent, isSaving, discussionPerms, thread, depth = 0, isNewReply }) => {
     const isEditing = editingReplyId === reply._id;
     const isNew = isNewReply(reply.createdAt);
 
@@ -814,12 +942,19 @@ const ReplyItem = ({ reply, handleToggleReplyApproval, handleDeleteReply, handle
                 <div className="flex justify-between items-start gap-6">
                     <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2.5 mb-3">
-                            <div className="w-8 h-8 bg-indigo-50 border border-indigo-100 rounded-lg flex items-center justify-center text-[10px] font-bold text-indigo-700 shadow-sm">
-                                {reply.author?.firstName?.[0] || reply.guestName?.[0] || 'G'}
+                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden shadow-sm ${reply.authorType === "User" ? "bg-blue-100 border border-blue-200" : "bg-indigo-50 border border-indigo-100"}`}>
+                                {reply.authorType === "User" ? (
+                                    <img src={BRAND_LOGO_URL} alt="TestPrepKart" className="w-full h-full object-cover" />
+                                ) : (
+                                    <span className="text-[10px] font-bold text-indigo-700">{getReplyAuthorInitial(reply)}</span>
+                                )}
                             </div>
                             <div className="flex-1">
                                 <div className="flex items-center gap-2 flex-wrap">
-                                    <p className="text-xs font-bold text-gray-900">{reply.author?.firstName ? `${reply.author.firstName} ${reply.author.lastName}` : (reply.guestName || "Guest User")}</p>
+                                    <p className="text-xs font-bold text-gray-900">{getReplyAuthorDisplayName(reply)}</p>
+                                    {reply.authorType === "User" && (
+                                        <span className="px-1.5 py-0.5 bg-blue-600 text-white text-[8px] font-bold uppercase tracking-wider rounded">TestPrepKart</span>
+                                    )}
                                     {isNew && (
                                         <span className="px-2 py-0.5 bg-blue-600 text-white text-[8px] font-bold uppercase tracking-wider rounded-full flex items-center gap-1 animate-pulse">
                                             <FaIcons.FaCircle size={6} />
@@ -882,6 +1017,15 @@ const ReplyItem = ({ reply, handleToggleReplyApproval, handleDeleteReply, handle
 
                     {!isEditing && (
                         <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            {onReplyToReply && (
+                                <button
+                                    onClick={() => onReplyToReply(reply._id, getReplyAuthorDisplayName(reply))}
+                                    className="w-9 h-9 rounded-lg flex items-center justify-center bg-blue-50 text-blue-600 border border-blue-100 hover:bg-blue-100 transition-all shadow-sm"
+                                    title="Reply to this"
+                                >
+                                    <FaIcons.FaReply size={13} />
+                                </button>
+                            )}
                             <button
                                 onClick={() => handleEditReply(reply._id, reply.content)}
                                 className="w-9 h-9 rounded-lg flex items-center justify-center bg-indigo-50 text-indigo-600 border border-indigo-100 hover:bg-indigo-100 transition-all shadow-sm"
@@ -922,6 +1066,7 @@ const ReplyItem = ({ reply, handleToggleReplyApproval, handleDeleteReply, handle
                             handleEditReply={handleEditReply}
                             handleSaveReply={handleSaveReply}
                             handleCancelEditReply={handleCancelEditReply}
+                            onReplyToReply={onReplyToReply}
                             editingReplyId={editingReplyId}
                             editContent={editContent}
                             setEditContent={setEditContent}
