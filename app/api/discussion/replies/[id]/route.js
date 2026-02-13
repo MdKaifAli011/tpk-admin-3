@@ -40,9 +40,9 @@ export async function DELETE(request, { params }) {
             return NextResponse.json({ success: false, message: "Reply not found" }, { status: 404 });
         }
 
-        // Allow deletion if Admin or Author
+        // Allow deletion if Admin or Author (reply.author is null for Guest replies)
         const isAdmin = user.type === "User";
-        const isAuthor = reply.author.toString() === user.id;
+        const isAuthor = reply.author != null && reply.author.toString() === user.id;
 
         if (!isAdmin && !isAuthor) {
             return NextResponse.json({ success: false, message: "Forbidden" }, { status: 403 });
