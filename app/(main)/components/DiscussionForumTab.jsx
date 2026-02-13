@@ -25,6 +25,21 @@ import { SEO_DEFAULTS } from "@/constants";
 
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
 const BRAND_AVATAR_URL = SEO_DEFAULTS?.FAVICON || `${basePath}/logo.png`;
+/** Build path for opening a thread so URL hierarchy matches the thread's (fixes fallback list opening wrong URL). Path is without basePath so Next.js router does not double-prefix. */
+function getThreadDetailPath(thread) {
+  if (!thread?.slug) return null;
+  const segments = [];
+  if (thread.examId?.slug) segments.push(thread.examId.slug);
+  if (thread.subjectId?.slug) segments.push(thread.subjectId.slug);
+  if (thread.unitId?.slug) segments.push(thread.unitId.slug);
+  if (thread.chapterId?.slug) segments.push(thread.chapterId.slug);
+  if (thread.topicId?.slug) segments.push(thread.topicId.slug);
+  if (thread.subTopicId?.slug) segments.push(thread.subTopicId.slug);
+  if (thread.definitionId?.slug) segments.push(thread.definitionId.slug);
+  if (segments.length === 0) return null;
+  const rest = segments.join("/");
+  return rest ? `/${rest}` : "/";
+}
 
 /* ---------- Helper Functions ---------- */
 // Helper function to resolve image path with base path
@@ -152,7 +167,7 @@ const ThreadCard = ({ thread, onClick }) => {
       layout
       initial={{ opacity: 0, scale: 0.98 }}
       animate={{ opacity: 1, scale: 1 }}
-      onClick={() => onClick(thread.slug)}
+      onClick={() => onClick(thread)}
       className="group"
     >
       <Card
@@ -1395,11 +1410,17 @@ const DiscussionForumTab = ({ entityName, entityType, examId, examSlug, subjectI
     if (isListView) fetchThreads();
   }, [fetchThreads, isListView]);
 
-  const handleThreadClick = (slug) => {
-    const params = new URLSearchParams(searchParams);
+  const handleThreadClick = (threadOrSlug) => {
+    const slug = typeof threadOrSlug === "string" ? threadOrSlug : threadOrSlug?.slug;
+    if (!slug) return;
+    const targetPath = typeof threadOrSlug === "object" && threadOrSlug
+      ? (getThreadDetailPath(threadOrSlug) || pathname)
+      : pathname;
+    const params = new URLSearchParams(targetPath === pathname ? searchParams : undefined);
+    params.set("tab", "discussion");
     params.set("thread", slug);
     params.delete("action");
-    router.push(`${pathname}?${params.toString()}`, { scroll: true });
+    router.push(`${targetPath}?${params.toString()}`, { scroll: true });
   };
 
   const handleStartCreate = () => {
