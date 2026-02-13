@@ -1,7 +1,8 @@
 "use client";
 import React, { useState, useEffect, useMemo } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import api from "@/lib/api";
+import { getThreadHierarchyQueryString } from "@/lib/discussionThreadQuery";
 import * as FaIcons from "react-icons/fa";
 import { ToastContainer, useToast } from "../../../../components/ui/Toast";
 import { LoadingSpinner } from "../../../../components/ui/SkeletonLoader";
@@ -28,6 +29,7 @@ const timeAgo = (date) => {
 const ThreadDetailModeration = () => {
     const { slug } = useParams();
     const router = useRouter();
+    const searchParams = useSearchParams();
     const [thread, setThread] = useState(null);
     const [replies, setReplies] = useState([]);
     const [isDataLoading, setIsDataLoading] = useState(true);
@@ -48,15 +50,23 @@ const ThreadDetailModeration = () => {
     const { role } = usePermissions();
     const discussionPerms = getDiscussionPermissions(role);
 
+    const hierarchyQuery = useMemo(() => {
+        const p = new URLSearchParams();
+        ["examId", "subjectId", "unitId", "chapterId", "topicId", "subTopicId", "definitionId"].forEach((key) => {
+            const v = searchParams.get(key);
+            if (v) p.set(key, v);
+        });
+        return p.toString();
+    }, [searchParams]);
+
     const fetchDetail = async (search = "") => {
         try {
             setIsDataLoading(true);
             const params = new URLSearchParams();
-            // Fetch all replies (use a high limit to get all)
-            params.append('replyLimit', 1000);
-            if (search) params.append('replySearch', search);
-
-            const res = await api.get(`/discussion/threads/${slug}?${params.toString()}`);
+            params.set("replyLimit", "1000");
+            if (search) params.set("replySearch", search);
+            const url = `/discussion/threads/${slug}?${params.toString()}${hierarchyQuery ? `&${hierarchyQuery}` : ""}`;
+            const res = await api.get(url);
             if (res.data.success) {
                 setThread(res.data.data.thread);
                 setReplies(res.data.data.replies || []);
@@ -81,7 +91,7 @@ const ThreadDetailModeration = () => {
 
     useEffect(() => {
         if (slug) fetchDetail(replySearch);
-    }, [slug]); // Intentionally exclude replySearch to handle via debounce
+    }, [slug, hierarchyQuery]); // hierarchyQuery from URL so correct thread is fetched
 
     const handleSearchChange = (e) => {
         const value = e.target.value;
@@ -121,7 +131,8 @@ const ThreadDetailModeration = () => {
         }
         try {
             const newStatus = !thread.isApproved;
-            const res = await api.patch(`/discussion/threads/${slug}`, {
+            const q = getThreadHierarchyQueryString(thread);
+            const res = await api.patch(`/discussion/threads/${slug}${q ? `?${q}` : ""}`, {
                 isApproved: newStatus
             });
             if (res.data.success) {
@@ -146,6 +157,9 @@ const ThreadDetailModeration = () => {
             if (res.data.success) {
                 success(newStatus ? "Reply approved" : "Reply restricted");
                 setReplies(replies.map(r => r._id === replyId ? { ...r, isApproved: newStatus } : r));
+                if (typeof window !== "undefined") {
+                    window.dispatchEvent(new CustomEvent("admin-discussion-reply-pending-updated", { detail: { delta: newStatus ? -1 : 1 } }));
+                }
             }
         } catch (err) {
             showError("Status update failed");
@@ -161,8 +175,12 @@ const ThreadDetailModeration = () => {
         try {
             const res = await api.delete(`/discussion/replies/${replyId}`);
             if (res.data.success) {
+                const deletedReply = replies.find(r => r._id === replyId);
                 success("Reply deleted successfully");
                 setReplies(replies.filter(r => r._id !== replyId));
+                if (deletedReply && !deletedReply.isApproved && typeof window !== "undefined") {
+                    window.dispatchEvent(new CustomEvent("admin-discussion-reply-pending-updated", { detail: { delta: -1 } }));
+                }
             }
         } catch (err) {
             showError("Failed to delete reply");
@@ -189,7 +207,8 @@ const ThreadDetailModeration = () => {
         }
         try {
             setIsSaving(true);
-            const res = await api.patch(`/discussion/threads/${slug}`, {
+            const q = getThreadHierarchyQueryString(thread);
+            const res = await api.patch(`/discussion/threads/${slug}${q ? `?${q}` : ""}`, {
                 content: editContent
             });
             if (res.data.success) {

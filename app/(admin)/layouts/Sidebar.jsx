@@ -104,14 +104,21 @@ const Sidebar = memo(({ isOpen, onClose }) => {
   const [userRole, setUserRole] = useState(null);
   const [expandedMenus, setExpandedMenus] = useState({});
   const [discussionPendingCount, setDiscussionPendingCount] = useState(0);
+  const [discussionReplyPendingCount, setDiscussionReplyPendingCount] = useState(0);
   const [overviewCommentPendingCount, setOverviewCommentPendingCount] = useState(0);
 
-  // Single fetch for discussion pending count (admin only)
-  const fetchDiscussionPendingCount = useCallback(async () => {
+  // Fetch discussion pending (threads) and reply-pending counts (admin only)
+  const fetchDiscussionCounts = useCallback(async () => {
     try {
-      const res = await api.get("/discussion/threads/pending-count");
-      if (res?.data?.success && typeof res.data.count === "number") {
-        setDiscussionPendingCount(res.data.count);
+      const [pendingRes, replyPendingRes] = await Promise.all([
+        api.get("/discussion/threads/pending-count"),
+        api.get("/discussion/threads/reply-pending-count"),
+      ]);
+      if (pendingRes?.data?.success && typeof pendingRes.data.count === "number") {
+        setDiscussionPendingCount(pendingRes.data.count);
+      }
+      if (replyPendingRes?.data?.success && typeof replyPendingRes.data.count === "number") {
+        setDiscussionReplyPendingCount(replyPendingRes.data.count);
       }
     } catch (err) {
       // Silently ignore (e.g. not logged in or no permission)
@@ -119,10 +126,10 @@ const Sidebar = memo(({ isOpen, onClose }) => {
   }, []);
 
   useEffect(() => {
-    fetchDiscussionPendingCount();
-  }, [fetchDiscussionPendingCount]);
+    fetchDiscussionCounts();
+  }, [fetchDiscussionCounts]);
 
-  // Update count when discussion page approves/unapproves/deletes (no extra API call)
+  // Update counts when discussion page approves/unapproves/deletes (no extra API call)
   useEffect(() => {
     const handleUpdate = (e) => {
       const d = e?.detail;
@@ -132,23 +139,31 @@ const Sidebar = memo(({ isOpen, onClose }) => {
         setDiscussionPendingCount((prev) => Math.max(0, prev + d.delta));
       }
     };
-    const handleRefetch = () => {
-      fetchDiscussionPendingCount();
+    const handleReplyPendingUpdate = (e) => {
+      const d = e?.detail;
+      if (d && typeof d.count === "number") {
+        setDiscussionReplyPendingCount(Math.max(0, d.count));
+      } else if (d && typeof d.delta === "number") {
+        setDiscussionReplyPendingCount((prev) => Math.max(0, prev + d.delta));
+      }
     };
+    const handleRefetch = () => fetchDiscussionCounts();
     window.addEventListener("admin-discussion-pending-updated", handleUpdate);
+    window.addEventListener("admin-discussion-reply-pending-updated", handleReplyPendingUpdate);
     window.addEventListener("admin-discussion-pending-refetch", handleRefetch);
     return () => {
       window.removeEventListener("admin-discussion-pending-updated", handleUpdate);
+      window.removeEventListener("admin-discussion-reply-pending-updated", handleReplyPendingUpdate);
       window.removeEventListener("admin-discussion-pending-refetch", handleRefetch);
     };
-  }, [fetchDiscussionPendingCount]);
+  }, [fetchDiscussionCounts]);
 
   // Refetch on window focus so new pending (e.g. from student) shows
   useEffect(() => {
-    const onFocus = () => fetchDiscussionPendingCount();
+    const onFocus = () => fetchDiscussionCounts();
     window.addEventListener("focus", onFocus);
     return () => window.removeEventListener("focus", onFocus);
-  }, [fetchDiscussionPendingCount]);
+  }, [fetchDiscussionCounts]);
 
   // Overview Comments pending count (single fetch + event updates)
   const fetchOverviewCommentPendingCount = useCallback(async () => {
@@ -355,10 +370,10 @@ const Sidebar = memo(({ isOpen, onClose }) => {
                             : "text-gray-500 group-hover:text-gray-700"
                             }`}
                         />
-                        {name === "Discussion" && discussionPendingCount > 0 && (
+                        {name === "Discussion" && (discussionPendingCount > 0 || discussionReplyPendingCount > 0) && (
                           <span
                             className="absolute -top-0.5 -left-0.5 w-2.5 h-2.5 rounded-full bg-green-500 ring-2 ring-white animate-pulse"
-                            title={`${discussionPendingCount} pending`}
+                            title={`${discussionPendingCount} thread(s) pending${discussionReplyPendingCount > 0 ? `, ${discussionReplyPendingCount} reply pending` : ""}`}
                             aria-hidden
                           />
                         )}
@@ -373,9 +388,18 @@ const Sidebar = memo(({ isOpen, onClose }) => {
                       <span className="flex-1 whitespace-nowrap overflow-hidden text-ellipsis text-left">
                         {name}
                       </span>
-                      {name === "Discussion" && discussionPendingCount > 0 && (
-                        <span className="shrink-0 inline-flex items-center justify-center min-w-5 h-5 px-2 rounded-full text-[10px] font-bold bg-green-500 text-white" title={`${discussionPendingCount} pending`}>
-                          {discussionPendingCount > 99 ? "99+" : discussionPendingCount}
+                      {name === "Discussion" && (discussionPendingCount > 0 || discussionReplyPendingCount > 0) && (
+                        <span className="shrink-0 flex items-center gap-1">
+                          {discussionPendingCount > 0 && (
+                            <span className="inline-flex items-center justify-center min-w-5 h-5 px-2 rounded-full text-[10px] font-bold bg-green-500 text-white" title={`${discussionPendingCount} thread(s) pending`}>
+                              {discussionPendingCount > 99 ? "99+" : discussionPendingCount}
+                            </span>
+                          )}
+                          {discussionReplyPendingCount > 0 && (
+                            <span className="inline-flex items-center justify-center min-w-5 h-5 px-2 rounded-full text-[10px] font-bold bg-amber-500 text-white" title={`${discussionReplyPendingCount} reply pending`}>
+                              {discussionReplyPendingCount > 99 ? "99+" : discussionReplyPendingCount}
+                            </span>
+                          )}
                         </span>
                       )}
                       {name === "Admin" && overviewCommentPendingCount > 0 && (
@@ -409,10 +433,10 @@ const Sidebar = memo(({ isOpen, onClose }) => {
                             >
                               <span className="relative shrink-0">
                                 <span className="w-2 h-2 rounded-full bg-current opacity-50 block" />
-                                {child.name === "Threads" && discussionPendingCount > 0 && (
+                                {child.name === "Threads" && (discussionPendingCount > 0 || discussionReplyPendingCount > 0) && (
                                   <span
                                     className="absolute -top-0.5 -left-0.5 w-2.5 h-2.5 rounded-full bg-green-500 ring-2 ring-white animate-pulse"
-                                    title={`${discussionPendingCount} pending`}
+                                    title={`${discussionPendingCount} thread(s) pending${discussionReplyPendingCount > 0 ? `, ${discussionReplyPendingCount} reply pending` : ""}`}
                                     aria-hidden
                                   />
                                 )}
@@ -426,9 +450,18 @@ const Sidebar = memo(({ isOpen, onClose }) => {
                               </span>
                               <span className="flex-1 whitespace-nowrap overflow-hidden text-ellipsis flex items-center gap-1.5">
                                 {child.name}
-                                {child.name === "Threads" && discussionPendingCount > 0 && (
-                                  <span className="shrink-0 inline-flex items-center justify-center min-w-5 h-5 px-2 rounded-full text-[10px] font-bold bg-green-500 text-white" title={`${discussionPendingCount} pending`}>
-                                    {discussionPendingCount > 99 ? "99+" : discussionPendingCount}
+                                {child.name === "Threads" && (discussionPendingCount > 0 || discussionReplyPendingCount > 0) && (
+                                  <span className="shrink-0 flex items-center gap-1">
+                                    {discussionPendingCount > 0 && (
+                                      <span className="inline-flex items-center justify-center min-w-5 h-5 px-2 rounded-full text-[10px] font-bold bg-green-500 text-white" title={`${discussionPendingCount} thread(s) pending`}>
+                                        {discussionPendingCount > 99 ? "99+" : discussionPendingCount}
+                                      </span>
+                                    )}
+                                    {discussionReplyPendingCount > 0 && (
+                                      <span className="inline-flex items-center justify-center min-w-5 h-5 px-2 rounded-full text-[10px] font-bold bg-amber-500 text-white" title={`${discussionReplyPendingCount} reply pending`}>
+                                        {discussionReplyPendingCount > 99 ? "99+" : discussionReplyPendingCount}
+                                      </span>
+                                    )}
                                   </span>
                                 )}
                                 {child.name === "Overview Comments" && overviewCommentPendingCount > 0 && (

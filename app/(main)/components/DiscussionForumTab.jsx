@@ -21,6 +21,10 @@ import VerticalBannerList from "./BannerCarousel";
 import DiscussionFormModal from "./DiscussionFormModal";
 import { useStudent } from "../hooks/useStudent";
 import Image from "next/image";
+import { SEO_DEFAULTS } from "@/constants";
+
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
+const BRAND_AVATAR_URL = SEO_DEFAULTS?.FAVICON || `${basePath}/logo.png`;
 
 /* ---------- Helper Functions ---------- */
 // Helper function to resolve image path with base path
@@ -175,11 +179,17 @@ const ThreadCard = ({ thread, onClick }) => {
 
               <div className="flex items-center flex-wrap gap-x-4 gap-y-2 text-xs text-gray-500">
                 <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden border border-gray-200">
-                    {thread.author?.avatar ? <img src={thread.author.avatar} alt="av" className="w-full h-full object-cover" /> : <FaUser size={10} className="text-gray-300" />}
+                  <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center overflow-hidden border border-gray-200">
+                    {thread.contributorDisplayName ? (
+                      <img src={BRAND_AVATAR_URL} alt="" className="w-full h-full object-cover" />
+                    ) : thread.author?.avatar ? (
+                      <img src={thread.author.avatar} alt="av" className="w-full h-full object-cover" />
+                    ) : (
+                      <FaUser size={10} className="text-gray-300" />
+                    )}
                   </div>
                   <span className="font-semibold text-gray-700">
-                    {thread.author?.firstName ? `${thread.author.firstName} ${thread.author.lastName}` : (thread.guestName || "Contributor")}
+                    {thread.contributorDisplayName || (thread.author?.firstName ? `${thread.author.firstName} ${thread.author.lastName}` : (thread.guestName || "Contributor"))}
                   </span>
                 </div>
                 <span className="text-gray-300 hidden sm:block">•</span>
@@ -351,7 +361,8 @@ const SuccessModal = ({ isOpen, onClose, title, message }) => {
 };
 
 /* ---------- Thread Detail View ---------- */
-const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal, examImage }) => {
+// hierarchy: { examId, subjectId, unitId, chapterId, topicId, subTopicId, definitionId } — slug is unique per level
+const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal, examImage, hierarchy = {} }) => {
   const [thread, setThread] = useState(null);
   const [replies, setReplies] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -368,6 +379,19 @@ const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal, examImage 
   const repliesRef = useRef(null);
   const searchTimeout = useRef(null);
 
+  const hierarchyQuery = useMemo(() => {
+    const p = new URLSearchParams();
+    if (hierarchy.examId) p.set("examId", hierarchy.examId);
+    if (hierarchy.subjectId) p.set("subjectId", hierarchy.subjectId);
+    if (hierarchy.unitId) p.set("unitId", hierarchy.unitId);
+    if (hierarchy.chapterId) p.set("chapterId", hierarchy.chapterId);
+    if (hierarchy.topicId) p.set("topicId", hierarchy.topicId);
+    if (hierarchy.subTopicId) p.set("subTopicId", hierarchy.subTopicId);
+    if (hierarchy.definitionId) p.set("definitionId", hierarchy.definitionId);
+    const s = p.toString();
+    return s ? `&${s}` : "";
+  }, [hierarchy]);
+
   const scrollToEditor = () => {
     editorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   };
@@ -378,7 +402,7 @@ const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal, examImage 
 
   const fetchDiscussionBanner = useCallback(async (examId) => {
     if (!examId) return;
-    
+
     try {
       console.log("Fetching banner for examId:", examId);
       const res = await api.get(`/discussion/banner?examId=${examId}`);
@@ -407,7 +431,7 @@ const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal, examImage 
       setLoading(true);
       const headers = { "x-guest-id": guestIdentity.id, "x-guest-name": guestIdentity.name };
       const sortParam = sortState === "Most Upvoted" ? "top" : "new";
-      const url = `/discussion/threads/${slug}?sort=${sortParam}&replyPage=${replyPage}&replySearch=${encodeURIComponent(replySearch || "")}`;
+      const url = `/discussion/threads/${slug}?sort=${sortParam}&replyPage=${replyPage}&replySearch=${encodeURIComponent(replySearch || "")}${hierarchyQuery}`;
       const res = await api.get(url, { headers });
       if (res.data.success) {
         setThread(res.data.data.thread);
@@ -415,7 +439,7 @@ const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal, examImage 
         if (res.data.data.pagination) {
           setReplyPagination(res.data.data.pagination);
         }
-        
+
         // Fetch discussion banner for this thread's exam
         if (res.data.data.thread?.examId?._id) {
           fetchDiscussionBanner(res.data.data.thread.examId._id);
@@ -440,7 +464,7 @@ const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal, examImage 
     } finally {
       setLoading(false);
     }
-  }, [slug, guestIdentity, sortState, replyPage, replySearch, fetchDiscussionBanner]);
+  }, [slug, hierarchyQuery, guestIdentity, sortState, replyPage, replySearch, fetchDiscussionBanner]);
 
   useEffect(() => {
     fetchDetail();
@@ -448,7 +472,7 @@ const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal, examImage 
 
   const handleVote = async (targetType, id, voteType) => {
     try {
-      const endpoint = targetType === 'thread' ? `/discussion/threads/${slug}/vote` : `/discussion/replies/${id}/vote`;
+      const endpoint = targetType === 'thread' ? `/discussion/threads/${slug}/vote${hierarchyQuery ? `?${hierarchyQuery.slice(1)}` : ""}` : `/discussion/replies/${id}/vote`;
       const headers = { "x-guest-id": guestIdentity.id, "x-guest-name": guestIdentity.name };
       const res = await api.post(endpoint, { voteType }, { headers });
 
@@ -468,7 +492,7 @@ const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal, examImage 
   const handleSave = async () => {
     try {
       const headers = { "x-guest-id": guestIdentity.id, "x-guest-name": guestIdentity.name };
-      const res = await api.post(`/discussion/threads/${slug}/subscribe`, {}, { headers });
+      const res = await api.post(`/discussion/threads/${slug}/subscribe${hierarchyQuery ? `?${hierarchyQuery.slice(1)}` : ""}`, {}, { headers });
       if (res.data.success) {
         setThread(prev => ({ ...prev, isSubscribed: res.data.isSubscribed }));
       }
@@ -481,7 +505,7 @@ const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal, examImage 
     const reason = prompt("Why are you reporting this post?");
     if (!reason) return;
     try {
-      const endpoint = targetType === 'thread' ? `/discussion/threads/${slug}/report` : `/discussion/replies/${id}/report`;
+      const endpoint = targetType === 'thread' ? `/discussion/threads/${slug}/report${hierarchyQuery ? `?${hierarchyQuery.slice(1)}` : ""}` : `/discussion/replies/${id}/report`;
       const headers = { "x-guest-id": guestIdentity.id, "x-guest-name": guestIdentity.name };
       const res = await api.post(endpoint, { reason }, { headers });
       if (res.data.success) alert("Report submitted successfully.");
@@ -705,7 +729,9 @@ const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal, examImage 
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-5">
                     <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center overflow-hidden border border-white shadow-sm ring-2 ring-gray-50">
-                      {thread.author?.avatar ? (
+                      {thread.contributorDisplayName ? (
+                        <img src={BRAND_AVATAR_URL} alt="" className="w-full h-full object-cover" />
+                      ) : thread.author?.avatar ? (
                         <img src={thread.author.avatar} alt="av" className="w-full h-full object-cover" />
                       ) : (
                         <span className="text-sm font-bold text-blue-600">{thread.author?.firstName?.[0] || thread.guestName?.[0] || "U"}</span>
@@ -713,8 +739,12 @@ const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal, examImage 
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <h4 className="font-bold text-sm text-gray-900 leading-none">{thread.author?.firstName ? `${thread.author.firstName} ${thread.author.lastName}` : (thread.guestName || "Contributor")}</h4>
-                        <span className="bg-gray-100 text-gray-400 text-[8px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider">{thread.author?.role || "Student"}</span>
+                        <h4 className="font-bold text-sm text-gray-900 leading-none">
+                          {thread.contributorDisplayName || (thread.author?.firstName ? `${thread.author.firstName} ${thread.author.lastName}` : (thread.guestName || "Contributor"))}
+                        </h4>
+                        <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider ${thread.contributorDisplayName ? "bg-indigo-100 text-indigo-700" : "bg-gray-100 text-gray-400"}`}>
+                          {thread.contributorDisplayName ? "ADMIN" : (thread.author?.role || "Student")}
+                        </span>
                       </div>
                       <p className="text-[10px] text-gray-400 font-medium mt-1">Posted {timeAgo(thread.createdAt)} • <FaEye size={8} className="inline mr-1" /> {thread.views || 0}</p>
                     </div>
@@ -980,7 +1010,7 @@ const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal, examImage 
                 }}
                 className="cursor-pointer"
               >
-                <VerticalBannerList 
+                <VerticalBannerList
                   banners={discussionBanner.banners.filter(banner => banner.isActive)}
                   defaultBannerIndex={discussionBanner.defaultBannerIndex || 0}
                 />
@@ -988,7 +1018,7 @@ const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal, examImage 
             </>
           ) : (
             <div className="w-full h-48 bg-gradient-to-r from-blue-100 to-purple-100 rounded-lg flex items-center justify-center border-2 border-dashed border-gray-300">
-             No images
+              No images
             </div>
           )}
         </div>
@@ -1454,322 +1484,323 @@ const DiscussionForumTab = ({ entityName, entityType, examId, examSlug, subjectI
         {/* SEO Metadata Updater for Thread Details */}
         {view === "DETAIL" && <DiscussionMetadata entityData={entityData} />}
 
-      {/* Header Section */}
-      {view === "LIST" && (
-        <div className="mb-6">
-          <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">
-            Discussion Forum
-          </h3>
-          <p className="text-sm text-gray-700 leading-normal">
-            Connect with peers studying {entityName || "this topic"}. Share insights, ask questions, and resolve queries together.
-          </p>
-        </div>
-      )}
-      <AnimatePresence mode="wait">
-        {view === "CREATE" && (
-          <motion.div
-            key="create-view"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            className="space-y-6"
-          >
-            <div className="flex items-center justify-between mb-4 sticky top-0 md:relative bg-white/80 backdrop-blur z-10 py-2 border-b border-gray-100">
-              <button
-                onClick={handleBack}
-                className="flex items-center gap-1.5 text-[11px] font-bold text-gray-400 hover:text-gray-900 transition-colors uppercase tracking-wider"
-              >
-                <FaArrowLeft size={10} /> Back to Forum
-              </button>
-            </div>
-
-            <Card variant="standard" className="overflow-hidden border-gray-200/60 shadow-sm">
-              <div className="px-6 py-5 border-b border-gray-50 bg-gray-50/50">
-                <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                  <FaPlus className="text-blue-600" size={16} /> Start a New Discussion
-                </h3>
-                <p className="text-[11px] text-gray-500 font-medium mt-1 uppercase tracking-wider">Share your thoughts or ask a question to the community</p>
+        {/* Header Section */}
+        {view === "LIST" && (
+          <div className="mb-6">
+            <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">
+              Discussion Forum
+            </h3>
+            <p className="text-sm text-gray-700 leading-normal">
+              Connect with peers studying {entityName || "this topic"}. Share insights, ask questions, and resolve queries together.
+            </p>
+          </div>
+        )}
+        <AnimatePresence mode="wait">
+          {view === "CREATE" && (
+            <motion.div
+              key="create-view"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              className="space-y-6"
+            >
+              <div className="flex items-center justify-between mb-4 sticky top-0 md:relative bg-white/80 backdrop-blur z-10 py-2 border-b border-gray-100">
+                <button
+                  onClick={handleBack}
+                  className="flex items-center gap-1.5 text-[11px] font-bold text-gray-400 hover:text-gray-900 transition-colors uppercase tracking-wider"
+                >
+                  <FaArrowLeft size={10} /> Back to Forum
+                </button>
               </div>
 
-              <div className="p-6 space-y-6">
-                <div>
-                  <label className="text-[10px] font-extrabold uppercase text-gray-400 tracking-widest mb-2.5 block">Subject / Title</label>
-                  <input
-                    className="w-full border-2 border-gray-100 rounded-xl px-4 py-3 text-sm font-bold text-gray-900 focus:border-blue-500 focus:ring-4 focus:ring-blue-50 outline-none transition-all shadow-sm placeholder-gray-300"
-                    placeholder="e.g. What is the most effective way to study anatomy?"
-                    value={newTitle}
-                    onChange={(e) => setNewTitle(e.target.value)}
-                  />
+              <Card variant="standard" className="overflow-hidden border-gray-200/60 shadow-sm">
+                <div className="px-6 py-5 border-b border-gray-50 bg-gray-50/50">
+                  <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                    <FaPlus className="text-blue-600" size={16} /> Start a New Discussion
+                  </h3>
+                  <p className="text-[11px] text-gray-500 font-medium mt-1 uppercase tracking-wider">Share your thoughts or ask a question to the community</p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="p-6 space-y-6">
                   <div>
-                    <label className="text-[10px] font-extrabold uppercase text-gray-400 tracking-widest mb-2.5 block">Discussion Category</label>
-                    <div className="relative">
-                      <select
-                        className="w-full appearance-none border-2 border-gray-100 rounded-xl px-4 py-3 text-xs font-bold text-gray-800 bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50 transition-all outline-none cursor-pointer"
-                        value={newTag} onChange={(e) => setNewTag(e.target.value)}
-                      >
-                        {["General", "Question", "Notes", "Urgent", "Exam"].map(t => <option key={t} value={t}>{t}</option>)}
-                      </select>
-                      <FaFilter className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300 pointer-events-none" size={12} />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-extrabold uppercase text-gray-400 tracking-widest mb-2.5 block">Visibility</label>
-                    <div className="w-full bg-gray-50 border-2 border-dashed border-gray-200 rounded-xl px-4 py-3 flex items-center justify-between">
-                      <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider italic">Public to all students</span>
-                      <FaCheckCircle className="text-emerald-500" size={14} />
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-[10px] font-extrabold uppercase text-gray-400 tracking-widest mb-2.5 block">Main Content</label>
-                  <div className="border-2 border-gray-100 rounded-xl overflow-hidden shadow-sm focus-within:border-blue-500 transition-all">
-                    <RichTextEditor
-                      value={newContent}
-                      onChange={setNewContent}
-                      placeholder="Write your discussion details here... Use the toolbar to format your text."
-                      hideAdminTools={true}
+                    <label className="text-[10px] font-extrabold uppercase text-gray-400 tracking-widest mb-2.5 block">Subject / Title</label>
+                    <input
+                      className="w-full border-2 border-gray-100 rounded-xl px-4 py-3 text-sm font-bold text-gray-900 focus:border-blue-500 focus:ring-4 focus:ring-blue-50 outline-none transition-all shadow-sm placeholder-gray-300"
+                      placeholder="e.g. What is the most effective way to study anatomy?"
+                      value={newTitle}
+                      onChange={(e) => setNewTitle(e.target.value)}
                     />
                   </div>
-                </div>
-              </div>
 
-              <div className="flex flex-col sm:flex-row justify-between items-center px-6 py-5 border-t bg-gray-50/30 gap-4">
-                <p className="text-[10px] text-gray-400 font-medium">
-                  By publishing, you agree to our <a href="#" className="text-blue-600 underline">Community Standards</a>.
-                </p>
-                <div className="flex items-center gap-3 w-full sm:w-auto">
-                  <Button variant="ghost" size="md" className="flex-1 sm:flex-none px-6 font-bold text-gray-500" onClick={handleBack}>Discard</Button>
-                  <Button
-                    onClick={handleCreateThread}
-                    disabled={isCreating || !newTitle.trim() || !newContent.trim()}
-                    variant="primary"
-                    size="md"
-                    className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-8 py-3 rounded-xl font-bold bg-blue-600 shadow-lg shadow-blue-200"
-                  >
-                    {isCreating ? "Publishing..." : <><FaPaperPlane size={14} /> Publish Discussion</>}
-                  </Button>
-                </div>
-              </div>
-            </Card>
-
-            <div className="p-4 bg-orange-50 rounded-xl border border-orange-100 flex items-start gap-3">
-              <div className="w-6 h-6 rounded-full bg-orange-500 text-white flex items-center justify-center shrink-0 mt-0.5 shadow-sm">
-                <FaBullhorn size={12} />
-              </div>
-              <div className="flex-1">
-                <h4 className="text-[11px] font-bold text-orange-900 uppercase tracking-wider mb-1">Moderation Notice</h4>
-                <p className="text-[11px] text-orange-800/70 font-medium leading-relaxed">
-                  Every post is reviewed by our moderation team. Ensuring your content is helpful and respectful creates a better learning hub for everyone.
-                </p>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {
-        view === "DETAIL" && (
-          <ThreadDetail
-            slug={currentThreadSlug}
-            onBack={handleBack}
-            guestIdentity={guestIdentity}
-            onShowAuthModal={(formId, onSuccess) => {
-              setPendingAction({ formId, onSuccess });
-              setShowAuthModal(true);
-            }}
-            examImage={getExamImage}
-          />
-        )
-      }
-      {
-        view === "LIST" && (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-            {/* Communities Banner */}
-            <Card variant="gradient" className="p-3 sm:p-4 md:p-5 border-indigo-100 relative overflow-hidden">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4 relative z-0">
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-1 sm:mb-1.5 tracking-tight">
-                    Welcome to the Hub
-                  </h3>
-                  <p className="text-[11px] sm:text-xs text-gray-600 font-medium leading-relaxed">
-                    Engage with a community of over 120+ active students. Get instant help and share your learning journey.
-                  </p>
-                </div>
-                <div className="flex items-center gap-2 sm:gap-3 bg-white/80 p-2 sm:p-2.5 rounded-lg border border-white shadow-sm self-start md:self-auto relative z-0">
-                  <div className="flex -space-x-2 relative">
-                    {[1, 2, 3].map(i => {
-                      const zIndexClass = i === 1 ? 'z-[1]' : i === 2 ? 'z-[2]' : 'z-[3]';
-                      return (
-                        <div key={i} className={`w-6 h-6 sm:w-7 sm:h-7 rounded-full border-2 border-white shadow-sm flex items-center justify-center overflow-hidden bg-gray-100 ${zIndexClass} relative`}>
-                          <img src={`https://i.pravatar.cc/100?u=${i + 20}`} alt="user" className="w-full h-full object-cover" />
-                        </div>
-                      );
-                    })}
-                    <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full border-2 border-white bg-blue-600 flex items-center justify-center text-[8px] sm:text-[9px] font-bold text-white z-[4] shadow-md relative">
-                      +124
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="text-[10px] font-extrabold uppercase text-gray-400 tracking-widest mb-2.5 block">Discussion Category</label>
+                      <div className="relative">
+                        <select
+                          className="w-full appearance-none border-2 border-gray-100 rounded-xl px-4 py-3 text-xs font-bold text-gray-800 bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50 transition-all outline-none cursor-pointer"
+                          value={newTag} onChange={(e) => setNewTag(e.target.value)}
+                        >
+                          {["General", "Question", "Notes", "Urgent", "Exam"].map(t => <option key={t} value={t}>{t}</option>)}
+                        </select>
+                        <FaFilter className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300 pointer-events-none" size={12} />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-extrabold uppercase text-gray-400 tracking-widest mb-2.5 block">Visibility</label>
+                      <div className="w-full bg-gray-50 border-2 border-dashed border-gray-200 rounded-xl px-4 py-3 flex items-center justify-between">
+                        <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider italic">Public to all students</span>
+                        <FaCheckCircle className="text-emerald-500" size={14} />
+                      </div>
                     </div>
                   </div>
-                  <div className="flex flex-col min-w-0">
-                    <span className="text-[8px] xs:text-[9px] font-bold text-gray-900 uppercase tracking-wider leading-none mb-0.5 whitespace-nowrap">Active Now</span>
-                    <span className="text-[7px] xs:text-[8px] text-emerald-500 font-bold uppercase tracking-wider flex items-center gap-1 whitespace-nowrap">
-                      <span className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse"></span> Discussion Hub
+
+                  <div>
+                    <label className="text-[10px] font-extrabold uppercase text-gray-400 tracking-widest mb-2.5 block">Main Content</label>
+                    <div className="border-2 border-gray-100 rounded-xl overflow-hidden shadow-sm focus-within:border-blue-500 transition-all">
+                      <RichTextEditor
+                        value={newContent}
+                        onChange={setNewContent}
+                        placeholder="Write your discussion details here... Use the toolbar to format your text."
+                        hideAdminTools={true}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row justify-between items-center px-6 py-5 border-t bg-gray-50/30 gap-4">
+                  <p className="text-[10px] text-gray-400 font-medium">
+                    By publishing, you agree to our <a href="#" className="text-blue-600 underline">Community Standards</a>.
+                  </p>
+                  <div className="flex items-center gap-3 w-full sm:w-auto">
+                    <Button variant="ghost" size="md" className="flex-1 sm:flex-none px-6 font-bold text-gray-500" onClick={handleBack}>Discard</Button>
+                    <Button
+                      onClick={handleCreateThread}
+                      disabled={isCreating || !newTitle.trim() || !newContent.trim()}
+                      variant="primary"
+                      size="md"
+                      className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-8 py-3 rounded-xl font-bold bg-blue-600 shadow-lg shadow-blue-200"
+                    >
+                      {isCreating ? "Publishing..." : <><FaPaperPlane size={14} /> Publish Discussion</>}
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+
+              <div className="p-4 bg-orange-50 rounded-xl border border-orange-100 flex items-start gap-3">
+                <div className="w-6 h-6 rounded-full bg-orange-500 text-white flex items-center justify-center shrink-0 mt-0.5 shadow-sm">
+                  <FaBullhorn size={12} />
+                </div>
+                <div className="flex-1">
+                  <h4 className="text-[11px] font-bold text-orange-900 uppercase tracking-wider mb-1">Moderation Notice</h4>
+                  <p className="text-[11px] text-orange-800/70 font-medium leading-relaxed">
+                    Every post is reviewed by our moderation team. Ensuring your content is helpful and respectful creates a better learning hub for everyone.
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {
+          view === "DETAIL" && (
+            <ThreadDetail
+              slug={currentThreadSlug}
+              onBack={handleBack}
+              guestIdentity={guestIdentity}
+              onShowAuthModal={(formId, onSuccess) => {
+                setPendingAction({ formId, onSuccess });
+                setShowAuthModal(true);
+              }}
+              examImage={getExamImage}
+              hierarchy={{ examId, subjectId, unitId, chapterId, topicId, subTopicId }}
+            />
+          )
+        }
+        {
+          view === "LIST" && (
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+              {/* Communities Banner */}
+              <Card variant="gradient" className="p-3 sm:p-4 md:p-5 border-indigo-100 relative overflow-hidden">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4 relative z-0">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-1 sm:mb-1.5 tracking-tight">
+                      Welcome to the Hub
+                    </h3>
+                    <p className="text-[11px] sm:text-xs text-gray-600 font-medium leading-relaxed">
+                      Engage with a community of over 120+ active students. Get instant help and share your learning journey.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 sm:gap-3 bg-white/80 p-2 sm:p-2.5 rounded-lg border border-white shadow-sm self-start md:self-auto relative z-0">
+                    <div className="flex -space-x-2 relative">
+                      {[1, 2, 3].map(i => {
+                        const zIndexClass = i === 1 ? 'z-[1]' : i === 2 ? 'z-[2]' : 'z-[3]';
+                        return (
+                          <div key={i} className={`w-6 h-6 sm:w-7 sm:h-7 rounded-full border-2 border-white shadow-sm flex items-center justify-center overflow-hidden bg-gray-100 ${zIndexClass} relative`}>
+                            <img src={`https://i.pravatar.cc/100?u=${i + 20}`} alt="user" className="w-full h-full object-cover" />
+                          </div>
+                        );
+                      })}
+                      <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full border-2 border-white bg-blue-600 flex items-center justify-center text-[8px] sm:text-[9px] font-bold text-white z-[4] shadow-md relative">
+                        +124
+                      </div>
+                    </div>
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-[8px] xs:text-[9px] font-bold text-gray-900 uppercase tracking-wider leading-none mb-0.5 whitespace-nowrap">Active Now</span>
+                      <span className="text-[7px] xs:text-[8px] text-emerald-500 font-bold uppercase tracking-wider flex items-center gap-1 whitespace-nowrap">
+                        <span className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse"></span> Discussion Hub
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+
+              {/* Search & Filters */}
+              <div className="py-2">
+                <div className="flex flex-col lg:flex-row gap-3 sm:gap-4 items-stretch lg:items-center">
+                  <div className="relative flex-1 w-full group">
+                    <FaSearch className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-500 transition-colors" size={12} />
+                    <input
+                      type="text" placeholder="Search discussions, topics, or peers..."
+                      className="w-full pl-9 sm:pl-11 pr-3 sm:pr-5 py-2.5 sm:py-3 rounded-lg border border-gray-200 bg-white text-xs sm:text-sm font-semibold text-gray-800 placeholder-gray-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-50 transition-all outline-none shadow-sm"
+                      defaultValue={search}
+                      onChange={(e) => {
+                        if (threadSearchTimeout.current) clearTimeout(threadSearchTimeout.current);
+                        threadSearchTimeout.current = setTimeout(() => {
+                          setSearch(e.target.value);
+                          setListPage(1);
+                        }, 500);
+                      }}
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-2 sm:gap-3 w-full lg:w-auto flex-wrap">
+                    <div className="flex items-center bg-gray-100 p-0.5 sm:p-1 rounded-lg border border-gray-200 flex-1 lg:flex-none min-w-0">
+                      {["All", "New", "Hot"].map(t => (
+                        <button key={t} onClick={() => { setFilter(t); setListPage(1); }}
+                          className={`flex-1 lg:flex-none px-2 sm:px-4 py-1.5 rounded-md text-[10px] xs:text-xs font-bold flex items-center justify-center gap-1 sm:gap-1.5 transition-all ${filter === t ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-900"}`}>
+                          {t === "Hot" && <FaFire className="text-orange-500" size={10} />} {t}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="relative shrink-0 flex-1 lg:flex-none min-w-[140px]">
+                      <select
+                        className="w-full appearance-none bg-white border border-gray-200 rounded-lg px-3 sm:px-4 py-2 text-[10px] xs:text-xs font-bold text-gray-700 outline-none focus:border-blue-500 transition shadow-sm cursor-pointer pr-8 sm:pr-10"
+                        value={selectedTag}
+                        onChange={(e) => { setSelectedTag(e.target.value); setListPage(1); }}
+                      >
+                        {["All Categories", "General", "Question", "Notes", "Urgent", "Exam"].map(tag => (
+                          <option key={tag} value={tag}>{tag}</option>
+                        ))}
+                      </select>
+                      <FaFilter className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 text-gray-300 pointer-events-none" size={9} />
+                    </div>
+
+                    <Button
+                      variant="primary"
+                      size="md"
+                      onClick={handleStartCreate}
+                      className="flex items-center justify-center gap-1.5 sm:gap-2 shrink-0 py-2 sm:py-[10px] px-3 sm:px-4 text-xs sm:text-sm w-full lg:w-auto"
+                    >
+                      <FaPlus size={10} /> <span className="whitespace-nowrap">Start Post</span>
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              {search && (
+                <div className="flex items-center justify-between text-[11px] text-gray-500 bg-blue-50/50 p-4 rounded-xl border border-blue-100/50 shadow-sm animate-in fade-in duration-300">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+                      <FaSearch size={10} />
+                    </div>
+                    <span>Showing results for "<span className="font-extrabold text-blue-700">{search}</span>"</span>
+                  </div>
+                  <button
+                    onClick={() => { setSearch(""); setListPage(1); }}
+                    className="text-[10px] font-extrabold text-blue-600 uppercase tracking-wider hover:bg-blue-100 px-3 py-1 rounded-lg transition-colors"
+                  >
+                    Clear Search
+                  </button>
+                </div>
+              )}
+
+              {/* Guidelines Banner */}
+              <Card variant="standard" className="p-4 flex flex-col md:flex-row items-center gap-4 overflow-hidden group">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-full blur-3xl -mr-16 -mt-16 transition-transform duration-1000 group-hover:scale-110"></div>
+                <div className="w-12 h-12 rounded-lg bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-md ring-2 ring-blue-50">
+                  <FaBullhorn size={20} />
+                </div>
+                <div className="flex-1 text-center md:text-left relative z-10">
+                  <div className="flex flex-col md:flex-row items-center gap-2 mb-1">
+                    <h4 className="text-base font-bold text-gray-900 leading-none">Participation Guidelines</h4>
+                    <span className="bg-emerald-500 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider">Active Community</span>
+                  </div>
+                  <p className="text-xs text-gray-600 font-medium leading-relaxed max-w-3xl">
+                    Maintain academic integrity. Be respectful and supportive. High-quality answers help the entire community study better.
+                  </p>
+                  <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 mt-2.5">
+                    <span className="flex items-center gap-1.5 text-[9px] font-bold text-blue-600 uppercase tracking-wider bg-blue-50 px-2 py-1 rounded border border-blue-100 shadow-sm"><FaCheckCircle size={8} /> Verified Hub</span>
+                    <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1">
+                      <FaClock size={8} className="text-gray-300" /> Latest Sync: 2h ago
                     </span>
                   </div>
                 </div>
-              </div>
-            </Card>
-
-            {/* Search & Filters */}
-            <div className="py-2">
-              <div className="flex flex-col lg:flex-row gap-3 sm:gap-4 items-stretch lg:items-center">
-                <div className="relative flex-1 w-full group">
-                  <FaSearch className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-500 transition-colors" size={12} />
-                  <input
-                    type="text" placeholder="Search discussions, topics, or peers..."
-                    className="w-full pl-9 sm:pl-11 pr-3 sm:pr-5 py-2.5 sm:py-3 rounded-lg border border-gray-200 bg-white text-xs sm:text-sm font-semibold text-gray-800 placeholder-gray-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-50 transition-all outline-none shadow-sm"
-                    defaultValue={search}
-                    onChange={(e) => {
-                      if (threadSearchTimeout.current) clearTimeout(threadSearchTimeout.current);
-                      threadSearchTimeout.current = setTimeout(() => {
-                        setSearch(e.target.value);
-                        setListPage(1);
-                      }, 500);
-                    }}
-                  />
-                </div>
-
-                <div className="flex items-center gap-2 sm:gap-3 w-full lg:w-auto flex-wrap">
-                  <div className="flex items-center bg-gray-100 p-0.5 sm:p-1 rounded-lg border border-gray-200 flex-1 lg:flex-none min-w-0">
-                    {["All", "New", "Hot"].map(t => (
-                      <button key={t} onClick={() => { setFilter(t); setListPage(1); }}
-                        className={`flex-1 lg:flex-none px-2 sm:px-4 py-1.5 rounded-md text-[10px] xs:text-xs font-bold flex items-center justify-center gap-1 sm:gap-1.5 transition-all ${filter === t ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-900"}`}>
-                        {t === "Hot" && <FaFire className="text-orange-500" size={10} />} {t}
-                      </button>
-                    ))}
-                  </div>
-
-                  <div className="relative shrink-0 flex-1 lg:flex-none min-w-[140px]">
-                    <select
-                      className="w-full appearance-none bg-white border border-gray-200 rounded-lg px-3 sm:px-4 py-2 text-[10px] xs:text-xs font-bold text-gray-700 outline-none focus:border-blue-500 transition shadow-sm cursor-pointer pr-8 sm:pr-10"
-                      value={selectedTag}
-                      onChange={(e) => { setSelectedTag(e.target.value); setListPage(1); }}
-                    >
-                      {["All Categories", "General", "Question", "Notes", "Urgent", "Exam"].map(tag => (
-                        <option key={tag} value={tag}>{tag}</option>
-                      ))}
-                    </select>
-                    <FaFilter className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 text-gray-300 pointer-events-none" size={9} />
-                  </div>
-
-                  <Button
-                    variant="primary"
-                    size="md"
-                    onClick={handleStartCreate}
-                    className="flex items-center justify-center gap-1.5 sm:gap-2 shrink-0 py-2 sm:py-[10px] px-3 sm:px-4 text-xs sm:text-sm w-full lg:w-auto"
-                  >
-                    <FaPlus size={10} /> <span className="whitespace-nowrap">Start Post</span>
-                  </Button>
-                </div>
-              </div>
-            </div>
-
-            {search && (
-              <div className="flex items-center justify-between text-[11px] text-gray-500 bg-blue-50/50 p-4 rounded-xl border border-blue-100/50 shadow-sm animate-in fade-in duration-300">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
-                    <FaSearch size={10} />
-                  </div>
-                  <span>Showing results for "<span className="font-extrabold text-blue-700">{search}</span>"</span>
-                </div>
-                <button
-                  onClick={() => { setSearch(""); setListPage(1); }}
-                  className="text-[10px] font-extrabold text-blue-600 uppercase tracking-wider hover:bg-blue-100 px-3 py-1 rounded-lg transition-colors"
-                >
-                  Clear Search
-                </button>
-              </div>
-            )}
-
-            {/* Guidelines Banner */}
-            <Card variant="standard" className="p-4 flex flex-col md:flex-row items-center gap-4 overflow-hidden group">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-full blur-3xl -mr-16 -mt-16 transition-transform duration-1000 group-hover:scale-110"></div>
-              <div className="w-12 h-12 rounded-lg bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-md ring-2 ring-blue-50">
-                <FaBullhorn size={20} />
-              </div>
-              <div className="flex-1 text-center md:text-left relative z-10">
-                <div className="flex flex-col md:flex-row items-center gap-2 mb-1">
-                  <h4 className="text-base font-bold text-gray-900 leading-none">Participation Guidelines</h4>
-                  <span className="bg-emerald-500 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider">Active Community</span>
-                </div>
-                <p className="text-xs text-gray-600 font-medium leading-relaxed max-w-3xl">
-                  Maintain academic integrity. Be respectful and supportive. High-quality answers help the entire community study better.
-                </p>
-                <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 mt-2.5">
-                  <span className="flex items-center gap-1.5 text-[9px] font-bold text-blue-600 uppercase tracking-wider bg-blue-50 px-2 py-1 rounded border border-blue-100 shadow-sm"><FaCheckCircle size={8} /> Verified Hub</span>
-                  <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1">
-                    <FaClock size={8} className="text-gray-300" /> Latest Sync: 2h ago
-                  </span>
-                </div>
-              </div>
-            </Card>
-
-            {/* Thread List */}
-            <div className="space-y-3">
-              {loading ? (
-                [1, 2, 3].map(i => <div key={i} className="h-32 rounded-lg bg-gray-50 border border-gray-100 animate-pulse" />)
-              ) : threads.length > 0 ? (
-                <>
-                  {threads.map(thread => <ThreadCard key={thread._id} thread={thread} onClick={handleThreadClick} />)}
-
-                  {/* List Pagination */}
-                  <Pagination
-                    currentPage={listPage}
-                    totalPages={listPagination.pages}
-                    onPageChange={(p) => { setListPage(p); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                  />
-                </>
-              ) : (
-                <div className="text-center py-24 bg-white rounded-2xl border border-dashed border-gray-200 animate-in fade-in duration-500">
-                  <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-sm border border-gray-100 text-gray-200">
-                    <FaComment size={24} />
-                  </div>
-                  <h4 className="text-sm font-extrabold text-gray-800">No discussions found</h4>
-                  <p className="text-[11px] text-gray-400 mt-2 uppercase tracking-widest font-bold">Try adjusting your filters or be the first to start a topic!</p>
-                </div>
-              )}
-            </div>
-
-            {/* Footer Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
-              <Card variant="standard" className="p-4 flex items-center justify-between group hover:border-blue-300 transition-colors">
-                <div>
-                  <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-0.5">Discussions</p>
-                  <p className="text-xl sm:text-2xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">1,200+</p>
-                </div>
-                <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600"><FaComment size={16} /></div>
               </Card>
-              <Card variant="standard" className="p-4 flex items-center justify-between group hover:border-emerald-300 transition-colors">
-                <div>
-                  <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-0.5">Solved</p>
-                  <p className="text-xl sm:text-2xl font-bold text-emerald-600">850+</p>
-                </div>
-                <div className="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600"><FaCheckCircle size={16} /></div>
-              </Card>
-              <Card variant="standard" className="p-4 flex items-center justify-between group hover:border-purple-300 transition-colors">
-                <div>
-                  <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-0.5">Active Peers</p>
-                  <p className="text-xl sm:text-2xl font-bold text-gray-900 group-hover:text-purple-600 transition-colors">340+</p>
-                </div>
-                <div className="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center text-purple-600"><FaUser size={16} /></div>
-              </Card>
-            </div>
-          </motion.div>
-        )
-      }
+
+              {/* Thread List */}
+              <div className="space-y-3">
+                {loading ? (
+                  [1, 2, 3].map(i => <div key={i} className="h-32 rounded-lg bg-gray-50 border border-gray-100 animate-pulse" />)
+                ) : threads.length > 0 ? (
+                  <>
+                    {threads.map(thread => <ThreadCard key={thread._id} thread={thread} onClick={handleThreadClick} />)}
+
+                    {/* List Pagination */}
+                    <Pagination
+                      currentPage={listPage}
+                      totalPages={listPagination.pages}
+                      onPageChange={(p) => { setListPage(p); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                    />
+                  </>
+                ) : (
+                  <div className="text-center py-24 bg-white rounded-2xl border border-dashed border-gray-200 animate-in fade-in duration-500">
+                    <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-sm border border-gray-100 text-gray-200">
+                      <FaComment size={24} />
+                    </div>
+                    <h4 className="text-sm font-extrabold text-gray-800">No discussions found</h4>
+                    <p className="text-[11px] text-gray-400 mt-2 uppercase tracking-widest font-bold">Try adjusting your filters or be the first to start a topic!</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Footer Stats */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
+                <Card variant="standard" className="p-4 flex items-center justify-between group hover:border-blue-300 transition-colors">
+                  <div>
+                    <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-0.5">Discussions</p>
+                    <p className="text-xl sm:text-2xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">1,200+</p>
+                  </div>
+                  <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600"><FaComment size={16} /></div>
+                </Card>
+                <Card variant="standard" className="p-4 flex items-center justify-between group hover:border-emerald-300 transition-colors">
+                  <div>
+                    <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-0.5">Solved</p>
+                    <p className="text-xl sm:text-2xl font-bold text-emerald-600">850+</p>
+                  </div>
+                  <div className="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600"><FaCheckCircle size={16} /></div>
+                </Card>
+                <Card variant="standard" className="p-4 flex items-center justify-between group hover:border-purple-300 transition-colors">
+                  <div>
+                    <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-0.5">Active Peers</p>
+                    <p className="text-xl sm:text-2xl font-bold text-gray-900 group-hover:text-purple-600 transition-colors">340+</p>
+                  </div>
+                  <div className="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center text-purple-600"><FaUser size={16} /></div>
+                </Card>
+              </div>
+            </motion.div>
+          )
+        }
 
         <SuccessModal
           isOpen={showSuccessModal}

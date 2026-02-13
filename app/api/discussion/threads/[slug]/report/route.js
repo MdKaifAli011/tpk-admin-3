@@ -1,6 +1,7 @@
 
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
+import { buildThreadQuery } from "@/lib/discussionThreadQuery";
 import Thread from "@/models/Thread";
 import { verifyToken } from "@/lib/auth";
 import { verifyStudentToken } from "@/lib/studentAuth";
@@ -26,6 +27,7 @@ async function getUser(request) {
 export async function POST(request, { params }) {
     try {
         const { slug } = await params;
+        const { searchParams } = new URL(request.url);
         const user = await getUser(request);
 
         if (!user) {
@@ -36,7 +38,8 @@ export async function POST(request, { params }) {
         const { reason } = body;
 
         await connectDB();
-        const thread = await Thread.findOne({ slug });
+        const threadQuery = buildThreadQuery(slug, searchParams);
+        const thread = await Thread.findOne(threadQuery);
 
         if (!thread) {
             return NextResponse.json({ success: false, message: "Thread not found" }, { status: 404 });

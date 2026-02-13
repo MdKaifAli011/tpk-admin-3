@@ -1,6 +1,6 @@
-
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
+import { buildThreadQuery } from "@/lib/discussionThreadQuery";
 import Thread from "@/models/Thread";
 import Reply from "@/models/Reply";
 import Student from "@/models/Student";
@@ -16,29 +16,23 @@ export async function GET(request, { params }) {
     try {
         await connectDB();
         const { slug } = await params;
-        
-        // Validate slug exists
+        const { searchParams } = new URL(request.url);
+
         if (!slug) {
-            console.error("GET /api/discussion/threads/[slug]: Slug is missing", { params });
             return NextResponse.json(
                 { success: false, message: "Thread slug is required" },
                 { status: 400 }
             );
         }
-        
-        console.log("GET /api/discussion/threads/[slug]: Fetching thread", { slug });
-        
+
         const user = await getUser(request);
         const isAdmin = user?.type === "User";
 
-        // Query to fetch the thread
-        // - Admins: can see all threads (approved and unapproved)
-        // - Non-admins: can see approved threads OR their own unapproved threads (for preview)
-        const threadQuery = { slug };
+        // Slug is unique per hierarchy: same slug can exist under different exam/subject/unit/...
+        const threadQuery = buildThreadQuery(slug, searchParams);
         
         if (!isAdmin) {
-            // First, fetch the thread to check if user is the author
-            const threadCheck = await Thread.findOne({ slug })
+            const threadCheck = await Thread.findOne(threadQuery)
                 .select("author authorType guestName isApproved")
                 .lean();
             
@@ -59,8 +53,6 @@ export async function GET(request, { params }) {
             }
         }
 
-        console.log("GET /api/discussion/threads/[slug]: Query", { threadQuery, isAdmin, userId: user?.id });
-
         // 1. Fetch Thread
         const thread = await Thread.findOne(threadQuery)
             .populate("author", "firstName lastName avatar role")
@@ -73,23 +65,15 @@ export async function GET(request, { params }) {
             .lean();
 
         if (!thread) {
-            console.warn("GET /api/discussion/threads/[slug]: Thread not found", {
-                slug,
-                threadQuery,
-                isAdmin,
-            });
             return NextResponse.json(
                 { success: false, message: "Thread not found or pending approval" },
                 { status: 404 }
             );
         }
-        
-        console.log("GET /api/discussion/threads/[slug]: Thread found", { threadId: thread._id, title: thread.title });
 
         // Increment views (Non-blocking)
         Thread.updateOne({ _id: thread._id }, { $inc: { views: 1 } }).exec();
 
-        const { searchParams } = new URL(request.url);
         const sort = searchParams.get("sort") || "top";
         const replyPage = parseInt(searchParams.get("replyPage") || "1");
         const replyLimit = parseInt(searchParams.get("replyLimit") || "10");
@@ -225,13 +209,15 @@ export async function DELETE(request, { params }) {
     try {
         await connectDB();
         const { slug } = await params;
+        const { searchParams } = new URL(request.url);
         const user = await getUser(request);
 
         if (!user) {
             return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
         }
 
-        const thread = await Thread.findOne({ slug });
+        const threadQuery = buildThreadQuery(slug, searchParams);
+        const thread = await Thread.findOne(threadQuery);
         if (!thread) {
             return NextResponse.json({ success: false, message: "Thread not found" }, { status: 404 });
         }
@@ -260,13 +246,15 @@ export async function PATCH(request, { params }) {
     try {
         await connectDB();
         const { slug } = await params;
+        const { searchParams } = new URL(request.url);
         const user = await getUser(request);
 
         if (!user) {
             return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
         }
 
-        const thread = await Thread.findOne({ slug });
+        const threadQuery = buildThreadQuery(slug, searchParams);
+        const thread = await Thread.findOne(threadQuery);
         if (!thread) {
             return NextResponse.json({ success: false, message: "Thread not found" }, { status: 404 });
         }

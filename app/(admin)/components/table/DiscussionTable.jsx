@@ -19,6 +19,7 @@ const timeAgo = (date) => {
 };
 
 import { usePermissions, getDiscussionPermissions, getDiscussionPermissionMessage } from "../../hooks/usePermissions";
+import { getThreadHierarchyQueryString } from "@/lib/discussionThreadQuery";
 
 const DiscussionTable = ({
     threads,
@@ -135,6 +136,7 @@ const DiscussionTable = ({
                                             )}
                                         </div>
                                     </th>
+                                    <th className="px-3 py-3 text-center text-[10px] font-bold text-gray-400 uppercase tracking-wider w-28">Replies</th>
                                     <th className="px-3 py-3 text-center text-[10px] font-bold text-gray-400 uppercase tracking-wider w-32">Context</th>
                                     <th className="px-3 py-3 text-center text-[10px] font-bold text-gray-400 uppercase tracking-wider w-24">Status</th>
                                     <th className="px-4 py-3 text-right text-[10px] font-bold text-gray-400 uppercase tracking-wider w-40">Actions</th>
@@ -174,7 +176,9 @@ const DiscussionTable = ({
                                                         <div className="w-5 h-5 rounded bg-gray-100 flex items-center justify-center text-[10px] text-gray-400 border border-gray-200 overflow-hidden">
                                                             {thread.author?.avatar ? <img src={thread.author.avatar} alt="avatar" className="w-full h-full object-cover" /> : <FaIcons.FaUserCircle size={10} />}
                                                         </div>
-                                                        <span className="font-medium">{thread.author?.firstName ? `${thread.author.firstName} ${thread.author.lastName}` : (thread.guestName || "Guest")}</span>
+                                                        <span className="font-medium">
+                                                            {thread.contributorDisplayName || thread.authorType === "User" || (thread.author?.role && String(thread.author.role).toLowerCase().includes("admin")) ? "TestPrepKart" : (thread.author?.firstName ? `${thread.author.firstName} ${thread.author.lastName}` : (thread.author?.name || thread.guestName || "Guest"))}
+                                                        </span>
                                                     </div>
                                                     <span className="w-1 h-1 rounded-full bg-gray-300"></span>
                                                     <span className="text-[10px] text-gray-400 font-medium">{timeAgo(thread.createdAt)}</span>
@@ -202,13 +206,23 @@ const DiscussionTable = ({
                                                     </span>
                                                 </div>
                                                 <div className="flex flex-col items-center">
-                                                    <span className="text-xs font-bold text-gray-900 leading-none">{thread.replyCount || 0}</span>
-                                                    <span className="text-[9px] font-medium text-gray-400 uppercase tracking-wider mt-1">Replies</span>
-                                                </div>
-                                                <div className="flex flex-col items-center">
                                                     <span className="text-xs font-bold text-gray-900 leading-none">{(thread.upvotes?.length || 0) - (thread.downvotes?.length || 0)}</span>
                                                     <span className="text-[9px] font-medium text-gray-400 uppercase tracking-wider mt-1">Votes</span>
                                                 </div>
+                                            </div>
+                                        </td>
+
+                                        {/* Replies: Total & Pending */}
+                                        <td className="px-3 py-4 text-center">
+                                            <div className="flex flex-col items-center gap-0.5">
+                                                <span className="text-xs font-bold text-gray-900 leading-none">
+                                                    {thread.totalReplies ?? thread.replyCount ?? 0}
+                                                </span>
+                                                <span className="text-[9px] font-medium text-gray-400 uppercase tracking-wider">Total</span>
+                                                <span className="text-xs font-bold leading-none mt-1 text-amber-600">
+                                                    {thread.pendingReplies ?? 0}
+                                                </span>
+                                                <span className="text-[9px] font-medium text-amber-600 uppercase tracking-wider">Pending</span>
                                             </div>
                                         </td>
 
@@ -266,7 +280,10 @@ const DiscussionTable = ({
                                                 )}
 
                                                 <Link
-                                                    href={`/admin/discussion/thread/${thread.slug}`}
+                                                    href={(() => {
+                                                        const q = getThreadHierarchyQueryString(thread);
+                                                        return `/admin/discussion/thread/${thread.slug}${q ? `?${q}` : ""}`;
+                                                    })()}
                                                     className="p-1.5 bg-blue-50 text-blue-600 border border-blue-100 rounded-lg shadow-sm hover:bg-blue-100 transition-colors"
                                                     title="Moderation Control"
                                                 >

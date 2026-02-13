@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import Thread from "@/models/Thread";
+import Reply from "@/models/Reply";
 import Student from "@/models/Student";
 import Exam from "@/models/Exam";
 import Subject from "@/models/Subject";
@@ -57,9 +58,11 @@ export async function GET(request) {
         const topicId = searchParams.get("topicId");
         const subTopicId = searchParams.get("subTopicId");
 
-        const sort = searchParams.get("sort") || "new"; // new, hot, views
+        const sort = searchParams.get("sort") || "new"; // new, hot, views, date_asc, date_desc
         const search = searchParams.get("search");
         const tag = searchParams.get("tag"); // e.g., Urgent
+        const dateFrom = searchParams.get("dateFrom"); // YYYY-MM-DD
+        const dateTo = searchParams.get("dateTo"); // YYYY-MM-DD
 
         const query = {};
 
@@ -83,6 +86,18 @@ export async function GET(request) {
             query.isApproved = false;
         } else if (status === "approved") {
             query.isApproved = true;
+        } else if (status === "reply_pending") {
+            // Threads that have at least one reply pending approval
+            const threadIdsWithPendingReplies = await Reply.distinct("threadId", { isApproved: false });
+            query._id = { $in: threadIdsWithPendingReplies };
+            if (threadIdsWithPendingReplies.length === 0) {
+                // No threads have pending replies; return empty result
+                return NextResponse.json({
+                    success: true,
+                    data: [],
+                    pagination: { total: 0, page: 1, limit: parseInt(searchParams.get("limit") || "10", 10), pages: 0 }
+                });
+            }
         } // if status='all' or not provided for admin, show all
 
         // Text Search
@@ -98,13 +113,27 @@ export async function GET(request) {
             query.tags = tag;
         }
 
+        // Date range filter (createdAt)
+        if (dateFrom || dateTo) {
+            query.createdAt = {};
+            if (dateFrom) {
+                query.createdAt.$gte = new Date(dateFrom + "T00:00:00.000Z");
+            }
+            if (dateTo) {
+                query.createdAt.$lte = new Date(dateTo + "T23:59:59.999Z");
+            }
+        }
+
         // Sorting
         let sortOption = { isPinned: -1, createdAt: -1 }; // Default new
         if (sort === "hot") {
             sortOption = { isPinned: -1, views: -1, replyCount: -1 };
         } else if (sort === "views") {
-            // Top Views sorting - primarily by views, then by recent activity
             sortOption = { isPinned: -1, views: -1, createdAt: -1 };
+        } else if (sort === "date_asc") {
+            sortOption = { isPinned: -1, createdAt: 1 }; // Oldest first
+        } else if (sort === "date_desc") {
+            sortOption = { isPinned: -1, createdAt: -1 }; // Newest first
         }
 
         // Pagination
@@ -126,6 +155,27 @@ export async function GET(request) {
             .lean();
 
         const total = await Thread.countDocuments(query);
+
+        // For admin: attach total reply count and pending reply count per thread
+        if (isAdmin && threads.length > 0) {
+            const threadIds = threads.map((t) => t._id);
+            const counts = await Reply.aggregate([
+                { $match: { threadId: { $in: threadIds } } },
+                {
+                    $group: {
+                        _id: "$threadId",
+                        totalReplies: { $sum: 1 },
+                        pendingReplies: { $sum: { $cond: [{ $eq: ["$isApproved", false] }, 1, 0] } },
+                    },
+                },
+            ]);
+            const countMap = Object.fromEntries(counts.map((c) => [c._id.toString(), { totalReplies: c.totalReplies, pendingReplies: c.pendingReplies }]));
+            threads.forEach((t) => {
+                const c = countMap[t._id.toString()];
+                t.totalReplies = c ? c.totalReplies : (t.replyCount || 0);
+                t.pendingReplies = c ? c.pendingReplies : 0;
+            });
+        }
 
         return NextResponse.json({
             success: true,
@@ -175,6 +225,7 @@ export async function POST(request) {
             author: user.type === "Guest" ? null : user.id,
             authorType: user.type,
             guestName: user.type === "Guest" ? user.name : undefined,
+            contributorDisplayName: user.type === "User" ? "TestPrepKart" : undefined, // Admin-created threads show as TestPrepKart on frontend
             tags: body.tags || ["General"],
             isApproved: user.type === "User", // Only Admin/User posts are auto-approved, Students and Guests need approval
         });

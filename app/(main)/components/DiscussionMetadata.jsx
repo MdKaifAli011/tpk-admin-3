@@ -55,9 +55,13 @@ export default function DiscussionMetadata({ entityData = {} }) {
 
         const threadTitle = thread.title || "Discussion Thread";
         const tags = thread.tags?.join(", ") || "";
-        const authorName = thread.author
-          ? `${thread.author.firstName || ""} ${thread.author.lastName || ""}`.trim()
-          : thread.guestName || "Community Member";
+        const authorName = thread.contributorDisplayName
+          ? thread.contributorDisplayName
+          : thread.authorType === "User" && thread.author
+            ? (thread.author.name || thread.author.email || "Admin")
+            : thread.authorType === "Student" && thread.author
+              ? `${thread.author.firstName || ""} ${thread.author.lastName || ""}`.trim() || thread.author.email || "Student"
+              : thread.guestName || "Community Member";
 
         // Generate metadata - Full title without truncation
         const title = `${threadTitle}${entityName ? ` - ${entityName}` : ""} | Discussion Forum | ${APP_CONFIG.name}`;

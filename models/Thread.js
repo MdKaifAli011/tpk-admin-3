@@ -13,7 +13,7 @@ const threadSchema = new mongoose.Schema(
         },
         slug: {
             type: String,
-            unique: true,
+            required: true,
         },
         content: {
             type: String,
@@ -29,6 +29,11 @@ const threadSchema = new mongoose.Schema(
             default: "Student",
         },
         guestName: {
+            type: String,
+            trim: true,
+        },
+        /** When set (e.g. "TestPrepKart" for admin-created threads), show this instead of author/guest on frontend with brand logo */
+        contributorDisplayName: {
             type: String,
             trim: true,
         },
@@ -101,18 +106,37 @@ const threadSchema = new mongoose.Schema(
     { timestamps: true }
 );
 
-// Pre-save hook to generate slug
+// Slug is unique per hierarchy (exam, subject, unit, chapter, topic, subtopic, definition)
+// Same title e.g. "testing1" can exist under exam1, exam2, exam1/subject1, etc.
+threadSchema.index(
+    { examId: 1, subjectId: 1, unitId: 1, chapterId: 1, topicId: 1, subTopicId: 1, definitionId: 1, slug: 1 },
+    { unique: true }
+);
+
+// Pre-save hook: generate slug from title, unique within same hierarchy
 threadSchema.pre("save", async function (next) {
     if (!this.isModified("title")) return next();
 
     let slug = slugify(this.title, { lower: true, strict: true });
+    if (!slug) slug = "thread";
 
-    // Ensure uniqueness
-    const slugRegEx = new RegExp(`^${slug}(-[0-9]*)?$`, "i");
-    const threadsWithSlug = await this.constructor.find({ slug: slugRegEx });
+    const hierarchyFilter = {
+        examId: this.examId || null,
+        subjectId: this.subjectId || null,
+        unitId: this.unitId || null,
+        chapterId: this.chapterId || null,
+        topicId: this.topicId || null,
+        subTopicId: this.subTopicId || null,
+        definitionId: this.definitionId || null,
+    };
 
-    if (threadsWithSlug.length > 0) {
-        slug = `${slug}-${threadsWithSlug.length + 1}`;
+    const slugRegEx = new RegExp(`^${slug.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&")}(-[0-9]*)?$`, "i");
+    const query = { ...hierarchyFilter, slug: slugRegEx };
+    if (this._id) query._id = { $ne: this._id }; // exclude self when updating title
+    const existing = await this.constructor.find(query);
+
+    if (existing.length > 0) {
+        slug = `${slug}-${existing.length + 1}`;
     }
 
     this.slug = slug;
