@@ -381,15 +381,20 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
     };
   }, [loadExams]);
 
-  // set active exam id from path or default
+  // set active exam id from path or default (skip on non-exam paths so sidebar keeps current exam e.g. on Notification)
+  const nonExamPathSegments = useMemo(
+    () => ["blog", "download", "contact", "login", "register", "calculator", "notification"],
+    []
+  );
   useEffect(() => {
     if (!exams.length) return;
+    if (nonExamPathSegments.includes(examSlugFromPath)) return; // e.g. /notification: keep current activeExamId, do not switch to exams[0]
     const matched = findByIdOrSlug(exams, examSlugFromPath) || exams[0] || null;
     if (matched?._id && matched._id !== activeExamId)
       setActiveExamId(matched._id);
     else if (!matched && activeExamId && examSlugFromPath)
       setActiveExamId(null);
-  }, [exams, examSlugFromPath, activeExamId]);
+  }, [exams, examSlugFromPath, activeExamId, nonExamPathSegments]);
 
   // load tree when activeExamId changes
   useEffect(() => {
