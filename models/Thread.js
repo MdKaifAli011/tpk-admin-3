@@ -13,7 +13,7 @@ const threadSchema = new mongoose.Schema(
         },
         slug: {
             type: String,
-            required: true,
+            required: false, // set by pre-save hook from title; validation runs before hooks so slug cannot be required
         },
         content: {
             type: String,
@@ -115,9 +115,10 @@ threadSchema.index(
 
 // Pre-save hook: generate slug from title, unique within same hierarchy
 threadSchema.pre("save", async function (next) {
-    if (!this.isModified("title")) return next();
+    if (!this.slug && !this.title) return next();
+    if (this.slug && !this.isModified("title")) return next(); // already have slug and title unchanged
 
-    let slug = slugify(this.title, { lower: true, strict: true });
+    let slug = slugify(this.title || "thread", { lower: true, strict: true });
     if (!slug) slug = "thread";
 
     const hierarchyFilter = {

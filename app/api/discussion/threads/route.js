@@ -1,5 +1,6 @@
 
 import { NextResponse } from "next/server";
+import slugify from "slugify";
 import connectDB from "@/lib/mongodb";
 import Thread from "@/models/Thread";
 import Reply from "@/models/Reply";
@@ -385,8 +386,24 @@ export async function POST(request) {
             );
         }
 
+        // Generate slug (unique per hierarchy) so validation passes; model pre-save also sets it but validation runs first
+        let slug = slugify(body.title, { lower: true, strict: true }) || "thread";
+        const hierarchyFilter = {
+            examId: body.examId || null,
+            subjectId: body.subjectId || null,
+            unitId: body.unitId || null,
+            chapterId: body.chapterId || null,
+            topicId: body.topicId || null,
+            subTopicId: body.subTopicId || null,
+            definitionId: body.definitionId || null,
+        };
+        const slugRegEx = new RegExp(`^${slug.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&")}(-[0-9]*)?$`, "i");
+        const existing = await Thread.find({ ...hierarchyFilter, slug: slugRegEx }).lean();
+        if (existing.length > 0) slug = `${slug}-${existing.length + 1}`;
+
         const newThread = await Thread.create({
             ...body,
+            slug,
             author: user.type === "Guest" ? null : user.id,
             authorType: user.type,
             guestName: user.type === "Guest" ? user.name : undefined,
