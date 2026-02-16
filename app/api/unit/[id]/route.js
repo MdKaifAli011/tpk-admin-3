@@ -58,7 +58,7 @@ export async function PUT(request, { params }) {
       return errorResponse("Invalid unit ID", 400);
     }
 
-    const { name, orderNumber, subjectId, examId, status } = body;
+    const { name, orderNumber, subjectId, examId, status, time, weightage } = body;
 
     // Validate required fields
     if (!name || name.trim() === "") {
@@ -84,6 +84,8 @@ export async function PUT(request, { params }) {
     if (subjectId) updateData.subjectId = subjectId;
     if (examId) updateData.examId = examId;
     if (status) updateData.status = status;
+    if (time !== undefined) updateData.time = time;
+    if (weightage !== undefined) updateData.weightage = weightage;
 
     const updated = await Unit.findByIdAndUpdate(id, { $set: updateData }, {
       new: true,
@@ -123,7 +125,7 @@ export async function PATCH(request, { params }) {
       return errorResponse("Invalid unit ID", 400);
     }
 
-    const { orderNumber, name, subjectId, examId, status } = body;
+    const { orderNumber, name, subjectId, examId, status, time, weightage } = body;
 
     const updateData = {};
     if (orderNumber !== undefined) updateData.orderNumber = orderNumber;
@@ -134,6 +136,8 @@ export async function PATCH(request, { params }) {
     if (subjectId !== undefined) updateData.subjectId = subjectId;
     if (examId !== undefined) updateData.examId = examId;
     if (status) updateData.status = status;
+    if (time !== undefined) updateData.time = time;
+    if (weightage !== undefined) updateData.weightage = weightage;
 
     if (Object.keys(updateData).length === 0) {
       return errorResponse("No valid update fields provided", 400);

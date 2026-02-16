@@ -163,6 +163,8 @@ export async function PUT(request, { params }) {
         numberOfQuestions: s.numberOfQuestions,
         maximumMarks: s.maximumMarks,
         weightage: s.weightage,
+        studyHours: s.studyHours != null ? s.studyHours : undefined,
+        time: s.time != null ? s.time : undefined,
       }));
     }
 

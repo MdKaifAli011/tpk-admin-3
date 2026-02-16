@@ -68,6 +68,8 @@ export async function PUT(request, { params }) {
       chapterId,
       orderNumber,
       status,
+      time,
+      weightage,
     } = body;
 
     // Validate required fields
@@ -95,6 +97,8 @@ export async function PUT(request, { params }) {
     if (chapterId) updateData.chapterId = chapterId;
     if (orderNumber !== undefined) updateData.orderNumber = orderNumber;
     if (status) updateData.status = status;
+    if (time !== undefined) updateData.time = time;
+    if (weightage !== undefined) updateData.weightage = weightage;
 
     const updatedTopic = await Topic.findByIdAndUpdate(
       id,

@@ -63,6 +63,16 @@ const examInfoSchema = new mongoose.Schema(
           min: 0,
           max: 100,
         },
+        studyHours: {
+          type: Number,
+          default: null,
+          min: 0,
+        },
+        time: {
+          type: Number,
+          default: null,
+          min: 0,
+        },
       },
     ],
     status: {

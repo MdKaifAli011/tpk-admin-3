@@ -105,6 +105,37 @@ export async function PUT(request, { params }) {
   }
 }
 
+export async function PATCH(request, { params }) {
+  try {
+    const authCheck = await requireAction(request, "PATCH");
+    if (authCheck.error) {
+      return NextResponse.json(authCheck, { status: authCheck.status || 403 });
+    }
+    await connectDB();
+    const { id } = await params;
+    const body = await request.json();
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+      return errorResponse("Invalid chapter ID", 400);
+    }
+    const { time, weightage } = body;
+    const updateData = {};
+    if (time !== undefined) updateData.time = time;
+    if (weightage !== undefined) updateData.weightage = weightage;
+    if (Object.keys(updateData).length === 0) {
+      return errorResponse("No valid update fields (time, weightage)", 400);
+    }
+    const updated = await Chapter.findByIdAndUpdate(id, { $set: updateData }, { new: true, runValidators: true })
+      .populate("examId", "name status")
+      .populate("subjectId", "name")
+      .populate("unitId", "name orderNumber")
+      .lean();
+    if (!updated) return notFoundResponse(ERROR_MESSAGES.CHAPTER_NOT_FOUND);
+    return successResponse(updated, "Chapter updated successfully");
+  } catch (error) {
+    return handleApiError(error, ERROR_MESSAGES.UPDATE_FAILED);
+  }
+}
+
 export async function DELETE(request, { params }) {
   try {
     // Check authentication and permissions

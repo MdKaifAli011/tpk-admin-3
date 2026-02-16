@@ -16,6 +16,7 @@ import {
     LoadingWrapper,
     LoadingSpinner,
 } from "../ui/SkeletonLoader";
+import TimeWeightageHierarchy from "./TimeWeightageHierarchy";
 
 const ExamInfoManagement = ({ examId }) => {
     const router = useRouter();
@@ -137,6 +138,7 @@ const ExamInfoManagement = ({ examId }) => {
             numberOfQuestions: "",
             maximumMarks: "",
             weightage: "",
+            studyHours: "",
         }));
 
         setFormData((prev) => ({
@@ -241,6 +243,7 @@ const ExamInfoManagement = ({ examId }) => {
                     numberOfQuestions: parseInt(s.numberOfQuestions),
                     maximumMarks: parseFloat(s.maximumMarks),
                     weightage: parseFloat(s.weightage),
+                    studyHours: s.studyHours !== "" && s.studyHours != null ? parseFloat(s.studyHours) : null,
                 })),
             };
 
@@ -615,6 +618,22 @@ const ExamInfoManagement = ({ examId }) => {
                                                         placeholder="0-100"
                                                     />
                                                 </div>
+                                                <div>
+                                                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                                                        Study Hours
+                                                    </label>
+                                                    <input
+                                                        type="number"
+                                                        value={subject.studyHours ?? ""}
+                                                        onChange={(e) =>
+                                                            handleSubjectChange(index, "studyHours", e.target.value)
+                                                        }
+                                                        min="0"
+                                                        step="0.5"
+                                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white"
+                                                        placeholder="Optional"
+                                                    />
+                                                </div>
                                             </div>
                                         </div>
                                     );
@@ -677,6 +696,13 @@ const ExamInfoManagement = ({ examId }) => {
                         </div>
                     </div>
                 </form>
+
+                {/* Time & Weightage: edit all levels in one place, then Save all */}
+                {examId && (
+                    <section className="mt-8 pt-8 border-t border-gray-200" aria-label="Time and weightage by level">
+                        <TimeWeightageHierarchy examId={examId} />
+                    </section>
+                )}
             </div>
         </>
     );

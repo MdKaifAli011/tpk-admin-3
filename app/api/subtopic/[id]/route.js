@@ -42,7 +42,7 @@ export async function PUT(request, { params }) {
       return errorResponse("Invalid subtopic ID", 400);
     }
 
-    const { name, examId, subjectId, unitId, chapterId, topicId, orderNumber, status } = body;
+    const { name, examId, subjectId, unitId, chapterId, topicId, orderNumber, status, time, weightage } = body;
 
     // Validate required fields
     if (!name || name.trim() === "") {
@@ -70,6 +70,8 @@ export async function PUT(request, { params }) {
     if (topicId) updateData.topicId = topicId;
     if (orderNumber !== undefined) updateData.orderNumber = orderNumber;
     if (status) updateData.status = status;
+    if (time !== undefined) updateData.time = time;
+    if (weightage !== undefined) updateData.weightage = weightage;
 
     const updatedSubTopic = await SubTopic.findByIdAndUpdate(id, { $set: updateData }, {
       new: true,

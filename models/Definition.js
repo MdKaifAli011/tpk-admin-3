@@ -47,6 +47,16 @@ const definitionSchema = new mongoose.Schema(
       ref: "SubTopic",
       required: true,
     },
+    time: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    weightage: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
     status: {
       type: String,
       enum: ["active", "inactive"],

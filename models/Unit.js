@@ -29,6 +29,16 @@ const unitSchema = new mongoose.Schema(
       ref: "Exam",
       required: true,
     },
+    time: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    weightage: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
     status: {
       type: String,
       enum: ["active", "inactive"],
