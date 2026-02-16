@@ -12,6 +12,12 @@ import { hasMoreContent } from "../lib/utils/contentUtils";
 
 // Lazy load DefinitionPreviewClient - only needed for subtopic pages
 const DefinitionPreviewClient = lazy(() => import("./DefinitionPreviewClient"));
+import UnitsSectionClient from "./UnitsSectionClient";
+import ChaptersSectionClient from "./ChaptersSectionClient";
+import DeepUnitChapterTracker from "./DeepUnitChapterTracker";
+import ExamPrepDashboard from "./ExamPrepDashboard";
+import PreparationProgressDashboard from "./PreparationProgressDashboard";
+import SyllabusTrackerSection from "./SyllabusTrackerSection";
 
 // SubTopic Preview Component with Fixed 400px Height
 const SubTopicPreview = ({
@@ -119,10 +125,39 @@ const OverviewTab = ({
   subTopicSlug,
   activeTab,
   overviewEntityId,
+  examId,
 }) => {
   return (
     <div className="space-y-2 px-3 sm:px-4 py-3 sm:py-4">
+      {/* Exam AI Preparation Dashboard - only for exam Overview */}
+      {entityType === "exam" && (
+        <div className="mb-6">
+          <ExamPrepDashboard examName={entityName || "Exam"} />
+        </div>
+      )}
 
+      {/* Preparation Progress (Overall + Subject-wise) - dynamic from subject progress */}
+      {entityType === "exam" && examId && (
+        <div className="mb-8">
+          <PreparationProgressDashboard
+            examId={examId}
+            subjectsWithUnits={subjectsWithUnits || []}
+            examName={entityName || "Exam"}
+          />
+        </div>
+      )}
+
+      {/* Syllabus Tracker (Subject → Unit → Chapter) - sliders + checklists, instant updates */}
+      {entityType === "exam" && examId && examSlug && subjectsWithUnits && subjectsWithUnits.length > 0 && (
+        <div className="mb-8">
+          <SyllabusTrackerSection
+            examId={examId}
+            subjectsWithUnits={subjectsWithUnits}
+            examSlug={examSlug}
+            examName={entityName || "Exam"}
+          />
+        </div>
+      )}
 
       <div className="prose prose-sm sm:prose max-w-none prose-headings:text-gray-900 prose-headings:font-bold prose-p:text-gray-700 prose-p:leading-normal prose-a:text-indigo-600 prose-a:no-underline hover:prose-a:underline prose-strong:text-gray-900 prose-code:text-indigo-700 prose-pre:bg-gray-50">
         {content ? (
@@ -240,6 +275,34 @@ const OverviewTab = ({
                   );
                 })}
             </div>
+          </div>
+        )}
+
+
+      {/* Deep Unit & Chapter Syllabus Tracker - expandable units with chapters, one per subject */}
+      {entityType === "exam" &&
+        examSlug &&
+        subjectsWithUnits &&
+        subjectsWithUnits.length > 0 && (
+          <div className="mt-8 space-y-8">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="h-0.5 w-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full"></div>
+              <h3 className="text-xl sm:text-2xl font-bold text-gray-900">
+                Syllabus Tracker
+              </h3>
+            </div>
+            {subjectsWithUnits
+              .filter((subject) => subject.units && subject.units.length > 0)
+              .map((subject) => (
+                <DeepUnitChapterTracker
+                  key={subject._id}
+                  units={subject.units}
+                  examSlug={examSlug}
+                  subjectSlug={subject.slug || createSlug(subject.name)}
+                  examName={entityName || "Exam"}
+                  subjectName={subject.name}
+                />
+              ))}
           </div>
         )}
 

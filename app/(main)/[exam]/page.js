@@ -13,6 +13,7 @@ import {
   fetchExams,
   fetchExamDetailsById,
   fetchUnitsBySubject,
+  fetchChaptersByUnit,
 } from "../lib/api";
 import { ERROR_MESSAGES, PLACEHOLDERS } from "@/constants";
 import { getNextExam, getPreviousExam } from "../lib/hierarchicalNavigation";
@@ -86,15 +87,21 @@ const ExamPage = async ({ params }) => {
     fetchSubjectsByExam(exam._id || examId),
   ]);
 
-  // Fetch units for each subject
+  // Fetch units for each subject, then chapters for each unit (for unit-wise chapters overview on Overview tab)
   const subjectsWithUnits = await Promise.all(
     subjects.map(async (subject) => {
       const units = await fetchUnitsBySubject(subject._id, exam._id).catch(
         () => []
       );
+      const unitsWithChapters = await Promise.all(
+        (units || []).map(async (unit) => {
+          const chapters = await fetchChaptersByUnit(unit._id).catch(() => []);
+          return { ...unit, chapters: chapters || [] };
+        })
+      );
       return {
         ...subject,
-        units: units || [],
+        units: unitsWithChapters,
       };
     })
   );

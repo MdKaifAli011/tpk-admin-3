@@ -182,6 +182,7 @@ const TabsClient = ({
             topicSlug={topicSlug}
             subTopicSlug={subTopicSlug}
             activeTab={activeTab}
+            examId={examId}
           />
         );
 

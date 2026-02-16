@@ -1,12 +1,50 @@
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import StudentProgress from "@/models/StudentProgress";
+import SubjectProgress from "@/models/SubjectProgress";
+import Unit from "@/models/Unit";
 import {
   successResponse,
   errorResponse,
   handleApiError,
 } from "@/utils/apiResponse";
 import { verifyStudentToken } from "@/lib/studentAuth";
+
+/** After unit progress is saved, recompute and update subject progress so exam/subject APIs return fresh data. */
+async function updateSubjectProgressFromUnits(studentId, unitId) {
+  const unit = await Unit.findById(unitId).select("subjectId").lean();
+  if (!unit?.subjectId) return;
+
+  const subjectId = unit.subjectId;
+  const units = await Unit.find({ subjectId, status: "active" }).select("_id").lean();
+  const unitIds = units.map((u) => u._id);
+  if (unitIds.length === 0) return;
+
+  const progressDocs = await StudentProgress.find({
+    studentId,
+    unitId: { $in: unitIds },
+  })
+    .select("unitId unitProgress")
+    .lean();
+
+  const progressByUnit = new Map(progressDocs.map((d) => [String(d.unitId), d.unitProgress ?? 0]));
+  let total = 0;
+  unitIds.forEach((uid) => {
+    total += progressByUnit.get(String(uid)) ?? 0;
+  });
+  const subjectProgress = Math.min(100, Math.max(0, Math.round(total / unitIds.length)));
+
+  let doc = await SubjectProgress.findOne({ studentId, subjectId });
+  if (!doc) {
+    doc = await SubjectProgress.create({
+      studentId,
+      subjectId,
+      subjectProgress: 0,
+    });
+  }
+  doc.subjectProgress = subjectProgress;
+  await doc.save();
+}
 
 // GET: Fetch progress for a student
 export async function GET(request) {
@@ -172,6 +210,11 @@ export async function PUT(request) {
     }
 
     await studentProgress.save();
+
+    // Recompute subject progress so exam/subject APIs and dashboard show updated values
+    await updateSubjectProgressFromUnits(authCheck.studentId, unitId).catch((err) => {
+      console.error("Error updating subject progress after unit save:", err);
+    });
 
     return successResponse(
       studentProgress.toObject(),

@@ -210,6 +210,16 @@ export const useProgress = (unitId, chapters = []) => {
                 response.statusText
               );
             }
+          } else {
+            // Success: dispatch so PreparationProgressDashboard and others refetch and show updated values
+            if (typeof window !== "undefined") {
+              window.dispatchEvent(
+                new CustomEvent("progress-updated", {
+                  detail: { unitId, unitProgress: calculatedUnitProgress },
+                })
+              );
+              window.dispatchEvent(new CustomEvent("chapterProgressUpdate"));
+            }
           }
         } catch (error) {
           if (error.name !== "AbortError") {
@@ -370,23 +380,9 @@ export const useProgress = (unitId, chapters = []) => {
         const newUnitProgress = calculateUnitProgress(updated);
         setUnitProgress(newUnitProgress);
 
-        // Save to database only (no localStorage for authenticated users)
+        // Save to database; event is dispatched after save completes so dashboard refetches with fresh data
         if (!isInitialLoadRef.current && isAuthenticated) {
           saveProgressToDB(updated, newUnitProgress);
-        }
-
-        // Dispatch custom event for real-time updates
-        if (typeof window !== "undefined") {
-          // Use requestAnimationFrame for better performance than setTimeout
-          requestAnimationFrame(() => {
-            if (typeof window !== "undefined") {
-              window.dispatchEvent(
-                new CustomEvent("progress-updated", {
-                  detail: { unitId, unitProgress: newUnitProgress },
-                })
-              );
-            }
-          });
         }
 
         return updated;

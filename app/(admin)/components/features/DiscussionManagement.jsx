@@ -96,7 +96,7 @@ const DiscussionManagement = () => {
             }
             const res = await api.get(url);
             if (res.data.success) setSubjects(res.data.data || []);
-        } catch (err) {
+        } catch (err) { 
             console.error("Error fetching subjects:", err);
             setSubjects([]);
         }
@@ -189,12 +189,12 @@ const DiscussionManagement = () => {
 
     // Reset dependents when parent changes
     const handleExamChange = (val) => {
-        setFilterExam(val);
-        setFilterSubject("");
-        setFilterUnit("");
-        setFilterChapter("");
-        setFilterTopic("");
-        setFilterSubTopic("");
+        setFilterExam(val); 
+        setFilterSubject(""); 
+        setFilterUnit(""); 
+        setFilterChapter(""); 
+        setFilterTopic(""); 
+        setFilterSubTopic(""); 
         setFilterDefinition("");
         // Clear subjects when exam is cleared, or let useEffect handle fetching
         if (!val) {
@@ -561,17 +561,17 @@ const DiscussionManagement = () => {
                                     {showCreateForm ? "Hide create form" : "Create thread"}
                                 </button>
                             )}
-                            {/* Quick Metrics */}
-                            <div className="flex items-center gap-3 bg-white/50 backdrop-blur-sm p-1.5 rounded-lg border border-white">
-                                <div className="px-3 py-1 text-center border-r border-gray-100">
-                                    <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Posts</p>
-                                    <p className="text-base font-bold text-gray-900 leading-none mt-1">{stats.total || threads.length}</p>
-                                </div>
-                                <div className="px-3 py-1 text-center">
-                                    <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider flex items-center gap-1 justify-center">
-                                        <FaIcons.FaCheck size={8} /> Verified
-                                    </p>
-                                    <p className="text-base font-bold text-emerald-600 leading-none mt-1">{stats.approved || 0}</p>
+                        {/* Quick Metrics */}
+                        <div className="flex items-center gap-3 bg-white/50 backdrop-blur-sm p-1.5 rounded-lg border border-white">
+                            <div className="px-3 py-1 text-center border-r border-gray-100">
+                                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Posts</p>
+                                <p className="text-base font-bold text-gray-900 leading-none mt-1">{stats.total || threads.length}</p>
+                            </div>
+                            <div className="px-3 py-1 text-center">
+                                <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider flex items-center gap-1 justify-center">
+                                    <FaIcons.FaCheck size={8} /> Verified
+                                </p>
+                                <p className="text-base font-bold text-emerald-600 leading-none mt-1">{stats.approved || 0}</p>
                                 </div>
                             </div>
                         </div>
