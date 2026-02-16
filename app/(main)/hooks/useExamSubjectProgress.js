@@ -6,6 +6,7 @@ const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
 
 /**
  * Fetches exam-level progress and per-subject progress for the Preparation Progress dashboard.
+ * Subjects with practiceDisabled are excluded from progress and from the list.
  * Returns { overallPercent, subjectProgressList, isLoading, error, refetch }.
  * subjectProgressList: [{ subjectId, subjectName, progress, weakArea? }]
  */
@@ -23,15 +24,20 @@ export function useExamSubjectProgress(examId, subjectsWithUnits = []) {
       return;
     }
 
+    // Only count and show subjects that do not have practice disabled
+    const subjectsForProgress = (subjectsWithUnits || []).filter(
+      (s) => s.practiceDisabled !== true
+    );
+
     const token = typeof window !== "undefined" ? localStorage.getItem("student_token") : null;
     if (!token) {
       setOverallPercent(0);
       setSubjectProgressList(
-        (subjectsWithUnits || []).map((s) => ({
+        subjectsForProgress.map((s) => ({
           subjectId: s._id,
           subjectName: s.name,
           progress: 0,
-          weakArea: "—",
+          weakArea: getWeakAreaPlaceholder(s.name),
         }))
       );
       setIsLoading(false);
@@ -57,9 +63,7 @@ export function useExamSubjectProgress(examId, subjectsWithUnits = []) {
         : 0;
       setOverallPercent(totalProgress);
 
-      const subjects = subjectsWithUnits && subjectsWithUnits.length > 0
-        ? subjectsWithUnits
-        : [];
+      const subjects = subjectsForProgress.length > 0 ? subjectsForProgress : [];
       const subjectPromises = subjects.map(async (subject) => {
         try {
           const res = await fetch(
@@ -90,10 +94,13 @@ export function useExamSubjectProgress(examId, subjectsWithUnits = []) {
       const list = await Promise.all(subjectPromises);
       setSubjectProgressList(list);
     } catch (err) {
+      const fallbackList = (subjectsWithUnits || []).filter(
+        (s) => s.practiceDisabled !== true
+      );
       setError(err.message || "Failed to load progress");
       setOverallPercent(0);
       setSubjectProgressList(
-        (subjectsWithUnits || []).map((s) => ({
+        fallbackList.map((s) => ({
           subjectId: s._id,
           subjectName: s.name,
           progress: 0,

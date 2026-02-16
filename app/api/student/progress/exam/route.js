@@ -29,10 +29,11 @@ export async function GET(request) {
       return errorResponse("Exam ID is required", 400);
     }
 
-    // Fetch all active subjects for this exam (optimized query with lean for performance)
+    // Fetch active subjects that count toward progress (exclude practice-disabled subjects)
     const subjects = await Subject.find({
       examId: examId,
       status: "active",
+      practiceDisabled: { $ne: true },
     })
       .select("_id")
       .lean();
