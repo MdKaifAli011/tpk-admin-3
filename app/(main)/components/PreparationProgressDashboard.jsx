@@ -62,17 +62,21 @@ export default function PreparationProgressDashboard({
 }) {
   const {
     overallPercent,
+    theoryPercent,
+    practicePercent,
     subjectProgressList,
     isLoading,
     error,
   } = useExamSubjectProgress(examId, subjectsWithUnits);
+
+  const totalSubInfo = `Theory ${Math.round(theoryPercent)}% (70%) + Practice ${Math.round(practicePercent)}% (30%)`;
 
   const cards = [
     {
       title: "TOTAL",
       progress: overallPercent,
       status: getStatus(overallPercent),
-      subInfo: "Target: 100% • Updated: Today",
+      subInfo: totalSubInfo,
       colorIndex: 0,
     },
     ...subjectProgressList.map((s, i) => ({

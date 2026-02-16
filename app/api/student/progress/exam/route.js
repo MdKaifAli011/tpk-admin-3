@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import SubjectProgress from "@/models/SubjectProgress";
 import Subject from "@/models/Subject";
+import StudentTestResult from "@/models/StudentTestResult";
+import mongoose from "mongoose";
 import {
   successResponse,
   errorResponse,
@@ -9,8 +11,34 @@ import {
 } from "@/utils/apiResponse";
 import { verifyStudentToken } from "@/lib/studentAuth";
 
-// GET: Fetch exam progress for a student
-// Exam progress = Average of all subject progress for that exam
+/** Compute practice % for student+exam: latest attempt per test, then average. 0 if no attempts. */
+async function getPracticeProgressPercent(studentId, examId) {
+  const examIdObj = mongoose.Types.ObjectId.isValid(examId) ? new mongoose.Types.ObjectId(examId) : null;
+  if (!examIdObj) return 0;
+
+  const latestPerTest = await StudentTestResult.aggregate([
+    { $match: { studentId: new mongoose.Types.ObjectId(studentId), examId: examIdObj } },
+    { $sort: { submittedAt: -1 } },
+    {
+      $group: {
+        _id: "$testId",
+        percentage: { $first: "$percentage" },
+      },
+    },
+    {
+      $group: {
+        _id: null,
+        avgPercentage: { $avg: "$percentage" },
+        count: { $sum: 1 },
+      },
+    },
+  ]);
+
+  if (!latestPerTest.length || latestPerTest[0].count === 0) return 0;
+  return Math.min(100, Math.max(0, Math.round(latestPerTest[0].avgPercentage)));
+}
+
+// GET: Fetch exam progress for a student (theory + practice + combined 70/30)
 export async function GET(request) {
   try {
     const authCheck = await verifyStudentToken(request);
@@ -38,50 +66,44 @@ export async function GET(request) {
       .select("_id")
       .lean();
 
-    if (subjects.length === 0) {
-      return successResponse(
-        {
-          examId,
-          examProgress: 0,
-          totalSubjects: 0,
-        },
-        "Exam progress fetched successfully"
-      );
+    let examProgress = 0;
+    let subjectsWithProgressCount = 0;
+    if (subjects.length > 0) {
+      const subjectIds = subjects.map((s) => s._id);
+      const subjectProgresses = await SubjectProgress.find({
+        studentId: authCheck.studentId,
+        subjectId: { $in: subjectIds },
+      })
+        .select("subjectId subjectProgress")
+        .lean();
+      subjectsWithProgressCount = subjectProgresses.length;
+
+      const progressMap = new Map();
+      subjectProgresses.forEach((sp) => {
+        progressMap.set(String(sp.subjectId), sp.subjectProgress || 0);
+      });
+
+      const totalProgress = subjects.reduce((sum, subject) => {
+        const subjectIdStr = String(subject._id);
+        return sum + (progressMap.get(subjectIdStr) || 0);
+      }, 0);
+      examProgress = Math.min(100, Math.max(0, Math.round(totalProgress / subjects.length)));
     }
 
-    const subjectIds = subjects.map((s) => s._id);
-
-    // Fetch progress for all subjects using optimized query (lean for performance)
-    // Uses compound index { studentId: 1, subjectId: 1 } automatically
-    const subjectProgresses = await SubjectProgress.find({
-      studentId: authCheck.studentId,
-      subjectId: { $in: subjectIds },
-    })
-      .select("subjectId subjectProgress")
-      .lean();
-
-    // Create a map for quick lookup
-    const progressMap = new Map();
-    subjectProgresses.forEach((sp) => {
-      progressMap.set(String(sp.subjectId), sp.subjectProgress || 0);
-    });
-
-    // Calculate exam progress: Sum of all subject progress / Total number of subjects
-    // Includes ALL subjects (even those with 0% progress) for accurate calculation
-    const totalProgress = subjects.reduce((sum, subject) => {
-      const subjectIdStr = String(subject._id);
-      const subjectProgress = progressMap.get(subjectIdStr) || 0;
-      return sum + subjectProgress;
-    }, 0);
-
-    const examProgress = Math.round(totalProgress / subjects.length);
+    const practiceProgress = await getPracticeProgressPercent(authCheck.studentId, examId);
+    const combinedProgress = Math.min(
+      100,
+      Math.max(0, Math.round(examProgress * 0.7 + practiceProgress * 0.3))
+    );
 
     return successResponse(
       {
         examId,
-        examProgress: Math.min(100, Math.max(0, examProgress)),
+        examProgress,
+        practiceProgress,
+        combinedProgress,
         totalSubjects: subjects.length,
-        subjectsWithProgress: subjectProgresses.length,
+        subjectsWithProgress: subjectsWithProgressCount,
       },
       "Exam progress fetched successfully"
     );

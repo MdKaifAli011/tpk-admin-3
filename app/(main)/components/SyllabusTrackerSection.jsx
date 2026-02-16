@@ -10,7 +10,10 @@ import CongratulationsModal from "./CongratulationsModal";
 import LoginPromptModal from "./LoginPromptModal";
 import { markChapterCongratulationsShown } from "@/lib/congratulations";
 
-const STAGE_PROGRESS = { theory: 34, practice: 67, revision: 100 };
+// Chapter progress: 0% | 30% (practice only) | 70% (theory only) | 100% (both)
+const PROGRESS_THEORY_ONLY = 70;
+const PROGRESS_PRACTICE_ONLY = 30;
+const PROGRESS_BOTH = 100;
 const CHAPTER_DESCRIPTIONS = [
   "Focus on NCERT definitions, nomenclature rules, hierarchy order, and \"statement trap\" questions.",
   "High-return: characteristics + examples for each kingdom; common confusion between groups.",
@@ -50,22 +53,28 @@ function ChapterRow({
   }, []);
 
   const progressPercent = Math.min(100, Math.max(0, localProgress));
-  const theoryChecked = progressPercent >= 33;
-  const practiceChecked = progressPercent >= 66;
-  const revisionChecked = progressPercent >= 100;
+  const theoryChecked = progressPercent >= PROGRESS_THEORY_ONLY;
+  const practiceChecked = progressPercent === PROGRESS_PRACTICE_ONLY || progressPercent >= PROGRESS_BOTH;
 
   const handleStageChange = useCallback(
     async (stage, checked) => {
       if (practiceDisabled) return;
-      const targetProgress = checked ? STAGE_PROGRESS[stage] : (stage === "theory" ? 0 : stage === "practice" ? 33 : 66);
+      let targetProgress;
+      if (stage === "theory") {
+        if (checked) targetProgress = practiceChecked ? PROGRESS_BOTH : PROGRESS_THEORY_ONLY;
+        else targetProgress = progressPercent >= PROGRESS_BOTH ? PROGRESS_PRACTICE_ONLY : 0;
+      } else {
+        if (checked) targetProgress = progressPercent >= PROGRESS_THEORY_ONLY ? PROGRESS_BOTH : PROGRESS_PRACTICE_ONLY;
+        else targetProgress = progressPercent >= PROGRESS_BOTH ? PROGRESS_THEORY_ONLY : 0;
+      }
       if (!isAuthenticated && targetProgress > 0) {
         setShowLoginPrompt(true);
         return;
       }
       setLocalProgress(targetProgress);
-      setIsCompleted(targetProgress === 100);
+      setIsCompleted(targetProgress === PROGRESS_BOTH);
       prevProgressRef.current = targetProgress;
-      if (targetProgress === 100 && !congratulationsShownRef.current && unitId) {
+      if (targetProgress === PROGRESS_BOTH && !congratulationsShownRef.current && unitId) {
         try {
           const success = await markChapterCongratulationsShown(chapter._id, unitId);
           if (success) {
@@ -76,9 +85,9 @@ function ChapterRow({
           console.error(e);
         }
       }
-      onProgressChange?.(chapter._id, targetProgress, targetProgress === 100);
+      onProgressChange?.(chapter._id, targetProgress, targetProgress === PROGRESS_BOTH);
     },
-    [chapter._id, unitId, onProgressChange, isAuthenticated, practiceDisabled]
+    [chapter._id, unitId, onProgressChange, isAuthenticated, practiceDisabled, progressPercent, practiceChecked]
   );
 
   const handleSliderChange = useCallback(
@@ -117,26 +126,25 @@ function ChapterRow({
           ) : (
             <span className="font-semibold text-slate-900 text-sm sm:text-base">Chapter: {chapter.name}</span>
           )}
-          {revisionChecked && <FaCheck className="w-4 h-4 text-emerald-600 shrink-0" />}
+          {progressPercent >= PROGRESS_BOTH && <FaCheck className="w-4 h-4 text-emerald-600 shrink-0" />}
         </div>
-        <p className="text-xs text-slate-600 mt-1">{description}</p>
+        {/* <p className="text-xs text-slate-600 mt-1">{description}</p> */}
         <div className="flex flex-wrap gap-3 mt-2">
-          {["theory", "practice", "revision"].map((stage) => {
-            const checked = stage === "theory" ? theoryChecked : stage === "practice" ? practiceChecked : revisionChecked;
-            const label = stage.charAt(0).toUpperCase() + stage.slice(1);
-            return (
-              <label key={stage} className="inline-flex items-center gap-1.5 cursor-pointer text-xs">
-                <input
-                  type="checkbox"
-                  checked={checked}
-                  onChange={(e) => handleStageChange(stage, e.target.checked)}
-                  disabled={practiceDisabled}
-                  className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-                />
-                <span className="text-slate-700">{label}</span>
-              </label>
-            );
-          })}
+          {[
+            { stage: "theory", label: "Theory (70%)", checked: theoryChecked },
+            { stage: "practice", label: "Practice (30%)", checked: practiceChecked },
+          ].map(({ stage, label, checked }) => (
+            <label key={stage} className="inline-flex items-center gap-1.5 cursor-pointer text-xs">
+              <input
+                type="checkbox"
+                checked={checked}
+                onChange={(e) => handleStageChange(stage, e.target.checked)}
+                disabled={practiceDisabled}
+                className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+              />
+              <span className="text-slate-700">{label}</span>
+            </label>
+          ))}
         </div>
       </div>
       <div className="flex items-center gap-3 shrink-0" onClick={(e) => e.stopPropagation()}>
@@ -182,18 +190,31 @@ function UnitAccordionItem({
 
   const unitProgressPercent = Math.min(100, Math.max(0, Math.round(unitProgress)));
   const unitSlug = unit.slug || createSlug(unit.name);
+  const unitUrl = examSlug && subjectSlug ? `/${examSlug}/${subjectSlug}/${unitSlug}` : null;
   const suggestedOrder = (unit.chapters || []).slice(0, 3).map((c) => c.name).join(" → ") || "—";
 
   return (
     <div className="border-b border-slate-200 last:border-b-0">
-      <button
-        type="button"
+      <div
+        role="button"
+        tabIndex={0}
         onClick={onToggle}
-        className="w-full text-left p-4 sm:p-5 rounded-none bg-white hover:bg-slate-50/80 transition-colors border-t border-slate-200 first:border-t-0"
+        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onToggle(); } }}
+        className="w-full text-left p-4 sm:p-5 rounded-none bg-white hover:bg-slate-50/80 transition-colors border-t border-slate-200 first:border-t-0 cursor-pointer"
       >
         <div className="flex flex-wrap items-center gap-2 mb-2">
           <span className="text-slate-500">{isExpanded ? <FaChevronDown className="w-4 h-4" /> : <FaChevronRight className="w-4 h-4" />}</span>
-          <h3 className="text-base font-bold text-slate-900 m-0">Unit: {unit.name}</h3>
+          {unitUrl ? (
+            <Link
+              href={unitUrl}
+              onClick={(e) => e.stopPropagation()}
+              className="text-base font-bold text-slate-900 hover:text-blue-600 m-0"
+            >
+              Unit: {unit.name}
+            </Link>
+          ) : (
+            <h3 className="text-base font-bold text-slate-900 m-0">Unit: {unit.name}</h3>
+          )}
           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
             Completion: {unitProgressPercent}%
           </span>
@@ -212,7 +233,7 @@ function UnitAccordionItem({
             style={{ width: `${unitProgressPercent}%` }}
           />
         </div>
-      </button>
+      </div>
       {isExpanded && (
         <div className="px-4 sm:px-5 pb-4 pt-1 bg-slate-50/50 border-t border-slate-200 space-y-2">
           {(unit.chapters || []).map((chapter, chIndex) => {
@@ -252,10 +273,20 @@ export default function SyllabusTrackerSection({
   const [selectedSubjectIndex, setSelectedSubjectIndex] = useState(0);
   const [expandedUnitId, setExpandedUnitId] = useState(null);
 
+  const subjects = subjectsWithUnits.filter(
+    (s) => s.units && s.units.length > 0 && s.practiceDisabled !== true
+  );
   const { overallPercent } = useExamSubjectProgress(examId, subjectsWithUnits);
 
-  const subjects = subjectsWithUnits.filter((s) => s.units && s.units.length > 0);
-  const subject = subjects[selectedSubjectIndex] || null;
+  const safeIndex = subjects.length > 0 ? Math.min(selectedSubjectIndex, subjects.length - 1) : 0;
+  const subject = subjects[safeIndex] || null;
+
+  React.useEffect(() => {
+    if (subjects.length > 0 && selectedSubjectIndex >= subjects.length) {
+      setSelectedSubjectIndex(subjects.length - 1);
+      setExpandedUnitId(null);
+    }
+  }, [subjects.length, selectedSubjectIndex]);
   const units = subject?.units || [];
 
   const handleSubjectSelect = useCallback((i) => {
@@ -301,7 +332,7 @@ export default function SyllabusTrackerSection({
               Syllabus Tracker (Subject → Unit → Chapter)
             </h2>
             <p className="text-xs text-slate-600 mt-1 m-0 max-w-2xl">
-              Update chapter completion using sliders + checklists. Later your code can roll up chapter % → unit % → subject % → total syllabus %.
+              Chapter progress = Theory 70% + Practice 30%. Use sliders and Theory/Practice checkboxes; progress rolls up to unit → subject → total.
             </p>
           </div>
           <span className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-bold bg-blue-100 text-blue-800 shrink-0">
@@ -314,7 +345,7 @@ export default function SyllabusTrackerSection({
               key={s._id}
               type="button"
               onClick={() => handleSubjectSelect(i)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${i === selectedSubjectIndex ? "bg-blue-600 text-white" : "bg-white text-slate-700 border border-slate-300 hover:bg-slate-50"
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${i === safeIndex ? "bg-blue-600 text-white" : "bg-white text-slate-700 border border-slate-300 hover:bg-slate-50"
                 }`}
             >
               {s.name}
