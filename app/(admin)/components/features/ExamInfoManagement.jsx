@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
     FaSave,
@@ -43,13 +43,33 @@ const ExamInfoManagement = ({ examId }) => {
     // Get today's date in YYYY-MM-DD format for date input min attribute
     const todayDate = new Date().toISOString().split("T")[0];
 
-    // Get available subjects (subjects not yet selected)
-    const availableSubjects = subjects.filter(
-        (subject) => !formData.subjects.some((s) => s.subjectId === subject._id)
-    );
-
-    // Check if all subjects are selected
-    const allSubjectsSelected = subjects.length > 0 && availableSubjects.length === 0;
+    // Refetch exam info (e.g. after adding/removing subjects in Time & Weightage)
+    const refetchExamInfo = useCallback(async () => {
+        if (!examId) return;
+        try {
+            const examInfoResponse = await api.get(`/exam-info?examId=${examId}`);
+            if (examInfoResponse.data?.success && examInfoResponse.data.data?.length > 0) {
+                const existingInfo = examInfoResponse.data.data[0];
+                setExamInfoId(existingInfo._id);
+                setFormData((prev) => ({
+                    ...prev,
+                    examDate: existingInfo.examDate
+                        ? new Date(existingInfo.examDate).toISOString().split("T")[0]
+                        : prev.examDate,
+                    examCut: {
+                        SC_ST: existingInfo.examCut?.SC_ST?.toString() ?? prev.examCut.SC_ST,
+                        OBC: existingInfo.examCut?.OBC?.toString() ?? prev.examCut.OBC,
+                        General: existingInfo.examCut?.General?.toString() ?? prev.examCut.General,
+                        NRIs: existingInfo.examCut?.NRIs?.toString() ?? prev.examCut.NRIs,
+                    },
+                    maximumMarks: existingInfo.maximumMarks?.toString() ?? prev.maximumMarks,
+                    subjects: existingInfo.subjects || [],
+                }));
+            }
+        } catch (e) {
+            console.error("Refetch exam info failed", e);
+        }
+    }, [examId]);
 
     // Fetch exam and subjects
     useEffect(() => {
@@ -126,54 +146,6 @@ const ExamInfoManagement = ({ examId }) => {
         }
     };
 
-    const handleAddSubject = () => {
-        if (allSubjectsSelected || availableSubjects.length === 0) {
-            return;
-        }
-
-        // Add all available subjects at once
-        const newSubjects = availableSubjects.map((subject) => ({
-            subjectId: subject._id,
-            subjectName: subject.name,
-            numberOfQuestions: "",
-            maximumMarks: "",
-            weightage: "",
-            studyHours: "",
-        }));
-
-        setFormData((prev) => ({
-            ...prev,
-            subjects: [...prev.subjects, ...newSubjects],
-        }));
-    };
-
-    const handleRemoveSubject = (index) => {
-        setFormData((prev) => ({
-            ...prev,
-            subjects: prev.subjects.filter((_, i) => i !== index),
-        }));
-    };
-
-    const handleSubjectChange = (index, field, value) => {
-        // Don't allow changing subjectId once it's set
-        if (field === "subjectId") {
-            return;
-        }
-
-        setFormData((prev) => {
-            const newSubjects = [...prev.subjects];
-            newSubjects[index] = {
-                ...newSubjects[index],
-                [field]: value,
-            };
-
-            return {
-                ...prev,
-                subjects: newSubjects,
-            };
-        });
-    };
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         setFormError(null);
@@ -199,26 +171,29 @@ const ExamInfoManagement = ({ examId }) => {
         }
 
         if (formData.subjects.length === 0) {
-            setFormError("At least one subject is required");
+            setFormError("Add at least one subject in the Time & Weightage section below before saving.");
             return;
         }
 
-        // Validate subjects
+        // Validate subjects (from Time & Weightage)
         for (let i = 0; i < formData.subjects.length; i++) {
             const subject = formData.subjects[i];
             if (!subject.subjectId) {
-                setFormError(`Subject ${i + 1}: Please select a subject`);
+                setFormError(`Subject ${i + 1}: invalid`);
                 return;
             }
-            if (!subject.numberOfQuestions || subject.numberOfQuestions <= 0) {
+            const nq = parseInt(subject.numberOfQuestions, 10);
+            const mm = parseFloat(subject.maximumMarks);
+            const w = parseFloat(subject.weightage);
+            if (isNaN(nq) || nq <= 0) {
                 setFormError(`Subject ${i + 1}: Number of questions must be greater than 0`);
                 return;
             }
-            if (!subject.maximumMarks || subject.maximumMarks <= 0) {
+            if (isNaN(mm) || mm <= 0) {
                 setFormError(`Subject ${i + 1}: Maximum marks must be greater than 0`);
                 return;
             }
-            if (!subject.weightage || subject.weightage < 0 || subject.weightage > 100) {
+            if (isNaN(w) || w < 0 || w > 100) {
                 setFormError(`Subject ${i + 1}: Weightage must be between 0 and 100`);
                 return;
             }
@@ -472,176 +447,6 @@ const ExamInfoManagement = ({ examId }) => {
                         </div>
                     </div>
 
-                    {/* Subjects */}
-                    <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
-                        <div className="flex items-center justify-between mb-4">
-                            <div>
-                                <h3 className="text-sm font-medium text-gray-700 mb-1">
-                                    <FaGraduationCap className="inline mr-2" />
-                                    Subjects *
-                                </h3>
-                                <p className="text-xs text-gray-500">
-                                    {subjects.length > 0
-                                        ? `${subjects.length} available subject${subjects.length > 1 ? "s" : ""}`
-                                        : "No subjects available for this exam"}
-                                    {formData.subjects.length > 0 &&
-                                        ` • ${formData.subjects.length} selected`}
-                                </p>
-                            </div>
-                            <button
-                                type="button"
-                                onClick={handleAddSubject}
-                                disabled={allSubjectsSelected || availableSubjects.length === 0}
-                                className={`flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg transition-colors ${allSubjectsSelected || availableSubjects.length === 0
-                                    ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                                    : "bg-[#0056FF] hover:bg-[#0044CC] text-white"
-                                    }`}
-                                title={
-                                    allSubjectsSelected
-                                        ? "All subjects are already selected"
-                                        : availableSubjects.length === 0
-                                            ? "No subjects available"
-                                            : `Add ${availableSubjects.length} available subject${availableSubjects.length > 1 ? "s" : ""}`
-                                }
-                            >
-                                <FaPlus className="text-xs" />
-                                {allSubjectsSelected
-                                    ? "All Selected"
-                                    : availableSubjects.length > 0
-                                        ? `Add ${availableSubjects.length} Subject${availableSubjects.length > 1 ? "s" : ""}`
-                                        : "No Subjects"}
-                            </button>
-                        </div>
-
-                        {formData.subjects.length === 0 ? (
-                            <div className="text-center py-8 border border-gray-200 rounded-lg bg-gray-50">
-                                <FaGraduationCap className="text-3xl text-gray-400 mx-auto mb-2" />
-                                <p className="text-sm text-gray-500 mb-1">
-                                    No subjects added yet
-                                </p>
-                                <p className="text-xs text-gray-400">
-                                    {subjects.length > 0
-                                        ? "Click the button above to add available subjects"
-                                        : "Please add subjects to this exam first"}
-                                </p>
-                            </div>
-                        ) : (
-                            <div className="space-y-4">
-                                {formData.subjects.map((subject, index) => {
-                                    const subjectData = subjects.find((s) => s._id === subject.subjectId);
-                                    return (
-                                        <div
-                                            key={`${subject.subjectId}-${index}`}
-                                            className="border border-gray-200 rounded-lg p-4 bg-gray-50"
-                                        >
-                                            <div className="flex items-center justify-between mb-3">
-                                                <div>
-                                                    <span className="text-sm font-medium text-gray-700">
-                                                        Subject {index + 1}
-                                                    </span>
-                                                    {subjectData && (
-                                                        <span className="ml-2 text-xs text-gray-500">
-                                                            ({subjectData.name})
-                                                        </span>
-                                                    )}
-                                                </div>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => handleRemoveSubject(index)}
-                                                    className="p-1.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
-                                                    title="Remove Subject"
-                                                >
-                                                    <FaTrash className="text-sm" />
-                                                </button>
-                                            </div>
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                                <div>
-                                                    <label className="block text-xs font-medium text-gray-600 mb-1">
-                                                        Subject *
-                                                    </label>
-                                                    <div className="px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-700">
-                                                        {subject.subjectName || "N/A"}
-                                                    </div>
-                                                </div>
-                                                <div>
-                                                    <label className="block text-xs font-medium text-gray-600 mb-1">
-                                                        Number of Questions *
-                                                    </label>
-                                                    <input
-                                                        type="number"
-                                                        value={subject.numberOfQuestions}
-                                                        onChange={(e) =>
-                                                            handleSubjectChange(
-                                                                index,
-                                                                "numberOfQuestions",
-                                                                e.target.value
-                                                            )
-                                                        }
-                                                        required
-                                                        min="0"
-                                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white"
-                                                        placeholder="Enter number"
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-xs font-medium text-gray-600 mb-1">
-                                                        Maximum Marks *
-                                                    </label>
-                                                    <input
-                                                        type="number"
-                                                        value={subject.maximumMarks}
-                                                        onChange={(e) =>
-                                                            handleSubjectChange(index, "maximumMarks", e.target.value)
-                                                        }
-                                                        required
-                                                        min="0"
-                                                        step="0.01"
-                                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white"
-                                                        placeholder="Enter marks"
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-xs font-medium text-gray-600 mb-1">
-                                                        Weightage (%) *
-                                                    </label>
-                                                    <input
-                                                        type="number"
-                                                        value={subject.weightage}
-                                                        onChange={(e) =>
-                                                            handleSubjectChange(index, "weightage", e.target.value)
-                                                        }
-                                                        required
-                                                        min="0"
-                                                        max="100"
-                                                        step="0.01"
-                                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white"
-                                                        placeholder="0-100"
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-xs font-medium text-gray-600 mb-1">
-                                                        Study Hours
-                                                    </label>
-                                                    <input
-                                                        type="number"
-                                                        value={subject.studyHours ?? ""}
-                                                        onChange={(e) =>
-                                                            handleSubjectChange(index, "studyHours", e.target.value)
-                                                        }
-                                                        min="0"
-                                                        step="0.5"
-                                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white"
-                                                        placeholder="Optional"
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        )}
-                    </div>
-
                     {/* Action Buttons */}
                     <div className="flex items-center justify-between gap-3">
                         {/* Delete Button - Only show if exam info exists */}
@@ -697,10 +502,16 @@ const ExamInfoManagement = ({ examId }) => {
                     </div>
                 </form>
 
-                {/* Time & Weightage: edit all levels in one place, then Save all */}
+                {/* Time & Weightage: add/remove subjects, edit time & weightage, then Save all */}
                 {examId && (
                     <section className="mt-8 pt-8 border-t border-gray-200" aria-label="Time and weightage by level">
-                        <TimeWeightageHierarchy examId={examId} />
+                        <TimeWeightageHierarchy
+                            examId={examId}
+                            examInfoId={examInfoId}
+                            formData={formData}
+                            allSubjects={subjects}
+                            onExamInfoChange={refetchExamInfo}
+                        />
                     </section>
                 )}
             </div>

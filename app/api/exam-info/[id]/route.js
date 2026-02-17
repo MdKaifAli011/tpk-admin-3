@@ -63,13 +63,7 @@ export async function PUT(request, { params }) {
       return errorResponse("Exam info not found", 404);
     }
 
-    const {
-      examDate,
-      examCut,
-      maximumMarks,
-      subjects,
-      status,
-    } = body;
+    const { examDate, examCut, maximumMarks, subjects, status } = body;
 
     // Update fields
     if (examDate !== undefined) {
@@ -88,8 +82,8 @@ export async function PUT(request, { params }) {
     }
 
     if (subjects !== undefined) {
-      if (!Array.isArray(subjects) || subjects.length === 0) {
-        return errorResponse("At least one subject is required", 400);
+      if (!Array.isArray(subjects)) {
+        return errorResponse("subjects must be an array", 400);
       }
 
       // Validate subjects
@@ -120,7 +114,7 @@ export async function PUT(request, { params }) {
         ) {
           return errorResponse(
             "Valid number of questions is required for all subjects",
-            400
+            400,
           );
         }
 
@@ -131,7 +125,7 @@ export async function PUT(request, { params }) {
         ) {
           return errorResponse(
             "Valid maximum marks is required for all subjects",
-            400
+            400,
           );
         }
 
@@ -143,17 +137,14 @@ export async function PUT(request, { params }) {
         ) {
           return errorResponse(
             "Valid weightage (0-100) is required for all subjects",
-            400
+            400,
           );
         }
 
         // Verify subject exists
         const subjectExists = await Subject.findById(subject.subjectId);
         if (!subjectExists) {
-          return errorResponse(
-            `Subject not found: ${subject.subjectId}`,
-            404
-          );
+          return errorResponse(`Subject not found: ${subject.subjectId}`, 404);
         }
       }
 

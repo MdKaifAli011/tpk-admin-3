@@ -80,6 +80,11 @@ const examInfoSchema = new mongoose.Schema(
       enum: ["active", "inactive"],
       default: "active",
     },
+    totalTime: {
+      type: Number,
+      default: null,
+      min: 0,
+    },
   },
   { timestamps: true }
 );
