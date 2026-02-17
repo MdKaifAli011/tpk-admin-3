@@ -415,17 +415,34 @@ export default function SyllabusTrackerSection({
   }, [subjects.length, selectedSubjectIndex]);
   const units = subject?.units || [];
 
+  const SHOW_SAVE_MODAL_FLAG = "syllabus_show_save_modal_on_stay";
+
   useEffect(() => {
     const handleBeforeUnload = (e) => {
       const token = typeof window !== "undefined" ? window.localStorage.getItem("student_token") : null;
       if (hasUnsavedProgress && !token) {
+        if (typeof window !== "undefined") {
+          window.sessionStorage.setItem(SHOW_SAVE_MODAL_FLAG, "1");
+        }
         e.preventDefault();
-        e.returnValue = "You have unsaved syllabus tracker progress. Leave anyway?";
+        e.returnValue = "Changes you made may not be saved.";
       }
     };
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [hasUnsavedProgress]);
+
+  useEffect(() => {
+    const handleFocus = () => {
+      if (typeof window === "undefined") return;
+      if (window.sessionStorage.getItem(SHOW_SAVE_MODAL_FLAG) === "1") {
+        window.sessionStorage.removeItem(SHOW_SAVE_MODAL_FLAG);
+        setShowSaveBeforeLeave(true);
+      }
+    };
+    window.addEventListener("focus", handleFocus);
+    return () => window.removeEventListener("focus", handleFocus);
+  }, []);
 
   useEffect(() => {
     const handleClick = (e) => {

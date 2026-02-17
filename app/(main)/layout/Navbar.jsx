@@ -144,12 +144,10 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen, showSidebar }) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isUserMenuOpen, activeMegaMenu]);
 
-  // Handle logout
+  // Handle logout - stay on current page (no redirect to home)
   const handleLogout = () => {
     logout();
     setIsUserMenuOpen(false);
-    // NOTE: Next.js basePath is applied automatically for internal navigation.
-    router.push("/");
   };
 
   // Get user display name
