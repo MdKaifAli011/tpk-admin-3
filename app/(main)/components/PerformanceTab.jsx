@@ -26,6 +26,13 @@ import { useStudent } from "../hooks/useStudent";
 import Button from "./Button";
 import Card from "./Card";
 
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
+const authHref = (pathname, target) => {
+  if (!pathname || pathname.includes("/login") || pathname.includes("/register")) return target;
+  const pathOnly = pathname.startsWith(basePath) ? pathname.slice(basePath.length) || "/" : pathname;
+  return `${target}?redirect=${encodeURIComponent(pathOnly)}`;
+};
+
 const PerformanceTab = ({
   entityType,
   entityName,
@@ -330,7 +337,7 @@ const PerformanceTab = ({
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-4">
             <Button
-              href="/login"
+              href={authHref(pathname, "/login")}
               variant="primary"
               size="md"
               className="flex items-center justify-center gap-2"
@@ -339,7 +346,7 @@ const PerformanceTab = ({
               <span>Sign In</span>
             </Button>
             <Button
-              href="/register"
+              href={authHref(pathname, "/register")}
               variant="outline"
               size="md"
               className="flex items-center justify-center gap-2 border-blue-600 text-blue-600 hover:border-blue-700 hover:text-blue-700"
@@ -354,7 +361,7 @@ const PerformanceTab = ({
             <p className="text-xs text-gray-600 text-center">
               Don&apos;t have an account yet?{" "}
               <Link
-                href="/register"
+                href={authHref(pathname, "/register")}
                 className="text-blue-600 hover:text-blue-700 font-semibold underline underline-offset-2 transition-colors"
               >
                 Create a free account

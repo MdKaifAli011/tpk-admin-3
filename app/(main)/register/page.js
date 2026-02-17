@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
   FaUser,
@@ -102,8 +102,18 @@ const COUNTRIES = [
   { name: "Other", code: "+", flag: "🌍" },
 ];
 
+const REDIRECT_KEY = "redirectAfterLogin";
+
 const RegisterPage = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const redirect = searchParams.get("redirect");
+    if (redirect && typeof redirect === "string" && redirect.length > 0 && typeof window !== "undefined") {
+      window.sessionStorage.setItem(REDIRECT_KEY, redirect);
+    }
+  }, [searchParams]);
 
   // Step & transitions
   const [step, setStep] = useState(1);
@@ -308,9 +318,17 @@ const RegisterPage = () => {
             verifyResponse.data.success &&
             verifyResponse.data.data?.student
           ) {
-            // Student verified, proceed to home page
-            // NOTE: Next.js basePath is applied automatically for internal navigation.
-            router.push("/");
+            let redirectTo =
+              typeof window !== "undefined"
+                ? window.sessionStorage.getItem(REDIRECT_KEY)
+                : null;
+            if (typeof window !== "undefined") {
+              window.sessionStorage.removeItem(REDIRECT_KEY);
+            }
+            if (redirectTo && redirectTo.startsWith(basePath)) {
+              redirectTo = redirectTo.slice(basePath.length) || "/";
+            }
+            router.push(redirectTo && redirectTo.startsWith("/") ? redirectTo : "/");
           } else {
             // Student not found or inactive
             setError("Account verification failed. Please try logging in.");
@@ -327,11 +345,16 @@ const RegisterPage = () => {
         setError(response.data.message || "Registration failed");
       }
     } catch (err) {
-      console.error("Registration error:", err);
-      setError(
-        err.response?.data?.message ||
-        "Registration failed. Please check your information and try again."
-      );
+      const msg =
+        err.response?.data?.message ??
+        err.response?.data?.error ??
+        (typeof err.message === "string" ? err.message : null);
+      const displayMessage =
+        typeof msg === "string" && msg.length > 0
+          ? msg
+          : "Registration failed. Please check your information and try again.";
+      console.error("Registration error:", displayMessage, err.response?.data ?? err);
+      setError(displayMessage);
     } finally {
       setLoading(false);
     }
@@ -763,7 +786,9 @@ const RegisterPage = () => {
                               </div>
                               <input
                                 name="phoneNumber"
-                                type="number"
+                                type="tel"
+                                inputMode="numeric"
+                                autoComplete="tel"
                                 value={formData.phoneNumber}
                                 onChange={handleChange}
                                 placeholder="1234567890"
@@ -964,7 +989,11 @@ const RegisterPage = () => {
                   <p className="text-xs text-gray-600">
                     Already have an account?{" "}
                     <Link
-                      href="/login"
+                      href={
+                        searchParams.get("redirect")
+                          ? `/login?redirect=${encodeURIComponent(searchParams.get("redirect"))}`
+                          : "/login"
+                      }
                       className="text-indigo-600 hover:text-indigo-700 font-bold"
                     >
                       Sign In

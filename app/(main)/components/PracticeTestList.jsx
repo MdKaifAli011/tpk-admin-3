@@ -1642,12 +1642,11 @@ const PracticeTestList = ({
                     onClick={() => {
                       if (typeof window !== "undefined") {
                         const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
-                        const currentPath =
-                          window.location.pathname + window.location.search;
-                        sessionStorage.setItem(
-                          "redirectAfterLogin",
-                          currentPath
-                        );
+                        let currentPath = window.location.pathname + window.location.search;
+                        if (currentPath.startsWith(basePath)) {
+                          currentPath = currentPath.slice(basePath.length) || "/";
+                        }
+                        sessionStorage.setItem("redirectAfterLogin", currentPath);
                         window.location.href = `${basePath}/login`;
                       }
                     }}

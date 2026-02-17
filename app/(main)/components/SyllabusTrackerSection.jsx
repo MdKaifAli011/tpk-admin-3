@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import Link from "next/link";
+import { useRouter, usePathname } from "next/navigation";
 import { FaCheck, FaChevronDown, FaChevronRight } from "react-icons/fa";
 import { useProgress } from "../hooks/useProgress";
 import { useExamSubjectProgress } from "../hooks/useExamSubjectProgress";
@@ -9,6 +10,17 @@ import { createSlug } from "../lib/api";
 import CongratulationsModal from "./CongratulationsModal";
 import LoginPromptModal from "./LoginPromptModal";
 import { markChapterCongratulationsShown } from "@/lib/congratulations";
+
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
+const PENDING_SAVE_KEY = "syllabus_pending_save";
+
+function pathWithoutBasePath(fullPath, base = basePath) {
+  if (!fullPath || typeof fullPath !== "string") return fullPath;
+  const pathOnly = fullPath.split("?")[0];
+  const search = fullPath.includes("?") ? fullPath.slice(fullPath.indexOf("?")) : "";
+  const withoutBase = pathOnly.startsWith(base) ? pathOnly.slice(base.length) || "/" : pathOnly;
+  return withoutBase + search;
+}
 
 // Chapter progress: 0% | 30% (practice only) | 70% (theory only) | 100% (both)
 const PROGRESS_THEORY_ONLY = 70;
@@ -34,6 +46,44 @@ function getZoneColor(progressPercent) {
   if (p < 80) return ZONE_BLUE;
   return ZONE_GREEN;
 }
+
+function SaveBeforeLeaveModal({ isOpen, onClose, onSave, onDontSave }) {
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center px-4" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="relative w-full max-w-sm rounded-2xl bg-white shadow-2xl p-6"
+      >
+        <h2 className="text-lg font-bold text-slate-900 m-0">Save syllabus tracker?</h2>
+        <p className="mt-2 text-sm text-slate-600 m-0">
+          You have unsaved syllabus tracker progress. Do you want to save it? You can log in or sign up next—after a successful login you will be brought back here and your progress will be saved.
+        </p>
+        <div className="mt-5 flex flex-col gap-2">
+          <button
+            type="button"
+            onClick={() => { onSave(); onClose(); }}
+            className="w-full py-2.5 rounded-lg font-medium bg-emerald-600 text-white hover:bg-emerald-700"
+          >
+            Yes, save progress
+          </button>
+          <button
+            type="button"
+            onClick={() => { onDontSave(); onClose(); }}
+            className="w-full py-2.5 rounded-lg font-medium border border-slate-300 text-slate-700 hover:bg-slate-50"
+          >
+            Don&apos;t save
+          </button>
+          <button type="button" onClick={onClose} className="w-full py-2 text-sm text-slate-500 hover:text-slate-700">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const CHAPTER_DESCRIPTIONS = [
   "Focus on NCERT definitions, nomenclature rules, hierarchy order, and \"statement trap\" questions.",
   "High-return: characteristics + examples for each kingdom; common confusion between groups.",
@@ -51,13 +101,13 @@ function ChapterRow({
   progress: initialProgress = 0,
   isCompleted: initialIsCompleted = false,
   onProgressChange,
+  onRecordPendingProgress,
   practiceDisabled = false,
 }) {
   const [localProgress, setLocalProgress] = useState(initialProgress);
   const [isCompleted, setIsCompleted] = useState(initialIsCompleted);
   const [showCongratulations, setShowCongratulations] = useState(false);
   const congratulationsShownRef = React.useRef(false);
-  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const prevProgressRef = React.useRef(initialProgress);
 
@@ -87,9 +137,8 @@ function ChapterRow({
         if (checked) targetProgress = progressPercent >= PROGRESS_THEORY_ONLY ? PROGRESS_BOTH : PROGRESS_PRACTICE_ONLY;
         else targetProgress = progressPercent >= PROGRESS_BOTH ? PROGRESS_THEORY_ONLY : 0;
       }
-      if (!isAuthenticated && targetProgress > 0) {
-        setShowLoginPrompt(true);
-        return;
+      if (!isAuthenticated && onRecordPendingProgress) {
+        onRecordPendingProgress(unitId, chapter._id, targetProgress, targetProgress === PROGRESS_BOTH);
       }
       setLocalProgress(targetProgress);
       setIsCompleted(targetProgress === PROGRESS_BOTH);
@@ -107,16 +156,15 @@ function ChapterRow({
       }
       onProgressChange?.(chapter._id, targetProgress, targetProgress === PROGRESS_BOTH);
     },
-    [chapter._id, unitId, onProgressChange, isAuthenticated, practiceDisabled, progressPercent, practiceChecked]
+    [chapter._id, unitId, onProgressChange, onRecordPendingProgress, isAuthenticated, practiceDisabled, progressPercent, practiceChecked]
   );
 
   const handleSliderChange = useCallback(
     (e) => {
       if (practiceDisabled) return;
       const v = parseInt(e.target.value, 10);
-      if (!isAuthenticated && v > 0) {
-        setShowLoginPrompt(true);
-        return;
+      if (!isAuthenticated && onRecordPendingProgress) {
+        onRecordPendingProgress(unitId, chapter._id, v, v === 100);
       }
       const wasUnder100 = prevProgressRef.current < 100;
       setLocalProgress(v);
@@ -130,7 +178,7 @@ function ChapterRow({
       }
       onProgressChange?.(chapter._id, v, v === 100);
     },
-    [chapter._id, unitId, onProgressChange, isAuthenticated, practiceDisabled]
+    [chapter._id, unitId, onProgressChange, onRecordPendingProgress, isAuthenticated, practiceDisabled]
   );
 
   const description = chapter.description || CHAPTER_DESCRIPTIONS[index % CHAPTER_DESCRIPTIONS.length];
@@ -193,11 +241,6 @@ function ChapterRow({
         </span>
       </div>
       <CongratulationsModal isOpen={showCongratulations} onClose={() => setShowCongratulations(false)} chapterName={chapter.name} type="chapter" />
-      <LoginPromptModal
-        isOpen={showLoginPrompt}
-        onClose={() => setShowLoginPrompt(false)}
-        examName={examName}
-      />
     </div>
   );
 }
@@ -210,6 +253,7 @@ function UnitAccordionItem({
   subjectSlug,
   examName,
   practiceDisabled,
+  onRecordPendingProgress,
 }) {
   const {
     unitProgress,
@@ -290,6 +334,7 @@ function UnitAccordionItem({
                 progress={chProgress.progress}
                 isCompleted={chProgress.isCompleted}
                 onProgressChange={updateChapterProgress}
+                onRecordPendingProgress={onRecordPendingProgress}
                 practiceDisabled={practiceDisabled}
               />
             );
@@ -307,8 +352,15 @@ export default function SyllabusTrackerSection({
   examName = "Exam",
   practiceDisabled = false,
 }) {
+  const router = useRouter();
+  const pathname = usePathname();
   const [selectedSubjectIndex, setSelectedSubjectIndex] = useState(0);
   const [expandedUnitId, setExpandedUnitId] = useState(null);
+  const [hasUnsavedProgress, setHasUnsavedProgress] = useState(false);
+  const [showSaveBeforeLeave, setShowSaveBeforeLeave] = useState(false);
+  const [showLoginModalForSave, setShowLoginModalForSave] = useState(false);
+  const pendingProgressRef = useRef({});
+  const pendingNavigateRef = useRef(null);
 
   const subjects = subjectsWithUnits.filter(
     (s) => s.units && s.units.length > 0 && s.practiceDisabled !== true
@@ -318,6 +370,43 @@ export default function SyllabusTrackerSection({
   const safeIndex = subjects.length > 0 ? Math.min(selectedSubjectIndex, subjects.length - 1) : 0;
   const subject = subjects[safeIndex] || null;
 
+  const recordPendingProgress = useCallback((unitId, chapterId, progress, isCompleted) => {
+    const uid = String(unitId);
+    const cid = String(chapterId);
+    pendingProgressRef.current = {
+      ...pendingProgressRef.current,
+      [uid]: {
+        ...(pendingProgressRef.current[uid] || {}),
+        [cid]: { progress, isCompleted },
+      },
+    };
+    setHasUnsavedProgress(true);
+  }, []);
+
+  const clearPendingAndNavigate = useCallback(() => {
+    pendingProgressRef.current = {};
+    setHasUnsavedProgress(false);
+    let href = pendingNavigateRef.current;
+    pendingNavigateRef.current = null;
+    if (href && typeof href === "string") {
+      href = pathWithoutBasePath(href);
+      router.push(href);
+    }
+  }, [router]);
+
+  const handleSaveAndShowLoginModal = useCallback(() => {
+    const pending = pendingProgressRef.current;
+    if (Object.keys(pending).length > 0 && typeof window !== "undefined") {
+      const redirectPath = pathWithoutBasePath(window.location.pathname + window.location.search);
+      window.sessionStorage.setItem("redirectAfterLogin", redirectPath);
+      window.localStorage.setItem(PENDING_SAVE_KEY, JSON.stringify(pending));
+    }
+    pendingProgressRef.current = {};
+    setHasUnsavedProgress(false);
+    setShowSaveBeforeLeave(false);
+    setShowLoginModalForSave(true);
+  }, [setHasUnsavedProgress, setShowSaveBeforeLeave, setShowLoginModalForSave]);
+
   React.useEffect(() => {
     if (subjects.length > 0 && selectedSubjectIndex >= subjects.length) {
       setSelectedSubjectIndex(subjects.length - 1);
@@ -325,6 +414,75 @@ export default function SyllabusTrackerSection({
     }
   }, [subjects.length, selectedSubjectIndex]);
   const units = subject?.units || [];
+
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      const token = typeof window !== "undefined" ? window.localStorage.getItem("student_token") : null;
+      if (hasUnsavedProgress && !token) {
+        e.preventDefault();
+        e.returnValue = "You have unsaved syllabus tracker progress. Leave anyway?";
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [hasUnsavedProgress]);
+
+  useEffect(() => {
+    const handleClick = (e) => {
+      const token = typeof window !== "undefined" ? window.localStorage.getItem("student_token") : null;
+      if (!hasUnsavedProgress || token) return;
+      const a = e.target.closest("a");
+      if (!a || !a.href) return;
+      try {
+        const url = new URL(a.href);
+        if (url.origin !== window.location.origin || url.pathname === pathname) return;
+        if (url.pathname.startsWith("/login") || url.pathname.startsWith("/register")) return;
+      } catch {
+        return;
+      }
+      e.preventDefault();
+      const rawHref = a.getAttribute("href") || a.href || "";
+      const toStore = rawHref.startsWith("http") ? pathWithoutBasePath(new URL(rawHref).pathname + new URL(rawHref).search) : pathWithoutBasePath(rawHref);
+      pendingNavigateRef.current = toStore;
+      setShowSaveBeforeLeave(true);
+    };
+    document.addEventListener("click", handleClick, true);
+    return () => document.removeEventListener("click", handleClick, true);
+  }, [hasUnsavedProgress, pathname]);
+
+  useEffect(() => {
+    const token = typeof window !== "undefined" ? window.localStorage.getItem("student_token") : null;
+    const raw = typeof window !== "undefined" ? window.localStorage.getItem(PENDING_SAVE_KEY) : null;
+    if (!token || !raw) return;
+    let data;
+    try {
+      data = JSON.parse(raw);
+    } catch {
+      window.localStorage.removeItem(PENDING_SAVE_KEY);
+      return;
+    }
+    const flush = async () => {
+      const headers = {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      };
+      for (const unitId of Object.keys(data)) {
+        const progress = data[unitId];
+        if (!progress || typeof progress !== "object") continue;
+        const chapterIds = Object.keys(progress);
+        const total = chapterIds.reduce((s, cid) => s + (progress[cid]?.progress ?? 0), 0);
+        const unitProgress = Math.round(total / Math.max(1, chapterIds.length));
+        await fetch(`${basePath}/api/student/progress`, {
+          method: "PUT",
+          headers,
+          body: JSON.stringify({ unitId, progress, unitProgress }),
+        });
+      }
+      window.localStorage.removeItem(PENDING_SAVE_KEY);
+      window.dispatchEvent(new CustomEvent("chapterProgressUpdate"));
+    };
+    flush();
+  }, []);
 
   const handleSubjectSelect = useCallback((i) => {
     setSelectedSubjectIndex(i);
@@ -408,10 +566,22 @@ export default function SyllabusTrackerSection({
               subjectSlug={subjectSlug}
               examName={examName}
               practiceDisabled={practiceDisabled}
+              onRecordPendingProgress={recordPendingProgress}
             />
           ))}
         </div>
       )}
+      <SaveBeforeLeaveModal
+        isOpen={showSaveBeforeLeave}
+        onClose={() => { setShowSaveBeforeLeave(false); pendingNavigateRef.current = null; }}
+        onSave={handleSaveAndShowLoginModal}
+        onDontSave={clearPendingAndNavigate}
+      />
+      <LoginPromptModal
+        isOpen={showLoginModalForSave}
+        onClose={() => setShowLoginModalForSave(false)}
+        examName={examName}
+      />
     </div>
   );
 }

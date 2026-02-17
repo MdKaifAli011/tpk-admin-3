@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
-import { useRouter } from "next/navigation";
+import React, { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
   FaEnvelope,
@@ -20,8 +20,18 @@ import { SearchProvider } from "../layout/context/SearchContext";
 // Base path - used for public asset URLs (Next.js applies basePath automatically for navigation)
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
 
+const REDIRECT_KEY = "redirectAfterLogin";
+
 const LoginPage = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const redirect = searchParams.get("redirect");
+    if (redirect && typeof redirect === "string" && redirect.length > 0 && typeof window !== "undefined") {
+      window.sessionStorage.setItem(REDIRECT_KEY, redirect);
+    }
+  }, [searchParams]);
 
   const [formData, setFormData] = useState({
     email: "",
@@ -68,8 +78,17 @@ const LoginPage = () => {
             verifyResponse.data.success &&
             verifyResponse.data.data?.student
           ) {
-            // Student verified, proceed to home page
-            router.push("/");
+            let redirectTo =
+              typeof window !== "undefined"
+                ? window.sessionStorage.getItem(REDIRECT_KEY)
+                : null;
+            if (typeof window !== "undefined") {
+              window.sessionStorage.removeItem(REDIRECT_KEY);
+            }
+            if (redirectTo && redirectTo.startsWith(basePath)) {
+              redirectTo = redirectTo.slice(basePath.length) || "/";
+            }
+            router.push(redirectTo && redirectTo.startsWith("/") ? redirectTo : "/");
           } else {
             // Student not found or inactive
             setError(
@@ -275,7 +294,11 @@ const LoginPage = () => {
               {/* Register */}
               <div className="text-center">
                 <Link
-                  href="/register"
+                  href={
+                    searchParams.get("redirect")
+                      ? `/register?redirect=${encodeURIComponent(searchParams.get("redirect"))}`
+                      : "/register"
+                  }
                   className="text-xs font-semibold text-indigo-600 hover:underline"
                 >
                   <FaUser className="inline mr-1 text-sm" /> Create an Account

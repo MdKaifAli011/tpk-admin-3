@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, memo } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import {
   FaInstagram,
   FaFacebook,
@@ -38,6 +38,12 @@ import {
 // Base path - should match next.config.mjs basePath
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
 
+function loginHref(pathname) {
+  if (!pathname || pathname.includes("/login") || pathname.includes("/register")) return "/login";
+  const pathOnly = pathname.startsWith(basePath) ? pathname.slice(basePath.length) || "/" : pathname;
+  return `/login?redirect=${encodeURIComponent(pathOnly)}`;
+}
+
 const Navbar = memo(({ onMenuToggle, isMenuOpen, showSidebar }) => {
   const [isNavMenuOpen, setIsNavMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
@@ -45,6 +51,7 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen, showSidebar }) => {
   const [mobileExpandedMenu, setMobileExpandedMenu] = useState(null);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
   const { student, isLoading, isAuthenticated, logout } = useStudent();
   
   // Refs for hover delay management
@@ -522,7 +529,7 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen, showSidebar }) => {
                 </div>
               ) : (
                 <Link
-                  href="/login"
+                  href={loginHref(pathname)}
                   className="hidden md:flex items-center justify-center gap-1.5 xl:gap-2 px-2 xl:px-3 py-1.5 xl:py-2 text-xs xl:text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors whitespace-nowrap touch-manipulation min-h-[44px]"
                 >
                   <FaUser className="text-xs sm:text-sm shrink-0" />
@@ -771,7 +778,7 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen, showSidebar }) => {
                     </>
                   ) : (
                     <Link
-                      href="/login"
+                      href={loginHref(pathname)}
                       className="flex items-center justify-start gap-2 px-4 py-3 sm:py-3.5 text-sm sm:text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 active:bg-gray-100 transition-colors rounded-lg touch-manipulation min-h-[44px]"
                       onClick={() => setIsNavMenuOpen(false)}
                     >

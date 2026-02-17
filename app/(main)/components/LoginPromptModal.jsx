@@ -11,6 +11,16 @@ import {
   FaTrophy,
 } from "react-icons/fa";
 
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
+
+function pathWithoutBasePath(fullPath) {
+  if (!fullPath || typeof fullPath !== "string") return fullPath;
+  const pathOnly = fullPath.split("?")[0];
+  const search = fullPath.includes("?") ? fullPath.slice(fullPath.indexOf("?")) : "";
+  const withoutBase = pathOnly.startsWith(basePath) ? pathOnly.slice(basePath.length) || "/" : pathOnly;
+  return withoutBase + search;
+}
+
 const LoginPromptModal = ({ isOpen, onClose, examName }) => {
   const router = useRouter();
   const [animate, setAnimate] = useState(false);
@@ -33,10 +43,8 @@ const LoginPromptModal = ({ isOpen, onClose, examName }) => {
 
   const redirect = (path) => {
     if (typeof window !== "undefined") {
-      sessionStorage.setItem(
-        "redirectAfterLogin",
-        window.location.pathname + window.location.search
-      );
+      const redirectPath = pathWithoutBasePath(window.location.pathname + window.location.search);
+      sessionStorage.setItem("redirectAfterLogin", redirectPath);
     }
     router.push(path);
     onClose();
