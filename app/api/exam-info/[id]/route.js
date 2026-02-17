@@ -86,22 +86,29 @@ export async function PUT(request, { params }) {
         return errorResponse("subjects must be an array", 400);
       }
 
-      // Validate subjects
+      const rawId = (s) => (s && typeof s === "object" && s._id != null ? s._id : s);
+      const normalizedSubjects = subjects.map((s) => ({
+        ...s,
+        subjectId: rawId(s.subjectId),
+        subjectName: typeof s.subjectName === "string" ? s.subjectName : (s.subjectId?.name ?? ""),
+      }));
+
       const subjectIds = [];
-      for (const subject of subjects) {
+      for (const subject of normalizedSubjects) {
         if (!subject.subjectId) {
           return errorResponse("Subject ID is required for all subjects", 400);
         }
 
-        if (!mongoose.Types.ObjectId.isValid(subject.subjectId)) {
-          return errorResponse(`Invalid subject ID: ${subject.subjectId}`, 400);
+        const sid = subject.subjectId;
+        if (!mongoose.Types.ObjectId.isValid(sid)) {
+          return errorResponse(`Invalid subject ID: ${String(sid)}`, 400);
         }
 
-        if (subjectIds.includes(subject.subjectId)) {
+        if (subjectIds.includes(String(sid))) {
           return errorResponse("Duplicate subjects are not allowed", 400);
         }
 
-        subjectIds.push(subject.subjectId);
+        subjectIds.push(String(sid));
 
         if (!subject.subjectName || !subject.subjectName.trim()) {
           return errorResponse("Subject name is required", 400);
@@ -142,15 +149,15 @@ export async function PUT(request, { params }) {
         }
 
         // Verify subject exists
-        const subjectExists = await Subject.findById(subject.subjectId);
+        const subjectExists = await Subject.findById(sid);
         if (!subjectExists) {
-          return errorResponse(`Subject not found: ${subject.subjectId}`, 404);
+          return errorResponse(`Subject not found: ${String(sid)}`, 404);
         }
       }
 
-      examInfo.subjects = subjects.map((s) => ({
+      examInfo.subjects = normalizedSubjects.map((s) => ({
         subjectId: s.subjectId,
-        subjectName: s.subjectName.trim(),
+        subjectName: (s.subjectName || "").trim(),
         numberOfQuestions: s.numberOfQuestions,
         maximumMarks: s.maximumMarks,
         weightage: s.weightage,

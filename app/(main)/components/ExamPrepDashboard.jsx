@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   FaCalendarAlt,
   FaHourglassHalf,
@@ -8,6 +8,79 @@ import {
   FaBullseye,
   FaChevronRight,
 } from "react-icons/fa";
+import api from "@/lib/api";
+
+function formatExamDate(date) {
+  if (!date) return null;
+  const d = new Date(date);
+  if (Number.isNaN(d.getTime())) return null;
+  const day = d.getDate();
+  const months = "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".split(" ");
+  const month = months[d.getMonth()];
+  const year = d.getFullYear();
+  return `${day.toString().padStart(2, "0")} ${month} ${year}`;
+}
+
+/** Days left from today (local date) to exam date (local date). Uses calendar days only. */
+function getPrepDaysRemaining(examDate) {
+  if (!examDate) return null;
+  const exam = new Date(examDate);
+  if (Number.isNaN(exam.getTime())) return null;
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const examDay = new Date(exam.getFullYear(), exam.getMonth(), exam.getDate());
+  const diffMs = examDay - today;
+  const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  return days;
+}
+
+const HOURS_PER_DAY_STORAGE_KEY = "examPrep_hoursPerDay";
+const ACCURACY_STORAGE_KEY = "examPrep_accuracyPct";
+
+/** Expected marks range from total marks and accuracy % (0–100). Fully dynamic. */
+function getExpectedMarksFromAccuracy(totalMarks, accuracyPct) {
+  if (!totalMarks || totalMarks <= 0) return null;
+  const pct = Math.min(100, Math.max(0, Number(accuracyPct) || 0)) / 100;
+  const t = totalMarks;
+  const spread = 0.05;
+  const minPct = Math.max(0, pct - spread);
+  const maxPct = Math.min(1, pct + spread);
+  const minScore = Math.round(t * minPct);
+  const maxScore = Math.round(t * maxPct);
+  return { minScore, maxScore, range: `${minScore} – ${maxScore}` };
+}
+
+function getStoredHoursPerDay() {
+  if (typeof window === "undefined") return 3;
+  try {
+    const v = parseInt(localStorage.getItem(HOURS_PER_DAY_STORAGE_KEY), 10);
+    return Number.isNaN(v) || v < 1 || v > 24 ? 3 : v;
+  } catch {
+    return 3;
+  }
+}
+
+function setStoredHoursPerDay(n) {
+  try {
+    localStorage.setItem(HOURS_PER_DAY_STORAGE_KEY, String(n));
+  } catch {}
+}
+
+function getStoredAccuracy() {
+  if (typeof window === "undefined") return 100;
+  try {
+    const v = parseInt(localStorage.getItem(ACCURACY_STORAGE_KEY), 10);
+    return Number.isNaN(v) || v < 0 || v > 100 ? 100 : v;
+  } catch {
+    return 100;
+  }
+}
+
+function setStoredAccuracy(n) {
+  try {
+    localStorage.setItem(ACCURACY_STORAGE_KEY, String(n));
+  } catch {}
+}
 
 // Static data as in the NEET AI Preparation Dashboard image
 const STATIC = {
@@ -48,7 +121,7 @@ const STATIC = {
     },
     {
       title: "Expected NEET Score",
-      value: "545-585",
+      value: "545-585 marks",
       subText: "Placeholder (later from mocks + accuracy)",
       icon: FaBullseye,
       iconBg: "bg-violet-100",
@@ -76,10 +149,121 @@ const STATIC = {
   ],
 };
 
-export default function ExamPrepDashboard({ examName = "NEET" }) {
+export default function ExamPrepDashboard({ examId, examName = "NEET" }) {
   const [activeTab, setActiveTab] = useState(STATIC.activeTab);
+  const [examInfo, setExamInfo] = useState(null);
+  const [hoursPerDay, setHoursPerDay] = useState(() =>
+    typeof window !== "undefined" ? getStoredHoursPerDay() : 3,
+  );
+  const [accuracyPct, setAccuracyPct] = useState(() =>
+    typeof window !== "undefined" ? getStoredAccuracy() : 100,
+  );
+
+  useEffect(() => {
+    if (!examId) return;
+    let cancelled = false;
+    api
+      .get(`/exam-info?examId=${examId}`)
+      .then((res) => {
+        if (cancelled || !res.data?.data?.length) return;
+        setExamInfo(res.data.data[0]);
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [examId]);
 
   const breadcrumbText = STATIC.breadcrumb.replace("NEET", examName);
+
+  const examDateDisplay = examInfo?.examDate
+    ? formatExamDate(examInfo.examDate)
+    : STATIC.cards[0].value;
+
+  const prepDays = examInfo?.examDate != null ? getPrepDaysRemaining(examInfo.examDate) : null;
+  const prepDaysDisplay =
+    prepDays != null
+      ? prepDays > 0
+        ? `${prepDays} Day${prepDays === 1 ? "" : "s"}`
+        : prepDays === 0
+          ? "Today"
+          : "Exam date passed"
+      : STATIC.cards[1].value;
+
+  const todayStr = formatExamDate(new Date());
+  const prepDaysSubText =
+    examInfo?.examDate && todayStr && examDateDisplay
+      ? `From ${todayStr} to ${examDateDisplay}`
+      : STATIC.cards[1].subText;
+
+  const studyHoursTotal =
+    prepDays != null && prepDays > 0 && hoursPerDay > 0
+      ? prepDays * hoursPerDay
+      : null;
+  const studyHoursDisplay =
+    studyHoursTotal != null
+      ? `${studyHoursTotal.toLocaleString()} Hours`
+      : prepDays === 0
+        ? "0 Hours"
+        : STATIC.cards[2].value;
+  const studyHoursFormula =
+    prepDays != null && prepDays > 0 && hoursPerDay > 0
+      ? `${prepDays} days × ${hoursPerDay} hrs/day`
+      : null;
+  const studyHoursSubText = studyHoursFormula
+    ? studyHoursFormula
+    : STATIC.cards[2].subText;
+
+  const maxMarks = examInfo?.maximumMarks != null ? Number(examInfo.maximumMarks) : null;
+  const expectedFromAccuracy =
+    maxMarks > 0 ? getExpectedMarksFromAccuracy(maxMarks, accuracyPct) : null;
+  const expectedScoreRange =
+    expectedFromAccuracy
+      ? `${expectedFromAccuracy.range} marks`
+      : maxMarks != null && maxMarks > 0
+        ? `Up to ${Math.round(maxMarks)} marks`
+        : STATIC.cards[3].value;
+
+  const handleAccuracyChange = (e) => {
+    const pct = Math.min(100, Math.max(0, Number(e.target.value) || 0));
+    setAccuracyPct(pct);
+    setStoredAccuracy(pct);
+    const suggestedHours = Math.round(2 + (pct / 100) * 8);
+    const hours = Math.min(24, Math.max(1, suggestedHours));
+    setHoursPerDay(hours);
+    setStoredHoursPerDay(hours);
+  };
+
+  const handleHoursPerDayChange = (e) => {
+    const n = parseInt(e.target.value, 10);
+    if (!Number.isNaN(n) && n >= 1 && n <= 24) {
+      setHoursPerDay(n);
+      setStoredHoursPerDay(n);
+    }
+  };
+
+  const cardsWithData = STATIC.cards.map((card) => {
+    const title = card.title.replace(/NEET/g, examName);
+    if (card.title === "NEET Exam Date") return { ...card, title, value: examDateDisplay };
+    if (card.title === "Prep Days Remaining")
+      return { ...card, title, value: prepDaysDisplay, subText: prepDaysSubText };
+    if (card.title === "Study Hours Left (Total)")
+      return {
+        ...card,
+        title,
+        value: studyHoursDisplay,
+        studyHoursFormula: studyHoursFormula ?? null,
+        hoursPerDay,
+        onHoursPerDayChange: handleHoursPerDayChange,
+      };
+    if (card.title === "Expected NEET Score")
+      return {
+        ...card,
+        title,
+        value: expectedScoreRange,
+        accuracyPct,
+        onAccuracyChange: handleAccuracyChange,
+      };
+    return { ...card, title };
+  });
 
   return (
     <div className="">
@@ -124,7 +308,7 @@ export default function ExamPrepDashboard({ examName = "NEET" }) {
       {/* Metric cards row */}
       <div className="py-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {STATIC.cards.map((card) => {
+          {cardsWithData.map((card) => {
             const Icon = card.icon;
             return (
               <div
@@ -142,21 +326,37 @@ export default function ExamPrepDashboard({ examName = "NEET" }) {
                 <p className={`text-lg font-bold ${card.valueColor} mb-1`}>
                   {card.value}
                 </p>
-                <p className="text-xs text-slate-500">
-                  {card.subTextLink ? (
-                    <>
-                      {card.subText.replace(card.subTextLink, "").trim()}{" "}
-                      <button
-                        type="button"
-                        className="text-blue-600 underline hover:text-blue-700"
-                      >
-                        {card.subTextLink}
-                      </button>
-                    </>
-                  ) : (
-                    card.subText
-                  )}
-                </p>
+                {card.onHoursPerDayChange ? (
+                  <div className="text-xs text-slate-500 space-y-1">
+                    {card.studyHoursFormula && <p>{card.studyHoursFormula}</p>}
+                    <p className="flex flex-wrap items-center gap-1">
+                      <span>Assuming</span>
+                      <input
+                        type="number"
+                        min={1}
+                        max={24}
+                        value={card.hoursPerDay}
+                        onChange={card.onHoursPerDayChange}
+                        className="w-14 px-1.5 py-0.5 border border-slate-300 rounded text-slate-700 text-center focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                      <span>hrs/day — Change</span>
+                    </p>
+                  </div>
+                ) : card.onAccuracyChange ? (
+                  <div className="text-xs text-slate-500 space-y-2 mt-1">
+                    <p className="text-slate-600">Accuracy: {card.accuracyPct}%</p>
+                    <input
+                      type="range"
+                      min={0}
+                      max={100}
+                      value={card.accuracyPct}
+                      onChange={card.onAccuracyChange}
+                      className="w-full h-2 rounded-full appearance-none bg-slate-200 accent-blue-600 cursor-pointer"
+                    />
+                  </div>
+                ) : (
+                  <p className="text-xs text-slate-500">{card.subText}</p>
+                )}
               </div>
             );
           })}

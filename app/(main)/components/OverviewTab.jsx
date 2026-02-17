@@ -132,7 +132,7 @@ const OverviewTab = ({
       {/* Exam AI Preparation Dashboard - only for exam Overview */}
       {entityType === "exam" && (
         <div className="mb-6">
-          <ExamPrepDashboard examName={entityName || "Exam"} />
+          <ExamPrepDashboard examId={examId} examName={entityName || "Exam"} />
         </div>
       )}
 

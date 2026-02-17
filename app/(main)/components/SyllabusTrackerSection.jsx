@@ -14,6 +14,26 @@ import { markChapterCongratulationsShown } from "@/lib/congratulations";
 const PROGRESS_THEORY_ONLY = 70;
 const PROGRESS_PRACTICE_ONLY = 30;
 const PROGRESS_BOTH = 100;
+
+// Slider zones: 0–60 orange, 60–80 blue, 80–100 green
+const ZONE_ORANGE = "#f97316";
+const ZONE_BLUE = "#2563eb";
+const ZONE_GREEN = "#10b981";
+const TRACK_UNFILLED = "#e2e8f0";
+
+// One color for the whole filled range based on zone: 0–60 orange, 60–80 blue, 80+ green
+function getSliderTrackGradient(progressPercent) {
+  const p = Math.min(100, Math.max(0, progressPercent));
+  const fillColor = getZoneColor(progressPercent);
+  return `linear-gradient(to right, ${fillColor} 0%, ${fillColor} ${p}%, ${TRACK_UNFILLED} ${p}%, ${TRACK_UNFILLED} 100%)`;
+}
+
+function getZoneColor(progressPercent) {
+  const p = Math.min(100, Math.max(0, progressPercent));
+  if (p < 60) return ZONE_ORANGE;
+  if (p < 80) return ZONE_BLUE;
+  return ZONE_GREEN;
+}
 const CHAPTER_DESCRIPTIONS = [
   "Focus on NCERT definitions, nomenclature rules, hierarchy order, and \"statement trap\" questions.",
   "High-return: characteristics + examples for each kingdom; common confusion between groups.",
@@ -147,7 +167,10 @@ function ChapterRow({
           ))}
         </div>
       </div>
-      <div className="flex items-center gap-3 shrink-0" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="flex items-center gap-3 shrink-0"
+        onClick={(e) => e.stopPropagation()}
+      >
         <input
           type="range"
           min="0"
@@ -158,10 +181,16 @@ function ChapterRow({
           disabled={practiceDisabled}
           className="w-28 sm:w-36 h-2 rounded-full appearance-none cursor-pointer slider-syllabus"
           style={{
-            background: `linear-gradient(to right, #22c55e 0%, #22c55e ${progressPercent}%, #1e40af ${progressPercent}%, #1e40af 100%)`,
+            background: getSliderTrackGradient(progressPercent),
+            ["--slider-zone-color"]: getZoneColor(progressPercent),
           }}
         />
-        <span className="text-sm font-bold text-slate-700 min-w-10">{Math.round(progressPercent)}%</span>
+        <span
+          className="text-sm font-bold min-w-10 tabular-nums"
+          style={{ color: getZoneColor(progressPercent) }}
+        >
+          {Math.round(progressPercent)}%
+        </span>
       </div>
       <CongratulationsModal isOpen={showCongratulations} onClose={() => setShowCongratulations(false)} chapterName={chapter.name} type="chapter" />
       <LoginPromptModal
@@ -203,20 +232,25 @@ function UnitAccordionItem({
         className="w-full text-left p-4 sm:p-5 rounded-none bg-white hover:bg-slate-50/80 transition-colors border-t border-slate-200 first:border-t-0 cursor-pointer"
       >
         <div className="flex flex-wrap items-center gap-2 mb-2">
-          <span className="text-slate-500">{isExpanded ? <FaChevronDown className="w-4 h-4" /> : <FaChevronRight className="w-4 h-4" />}</span>
+          <span className="text-slate-500 shrink-0">{isExpanded ? <FaChevronDown className="w-4 h-4" /> : <FaChevronRight className="w-4 h-4" />}</span>
           {unitUrl ? (
             <Link
               href={unitUrl}
               onClick={(e) => e.stopPropagation()}
-              className="text-base font-bold text-slate-900 hover:text-blue-600 m-0"
+              className="text-base font-bold text-slate-900 hover:text-blue-600 m-0 shrink-0"
             >
               Unit: {unit.name}
             </Link>
           ) : (
-            <h3 className="text-base font-bold text-slate-900 m-0">Unit: {unit.name}</h3>
+            <h3 className="text-base font-bold text-slate-900 m-0 shrink-0">Unit: {unit.name}</h3>
           )}
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
-            Completion: {unitProgressPercent}%
+         
+          <span className="flex-1 min-w-0 " aria-hidden="true" />
+          <span
+            className="text-lg font-bold tabular-nums shrink-0  me-16"
+            style={{ color: getZoneColor(unitProgressPercent) }}
+          >
+            {unitProgressPercent}%
           </span>
         </div>
         <p className="text-xs text-slate-600 mb-3 pl-6">
@@ -230,7 +264,10 @@ function UnitAccordionItem({
         <div className="w-full h-2.5 rounded-full overflow-hidden bg-slate-200">
           <div
             className="h-full rounded-full transition-all duration-500 bg-emerald-500"
-            style={{ width: `${unitProgressPercent}%` }}
+            style={{
+              width: `${unitProgressPercent}%`,
+              minWidth: unitProgressPercent > 0 ? "2%" : 0,
+            }}
           />
         </div>
       </div>
@@ -304,25 +341,25 @@ export default function SyllabusTrackerSection({
 
   return (
     <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-      <style jsx>{`
+      <style jsx global>{`
         .slider-syllabus::-webkit-slider-thumb {
           appearance: none;
           width: 18px;
           height: 18px;
           border-radius: 50%;
-          background: #1e40af;
+          background: white;
           cursor: pointer;
-          border: 2px solid white;
-          box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+          border: 2px solid var(--slider-zone-color, #10b981);
+          box-shadow: 0 1px 3px rgba(0,0,0,0.15);
         }
         .slider-syllabus::-moz-range-thumb {
           width: 18px;
           height: 18px;
           border-radius: 50%;
-          background: #1e40af;
+          background: white;
           cursor: pointer;
-          border: 2px solid white;
-          box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+          border: 2px solid var(--slider-zone-color, #10b981);
+          box-shadow: 0 1px 3px rgba(0,0,0,0.15);
         }
       `}</style>
       <div className="p-4 sm:p-5 border-b border-slate-200 bg-slate-50/50">
@@ -335,8 +372,12 @@ export default function SyllabusTrackerSection({
               Chapter progress = Theory 70% + Practice 30%. Use sliders and Theory/Practice checkboxes; progress rolls up to unit → subject → total.
             </p>
           </div>
-          <span className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-bold bg-blue-100 text-blue-800 shrink-0">
-            Overall Syllabus: {Math.round(overallPercent)}%
+          <span
+            className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-bold shrink-0 ${
+              Math.round(overallPercent) === 0 ? "bg-blue-100 text-blue-800" : "bg-emerald-100 text-emerald-800"
+            }`}
+          >
+            Completion: {Math.round(overallPercent)}%
           </span>
         </div>
         <div className="flex flex-wrap gap-2 mt-4">
