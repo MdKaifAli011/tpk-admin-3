@@ -149,28 +149,90 @@ const STATIC = {
   ],
 };
 
-export default function ExamPrepDashboard({ examId, examName = "NEET" }) {
+export default function ExamPrepDashboard({
+  examId,
+  examName = "NEET",
+  hoursPerDay: hoursPerDayProp,
+  onHoursPerDayChange,
+  examInfo: examInfoProp,
+  accuracyPct: accuracyPctProp,
+  onAccuracyChange,
+}) {
   const [activeTab, setActiveTab] = useState(STATIC.activeTab);
-  const [examInfo, setExamInfo] = useState(null);
-  const [hoursPerDay, setHoursPerDay] = useState(() =>
+  const [examInfoInternal, setExamInfoInternal] = useState(null);
+  const [hoursPerDayInternal, setHoursPerDayInternal] = useState(() =>
     typeof window !== "undefined" ? getStoredHoursPerDay() : 3,
   );
-  const [accuracyPct, setAccuracyPct] = useState(() =>
+  const [accuracyPctInternal, setAccuracyPctInternal] = useState(() =>
     typeof window !== "undefined" ? getStoredAccuracy() : 100,
   );
+  const [eventOverride, setEventOverride] = useState(null);
+  const isControlledHours = onHoursPerDayChange != null;
+  const isControlledAccuracy = onAccuracyChange != null;
+  const hoursPerDay = eventOverride?.hoursPerDay ?? (isControlledHours ? (hoursPerDayProp ?? 3) : hoursPerDayInternal);
+  const accuracyPct = eventOverride?.accuracyPct ?? (isControlledAccuracy ? (accuracyPctProp ?? 100) : accuracyPctInternal);
 
   useEffect(() => {
-    if (!examId) return;
+    const onSync = (e) => {
+      if (e.detail?.hoursPerDay != null || e.detail?.accuracyPct != null)
+        setEventOverride({
+          hoursPerDay: e.detail.hoursPerDay,
+          accuracyPct: e.detail.accuracyPct,
+        });
+    };
+    window.addEventListener("examPrep_sync", onSync);
+    return () => window.removeEventListener("examPrep_sync", onSync);
+  }, []);
+
+  useEffect(() => {
+    if (hoursPerDayProp != null || accuracyPctProp != null)
+      setEventOverride(null);
+  }, [hoursPerDayProp, accuracyPctProp]);
+  const setHoursPerDay = isControlledHours
+    ? (n) => {
+        const val = Number(n);
+        if (!Number.isNaN(val)) {
+          onHoursPerDayChange(val);
+          setStoredHoursPerDay(val);
+        }
+      }
+    : (n) => {
+        const val = Number(n);
+        if (!Number.isNaN(val)) {
+          setHoursPerDayInternal(val);
+          setStoredHoursPerDay(val);
+        }
+      };
+  const setAccuracyPct = isControlledAccuracy
+    ? (pct) => {
+        const val = Number(pct);
+        if (!Number.isNaN(val)) {
+          onAccuracyChange(val);
+          setStoredAccuracy(val);
+        }
+      }
+    : (pct) => {
+        const val = Number(pct);
+        if (!Number.isNaN(val)) {
+          setAccuracyPctInternal(val);
+          setStoredAccuracy(val);
+        }
+      };
+
+  const examInfo = examInfoProp !== undefined ? examInfoProp : examInfoInternal;
+
+  useEffect(() => {
+    if (examInfoProp !== undefined || !examId) return;
     let cancelled = false;
     api
       .get(`/exam-info?examId=${examId}`)
       .then((res) => {
         if (cancelled || !res.data?.data?.length) return;
-        setExamInfo(res.data.data[0]);
+        setExamInfoInternal(res.data.data[0]);
       })
       .catch(() => {});
     return () => { cancelled = true; };
-  }, [examId]);
+  }, [examId, examInfoProp]);
 
   const breadcrumbText = STATIC.breadcrumb.replace("NEET", examName);
 
@@ -198,6 +260,44 @@ export default function ExamPrepDashboard({ examId, examName = "NEET" }) {
     prepDays != null && prepDays > 0 && hoursPerDay > 0
       ? prepDays * hoursPerDay
       : null;
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (prepDays != null && studyHoursTotal != null)
+      window.dispatchEvent(
+        new CustomEvent("examPrep_timeRequired", {
+          detail: { prepDays, studyHoursLeft: studyHoursTotal },
+        })
+      );
+  }, [prepDays, studyHoursTotal]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const onRequest = () => {
+      if (prepDays != null && studyHoursTotal != null)
+        window.dispatchEvent(
+          new CustomEvent("examPrep_timeRequired", {
+            detail: { prepDays, studyHoursLeft: studyHoursTotal },
+          })
+        );
+    };
+    window.addEventListener("examPrep_requestTimeRequired", onRequest);
+    return () => window.removeEventListener("examPrep_requestTimeRequired", onRequest);
+  }, [prepDays, studyHoursTotal]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const t = setTimeout(() => {
+      if (prepDays != null && studyHoursTotal != null)
+        window.dispatchEvent(
+          new CustomEvent("examPrep_timeRequired", {
+            detail: { prepDays, studyHoursLeft: studyHoursTotal },
+          })
+        );
+    }, 300);
+    return () => clearTimeout(t);
+  }, [prepDays, studyHoursTotal]);
+
   const studyHoursDisplay =
     studyHoursTotal != null
       ? `${studyHoursTotal.toLocaleString()} Hours`
@@ -225,18 +325,31 @@ export default function ExamPrepDashboard({ examId, examName = "NEET" }) {
   const handleAccuracyChange = (e) => {
     const pct = Math.min(100, Math.max(0, Number(e.target.value) || 0));
     setAccuracyPct(pct);
-    setStoredAccuracy(pct);
-    const suggestedHours = Math.round(2 + (pct / 100) * 8);
-    const hours = Math.min(24, Math.max(1, suggestedHours));
-    setHoursPerDay(hours);
-    setStoredHoursPerDay(hours);
+    if (!isControlledAccuracy && !isControlledHours) {
+      const suggestedHours = Math.round(2 + (pct / 100) * 8);
+      const hours = Math.min(24, Math.max(1, suggestedHours));
+      setHoursPerDay(hours);
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("examPrep_hoursPerDayChanged", { detail: { hoursPerDay: hours } }));
+      }
+    }
   };
 
   const handleHoursPerDayChange = (e) => {
-    const n = parseInt(e.target.value, 10);
-    if (!Number.isNaN(n) && n >= 1 && n <= 24) {
-      setHoursPerDay(n);
-      setStoredHoursPerDay(n);
+    const raw = parseInt(e.target.value, 10);
+    const n = Number.isNaN(raw) ? 3 : Math.min(24, Math.max(1, raw));
+    setHoursPerDay(n);
+    if (!isControlledHours && typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("examPrep_hoursPerDayChanged", { detail: { hoursPerDay: n } }));
+    }
+  };
+
+  const handleHoursPerDayBlur = (e) => {
+    const raw = parseInt(e.target.value, 10);
+    const n = Number.isNaN(raw) ? 3 : Math.min(24, Math.max(1, raw));
+    setHoursPerDay(n);
+    if (!isControlledHours && typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("examPrep_hoursPerDayChanged", { detail: { hoursPerDay: n } }));
     }
   };
 
@@ -253,6 +366,7 @@ export default function ExamPrepDashboard({ examId, examName = "NEET" }) {
         studyHoursFormula: studyHoursFormula ?? null,
         hoursPerDay,
         onHoursPerDayChange: handleHoursPerDayChange,
+        onHoursPerDayBlur: handleHoursPerDayBlur,
       };
     if (card.title === "Expected NEET Score")
       return {
@@ -335,8 +449,9 @@ export default function ExamPrepDashboard({ examId, examName = "NEET" }) {
                         type="number"
                         min={1}
                         max={24}
-                        value={card.hoursPerDay}
+                        value={Number(card.hoursPerDay) || 3}
                         onChange={card.onHoursPerDayChange}
+                        onBlur={card.onHoursPerDayBlur}
                         className="w-14 px-1.5 py-0.5 border border-slate-300 rounded text-slate-700 text-center focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                       />
                       <span>hrs/day — Change</span>
@@ -349,7 +464,7 @@ export default function ExamPrepDashboard({ examId, examName = "NEET" }) {
                       type="range"
                       min={0}
                       max={100}
-                      value={card.accuracyPct}
+                      value={Number(card.accuracyPct) ?? 100}
                       onChange={card.onAccuracyChange}
                       className="w-full h-2 rounded-full appearance-none bg-slate-200 accent-blue-600 cursor-pointer"
                     />

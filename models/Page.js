@@ -28,6 +28,12 @@ const pageSchema = new mongoose.Schema(
       enum: ["active", "inactive", "draft"],
       default: "draft",
     },
+    // SEO: optional meta title (defaults to title if empty)
+    metaTitle: {
+      type: String,
+      trim: true,
+      default: "",
+    },
     metaDescription: {
       type: String,
       trim: true,

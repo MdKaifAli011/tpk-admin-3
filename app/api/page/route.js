@@ -88,8 +88,9 @@ export async function POST(request) {
       exam: examId,
       content: body.content || "",
       status: body.status || "draft",
-      metaDescription: body.metaDescription || "",
-      keywords: body.keywords || "",
+      metaTitle: (body.metaTitle || "").trim(),
+      metaDescription: (body.metaDescription || "").trim(),
+      keywords: (body.keywords || "").trim(),
     });
 
     const populated = await Page.findById(newPage._id)

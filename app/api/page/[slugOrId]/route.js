@@ -98,6 +98,7 @@ export async function PUT(request, { params }) {
       ...(body.title !== undefined && { title: body.title.trim() }),
       ...(body.content !== undefined && { content: body.content }),
       ...(body.status !== undefined && { status: body.status }),
+      ...(body.metaTitle !== undefined && { metaTitle: body.metaTitle.trim() }),
       ...(body.metaDescription !== undefined && {
         metaDescription: body.metaDescription.trim(),
       }),

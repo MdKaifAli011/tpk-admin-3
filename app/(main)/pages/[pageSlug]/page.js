@@ -8,6 +8,9 @@ import RichContent from "../../components/RichContent";
 
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
 
+// Ensure metadata and content are always fresh (no static cache)
+export const dynamic = "force-dynamic";
+
 /**
  * Fetch site-level page by slug for public UI.
  * - exam must be null (site-level)
@@ -33,10 +36,15 @@ export async function generateMetadata({ params }) {
     return { title: "Page Not Found" };
   }
   const isActive = page.status === "active";
+  const title = (page.metaTitle && page.metaTitle.trim()) || page.title || "Page";
+  const description = (page.metaDescription && page.metaDescription.trim()) || "";
+  const keywords = page.keywords && page.keywords.trim()
+    ? page.keywords.split(",").map((k) => k.trim()).filter(Boolean)
+    : undefined;
   return {
-    title: page.title || "Page",
-    description: page.metaDescription || "",
-    keywords: page.keywords || undefined,
+    title,
+    description: description || undefined,
+    keywords: keywords?.length ? keywords : undefined,
     robots: isActive ? "index, follow" : "noindex, nofollow",
   };
 }

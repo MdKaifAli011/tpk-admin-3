@@ -3,9 +3,9 @@
  * Production-ready service worker with cache strategies
  */
 
-const CACHE_NAME = "testprepkart-v1";
-const RUNTIME_CACHE = "testprepkart-runtime-v1";
-const STATIC_CACHE = "testprepkart-static-v1";
+const CACHE_NAME = "testprepkart-v2";
+const RUNTIME_CACHE = "testprepkart-runtime-v2";
+const STATIC_CACHE = "testprepkart-static-v2";
 
 // Base path - should match next.config.mjs basePath
 const BASE_PATH = "/self-study";
@@ -67,6 +67,11 @@ self.addEventListener("fetch", (event) => {
   // Skip API requests (they should always be fresh)
   // Handle both /api/ and /self-study/api/
   if (url.pathname.startsWith("/api/") || url.pathname.startsWith(`${BASE_PATH}/api/`)) {
+    return;
+  }
+
+  // Skip Next.js RSC (React Server Components) - never cache; prevents stale UI and failed prefetches
+  if (url.searchParams.has("_rsc")) {
     return;
   }
 

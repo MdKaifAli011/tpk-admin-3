@@ -24,6 +24,7 @@ const PageDetailPage = ({ pageSlug, examSlug: initialExamSlug }) => {
     title: "",
     content: "",
     status: "draft",
+    metaTitle: "",
     metaDescription: "",
     keywords: "",
   });
@@ -45,6 +46,7 @@ const PageDetailPage = ({ pageSlug, examSlug: initialExamSlug }) => {
           title: p.title || "",
           content: p.content || "",
           status: p.status || "draft",
+          metaTitle: p.metaTitle || "",
           metaDescription: p.metaDescription || "",
           keywords: p.keywords || "",
         });
@@ -90,6 +92,7 @@ const PageDetailPage = ({ pageSlug, examSlug: initialExamSlug }) => {
     title: formData.title.trim(),
     content: formData.content,
     status: formData.status,
+    metaTitle: formData.metaTitle.trim(),
     metaDescription: formData.metaDescription.trim(),
     keywords: formData.keywords.trim(),
     exam: effectiveExamSlug || "site",
@@ -107,6 +110,7 @@ const PageDetailPage = ({ pageSlug, examSlug: initialExamSlug }) => {
           title: formData.title.trim(),
           content: formData.content,
           status: formData.status,
+          metaTitle: formData.metaTitle.trim(),
           metaDescription: formData.metaDescription.trim(),
           keywords: formData.keywords.trim(),
           ...(examSlug && { exam: examSlug }),
@@ -146,6 +150,7 @@ const PageDetailPage = ({ pageSlug, examSlug: initialExamSlug }) => {
           title: formData.title.trim(),
           content: formData.content,
           status: formData.status,
+          metaTitle: formData.metaTitle.trim(),
           metaDescription: formData.metaDescription.trim(),
           keywords: formData.keywords.trim(),
           ...(examSlug && { exam: examSlug }),
@@ -367,6 +372,20 @@ const PageDetailPage = ({ pageSlug, examSlug: initialExamSlug }) => {
                 </h3>
               </div>
               <div className="p-4 sm:p-6 space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Meta Title (SEO)
+                  </label>
+                  <input
+                    type="text"
+                    name="metaTitle"
+                    value={formData.metaTitle}
+                    onChange={handleChange}
+                    placeholder="Leave empty to use page title"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Used for &lt;title&gt; and search results. Defaults to page title if empty.</p>
+                </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Meta Description

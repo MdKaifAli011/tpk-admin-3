@@ -199,8 +199,8 @@ function ChapterRow({
         {/* <p className="text-xs text-slate-600 mt-1">{description}</p> */}
         <div className="flex flex-wrap gap-3 mt-2">
           {[
-            { stage: "theory", label: "Theory (70%)", checked: theoryChecked },
-            { stage: "practice", label: "Practice (30%)", checked: practiceChecked },
+            { stage: "theory", label: "Theory", checked: theoryChecked },
+            { stage: "practice", label: "Practice", checked: practiceChecked },
           ].map(({ stage, label, checked }) => (
             <label key={stage} className="inline-flex items-center gap-1.5 cursor-pointer text-xs">
               <input

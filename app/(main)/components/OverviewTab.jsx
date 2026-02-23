@@ -1,6 +1,7 @@
 "use client";
 
-import React, { lazy, Suspense, useState } from "react";
+import React, { lazy, Suspense, useState, useEffect, useCallback, useRef } from "react";
+import { flushSync } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FaBook, FaChartLine, FaTrophy, FaChevronDown } from "react-icons/fa";
@@ -17,7 +18,17 @@ import ChaptersSectionClient from "./ChaptersSectionClient";
 import DeepUnitChapterTracker from "./DeepUnitChapterTracker";
 import ExamPrepDashboard from "./ExamPrepDashboard";
 import PreparationProgressDashboard from "./PreparationProgressDashboard";
+import {
+  getStoredHoursPerDay,
+  setStoredHoursPerDay,
+  getStoredAccuracy,
+  setStoredAccuracy,
+  getSuggestedHoursFromAccuracy,
+  getAccuracyFromHours,
+  broadcastExamPrepSync,
+} from "../lib/examPrepStorage";
 import SyllabusTrackerSection from "./SyllabusTrackerSection";
+import api from "@/lib/api";
 
 // SubTopic Preview Component with Fixed 400px Height
 const SubTopicPreview = ({
@@ -127,12 +138,118 @@ const OverviewTab = ({
   overviewEntityId,
   examId,
 }) => {
+  const [hoursPerDay, setHoursPerDay] = useState(3);
+  const [accuracyPct, setAccuracyPct] = useState(100);
+  const [examInfo, setExamInfo] = useState(null);
+
+  const syncFromStorage = useCallback(() => {
+    if (typeof window === "undefined") return;
+    try {
+      setHoursPerDay(getStoredHoursPerDay());
+      setAccuracyPct(getStoredAccuracy());
+    } catch (_) {}
+  }, []);
+
+  useEffect(() => {
+    syncFromStorage();
+  }, [syncFromStorage]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const onVisible = () => syncFromStorage();
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onVisible);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", onVisible);
+    };
+  }, [syncFromStorage]);
+
+  useEffect(() => {
+    if (entityType !== "exam" || !examId) return;
+    let cancelled = false;
+    const id = examId != null ? String(examId) : "";
+    if (!id) return;
+    api
+      .get(`/exam-info?examId=${id}`)
+      .then((res) => {
+        if (cancelled || !res.data?.data?.length) return;
+        setExamInfo(res.data.data[0]);
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [entityType, examId]);
+
+  const handleHoursPerDayChange = useCallback((n) => {
+    const v = Math.min(24, Math.max(1, Number(n)));
+    if (Number.isNaN(v)) return;
+    const pct = getAccuracyFromHours(v);
+    setStoredHoursPerDay(v);
+    setStoredAccuracy(pct);
+    flushSync(() => {
+      setHoursPerDay(v);
+      setAccuracyPct(pct);
+    });
+    broadcastExamPrepSync(v, pct);
+  }, []);
+
+  const handleAccuracyChange = useCallback((pct) => {
+    const v = Math.min(100, Math.max(0, Number(pct)));
+    if (Number.isNaN(v)) return;
+    const suggestedHours = getSuggestedHoursFromAccuracy(v);
+    setStoredAccuracy(v);
+    setStoredHoursPerDay(suggestedHours);
+    flushSync(() => {
+      setAccuracyPct(v);
+      setHoursPerDay(suggestedHours);
+    });
+    broadcastExamPrepSync(suggestedHours, v);
+  }, []);
+
+  const hoursCbRef = useRef(handleHoursPerDayChange);
+  const accuracyCbRef = useRef(handleAccuracyChange);
+  hoursCbRef.current = handleHoursPerDayChange;
+  accuracyCbRef.current = handleAccuracyChange;
+
+  const onHoursPerDayChangeStable = useCallback((n) => {
+    hoursCbRef.current(n);
+  }, []);
+  const onAccuracyChangeStable = useCallback((pct) => {
+    accuracyCbRef.current(pct);
+  }, []);
+
+  const prepDaysRemaining =
+    examInfo?.examDate != null
+      ? (() => {
+          const exam = new Date(examInfo.examDate);
+          if (Number.isNaN(exam.getTime())) return null;
+          const now = new Date();
+          const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+          const examDay = new Date(exam.getFullYear(), exam.getMonth(), exam.getDate());
+          const diffMs = examDay - today;
+          return Math.floor(diffMs / (1000 * 60 * 60 * 24));
+        })()
+      : null;
+  const hoursPerDayNum = Math.max(1, Number(hoursPerDay) || 3);
+  const timeRequiredFallback =
+    prepDaysRemaining != null && prepDaysRemaining > 0 && hoursPerDayNum > 0
+      ? { prepDays: prepDaysRemaining, studyHoursLeft: prepDaysRemaining * hoursPerDayNum }
+      : null;
+
   return (
     <div className="space-y-2 px-3 sm:px-4 py-3 sm:py-4">
       {/* Exam AI Preparation Dashboard - only for exam Overview */}
-      {entityType === "exam" && (
+      {entityType === "exam" && examId && (
         <div className="mb-6">
-          <ExamPrepDashboard examId={examId} examName={entityName || "Exam"} />
+          <ExamPrepDashboard
+            examId={examId}
+            examName={entityName || "Exam"}
+            hoursPerDay={hoursPerDay ?? 3}
+            onHoursPerDayChange={onHoursPerDayChangeStable}
+            examInfo={examInfo}
+            accuracyPct={accuracyPct ?? 100}
+            onAccuracyChange={onAccuracyChangeStable}
+          />
         </div>
       )}
 
@@ -143,6 +260,9 @@ const OverviewTab = ({
             examId={examId}
             subjectsWithUnits={subjectsWithUnits || []}
             examName={entityName || "Exam"}
+            hoursPerDay={hoursPerDay ?? 3}
+            examInfo={examInfo}
+            timeRequiredFallback={timeRequiredFallback}
           />
         </div>
       )}

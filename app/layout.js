@@ -6,7 +6,7 @@ const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
   display: "swap", // Improve FCP - prevents invisible text during font load
-  preload: true, // Preload critical font
+  preload: false, // Avoid "preloaded but not used" console warning when font is used in client-rendered content
 });
 
 const geistMono = Geist_Mono({
