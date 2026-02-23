@@ -16,6 +16,7 @@ const DefinitionPreviewClient = lazy(() => import("./DefinitionPreviewClient"));
 import UnitsSectionClient from "./UnitsSectionClient";
 import ChaptersSectionClient from "./ChaptersSectionClient";
 import DeepUnitChapterTracker from "./DeepUnitChapterTracker";
+import ClientOnly from "./ClientOnly";
 import ExamPrepDashboard from "./ExamPrepDashboard";
 import PreparationProgressDashboard from "./PreparationProgressDashboard";
 import {
@@ -27,6 +28,7 @@ import {
   getAccuracyFromHours,
   broadcastExamPrepSync,
 } from "../lib/examPrepStorage";
+import { useClientToday, getPrepDaysRemaining } from "../hooks/useClientToday";
 import SyllabusTrackerSection from "./SyllabusTrackerSection";
 import api from "@/lib/api";
 
@@ -137,10 +139,22 @@ const OverviewTab = ({
   activeTab,
   overviewEntityId,
   examId,
+  initialExamInfo = null,
 }) => {
   const [hoursPerDay, setHoursPerDay] = useState(3);
   const [accuracyPct, setAccuracyPct] = useState(100);
-  const [examInfo, setExamInfo] = useState(null);
+  const [examInfo, setExamInfo] = useState(initialExamInfo ?? null);
+  const today = useClientToday();
+
+  // Use prop when state is null so dashboards get exam info even before useEffect runs (e.g. lazy tab mount)
+  const hasValidInitial = initialExamInfo != null && (initialExamInfo.examDate != null || initialExamInfo.maximumMarks != null);
+  const effectiveExamInfo = examInfo ?? (hasValidInitial ? initialExamInfo : null);
+
+  useEffect(() => {
+    if (initialExamInfo != null && (initialExamInfo.examDate != null || initialExamInfo.maximumMarks != null)) {
+      setExamInfo(initialExamInfo);
+    }
+  }, [initialExamInfo]);
 
   const syncFromStorage = useCallback(() => {
     if (typeof window === "undefined") return;
@@ -170,13 +184,15 @@ const OverviewTab = ({
     let cancelled = false;
     const id = examId != null ? String(examId) : "";
     if (!id) return;
-    api
-      .get(`/exam-info?examId=${id}`)
-      .then((res) => {
+    const fetchIt = () =>
+      api.get(`/exam-info?examId=${id}`).then((res) => {
         if (cancelled || !res.data?.data?.length) return;
         setExamInfo(res.data.data[0]);
-      })
-      .catch(() => {});
+      });
+    fetchIt().catch(() => {
+      if (cancelled) return;
+      setTimeout(() => fetchIt().catch(() => {}), 800);
+    });
     return () => { cancelled = true; };
   }, [entityType, examId]);
 
@@ -219,16 +235,8 @@ const OverviewTab = ({
   }, []);
 
   const prepDaysRemaining =
-    examInfo?.examDate != null
-      ? (() => {
-          const exam = new Date(examInfo.examDate);
-          if (Number.isNaN(exam.getTime())) return null;
-          const now = new Date();
-          const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-          const examDay = new Date(exam.getFullYear(), exam.getMonth(), exam.getDate());
-          const diffMs = examDay - today;
-          return Math.floor(diffMs / (1000 * 60 * 60 * 24));
-        })()
+    effectiveExamInfo?.examDate != null && today
+      ? getPrepDaysRemaining(effectiveExamInfo.examDate, today)
       : null;
   const hoursPerDayNum = Math.max(1, Number(hoursPerDay) || 3);
   const timeRequiredFallback =
@@ -238,33 +246,33 @@ const OverviewTab = ({
 
   return (
     <div className="space-y-2 px-3 sm:px-4 py-3 sm:py-4">
-      {/* Exam AI Preparation Dashboard - only for exam Overview */}
+      {/* Exam dashboards: client-only to avoid hydration mismatch (React #418) from date/count */}
       {entityType === "exam" && examId && (
-        <div className="mb-6">
-          <ExamPrepDashboard
-            examId={examId}
-            examName={entityName || "Exam"}
-            hoursPerDay={hoursPerDay ?? 3}
-            onHoursPerDayChange={onHoursPerDayChangeStable}
-            examInfo={examInfo}
-            accuracyPct={accuracyPct ?? 100}
-            onAccuracyChange={onAccuracyChangeStable}
-          />
-        </div>
-      )}
-
-      {/* Preparation Progress (Overall + Subject-wise) - dynamic from subject progress */}
-      {entityType === "exam" && examId && (
-        <div className="mb-8">
-          <PreparationProgressDashboard
-            examId={examId}
-            subjectsWithUnits={subjectsWithUnits || []}
-            examName={entityName || "Exam"}
-            hoursPerDay={hoursPerDay ?? 3}
-            examInfo={examInfo}
-            timeRequiredFallback={timeRequiredFallback}
-          />
-        </div>
+        <ClientOnly fallback={<div className="mb-6 min-h-[200px]" aria-hidden="true" />}>
+          <>
+            <div className="mb-6">
+              <ExamPrepDashboard
+                examId={examId}
+                examName={entityName || "Exam"}
+                hoursPerDay={hoursPerDay ?? 3}
+                onHoursPerDayChange={onHoursPerDayChangeStable}
+                examInfo={effectiveExamInfo}
+                accuracyPct={accuracyPct ?? 100}
+                onAccuracyChange={onAccuracyChangeStable}
+              />
+            </div>
+            <div className="mb-8">
+              <PreparationProgressDashboard
+                examId={examId}
+                subjectsWithUnits={subjectsWithUnits || []}
+                examName={entityName || "Exam"}
+                hoursPerDay={hoursPerDay ?? 3}
+                examInfo={effectiveExamInfo}
+                timeRequiredFallback={timeRequiredFallback}
+              />
+            </div>
+          </>
+        </ClientOnly>
       )}
 
       {/* Syllabus Tracker (Subject → Unit → Chapter) - sliders + checklists, instant updates */}
@@ -279,7 +287,10 @@ const OverviewTab = ({
         </div>
       )}
 
-      <div className="prose prose-sm sm:prose max-w-none prose-headings:text-gray-900 prose-headings:font-bold prose-p:text-gray-700 prose-p:leading-normal prose-a:text-indigo-600 prose-a:no-underline hover:prose-a:underline prose-strong:text-gray-900 prose-code:text-indigo-700 prose-pre:bg-gray-50">
+      <div
+        className="prose prose-sm sm:prose max-w-none prose-headings:text-gray-900 prose-headings:font-bold prose-p:text-gray-700 prose-p:leading-normal prose-a:text-indigo-600 prose-a:no-underline hover:prose-a:underline prose-strong:text-gray-900 prose-code:text-indigo-700 prose-pre:bg-gray-50"
+        suppressHydrationWarning
+      >
         {content ? (
           <RichContent html={content} />
         ) : (

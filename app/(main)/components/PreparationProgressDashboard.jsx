@@ -2,22 +2,11 @@
 
 import React, { useState, useEffect } from "react";
 import { useExamSubjectProgress } from "../hooks/useExamSubjectProgress";
+import { useClientToday, getPrepDaysRemaining } from "../hooks/useClientToday";
 import api from "@/lib/api";
 import { getStoredHoursPerDay as getStored, subscribeExamPrepSync } from "../lib/examPrepStorage";
 
 const HOURS_PER_DAY_STORAGE_KEY = "examPrep_hoursPerDay";
-
-/** Days left from today to exam date (calendar days). */
-function getPrepDaysRemaining(examDate) {
-  if (!examDate) return null;
-  const exam = new Date(examDate);
-  if (Number.isNaN(exam.getTime())) return null;
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const examDay = new Date(exam.getFullYear(), exam.getMonth(), exam.getDate());
-  const diffMs = examDay - today;
-  return Math.floor(diffMs / (1000 * 60 * 60 * 24));
-}
 
 function getStoredHoursPerDay() {
   if (typeof window === "undefined") return 3;
@@ -104,6 +93,7 @@ export default function PreparationProgressDashboard({
   const [eventSync, setEventSync] = useState(null);
   const [timeRequiredFromTop, setTimeRequiredFromTop] = useState(null);
   const [examInfoInternal, setExamInfoInternal] = useState(null);
+  const today = useClientToday();
 
   const hasValidExamInfo = (info) =>
     info != null && typeof info === "object" && info.examDate != null;
@@ -221,7 +211,10 @@ export default function PreparationProgressDashboard({
   ];
 
   const remainingPercent = Math.max(0, 100 - overallPercent);
-  const prepDays = examInfo?.examDate != null ? getPrepDaysRemaining(examInfo.examDate) : null;
+  const prepDays =
+    examInfo?.examDate != null && today
+      ? getPrepDaysRemaining(examInfo.examDate, today)
+      : null;
   const studyHoursLeft =
     prepDays != null && prepDays > 0 && hoursPerDay > 0
       ? prepDays * hoursPerDay
@@ -305,7 +298,7 @@ export default function PreparationProgressDashboard({
             <h3 className="text-[10px] font-semibold text-slate-700 uppercase tracking-wider mb-1">
               Time Required to Complete (Estimate)
             </h3>
-            <p className="text-xl font-extrabold text-slate-900 mb-1 m-0">
+            <p className="text-xl font-extrabold text-slate-900 mb-1 m-0" suppressHydrationWarning>
               {displayPrepDays != null && displayPrepDays > 0 && displayStudyHoursLeft != null
                 ? `${displayPrepDays} Days (${displayStudyHoursLeft.toLocaleString()} Hours)`
                 : displayPrepDays === 0

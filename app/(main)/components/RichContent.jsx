@@ -842,7 +842,7 @@ const RichContent = ({ html }) => {
           page.
         </div>
       )}
-      <div ref={containerRef} className="rich-text-content wrap-anywhere">
+      <div ref={containerRef} className="rich-text-content wrap-anywhere" suppressHydrationWarning>
         <style jsx global>{`
         .video-grid-container {
           width: 100%;

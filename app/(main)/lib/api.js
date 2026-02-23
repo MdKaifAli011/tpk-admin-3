@@ -987,6 +987,31 @@ export const fetchExamDetailsById = async (examId) => {
   }
 };
 
+// Fetch exam info (exam date, maximumMarks, etc.) for dashboard prep days / time required
+export const fetchExamInfo = async (examId) => {
+  if (!examId) return null;
+  const isServer = typeof window === "undefined";
+  const baseUrl = getBaseUrl();
+  const id = examId.toString ? examId.toString() : String(examId);
+  try {
+    if (isServer) {
+      const response = await fetch(`${baseUrl}/api/exam-info?examId=${id}`, {
+        cache: "no-store",
+      });
+      if (!response.ok) return null;
+      const data = await response.json();
+      const list = data?.success && Array.isArray(data?.data) ? data.data : [];
+      return list[0] || null;
+    }
+    const response = await api.get(`/exam-info?examId=${id}`);
+    const list = response?.data?.data;
+    return Array.isArray(list) && list.length ? list[0] : null;
+  } catch (err) {
+    logger.warn("fetchExamInfo error:", err?.message);
+    return null;
+  }
+};
+
 // Fetch subject details
 export const fetchSubjectDetailsById = async (subjectId) => {
   if (!subjectId) return null;

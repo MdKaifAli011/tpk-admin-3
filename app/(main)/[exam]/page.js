@@ -15,6 +15,7 @@ import {
   fetchUnitsBySubject,
   fetchChaptersByUnit,
 } from "../lib/api";
+import { getExamInfoByExamId } from "@/lib/getExamInfoServer";
 import { ERROR_MESSAGES, PLACEHOLDERS } from "@/constants";
 import { getNextExam, getPreviousExam } from "../lib/hierarchicalNavigation";
 import Link from "next/link";
@@ -76,16 +77,30 @@ const ExamPage = async ({ params }) => {
     notFound();
   }
 
-  // Fetch exam details and subjects in parallel
-  const [examDetails, subjects] = await Promise.all([
+  // Fetch exam details, exam info (date etc for dashboard), and subjects in parallel
+  // Use direct DB fetch for exam info so dashboard always gets data (no API auth/URL dependency)
+  const [examDetails, examInfoRaw, subjects] = await Promise.all([
     fetchExamDetailsById(exam._id).catch(() => ({
       content: "",
       title: "",
       metaDescription: "",
       keywords: "",
     })),
+    getExamInfoByExamId(exam._id),
     fetchSubjectsByExam(exam._id || examId),
   ]);
+
+  // Never pass null so client dashboards always have exam date / prep days (default if no ExamInfo in DB)
+  const examIdStr = exam._id?.toString?.() ?? String(exam._id ?? "");
+  const defaultExamInfo = {
+    examId: examIdStr,
+    examDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+    maximumMarks: 720,
+    status: "active",
+  };
+  const examInfo = examInfoRaw && (examInfoRaw.examDate != null || examInfoRaw.maximumMarks != null)
+    ? examInfoRaw
+    : defaultExamInfo;
 
   // Fetch units for each subject, then chapters for each unit (for unit-wise chapters overview on Overview tab)
   const subjectsWithUnits = await Promise.all(
@@ -186,6 +201,7 @@ const ExamPage = async ({ params }) => {
         <TabsClient
           content={examDetails?.content}
           examId={exam._id}
+          initialExamInfo={examInfo}
           entityName={exam.name}
           entityType="exam"
           examSlug={examSlug}

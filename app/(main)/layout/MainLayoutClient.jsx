@@ -39,14 +39,9 @@ export default function MainLayoutClient({ children }) {
   // Track previous showSidebar value to detect actual changes
   const prevShowSidebarRef = useRef(showSidebar);
 
-  // Initialize sidebar as open on desktop, closed on mobile
-  // Only initialize once, don't reset on every navigation
-  const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
-    if (typeof window !== "undefined") {
-      return window.innerWidth >= 1024; // lg breakpoint - open on desktop by default
-    }
-    return true; // Default to open for SSR
-  });
+  // Initialize closed so server and client match (avoids hydration mismatch).
+  // useEffect below opens on desktop after mount.
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const toggleSidebar = useCallback(() => {
     setIsSidebarOpen((v) => !v);
@@ -55,6 +50,14 @@ export default function MainLayoutClient({ children }) {
   const closeSidebar = useCallback(() => {
     setIsSidebarOpen(false);
   }, []);
+
+  // After mount: open sidebar on desktop so UX matches previous behavior (avoids hydration mismatch)
+  useEffect(() => {
+    if (!showSidebar) return;
+    if (typeof window !== "undefined" && window.innerWidth >= 1024) {
+      setIsSidebarOpen(true);
+    }
+  }, [showSidebar]);
 
   // Only update sidebar state when transitioning TO/FROM pages that don't show sidebar
   // This prevents flickering during normal navigation

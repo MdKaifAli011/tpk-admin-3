@@ -61,6 +61,7 @@ const TabsClient = ({
   content,
   details,
   examId,
+  initialExamInfo = null,
   subjectId,
   unitId,
   chapterId,
@@ -183,6 +184,7 @@ const TabsClient = ({
             subTopicSlug={subTopicSlug}
             activeTab={activeTab}
             examId={examId}
+            initialExamInfo={initialExamInfo}
           />
         );
 

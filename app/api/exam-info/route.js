@@ -13,21 +13,26 @@ import { requireAuth, requireAction } from "@/middleware/authMiddleware";
 import { STATUS } from "@/constants";
 
 // GET: Fetch all exam info or filter by examId
+// Public read when only examId is provided (so dashboard can show exam date / prep days without login)
 export async function GET(request) {
   try {
-    const authCheck = await requireAuth(request);
-    if (authCheck.error) {
-      return NextResponse.json(authCheck, { status: authCheck.status || 401 });
-    }
-
-    await connectDB();
     const { searchParams } = new URL(request.url);
     const examId = searchParams.get("examId");
     const status = searchParams.get("status");
 
+    const singleExamQuery = examId && mongoose.Types.ObjectId.isValid(examId) && !status;
+    if (!singleExamQuery) {
+      const authCheck = await requireAuth(request);
+      if (authCheck.error) {
+        return NextResponse.json(authCheck, { status: authCheck.status || 401 });
+      }
+    }
+
+    await connectDB();
+
     const query = {};
     if (examId && mongoose.Types.ObjectId.isValid(examId)) {
-      query.examId = examId;
+      query.examId = new mongoose.Types.ObjectId(examId);
     }
     if (status && status !== "all") {
       query.status = { $regex: new RegExp(`^${status}$`, "i") };

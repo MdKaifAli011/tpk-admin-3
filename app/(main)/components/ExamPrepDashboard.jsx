@@ -9,6 +9,7 @@ import {
   FaChevronRight,
 } from "react-icons/fa";
 import api from "@/lib/api";
+import { useClientToday, getPrepDaysRemaining } from "../hooks/useClientToday";
 
 function formatExamDate(date) {
   if (!date) return null;
@@ -19,19 +20,6 @@ function formatExamDate(date) {
   const month = months[d.getMonth()];
   const year = d.getFullYear();
   return `${day.toString().padStart(2, "0")} ${month} ${year}`;
-}
-
-/** Days left from today (local date) to exam date (local date). Uses calendar days only. */
-function getPrepDaysRemaining(examDate) {
-  if (!examDate) return null;
-  const exam = new Date(examDate);
-  if (Number.isNaN(exam.getTime())) return null;
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const examDay = new Date(exam.getFullYear(), exam.getMonth(), exam.getDate());
-  const diffMs = examDay - today;
-  const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-  return days;
 }
 
 const HOURS_PER_DAY_STORAGE_KEY = "examPrep_hoursPerDay";
@@ -220,6 +208,7 @@ export default function ExamPrepDashboard({
       };
 
   const examInfo = examInfoProp !== undefined ? examInfoProp : examInfoInternal;
+  const today = useClientToday();
 
   useEffect(() => {
     if (examInfoProp !== undefined || !examId) return;
@@ -240,7 +229,10 @@ export default function ExamPrepDashboard({
     ? formatExamDate(examInfo.examDate)
     : STATIC.cards[0].value;
 
-  const prepDays = examInfo?.examDate != null ? getPrepDaysRemaining(examInfo.examDate) : null;
+  const prepDays =
+    examInfo?.examDate != null && today
+      ? getPrepDaysRemaining(examInfo.examDate, today)
+      : null;
   const prepDaysDisplay =
     prepDays != null
       ? prepDays > 0
@@ -250,7 +242,7 @@ export default function ExamPrepDashboard({
           : "Exam date passed"
       : STATIC.cards[1].value;
 
-  const todayStr = formatExamDate(new Date());
+  const todayStr = today ? formatExamDate(today) : null;
   const prepDaysSubText =
     examInfo?.examDate && todayStr && examDateDisplay
       ? `From ${todayStr} to ${examDateDisplay}`
