@@ -46,15 +46,32 @@ const baseUrl = `${origin}${BASE_PATH}`;
 
 const TAB_VARIANTS = ["discussion", "practice", "performance"];
 
+/** Strip XML 1.0 invalid control characters (except tab, newline, carriage return) from a string */
+function stripInvalidXmlChars(str) {
+  if (typeof str !== "string") return str;
+  return str.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, "");
+}
+
 /** Escape URL for use inside XML <loc> so ampersands etc. are valid (e.g. ?a=1&b=2 → &amp;) */
 function escapeUrlForXml(urlString) {
   if (typeof urlString !== "string") return urlString;
-  return urlString
+  const cleaned = stripInvalidXmlChars(urlString);
+  return cleaned
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&apos;");
+}
+
+/** Ensure lastModified is a valid Date for sitemap (invalid dates can break XML) */
+function safeLastModified(value) {
+  if (value instanceof Date && !Number.isNaN(value.getTime())) return value;
+  if (typeof value === "string") {
+    const d = new Date(value);
+    if (!Number.isNaN(d.getTime())) return d;
+  }
+  return new Date();
 }
 
 function url(path, query = null) {
@@ -71,9 +88,11 @@ function url(path, query = null) {
 function entry(path, options = {}) {
   const query = options.query || null;
   const rawUrl = url(path, query);
+  const escapedUrl = escapeUrlForXml(rawUrl);
+  if (!escapedUrl || escapedUrl.length === 0) return null;
   return {
-    url: escapeUrlForXml(rawUrl),
-    lastModified: options.lastModified || new Date(),
+    url: escapedUrl,
+    lastModified: safeLastModified(options.lastModified),
     changeFrequency: options.changeFrequency || "weekly",
     priority: options.priority ?? 0.8,
   };
@@ -557,5 +576,5 @@ export default async function sitemap() {
     console.error("[sitemap] Error fetching dynamic routes:", err);
   }
 
-  return routes;
+  return routes.filter(Boolean);
 }
