@@ -6,4 +6,4 @@ Disallow: /self-study/admin/
 Disallow: /self-study/api/
 
 # Sitemap
-Sitemap: https://yourdomain.com/self-study/sitemap.xml
+Sitemap: https://testprepkart.com/self-study/sitemap.xml
