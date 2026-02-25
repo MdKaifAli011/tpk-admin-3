@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { FaTimes, FaSearch, FaImage, FaUpload, FaSpinner, FaVideo, FaAlignLeft, FaAlignCenter, FaAlignRight } from "react-icons/fa";
+import { FaTimes, FaSearch, FaImage, FaUpload, FaSpinner, FaVideo, FaAlignLeft, FaAlignCenter, FaAlignRight, FaFolderOpen, FaCopy, FaChevronLeft, FaChevronRight, FaFile, FaFileAlt } from "react-icons/fa";
 import api from "@/lib/api";
 
 // Base path - should match next.config.mjs basePath
@@ -110,8 +110,18 @@ const RichTextEditor = ({
   const openButtonModalRef = useRef(null);
   const openFormModalRef = useRef(null);
   const openFormLinkModalRef = useRef(null);
+  const openMediaLibraryModalRef = useRef(null);
   const customToolbarStyleRef = useRef(null);
   const imageModalFocusRef = useRef(null);
+
+  const [showMediaLibraryModal, setShowMediaLibraryModal] = useState(false);
+  const [mediaLibraryItems, setMediaLibraryItems] = useState([]);
+  const [mediaLibraryLoading, setMediaLibraryLoading] = useState(false);
+  const [mediaLibraryPage, setMediaLibraryPage] = useState(1);
+  const [mediaLibraryTotalPages, setMediaLibraryTotalPages] = useState(0);
+  const [mediaLibraryType, setMediaLibraryType] = useState("image");
+  const [mediaLibrarySearch, setMediaLibrarySearch] = useState("");
+  const [mediaLibraryCopyToast, setMediaLibraryCopyToast] = useState(null);
 
   const instanceId = useMemo(
     () => `rte-${Math.random().toString(36).slice(2, 10)}`,
@@ -141,6 +151,13 @@ const RichTextEditor = ({
     openButtonModalRef.current = () => setShowButtonModal(true);
     openFormModalRef.current = () => setShowFormModal(true);
     openFormLinkModalRef.current = openFormLinkModal;
+    openMediaLibraryModalRef.current = () => {
+      const editor = editorRef.current;
+      if (editor?.focusManager) editor.focusManager.blur();
+      setShowMediaLibraryModal(true);
+      setMediaLibraryPage(1);
+      setMediaLibrarySearch("");
+    };
   });
 
   useEffect(() => {
@@ -179,6 +196,7 @@ const RichTextEditor = ({
     () => ({
       video: `${RTE_ICON_BASE}/rte-video.svg`,
       image: `${RTE_ICON_BASE}/rte-image.svg`,
+      mediaLibrary: `${RTE_ICON_BASE}/rte-fileManger-button.svg`,
       button: `${RTE_ICON_BASE}/rte-button.svg`,
       form: `${RTE_ICON_BASE}/rte-form.svg`,
       formLink: `${RTE_ICON_BASE}/rte-formlink.svg`,
@@ -247,6 +265,7 @@ const RichTextEditor = ({
           items: [
             "RTEInsertVideo",
             "RTEInsertImage",
+            "RTEMediaLibrary",
             "RTEInsertButton",
             "RTEInsertForm",
             "RTEFormLink",
@@ -357,6 +376,11 @@ const RichTextEditor = ({
                 edt._openFormLinkModal?.();
               },
             });
+            editor.addCommand("RTEMediaLibrary", {
+              exec(edt) {
+                edt._openMediaLibraryModal?.();
+              },
+            });
             editor.ui.addButton("RTEInsertVideo", {
               label: "Insert Video",
               command: "RTEInsertVideo",
@@ -386,6 +410,12 @@ const RichTextEditor = ({
               command: "RTEFormLink",
               toolbar: "insertCustom",
               icon: iconUrls.formLink,
+            });
+            editor.ui.addButton("RTEMediaLibrary", {
+              label: "Media Library",
+              command: "RTEMediaLibrary",
+              toolbar: "insertCustom",
+              icon: iconUrls.mediaLibrary,
             });
           },
         });
@@ -429,6 +459,7 @@ const RichTextEditor = ({
           editor._openButtonModal = () => openButtonModalRef.current?.();
           editor._openFormModal = () => openFormModalRef.current?.();
           editor._openFormLinkModal = () => openFormLinkModalRef.current?.();
+          editor._openMediaLibraryModal = () => openMediaLibraryModalRef.current?.();
         }
         if (valueRef.current) {
           editor.setData(valueRef.current);
@@ -544,14 +575,16 @@ const RichTextEditor = ({
       ${btnSel("RTEInsertButton")} { background-image: url("${esc(ic.button)}") !important; background-repeat: no-repeat !important; background-position: 6px center !important; background-size: 16px 16px !important; padding-left: 26px !important; min-width: 82px !important; }
       ${btnSel("RTEInsertForm")} { background-image: url("${esc(ic.form)}") !important; background-repeat: no-repeat !important; background-position: 6px center !important; background-size: 16px 16px !important; padding-left: 26px !important; min-width: 82px !important; }
       ${btnSel("RTEFormLink")} { background-image: url("${esc(ic.formLink)}") !important; background-repeat: no-repeat !important; background-position: 6px center !important; background-size: 16px 16px !important; padding-left: 26px !important; min-width: 82px !important; }
+      ${btnSel("RTEMediaLibrary")} { background-image: url("${esc(ic.mediaLibrary)}") !important; background-repeat: no-repeat !important; background-position: 6px center !important; background-size: 16px 16px !important; padding-left: 26px !important; min-width: 82px !important; }
       /* Hide empty icon span so only our button background + label show */
       ${btnSel("RTEInsertVideo")} .cke_icon, ${btnSel("RTEInsertVideo")} .cke_button_icon, .cke_button_RTEInsertVideo_icon,
       ${btnSel("RTEInsertImage")} .cke_icon, ${btnSel("RTEInsertImage")} .cke_button_icon, .cke_button_RTEInsertImage_icon,
+      ${btnSel("RTEMediaLibrary")} .cke_icon, ${btnSel("RTEMediaLibrary")} .cke_button_icon, .cke_button_RTEMediaLibrary_icon,
       ${btnSel("RTEInsertButton")} .cke_icon, ${btnSel("RTEInsertButton")} .cke_button_icon, .cke_button_RTEInsertButton_icon,
       ${btnSel("RTEInsertForm")} .cke_icon, ${btnSel("RTEInsertForm")} .cke_button_icon, .cke_button_RTEInsertForm_icon,
       ${btnSel("RTEFormLink")} .cke_icon, ${btnSel("RTEFormLink")} .cke_button_icon, .cke_button_RTEFormLink_icon { background: none !important; width: 0 !important; min-width: 0 !important; overflow: hidden !important; padding: 0 !important; }
       /* Always show label text */
-      ${labelSel("RTEInsertVideo")}, ${labelSel("RTEInsertImage")}, ${labelSel("RTEInsertButton")}, ${labelSel("RTEInsertForm")}, ${labelSel("RTEFormLink")} { display: inline !important; visibility: visible !important; }
+      ${labelSel("RTEInsertVideo")}, ${labelSel("RTEInsertImage")}, ${labelSel("RTEMediaLibrary")}, ${labelSel("RTEInsertButton")}, ${labelSel("RTEInsertForm")}, ${labelSel("RTEFormLink")} { display: inline !important; visibility: visible !important; }
     `;
     const injectGlobal = () => {
       if (globalToolbarStyleEl && globalToolbarStyleEl.parentNode) return;
@@ -968,6 +1001,33 @@ const RichTextEditor = ({
     const t = setTimeout(moveFocus, 50);
     return () => clearTimeout(t);
   }, [showImageModal]);
+
+  // Fetch media list when Media Library modal is open
+  const mediaLibrarySearchDebounced = mediaLibrarySearch.trim() ? mediaLibrarySearch.trim() : "";
+  useEffect(() => {
+    if (!showMediaLibraryModal) return;
+    let cancelled = false;
+    setMediaLibraryLoading(true);
+    const params = new URLSearchParams();
+    params.set("type", mediaLibraryType);
+    params.set("page", String(mediaLibraryPage));
+    params.set("limit", "24");
+    if (mediaLibrarySearchDebounced) params.set("search", mediaLibrarySearchDebounced);
+    api.get(`/media?${params.toString()}`)
+      .then((res) => {
+        if (cancelled || !res.data?.success) return;
+        setMediaLibraryItems(res.data.data?.data ?? []);
+        const pagination = res.data.data?.pagination ?? {};
+        setMediaLibraryTotalPages(pagination.totalPages ?? 0);
+      })
+      .catch(() => {
+        if (!cancelled) setMediaLibraryItems([]);
+      })
+      .finally(() => {
+        if (!cancelled) setMediaLibraryLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [showMediaLibraryModal, mediaLibraryPage, mediaLibraryType, mediaLibrarySearchDebounced]);
 
   // Compress image client-side to reduce size and avoid 413 (Payload Too Large)
   const compressImageIfNeeded = (file, maxSizeBytes = 2 * 1024 * 1024, maxWidth = 1920) => {
@@ -2031,6 +2091,141 @@ const RichTextEditor = ({
                 <div className="flex items-center justify-center gap-2 p-4">
                   <FaSpinner className="w-5 h-5 animate-spin text-purple-600" />
                   <span className="text-sm text-gray-600">Uploading image...</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Media Library Modal – browse files and copy URL */}
+      {showMediaLibraryModal && typeof document !== "undefined" && createPortal(
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[85vh] overflow-hidden border border-gray-200 flex flex-col">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 shrink-0">
+              <div className="flex items-center gap-2">
+                <FaFolderOpen className="w-5 h-5 text-indigo-600" />
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-900">Media Library</h2>
+                  <p className="text-xs text-gray-500 mt-0.5">Browse files and copy URL</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowMediaLibraryModal(false)}
+                className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-2 rounded-lg transition"
+              >
+                <FaTimes className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-4 border-b border-gray-100 flex flex-wrap items-center gap-3 shrink-0">
+              <div className="relative flex-1 min-w-[180px]">
+                <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <input
+                  type="text"
+                  value={mediaLibrarySearch}
+                  onChange={(e) => { setMediaLibrarySearch(e.target.value); setMediaLibraryPage(1); }}
+                  placeholder="Search by name..."
+                  className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500"
+                />
+              </div>
+              <div className="flex rounded-lg border border-gray-200 p-0.5">
+                {["image", "video", "document", "file"].map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => { setMediaLibraryType(t); setMediaLibraryPage(1); }}
+                    className={`px-3 py-1.5 rounded-md text-sm font-medium capitalize ${mediaLibraryType === t ? "bg-indigo-600 text-white" : "text-gray-600 hover:bg-gray-100"}`}
+                  >
+                    {t === "image" ? "Images" : t === "video" ? "Videos" : t === "document" ? "Docs" : "Files"}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4">
+              {mediaLibraryLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <FaSpinner className="w-8 h-8 animate-spin text-indigo-600" />
+                </div>
+              ) : mediaLibraryItems.length === 0 ? (
+                <div className="text-center py-12 text-gray-500">
+                  <FaFolderOpen className="w-12 h-12 mx-auto mb-3 opacity-40" />
+                  <p className="font-medium">No files found</p>
+                  <p className="text-sm mt-1">Try another type or search.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                  {mediaLibraryItems.map((item) => (
+                    <div key={item._id} className="rounded-xl border border-gray-200 overflow-hidden bg-gray-50 hover:border-gray-300 transition-colors">
+                      <div className="aspect-square flex items-center justify-center bg-gray-100">
+                        {item.type === "image" ? (
+                          <img src={item.url} alt={item.altText || item.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="text-center p-2">
+                            {item.type === "video" ? <FaVideo className="w-10 h-10 text-indigo-500 mx-auto" /> : <FaFileAlt className="w-10 h-10 text-gray-400 mx-auto" />}
+                            <span className="text-xs text-gray-500 block mt-1 truncate">{item.fileName}</span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="p-2 bg-white border-t border-gray-100">
+                        <p className="text-xs font-medium text-gray-900 truncate" title={item.name}>{item.name || item.fileName}</p>
+                        <div className="flex items-center gap-1 mt-1.5">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (typeof navigator?.clipboard?.writeText === "function") {
+                                navigator.clipboard.writeText(item.url);
+                                setMediaLibraryCopyToast(item._id);
+                                setTimeout(() => setMediaLibraryCopyToast(null), 2000);
+                              }
+                            }}
+                            className="flex-1 inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg border border-gray-200 text-xs font-medium text-gray-700 hover:bg-gray-50"
+                          >
+                            <FaCopy className="w-3 h-3" />
+                            {mediaLibraryCopyToast === item._id ? "Copied!" : "Copy URL"}
+                          </button>
+                          {item.type === "image" && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const editor = editorRef.current;
+                                if (editor) {
+                                  const imageHtml = `<img src="${item.url}" alt="${(item.altText || item.name || "").replace(/"/g, "&quot;")}" style="max-width: 100%; height: auto;" />`;
+                                  editor.insertHtml(imageHtml);
+                                }
+                                setShowMediaLibraryModal(false);
+                              }}
+                              className="px-2 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-medium hover:bg-indigo-700"
+                            >
+                              Insert
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {mediaLibraryTotalPages > 1 && !mediaLibraryLoading && (
+                <div className="flex items-center justify-center gap-2 mt-4">
+                  <button
+                    type="button"
+                    onClick={() => setMediaLibraryPage((p) => Math.max(1, p - 1))}
+                    disabled={mediaLibraryPage <= 1}
+                    className="p-2 rounded-lg border border-gray-200 disabled:opacity-40 hover:bg-gray-50"
+                  >
+                    <FaChevronLeft className="w-4 h-4" />
+                  </button>
+                  <span className="text-sm text-gray-600">Page {mediaLibraryPage} of {mediaLibraryTotalPages}</span>
+                  <button
+                    type="button"
+                    onClick={() => setMediaLibraryPage((p) => Math.min(mediaLibraryTotalPages, p + 1))}
+                    disabled={mediaLibraryPage >= mediaLibraryTotalPages}
+                    className="p-2 rounded-lg border border-gray-200 disabled:opacity-40 hover:bg-gray-50"
+                  >
+                    <FaChevronRight className="w-4 h-4" />
+                  </button>
                 </div>
               )}
             </div>

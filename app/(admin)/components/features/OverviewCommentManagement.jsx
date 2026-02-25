@@ -786,7 +786,7 @@ const OverviewCommentManagement = () => {
                             {comment.status !== "approved" && (
                               <PermissionButton
                                 action="edit"
-                                onClick={() => handleStatusChange(comment._id, "approved")}
+                                onClick={() => handleStatusChange(comment, "approved")}
                                 className="p-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors"
                                 title={getPermissionMessage("edit", role)}
                               >

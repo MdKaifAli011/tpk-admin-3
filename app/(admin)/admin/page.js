@@ -15,6 +15,7 @@ import {
   FaClock,
   FaTrophy,
   FaGraduationCap,
+  FaImage,
 } from "react-icons/fa";
 import { LoadingSpinner } from "../components/ui/SkeletonLoader";
 import api from "@/lib/api";
@@ -145,6 +146,15 @@ const AdminDashboard = () => {
         bgColor: "bg-gray-50",
         textColor: "text-gray-700",
         count: stats.definitions,
+      },
+      {
+        name: "Media Management",
+        href: "/admin/media",
+        icon: FaImage,
+        color: "from-cyan-500 to-cyan-600",
+        bgColor: "bg-cyan-50",
+        textColor: "text-cyan-600",
+        count: 0,
       },
       {
         name: "Discussion Management",

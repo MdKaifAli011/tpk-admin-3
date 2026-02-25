@@ -32,6 +32,7 @@ const ROUTE_PERMISSIONS = [
   { path: "/admin/discussion-import", minRole: "moderator" },
   { path: "/admin/discussion", minRole: "viewer" },
   { path: "/admin/download", minRole: "viewer" },
+  { path: "/admin/media", minRole: "viewer" },
   { path: "/admin/blog-category", minRole: "viewer" },
   { path: "/admin/blog-comment", minRole: "viewer" },
   { path: "/admin/blog", minRole: "viewer" },

@@ -15,6 +15,7 @@ import {
   FaChartLine,
   FaFileAlt,
   FaUserCog,
+  FaPhotoVideo,
 } from "react-icons/fa";
 import { canAccessRoute, normalizeRole } from "../config/adminRoutes";
 import api from "@/lib/api";
@@ -86,6 +87,7 @@ const ALL_MENU_ITEMS = [
     icon: FaUserCog,
     sectionStart: true,
     children: [
+      { name: "Media Management", href: "/admin/media" },
       { name: "Lead Management", href: "/admin/lead" },
       { name: "Students", href: "/admin/student" },
       { name: "Forms", href: "/admin/form" },
