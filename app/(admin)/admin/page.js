@@ -16,6 +16,7 @@ import {
   FaTrophy,
   FaGraduationCap,
   FaImage,
+  FaCog,
 } from "react-icons/fa";
 import { LoadingSpinner } from "../components/ui/SkeletonLoader";
 import api from "@/lib/api";
@@ -148,6 +149,15 @@ const AdminDashboard = () => {
         count: stats.definitions,
       },
       {
+        name: "Course Management",
+        href: "/admin/course",
+        icon: FaGraduationCap,
+        color: "from-violet-500 to-violet-600",
+        bgColor: "bg-violet-50",
+        textColor: "text-violet-600",
+        count: 0,
+      },
+      {
         name: "Media Management",
         href: "/admin/media",
         icon: FaImage,
@@ -181,6 +191,15 @@ const AdminDashboard = () => {
         color: "from-teal-500 to-teal-600",
         bgColor: "bg-teal-50",
         textColor: "text-teal-600",
+        count: 0,
+      },
+      {
+        name: "Site Settings",
+        href: "/admin/site-settings",
+        icon: FaCog,
+        color: "from-slate-500 to-slate-600",
+        bgColor: "bg-slate-50",
+        textColor: "text-slate-600",
         count: 0,
       },
     ];

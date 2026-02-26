@@ -16,6 +16,7 @@ import {
   FaFileAlt,
   FaUserCog,
   FaPhotoVideo,
+  FaGraduationCap,
 } from "react-icons/fa";
 import { canAccessRoute, normalizeRole } from "../config/adminRoutes";
 import api from "@/lib/api";
@@ -60,6 +61,13 @@ const ALL_MENU_ITEMS = [
     ],
   },
   {
+    name: "Courses",
+    icon: FaGraduationCap,
+    children: [
+      { name: "Course Management", href: "/admin/course" },
+    ],
+  },
+  {
     name: "Pages",
     icon: FaFileAlt,
     children: [
@@ -97,6 +105,7 @@ const ALL_MENU_ITEMS = [
       { name: "Import Self Study Data", href: "/admin/bulk-import" },
       { name: "Meta Import", href: "/admin/seo-import" },
       { name: "URL Export", href: "/admin/url-export" },
+      { name: "Site Settings", href: "/admin/site-settings" },
     ],
   },
 ];

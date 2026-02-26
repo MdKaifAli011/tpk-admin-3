@@ -15,6 +15,7 @@ import Footer from "./Footer";
 import ServiceWorkerRegistration from "../components/ServiceWorkerRegistration";
 import ScrollToTop from "../components/ScrollToTop";
 import WhatsAppFloatButton from "../components/WhatsAppFloatButton";
+import CustomCodeInjector from "../components/CustomCodeInjector";
 import { SearchProvider } from "./context/SearchContext";
 import api from "../../../lib/api.js";
 
@@ -30,7 +31,7 @@ export default function MainLayoutClient({ children }) {
       pathname !== "/contact" &&
       !pathname?.startsWith("/calculator") &&
       !pathname?.startsWith("/store") &&
-      
+
       !pathname?.startsWith("/pages") &&
       !isExamPagesRoute
     );
@@ -259,14 +260,20 @@ export default function MainLayoutClient({ children }) {
     };
   }, [showSidebar, isSidebarOpen]);
 
-  // If on login/register pages, render without layout
+  // If on login/register pages, render without layout (but still inject custom code e.g. GA)
   if (pathname === "/login" || pathname === "/register") {
-    return <>{children}</>;
+    return (
+      <>
+        <CustomCodeInjector />
+        {children}
+      </>
+    );
   }
 
   return (
     <ErrorBoundary>
       <SearchProvider>
+        <CustomCodeInjector />
         <ServiceWorkerRegistration />
         <ScrollToTop />
         <WhatsAppFloatButton />

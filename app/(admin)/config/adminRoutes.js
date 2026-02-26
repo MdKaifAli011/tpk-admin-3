@@ -32,6 +32,7 @@ const ROUTE_PERMISSIONS = [
   { path: "/admin/discussion-import", minRole: "moderator" },
   { path: "/admin/discussion", minRole: "viewer" },
   { path: "/admin/download", minRole: "viewer" },
+  { path: "/admin/course", minRole: "viewer" },
   { path: "/admin/media", minRole: "viewer" },
   { path: "/admin/blog-category", minRole: "viewer" },
   { path: "/admin/blog-comment", minRole: "viewer" },
@@ -45,6 +46,7 @@ const ROUTE_PERMISSIONS = [
   { path: "/admin/subject", minRole: "viewer" },
   { path: "/admin/exam-info", minRole: "viewer" },
   { path: "/admin/exam", minRole: "viewer" },
+  { path: "/admin/site-settings", minRole: "admin" },
   { path: "/admin", minRole: "viewer" },
 ].sort((a, b) => b.path.length - a.path.length);
 

@@ -154,6 +154,7 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
   // Only treat as Download/Blog/Video when the segment is exact (e.g. /neet/download), not when "download" appears inside a segment (e.g. .../download-neet-scorecard)
   const isDownloadPath = pathSegments[1] === "download";
   const isBlogPath = pathSegments[1] === "blog";
+  const isCoursePath = pathSegments[1] === "course";
   const isVideoLibraryPath = pathSegments[1] === "video-library";
   const isNotificationPath = pathSegments[0] === "notification";
 
@@ -932,6 +933,27 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
                 ) : (
                   <li className="px-3 py-2 text-xs sm:text-sm font-medium text-gray-400">
                     Download
+                  </li>
+                )}
+
+                {/* Course — /{examSlug}/course */}
+                {activeExamSlug ? (
+                  <li>
+                    <Link
+                      href={`/${activeExamSlug}/course`}
+                      className={`w-full flex items-center justify-between px-3 py-2 font-semibold rounded-lg transition-all duration-200 ${
+                        isCoursePath
+                          ? "bg-indigo-100/60 shadow-sm text-indigo-900"
+                          : "text-black hover:text-indigo-600 hover:bg-gray-50"
+                      }`}
+                      onClick={closeOnMobile}
+                    >
+                      <span>Course</span>
+                    </Link>
+                  </li>
+                ) : (
+                  <li className="px-3 py-2 text-xs sm:text-sm font-medium text-gray-400">
+                    Course
                   </li>
                 )}
 
