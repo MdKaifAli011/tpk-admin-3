@@ -98,9 +98,11 @@ const ExamPage = async ({ params }) => {
     maximumMarks: 720,
     status: "active",
   };
-  const examInfo = examInfoRaw && (examInfoRaw.examDate != null || examInfoRaw.maximumMarks != null)
+  const examInfoRawResolved = examInfoRaw && (examInfoRaw.examDate != null || examInfoRaw.maximumMarks != null)
     ? examInfoRaw
     : defaultExamInfo;
+  // Serialize for Client Components (strip Mongoose/BSON types like ObjectId, Date with toJSON)
+  const examInfo = JSON.parse(JSON.stringify(examInfoRawResolved));
 
   // Fetch units for each subject, then chapters for each unit (for unit-wise chapters overview on Overview tab)
   const subjectsWithUnits = await Promise.all(
@@ -145,7 +147,7 @@ const ExamPage = async ({ params }) => {
     <div className="space-y-4">
       <VisitTracker 
         level="exam" 
-        itemId={exam._id} 
+        itemId={examIdStr} 
         itemSlug={examSlug} 
         itemName={exam.name} 
       />
@@ -189,7 +191,7 @@ const ExamPage = async ({ params }) => {
 
     {/* RIGHT — Exam Progress */}
     <div className="shrink-0 ml-auto">
-      <ExamProgressClient examId={exam._id} />
+      <ExamProgressClient examId={examIdStr} />
     </div>
 
   </div>
@@ -200,12 +202,12 @@ const ExamPage = async ({ params }) => {
         {/* Tabs */}
         <TabsClient
           content={examDetails?.content}
-          examId={exam._id}
+          examId={examIdStr}
           initialExamInfo={examInfo}
           entityName={exam.name}
           entityType="exam"
           examSlug={examSlug}
-          subjectsWithUnits={subjectsWithUnits}
+          subjectsWithUnits={JSON.parse(JSON.stringify(subjectsWithUnits))}
         />
 
         {/* Navigation */}
@@ -217,7 +219,7 @@ const ExamPage = async ({ params }) => {
         />
 
 
-        <OverviewCommentSection entityType="exam" entityId={exam._id} />
+        <OverviewCommentSection entityType="exam" entityId={examIdStr} />
       </div>
       
   );
