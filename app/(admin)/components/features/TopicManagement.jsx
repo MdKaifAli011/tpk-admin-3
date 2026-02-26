@@ -892,6 +892,55 @@ const TopicManagement = () => {
     }
   };
 
+  const handleBulkToggleStatus = async (selectedTopics, newStatus) => {
+    if (!selectedTopics || selectedTopics.length === 0) return Promise.resolve();
+    const action = newStatus === "inactive" ? "deactivate" : "activate";
+    const n = selectedTopics.length;
+    if (
+      !window.confirm(
+        `Are you sure you want to ${action} ${n} topic${n === 1 ? "" : "s"}? All their subtopics will also be ${action}d.`
+      )
+    ) {
+      return Promise.resolve();
+    }
+    try {
+      setIsFormLoading(true);
+      setError(null);
+      const results = await Promise.all(
+        selectedTopics.map((topic) =>
+          api.patch(`/topic/${topic._id}/status`, { status: newStatus })
+        )
+      );
+      const allOk = results.every((r) => r?.data?.success);
+      if (allOk) {
+        const ids = new Set(selectedTopics.map((t) => t._id));
+        const newList = topics.map((t) =>
+          ids.has(t._id) ? { ...t, status: newStatus } : t
+        );
+        setTopics(newList);
+        setTopicListCache(newList, metaFilter);
+        success(
+          n === 1
+            ? `Topic ${action}d successfully`
+            : `${n} topics ${action}d successfully`
+        );
+      } else {
+        throw new Error(results.find((r) => !r?.data?.success)?.data?.message || `Failed to ${action} some topics`);
+      }
+    } catch (error) {
+      console.error(`❌ Error bulk ${action}ing topics:`, error);
+      setError(
+        error.response?.data?.message ||
+        error.message ||
+        `Failed to ${action} topics`
+      );
+      showError(error.response?.data?.message || error.message || `Failed to ${action} topics`);
+      throw error;
+    } finally {
+      setIsFormLoading(false);
+    }
+  };
+
   const saveReorderForChapter = async (chapterId, newOrderedTopics) => {
     const payload = {
       topics: newOrderedTopics.map((t, i) => ({
@@ -1772,6 +1821,7 @@ const TopicManagement = () => {
               onEdit={handleEditTopic}
               onDelete={handleDeleteTopic}
               onToggleStatus={handleToggleStatus}
+              onBulkToggleStatus={handleBulkToggleStatus}
               onReorderDraft={handleReorderDraft}
               reorderDraft={reorderDraft}
               isReorderAllowed={isReorderMode && !searchQuery.trim()}
