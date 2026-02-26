@@ -1,6 +1,8 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { SEO_DEFAULTS } from "@/constants";
+import { getSiteSettingsCustomCode } from "@/lib/getSiteSettingsCustomCode";
+import { headers } from "next/headers";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -18,7 +20,7 @@ const geistMono = Geist_Mono({
 
 export const metadata = {
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+    process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
   ),
   title: SEO_DEFAULTS.TITLE,
   description: SEO_DEFAULTS.DESCRIPTION,
@@ -69,14 +71,40 @@ export const metadata = {
   },
 };
 
-export default function RootLayout({ children }) {
+export default async function RootLayout({ children }) {
+  const headersList = await headers();
+  const pathname = headersList.get("x-pathname") || "";
+  const isAdmin =
+    pathname.startsWith("/self-study/admin") || pathname.startsWith("/admin");
+  const { headerCode, footerCode } = isAdmin
+    ? { headerCode: "", footerCode: "" }
+    : await getSiteSettingsCustomCode();
+
   return (
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         suppressHydrationWarning
       >
+        {headerCode?.trim() ? (
+          <div
+            data-custom-code-injected="server"
+            dangerouslySetInnerHTML={{ __html: headerCode }}
+            style={{ display: "none" }}
+            suppressHydrationWarning
+            aria-hidden
+          />
+        ) : null}
         {children}
+        {footerCode?.trim() ? (
+          <div
+            data-custom-code-injected="server"
+            dangerouslySetInnerHTML={{ __html: footerCode }}
+            style={{ display: "none" }}
+            suppressHydrationWarning
+            aria-hidden
+          />
+        ) : null}
       </body>
     </html>
   );
