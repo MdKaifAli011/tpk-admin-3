@@ -47,26 +47,35 @@ export async function PATCH(request, { params }) {
       "durationLabel", "createdBy", "price", "reviewCount", "rating",
       "image", "status", "orderNumber",
       "metaTitle", "metaDescription", "keywords", "content",
+      "madeFor", "mode", "target", "subjectCovered", "sessionLength",
+      "tests", "fullLength", "feeUsaEurope", "feeIndiaMeSe", "timeZone",
+      "batchClosingDays", "callPhone",
     ];
+    const str = (v) => (v != null && v !== "" ? String(v).trim() : "");
+    const numOrNull = (v) => (v != null && v !== "" ? Number(v) : null);
     allowed.forEach((key) => {
-      if (body[key] !== undefined) {
-        if (key === "title") updateData.title = body.title?.trim() ?? "";
-        else if (key === "shortDescription") updateData.shortDescription = body.shortDescription?.trim() ?? "";
-        else if (key === "hours") updateData.hours = body.hours?.trim() ?? "";
-        else if (key === "lessonsRange") updateData.lessonsRange = body.lessonsRange?.trim() ?? "";
-        else if (key === "durationLabel") updateData.durationLabel = body.durationLabel?.trim() ?? "";
-        else if (key === "createdBy") updateData.createdBy = body.createdBy?.trim() ?? "";
-        else if (key === "price") updateData.price = body.price != null && body.price !== "" ? Number(body.price) : null;
-        else if (key === "reviewCount") updateData.reviewCount = Math.max(0, parseInt(body.reviewCount, 10) || 0);
-        else if (key === "rating") updateData.rating = Math.min(5, Math.max(0, Number(body.rating) || 5));
-        else if (key === "image") updateData.image = body.image?.trim() ?? "";
-        else if (key === "examId") updateData.examId = body.examId?.trim() || null;
-        else if (key === "status") updateData.status = body.status || "active";
-        else if (key === "orderNumber") updateData.orderNumber = Number(body.orderNumber) || 0;
-        else if (key === "metaTitle") updateData.metaTitle = body.metaTitle?.trim() ?? "";
-        else if (key === "metaDescription") updateData.metaDescription = body.metaDescription?.trim() ?? "";
-        else if (key === "keywords") updateData.keywords = body.keywords?.trim() ?? "";
-        else if (key === "content") updateData.content = body.content ?? "";
+      if (body[key] === undefined) return;
+      if (key === "title") updateData.title = str(body.title) || "";
+      else if (key === "shortDescription") updateData.shortDescription = str(body.shortDescription);
+      else if (key === "hours") updateData.hours = str(body.hours);
+      else if (key === "lessonsRange") updateData.lessonsRange = str(body.lessonsRange);
+      else if (key === "durationLabel") updateData.durationLabel = str(body.durationLabel);
+      else if (key === "createdBy") updateData.createdBy = str(body.createdBy);
+      else if (key === "price") updateData.price = numOrNull(body.price);
+      else if (key === "reviewCount") updateData.reviewCount = Math.max(0, parseInt(body.reviewCount, 10) || 0);
+      else if (key === "rating") updateData.rating = Math.min(5, Math.max(0, Number(body.rating) || 5));
+      else if (key === "image") updateData.image = str(body.image);
+      else if (key === "examId") updateData.examId = body.examId?.trim() || null;
+      else if (key === "status") updateData.status = body.status || "active";
+      else if (key === "orderNumber") updateData.orderNumber = Number(body.orderNumber) || 0;
+      else if (key === "metaTitle") updateData.metaTitle = str(body.metaTitle);
+      else if (key === "metaDescription") updateData.metaDescription = str(body.metaDescription);
+      else if (key === "keywords") updateData.keywords = str(body.keywords);
+      else if (key === "content") updateData.content = body.content ?? "";
+      else if (key === "batchClosingDays") updateData.batchClosingDays = numOrNull(body.batchClosingDays);
+      else if (key === "callPhone") updateData.callPhone = str(body.callPhone);
+      else if (["madeFor", "mode", "target", "subjectCovered", "sessionLength", "tests", "fullLength", "feeUsaEurope", "feeIndiaMeSe", "timeZone"].includes(key)) {
+        updateData[key] = str(body[key]);
       }
     });
     // Always persist content when present in body (rich text from admin editor)

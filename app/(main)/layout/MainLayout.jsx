@@ -132,22 +132,17 @@ const MainLayout = ({ children, showSidebar = true, fullWidth = false }) => {
             <Sidebar isOpen={isSidebarOpen} onClose={closeSidebar} />
           )}
 
-          {/* MAIN CONTENT */}
-          <main
-            className={`
-              flex-1
-              pt-[110px] md:pt-[120px]
-              ${showSidebar && isSidebarOpen ? "lg:ml-[300px]" : ""}
-              bg-white
-              overflow-y-auto
-              min-h-0
-              ${fullWidth ? "" : "px-4 md:px-6 pb-6"}
-              transition-all duration-300 ease-out
-              [&::-webkit-scrollbar]:hidden
-              [-ms-overflow-style:none]
-              [scrollbar-width:none]
-            `}
-          >
+<main
+  className={`
+    flex-1
+    pt-[110px] md:pt-[120px]
+    ${showSidebar && isSidebarOpen ? "lg:ml-[300px]" : ""}
+    bg-white
+    min-h-screen
+    ${fullWidth ? "" : "px-4 md:px-6 pb-6"}
+    transition-all duration-300 ease-out
+  `}
+>
             {fullWidth ? (
               <Suspense
                 fallback={

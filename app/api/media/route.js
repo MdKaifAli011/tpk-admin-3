@@ -77,7 +77,6 @@ export async function GET(request) {
 
     const { searchParams } = new URL(request.url);
     const type = searchParams.get("type") || "";
-    const folder = searchParams.get("folder") || "";
     const search = searchParams.get("search") || "";
     const trash = searchParams.get("trash") === "true";
     const page = Math.max(1, parseInt(searchParams.get("page"), 10) || 1);
@@ -93,12 +92,20 @@ export async function GET(request) {
       });
     }
 
+    const folderParam = searchParams.get("folder");
+    const folder = folderParam === null || folderParam === undefined ? undefined : (folderParam || "");
+
     if (type && ["image", "video", "document", "file"].includes(type)) {
       andParts.push({ type });
     }
 
-    if (folder && folder.trim()) {
-      andParts.push({ folder: folder.trim() });
+    if (folder !== undefined) {
+      const folderValue = (typeof folder === "string" ? folder.trim() : "") || "";
+      if (folderValue === "") {
+        andParts.push({ $or: [{ folder: "" }, { folder: { $exists: false } }, { folder: null }] });
+      } else {
+        andParts.push({ folder: folderValue });
+      }
     }
 
     if (search && search.trim()) {

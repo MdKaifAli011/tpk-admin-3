@@ -1,24 +1,16 @@
-import {
-  getUserFromRequest,
-  canPerformAction,
-  canManageUsers,
-} from "@/lib/auth";
-
-/** Plain error object for routes to return as JSON (routes check authCheck.error) */
-function authError(message, status = 401) {
-  return { error: true, success: false, message, status };
-}
+import { getUserFromRequest, canPerformAction, canManageUsers } from "@/lib/auth";
+import { errorResponse } from "@/utils/apiResponse";
 
 /**
  * Middleware to check if user is authenticated
  * @param {Request} request - Next.js request object
- * @returns {object} - User data or { error, success, message, status }
+ * @returns {object|null} - User data or null
  */
 export async function requireAuth(request) {
   const user = await getUserFromRequest(request);
 
   if (!user) {
-    return authError("Authentication required", 401);
+    return errorResponse("Authentication required", 401);
   }
 
   return user;
@@ -34,18 +26,18 @@ export async function requireRole(request, requiredRoles) {
   const user = await requireAuth(request);
 
   if (user.error) {
-    return user;
+    return user; // Return error response
   }
 
   const userRole = user.role;
 
   if (Array.isArray(requiredRoles)) {
     if (!requiredRoles.includes(userRole)) {
-      return authError("Insufficient permissions", 403);
+      return errorResponse("Insufficient permissions", 403);
     }
   } else {
     if (userRole !== requiredRoles) {
-      return authError("Insufficient permissions", 403);
+      return errorResponse("Insufficient permissions", 403);
     }
   }
 
@@ -62,11 +54,11 @@ export async function requireAction(request, action) {
   const user = await requireAuth(request);
 
   if (user.error) {
-    return user;
+    return user; // Return error response
   }
 
   if (!canPerformAction(user.role, action)) {
-    return authError(
+    return errorResponse(
       `You don't have permission to ${action.toLowerCase()} this resource`,
       403
     );
@@ -84,11 +76,11 @@ export async function requireUserManagement(request) {
   const user = await requireAuth(request);
 
   if (user.error) {
-    return user;
+    return user; // Return error response
   }
 
   if (!canManageUsers(user.role)) {
-    return authError("Only administrators can manage users", 403);
+    return errorResponse("Only administrators can manage users", 403);
   }
 
   return user;

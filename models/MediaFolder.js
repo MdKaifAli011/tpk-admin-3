@@ -46,7 +46,17 @@ function pathToName(pathStr) {
   return parts[parts.length - 1] || "";
 }
 
+/** Display name: capitalize first letter of each word (e.g. "neet demo" → "Neet Demo") */
+function capitalizeDisplayName(str) {
+  if (typeof str !== "string" || !str.trim()) return str;
+  return str
+    .trim()
+    .split(/\s+/)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
+}
+
 const MediaFolder =
   mongoose.models.MediaFolder || mongoose.model("MediaFolder", mediaFolderSchema);
 export default MediaFolder;
-export { normalizePath, pathToName, slugifySegment };
+export { normalizePath, pathToName, slugifySegment, capitalizeDisplayName };

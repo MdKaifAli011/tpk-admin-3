@@ -1,22 +1,7 @@
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { SEO_DEFAULTS } from "@/constants";
 import { getSiteSettingsCustomCode } from "@/lib/getSiteSettingsCustomCode";
 import { headers } from "next/headers";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-  display: "swap", // Improve FCP - prevents invisible text during font load
-  preload: false, // Avoid "preloaded but not used" console warning when font is used in client-rendered content
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-  display: "swap", // Improve FCP
-  preload: false, // Not critical, can load later
-});
 
 export const metadata = {
   metadataBase: new URL(
@@ -83,7 +68,7 @@ export default async function RootLayout({ children }) {
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className="antialiased"
         suppressHydrationWarning
       >
         {headerCode?.trim() ? (

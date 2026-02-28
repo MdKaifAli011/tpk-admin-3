@@ -292,21 +292,16 @@ export default function MainLayoutClient({ children }) {
               onClose={closeSidebar}
             />
 
-            {/* Main content area - only this changes on navigation */}
             <main
               className={`
-                flex-1
-                pt-[110px] md:pt-[120px]
-                ${showSidebar && isSidebarOpen ? "lg:ml-[300px]" : ""}
-                bg-white
-                overflow-y-auto
-                min-h-screen
-                px-4 md:px-6 pb-6
-                transition-all duration-300 ease-out
-                [&::-webkit-scrollbar]:hidden
-                [-ms-overflow-style:none]
-                [scrollbar-width:none]
-              `}
+    flex-1
+    pt-[110px] md:pt-[120px]
+    ${showSidebar && isSidebarOpen ? "lg:ml-[300px]" : ""}
+    bg-white
+    min-h-screen
+    px-4 md:px-6 pb-6
+    transition-all duration-300 ease-out
+  `}
             >
               <div className="w-full max-w-7xl mx-auto min-h-[400px]">
                 <Suspense

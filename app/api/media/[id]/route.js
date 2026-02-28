@@ -3,7 +3,7 @@ export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
 import path from "path";
-import { rename, mkdir } from "fs/promises";
+import { rename, mkdir, unlink } from "fs/promises";
 import { existsSync } from "fs";
 import connectDB from "@/lib/mongodb";
 import Media from "@/models/Media";
@@ -130,8 +130,17 @@ export async function DELETE(request, { params }) {
     await connectDB();
 
     if (permanent) {
-      const item = await Media.findByIdAndDelete(id);
+      const item = await Media.findById(id).lean();
       if (!item) return errorResponse("Media not found", 404);
+      const filePath = path.join(assetsBaseDir, (item.path || "").replace(/\//g, path.sep));
+      if (filePath.startsWith(assetsBaseDir) && existsSync(filePath)) {
+        try {
+          await unlink(filePath);
+        } catch (err) {
+          console.error("Failed to delete physical file:", filePath, err);
+        }
+      }
+      await Media.findByIdAndDelete(id);
       return successResponse({ deleted: true }, "Media permanently deleted");
     }
 

@@ -9,7 +9,8 @@
     "start": "next start",
     "clean": "node -e \"try{require('fs').rmSync('.next',{recursive:true,force:true});console.log('Cleaned .next');}catch(e){if(e.code!=='ENOENT')throw e;console.log('No .next folder');}\"",
     "lint": "eslint",
-    "import:neet-biology": "node scripts/import-neet-biology-data.mjs"
+    "import:neet-biology": "node scripts/import-neet-biology-data.mjs",
+    "normalize:media-folders": "node scripts/normalize-media-folders.mjs"
   },
   "dependencies": {
     "@lexical/history": "^0.38.1",

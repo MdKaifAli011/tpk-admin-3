@@ -9,6 +9,7 @@ import {
   FaTrash,
   FaGraduationCap,
   FaImage,
+  FaListUl,
 } from "react-icons/fa";
 import { LoadingSpinner } from "../ui/SkeletonLoader";
 import { ToastContainer, useToast } from "../ui/Toast";
@@ -104,6 +105,13 @@ const CourseTable = ({ courses, onEdit, onDelete }) => {
               </td>
               <td className="px-3 py-2 text-right">
                 <div className="flex items-center justify-end gap-1">
+                  <Link
+                    href={`/admin/course/${course._id}/details`}
+                    className="p-1.5 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200"
+                    title="Card details"
+                  >
+                    <FaListUl className="w-4 h-4" />
+                  </Link>
                   <button
                     type="button"
                     onClick={() => onEdit(course)}

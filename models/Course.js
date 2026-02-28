@@ -80,6 +80,19 @@ const courseSchema = new mongoose.Schema(
     keywords: { type: String, trim: true, default: "" },
     // Rich content (HTML from editor)
     content: { type: String, default: "" },
+    // Sidebar/card details (public course page)
+    madeFor: { type: String, trim: true, default: "" },
+    mode: { type: String, trim: true, default: "" },
+    target: { type: String, trim: true, default: "" },
+    subjectCovered: { type: String, trim: true, default: "" },
+    sessionLength: { type: String, trim: true, default: "" },
+    tests: { type: String, trim: true, default: "" },
+    fullLength: { type: String, trim: true, default: "" },
+    feeUsaEurope: { type: String, trim: true, default: "" },
+    feeIndiaMeSe: { type: String, trim: true, default: "" },
+    timeZone: { type: String, trim: true, default: "" },
+    batchClosingDays: { type: Number, default: null },
+    callPhone: { type: String, trim: true, default: "" },
   },
   { timestamps: true }
 );

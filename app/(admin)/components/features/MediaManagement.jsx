@@ -174,7 +174,7 @@ export default function MediaManagement() {
       if (viewMode === "trash") params.set("trash", "true");
       else if (viewMode === "library") {
         if (activeFilter !== "all") params.set("type", activeFilter);
-        if (currentFolderPath.trim()) params.set("folder", currentFolderPath.trim());
+        params.set("folder", currentFolderPath);
       }
       params.set("page", String(page));
       params.set("limit", String(pageSize));
@@ -271,13 +271,14 @@ export default function MediaManagement() {
     }
   };
 
-  const handleDeleteFolder = async () => {
+  const handleDeleteFolder = async (force = false) => {
     if (!deleteFolder?.path) return;
     setDeletingFolder(true);
     try {
-      const res = await api.delete("/media/folders", { data: { path: deleteFolder.path } });
+      const url = force ? `/media/folders?force=true` : "/media/folders";
+      const res = await api.delete(url, { data: { path: deleteFolder.path } });
       if (res.data?.success) {
-        success("Folder deleted");
+        success(force ? "Folder and all contents deleted" : "Folder deleted");
         setSelectedFolderPaths((prev) => { const n = new Set(prev); n.delete(deleteFolder.path); return n; });
         setDeleteFolder(null);
         setFolderDeleteCounts(null);
@@ -289,7 +290,7 @@ export default function MediaManagement() {
         fetchMedia(1);
       } else showError(res.data?.message || "Failed to delete folder");
     } catch (err) {
-      showError(err.response?.data?.message || err.response?.data?.error || "Only administrators can delete folders.");
+      showError(err.response?.data?.message || err.response?.data?.error || "Failed to delete folder.");
     } finally {
       setDeletingFolder(false);
     }
@@ -453,8 +454,7 @@ export default function MediaManagement() {
 
   const subfolders = viewMode === "library" ? foldersFlat.filter((f) => (f.parentPath || "") === currentFolderPath) : [];
   const breadcrumbSegments = currentFolderPath ? currentFolderPath.split("/").filter(Boolean) : [];
-  const atRoot = viewMode === "library" && currentFolderPath === "";
-  const displayItems = atRoot ? [] : items;
+  const displayItems = items;
 
   const selectedItem = displayItems.find((i) => i._id === Array.from(selectedIds)[0]);
 
@@ -560,6 +560,7 @@ export default function MediaManagement() {
                       breadcrumbSegments.map((seg, i) => {
                         const pathUp = breadcrumbSegments.slice(0, i + 1).join("/");
                         const isLast = i === breadcrumbSegments.length - 1;
+                        const displayName = foldersFlat.find((f) => f.path === pathUp)?.name || seg.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
                         return (
                           <span key={pathUp} className="flex items-center gap-2">
                             <span className="text-slate-400">/</span>
@@ -568,7 +569,7 @@ export default function MediaManagement() {
                               onClick={() => setCurrentFolderPath(pathUp)}
                               className={`transition-colors ${isLast ? "text-slate-900 font-medium" : "hover:text-[#0052CC]"}`}
                             >
-                              {seg}
+                              {displayName}
                             </button>
                           </span>
                         );
@@ -1320,7 +1321,7 @@ export default function MediaManagement() {
                 </div>
                 {currentFolderPath ? (
                   <p className="rounded-lg bg-slate-50 px-3 py-1.5 text-sm text-slate-500">
-                    Location: <span className="font-medium text-slate-700">{currentFolderPath}</span>
+                    Location: <span className="font-medium text-slate-700">{foldersFlat.find((f) => f.path === currentFolderPath)?.name || currentFolderPath.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}</span>
                   </p>
                 ) : null}
                 <div className="flex gap-3 pt-2">
@@ -1520,24 +1521,33 @@ export default function MediaManagement() {
                           <li>{folderDeleteCounts.subfolders} subfolder{folderDeleteCounts.subfolders !== 1 ? "s" : ""}</li>
                         )}
                       </ul>
-                      <p className="mt-2 text-amber-700">The folder must be empty before it can be deleted. Move or delete the contents first.</p>
+                      <p className="mt-2 font-medium text-amber-800">Deleting will remove everything inside this folder permanently. This cannot be undone.</p>
                     </div>
-                    <div className="flex gap-3 pt-2">
+                    <div className="flex flex-wrap gap-3 pt-2">
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteFolder(true)}
+                        disabled={deletingFolder}
+                        className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
+                      >
+                        {deletingFolder ? "Deleting…" : "Delete permanently"}
+                      </button>
                       <button
                         type="button"
                         onClick={() => { setCurrentFolderPath(deleteFolder.path); setDeleteFolder(null); setFolderDeleteCounts(null); fetchMedia(1); }}
-                        className="flex-1 rounded-lg bg-[#0052CC] px-4 py-2 text-sm font-medium text-white hover:bg-[#0044AA]"
+                        className="rounded-lg bg-[#0052CC] px-4 py-2 text-sm font-medium text-white hover:bg-[#0044AA]"
                       >
                         Go to folder
                       </button>
                       <button
                         type="button"
                         onClick={() => { setDeleteFolder(null); setFolderDeleteCounts(null); }}
+                        disabled={deletingFolder}
                         className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
                       >
                         Cancel
                       </button>
-      </div>
+                    </div>
                   </>
                 ) : (
                   <>
@@ -1547,7 +1557,7 @@ export default function MediaManagement() {
                     <div className="flex gap-3 pt-2">
                       <button
                         type="button"
-                        onClick={handleDeleteFolder}
+                        onClick={() => handleDeleteFolder(false)}
                         disabled={deletingFolder}
                         className="flex-1 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
                       >

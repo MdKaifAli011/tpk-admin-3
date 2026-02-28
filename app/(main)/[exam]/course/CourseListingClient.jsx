@@ -77,20 +77,21 @@ export default function CourseListingClient({ examSlug, examName: examNameProp }
           </div>
         </section>
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 items-stretch">
             {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
-                <div className="aspect-[2/1] bg-slate-100 animate-pulse" />
-                <div className="p-4 space-y-2">
+              <div key={i} className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm flex flex-col">
+                <div className="aspect-video w-full bg-slate-100 animate-pulse shrink-0" />
+                <div className="p-5 sm:p-6 flex flex-col flex-1 space-y-3">
                   <div className="flex gap-1.5">
-                    <div className="h-3.5 w-3.5 rounded bg-amber-200 animate-pulse" />
-                    <div className="h-3.5 w-16 bg-slate-100 rounded animate-pulse" />
+                    <div className="h-4 w-4 rounded bg-amber-200 animate-pulse" />
+                    <div className="h-4 w-20 bg-slate-100 rounded animate-pulse" />
                   </div>
                   <div className="h-4 w-full bg-slate-200 rounded animate-pulse" />
-                  <div className="h-3 w-2/3 bg-slate-100 rounded animate-pulse" />
-                  <div className="flex justify-between pt-1.5">
-                    <div className="h-5 w-14 bg-slate-200 rounded animate-pulse" />
-                    <div className="h-3 w-16 bg-slate-100 rounded animate-pulse" />
+                  <div className="h-4 w-2/3 bg-slate-100 rounded animate-pulse" />
+                  <div className="h-10 w-full bg-slate-100 rounded animate-pulse flex-1" />
+                  <div className="flex justify-between pt-3 mt-auto border-t border-slate-100">
+                    <div className="h-6 w-16 bg-slate-200 rounded animate-pulse" />
+                    <div className="h-4 w-20 bg-slate-100 rounded animate-pulse" />
                   </div>
                 </div>
               </div>
@@ -106,19 +107,19 @@ export default function CourseListingClient({ examSlug, examName: examNameProp }
       {/* Hero */}
       <section className="bg-gradient-to-br from-indigo-50/80 via-white to-purple-50/50 py-8 sm:py-10 lg:py-12 border-b border-slate-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <nav className="flex items-center gap-2 text-sm text-slate-500 mb-5" aria-label="Breadcrumb">
+          <nav className="flex items-center gap-2 text-sm text-slate-500 mb-6" aria-label="Breadcrumb">
             <Link href="/" className="hover:text-indigo-600 font-medium transition-colors">Home</Link>
             <span className="text-slate-300" aria-hidden>/</span>
-            <span className="text-slate-700 font-medium">All Courses</span>
+            <span className="text-slate-700 font-medium truncate">{examName} Courses</span>
           </nav>
 
           <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
-            <div>
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight mb-1.5">
+            <div className="min-w-0">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight mb-2">
                 {examName} Preparation Courses
               </h1>
-              <p className="text-slate-600 text-sm sm:text-base max-w-xl">
-                {examName} coaching online courses from Class 9th to 12th. Expert-led programs to help you crack the exam.
+              <p className="text-slate-600 text-sm sm:text-base max-w-xl leading-relaxed">
+                Expert-led online courses to help you crack {examName}. From fundamentals to advanced practice.
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-3">
@@ -156,20 +157,20 @@ export default function CourseListingClient({ examSlug, examName: examNameProp }
 
           <div className="mt-6 pt-6 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <p className="text-sm text-slate-500">
-              Showing <span className="font-medium text-slate-700">{from}</span>–<span className="font-medium text-slate-700">{to}</span> of <span className="font-medium text-slate-700">{courses.length}</span> results
+              Showing <span className="font-semibold text-slate-700">{from}</span>–<span className="font-semibold text-slate-700">{to}</span> of <span className="font-semibold text-slate-700">{courses.length}</span> course{courses.length !== 1 ? "s" : ""}
             </p>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <Link
                 href="/contact"
-                className="inline-flex items-center justify-center px-4 py-2.5 rounded-xl border-2 border-indigo-600 text-indigo-600 font-semibold text-sm hover:bg-indigo-50 transition-colors"
+                className="inline-flex items-center justify-center px-4 py-2.5 rounded-xl border-2 border-indigo-600 text-indigo-600 font-semibold text-sm hover:bg-indigo-50 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
               >
                 Get Trial Session
               </Link>
               <Link
                 href="/store"
-                className="inline-flex items-center justify-center px-4 py-2.5 rounded-xl bg-indigo-600 text-white font-semibold text-sm hover:bg-indigo-700 transition-colors shadow-sm shadow-indigo-500/20"
+                className="inline-flex items-center justify-center px-4 py-2.5 rounded-xl bg-indigo-600 text-white font-semibold text-sm hover:bg-indigo-700 transition-colors shadow-sm shadow-indigo-500/20 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
               >
-                Enroll For Course
+                View Store
               </Link>
             </div>
           </div>
@@ -177,19 +178,19 @@ export default function CourseListingClient({ examSlug, examName: examNameProp }
       </section>
 
       {/* Content */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
+      <section className="max-w-7xl mx-auto py-8 lg:py-12">
         {courses.length === 0 ? (
-          <div className="text-center py-20 px-6 bg-slate-50/80 rounded-2xl border border-slate-200">
-            <div className="w-20 h-20 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-5 text-4xl">
+          <div className="text-center py-16 sm:py-20 px-6 bg-gradient-to-b from-slate-50 to-white rounded-2xl border border-slate-200 shadow-sm">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-indigo-50 flex items-center justify-center mx-auto mb-5 text-4xl sm:text-5xl">
               📚
             </div>
             <h2 className="text-xl font-bold text-slate-900 mb-2">No courses yet</h2>
-            <p className="text-slate-600 max-w-md mx-auto mb-6">
-              There are no courses available for this exam at the moment. Check back later or browse the store for other resources.
+            <p className="text-slate-600 max-w-md mx-auto mb-6 text-sm sm:text-base leading-relaxed">
+              No courses are available for {examName} right now. Check back later or explore the store for study material.
             </p>
             <Link
               href="/store"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 text-white font-semibold text-sm hover:bg-indigo-700 transition-colors"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 text-white font-semibold text-sm hover:bg-indigo-700 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
             >
               Browse store <FaArrowRight className="w-3.5 h-3.5" />
             </Link>
@@ -203,7 +204,7 @@ export default function CourseListingClient({ examSlug, examName: examNameProp }
             ))}
           </ul>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 items-stretch">
             {paginated.map((course) => (
               <CourseCard key={course._id} course={course} examSlug={slugForLinks} formatPrice={formatPrice} layout="grid" />
             ))}
@@ -211,26 +212,26 @@ export default function CourseListingClient({ examSlug, examName: examNameProp }
         )}
 
         {totalPages > 1 && (
-          <nav className="mt-12 flex items-center justify-center gap-2" aria-label="Pagination">
+          <nav className="mt-14 flex items-center justify-center gap-3" aria-label="Pagination">
             <button
               type="button"
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page <= 1}
-              className="inline-flex items-center justify-center w-10 h-10 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:border-slate-300 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white transition-colors"
+              className="inline-flex items-center justify-center w-10 h-10 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:border-slate-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
               aria-label="Previous page"
             >
               <FaChevronLeft className="w-4 h-4" />
             </button>
-            <span className="flex items-center gap-2 px-4">
+            <span className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-slate-50 border border-slate-100 min-w-[7rem] justify-center">
               <span className="text-sm text-slate-600">Page</span>
-              <span className="font-semibold text-slate-900">{page}</span>
+              <span className="font-bold text-slate-900">{page}</span>
               <span className="text-sm text-slate-500">of {totalPages}</span>
             </span>
             <button
               type="button"
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page >= totalPages}
-              className="inline-flex items-center justify-center w-10 h-10 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:border-slate-300 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white transition-colors"
+              className="inline-flex items-center justify-center w-10 h-10 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:border-slate-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
               aria-label="Next page"
             >
               <FaChevronRight className="w-4 h-4" />
@@ -262,73 +263,103 @@ function CourseCard({ course, examSlug, formatPrice, layout, listIndex = 0 }) {
   return (
     <Link
       href={href}
-      className={`group block bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-lg hover:border-slate-300 transition-all duration-200 overflow-hidden focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
-        isGrid ? "" : `flex flex-col sm:flex-row ${imageOnRight ? "sm:flex-row-reverse" : ""}`
+      className={`group block bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-2xl hover:border-indigo-100 transition-all duration-300 overflow-hidden focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
+        isGrid ? "flex flex-col h-full" : `flex flex-col sm:flex-row ${imageOnRight ? "sm:flex-row-reverse" : ""}`
       }`}
     >
-      <div className={`relative bg-slate-100 ${isGrid ? "aspect-[2/1]" : "w-full sm:w-56 shrink-0 aspect-video sm:aspect-[4/3]"}`}>
-        {course.image ? (
-          <Image
-            src={course.image}
-            alt=""
-            fill
-            className="object-cover group-hover:scale-[1.03] transition-transform duration-300"
-            sizes={isGrid ? "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" : "(max-width: 640px) 100vw, 224px"}
-          />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center text-slate-300 text-4xl bg-slate-50">
-            📚
-          </div>
-        )}
-        <button
-          type="button"
-          onClick={handleBookmarkClick}
-          className="absolute top-2 right-2 p-1.5 rounded-full bg-white/95 hover:bg-white shadow-md text-slate-500 hover:text-indigo-600 transition-colors"
-          aria-label="Save course"
-        >
-          <FaBookmark className="w-3.5 h-3.5" />
-        </button>
+      {/* Image Container with balanced padding */}
+      <div className={`relative bg-white p-4 shrink-0 overflow-hidden ${isGrid ? "w-full" : "w-full sm:w-72"}`}>
+        <div className="relative aspect-[16/10] rounded-xl overflow-hidden bg-slate-50 shadow-inner">
+          {course.image ? (
+            <Image
+              src={course.image}
+              alt=""
+              fill
+              className="object-cover group-hover:scale-110 transition-transform duration-700 ease-in-out"
+              sizes={isGrid ? "(max-width: 640px) 100vw, 33vw" : "300px"}
+            />
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center text-slate-200 text-4xl">📚</div>
+          )}
+        </div>
       </div>
 
-      <div className={`flex flex-col flex-1 p-4 ${isGrid ? "" : "sm:justify-center sm:py-4"}`}>
-        <div className="flex items-center gap-1.5 text-amber-500 mb-1.5">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <FaStar
-              key={i}
-              className={`w-3.5 h-3.5 ${i <= Math.floor(rating) ? "fill-current" : "text-slate-200 fill-slate-200"}`}
-            />
-          ))}
-          <span className="text-slate-500 text-xs font-medium">({(course.reviewCount ?? 0)} Reviews)</span>
+      {/* Content Container - Increased Padding for "Premium" feel */}
+      <div className={`flex flex-col flex-1 p-6 pt-2 ${isGrid ? "" : "sm:justify-center sm:py-6"}`}>
+        
+        {/* Row 1: Rating & Bookmark */}
+        <div className="flex justify-between items-center mb-4">
+          <div className="flex items-center gap-1.5">
+            <div className="flex items-center">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <FaStar
+                  key={i}
+                  className={`w-3 h-3 ${i <= Math.floor(rating) ? "text-orange-400 fill-orange-400" : "text-slate-200 fill-slate-200"}`}
+                />
+              ))}
+            </div>
+            <span className="text-slate-400 text-[12px] font-semibold tracking-tight">
+              ({course.reviewCount ?? 0} Reviews)
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={handleBookmarkClick}
+            className="p-1.5 rounded-full hover:bg-slate-50 text-slate-400 hover:text-indigo-600 transition-all"
+            aria-label="Save course"
+          >
+            <FaBookmark className="w-3.5 h-3.5" />
+          </button>
         </div>
 
-        <h2 className="text-base font-bold text-slate-900 mb-1.5 group-hover:text-indigo-600 transition-colors line-clamp-2">
+        {/* Title: High Impact Typography */}
+        <h2 className="text-[19px] font-black text-slate-800 mb-3 leading-[1.3] group-hover:text-indigo-600 transition-colors line-clamp-2 tracking-tight">
           {course.title}
         </h2>
 
+        {/* Meta Row: Clean Separation */}
         {metaParts.length > 0 && (
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-slate-500 mb-2">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mb-4">
             {metaParts.map((part, idx) => (
-              <span key={idx} className="inline-flex items-center gap-1">
-                <part.Icon className="w-3 h-3 text-slate-400 shrink-0" /> {part.text}
+              <span key={idx} className="inline-flex items-center gap-1.5 text-[12px] text-slate-500 font-medium">
+                <part.Icon className="w-3.5 h-3.5 text-slate-400/80" /> {part.text}
               </span>
             ))}
           </div>
         )}
 
-        <p className="text-xs text-slate-600 line-clamp-1 mb-2 flex-1 min-h-0">
-          {course.shortDescription || "Expert-led course for exam preparation."}
+        {/* Description: Increased Line Height (leading-relaxed) */}
+        <p className="text-[14px] text-slate-500 line-clamp-2 mb-6 leading-relaxed font-medium">
+          {course.shortDescription || "This specialized course is exclusively designed for students preparing for their upcoming exams with expert mentorship."}
         </p>
 
+        {/* Instructor Section */}
         {course.createdBy && (
-          <p className="text-xs text-slate-500 mb-2 inline-flex items-center gap-1">
-            <FaUser className="w-2.5 h-2.5 text-slate-400" /> By {course.createdBy}
-          </p>
+          <div className="flex items-center gap-3 mb-6 mt-auto">
+            <div className="relative w-8 h-8 rounded-full bg-slate-100 shrink-0 overflow-hidden ring-2 ring-white shadow-sm">
+              {course.instructorImage ? (
+                <Image src={course.instructorImage} alt="" fill className="object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-indigo-50 text-[11px] font-bold text-indigo-600 uppercase">
+                  {(course.createdBy || "?").trim().charAt(0)}
+                </div>
+              )}
+            </div>
+            <p className="text-[13px] text-slate-500">
+              By <span className="font-bold text-slate-900 ml-0.5">{course.createdBy}</span>
+            </p>
+          </div>
         )}
 
-        <div className="flex items-center justify-between pt-2 border-t border-slate-100">
-          <span className="text-lg font-bold text-slate-900">{formatPrice(course.price)}</span>
-          <span className="inline-flex items-center gap-1 text-indigo-600 font-semibold text-xs group-hover:gap-1.5 transition-all">
-            Learn More <FaArrowRight className="w-3 h-3" />
+        {/* Footer: Price and Learn More link */}
+        <div className="flex items-center justify-between pt-5 border-t border-slate-100/60">
+          <div className="flex flex-col">
+            <span className="text-[22px] font-black text-slate-900 tabular-nums tracking-tighter">
+              ${course.price || "0"}
+            </span>
+          </div>
+          <span className="inline-flex items-center gap-1.5 text-slate-900 font-extrabold text-[13px] group-hover:text-indigo-600 transition-all uppercase tracking-wide">
+            Learn More <FaArrowRight className="w-3 h-3 transform group-hover:translate-x-1.5 transition-transform duration-300" />
           </span>
         </div>
       </div>

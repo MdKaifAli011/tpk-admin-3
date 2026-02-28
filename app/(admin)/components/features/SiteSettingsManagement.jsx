@@ -59,25 +59,10 @@ export default function SiteSettingsManagement() {
       if (res.data?.success) {
         success("Site settings saved. Header and footer code will appear on the public site.");
       } else {
-        const msg = res.data?.message || (res.data?.error && String(res.data.error)) || "Save failed";
-        showError(msg);
+        showError(res.data?.message || "Save failed");
       }
     } catch (err) {
-      const status = err?.response?.status;
-      const data = err?.response?.data;
-      const msg =
-        (typeof data?.message === "string" && data.message) ||
-        (data?.error && String(data.error)) ||
-        err?.message;
-      if (status === 401) {
-        showError(msg || "Please log in again to save.");
-      } else if (status === 403) {
-        showError(msg || "You don't have permission to save.");
-      } else if (!err?.response) {
-        showError("Network error. Check your connection and try again.");
-      } else {
-        showError(msg || "Save failed");
-      }
+      showError(err?.response?.data?.message || "Save failed");
     } finally {
       setSaving(false);
     }

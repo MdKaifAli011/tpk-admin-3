@@ -1,5 +1,14 @@
 @import "tailwindcss";
 
+/* System font stacks — no network fetch at build time (avoids Google Fonts connection errors) */
+:root {
+  --font-geist-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-geist-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+}
+
+body {
+  font-family: var(--font-geist-sans);
+}
 
 
 /* Rich Text Editor Content Styles - Shared between editor and rendered content */
@@ -352,4 +361,10 @@
 .hide-scrollbar::-webkit-scrollbar {
   display: none;
   /* Chrome, Safari */
+}
+
+
+.sticky-sidebar {
+  position: sticky;
+  top: 2rem;
 }
