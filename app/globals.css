@@ -349,6 +349,27 @@ body {
   animation: slideDown 0.3s ease-out;
 }
 
+/* Video play button — pulsing rings */
+@keyframes playRingPulse {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.6;
+    border-color: rgba(255, 255, 255, 0.5);
+  }
+  100% {
+    transform: scale(2);
+    opacity: 0;
+    border-color: rgba(255, 255, 255, 0);
+  }
+}
+
+.animate-play-ring {
+  animation: playRingPulse 2s ease-out infinite;
+}
+
+.animate-play-ring-1 { animation-delay: 0s; }
+.animate-play-ring-2 { animation-delay: 0.6s; }
+.animate-play-ring-3 { animation-delay: 1.2s; }
 
 /* Hide scrollbar but keep scroll */
 .hide-scrollbar {
