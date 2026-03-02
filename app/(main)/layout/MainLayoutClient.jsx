@@ -277,7 +277,7 @@ export default function MainLayoutClient({ children }) {
         <ServiceWorkerRegistration />
         <ScrollToTop />
         <WhatsAppFloatButton />
-        <div className="flex flex-col min-h-screen bg-gray-50">
+        <div className="flex flex-col min-h-screen min-w-0 w-full bg-gray-50">
           {/* Persistent Navbar - won't re-render on navigation */}
           <Navbar
             onMenuToggle={toggleSidebar}
@@ -285,7 +285,7 @@ export default function MainLayoutClient({ children }) {
             showSidebar={showSidebar}
           />
 
-          <div className="flex flex-1 relative">
+          <div className="flex flex-1 relative min-h-0 min-w-0 w-full">
             {/* Persistent Sidebar - always rendered to prevent flickering */}
             <Sidebar
               isOpen={showSidebar && isSidebarOpen}
@@ -295,15 +295,18 @@ export default function MainLayoutClient({ children }) {
             <main
               className={`
     flex-1
-    pt-[110px] md:pt-[120px]
+    min-w-0
+    min-h-0
+    w-full
+    max-w-full
+    pt-[var(--navbar-height,7.5rem)]
     ${showSidebar && isSidebarOpen ? "lg:ml-[300px]" : ""}
     bg-white
-    min-h-screen
-    px-4 md:px-6 pb-6
+    px-4 sm:px-4 md:px-6 pb-6
     transition-all duration-300 ease-out
   `}
             >
-              <div className="w-full max-w-7xl mx-auto min-h-[400px]">
+              <div className="w-full max-w-7xl mx-auto min-w-0 min-h-[400px]">
                 <Suspense
                   fallback={
                     <div className="flex items-center justify-center min-h-[500px] sm:min-h-[600px] py-12 sm:py-16">

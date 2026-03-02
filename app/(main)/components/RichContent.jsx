@@ -425,7 +425,7 @@ const RichContent = ({ html }) => {
       buttonText: /data-button-text=["']([^"']*)["']/i,
       buttonColor: /data-button-color=["']([^"']*)["']/i,
       buttonLink: /data-button-link=["']([^"']*)["']/i,
-      imageUrl: /data-image-url=["']([^"']*)["']/i,
+      imageUrl: /data-image-url\s*=\s*["']([^"']*)["']/i,
     };
 
     // Match inline form embeds - optimized single pass extraction
@@ -478,6 +478,35 @@ const RichContent = ({ html }) => {
           index: formIndex,
           buttonText: decodeAttr(match[2] || ""),
           isInline: false,
+        });
+        formIndex++;
+      }
+    }
+
+    // Match inline contact form (div) - form shown directly, no button
+    const contactFormInlineRegex =
+      /<div[^>]*class="[^"]*contact-form-inline[^"]*"[^>]*data-form-id=["']?([^"'\s>]+)["']?[^>]*>[\s\S]*?<\/div>/gi;
+    while ((match = contactFormInlineRegex.exec(html)) !== null) {
+      const formId = (match[1] || "").trim();
+      if (formId) {
+        const fullMatch = match[0];
+        const placeholder = `<!--FORM_PLACEHOLDER_${formIndex}-->`;
+        processedHtml = processedHtml.replace(fullMatch, placeholder);
+        // Extract imageUrl: try normal quotes first, then entity-encoded &quot; (saved HTML)
+        let extractedImageUrl = attrRegexes.imageUrl.exec(fullMatch)?.[1] || "";
+        if (!extractedImageUrl && /data-image-url/i.test(fullMatch)) {
+          const entityMatch = fullMatch.match(/data-image-url\s*=\s*&quot;([^&]*(?:&amp;[^&]*)*)&quot;/i);
+          if (entityMatch && entityMatch[1]) extractedImageUrl = entityMatch[1];
+        }
+        formsFound.push({
+          formId,
+          placeholder,
+          index: formIndex,
+          title: decodeAttr(attrRegexes.title.exec(fullMatch)?.[1] || ""),
+          description: decodeAttr(attrRegexes.description.exec(fullMatch)?.[1] || ""),
+          imageUrl: decodeAttr(extractedImageUrl).trim(),
+          isInline: true,
+          isContactFormInline: true,
         });
         formIndex++;
       }
@@ -663,7 +692,28 @@ const RichContent = ({ html }) => {
             const isOpen = formStates[formKey] || false;
             const formConfig = formConfigs[formId];
 
-            // For inline forms
+            // Inline contact form (div) — form shown directly in page, no button
+            if (formData?.isContactFormInline) {
+              return (
+                <div key={formKey} className="my-4 w-full min-w-0" data-content-part="true">
+                  <Suspense fallback={<div className="rounded-xl border border-gray-200 bg-gray-50 p-6 text-center text-sm text-gray-500">Loading form...</div>}>
+                    <FormRenderer
+                      formId={formId}
+                      inline={true}
+                      isOpen={true}
+                      onClose={() => {}}
+                      prepared=""
+                      buttonLink=""
+                      imageUrl={formData.imageUrl || ""}
+                      title={formData.title || ""}
+                      description={formData.description || ""}
+                    />
+                  </Suspense>
+                </div>
+              );
+            }
+
+            // For inline forms (button that opens modal)
             if (formData?.isInline) {
               // Priority: formData (from HTML attributes) > formConfig > default
               const buttonText =

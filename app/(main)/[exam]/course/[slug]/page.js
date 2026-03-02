@@ -359,7 +359,7 @@ export default function CourseDetailPage() {
   const rating = course.rating != null ? Number(course.rating) : 5;
 
   return (
-    <div className="min-h-screen bg-white text-slate-900 overflow-x-clip">
+    <div className="min-h-screen bg-white text-slate-900">
    {/* Hero — gradient bg; left: info + price + CTAs; right: video card (white border) */}
 <section className="relative overflow-hidden border-b border-slate-200/60">
   <div className="absolute inset-0 bg-gradient-to-br from-indigo-50 via-white to-purple-50
@@ -554,8 +554,8 @@ export default function CourseDetailPage() {
 </section>
 
       {/* Main: content + right sidebar (summary card only) */}
-      <div className="max-w-7xl mx-auto mt-10">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
+      <div className="max-w-7xl mx-auto mt-10 w-full min-w-0">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 min-w-0">
           {/* Left — Course content */}
           <div className="lg:col-span-8 min-w-0 order-1">
             <Card
@@ -589,7 +589,7 @@ export default function CourseDetailPage() {
             role="complementary"
             aria-label="Course summary and enrollment"
           >
-            <div className="sticky top-32 sm:top-32 z-10">
+            <div className="sticky z-10 w-full" style={{ top: "calc(var(--navbar-height, 7.5rem) + 0.5rem)" }}>
               <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
                 {/* Course summary card — two columns label / value */}
                 <div className="p-4 sm:p-5">

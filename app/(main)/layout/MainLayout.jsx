@@ -135,7 +135,10 @@ const MainLayout = ({ children, showSidebar = true, fullWidth = false }) => {
 <main
   className={`
     flex-1
-    pt-[110px] md:pt-[120px]
+    min-w-0
+    w-full
+    overflow-x-clip
+    pt-[var(--navbar-height,7.5rem)]
     ${showSidebar && isSidebarOpen ? "lg:ml-[300px]" : ""}
     bg-white
     min-h-screen
@@ -157,7 +160,7 @@ const MainLayout = ({ children, showSidebar = true, fullWidth = false }) => {
                 {children}
               </Suspense>
             ) : (
-              <div className="w-full max-w-7xl mx-auto">
+              <div className="w-full max-w-7xl mx-auto min-w-0">
                 <Suspense
                   fallback={
                     <div className="flex items-center justify-center py-16">

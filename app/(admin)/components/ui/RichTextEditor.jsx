@@ -65,6 +65,13 @@ const RichTextEditor = ({
   const [formLinkText, setFormLinkText] = useState("");
   const [formLinkFormId, setFormLinkFormId] = useState(null);
   const [formLinkRedirect, setFormLinkRedirect] = useState("");
+  const [showContactFormModal, setShowContactFormModal] = useState(false);
+  const [contactFormOptions, setContactFormOptions] = useState({
+    formId: "",
+    title: "",
+    description: "",
+    imageUrl: "",
+  });
   const [showButtonModal, setShowButtonModal] = useState(false);
   const [showImageModal, setShowImageModal] = useState(false);
   const [showVideoModal, setShowVideoModal] = useState(false);
@@ -110,7 +117,9 @@ const RichTextEditor = ({
   const openButtonModalRef = useRef(null);
   const openFormModalRef = useRef(null);
   const openFormLinkModalRef = useRef(null);
+  const openContactFormModalRef = useRef(null);
   const openMediaLibraryModalRef = useRef(null);
+  const contactFormEditingElementRef = useRef(null);
   const customToolbarStyleRef = useRef(null);
   const imageModalFocusRef = useRef(null);
 
@@ -151,6 +160,7 @@ const RichTextEditor = ({
     openButtonModalRef.current = () => setShowButtonModal(true);
     openFormModalRef.current = () => setShowFormModal(true);
     openFormLinkModalRef.current = openFormLinkModal;
+    openContactFormModalRef.current = () => setShowContactFormModal(true);
     openMediaLibraryModalRef.current = () => {
       const editor = editorRef.current;
       if (editor?.focusManager) editor.focusManager.blur();
@@ -268,6 +278,7 @@ const RichTextEditor = ({
             "RTEMediaLibrary",
             "RTEInsertButton",
             "RTEInsertForm",
+            "RTEInsertContactForm",
             "RTEFormLink",
           ],
         },
@@ -376,6 +387,11 @@ const RichTextEditor = ({
                 edt._openFormLinkModal?.();
               },
             });
+            editor.addCommand("RTEInsertContactForm", {
+              exec(edt) {
+                edt._openContactFormModal?.();
+              },
+            });
             editor.addCommand("RTEMediaLibrary", {
               exec(edt) {
                 edt._openMediaLibraryModal?.();
@@ -410,6 +426,12 @@ const RichTextEditor = ({
               command: "RTEFormLink",
               toolbar: "insertCustom",
               icon: iconUrls.formLink,
+            });
+            editor.ui.addButton("RTEInsertContactForm", {
+              label: "Contact Form",
+              command: "RTEInsertContactForm",
+              toolbar: "insertCustom",
+              icon: iconUrls.form,
             });
             editor.ui.addButton("RTEMediaLibrary", {
               label: "Media Library",
@@ -459,6 +481,10 @@ const RichTextEditor = ({
           editor._openButtonModal = () => openButtonModalRef.current?.();
           editor._openFormModal = () => openFormModalRef.current?.();
           editor._openFormLinkModal = () => openFormLinkModalRef.current?.();
+          editor._openContactFormModal = () => {
+            contactFormEditingElementRef.current = null;
+            openContactFormModalRef.current?.();
+          };
           editor._openMediaLibraryModal = () => openMediaLibraryModalRef.current?.();
         }
         if (valueRef.current) {
@@ -497,6 +523,30 @@ const RichTextEditor = ({
                   imageUrl: imageUrl || "",
                 });
                 setShowFormModal(true);
+              }
+            } else {
+              // Click on contact form inline block (div) — open Contact Form modal to edit
+              let contactFormDiv = element;
+              while (contactFormDiv && contactFormDiv.getParent) {
+                const name = contactFormDiv.getName ? contactFormDiv.getName() : "";
+                const hasClass = contactFormDiv.hasClass ? contactFormDiv.hasClass("contact-form-inline") : false;
+                if (name === "div" && hasClass) break;
+                contactFormDiv = contactFormDiv.getParent();
+              }
+              if (contactFormDiv && contactFormDiv.hasClass && contactFormDiv.hasClass("contact-form-inline")) {
+                const formId = contactFormDiv.getAttribute("data-form-id") || "";
+                const title = contactFormDiv.getAttribute("data-title") || "";
+                const description = contactFormDiv.getAttribute("data-description") || "";
+                const imageUrl = contactFormDiv.getAttribute("data-image-url") || "";
+                setContactFormOptions({
+                  formId: formId.trim(),
+                  title: title.trim(),
+                  description: description.trim(),
+                  imageUrl: imageUrl.trim(),
+                });
+                contactFormEditingElementRef.current = contactFormDiv;
+                setShowContactFormModal(true);
+                evt.data.preventDefault();
               }
             }
           });
@@ -575,6 +625,7 @@ const RichTextEditor = ({
       ${btnSel("RTEInsertButton")} { background-image: url("${esc(ic.button)}") !important; background-repeat: no-repeat !important; background-position: 6px center !important; background-size: 16px 16px !important; padding-left: 26px !important; min-width: 82px !important; }
       ${btnSel("RTEInsertForm")} { background-image: url("${esc(ic.form)}") !important; background-repeat: no-repeat !important; background-position: 6px center !important; background-size: 16px 16px !important; padding-left: 26px !important; min-width: 82px !important; }
       ${btnSel("RTEFormLink")} { background-image: url("${esc(ic.formLink)}") !important; background-repeat: no-repeat !important; background-position: 6px center !important; background-size: 16px 16px !important; padding-left: 26px !important; min-width: 82px !important; }
+      ${btnSel("RTEInsertContactForm")} { background-image: url("${esc(ic.form)}") !important; background-repeat: no-repeat !important; background-position: 6px center !important; background-size: 16px 16px !important; padding-left: 26px !important; min-width: 98px !important; }
       ${btnSel("RTEMediaLibrary")} { background-image: url("${esc(ic.mediaLibrary)}") !important; background-repeat: no-repeat !important; background-position: 6px center !important; background-size: 16px 16px !important; padding-left: 26px !important; min-width: 82px !important; }
       /* Hide empty icon span so only our button background + label show */
       ${btnSel("RTEInsertVideo")} .cke_icon, ${btnSel("RTEInsertVideo")} .cke_button_icon, .cke_button_RTEInsertVideo_icon,
@@ -582,9 +633,10 @@ const RichTextEditor = ({
       ${btnSel("RTEMediaLibrary")} .cke_icon, ${btnSel("RTEMediaLibrary")} .cke_button_icon, .cke_button_RTEMediaLibrary_icon,
       ${btnSel("RTEInsertButton")} .cke_icon, ${btnSel("RTEInsertButton")} .cke_button_icon, .cke_button_RTEInsertButton_icon,
       ${btnSel("RTEInsertForm")} .cke_icon, ${btnSel("RTEInsertForm")} .cke_button_icon, .cke_button_RTEInsertForm_icon,
-      ${btnSel("RTEFormLink")} .cke_icon, ${btnSel("RTEFormLink")} .cke_button_icon, .cke_button_RTEFormLink_icon { background: none !important; width: 0 !important; min-width: 0 !important; overflow: hidden !important; padding: 0 !important; }
+      ${btnSel("RTEFormLink")} .cke_icon, ${btnSel("RTEFormLink")} .cke_button_icon, .cke_button_RTEFormLink_icon,
+      ${btnSel("RTEInsertContactForm")} .cke_icon, ${btnSel("RTEInsertContactForm")} .cke_button_icon, .cke_button_RTEInsertContactForm_icon { background: none !important; width: 0 !important; min-width: 0 !important; overflow: hidden !important; padding: 0 !important; }
       /* Always show label text */
-      ${labelSel("RTEInsertVideo")}, ${labelSel("RTEInsertImage")}, ${labelSel("RTEMediaLibrary")}, ${labelSel("RTEInsertButton")}, ${labelSel("RTEInsertForm")}, ${labelSel("RTEFormLink")} { display: inline !important; visibility: visible !important; }
+      ${labelSel("RTEInsertVideo")}, ${labelSel("RTEInsertImage")}, ${labelSel("RTEMediaLibrary")}, ${labelSel("RTEInsertButton")}, ${labelSel("RTEInsertForm")}, ${labelSel("RTEFormLink")}, ${labelSel("RTEInsertContactForm")} { display: inline !important; visibility: visible !important; }
     `;
     const injectGlobal = () => {
       if (globalToolbarStyleEl && globalToolbarStyleEl.parentNode) return;
@@ -658,7 +710,7 @@ const RichTextEditor = ({
     editor.config.placeholder = placeholder;
   }, [placeholder]);
 
-  // Fetch forms when form modal or form-link modal opens
+  // Fetch forms when form modal or form-link modal opens (not for contact form — that uses plain form ID input)
   useEffect(() => {
     if (showFormModal || showFormLinkModal) {
       fetchForms();
@@ -838,6 +890,50 @@ const RichTextEditor = ({
       buttonLink: "",
       imageUrl: "",
     });
+  };
+
+  const insertContactFormCode = () => {
+    const editor = editorRef.current;
+    const formId = (contactFormOptions.formId || "").trim();
+    const title = (contactFormOptions.title || "").trim() || formId;
+    const description = (contactFormOptions.description || "").trim();
+    const imageUrl = (contactFormOptions.imageUrl || "").trim();
+    if (!editor || !formId) return;
+
+    const escapeHtml = (str) => {
+      if (!str) return "";
+      return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    };
+
+    const divHtml = `<div class="contact-form-inline" data-form-id="${escapeHtml(formId)}" data-title="${escapeHtml(
+      title
+    )}" data-description="${escapeHtml(
+      description
+    )}" data-image-url="${escapeHtml(
+      imageUrl
+    )}"><span class="contact-form-editor-placeholder" contenteditable="false" style="display: inline-block; padding: 6px 10px; background: #e0e7ff; color: #3730a3; border-radius: 6px; font-size: 13px; border: 1px dashed #818cf8;">📋 Contact Form: ${escapeHtml(title || formId)}</span></div>`;
+
+    const editingEl = contactFormEditingElementRef.current;
+    if (editingEl && typeof CKEDITOR !== "undefined" && CKEDITOR.dom && CKEDITOR.dom.element) {
+      try {
+        const doc = editor.document;
+        const newEl = CKEDITOR.dom.element.createFromHtml(divHtml, doc);
+        editingEl.insertBeforeMe(newEl);
+        editingEl.remove();
+      } catch (err) {
+        editor.insertHtml(divHtml);
+      }
+      contactFormEditingElementRef.current = null;
+    } else {
+      editor.insertHtml(divHtml);
+    }
+    setShowContactFormModal(false);
+    setContactFormOptions({ formId: "", title: "", description: "", imageUrl: "" });
   };
 
   const insertButtonCode = () => {
@@ -1452,6 +1548,115 @@ const RichTextEditor = ({
                 className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Insert link
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Insert Contact Form modal — form ID (input), title, description, image URL; inserts div for inline form */}
+      {showContactFormModal && typeof document !== "undefined" && createPortal(
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 sm:p-6">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-200 flex flex-col max-h-[90vh]">
+            <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-gray-200 shrink-0">
+              <div>
+                <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Insert Contact Form</h2>
+                <p className="text-xs sm:text-sm text-gray-500 mt-0.5">
+                  Form will appear inline. Use the form ID that receives leads (e.g. contact-form).
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowContactFormModal(false);
+                  contactFormEditingElementRef.current = null;
+                  setContactFormOptions({ formId: "", title: "", description: "", imageUrl: "" });
+                }}
+                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors shrink-0"
+                aria-label="Close"
+              >
+                <FaTimes className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Form ID <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={contactFormOptions.formId}
+                  onChange={(e) =>
+                    setContactFormOptions((prev) => ({ ...prev, formId: e.target.value }))
+                  }
+                  placeholder="e.g. contact-form, lead-form"
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+                />
+                <p className="mt-1 text-xs text-gray-500">ID used when submitting leads. Must match a form in Form Management.</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Title <span className="text-gray-500 text-xs font-normal">(optional)</span>
+                </label>
+                <input
+                  type="text"
+                  value={contactFormOptions.title}
+                  onChange={(e) =>
+                    setContactFormOptions((prev) => ({ ...prev, title: e.target.value }))
+                  }
+                  placeholder="e.g. Connect With Us"
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Description <span className="text-gray-500 text-xs font-normal">(optional)</span>
+                </label>
+                <textarea
+                  value={contactFormOptions.description}
+                  onChange={(e) =>
+                    setContactFormOptions((prev) => ({ ...prev, description: e.target.value }))
+                  }
+                  placeholder="Short description for the form"
+                  rows={3}
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm resize-none"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Image URL <span className="text-gray-500 text-xs font-normal">(optional)</span>
+                </label>
+                <input
+                  type="text"
+                  value={contactFormOptions.imageUrl}
+                  onChange={(e) =>
+                    setContactFormOptions((prev) => ({ ...prev, imageUrl: e.target.value }))
+                  }
+                  placeholder="https://... or path like /images/form.png"
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+                />
+              </div>
+            </div>
+            <div className="px-4 sm:px-6 py-4 bg-gray-50 border-t border-gray-200 flex flex-col-reverse sm:flex-row justify-end gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowContactFormModal(false);
+                  contactFormEditingElementRef.current = null;
+                  setContactFormOptions({ formId: "", title: "", description: "", imageUrl: "" });
+                }}
+                className="w-full sm:w-auto px-4 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-sm font-medium transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={insertContactFormCode}
+                disabled={!contactFormOptions.formId.trim()}
+                className="w-full sm:w-auto px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Insert Contact Form
               </button>
             </div>
           </div>
