@@ -14,6 +14,15 @@ export async function GET(request) {
         const { searchParams } = new URL(request.url);
         const statusFilter = searchParams.get("status") || "all";
         const examId = searchParams.get("examId");
+        const limitParam = searchParams.get("limit");
+        // Assignment filter (for "assigned to this level" on hierarchy pages)
+        const assignmentLevel = searchParams.get("assignmentLevel");
+        const assignmentSubjectId = searchParams.get("assignmentSubjectId");
+        const assignmentUnitId = searchParams.get("assignmentUnitId");
+        const assignmentChapterId = searchParams.get("assignmentChapterId");
+        const assignmentTopicId = searchParams.get("assignmentTopicId");
+        const assignmentSubTopicId = searchParams.get("assignmentSubTopicId");
+        const assignmentDefinitionId = searchParams.get("assignmentDefinitionId");
 
         // Allow public access for active blogs only (for public blog pages)
         // Require authentication for inactive/all blogs (admin access)
@@ -38,9 +47,23 @@ export async function GET(request) {
             query.examId = examId;
         }
 
+        // Filter by assignment level (blogs assigned to this hierarchy level)
+        if (assignmentLevel) {
+            query.assignmentLevel = assignmentLevel;
+            if (assignmentSubjectId) query.assignmentSubjectId = assignmentSubjectId;
+            if (assignmentUnitId) query.assignmentUnitId = assignmentUnitId;
+            if (assignmentChapterId) query.assignmentChapterId = assignmentChapterId;
+            if (assignmentTopicId) query.assignmentTopicId = assignmentTopicId;
+            if (assignmentSubTopicId) query.assignmentSubTopicId = assignmentSubTopicId;
+            if (assignmentDefinitionId) query.assignmentDefinitionId = assignmentDefinitionId;
+        }
+
+        const limit = limitParam ? Math.min(Math.max(parseInt(limitParam, 10) || 50, 1), 100) : 100;
+
         // Sort by newest first and populate Exam and Category
         const blogs = await Blog.find(query)
             .sort({ createdAt: -1 })
+            .limit(limit)
             .populate("examId", "name slug")
             .populate("categoryId", "name");
 
@@ -79,6 +102,13 @@ export async function POST(request) {
             examId: body.examId || null,
             image: body.image || "",
             author: authCheck.name || authCheck.email || "Admin", // Auto-detect author
+            assignmentLevel: body.assignmentLevel || "",
+            assignmentSubjectId: body.assignmentSubjectId || null,
+            assignmentUnitId: body.assignmentUnitId || null,
+            assignmentChapterId: body.assignmentChapterId || null,
+            assignmentTopicId: body.assignmentTopicId || null,
+            assignmentSubTopicId: body.assignmentSubTopicId || null,
+            assignmentDefinitionId: body.assignmentDefinitionId || null,
         });
 
         return successResponse(newBlog, "Blog created successfully", 201);

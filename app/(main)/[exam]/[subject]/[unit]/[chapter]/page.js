@@ -29,6 +29,7 @@ import {
 import { generateTabAwareMetadata, extractSearchParams } from "@/utils/tabSeo";
 import { logger } from "@/utils/logger";
 import OverviewCommentSection from "@/app/(main)/components/OverviewCommentSection";
+import AssignedBlogsSection from "@/app/(main)/components/AssignedBlogsSection";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
@@ -317,6 +318,15 @@ const ChapterPage = async ({ params }) => {
           practiceDisabled={subject.practiceDisabled || false}
         />
 
+        {/* Blog Section - assigned to this chapter */}
+        <AssignedBlogsSection
+          examSlug={examSlug}
+          examId={fetchedExam._id}
+          assignmentLevel="chapter"
+          assignmentChapterId={chapter._id}
+        />
+
+        {/* Overview Comment Section */}
         <OverviewCommentSection entityType="chapter" entityId={chapter._id} />
       </div>
     </div>

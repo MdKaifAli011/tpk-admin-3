@@ -34,6 +34,7 @@ import {
 import { generateTabAwareMetadata, extractSearchParams } from "@/utils/tabSeo";
 import { logger } from "@/utils/logger";
 import OverviewCommentSection from "@/app/(main)/components/OverviewCommentSection";
+import AssignedBlogsSection from "@/app/(main)/components/AssignedBlogsSection";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
@@ -385,6 +386,15 @@ const SubTopicPage = async ({ params }) => {
           practiceDisabled={subject.practiceDisabled || false}
         />
 
+        {/* Blog Section - assigned to this subtopic */}
+        <AssignedBlogsSection
+          examSlug={examSlug}
+          examId={fetchedExam._id}
+          assignmentLevel="subtopic"
+          assignmentSubTopicId={subTopic._id}
+        />
+
+        {/* Overview Comment Section */}
         <OverviewCommentSection entityType="subtopic" entityId={subTopic._id} />
       </div>
     </div>

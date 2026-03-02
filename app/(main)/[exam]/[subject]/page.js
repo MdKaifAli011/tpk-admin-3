@@ -24,6 +24,7 @@ import {
 import { generateTabAwareMetadata, extractSearchParams } from "@/utils/tabSeo";
 import { logger } from "@/utils/logger";
 import OverviewCommentSection from "@/app/(main)/components/OverviewCommentSection";
+import AssignedBlogsSection from "@/app/(main)/components/AssignedBlogsSection";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
@@ -250,6 +251,16 @@ const SubjectPage = async ({ params }) => {
         subjectName={subject.name}
         unitIds={fetchedUnits.map((unit) => unit._id)}
       />
+
+      {/* Blog Section - assigned to this subject */}
+      <AssignedBlogsSection
+        examSlug={examSlug}
+        examId={fetchedExam._id}
+        assignmentLevel="subject"
+        assignmentSubjectId={subject._id}
+      />
+
+      {/* Overview Comment Section */}
       <OverviewCommentSection entityType="subject" entityId={subject._id} />
     </div>
   );

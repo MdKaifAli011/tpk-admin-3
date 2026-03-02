@@ -1909,7 +1909,18 @@ export async function fetchAllStudentTestResults(filters = {}) {
 // Fetch blogs (public access for active blogs)
 export const fetchBlogs = async (options = {}) => {
   try {
-    const { examId = null, status = STATUS.ACTIVE, limit = 100 } = options;
+    const {
+      examId = null,
+      status = STATUS.ACTIVE,
+      limit = 100,
+      assignmentLevel = null,
+      assignmentSubjectId = null,
+      assignmentUnitId = null,
+      assignmentChapterId = null,
+      assignmentTopicId = null,
+      assignmentSubTopicId = null,
+      assignmentDefinitionId = null,
+    } = options;
 
     const isServer = typeof window === "undefined";
     const baseUrl = getBaseUrl();
@@ -1918,6 +1929,15 @@ export const fetchBlogs = async (options = {}) => {
     let queryString = `status=${status}&limit=${limit}`;
     if (examId) {
       queryString += `&examId=${examId}`;
+    }
+    if (assignmentLevel) {
+      queryString += `&assignmentLevel=${encodeURIComponent(assignmentLevel)}`;
+      if (assignmentSubjectId) queryString += `&assignmentSubjectId=${assignmentSubjectId}`;
+      if (assignmentUnitId) queryString += `&assignmentUnitId=${assignmentUnitId}`;
+      if (assignmentChapterId) queryString += `&assignmentChapterId=${assignmentChapterId}`;
+      if (assignmentTopicId) queryString += `&assignmentTopicId=${assignmentTopicId}`;
+      if (assignmentSubTopicId) queryString += `&assignmentSubTopicId=${assignmentSubTopicId}`;
+      if (assignmentDefinitionId) queryString += `&assignmentDefinitionId=${assignmentDefinitionId}`;
     }
 
     const url = `${baseUrl}/api/blog?${queryString}`;
@@ -1965,6 +1985,15 @@ export const fetchBlogs = async (options = {}) => {
     logger.error("Error fetching blogs:", error);
     return [];
   }
+};
+
+/**
+ * Fetch blogs assigned to a specific hierarchy level (for AssignedBlogsSection).
+ * Returns up to 3 active blogs. Use on exam/subject/unit/chapter/topic/subtopic/definition pages.
+ */
+export const fetchBlogsByAssignment = async (options = {}) => {
+  const { limit = 3, ...rest } = options;
+  return fetchBlogs({ ...rest, status: STATUS.ACTIVE, limit });
 };
 
 // Fetch blog by slug (public access for active blogs)

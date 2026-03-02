@@ -48,6 +48,19 @@ const blogSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
+    // --- Assign to level (7-level hierarchy: exam → subject → unit → chapter → topic → subtopic → definition) ---
+    assignmentLevel: {
+      type: String,
+      enum: ["", "exam", "subject", "unit", "chapter", "topic", "subtopic", "definition"],
+      default: "",
+      trim: true,
+    },
+    assignmentSubjectId: { type: mongoose.Schema.Types.ObjectId, ref: "Subject", required: false },
+    assignmentUnitId: { type: mongoose.Schema.Types.ObjectId, ref: "Unit", required: false },
+    assignmentChapterId: { type: mongoose.Schema.Types.ObjectId, ref: "Chapter", required: false },
+    assignmentTopicId: { type: mongoose.Schema.Types.ObjectId, ref: "Topic", required: false },
+    assignmentSubTopicId: { type: mongoose.Schema.Types.ObjectId, ref: "SubTopic", required: false },
+    assignmentDefinitionId: { type: mongoose.Schema.Types.ObjectId, ref: "Definition", required: false },
   },
   { timestamps: true }
 );
