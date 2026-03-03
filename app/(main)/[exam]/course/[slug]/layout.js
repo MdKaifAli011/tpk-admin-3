@@ -20,7 +20,9 @@ export async function generateMetadata({ params }) {
 
   try {
     const baseUrl = getBaseUrl();
-    const res = await fetch(`${baseUrl}/api/course/${slug}`, { cache: "no-store" });
+    const res = await fetch(`${baseUrl}/api/course/${slug}`, {
+      cache: "no-store",
+    });
     if (!res.ok) return generateSEO({}, { name: "Course" });
 
     const json = await res.json();

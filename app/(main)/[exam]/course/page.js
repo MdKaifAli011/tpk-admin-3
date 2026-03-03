@@ -14,5 +14,12 @@ export default async function ExamCoursePage({ params }) {
   }
   const examSlug = createSlug(exam.name);
   const examName = exam.name || examParam;
-  return <CourseListingClient examSlug={examSlug} examName={examName} />;
+  const examId = exam._id?.toString() || null;
+  return (
+    <CourseListingClient
+      examSlug={examSlug}
+      examName={examName}
+      examId={examId}
+    />
+  );
 }

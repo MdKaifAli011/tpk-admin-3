@@ -16,6 +16,7 @@ const defaultForm = {
   lessonsRange: "",
   durationLabel: "",
   createdBy: "",
+  instructorImage: "",
   price: "",
   reviewCount: "0",
   rating: "5",
@@ -56,6 +57,7 @@ export default function CourseForm({ courseId, isNew }) {
               lessonsRange: c.lessonsRange ?? "",
               durationLabel: c.durationLabel ?? "",
               createdBy: c.createdBy ?? "",
+              instructorImage: c.instructorImage || "",
               price: c.price != null ? String(c.price) : "",
               reviewCount: c.reviewCount != null ? String(c.reviewCount) : "0",
               rating: c.rating != null ? String(c.rating) : "5",
@@ -105,6 +107,7 @@ export default function CourseForm({ courseId, isNew }) {
         lessonsRange: form.lessonsRange.trim(),
         durationLabel: form.durationLabel.trim(),
         createdBy: form.createdBy.trim(),
+        instructorImage: form.instructorImage.trim(),
         price: form.price === "" ? null : Number(form.price),
         reviewCount: form.reviewCount === "" ? 0 : parseInt(form.reviewCount, 10),
         rating: form.rating === "" ? 5 : Number(form.rating),
@@ -300,6 +303,32 @@ export default function CourseForm({ courseId, isNew }) {
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
                   disabled={saving}
                 />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Instructor / faculty image URL</label>
+                <input
+                  type="url"
+                  name="instructorImage"
+                  value={form.instructorImage}
+                  onChange={handleChange}
+                  placeholder="https://... (shown next to &quot;By [name]&quot; on course page)"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                  disabled={saving}
+                />
+                <p className="mt-1 text-xs text-gray-500">Small circular image shown beside the instructor name on the course detail page.</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Instructor / faculty image URL</label>
+                <input
+                  type="url"
+                  name="instructorImage"
+                  value={form.instructorImage}
+                  onChange={handleChange}
+                  placeholder="https://... (shown next to By [name] on course page)"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                  disabled={saving}
+                />
+                <p className="mt-1 text-xs text-gray-500">Small circular image shown beside the instructor name on the course detail page.</p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Price ($)</label>

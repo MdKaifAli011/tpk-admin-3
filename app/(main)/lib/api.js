@@ -175,16 +175,17 @@ export const fetchExamById = async (examId) => {
     const examIdLower = examId?.toLowerCase();
     const found = exams.find(
       (exam) =>
-        exam._id === examId ||
+        String(exam._id) === String(examId) ||
         exam.name?.toLowerCase() === examIdLower ||
         createSlugLocal(exam.name) === examIdLower
     );
 
     // If found by slug, fetch the full exam data by its actual ID
     if (found && found._id) {
+      const idForFetch = String(found._id);
       try {
         if (isServer) {
-          const response = await fetch(`${baseUrl}/api/exam/${found._id}`, {
+          const response = await fetch(`${baseUrl}/api/exam/${idForFetch}`, {
             next: { revalidate: 60 },
           });
           if (response.ok) {
@@ -195,7 +196,7 @@ export const fetchExamById = async (examId) => {
           }
           return found;
         } else {
-          const fullResponse = await api.get(`/exam/${found._id}`);
+          const fullResponse = await api.get(`/exam/${idForFetch}`);
           if (fullResponse.data.success && fullResponse.data.data) {
             return fullResponse.data.data;
           }
@@ -1419,19 +1420,21 @@ export const fetchPracticeCategories = async (filters = {}) => {
       if (data.success && data.data) {
         let categories = data.data || [];
 
-        // Client-side filtering
+        // Client-side filtering (compare as string so ObjectId vs string both match)
         if (examId) {
+          const eid = String(examId);
           categories = categories.filter(
             (cat) =>
-              (cat.examId?._id || cat.examId) === examId ||
-              cat.examId === examId
+              String(cat.examId?._id || cat.examId) === eid ||
+              String(cat.examId) === eid
           );
         }
         if (subjectId) {
+          const sid = String(subjectId);
           categories = categories.filter(
             (cat) =>
-              (cat.subjectId?._id || cat.subjectId) === subjectId ||
-              cat.subjectId === subjectId
+              String(cat.subjectId?._id || cat.subjectId) === sid ||
+              String(cat.subjectId) === sid
           );
         }
 
@@ -1444,19 +1447,21 @@ export const fetchPracticeCategories = async (filters = {}) => {
       if (response.data.success && response.data.data) {
         let categories = response.data.data || [];
 
-        // Client-side filtering
+        // Client-side filtering (compare as string so ObjectId vs string both match)
         if (examId) {
+          const eid = String(examId);
           categories = categories.filter(
             (cat) =>
-              (cat.examId?._id || cat.examId) === examId ||
-              cat.examId === examId
+              String(cat.examId?._id || cat.examId) === eid ||
+              String(cat.examId) === eid
           );
         }
         if (subjectId) {
+          const sid = String(subjectId);
           categories = categories.filter(
             (cat) =>
-              (cat.subjectId?._id || cat.subjectId) === subjectId ||
-              cat.subjectId === subjectId
+              String(cat.subjectId?._id || cat.subjectId) === sid ||
+              String(cat.subjectId) === sid
           );
         }
 

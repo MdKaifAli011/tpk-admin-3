@@ -444,9 +444,9 @@ export default function CourseDetailPage() {
           
           <div className="flex items-center gap-2 min-w-0">
             <div className="h-8 w-8 shrink-0 overflow-hidden rounded-full border border-slate-200 bg-slate-100">
-              {course.image ? (
+              {course.instructorImage && String(course.instructorImage).trim() ? (
                 <Image
-                  src={course.image}
+                  src={course.instructorImage}
                   alt=""
                   width={32}
                   height={32}

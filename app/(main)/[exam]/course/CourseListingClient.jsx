@@ -17,45 +17,74 @@ import {
 } from "react-icons/fa";
 import api from "@/lib/api";
 import { createSlug } from "@/utils/slug";
+import CounselorModal from "@/app/(main)/components/CounselorModal";
 
-const PER_PAGE = 9;
+const PER_PAGE = 10;
 
-export default function CourseListingClient({ examSlug, examName: examNameProp }) {
+export default function CourseListingClient({ examSlug, examName: examNameProp, examId: examIdProp }) {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState("grid");
   const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [trialSessionModalOpen, setTrialSessionModalOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
-      if (!examSlug?.trim()) {
+      const hasExamId = examIdProp && String(examIdProp).trim();
+      const hasSlug = examSlug?.trim();
+      if (!hasExamId && !hasSlug) {
         setCourses([]);
+        setTotal(0);
+        setTotalPages(1);
         setLoading(false);
         return;
       }
       try {
         setLoading(true);
-        const courseRes = await api.get(`/course?exam=${encodeURIComponent(examSlug.trim())}`);
+        const params = new URLSearchParams();
+        if (hasExamId) params.set("examId", String(examIdProp).trim());
+        else params.set("exam", examSlug.trim());
+        params.set("page", String(page));
+        params.set("limit", String(PER_PAGE));
+        const courseRes = await api.get(`/course?${params.toString()}`);
         if (cancelled) return;
         const raw = courseRes.data?.data;
+        const pagination = courseRes.data?.pagination;
         setCourses(Array.isArray(raw) ? raw : []);
+        if (pagination) {
+          setTotal(pagination.total ?? 0);
+          setTotalPages(Math.max(1, pagination.totalPages ?? 1));
+        } else {
+          const len = Array.isArray(raw) ? raw.length : 0;
+          setTotal(len);
+          setTotalPages(len > 0 ? 1 : 1);
+        }
       } catch (err) {
-        if (!cancelled) setCourses([]);
+        if (!cancelled) {
+          setCourses([]);
+          setTotal(0);
+          setTotalPages(1);
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }
     };
     load();
     return () => { cancelled = true; };
-  }, [examSlug]);
+  }, [examSlug, examIdProp, page]);
+
+  // Reset to page 1 when exam changes
+  useEffect(() => {
+    setPage(1);
+  }, [examSlug, examIdProp]);
 
   const examName = examNameProp || examSlug || "Exam";
   const slugForLinks = examSlug || createSlug(examName);
-  const paginated = courses.slice((page - 1) * PER_PAGE, page * PER_PAGE);
-  const totalPages = Math.max(1, Math.ceil(courses.length / PER_PAGE));
-  const from = courses.length === 0 ? 0 : (page - 1) * PER_PAGE + 1;
-  const to = Math.min(page * PER_PAGE, courses.length);
+  const from = total === 0 ? 0 : (page - 1) * PER_PAGE + 1;
+  const to = total === 0 ? 0 : Math.min(page * PER_PAGE, total);
 
   const formatPrice = (p) => {
     if (p == null || p === "") return "$--";
@@ -135,7 +164,7 @@ export default function CourseListingClient({ examSlug, examName: examNameProp }
                 </span>
                 <span className="w-1 h-1 rounded-full bg-slate-300" aria-hidden />
                 <span className="text-xs font-medium text-slate-500">
-                  {courses.length} List of Courses
+                  {total} List of Courses
                 </span>
               </div>
 
@@ -187,17 +216,18 @@ export default function CourseListingClient({ examSlug, examName: examNameProp }
                 ))}
               </div>
               <p className="text-xs text-slate-500">
-                Showing <span className="font-semibold text-slate-800">{from}–{to}</span> of <span className="font-semibold text-slate-800">{courses.length}</span> courses
+                Showing <span className="font-semibold text-slate-800">{from}–{to}</span> of <span className="font-semibold text-slate-800">{total}</span> courses
               </p>
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
-              <Link
-                href="/contact"
+              <button
+                type="button"
+                onClick={() => setTrialSessionModalOpen(true)}
                 className="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-white border border-slate-200 text-xs font-semibold text-slate-700 hover:border-indigo-400 hover:text-indigo-600 transition-colors"
               >
                 Get Trial Session
-              </Link>
+              </button>
               <Link
                 href="/store"
                 className="inline-flex items-center justify-center px-5 py-2 rounded-lg bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-700 transition-colors active:scale-[0.98]"
@@ -211,7 +241,7 @@ export default function CourseListingClient({ examSlug, examName: examNameProp }
 
       {/* Content */}
       <section className="">
-        {courses.length === 0 ? (
+        {!loading && courses.length === 0 ? (
           <div className="text-center py-12 px-5 bg-gradient-to-b from-slate-50 to-white rounded-xl border border-slate-200 shadow-sm">
             <div className="w-12 h-12 rounded-xl bg-indigo-50 flex items-center justify-center mx-auto mb-4 text-2xl">
               📚
@@ -229,7 +259,7 @@ export default function CourseListingClient({ examSlug, examName: examNameProp }
           </div>
         ) : viewMode === "list" ? (
           <ul className="space-y-5">
-            {paginated.map((course, index) => (
+            {courses.map((course, index) => (
               <li key={course._id}>
                 <CourseCard course={course} examSlug={slugForLinks} formatPrice={formatPrice} layout="list" listIndex={index} />
               </li>
@@ -237,7 +267,7 @@ export default function CourseListingClient({ examSlug, examName: examNameProp }
           </ul>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 items-stretch">
-            {paginated.map((course) => (
+            {courses.map((course) => (
               <CourseCard key={course._id} course={course} examSlug={slugForLinks} formatPrice={formatPrice} layout="grid" />
             ))}
           </div>
@@ -269,6 +299,18 @@ export default function CourseListingClient({ examSlug, examName: examNameProp }
           </nav>
         )}
       </section>
+
+      {/* Get Trial Session modal */}
+      <CounselorModal
+        isOpen={trialSessionModalOpen}
+        onClose={() => setTrialSessionModalOpen(false)}
+        title="Get a Free Trial Session"
+        badgeText="Trial Session"
+        formName="Get Trial Session"
+        formId="Get-Trial-Session"
+        successMessage="Thank you! Your trial session request has been sent. Our team will contact you shortly."
+        submitButtonText="Request Trial Session"
+      />
     </div>
   );
 }

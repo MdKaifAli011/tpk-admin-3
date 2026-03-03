@@ -44,6 +44,11 @@ const courseSchema = new mongoose.Schema(
       trim: true,
       default: "",
     },
+    instructorImage: {
+      type: String,
+      trim: true,
+      default: "",
+    },
     price: {
       type: Number,
       default: null,

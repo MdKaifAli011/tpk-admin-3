@@ -32,7 +32,16 @@ import {
     validateClassName,
 } from "./utils/formValidation";
 
-const CounselorModal = ({ isOpen, onClose }) => {
+const CounselorModal = ({
+    isOpen,
+    onClose,
+    title = "Talk to Our Expert Counselors",
+    badgeText = "Connect With Expert Counselor",
+    formName = "Connect With Counselor",
+    formId = "Connect-With-Counselor",
+    successMessage = "Thank you! Your request has been sent. A counselor will contact you shortly.",
+    submitButtonText = "Request Connection",
+}) => {
     const [formData, setFormData] = useState({
         name: "",
         email: "",
@@ -160,15 +169,15 @@ const CounselorModal = ({ isOpen, onClose }) => {
                 className: formData.className.trim(),
                 phoneNumber: formData.countryCode + formData.phoneNumber.trim(),
                 message: formData.message.trim(),
-                form_name: "Connect With Counselor",
-                form_id: "Connect-With-Counselor",
+                form_name: formName,
+                form_id: formId,
                 source: sourcePath,
                 prepared: "",
             });
 
             if (response.data?.success) {
                 setSubmitStatus("success");
-                setSubmitMessage("Thank you! Your request has been sent. A counselor will contact you shortly.");
+                setSubmitMessage(successMessage);
 
                 // Reset form
                 setFormData({
@@ -255,11 +264,11 @@ const CounselorModal = ({ isOpen, onClose }) => {
                     <div className="flex-1 overflow-y-auto">
                         <div className="p-4">
                             <div className="bg-blue-600 text-white text-xs font-medium px-3 py-1 rounded-full inline-block mb-2">
-                                Connect With Expert Counselor
+                                {badgeText}
                             </div>
 
                             <h2 className="text-xl font-bold text-gray-900 mb-3">
-                                Talk to Our Expert Counselors
+                                {title}
                             </h2>
 
                             <form onSubmit={handleSubmit} className="space-y-2.5">
@@ -477,7 +486,7 @@ const CounselorModal = ({ isOpen, onClose }) => {
                                                 <span>Submitting...</span>
                                             </>
                                         ) : (
-                                            <span>Request Connection</span>
+                                            <span>{submitButtonText}</span>
                                         )}
                                     </button>
                                 </div>

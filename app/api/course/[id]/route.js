@@ -44,7 +44,7 @@ export async function PATCH(request, { params }) {
     const updateData = {};
     const allowed = [
       "examId", "title", "shortDescription", "hours", "lessonsRange",
-      "durationLabel", "createdBy", "price", "reviewCount", "rating",
+      "durationLabel", "createdBy", "instructorImage", "price", "reviewCount", "rating",
       "image", "status", "orderNumber",
       "metaTitle", "metaDescription", "keywords", "content",
       "madeFor", "mode", "target", "subjectCovered", "sessionLength",
@@ -61,6 +61,7 @@ export async function PATCH(request, { params }) {
       else if (key === "lessonsRange") updateData.lessonsRange = str(body.lessonsRange);
       else if (key === "durationLabel") updateData.durationLabel = str(body.durationLabel);
       else if (key === "createdBy") updateData.createdBy = str(body.createdBy);
+      else if (key === "instructorImage") updateData.instructorImage = str(body.instructorImage);
       else if (key === "price") updateData.price = numOrNull(body.price);
       else if (key === "reviewCount") updateData.reviewCount = Math.max(0, parseInt(body.reviewCount, 10) || 0);
       else if (key === "rating") updateData.rating = Math.min(5, Math.max(0, Number(body.rating) || 5));
