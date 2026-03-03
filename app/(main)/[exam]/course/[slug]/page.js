@@ -24,6 +24,7 @@ import {
 import api from "@/lib/api";
 import RichContent from "@/app/(main)/components/RichContent";
 import Card from "@/app/(main)/components/Card";
+import CounselorModal from "@/app/(main)/components/CounselorModal";
 import {
   countriesWithCodesSorted,
   countryCodeMap,
@@ -85,6 +86,7 @@ export default function CourseDetailPage() {
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
   const [videoModalOpen, setVideoModalOpen] = useState(false);
+  const [counselorModalOpen, setCounselorModalOpen] = useState(false);
   const [contactFormData, setContactFormData] = useState({
     name: "",
     email: "",
@@ -524,13 +526,14 @@ export default function CourseDetailPage() {
             Download Course Brochure
           </Link>
 
-          <Link
-            href="/contact"
+          <button
+            type="button"
+            onClick={() => setCounselorModalOpen(true)}
             className="inline-flex items-center justify-center gap-2 rounded-lg border-2 border-indigo-200 bg-white px-5 py-2.5 text-sm font-semibold text-indigo-600 hover:bg-indigo-50 hover:border-indigo-300 transition-colors"
           >
             <FaPhone className="w-4 h-4 shrink-0" />
             Connect With Counselor
-          </Link>
+          </button>
 
           {batchClosingDays != null && (
             <span className="flex items-center gap-1 rounded-full bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-600 shrink-0">
@@ -631,6 +634,12 @@ export default function CourseDetailPage() {
           />
         </div>
       )}
+
+      {/* Counselor modal — Connect With Counselor */}
+      <CounselorModal
+        isOpen={counselorModalOpen}
+        onClose={() => setCounselorModalOpen(false)}
+      />
 
     </div>
   </div>
