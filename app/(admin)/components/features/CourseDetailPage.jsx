@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ToastContainer, useToast } from "../ui/Toast";
 import { LoadingSpinner } from "../ui/SkeletonLoader";
@@ -10,13 +11,16 @@ import { createSlug } from "@/utils/slug";
 import { FaArrowLeft, FaSave, FaGlobe, FaEye, FaEdit, FaFileAlt } from "react-icons/fa";
 
 export default function CourseDetailPage({ courseId }) {
+  const router = useRouter();
   const { toasts, removeToast, success, error: showError } = useToast();
   const fetchRef = useRef(false);
+  const originalFormDataRef = useRef(null);
 
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
 
   const [formData, setFormData] = useState({
     metaTitle: "",
@@ -67,12 +71,53 @@ export default function CourseDetailPage({ courseId }) {
       if (res.data?.success) {
         setCourse(res.data.data);
         success("SEO & content saved successfully.");
+        originalFormDataRef.current = { ...formData };
       } else showError(res.data?.message || "Save failed");
     } catch (err) {
       showError(err?.response?.data?.message || "Save failed");
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleSaveAndClose = async () => {
+    try {
+      setSaving(true);
+      const payload = {
+        metaTitle: formData.metaTitle.trim(),
+        metaDescription: formData.metaDescription.trim(),
+        keywords: formData.keywords.trim(),
+        content: formData.content ?? "",
+      };
+      const res = await api.patch(`/course/${courseId}`, payload);
+      if (res.data?.success) {
+        success("SEO & content saved successfully.");
+        router.push("/admin/course");
+        return;
+      }
+      showError(res.data?.message || "Save failed");
+    } catch (err) {
+      showError(err?.response?.data?.message || "Save failed");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCancel = () => {
+    if (originalFormDataRef.current) {
+      setFormData({ ...originalFormDataRef.current });
+    }
+    setIsEditing(false);
+  };
+
+  const handleEditContent = () => {
+    originalFormDataRef.current = {
+      metaTitle: formData.metaTitle,
+      metaDescription: formData.metaDescription,
+      keywords: formData.keywords,
+      content: formData.content ?? "",
+    };
+    setIsEditing(true);
   };
 
   const getPublicUrl = () => {
@@ -151,15 +196,44 @@ export default function CourseDetailPage({ courseId }) {
                   <FaEye className="w-4 h-4" /> View
                 </a>
               )}
-              <button
-                type="button"
-                onClick={handleSave}
-                disabled={saving}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors shadow-sm"
-              >
-                {saving ? <LoadingSpinner size="small" color="white" /> : <FaSave className="w-4 h-4" />}
-                {saving ? "Saving..." : "Save"}
-              </button>
+              {!isEditing ? (
+                <button
+                  type="button"
+                  onClick={handleEditContent}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 transition-colors"
+                >
+                  <FaEdit className="w-4 h-4" /> Edit content
+                </button>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    onClick={handleCancel}
+                    disabled={saving}
+                    className="px-4 py-2 bg-white border border-gray-300 rounded-xl hover:shadow-md text-gray-800 text-sm font-semibold transition-all duration-200 disabled:opacity-50"
+                  >
+                    {saving ? "Restoring..." : "Cancel"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSave}
+                    disabled={saving}
+                    className="px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:scale-105 hover:shadow-lg text-white text-sm rounded-xl font-semibold flex items-center gap-2 transition-all duration-200 disabled:opacity-50"
+                  >
+                    {saving ? <LoadingSpinner size="small" color="white" /> : <FaSave className="w-3.5 h-3.5" />}
+                    {saving ? "Saving..." : "Save"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSaveAndClose}
+                    disabled={saving}
+                    className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:scale-105 hover:shadow-lg text-white text-sm rounded-xl font-semibold flex items-center gap-2 transition-all duration-200 disabled:opacity-50"
+                  >
+                    {saving ? <LoadingSpinner size="small" color="white" /> : null}
+                    {saving ? "Saving..." : "Save & Close"}
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -184,6 +258,7 @@ export default function CourseDetailPage({ courseId }) {
                 onChange={(v) => setFormData((p) => ({ ...p, content: v ?? "" }))}
                 placeholder="Write course description, syllabus, FAQ..."
                 className="min-h-[420px]"
+                disabled={!isEditing}
               />
             </div>
           </div>
@@ -210,8 +285,13 @@ export default function CourseDetailPage({ courseId }) {
                     type="text"
                     value={formData.metaTitle}
                     onChange={handleChange}
+                    readOnly={!isEditing}
                     placeholder="e.g. 1 Yr. JEE Preparation | TestprepKart"
-                    className="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm transition-shadow"
+                    className={`w-full px-4 py-2.5 rounded-lg border text-sm transition-shadow ${
+                      isEditing
+                        ? "border-gray-300 text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        : "border-gray-200 bg-gray-50 text-gray-700 cursor-not-allowed"
+                    }`}
                   />
                 </div>
                 <div>
@@ -224,8 +304,13 @@ export default function CourseDetailPage({ courseId }) {
                     rows={3}
                     value={formData.metaDescription}
                     onChange={handleChange}
+                    readOnly={!isEditing}
                     placeholder="Short description for search results."
-                    className="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm resize-y transition-shadow"
+                    className={`w-full px-4 py-2.5 rounded-lg border text-sm resize-y transition-shadow ${
+                      isEditing
+                        ? "border-gray-300 text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        : "border-gray-200 bg-gray-50 text-gray-700 cursor-not-allowed"
+                    }`}
                   />
                 </div>
                 <div>
@@ -238,8 +323,13 @@ export default function CourseDetailPage({ courseId }) {
                     type="text"
                     value={formData.keywords}
                     onChange={handleChange}
+                    readOnly={!isEditing}
                     placeholder="Comma-separated keywords"
-                    className="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm transition-shadow"
+                    className={`w-full px-4 py-2.5 rounded-lg border text-sm transition-shadow ${
+                      isEditing
+                        ? "border-gray-300 text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        : "border-gray-200 bg-gray-50 text-gray-700 cursor-not-allowed"
+                    }`}
                   />
                 </div>
               </div>

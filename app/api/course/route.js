@@ -108,6 +108,8 @@ export async function POST(request) {
       reviewCount: body.reviewCount != null && body.reviewCount !== "" ? Math.max(0, parseInt(body.reviewCount, 10)) : 0,
       rating: body.rating != null && body.rating !== "" ? Math.min(5, Math.max(0, Number(body.rating))) : 5,
       image: (body.image && String(body.image).trim()) || "",
+      videoUrl: (body.videoUrl && String(body.videoUrl).trim()) || "",
+      videoThumbnail: (body.videoThumbnail && String(body.videoThumbnail).trim()) || "",
       status: body.status || "active",
       orderNumber: body.orderNumber != null ? Number(body.orderNumber) : 0,
     });

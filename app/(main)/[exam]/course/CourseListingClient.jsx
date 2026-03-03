@@ -58,8 +58,8 @@ export default function CourseListingClient({ examSlug, examName: examNameProp }
   const to = Math.min(page * PER_PAGE, courses.length);
 
   const formatPrice = (p) => {
-    if (p == null || p === "") return "$ --";
-    return `$ ${Number(p).toLocaleString()}`;
+    if (p == null || p === "") return "$--";
+    return `$${Number(p).toLocaleString()}`;
   };
 
   if (loading) {
@@ -101,9 +101,13 @@ export default function CourseListingClient({ examSlug, examName: examNameProp }
   }
 
   return (
-    <div className="min-h-screen bg-white text-slate-900">
+    <div className="min-h-screen bg-white text-slate-900 space-y-6 mt-6">
       {/* Hero */}
-      <section className="relative bg-white overflow-hidden border-b border-slate-200/60">
+      <section className="relative  rounded-xl
+    p-3 sm:p-4
+    bg-gradient-to-br from-indigo-50 via-white to-purple-50
+    border border-indigo-100/60
+    shadow-[0_2px_12px_rgba(100,70,200,0.08)]">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-50/50 rounded-full blur-3xl opacity-60 pointer-events-none" />
         <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-50/50 rounded-full blur-3xl opacity-60 pointer-events-none" />
 
@@ -127,11 +131,11 @@ export default function CourseListingClient({ examSlug, examName: examNameProp }
             <div className="max-w-2xl">
               <div className="flex items-center gap-2 mb-2">
                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-indigo-600/10 text-indigo-600 text-[11px] font-semibold uppercase tracking-wider">
-                  Online Prep
+                  {examName} Online Courses
                 </span>
                 <span className="w-1 h-1 rounded-full bg-slate-300" aria-hidden />
                 <span className="text-xs font-medium text-slate-500">
-                  {courses.length} Professional Modules
+                  {courses.length} List of Courses
                 </span>
               </div>
 
@@ -140,7 +144,7 @@ export default function CourseListingClient({ examSlug, examName: examNameProp }
               </h1>
 
               <p className="text-sm sm:text-base text-slate-600 leading-snug max-w-xl">
-                Master every concept with expert-led curriculum, detailed practice modules, and real-world exam strategies.
+                {examName} Online Courses designed for NRI students worldwide to match curriculum differences and build solid entrance exam preparation by filling the gaps. Register for a free {examName} Analysis Session today.
               </p>
             </div>
 
@@ -206,7 +210,7 @@ export default function CourseListingClient({ examSlug, examName: examNameProp }
       </section>
 
       {/* Content */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+      <section className="">
         {courses.length === 0 ? (
           <div className="text-center py-12 px-5 bg-gradient-to-b from-slate-50 to-white rounded-xl border border-slate-200 shadow-sm">
             <div className="w-12 h-12 rounded-xl bg-indigo-50 flex items-center justify-center mx-auto mb-4 text-2xl">

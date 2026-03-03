@@ -49,7 +49,7 @@ export async function PATCH(request, { params }) {
       "metaTitle", "metaDescription", "keywords", "content",
       "madeFor", "mode", "target", "subjectCovered", "sessionLength",
       "tests", "fullLength", "feeUsaEurope", "feeIndiaMeSe", "timeZone",
-      "batchClosingDays", "callPhone",
+      "batchClosingDays", "callPhone", "totalStudents", "videoUrl", "videoThumbnail", "brochureButtonUrl",
     ];
     const str = (v) => (v != null && v !== "" ? String(v).trim() : "");
     const numOrNull = (v) => (v != null && v !== "" ? Number(v) : null);
@@ -74,6 +74,10 @@ export async function PATCH(request, { params }) {
       else if (key === "content") updateData.content = body.content ?? "";
       else if (key === "batchClosingDays") updateData.batchClosingDays = numOrNull(body.batchClosingDays);
       else if (key === "callPhone") updateData.callPhone = str(body.callPhone);
+      else if (key === "totalStudents") updateData.totalStudents = body.totalStudents != null && body.totalStudents !== "" ? Math.max(0, parseInt(body.totalStudents, 10) || 0) : null;
+      else if (key === "videoUrl") updateData.videoUrl = str(body.videoUrl);
+      else if (key === "videoThumbnail") updateData.videoThumbnail = str(body.videoThumbnail);
+      else if (key === "brochureButtonUrl") updateData.brochureButtonUrl = str(body.brochureButtonUrl);
       else if (["madeFor", "mode", "target", "subjectCovered", "sessionLength", "tests", "fullLength", "feeUsaEurope", "feeIndiaMeSe", "timeZone"].includes(key)) {
         updateData[key] = str(body[key]);
       }

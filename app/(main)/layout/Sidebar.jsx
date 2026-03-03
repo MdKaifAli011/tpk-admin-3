@@ -936,7 +936,7 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
                   </li>
                 )}
 
-                {/* Course — /{examSlug}/course */}
+                {/* Course — /{examSlug}/course — label: "NEET Courses", "JEE Courses", etc. */}
                 {activeExamSlug ? (
                   <li>
                     <Link
@@ -948,7 +948,7 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
                       }`}
                       onClick={closeOnMobile}
                     >
-                      <span>Course</span>
+                      <span>{activeExam ? `${activeExam.name} Courses` : "Course"}</span>
                     </Link>
                   </li>
                 ) : (

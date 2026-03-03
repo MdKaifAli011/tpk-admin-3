@@ -93,6 +93,10 @@ const courseSchema = new mongoose.Schema(
     timeZone: { type: String, trim: true, default: "" },
     batchClosingDays: { type: Number, default: null },
     callPhone: { type: String, trim: true, default: "" },
+    totalStudents: { type: Number, default: null, min: 0 },
+    videoUrl: { type: String, trim: true, default: "" },
+    videoThumbnail: { type: String, trim: true, default: "" },
+    brochureButtonUrl: { type: String, trim: true, default: "" },
   },
   { timestamps: true }
 );

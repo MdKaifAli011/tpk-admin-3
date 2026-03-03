@@ -97,7 +97,7 @@ const CourseTable = ({ courses, onEdit, onDelete }) => {
                 )}
               </td>
               <td className="px-3 py-2 text-sm text-gray-700">
-                {course.price != null ? `₹${Number(course.price).toLocaleString()}` : "—"}
+                {course.price != null ? `$${Number(course.price).toLocaleString()}` : "—"}
               </td>
               <td className="px-3 py-2 text-sm text-gray-700">{course.reviewCount ?? 0}</td>
               <td className="px-3 py-2">

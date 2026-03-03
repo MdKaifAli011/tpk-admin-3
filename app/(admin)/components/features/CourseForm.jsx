@@ -20,6 +20,8 @@ const defaultForm = {
   reviewCount: "0",
   rating: "5",
   image: "",
+  videoUrl: "",
+  videoThumbnail: "",
   status: "active",
 };
 
@@ -58,6 +60,8 @@ export default function CourseForm({ courseId, isNew }) {
               reviewCount: c.reviewCount != null ? String(c.reviewCount) : "0",
               rating: c.rating != null ? String(c.rating) : "5",
               image: c.image || "",
+              videoUrl: c.videoUrl || "",
+              videoThumbnail: c.videoThumbnail || "",
               status: c.status || "active",
             });
           } else {
@@ -105,6 +109,8 @@ export default function CourseForm({ courseId, isNew }) {
         reviewCount: form.reviewCount === "" ? 0 : parseInt(form.reviewCount, 10),
         rating: form.rating === "" ? 5 : Number(form.rating),
         image: form.image.trim(),
+        videoUrl: form.videoUrl.trim(),
+        videoThumbnail: form.videoThumbnail.trim(),
         status: form.status,
       };
       if (isNew) {
@@ -148,20 +154,52 @@ export default function CourseForm({ courseId, isNew }) {
     );
   }
 
+  const examName = form.examId ? exams.find((e) => e._id === form.examId)?.name : null;
+
   return (
     <>
       <ToastContainer toasts={toasts} removeToast={removeToast} />
       <div className="space-y-6">
-        <div className="flex items-center gap-4">
-          <Link
-            href="/admin/course"
-            className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900"
-          >
-            <FaArrowLeft className="w-4 h-4" /> Back
-          </Link>
-          <h1 className="text-xl font-semibold text-gray-900">
-            {isNew ? "Create course" : "Edit course"}
-          </h1>
+        {/* Management header */}
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl shadow-lg border border-blue-100 px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex items-center gap-3 min-w-0">
+            <Link
+              href="/admin/course"
+              className="flex-shrink-0 p-2 rounded-xl text-gray-700 hover:text-gray-900 hover:bg-white/70 transition-all duration-200"
+              aria-label="Back to courses"
+            >
+              <FaArrowLeft className="w-4 h-4" />
+            </Link>
+            <div className="min-w-0">
+              <h1 className="text-xl font-semibold text-gray-900 truncate">
+                {isNew ? "Create course" : "Edit course"}
+              </h1>
+              {!isNew && (form.title || examName) && (
+                <p className="text-sm text-gray-600 mt-0.5 truncate">
+                  {form.title && (
+                    <span className="font-medium text-gray-800">{form.title}</span>
+                  )}
+                  {form.title && examName && " • "}
+                  {examName && (
+                    <span className="text-indigo-600">Exam: {examName}</span>
+                  )}
+                </p>
+              )}
+              {isNew && (
+                <p className="text-sm text-gray-500 mt-0.5">
+                  Select exam and fill in card details for the course listing.
+                </p>
+              )}
+            </div>
+          </div>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <Link
+              href="/admin/course"
+              className="px-4 py-2 bg-white border border-gray-300 rounded-xl hover:shadow-md text-gray-800 text-sm font-semibold transition-all duration-200 inline-flex items-center gap-2"
+            >
+              <FaTimes className="w-3.5 h-3.5" /> Cancel
+            </Link>
+          </div>
         </div>
 
         <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
@@ -264,7 +302,7 @@ export default function CourseForm({ courseId, isNew }) {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Price (₹)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Price ($)</label>
                 <input
                   type="number"
                   name="price"
@@ -325,6 +363,31 @@ export default function CourseForm({ courseId, isNew }) {
                   value={form.image}
                   onChange={handleChange}
                   placeholder="https://..."
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                  disabled={saving}
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Video URL (e.g. YouTube)</label>
+                <input
+                  type="url"
+                  name="videoUrl"
+                  value={form.videoUrl}
+                  onChange={handleChange}
+                  placeholder="https://www.youtube.com/watch?v=... or https://youtu.be/..."
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                  disabled={saving}
+                />
+                <p className="mt-1 text-xs text-gray-500">Shown in header; click opens a modal to play the video.</p>
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Video thumbnail URL (optional)</label>
+                <input
+                  type="url"
+                  name="videoThumbnail"
+                  value={form.videoThumbnail}
+                  onChange={handleChange}
+                  placeholder="Leave empty to use YouTube default thumbnail"
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
                   disabled={saving}
                 />

@@ -53,7 +53,7 @@ const SIDEBAR_COURSE_DETAILS = [
   { label: "Fee (India/ME/SE*)", value: "INR 97,600" },
   { label: "Time Zone", value: "Adjusted as per different Time Zones" },
 ];
-const SIDEBAR_CALL_PHONE = "+918800123492";
+const SIDEBAR_CALL_PHONE = "+15107069331";
 
 const labelToKey = {
   "Made For": "madeFor",
@@ -68,10 +68,23 @@ const labelToKey = {
   "Time Zone": "timeZone",
 };
 
+function getYouTubeVideoId(url) {
+  if (!url || typeof url !== "string") return null;
+  const u = url.trim();
+  const m1 = u.match(/[?&]v=([^&\s#]+)/);
+  if (m1) return m1[1];
+  const m2 = u.match(/youtu\.be\/([^?\s#]+)/);
+  if (m2) return m2[1];
+  const m3 = u.match(/youtube\.com\/embed\/([^?\s#]+)/);
+  if (m3) return m3[1];
+  return null;
+}
+
 export default function CourseDetailPage() {
   const { exam: examSlug, slug } = useParams();
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [videoModalOpen, setVideoModalOpen] = useState(false);
   const [contactFormData, setContactFormData] = useState({
     name: "",
     email: "",
@@ -332,7 +345,7 @@ export default function CourseDetailPage() {
 
   const examName = course.examId?.name || examSlug || "Exam";
   const formatPrice = (p) =>
-    p != null && p !== "" ? `$ ${Number(p).toLocaleString()}` : "—";
+    p != null && p !== "" ? `$${Number(p).toLocaleString()}` : "—";
   const contentTrimmed =
     course.content != null ? String(course.content).trim() : "";
 
@@ -358,8 +371,25 @@ export default function CourseDetailPage() {
       : null;
   const rating = course.rating != null ? Number(course.rating) : 5;
 
+  const videoUrl = course.videoUrl != null ? String(course.videoUrl).trim() : "";
+  const videoId = getYouTubeVideoId(videoUrl);
+  const videoThumbnailUrl =
+    course.videoThumbnail != null && String(course.videoThumbnail).trim() !== ""
+      ? String(course.videoThumbnail).trim()
+      : videoId
+        ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
+        : null;
+  const videoEmbedUrl = videoId ? `https://www.youtube.com/embed/${videoId}?autoplay=1` : null;
+  const hasVideo = !!videoEmbedUrl;
+
+  const brochureButtonUrl =
+    course.brochureButtonUrl != null && String(course.brochureButtonUrl).trim() !== ""
+      ? String(course.brochureButtonUrl).trim()
+      : "/contact";
+  const brochureIsExternal = /^https?:\/\//i.test(brochureButtonUrl);
+
   return (
-    <div className="min-h-screen bg-white text-slate-900">
+    <div className="min-h-screen bg-white text-slate-900 space-y-6 mt-6">
    {/* Hero — gradient bg; left: info + price + CTAs; right: video card (white border) */}
 <section className="relative overflow-hidden border-b border-slate-200/60">
   <div className="absolute inset-0 bg-gradient-to-br from-indigo-50 via-white to-purple-50
@@ -453,7 +483,8 @@ export default function CourseDetailPage() {
               <span className="text-slate-300 shrink-0" aria-hidden>·</span>
 
               <span className="shrink-0">
-                {course.studentCount ??
+                {course.totalStudents ??
+                  course.studentCount ??
                   course.enrolledCount ??
                   course.students ??
                   0}{" "}
@@ -485,8 +516,9 @@ export default function CourseDetailPage() {
           </span>
 
           <Link
-            href="/contact"
+            href={brochureButtonUrl}
             className="inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 transition-colors shadow-sm"
+            {...(brochureIsExternal ? { target: "_blank", rel: "noopener noreferrer" } : {})}
           >
             <FaDownload className="w-4 h-4 shrink-0" />
             Download Course Brochure
@@ -510,12 +542,27 @@ export default function CourseDetailPage() {
         </div>
       </div>
 
-      {/* RIGHT */}
+      {/* RIGHT — video thumbnail or course image */}
       <div className="lg:col-span-4 w-full max-w-md lg:max-w-none">
         <div className="rounded-xl overflow-hidden shadow-lg ring-2 ring-white border-2 border-white bg-white">
-          <div className="relative group cursor-pointer bg-slate-900 overflow-hidden">
+          <div
+            className={`relative group overflow-hidden bg-slate-900 ${hasVideo ? "cursor-pointer" : ""}`}
+            role={hasVideo ? "button" : undefined}
+            tabIndex={hasVideo ? 0 : undefined}
+            onClick={hasVideo ? () => setVideoModalOpen(true) : undefined}
+            onKeyDown={hasVideo ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setVideoModalOpen(true); } } : undefined}
+            aria-label={hasVideo ? "Play course video" : undefined}
+          >
             <div className="w-full aspect-video relative">
-              {course.image ? (
+              {videoThumbnailUrl ? (
+                <Image
+                  src={videoThumbnailUrl}
+                  alt="Course video thumbnail"
+                  fill
+                  className="object-cover group-hover:scale-105 transition-transform duration-700"
+                  sizes="(max-width: 1024px) 100vw, 380px"
+                />
+              ) : course.image ? (
                 <Image
                   src={course.image}
                   alt="Course preview"
@@ -529,25 +576,61 @@ export default function CourseDetailPage() {
                 </div>
               )}
             </div>
-            <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center text-white transition-opacity group-hover:bg-black/60" />
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-              {/* Play button + pulsing rings (shared center) */}
-              <div className="relative w-20 h-20 flex items-center justify-center mb-3">
-                <span className="absolute inset-0 rounded-full border-2 border-white/60 animate-play-ring animate-play-ring-1" aria-hidden />
-                <span className="absolute inset-0 rounded-full border-2 border-white/60 animate-play-ring animate-play-ring-2" aria-hidden />
-                <span className="absolute inset-0 rounded-full border-2 border-white/60 animate-play-ring animate-play-ring-3" aria-hidden />
-                <div className="relative w-16 h-16 rounded-full bg-white flex items-center justify-center shadow-xl group-hover:scale-105 transition-transform duration-300 ring-4 ring-white/20">
-                  <FaPlay className="w-6 h-6 ml-1 text-indigo-600 shrink-0" />
+            {hasVideo && (
+              <>
+                <div className="absolute inset-0 bg-black/20 flex flex-col items-center justify-center text-white transition-opacity group-hover:bg-black/60" />
+                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                  <div className="relative w-20 h-20 flex items-center justify-center mb-3">
+                    <span className="absolute inset-0 rounded-full border-2 border-white/60 animate-play-ring animate-play-ring-1" aria-hidden />
+                    <span className="absolute inset-0 rounded-full border-2 border-white/60 animate-play-ring animate-play-ring-2" aria-hidden />
+                    <span className="absolute inset-0 rounded-full border-2 border-white/60 animate-play-ring animate-play-ring-3" aria-hidden />
+                    <div className="relative w-16 h-16 rounded-full bg-white flex items-center justify-center shadow-xl group-hover:scale-105 transition-transform duration-300 ring-4 ring-white/20">
+                      <FaPlay className="w-6 h-6 ml-1 text-indigo-600 shrink-0" />
+                    </div>
+                  </div>
+                  <span className="flex items-center gap-2 text-sm font-semibold text-white drop-shadow-md">
+                    <FaEye className="w-4 h-4 shrink-0" />
+                    Watch course video
+                  </span>
                 </div>
-              </div>
-              <span className="flex items-center gap-2 text-sm font-semibold text-white drop-shadow-md">
-                <FaEye className="w-4 h-4 shrink-0" />
-                Watch course video
-              </span>
-            </div>
+              </>
+            )}
           </div>
         </div>
       </div>
+
+      {/* Video modal */}
+      {videoModalOpen && videoEmbedUrl && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Course video"
+        >
+          <button
+            type="button"
+            onClick={() => setVideoModalOpen(false)}
+            className="absolute top-4 right-4 z-10 w-10 h-10 flex items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors focus:outline-none focus:ring-2 focus:ring-white"
+            aria-label="Close video"
+          >
+            <span className="text-2xl leading-none">&times;</span>
+          </button>
+          <div className="relative w-full max-w-4xl aspect-video rounded-lg overflow-hidden bg-black">
+            <iframe
+              src={videoEmbedUrl}
+              title="Course video"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              className="absolute inset-0 w-full h-full"
+            />
+          </div>
+          <div
+            className="absolute inset-0 -z-10"
+            onClick={() => setVideoModalOpen(false)}
+            aria-hidden="true"
+          />
+        </div>
+      )}
 
     </div>
   </div>
