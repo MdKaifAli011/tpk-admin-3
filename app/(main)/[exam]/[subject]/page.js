@@ -62,11 +62,11 @@ export async function generateMetadata({ params, searchParams }) {
       return { title: `${subjectSlug || "Subject"} | TestPrepKart` };
 
     const fullSubjectData = await fetchSubjectById(subject._id).catch(
-      () => null
+      () => null,
     );
     const finalSubject = fullSubjectData || subject;
     const subjectDetails = await fetchSubjectDetailsById(
-      finalSubject._id
+      finalSubject._id,
     ).catch(() => null);
     const path = `/${createSlug(exam.name)}/${createSlug(finalSubject.name)}`;
 
@@ -80,7 +80,7 @@ export async function generateMetadata({ params, searchParams }) {
           exam: exam.name,
           subject: finalSubject.name,
         },
-      }
+      },
     );
   } catch (error) {
     logger.warn("Error generating subject page metadata:", error);
@@ -127,7 +127,7 @@ const SubjectPage = async ({ params }) => {
     (s) =>
       s._id === foundSubject._id ||
       createSlug(s.name) === subjectSlug ||
-      s.name?.toLowerCase() === subjectSlug.toLowerCase()
+      s.name?.toLowerCase() === subjectSlug.toLowerCase(),
   );
 
   const examSlug = createSlug(fetchedExam.name);
@@ -155,11 +155,11 @@ const SubjectPage = async ({ params }) => {
 
   return (
     <div className="space-y-4">
-      <VisitTracker 
-        level="subject" 
-        itemId={subject._id} 
-        itemSlug={subjectSlugValue} 
-        itemName={subject.name} 
+      <VisitTracker
+        level="subject"
+        itemId={subject._id}
+        itemSlug={subjectSlugValue}
+        itemName={subject.name}
       />
       {/* Premium Educational Header */}
       <section
@@ -222,8 +222,8 @@ const SubjectPage = async ({ params }) => {
         units={fetchedUnits}
         practiceDisabled={subject.practiceDisabled || false}
       />
-         {/* Navigation */}
-         <NavigationClient
+      {/* Navigation */}
+      <NavigationClient
         backUrl={`/${examSlug}`}
         backLabel={`Back to ${fetchedExam.name}`}
         prevNav={prevNav}
@@ -231,7 +231,11 @@ const SubjectPage = async ({ params }) => {
       />
 
       {/* Test List Table */}
-      <ConditionalTestListTable examId={fetchedExam._id} subjectId={subject._id} practiceDisabled={subject.practiceDisabled || false} />
+      <ConditionalTestListTable
+        examId={fetchedExam._id}
+        subjectId={subject._id}
+        practiceDisabled={subject.practiceDisabled || false}
+      />
 
       {/* Units Section */}
       <UnitsSectionClient
@@ -242,8 +246,6 @@ const SubjectPage = async ({ params }) => {
         examName={fetchedExam.name}
         subjectName={subject.name}
       />
-
-   
 
       {/* Subject Completion Tracker */}
       <SubjectCompletionTracker

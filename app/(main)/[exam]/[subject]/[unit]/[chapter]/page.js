@@ -39,8 +39,13 @@ export const revalidate = 0;
  * This metadata will override layout metadata when searchParams are present
  */
 export async function generateMetadata({ params, searchParams }) {
-  const { exam: examSlug, subject: subjectSlug, unit: unitSlug, chapter: chapterSlug } = await params;
-  
+  const {
+    exam: examSlug,
+    subject: subjectSlug,
+    unit: unitSlug,
+    chapter: chapterSlug,
+  } = await params;
+
   // Pages receive searchParams (Promise in Next.js 15) – resolve before use
   const resolvedSearchParams = await extractSearchParams(searchParams);
 
@@ -50,24 +55,41 @@ export async function generateMetadata({ params, searchParams }) {
 
   try {
     // Fetch data for metadata (same as layout, but with searchParams support)
-    const { fetchExamById, fetchSubjectById, fetchUnitById, fetchChapterById, fetchChapterDetailsById, fetchSubjectsByExam, fetchUnitsBySubject, fetchChaptersByUnit, findByIdOrSlug, createSlug } = await import("../../../../lib/api");
-    
+    const {
+      fetchExamById,
+      fetchSubjectById,
+      fetchUnitById,
+      fetchChapterById,
+      fetchChapterDetailsById,
+      fetchSubjectsByExam,
+      fetchUnitsBySubject,
+      fetchChaptersByUnit,
+      findByIdOrSlug,
+      createSlug,
+    } = await import("../../../../lib/api");
+
     const exam = await fetchExamById(examSlug).catch(() => null);
     if (!exam) return { title: `${chapterSlug || "Chapter"} | TestPrepKart` };
 
     const subjects = await fetchSubjectsByExam(exam._id).catch(() => []);
     const subject = findByIdOrSlug(subjects, subjectSlug);
-    if (!subject) return { title: `${chapterSlug || "Chapter"} | TestPrepKart` };
+    if (!subject)
+      return { title: `${chapterSlug || "Chapter"} | TestPrepKart` };
 
-    const units = await fetchUnitsBySubject(subject._id, exam._id).catch(() => []);
+    const units = await fetchUnitsBySubject(subject._id, exam._id).catch(
+      () => [],
+    );
     const unit = findByIdOrSlug(units, unitSlug);
     if (!unit) return { title: `${chapterSlug || "Chapter"} | TestPrepKart` };
 
     const chapters = await fetchChaptersByUnit(unit._id).catch(() => []);
     const chapter = findByIdOrSlug(chapters, chapterSlug);
-    if (!chapter) return { title: `${chapterSlug || "Chapter"} | TestPrepKart` };
+    if (!chapter)
+      return { title: `${chapterSlug || "Chapter"} | TestPrepKart` };
 
-    const chapterDetails = await fetchChapterDetailsById(chapter._id).catch(() => null);
+    const chapterDetails = await fetchChapterDetailsById(chapter._id).catch(
+      () => null,
+    );
     const path = `/${createSlug(exam.name)}/${createSlug(subject.name)}/${createSlug(unit.name)}/${createSlug(chapter.name)}`;
 
     return await generateTabAwareMetadata(
@@ -82,7 +104,7 @@ export async function generateMetadata({ params, searchParams }) {
           unit: unit.name,
           chapter: chapter.name,
         },
-      }
+      },
     );
   } catch (error) {
     logger.warn("Error generating chapter page metadata:", error);
@@ -160,7 +182,7 @@ const ChapterPage = async ({ params }) => {
     (c) =>
       c._id === foundChapter._id ||
       createSlug(c.name) === chapterSlug ||
-      c.name?.toLowerCase() === chapterSlug.toLowerCase()
+      c.name?.toLowerCase() === chapterSlug.toLowerCase(),
   );
 
   const examSlug = createSlug(fetchedExam.name);
@@ -198,11 +220,11 @@ const ChapterPage = async ({ params }) => {
 
   return (
     <div className="space-y-4">
-      <VisitTracker 
-        level="chapter" 
-        itemId={chapter._id} 
-        itemSlug={chapterSlugValue} 
-        itemName={chapter.name} 
+      <VisitTracker
+        level="chapter"
+        itemId={chapter._id}
+        itemSlug={chapterSlugValue}
+        itemName={chapter.name}
       />
       <ProgressTracker
         unitId={unit._id}
@@ -217,60 +239,54 @@ const ChapterPage = async ({ params }) => {
         unitId={unit._id}
       />
       <div className="space-y-4">
-{/* Premium Educational Header */}
-<section
-  className="
+        {/* Premium Educational Header */}
+        <section
+          className="
     rounded-xl
     p-3 sm:p-4
     bg-gradient-to-br from-indigo-50 via-white to-purple-50
     border border-indigo-100/60
     shadow-[0_2px_12px_rgba(120,90,200,0.08)]
   "
->
-  <div className="flex items-start sm:items-center justify-between w-full gap-3 sm:gap-4 min-w-0">
-
-    {/* LEFT — Unit Title + Breadcrumb */}
-    <div className="flex flex-col min-w-0 flex-1 leading-tight">
-
-      {/* Unit Name */}
-      <h1
-        className="
+        >
+          <div className="flex items-start sm:items-center justify-between w-full gap-3 sm:gap-4 min-w-0">
+            {/* LEFT — Unit Title + Breadcrumb */}
+            <div className="flex flex-col min-w-0 flex-1 leading-tight">
+              {/* Unit Name */}
+              <h1
+                className="
           text-base sm:text-lg md:text-xl font-bold text-indigo-900
           truncate
           w-full
         "
-        title={chapter.name}
-      >
-        {chapter.name}
-      </h1>
+                title={chapter.name}
+              >
+                {chapter.name}
+              </h1>
 
-      {/* Breadcrumb */}
-      <p
-        className="
+              {/* Breadcrumb */}
+              <p
+                className="
           text-[10px] sm:text-xs text-gray-600 mt-0.5
           truncate
           w-full
         "
-        title={`${fetchedExam.name} > ${subject.name} > ${unit.name}`}
-      >
-        {fetchedExam.name} &gt; {subject.name} &gt; {unit.name}
-      </p>
-    </div>
+                title={`${fetchedExam.name} > ${subject.name} > ${unit.name}`}
+              >
+                {fetchedExam.name} &gt; {subject.name} &gt; {unit.name}
+              </p>
+            </div>
 
-    {/* RIGHT — Unit Progress */}
-    <div className="shrink-0 ml-auto">
-      <UnitProgressClient
-        unitId={unit._id}
-        unitName={unit.name}
-        initialProgress={0}
-      />
-    </div>
-
-  </div>
-</section>
-
-
-
+            {/* RIGHT — Unit Progress */}
+            <div className="shrink-0 ml-auto">
+              <UnitProgressClient
+                unitId={unit._id}
+                unitName={unit.name}
+                initialProgress={0}
+              />
+            </div>
+          </div>
+        </section>
 
         {/* Tabs */}
         <TabsClient
@@ -288,8 +304,8 @@ const ChapterPage = async ({ params }) => {
           chapterSlug={chapterSlugValue}
           practiceDisabled={subject.practiceDisabled || false}
         />
-           {/* Navigation */}
-           <NavigationClient
+        {/* Navigation */}
+        <NavigationClient
           backUrl={`/${examSlug}/${subjectSlugValue}/${unitSlugValue}`}
           backLabel={`Back to ${unit.name}`}
           prevNav={prevNav}

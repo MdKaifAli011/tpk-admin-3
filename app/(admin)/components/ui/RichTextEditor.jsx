@@ -74,6 +74,23 @@ const RichTextEditor = ({
   });
   const [showButtonModal, setShowButtonModal] = useState(false);
   const [showImageModal, setShowImageModal] = useState(false);
+  const [imageLayout, setImageLayout] = useState("1"); // "1" | "2" | "3"
+  const [imageWidth, setImageWidth] = useState("");
+  const [imageHeight, setImageHeight] = useState("");
+  const [imageAlign, setImageAlign] = useState("center"); // "left" | "center" | "right" — only for 1 col
+  const [imageInsertSource, setImageInsertSource] = useState("upload"); // "upload" | "url" | "media"
+  const [imageUrl, setImageUrl] = useState("");
+  const [imageAltText, setImageAltText] = useState("");
+  const [imageUrlList, setImageUrlList] = useState([{ url: "", altText: "" }]); // multiple URLs
+  const [pastedImagePreviews, setPastedImagePreviews] = useState([]); // legacy, kept for cleanup
+  const [uploadImageSlots, setUploadImageSlots] = useState([null]); // [ null | { file, previewUrl }, ... ] length = 1, 2, or 3 by imageLayout
+  const [imageMediaPickerFolder, setImageMediaPickerFolder] = useState("");
+  const [imageMediaPickerItems, setImageMediaPickerItems] = useState([]);
+  const [imageMediaPickerLoading, setImageMediaPickerLoading] = useState(false);
+  const [imageMediaPickerSelected, setImageMediaPickerSelected] = useState(new Set()); // ids
+  const [imageMediaPickerFolders, setImageMediaPickerFolders] = useState({ folders: [], tree: [] });
+  const [imageMediaPickerFullScreen, setImageMediaPickerFullScreen] = useState(null); // { url, altText, name } | null
+  const [imageMediaPickerCopyUrlToast, setImageMediaPickerCopyUrlToast] = useState(false);
   const [showVideoModal, setShowVideoModal] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [uploadingVideo, setUploadingVideo] = useState(false);
@@ -155,6 +172,19 @@ const RichTextEditor = ({
     openImageModalRef.current = () => {
       const editor = editorRef.current;
       if (editor?.focusManager) editor.focusManager.blur();
+      setImageInsertSource("upload");
+      setImageUrl("");
+      setImageAltText("");
+      setImageUrlList([{ url: "", altText: "" }]);
+      setPastedImagePreviews((prev) => {
+        prev.forEach((p) => { try { URL.revokeObjectURL(p.previewUrl); } catch (_) {} });
+        return [];
+      });
+      setUploadImageSlots((prev) => {
+        const N = Math.min(3, Math.max(1, parseInt(imageLayout, 10) || 1));
+        prev.forEach((s) => { if (s?.previewUrl) try { URL.revokeObjectURL(s.previewUrl); } catch (_) {} });
+        return Array(N).fill(null);
+      });
       setShowImageModal(true);
     };
     openButtonModalRef.current = () => setShowButtonModal(true);
@@ -206,9 +236,10 @@ const RichTextEditor = ({
     () => ({
       video: `${RTE_ICON_BASE}/rte-video.svg`,
       image: `${RTE_ICON_BASE}/rte-image.svg`,
-      mediaLibrary: `${RTE_ICON_BASE}/rte-fileManger-button.svg`,
+      mediaLibrary: `${RTE_ICON_BASE}/rte-filemanager.svg`,
       button: `${RTE_ICON_BASE}/rte-button.svg`,
       form: `${RTE_ICON_BASE}/rte-form.svg`,
+      contactForm: `${RTE_ICON_BASE}/rte-contact-form.svg`,
       formLink: `${RTE_ICON_BASE}/rte-formlink.svg`,
     }),
     [RTE_ICON_BASE]
@@ -431,7 +462,7 @@ const RichTextEditor = ({
               label: "Contact Form",
               command: "RTEInsertContactForm",
               toolbar: "insertCustom",
-              icon: iconUrls.form,
+              icon: iconUrls.contactForm,
             });
             editor.ui.addButton("RTEMediaLibrary", {
               label: "Media Library",
@@ -494,6 +525,37 @@ const RichTextEditor = ({
           editor.setReadOnly(true);
         }
         editor.fire("change");
+
+        // Inject image grid CSS into editor content so 2-col/3-col layouts display correctly in the editor
+        try {
+          const doc = editor.document;
+          const head = doc && doc.getHead && doc.getHead();
+          if (head) {
+            const style = new CKEDITOR.dom.element("style");
+            style.setAttribute("type", "text/css");
+            const cssText =
+              ".image-insert-wrapper{display:grid;gap:0.75rem 1rem;margin:1rem 0;align-items:start;width:100%;box-sizing:border-box}" +
+              ".image-insert-wrapper .image-grid-cell{min-width:0;box-sizing:border-box}" +
+              ".image-insert-wrapper img{max-width:100%;width:100%;height:auto;display:block;border-radius:6px;box-sizing:border-box}" +
+              ".image-grid-cols-1{grid-template-columns:1fr}" +
+              ".image-grid-cols-2{grid-template-columns:1fr}" +
+              "@media (min-width:768px){.image-grid-cols-2{grid-template-columns:repeat(2,1fr)}}" +
+              ".image-grid-cols-3{grid-template-columns:1fr}" +
+              "@media (min-width:640px){.image-grid-cols-3{grid-template-columns:repeat(2,1fr)}}" +
+              "@media (min-width:1024px){.image-grid-cols-3{grid-template-columns:repeat(3,1fr)}}" +
+              ".image-insert-wrapper.image-align-left{width:fit-content;margin-left:0;margin-right:auto}" +
+              ".image-insert-wrapper.image-align-center{width:fit-content;margin-left:auto;margin-right:auto}" +
+              ".image-insert-wrapper.image-align-right{width:fit-content;margin-left:auto;margin-right:0}";
+            if (style.$) {
+              style.$.textContent = cssText;
+            } else {
+              style.setHtml(cssText);
+            }
+            head.append(style);
+          }
+        } catch (err) {
+          console.warn("Could not inject image grid CSS into editor:", err);
+        }
 
         // Add click listener to handle editing existing forms/buttons
         const doc = editor.document;
@@ -625,7 +687,7 @@ const RichTextEditor = ({
       ${btnSel("RTEInsertButton")} { background-image: url("${esc(ic.button)}") !important; background-repeat: no-repeat !important; background-position: 6px center !important; background-size: 16px 16px !important; padding-left: 26px !important; min-width: 82px !important; }
       ${btnSel("RTEInsertForm")} { background-image: url("${esc(ic.form)}") !important; background-repeat: no-repeat !important; background-position: 6px center !important; background-size: 16px 16px !important; padding-left: 26px !important; min-width: 82px !important; }
       ${btnSel("RTEFormLink")} { background-image: url("${esc(ic.formLink)}") !important; background-repeat: no-repeat !important; background-position: 6px center !important; background-size: 16px 16px !important; padding-left: 26px !important; min-width: 82px !important; }
-      ${btnSel("RTEInsertContactForm")} { background-image: url("${esc(ic.form)}") !important; background-repeat: no-repeat !important; background-position: 6px center !important; background-size: 16px 16px !important; padding-left: 26px !important; min-width: 98px !important; }
+      ${btnSel("RTEInsertContactForm")} { background-image: url("${esc(ic.contactForm)}") !important; background-repeat: no-repeat !important; background-position: 6px center !important; background-size: 16px 16px !important; padding-left: 26px !important; min-width: 98px !important; }
       ${btnSel("RTEMediaLibrary")} { background-image: url("${esc(ic.mediaLibrary)}") !important; background-repeat: no-repeat !important; background-position: 6px center !important; background-size: 16px 16px !important; padding-left: 26px !important; min-width: 82px !important; }
       /* Hide empty icon span so only our button background + label show */
       ${btnSel("RTEInsertVideo")} .cke_icon, ${btnSel("RTEInsertVideo")} .cke_button_icon, .cke_button_RTEInsertVideo_icon,
@@ -1039,31 +1101,42 @@ const RichTextEditor = ({
     });
   };
 
-  // Handle image upload
+  // Handle image upload (single or multiple files)
   const handleImageUpload = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const fileList = e.target.files;
+    if (!fileList?.length) return;
 
-    // Validate file type
     const allowedTypes = ["image/png", "image/jpeg", "image/jpg", "image/gif", "image/webp"];
-    if (!allowedTypes.includes(file.type)) {
-      setImageError("Invalid file type. Only PNG, JPEG, GIF, and WebP are allowed.");
-      return;
-    }
-
-    // Validate file size (max 10MB); larger files will be compressed before upload
     const maxSize = 10 * 1024 * 1024;
-    if (file.size > maxSize) {
-      setImageError("File size exceeds 10MB limit. Please choose a smaller image.");
-      return;
+    const files = Array.from(fileList);
+
+    for (const file of files) {
+      if (!allowedTypes.includes(file.type)) {
+        setImageError("Invalid file type. Only PNG, JPEG, GIF, and WebP are allowed.");
+        return;
+      }
+      if (file.size > maxSize) {
+        setImageError("One or more files exceed 10MB. Please choose smaller images.");
+        return;
+      }
     }
 
-    await uploadAndInsertImage(file);
+    await uploadAndInsertImage(files);
+    e.target.value = "";
   };
 
-  // Handle clipboard paste
+  // Handle clipboard paste — show preview first, then user confirms to upload
   useEffect(() => {
     if (!isReady || disabled || !showImageModal) return;
+
+    const clearPasted = () => {
+      setPastedImagePreviews((prev) => {
+        prev.forEach((p) => {
+          try { URL.revokeObjectURL(p.previewUrl); } catch (_) {}
+        });
+        return [];
+      });
+    };
 
     const handlePaste = async (e) => {
       const items = e.clipboardData?.items;
@@ -1075,7 +1148,23 @@ const RichTextEditor = ({
           e.preventDefault();
           const file = item.getAsFile();
           if (file) {
-            await uploadAndInsertImage(file);
+            const allowed = ["image/png", "image/jpeg", "image/jpg", "image/gif", "image/webp"];
+            if (!allowed.includes(file.type)) return;
+            const previewUrl = URL.createObjectURL(file);
+            const N = Math.min(3, Math.max(1, parseInt(imageLayout, 10) || 1));
+            setUploadImageSlots((prev) => {
+              const next = prev.length >= N ? [...prev.slice(0, N)] : [...prev];
+              while (next.length < N) next.push(null);
+              const idx = next.findIndex((s) => !s);
+              if (idx === -1) {
+                try { URL.revokeObjectURL(previewUrl); } catch (_) {}
+                return prev;
+              }
+              if (next[idx]?.previewUrl) try { URL.revokeObjectURL(next[idx].previewUrl); } catch (_) {}
+              next[idx] = { file, previewUrl };
+              return next;
+            });
+            setImageInsertSource("upload");
           }
           break;
         }
@@ -1085,8 +1174,41 @@ const RichTextEditor = ({
     document.addEventListener("paste", handlePaste);
     return () => {
       document.removeEventListener("paste", handlePaste);
+      setPastedImagePreviews((prev) => {
+        prev.forEach((p) => {
+          try { URL.revokeObjectURL(p.previewUrl); } catch (_) {}
+        });
+        return [];
+      });
     };
-  }, [isReady, disabled, showImageModal]);
+  }, [isReady, disabled, showImageModal, imageLayout]);
+  const imageLayoutNum = Math.min(3, Math.max(1, parseInt(imageLayout, 10) || 1));
+
+  // Keep upload slots length in sync with column layout (1/2/3)
+  useEffect(() => {
+    if (!showImageModal) return;
+    setUploadImageSlots((prev) => {
+      const N = imageLayoutNum;
+      if (prev.length === N) return prev;
+      const next = prev.slice(0, N);
+      while (next.length < N) next.push(null);
+      for (let i = N; i < prev.length; i++) {
+        if (prev[i]?.previewUrl) try { URL.revokeObjectURL(prev[i].previewUrl); } catch (_) {}
+      }
+      return next;
+    });
+  }, [showImageModal, imageLayoutNum]);
+
+  // Keep URL list length in sync with column layout (1/2/3) for By URL tab
+  useEffect(() => {
+    if (!showImageModal) return;
+    setImageUrlList((prev) => {
+      const N = imageLayoutNum;
+      if (prev.length === N) return prev;
+      if (prev.length < N) return [...prev, ...Array(N - prev.length).fill({ url: "", altText: "" })];
+      return prev.slice(0, N);
+    });
+  }, [showImageModal, imageLayoutNum]);
 
   // When Insert Image modal opens, move focus into the modal so paste goes to modal not editor
   useEffect(() => {
@@ -1097,6 +1219,14 @@ const RichTextEditor = ({
     const t = setTimeout(moveFocus, 50);
     return () => clearTimeout(t);
   }, [showImageModal]);
+
+  // Close media picker full-screen preview on Escape
+  useEffect(() => {
+    if (!imageMediaPickerFullScreen) return;
+    const onKeyDown = (e) => { if (e.key === "Escape") setImageMediaPickerFullScreen(null); };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [imageMediaPickerFullScreen]);
 
   // Fetch media list when Media Library modal is open
   const mediaLibrarySearchDebounced = mediaLibrarySearch.trim() ? mediaLibrarySearch.trim() : "";
@@ -1124,6 +1254,36 @@ const RichTextEditor = ({
       });
     return () => { cancelled = true; };
   }, [showMediaLibraryModal, mediaLibraryPage, mediaLibraryType, mediaLibrarySearchDebounced]);
+
+  // Fetch folders + image list when Insert Image → See Media picker is open
+  useEffect(() => {
+    if (!showImageModal || imageInsertSource !== "media") return;
+    let cancelled = false;
+    setImageMediaPickerLoading(true);
+    Promise.all([
+      api.get("/media/folders?type=image"),
+      api.get(`/media?type=image&limit=100&folder=${encodeURIComponent(imageMediaPickerFolder)}`),
+    ])
+      .then(([foldersRes, mediaRes]) => {
+        if (cancelled) return;
+        if (foldersRes.data?.success) {
+          setImageMediaPickerFolders({
+            folders: foldersRes.data.data?.folders ?? [],
+            tree: foldersRes.data.data?.tree ?? [],
+          });
+        }
+        if (mediaRes.data?.success) {
+          setImageMediaPickerItems(mediaRes.data.data?.data ?? []);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setImageMediaPickerItems([]);
+      })
+      .finally(() => {
+        if (!cancelled) setImageMediaPickerLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [showImageModal, imageInsertSource, imageMediaPickerFolder]);
 
   // Compress image client-side to reduce size and avoid 413 (Payload Too Large)
   const compressImageIfNeeded = (file, maxSizeBytes = 2 * 1024 * 1024, maxWidth = 1920) => {
@@ -1166,52 +1326,122 @@ const RichTextEditor = ({
     });
   };
 
-  // Upload image and insert into editor
-  const uploadAndInsertImage = async (file) => {
+  // Build HTML for inserting one or more images with optional layout, dimensions, and alignment (1 col only)
+  const buildImageInsertHtml = (items, layout, width, height, align) => {
+    const list = Array.isArray(items) ? items : [items];
+    const entries = list.map((i) =>
+      typeof i === "string" ? { url: i, altText: "" } : { url: i?.url || i, altText: i?.altText || "" }
+    );
+    const urls = entries.map((e) => e.url).filter(Boolean);
+    if (!urls.length) return "";
+    const w = width && Number(width) > 0 ? `${Number(width)}px` : "";
+    const h = height && Number(height) > 0 ? `${Number(height)}px` : "";
+    const styleParts = ["max-width: 100%", "height: auto"];
+    if (w) styleParts.push(`width: ${w}`);
+    if (h) styleParts.push(`height: ${h}`);
+    const imgStyle = styleParts.join("; ");
+    const cols = layout === "3" ? "3" : layout === "2" ? "2" : "1";
+    const alignClass = cols === "1" && align && ["left", "center", "right"].includes(align) ? ` image-align-${align}` : "";
+    const wrapperClass = `image-insert-wrapper image-grid-cols-${cols}${alignClass}`.trim();
+    const imgs = entries
+      .map(
+        (e, i) => {
+          const imgTag = `<img src="${String(e.url).replace(/"/g, "&quot;")}" alt="${String(e.altText || `Image ${i + 1}`).replace(/"/g, "&quot;")}" style="${imgStyle}" loading="lazy" />`;
+          return `<div class="image-grid-cell">${imgTag}</div>`;
+        }
+      )
+      .join("");
+    return `<div class="${wrapperClass}">${imgs}</div>`;
+  };
+
+  // Upload image(s) to both /api/upload/image and /api/media, then insert into editor
+  const uploadAndInsertImage = async (fileOrFiles) => {
+    const files = Array.isArray(fileOrFiles) ? fileOrFiles : fileOrFiles ? [fileOrFiles] : [];
+    if (!files.length) return;
+
+    const allowedTypes = ["image/png", "image/jpeg", "image/jpg", "image/gif", "image/webp"];
+    const maxSize = 10 * 1024 * 1024;
+
     try {
       setUploadingImage(true);
       setImageError("");
 
-      const fileToUpload = await compressImageIfNeeded(file);
-      const formData = new FormData();
-      formData.append("image", fileToUpload);
-
-      // Add context IDs if available
-      if (examId) formData.append("examId", examId);
-      if (subjectId) formData.append("subjectId", subjectId);
-      if (unitId) formData.append("unitId", unitId);
-      if (chapterId) formData.append("chapterId", chapterId);
-      if (topicId) formData.append("topicId", topicId);
-      if (subtopicId) formData.append("subtopicId", subtopicId);
-      if (definitionId) formData.append("definitionId", definitionId);
-
-      const response = await api.post("/upload/image", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
-
-      if (response.data?.success && response.data?.data?.url) {
-        const imageUrl = response.data.data.url;
-        const editor = editorRef.current;
-
-        if (editor) {
-          // Insert image into editor
-          const imageHtml = `<img src="${imageUrl}" alt="Uploaded image" style="max-width: 100%; height: auto;" />`;
-          editor.insertHtml(imageHtml);
+      const urls = [];
+      for (const file of files) {
+        if (!allowedTypes.includes(file.type)) {
+          setImageError(`Invalid file type: ${file.name}. Only PNG, JPEG, GIF, and WebP are allowed.`);
+          return;
+        }
+        if (file.size > maxSize) {
+          setImageError(`File too large: ${file.name}. Max 10MB per file.`);
+          return;
         }
 
+        const fileToUpload = await compressImageIfNeeded(file);
+
+        // 1) Upload via /api/upload/image (stores in assets/{hierarchy} and creates Media record)
+        const formDataUpload = new FormData();
+        formDataUpload.append("image", fileToUpload);
+        if (examId) formDataUpload.append("examId", examId);
+        if (subjectId) formDataUpload.append("subjectId", subjectId);
+        if (unitId) formDataUpload.append("unitId", unitId);
+        if (chapterId) formDataUpload.append("chapterId", chapterId);
+        if (topicId) formDataUpload.append("topicId", topicId);
+        if (subtopicId) formDataUpload.append("subtopicId", subtopicId);
+        if (definitionId) formDataUpload.append("definitionId", definitionId);
+
+        const responseUpload = await api.post("/upload/image", formDataUpload, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+
+        if (!responseUpload.data?.success || !responseUpload.data?.data?.url) {
+          setImageError(responseUpload.data?.message || "Failed to upload image");
+          return;
+        }
+
+        const imageUrl = responseUpload.data.data.url;
+        const uploadFilename = responseUpload.data.data.filename || fileToUpload.name || "image";
+        const uploadPath = responseUpload.data.data.path || "";
+
+        // 2) Also register in Media with same url/path (no duplicate file) so Media Management shows same URL
+        const formDataMedia = new FormData();
+        formDataMedia.append("file", fileToUpload);
+        formDataMedia.append("name", uploadFilename);
+        formDataMedia.append("folder", "editor");
+        formDataMedia.append("sourceUrl", imageUrl);
+        formDataMedia.append("sourcePath", uploadPath);
+        try {
+          await api.post("/media", formDataMedia, {
+            headers: { "Content-Type": "multipart/form-data" },
+          });
+        } catch (mediaErr) {
+          console.warn("Media API save failed (upload succeeded):", mediaErr);
+          // still use imageUrl for insert
+        }
+
+        urls.push({ url: imageUrl, altText: uploadFilename || fileToUpload.name || "" });
+      }
+
+      if (urls.length) {
+        const editor = editorRef.current;
+        if (editor) {
+          const html = buildImageInsertHtml(urls, imageLayout, imageLayout === "1" ? (imageWidth || undefined) : undefined, imageLayout === "1" ? (imageHeight || undefined) : undefined, imageLayout === "1" ? imageAlign : undefined);
+          editor.insertHtml(html);
+        }
         setShowImageModal(false);
+        setImageInsertSource("upload");
         setImageError("");
-      } else {
-        setImageError(response.data?.message || "Failed to upload image");
+        setPastedImagePreviews((prev) => {
+          prev.forEach((p) => { try { URL.revokeObjectURL(p.previewUrl); } catch (_) {} });
+          return [];
+        });
       }
     } catch (error) {
       console.error("Image upload error:", error);
       setImageError(
         error.response?.data?.message ||
-        error.message ||
-        "Failed to upload image. Please try again."
+          error.message ||
+          "Failed to upload image. Please try again."
       );
     } finally {
       setUploadingImage(false);
@@ -2227,24 +2457,41 @@ const RichTextEditor = ({
           <div
             ref={imageModalFocusRef}
             tabIndex={-1}
-            className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-200 max-h-[90vh] flex flex-col outline-none"
+            className={`bg-white rounded-2xl shadow-2xl w-full overflow-hidden border border-gray-200 max-h-[90vh] flex flex-col outline-none ${imageInsertSource === "media" ? "max-w-2xl" : "max-w-lg"}`}
             role="dialog"
             aria-modal="true"
             aria-labelledby="insert-image-modal-title"
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b bg-white">
+            <div className="flex items-center justify-between px-6 py-4 border-b bg-white shrink-0">
               <div>
                 <h2 id="insert-image-modal-title" className="text-xl font-semibold text-gray-900">
-                  Insert Image
+                  {imageInsertSource === "media" ? "Select from Media" : "Insert Image"}
                 </h2>
                 <p className="text-xs text-gray-500 mt-0.5">
-                  Upload an image or paste from clipboard
+                  {imageInsertSource === "media"
+                    ? "Choose images from Media Library (images only, by folder)"
+                    : "Upload, paste a URL, or choose from Media Library"}
                 </p>
               </div>
               <button
                 onClick={() => {
                   setShowImageModal(false);
+                  setImageInsertSource("upload");
+                  setImageMediaPickerSelected(new Set());
+                  setImageMediaPickerFullScreen(null);
+                  setImageMediaPickerCopyUrlToast(false);
+                  setImageUrl("");
+                  setImageAltText("");
+                  setImageUrlList([{ url: "", altText: "" }]);
+                  setPastedImagePreviews((prev) => {
+                    prev.forEach((p) => { try { URL.revokeObjectURL(p.previewUrl); } catch (_) {} });
+                    return [];
+                  });
+                  setUploadImageSlots((prev) => {
+                    prev.forEach((s) => { if (s?.previewUrl) try { URL.revokeObjectURL(s.previewUrl); } catch (_) {} });
+                    return [null];
+                  });
                   setImageError("");
                 }}
                 className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-2 rounded-lg transition"
@@ -2253,51 +2500,532 @@ const RichTextEditor = ({
               </button>
             </div>
 
-            {/* Body */}
+            {/* Body: Picker view vs Upload view */}
             <div className="flex-1 overflow-y-auto p-6 space-y-4">
-              {/* File Input */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Select Image
-                </label>
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-purple-400 transition-colors">
-                  <input
-                    type="file"
-                    id="image-upload"
-                    accept="image/png,image/jpeg,image/jpg,image/gif,image/webp"
-                    onChange={handleImageUpload}
-                    className="hidden"
-                    disabled={uploadingImage}
-                  />
-                  <label
-                    htmlFor="image-upload"
-                    className="cursor-pointer flex flex-col items-center"
+              {imageInsertSource === "media" ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setImageInsertSource("upload");
+                      setImageMediaPickerSelected(new Set());
+                    }}
+                    className="flex items-center gap-2 text-sm font-medium text-indigo-600 hover:text-indigo-800 mb-4"
                   >
-                    <FaUpload className="w-8 h-8 text-gray-400 mb-2" />
-                    <span className="text-sm text-gray-600">
-                      Click to select or paste image (Ctrl+V)
-                    </span>
-                    <span className="text-xs text-gray-500 mt-1">
-                      PNG, JPEG, GIF, WebP (max 10MB)
-                    </span>
-                  </label>
-                </div>
-              </div>
+                    <span className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center">←</span>
+                    Back
+                  </button>
 
-              {/* Error Message */}
-              {imageError && (
-                <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                  <p className="text-sm text-red-600">{imageError}</p>
-                </div>
-              )}
+                  {/* Column layout – choose how inserted images will display */}
+                  <div>
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Layout (columns)</p>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setImageLayout("1")}
+                        className={`flex-1 py-2.5 rounded-xl border-2 text-sm font-medium transition ${imageLayout === "1" ? "border-indigo-500 bg-indigo-50 text-indigo-700 shadow-sm" : "border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50"}`}
+                      >
+                        1 col
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setImageLayout("2")}
+                        className={`flex-1 py-2.5 rounded-xl border-2 text-sm font-medium transition ${imageLayout === "2" ? "border-indigo-500 bg-indigo-50 text-indigo-700 shadow-sm" : "border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50"}`}
+                      >
+                        2 col
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setImageLayout("3")}
+                        className={`flex-1 py-2.5 rounded-xl border-2 text-sm font-medium transition ${imageLayout === "3" ? "border-indigo-500 bg-indigo-50 text-indigo-700 shadow-sm" : "border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50"}`}
+                      >
+                        3 col
+                      </button>
+                    </div>
+                    <p className="mt-1 text-[11px] text-gray-400">Choose how many columns to show (responsive).</p>
+                  </div>
 
-              {/* Upload Progress */}
-              {uploadingImage && (
-                <div className="flex items-center justify-center gap-2 p-4">
-                  <FaSpinner className="w-5 h-5 animate-spin text-purple-600" />
-                  <span className="text-sm text-gray-600">Uploading image...</span>
-                </div>
+                  {imageLayout === "1" && (
+                  <div>
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Width & height (optional)</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-500 mb-1">Width (px)</label>
+                        <input
+                          type="number"
+                          min={1}
+                          max={2000}
+                          placeholder="Auto"
+                          value={imageWidth}
+                          onChange={(e) => setImageWidth(e.target.value)}
+                          className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 bg-gray-50/50"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-500 mb-1">Height (px)</label>
+                        <input
+                          type="number"
+                          min={1}
+                          max={2000}
+                          placeholder="Auto"
+                          value={imageHeight}
+                          onChange={(e) => setImageHeight(e.target.value)}
+                          className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 bg-gray-50/50"
+                        />
+                      </div>
+                    </div>
+                    <p className="mt-1 text-[11px] text-gray-400">Leave empty for auto. Applied to all inserted images.</p>
+                  </div>
+                  )}
+                  {imageLayout === "1" && (
+                  <div>
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Alignment</p>
+                    <div className="flex gap-2">
+                      {["left", "center", "right"].map((al) => (
+                        <button
+                          key={al}
+                          type="button"
+                          onClick={() => setImageAlign(al)}
+                          className={`flex-1 py-2 rounded-xl border-2 text-sm font-medium capitalize transition ${imageAlign === al ? "border-indigo-500 bg-indigo-50 text-indigo-700" : "border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50"}`}
+                        >
+                          {al}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  )}
+
+                  <div>
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Folder</p>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setImageMediaPickerFolder("")}
+                        className={`px-3 py-2 rounded-xl text-sm font-medium border-2 transition ${imageMediaPickerFolder === "" ? "border-indigo-500 bg-indigo-50 text-indigo-700" : "border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50"}`}
+                      >
+                        All images
+                      </button>
+                      {(imageMediaPickerFolders.folders || []).map((f) => (
+                        <button
+                          key={f.path}
+                          type="button"
+                          onClick={() => setImageMediaPickerFolder(f.path)}
+                          className={`px-3 py-2 rounded-xl text-sm font-medium border-2 transition flex items-center gap-1.5 ${imageMediaPickerFolder === f.path ? "border-indigo-500 bg-indigo-50 text-indigo-700" : "border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50"}`}
+                        >
+                          <FaFolderOpen className="w-4 h-4" />
+                          {f.name || f.path}
+                          {f.count != null ? ` (${f.count})` : ""}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  {imageMediaPickerLoading ? (
+                    <div className="flex items-center justify-center py-16">
+                      <FaSpinner className="w-10 h-10 animate-spin text-indigo-600" />
+                    </div>
+                  ) : imageMediaPickerItems.length === 0 ? (
+                    <div className="text-center py-16 rounded-xl bg-gray-50 border border-gray-100">
+                      <FaImage className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                      <p className="text-sm font-medium text-gray-500">No images in this folder</p>
+                    </div>
+                  ) : (
+                    <>
+                      <p className="text-xs text-gray-500 mb-2">Select up to {imageLayoutNum} image{imageLayoutNum > 1 ? "s" : ""} for this layout. Click to select/deselect. Double-click for full-screen preview.</p>
+                      <div className="flex flex-wrap gap-2 mb-3">
+                        <button
+                          type="button"
+                          onClick={() => setImageMediaPickerSelected(new Set(imageMediaPickerItems.slice(0, imageLayoutNum).map((i) => i._id)))}
+                          className="text-xs font-medium text-indigo-600 hover:text-indigo-800"
+                        >
+                          Select up to {imageLayoutNum}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setImageMediaPickerSelected(new Set())}
+                          className="text-xs font-medium text-gray-500 hover:text-gray-700"
+                        >
+                          Clear selection
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                        {imageMediaPickerItems.map((item) => (
+                          <button
+                            key={item._id}
+                            type="button"
+                            onClick={() => {
+                              setImageMediaPickerSelected((prev) => {
+                                const next = new Set(prev);
+                                if (next.has(item._id)) next.delete(item._id);
+                                else if (next.size < imageLayoutNum) next.add(item._id);
+                                return next;
+                              });
+                            }}
+                            onDoubleClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setImageMediaPickerFullScreen({ url: item.url, altText: item.altText || item.name, name: item.name || item.fileName });
+                            }}
+                            className={`rounded-xl border-2 overflow-hidden text-left transition relative ${imageMediaPickerSelected.has(item._id) ? "border-indigo-500 ring-2 ring-indigo-200 shadow-md" : "border-gray-200 hover:border-gray-300 hover:shadow-sm"}`}
+                          >
+                            <div className="aspect-square flex items-center justify-center bg-gray-100">
+                              <img src={item.url} alt={item.altText || item.name} className="w-full h-full object-cover" />
+                              {imageMediaPickerSelected.has(item._id) && (
+                                <span className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs font-bold">✓</span>
+                              )}
+                            </div>
+                            <p className="p-2 text-xs text-gray-600 truncate bg-white border-t border-gray-100" title={item.name}>{item.name || item.fileName}</p>
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                  {imageMediaPickerSelected.size > 0 && (
+                    <>
+                      <div className="flex items-center justify-between pt-4 mt-4 border-t border-gray-200">
+                        <span className="text-sm font-medium text-gray-600">{imageMediaPickerSelected.size} selected · {imageLayout} col layout</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const editor = editorRef.current;
+                            if (!editor) return;
+                            const selected = imageMediaPickerItems.filter((i) => imageMediaPickerSelected.has(i._id)).slice(0, imageLayoutNum);
+                            const items = selected.map((i) => ({ url: i.url, altText: i.altText || i.name }));
+                            const html = buildImageInsertHtml(items, imageLayout, imageLayout === "1" ? (imageWidth || undefined) : undefined, imageLayout === "1" ? (imageHeight || undefined) : undefined, imageLayout === "1" ? imageAlign : undefined);
+                            editor.insertHtml(html);
+                            setShowImageModal(false);
+                            setImageInsertSource("upload");
+                            setImageMediaPickerSelected(new Set());
+                          }}
+                          className="px-5 py-2.5 rounded-xl bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 shadow-sm transition"
+                        >
+                          Insert selected
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </>
+              ) : (
+                <>
+                  {/* Layout & dimensions – shared */}
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Layout (responsive)</label>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setImageLayout("1")}
+                          className={`flex-1 py-2.5 rounded-xl border-2 text-sm font-medium transition ${imageLayout === "1" ? "border-indigo-500 bg-indigo-50 text-indigo-700 shadow-sm" : "border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50"}`}
+                        >
+                          1 col
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setImageLayout("2")}
+                          className={`flex-1 py-2.5 rounded-xl border-2 text-sm font-medium transition ${imageLayout === "2" ? "border-indigo-500 bg-indigo-50 text-indigo-700 shadow-sm" : "border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50"}`}
+                        >
+                          2 col
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setImageLayout("3")}
+                          className={`flex-1 py-2.5 rounded-xl border-2 text-sm font-medium transition ${imageLayout === "3" ? "border-indigo-500 bg-indigo-50 text-indigo-700 shadow-sm" : "border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50"}`}
+                        >
+                          3 col
+                        </button>
+                      </div>
+                      <p className="mt-1.5 text-[11px] text-gray-400">1 col: single column · 2 col: 1 on mobile, 2 on tablet+ · 3 col: 1 → 2 → 3 by screen size</p>
+                    </div>
+                    {imageLayout === "1" && (
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-500 mb-1">Width (px)</label>
+                        <input
+                          type="number"
+                          min={1}
+                          max={2000}
+                          placeholder="Auto"
+                          value={imageWidth}
+                          onChange={(e) => setImageWidth(e.target.value)}
+                          className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 bg-gray-50/50"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-500 mb-1">Height (px)</label>
+                        <input
+                          type="number"
+                          min={1}
+                          max={2000}
+                          placeholder="Auto"
+                          value={imageHeight}
+                          onChange={(e) => setImageHeight(e.target.value)}
+                          className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 bg-gray-50/50"
+                        />
+                      </div>
+                    </div>
+                    )}
+                    {imageLayout === "1" && (
+                    <div>
+                      <label className="block text-xs font-medium text-gray-500 mb-2">Alignment</label>
+                      <div className="flex gap-2">
+                        {["left", "center", "right"].map((al) => (
+                          <button
+                            key={al}
+                            type="button"
+                            onClick={() => setImageAlign(al)}
+                            className={`flex-1 py-2 rounded-xl border-2 text-sm font-medium capitalize transition ${imageAlign === al ? "border-indigo-500 bg-indigo-50 text-indigo-700" : "border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50"}`}
+                          >
+                            {al}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    )}
+
+                  </div>
+
+                  {/* Tabs: Upload | By URL | Media Library */}
+                  <div className="border-t border-gray-100 pt-4">
+                    <div className="flex rounded-xl bg-gray-100 p-1 mb-4">
+                      {[
+                        { id: "upload", label: "Upload", icon: FaUpload },
+                        { id: "url", label: "By URL", icon: FaImage },
+                        { id: "media", label: "Media Library", icon: FaFolderOpen },
+                      ].map(({ id, label, icon: Icon }) => (
+                        <button
+                          key={id}
+                          type="button"
+                          onClick={() => setImageInsertSource(id)}
+                          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition ${imageInsertSource === id ? "bg-white text-indigo-700 shadow-sm" : "text-gray-600 hover:text-gray-900"}`}
+                        >
+                          <Icon className="w-4 h-4" />
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Tab content */}
+                    {imageInsertSource === "upload" && (
+                      <div className="space-y-3">
+                        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider">Upload image(s)</label>
+                        <p className="text-xs text-gray-500 -mt-1">Choose layout first, then add one image per column (or paste). Click Upload to save and insert.</p>
+
+                        {(() => {
+                          const N = imageLayoutNum;
+                          const slots = uploadImageSlots.length >= N ? uploadImageSlots : [...uploadImageSlots, ...Array(N - uploadImageSlots.length).fill(null)];
+                          const hasAny = slots.some((s) => s != null);
+                          return (
+                            <>
+                              <div className={`grid gap-3 image-insert-wrapper image-grid-cols-${imageLayout}`}>
+                                {Array.from({ length: N }, (_, i) => (
+                                  <div key={i} className="image-grid-cell rounded-xl border-2 border-dashed border-gray-200 bg-gray-50/50 p-3 min-h-[120px]">
+                                    {slots[i] ? (
+                                      <div className="relative">
+                                        <img src={slots[i].previewUrl} alt={`Slot ${i + 1}`} className="w-full h-28 object-contain rounded-lg bg-white border border-gray-100" />
+                                        <button
+                                          type="button"
+                                          onClick={() => setUploadImageSlots((prev) => {
+                                            const next = [...prev];
+                                            if (next[i]?.previewUrl) try { URL.revokeObjectURL(next[i].previewUrl); } catch (_) {}
+                                            next[i] = null;
+                                            return next;
+                                          })}
+                                          className="absolute top-1 right-1 w-6 h-6 rounded-full bg-red-500 text-white text-xs font-bold hover:bg-red-600"
+                                        >
+                                          ×
+                                        </button>
+                                      </div>
+                                    ) : (
+                                      <label className="cursor-pointer flex flex-col items-center justify-center h-28 text-gray-500 hover:text-indigo-600 transition">
+                                        <input
+                                          type="file"
+                                          accept="image/png,image/jpeg,image/jpg,image/gif,image/webp"
+                                          className="hidden"
+                                          onChange={(e) => {
+                                            const file = e.target.files?.[0];
+                                            if (!file) return;
+                                            const allowed = ["image/png", "image/jpeg", "image/jpg", "image/gif", "image/webp"];
+                                            if (!allowed.includes(file.type)) { setImageError("Invalid file type."); return; }
+                                            if (file.size > 10 * 1024 * 1024) { setImageError("File exceeds 10MB."); return; }
+                                            setUploadImageSlots((prev) => {
+                                              const next = [...prev];
+                                              if (next[i]?.previewUrl) try { URL.revokeObjectURL(next[i].previewUrl); } catch (_) {}
+                                              next[i] = { file, previewUrl: URL.createObjectURL(file) };
+                                              return next;
+                                            });
+                                            e.target.value = "";
+                                          }}
+                                          disabled={uploadingImage}
+                                        />
+                                        <FaUpload className="w-8 h-8 mb-1" />
+                                        <span className="text-xs">Slot {i + 1}</span>
+                                      </label>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                              {hasAny && (
+                                <div className="flex gap-2 pt-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const files = slots.map((s) => s?.file).filter(Boolean);
+                                      if (!files.length) return;
+                                      setUploadImageSlots((prev) => {
+                                        prev.forEach((s) => { if (s?.previewUrl) try { URL.revokeObjectURL(s.previewUrl); } catch (_) {} });
+                                        return Array(N).fill(null);
+                                      });
+                                      uploadAndInsertImage(files);
+                                    }}
+                                    disabled={uploadingImage}
+                                    className="flex-1 py-2.5 rounded-xl bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 disabled:opacity-60 transition-colors"
+                                  >
+                                    Upload & Insert
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => setUploadImageSlots((prev) => {
+                                      prev.forEach((s) => { if (s?.previewUrl) try { URL.revokeObjectURL(s.previewUrl); } catch (_) {} });
+                                      return Array(N).fill(null);
+                                    })}
+                                    className="px-4 py-2.5 rounded-xl border border-gray-300 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 transition-colors"
+                                  >
+                                    Clear
+                                  </button>
+                                </div>
+                              )}
+                            </>
+                          );
+                        })()}
+                      </div>
+                    )}
+
+                    {imageInsertSource === "url" && (
+                      <div className="space-y-4">
+                        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider">Image URL(s)</label>
+                        <p className="text-xs text-gray-500 -mt-1">Enter one URL per column ({imageLayoutNum} col layout).</p>
+                        {Array.from({ length: imageLayoutNum }, (_, i) => (
+                          <div key={i} className="space-y-1">
+                            <label className="block text-xs font-medium text-gray-500">Image {i + 1} URL</label>
+                            <input
+                              type="url"
+                              placeholder="https://example.com/image.jpg"
+                              value={imageUrlList[i]?.url ?? ""}
+                              onChange={(e) => setImageUrlList((prev) => {
+                                const next = [...prev];
+                                while (next.length <= i) next.push({ url: "", altText: "" });
+                                next[i] = { ...next[i], url: e.target.value };
+                                return next;
+                              })}
+                              className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 placeholder:text-gray-400"
+                            />
+                            <input
+                              type="text"
+                              placeholder="Alt text (optional)"
+                              value={imageUrlList[i]?.altText ?? ""}
+                              onChange={(e) => setImageUrlList((prev) => {
+                                const next = [...prev];
+                                while (next.length <= i) next.push({ url: "", altText: "" });
+                                next[i] = { ...next[i], altText: e.target.value };
+                                return next;
+                              })}
+                              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 placeholder:text-gray-400"
+                            />
+                          </div>
+                        ))}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const items = imageUrlList.slice(0, imageLayoutNum).map((o) => ({ url: (o?.url || "").trim(), altText: (o?.altText || "").trim() })).filter((o) => o.url);
+                            if (!items.length) {
+                              setImageError("Enter at least one image URL.");
+                              return;
+                            }
+                            setImageError("");
+                            const editor = editorRef.current;
+                            if (editor) {
+                              const html = buildImageInsertHtml(items, imageLayout, imageLayout === "1" ? (imageWidth || undefined) : undefined, imageLayout === "1" ? (imageHeight || undefined) : undefined, imageLayout === "1" ? imageAlign : undefined);
+                              editor.insertHtml(html);
+                              setShowImageModal(false);
+                              setImageUrlList(Array(imageLayoutNum).fill({ url: "", altText: "" }));
+                            }
+                          }}
+                          className="w-full py-3 rounded-xl bg-indigo-600 text-white font-medium text-sm hover:bg-indigo-700 shadow-sm transition"
+                        >
+                          Insert {imageLayoutNum} image{imageLayoutNum > 1 ? "s" : ""}
+                        </button>
+                      </div>
+                    )}
+
+                  </div>
+
+                  {imageError && (
+                    <div className="p-3 rounded-xl bg-red-50 border border-red-100">
+                      <p className="text-sm text-red-700">{imageError}</p>
+                    </div>
+                  )}
+
+                  {uploadingImage && (
+                    <div className="flex items-center justify-center gap-3 py-4 rounded-xl bg-indigo-50/50">
+                      <FaSpinner className="w-5 h-5 animate-spin text-indigo-600" />
+                      <span className="text-sm font-medium text-gray-700">Uploading...</span>
+                    </div>
+                  )}
+                </>
               )}
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Media picker full-screen image preview – double-click image to open */}
+      {imageMediaPickerFullScreen && typeof document !== "undefined" && createPortal(
+        <div
+          className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/90 p-4"
+          onClick={() => { setImageMediaPickerFullScreen(null); setImageMediaPickerCopyUrlToast(false); }}
+          role="button"
+          tabIndex={-1}
+          aria-label="Close full screen preview"
+        >
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); setImageMediaPickerFullScreen(null); setImageMediaPickerCopyUrlToast(false); }}
+            className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition"
+            aria-label="Close"
+          >
+            <FaTimes className="w-6 h-6" />
+          </button>
+          <div
+            className="relative max-w-[95vw] max-h-[95vh] flex items-center justify-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={imageMediaPickerFullScreen.url}
+              alt={imageMediaPickerFullScreen.altText || imageMediaPickerFullScreen.name || "Preview"}
+              className="max-w-full max-h-[95vh] w-auto h-auto object-contain rounded-lg shadow-2xl"
+            />
+          </div>
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 max-w-[90vw]">
+            <div className="flex items-center gap-3 flex-wrap justify-center">
+              {imageMediaPickerFullScreen.name && (
+                <span className="text-white/90 text-sm truncate max-w-[50vw]">{imageMediaPickerFullScreen.name}</span>
+              )}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (typeof navigator?.clipboard?.writeText === "function") {
+                    navigator.clipboard.writeText(imageMediaPickerFullScreen.url);
+                    setImageMediaPickerCopyUrlToast(true);
+                    setTimeout(() => setImageMediaPickerCopyUrlToast(false), 2000);
+                  }
+                }}
+                className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm font-medium transition"
+              >
+                <FaCopy className="w-4 h-4 shrink-0" />
+                {imageMediaPickerCopyUrlToast ? "Copied!" : "Copy URL"}
+              </button>
             </div>
           </div>
         </div>,

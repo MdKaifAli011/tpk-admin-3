@@ -11,6 +11,7 @@ import {
   FaSearch,
   FaImage,
   FaNewspaper,
+  FaPowerOff,
 } from "react-icons/fa";
 import { ToastContainer, useToast } from "../ui/Toast";
 import { PermissionButton } from "../common/PermissionButton";
@@ -36,10 +37,12 @@ const StatusBadge = ({ status, onClick }) => {
 
   return (
     <button
+      type="button"
       onClick={onClick}
+      title={status === "active" || status === "publish" ? "Click to set Inactive" : "Click to set Active"}
       className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusStyles(
         status
-      )}`}
+      )} hover:opacity-90 transition-opacity`}
     >
       {(status || "active").charAt(0).toUpperCase() +
         (status || "active").slice(1)}
@@ -89,7 +92,7 @@ const BlogTable = ({ blogs, onEdit, onDelete, onToggleStatus }) => {
               <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-40">
                 Metadata
               </th>
-              <th className="px-2 py-1 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
+              <th className="px-2 py-1 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-40">
                 Actions
               </th>
             </tr>
@@ -183,12 +186,25 @@ const BlogTable = ({ blogs, onEdit, onDelete, onToggleStatus }) => {
                     </div>
                   </div>
                 </td>
-                <td className="px-2 py-1 whitespace-nowrap text-right w-32">
-                  <div className="flex items-center justify-end gap-1">
+                <td className="px-2 py-1 whitespace-nowrap text-right w-40">
+                  <div className="flex items-center justify-end gap-1.5 flex-wrap">
+                    <PermissionButton
+                      action="edit"
+                      onClick={() => onToggleStatus(blog)}
+                      className={`px-2 py-1 rounded-lg text-xs font-medium transition-colors inline-flex items-center gap-1.5 ${
+                        blog.status === "active" || blog.status === "publish"
+                          ? "bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200"
+                          : "bg-green-50 text-green-700 hover:bg-green-100 border border-green-200"
+                      }`}
+                      title={blog.status === "active" || blog.status === "publish" ? "Set Inactive" : "Set Active"}
+                    >
+                      <FaPowerOff className="text-xs" />
+                      {blog.status === "active" || blog.status === "publish" ? "Inactive" : "Active"}
+                    </PermissionButton>
                     <PermissionButton
                       action="edit"
                       onClick={() => onEdit(blog)}
-                      className="p-1 bg-blue-50 text-blue-600 rounded-lg transition-colors hover:bg-blue-100"
+                      className="p-1.5 bg-blue-50 text-blue-600 rounded-lg transition-colors hover:bg-blue-100"
                       title={getPermissionMessage("edit", role)}
                     >
                       <FaEdit className="text-sm" />
@@ -196,7 +212,7 @@ const BlogTable = ({ blogs, onEdit, onDelete, onToggleStatus }) => {
                     <PermissionButton
                       action="delete"
                       onClick={() => onDelete(blog)}
-                      className="p-1 bg-red-50 text-red-600 rounded-lg transition-colors hover:bg-red-100"
+                      className="p-1.5 bg-red-50 text-red-600 rounded-lg transition-colors hover:bg-red-100"
                       title={getPermissionMessage("delete", role)}
                     >
                       <FaTrash className="text-sm" />
@@ -291,11 +307,24 @@ const BlogTable = ({ blogs, onEdit, onDelete, onToggleStatus }) => {
                   </span>
                 </div>
               </div>
-              <div className="flex items-center gap-1 ml-3">
+              <div className="flex items-center gap-1.5 ml-3 flex-shrink-0">
+                <PermissionButton
+                  action="edit"
+                  onClick={() => onToggleStatus(blog)}
+                  className={`px-2 py-1 rounded-lg text-xs font-medium transition-colors inline-flex items-center gap-1.5 ${
+                    blog.status === "active" || blog.status === "publish"
+                      ? "bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200"
+                      : "bg-green-50 text-green-700 hover:bg-green-100 border border-green-200"
+                  }`}
+                  title={blog.status === "active" || blog.status === "publish" ? "Set Inactive" : "Set Active"}
+                >
+                  <FaPowerOff className="text-xs" />
+                  {blog.status === "active" || blog.status === "publish" ? "Inactive" : "Active"}
+                </PermissionButton>
                 <PermissionButton
                   action="edit"
                   onClick={() => onEdit(blog)}
-                  className="p-1 bg-blue-50 text-blue-600 rounded-lg transition-colors hover:bg-blue-100"
+                  className="p-1.5 bg-blue-50 text-blue-600 rounded-lg transition-colors hover:bg-blue-100"
                   title={getPermissionMessage("edit", role)}
                 >
                   <FaEdit className="text-sm" />
@@ -303,7 +332,7 @@ const BlogTable = ({ blogs, onEdit, onDelete, onToggleStatus }) => {
                 <PermissionButton
                   action="delete"
                   onClick={() => onDelete(blog)}
-                  className="p-1 bg-red-50 text-red-600 rounded-lg transition-colors hover:bg-red-100"
+                  className="p-1.5 bg-red-50 text-red-600 rounded-lg transition-colors hover:bg-red-100"
                   title={getPermissionMessage("delete", role)}
                 >
                   <FaTrash className="text-sm" />
@@ -337,6 +366,7 @@ const BlogManagement = () => {
   });
 
   const [formError, setFormError] = useState(null);
+  const [statusFilter, setStatusFilter] = useState("all"); // all | active | inactive | draft
   const { toasts, removeToast, success, error: showError } = useToast();
   const isFetchingRef = useRef(false);
 
@@ -348,7 +378,7 @@ const BlogManagement = () => {
       setError(null);
 
       const [blogsRes, examsRes, categoriesRes] = await Promise.all([
-        api.get("/blog"),
+        api.get(`/blog?status=${statusFilter}`),
         api.get("/exam?status=active"),
         api.get("/blog/category?status=active").catch(() => ({ data: { success: false } })),
       ]);
@@ -373,7 +403,7 @@ const BlogManagement = () => {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [statusFilter]);
 
   const handleAddBlog = async (e) => {
     e.preventDefault();
@@ -446,7 +476,7 @@ const BlogManagement = () => {
             b._id === blog._id ? { ...b, status: newStatus } : b
           )
         );
-        success(`Status updated to ${newStatus}`);
+        success(`Blog set to ${newStatus}`);
       }
     } catch (err) {
       showError("Failed to update status");
@@ -691,6 +721,22 @@ const BlogManagement = () => {
                 <p className="text-sm text-gray-600 mt-1">
                   Manage your blogs, view details, and perform actions
                 </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <label htmlFor="blog-status-filter" className="text-sm font-medium text-gray-700 whitespace-nowrap">
+                  Status
+                </label>
+                <select
+                  id="blog-status-filter"
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm bg-white"
+                >
+                  <option value="all">All</option>
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                  <option value="draft">Draft</option>
+                </select>
               </div>
             </div>
           </div>

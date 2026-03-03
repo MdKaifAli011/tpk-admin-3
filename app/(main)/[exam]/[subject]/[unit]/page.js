@@ -48,7 +48,16 @@ export async function generateMetadata({ params, searchParams }) {
   }
 
   try {
-    const { fetchExamById, fetchSubjectById, fetchUnitById, fetchUnitDetailsById, fetchUnitsBySubject, fetchSubjectsByExam, findByIdOrSlug, createSlug } = await import("../../../lib/api");
+    const {
+      fetchExamById,
+      fetchSubjectById,
+      fetchUnitById,
+      fetchUnitDetailsById,
+      fetchUnitsBySubject,
+      fetchSubjectsByExam,
+      findByIdOrSlug,
+      createSlug,
+    } = await import("../../../lib/api");
 
     const exam = await fetchExamById(examSlug).catch(() => null);
     if (!exam) return { title: `${unitSlug || "Unit"} | TestPrepKart` };
@@ -57,13 +66,17 @@ export async function generateMetadata({ params, searchParams }) {
     const subject = findByIdOrSlug(subjects, subjectSlug);
     if (!subject) return { title: `${unitSlug || "Unit"} | TestPrepKart` };
 
-    const units = await fetchUnitsBySubject(subject._id, exam._id).catch(() => []);
+    const units = await fetchUnitsBySubject(subject._id, exam._id).catch(
+      () => [],
+    );
     const unit = findByIdOrSlug(units, unitSlug);
     if (!unit) return { title: `${unitSlug || "Unit"} | TestPrepKart` };
 
     const fullUnitData = await fetchUnitById(unit._id).catch(() => null);
     const finalUnit = fullUnitData || unit;
-    const unitDetails = await fetchUnitDetailsById(finalUnit._id).catch(() => null);
+    const unitDetails = await fetchUnitDetailsById(finalUnit._id).catch(
+      () => null,
+    );
     const path = `/${createSlug(exam.name)}/${createSlug(subject.name)}/${createSlug(finalUnit.name)}`;
 
     return await generateTabAwareMetadata(
@@ -77,7 +90,7 @@ export async function generateMetadata({ params, searchParams }) {
           subject: subject.name,
           unit: finalUnit.name,
         },
-      }
+      },
     );
   } catch (error) {
     logger.warn("Error generating unit page metadata:", error);
@@ -137,7 +150,7 @@ const UnitPage = async ({ params }) => {
     (u) =>
       u._id === foundUnit._id ||
       createSlug(u.name) === unitSlug ||
-      u.name?.toLowerCase() === unitSlug.toLowerCase()
+      u.name?.toLowerCase() === unitSlug.toLowerCase(),
   );
 
   const examSlug = createSlug(fetchedExam.name);
@@ -170,11 +183,11 @@ const UnitPage = async ({ params }) => {
 
   return (
     <div className="space-y-4">
-      <VisitTracker 
-        level="unit" 
-        itemId={unit._id} 
-        itemSlug={unitSlugValue} 
-        itemName={unit.name} 
+      <VisitTracker
+        level="unit"
+        itemId={unit._id}
+        itemSlug={unitSlugValue}
+        itemName={unit.name}
       />
       {/* Premium Educational Header */}
       <section
@@ -187,10 +200,8 @@ const UnitPage = async ({ params }) => {
   "
       >
         <div className="flex items-start sm:items-center justify-between w-full gap-3 sm:gap-4 min-w-0">
-
           {/* LEFT — Title + Breadcrumb */}
           <div className="flex flex-col min-w-0 flex-1 leading-tight">
-
             <h1
               className="
           text-base sm:text-lg md:text-xl font-bold text-indigo-900
@@ -222,10 +233,8 @@ const UnitPage = async ({ params }) => {
               initialProgress={0}
             />
           </div>
-
         </div>
       </section>
-
 
       {/* Tabs */}
       <TabsClient
@@ -242,7 +251,7 @@ const UnitPage = async ({ params }) => {
         unitName={unit.name}
         practiceDisabled={subject.practiceDisabled || false}
       />
-      
+
       {/* Navigation */}
       <NavigationClient
         backUrl={`/${examSlug}/${subjectSlugValue}`}
@@ -271,7 +280,6 @@ const UnitPage = async ({ params }) => {
         unitName={unit.name}
         practiceDisabled={subject.practiceDisabled || false}
       />
-
 
       {/* Unit Completion Tracker */}
       <UnitCompletionTracker unitId={unit._id} unitName={unit.name} />

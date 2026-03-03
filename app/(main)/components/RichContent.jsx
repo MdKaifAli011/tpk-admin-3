@@ -19,12 +19,16 @@ import { logger } from "@/utils/logger";
 const FormRenderer = lazy(() =>
   import("./forms/FormRenderer").catch(() => ({
     default: () => (
-      <div className="text-red-600 text-sm p-2">
+      <div className="text-red-600 text-sm p-2" role="alert">
         Failed to load form. Please refresh the page.
       </div>
     ),
   }))
 );
+
+// Block-level tags for structure detection (must match editor/content expectations)
+const BLOCK_TAG_REGEX = /^<[^>]*(?:p|div|h[1-6]|ul|ol|li|blockquote|pre|table|section|article|header|footer|nav|aside|main|figure|hr)[\s>\/]/i;
+const LIST_STRUCTURE_REGEX = /<(ul|ol)[^>]*>[\s\S]*<\/(ul|ol)>/i;
 
 // Helper function to Title-Case button text while preserving ALL-CAPS tokens (e.g., "PDF", "NEET").
 // Examples:
@@ -92,36 +96,12 @@ const sanitizeHexColor = (value, fallback = "#2563eb") => {
   return /^#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})$/.test(v) ? v : fallback;
 };
 
-// Helper function to check if HTML content is inline - moved outside to avoid recreation
-const blockLevelTags = [
-  "<p",
-  "<div",
-  "<h1",
-  "<h2",
-  "<h3",
-  "<h4",
-  "<h5",
-  "<h6",
-  "<ul",
-  "<ol",
-  "<li",
-  "<blockquote",
-  "<pre",
-  "<table",
-  "<section",
-  "<article",
-  "<header",
-  "<footer",
-  "<nav",
-  "<aside",
-  "<main",
-  "<figure",
-  "<hr",
-];
+// Helper function to check if HTML content is inline (for rendering flow)
 const isInlineContent = (html) => {
   if (!html || !html.trim()) return false;
   const trimmed = html.trim().toLowerCase();
-  return !blockLevelTags.some((tag) => trimmed.startsWith(tag));
+  const blockStarts = ["<p", "<div", "<h1", "<h2", "<h3", "<h4", "<h5", "<h6", "<ul", "<ol", "<li", "<blockquote", "<pre", "<table", "<section", "<article", "<header", "<footer", "<nav", "<aside", "<main", "<figure", "<hr"];
+  return !blockStarts.some((tag) => trimmed.startsWith(tag));
 };
 
 // Helper function to extract YouTube video ID from URL (including YouTube Shorts)
@@ -173,8 +153,16 @@ const normalizeYouTubeUrl = (url) => {
   return url;
 };
 
-const RichContent = ({ html }) => {
+const RichContent = forwardRef(({ html = "" }, ref) => {
   const containerRef = useRef(null);
+  const mergedRef = useCallback(
+    (el) => {
+      containerRef.current = el;
+      if (typeof ref === "function") ref(el);
+      else if (ref) ref.current = el;
+    },
+    [ref]
+  );
   const mathJaxTimerRef = useRef(null);
   const mathJaxInitTimerRef = useRef(null);
   const [mathJaxError, setMathJaxError] = useState(false);
@@ -678,6 +666,8 @@ const RichContent = ({ html }) => {
     };
   }, [processedHtml, forms]);
 
+  const isEmpty = !html || (typeof html === "string" && !html.trim());
+
   // Render content with forms - optimized inline render
   const renderContent = useMemo(() => {
     if (!processedHtml || parts.length === 0) return null;
@@ -838,15 +828,8 @@ const RichContent = ({ html }) => {
             const trimmedPart = part.trim();
 
             // Check if content starts with block-level elements (lists, paragraphs, etc.)
-            const startsWithBlockTag =
-              /^<[^>]+(?:p|div|h[1-6]|ul|ol|li|blockquote|pre|table|section|article|header|footer|nav|aside|main|figure|hr)[\s>\/]/.test(
-                trimmedPart
-              );
-
-            // Check if content contains complete list structures
-            const hasListStructure = /<(ul|ol)[^>]*>[\s\S]*<\/(ul|ol)>/i.test(
-              trimmedPart
-            );
+            const startsWithBlockTag = BLOCK_TAG_REGEX.test(trimmedPart);
+            const hasListStructure = LIST_STRUCTURE_REGEX.test(trimmedPart);
 
             // For block-level content (lists, paragraphs, etc.), render directly to preserve structure
             // Lists need to be rendered exactly as they are in the editor
@@ -887,12 +870,13 @@ const RichContent = ({ html }) => {
   return (
     <>
       {mathJaxError && (
-        <div className="text-yellow-600 text-sm mb-2 p-2 bg-yellow-50 border border-yellow-200 rounded">
+        <div className="text-yellow-600 text-sm mb-2 p-2 bg-yellow-50 border border-yellow-200 rounded" role="alert">
           Note: Math equations may not render correctly. Please refresh the
           page.
         </div>
       )}
-      <div ref={containerRef} className="rich-text-content wrap-anywhere" suppressHydrationWarning>
+      {!isEmpty && (
+      <div ref={mergedRef} className="rich-text-content wrap-anywhere min-w-0" suppressHydrationWarning>
         <style jsx global>{`
         .video-grid-container {
           width: 100%;
@@ -938,6 +922,7 @@ const RichContent = ({ html }) => {
       `}</style>
         {renderContent}
       </div>
+      )}
 
       {/* Video Modal Player */}
       {activeVideo && (
@@ -961,7 +946,7 @@ const RichContent = ({ html }) => {
       )}
     </>
   );
-};
+});
 
 // Internal Video Modal Component
 const VideoModal = ({ video, onClose }) => {
@@ -998,6 +983,7 @@ const VideoModal = ({ video, onClose }) => {
           onClick={onClose}
           className="absolute top-4 right-4 z-[60] p-2.5 bg-black/40 hover:bg-red-600 text-white rounded-full transition-all duration-300 backdrop-blur-sm group"
           title="Close (Esc)"
+          aria-label="Close video"
         >
           <FaTimes className="w-5 h-5 group-hover:scale-110" />
         </button>
@@ -1046,5 +1032,7 @@ const VideoModal = ({ video, onClose }) => {
     document.body
   );
 };
+
+RichContent.displayName = "RichContent";
 
 export default RichContent;

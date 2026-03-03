@@ -603,17 +603,17 @@ export default function CourseDetailPage() {
                             : ""
                         }`}
                       >
-                        <span className="text-slate-500 font-medium shrink-0 text-sm">
+                        <span className="font-medium shrink-0 text-sm text-[#21A58E]">
                           {row.label}
                         </span>
-                        <span className="text-slate-800 sm:text-right break-words min-w-0 text-sm">
+                        <span className="sm:text-right break-words min-w-0 text-sm text-[#445050]">
                           {row.value}
                         </span>
                       </div>
                     ))}
                   </div>
 
-                  <p className="mt-4 mb-2 text-sm font-medium text-slate-500">
+                  <p className="mt-4 mb-2 text-sm font-medium text-[#21A58E]">
                     For details about the course
                   </p>
                   <a

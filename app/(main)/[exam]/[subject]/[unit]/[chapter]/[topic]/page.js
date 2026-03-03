@@ -42,7 +42,13 @@ export const revalidate = 0;
  * This metadata will override layout metadata when searchParams are present
  */
 export async function generateMetadata({ params, searchParams }) {
-  const { exam: examSlug, subject: subjectSlug, unit: unitSlug, chapter: chapterSlug, topic: topicSlug } = await params;
+  const {
+    exam: examSlug,
+    subject: subjectSlug,
+    unit: unitSlug,
+    chapter: chapterSlug,
+    topic: topicSlug,
+  } = await params;
 
   // Pages receive searchParams (Promise in Next.js 15) – resolve before use
   const resolvedSearchParams = await extractSearchParams(searchParams);
@@ -52,7 +58,20 @@ export async function generateMetadata({ params, searchParams }) {
   }
 
   try {
-    const { fetchExamById, fetchSubjectById, fetchUnitById, fetchChapterById, fetchTopicById, fetchTopicDetailsById, fetchSubjectsByExam, fetchUnitsBySubject, fetchChaptersByUnit, fetchTopicsByChapter, findByIdOrSlug, createSlug } = await import("../../../../../lib/api");
+    const {
+      fetchExamById,
+      fetchSubjectById,
+      fetchUnitById,
+      fetchChapterById,
+      fetchTopicById,
+      fetchTopicDetailsById,
+      fetchSubjectsByExam,
+      fetchUnitsBySubject,
+      fetchChaptersByUnit,
+      fetchTopicsByChapter,
+      findByIdOrSlug,
+      createSlug,
+    } = await import("../../../../../lib/api");
 
     const exam = await fetchExamById(examSlug).catch(() => null);
     if (!exam) return { title: `${topicSlug || "Topic"} | TestPrepKart` };
@@ -61,7 +80,9 @@ export async function generateMetadata({ params, searchParams }) {
     const subject = findByIdOrSlug(subjects, subjectSlug);
     if (!subject) return { title: `${topicSlug || "Topic"} | TestPrepKart` };
 
-    const units = await fetchUnitsBySubject(subject._id, exam._id).catch(() => []);
+    const units = await fetchUnitsBySubject(subject._id, exam._id).catch(
+      () => [],
+    );
     const unit = findByIdOrSlug(units, unitSlug);
     if (!unit) return { title: `${topicSlug || "Topic"} | TestPrepKart` };
 
@@ -75,7 +96,9 @@ export async function generateMetadata({ params, searchParams }) {
 
     const fullTopicData = await fetchTopicById(topic._id).catch(() => null);
     const finalTopic = fullTopicData || topic;
-    const topicDetails = await fetchTopicDetailsById(finalTopic._id).catch(() => null);
+    const topicDetails = await fetchTopicDetailsById(finalTopic._id).catch(
+      () => null,
+    );
     const path = `/${createSlug(exam.name)}/${createSlug(subject.name)}/${createSlug(unit.name)}/${createSlug(chapter.name)}/${createSlug(finalTopic.name)}`;
 
     return await generateTabAwareMetadata(
@@ -91,7 +114,7 @@ export async function generateMetadata({ params, searchParams }) {
           chapter: chapter.name,
           topic: finalTopic.name,
         },
-      }
+      },
     );
   } catch (error) {
     logger.warn("Error generating topic page metadata:", error);
@@ -183,8 +206,8 @@ const TopicPage = async ({ params }) => {
     fetchedSubTopics.map((subTopic) =>
       fetchSubTopicDetailsById(subTopic._id)
         .then((details) => ({ content: details?.content || "" }))
-        .catch(() => ({ content: "" }))
-    )
+        .catch(() => ({ content: "" })),
+    ),
   );
 
   // Find current topic index for navigation
@@ -192,7 +215,7 @@ const TopicPage = async ({ params }) => {
     (t) =>
       t._id === foundTopic._id ||
       createSlug(t.name) === topicSlug ||
-      t.name?.toLowerCase() === topicSlug.toLowerCase()
+      t.name?.toLowerCase() === topicSlug.toLowerCase(),
   );
 
   const examSlug = createSlug(fetchedExam.name);
@@ -235,11 +258,11 @@ const TopicPage = async ({ params }) => {
 
   return (
     <div className="space-y-4">
-      <VisitTracker 
-        level="topic" 
-        itemId={topic._id} 
-        itemSlug={topicSlugValue} 
-        itemName={topic.name} 
+      <VisitTracker
+        level="topic"
+        itemId={topic._id}
+        itemSlug={topicSlugValue}
+        itemName={topic.name}
       />
       <ProgressTracker
         unitId={unit._id}
@@ -259,10 +282,8 @@ const TopicPage = async ({ params }) => {
   "
         >
           <div className="flex items-start sm:items-center justify-between w-full gap-3 sm:gap-4 min-w-0">
-
             {/* LEFT — Topic Title + Breadcrumb */}
             <div className="flex flex-col min-w-0 flex-1 leading-tight">
-
               {/* Topic Name */}
               <h1
                 className="
@@ -284,7 +305,8 @@ const TopicPage = async ({ params }) => {
         "
                 title={`${fetchedExam.name} > ${subject.name} > ${unit.name} > ${chapter.name} > ${topic.name}`}
               >
-                {fetchedExam.name} &gt; {subject.name} &gt; {unit.name} &gt; {chapter.name} &gt; {topic.name}
+                {fetchedExam.name} &gt; {subject.name} &gt; {unit.name} &gt;{" "}
+                {chapter.name} &gt; {topic.name}
               </p>
             </div>
 
@@ -296,11 +318,8 @@ const TopicPage = async ({ params }) => {
                 initialProgress={0}
               />
             </div>
-
           </div>
         </section>
-
-
 
         {/* Tabs */}
         <TabsClient

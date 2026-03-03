@@ -36,7 +36,7 @@ export const revalidate = 0;
  */
 export async function generateMetadata({ params, searchParams }) {
   const { exam: examSlug } = await params;
-  
+
   // Pages receive searchParams correctly in Next.js App Router (searchParams is a Promise in Next.js 15+)
   const resolvedSearchParams = await extractSearchParams(searchParams);
 
@@ -45,9 +45,14 @@ export async function generateMetadata({ params, searchParams }) {
   }
 
   try {
-    const { fetchExamById, fetchExamDetailsById, createSlug } = await import("../lib/api");
+    const { fetchExamById, fetchExamDetailsById, createSlug } =
+      await import("../lib/api");
     const exam = await fetchExamById(examSlug).catch(() => null);
-    if (!exam) return generateSEO({}, { type: "exam", name: examSlug || "Exam", indexable: false });
+    if (!exam)
+      return generateSEO(
+        {},
+        { type: "exam", name: examSlug || "Exam", indexable: false },
+      );
 
     const examDetails = await fetchExamDetailsById(exam._id).catch(() => null);
     const path = `/${createSlug(exam.name)}`;
@@ -61,11 +66,14 @@ export async function generateMetadata({ params, searchParams }) {
         hierarchy: {
           exam: exam.name,
         },
-      }
+      },
     );
   } catch (error) {
     logger.warn("Error generating exam page metadata:", error);
-    return generateSEO({}, { type: "exam", name: examSlug || "Exam", indexable: false });
+    return generateSEO(
+      {},
+      { type: "exam", name: examSlug || "Exam", indexable: false },
+    );
   }
 }
 
@@ -99,9 +107,11 @@ const ExamPage = async ({ params }) => {
     maximumMarks: 720,
     status: "active",
   };
-  const examInfoRawResolved = examInfoRaw && (examInfoRaw.examDate != null || examInfoRaw.maximumMarks != null)
-    ? examInfoRaw
-    : defaultExamInfo;
+  const examInfoRawResolved =
+    examInfoRaw &&
+    (examInfoRaw.examDate != null || examInfoRaw.maximumMarks != null)
+      ? examInfoRaw
+      : defaultExamInfo;
   // Serialize for Client Components (strip Mongoose/BSON types like ObjectId, Date with toJSON)
   const examInfo = JSON.parse(JSON.stringify(examInfoRawResolved));
 
@@ -109,19 +119,19 @@ const ExamPage = async ({ params }) => {
   const subjectsWithUnits = await Promise.all(
     subjects.map(async (subject) => {
       const units = await fetchUnitsBySubject(subject._id, exam._id).catch(
-        () => []
+        () => [],
       );
       const unitsWithChapters = await Promise.all(
         (units || []).map(async (unit) => {
           const chapters = await fetchChaptersByUnit(unit._id).catch(() => []);
           return { ...unit, chapters: chapters || [] };
-        })
+        }),
       );
       return {
         ...subject,
         units: unitsWithChapters,
       };
-    })
+    }),
   );
 
   // Calculate navigation
@@ -146,91 +156,84 @@ const ExamPage = async ({ params }) => {
 
   return (
     <div className="space-y-4">
-      <VisitTracker 
-        level="exam" 
-        itemId={examIdStr} 
-        itemSlug={examSlug} 
-        itemName={exam.name} 
+      <VisitTracker
+        level="exam"
+        itemId={examIdStr}
+        itemSlug={examSlug}
+        itemName={exam.name}
       />
-      
-<section
-  className="
+
+      <section
+        className="
     rounded-xl
     p-3 sm:p-4
     bg-gradient-to-br from-indigo-50 via-white to-purple-50
     border border-indigo-100/60
     shadow-[0_2px_12px_rgba(120,90,200,0.08)]
   "
->
-  <div className="flex items-start md:items-center justify-between w-full gap-3 sm:gap-4 min-w-0">
-
-    {/* LEFT — Exam Title + Description */}
-    <div className="flex flex-col min-w-0 flex-1 leading-tight">
-
-      <h1
-        className="
+      >
+        <div className="flex items-start md:items-center justify-between w-full gap-3 sm:gap-4 min-w-0">
+          {/* LEFT — Exam Title + Description */}
+          <div className="flex flex-col min-w-0 flex-1 leading-tight">
+            <h1
+              className="
           text-lg sm:text-xl font-bold text-indigo-900
           truncate
           w-full
         "
-        title={`${exam.name} Preparation`}
-      >
-        {exam.name} Preparation
-      </h1>
+              title={`${exam.name} Preparation`}
+            >
+              {exam.name} Preparation
+            </h1>
 
-      <p
-        className="
+            <p
+              className="
           text-[10px] sm:text-xs text-gray-600 mt-0.5
           truncate
           w-full
         "
-        title={`Smart study tools for your ${exam.name} exam.`}
-      >
-        Smart study tools for your {exam.name} exam.
-      </p>
+              title={`Smart study tools for your ${exam.name} exam.`}
+            >
+              Smart study tools for your {exam.name} exam.
+            </p>
+          </div>
+
+          {/* RIGHT — Exam Progress */}
+          <div className="shrink-0 ml-auto">
+            <ExamProgressClient examId={examIdStr} />
+          </div>
+        </div>
+      </section>
+
+      {/* Tabs */}
+      <TabsClient
+        content={examDetails?.content}
+        examId={examIdStr}
+        initialExamInfo={examInfo}
+        entityName={exam.name}
+        entityType="exam"
+        examSlug={examSlug}
+        subjectsWithUnits={JSON.parse(JSON.stringify(subjectsWithUnits))}
+      />
+
+      {/* Navigation */}
+      <NavigationClient
+        backUrl="/"
+        backLabel="Back to Home"
+        prevNav={prevNav}
+        nextNav={nextNav}
+      />
+
+      {/* Blog Section - assigned to this exam */}
+      <AssignedBlogsSection
+        examSlug={examSlug}
+        examId={exam._id}
+        assignmentLevel="exam"
+      />
+
+      {/* Overview Comment Section */}
+      <OverviewCommentSection entityType="exam" entityId={examIdStr} />
     </div>
-
-    {/* RIGHT — Exam Progress */}
-    <div className="shrink-0 ml-auto">
-      <ExamProgressClient examId={examIdStr} />
-    </div>
-
-  </div>
-</section>
-
-
-
-        {/* Tabs */}
-        <TabsClient
-          content={examDetails?.content}
-          examId={examIdStr}
-          initialExamInfo={examInfo}
-          entityName={exam.name}
-          entityType="exam"
-          examSlug={examSlug}
-          subjectsWithUnits={JSON.parse(JSON.stringify(subjectsWithUnits))}
-        />
-
-        {/* Navigation */}
-        <NavigationClient
-          backUrl="/"
-          backLabel="Back to Home"
-          prevNav={prevNav}
-          nextNav={nextNav}
-        />
-
-
-        {/* Blog Section - assigned to this exam */}
-        <AssignedBlogsSection
-          examSlug={examSlug}
-          examId={exam._id}
-          assignmentLevel="exam"
-        />
-
-        {/* Overview Comment Section */}
-        <OverviewCommentSection entityType="exam" entityId={examIdStr} />
-      </div>
-      
   );
 };
 
