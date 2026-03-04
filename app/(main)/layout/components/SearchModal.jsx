@@ -7,16 +7,36 @@ import {
   FaBook,
   FaFolder,
   FaFileAlt,
+  FaComments,
 } from "react-icons/fa";
 import Link from "next/link";
 import { useSearchContext } from "../context/SearchContext";
 import { tokenizeQuery, textMatchesTokens, getSearchableText } from "../utils/searchTokens";
+import api from "@/lib/api";
+
+/** Build path for a discussion thread (hierarchy slugs). Same logic as DiscussionForumTab.getThreadDetailPath. */
+function getThreadDetailPath(thread) {
+  if (!thread?.slug) return null;
+  const segments = [];
+  if (thread.examId?.slug) segments.push(thread.examId.slug);
+  if (thread.subjectId?.slug) segments.push(thread.subjectId.slug);
+  if (thread.unitId?.slug) segments.push(thread.unitId.slug);
+  if (thread.chapterId?.slug) segments.push(thread.chapterId.slug);
+  if (thread.topicId?.slug) segments.push(thread.topicId.slug);
+  if (thread.subTopicId?.slug) segments.push(thread.subTopicId.slug);
+  if (thread.definitionId?.slug) segments.push(thread.definitionId.slug);
+  if (segments.length === 0) return null;
+  const rest = segments.join("/");
+  return rest ? `/${rest}` : "/";
+}
 
 const SearchModal = ({ isOpen, onClose }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
-  const { tree, treeLoading, activeExamSlug } = useSearchContext();
+  const { tree, treeLoading, activeExamSlug, activeExamId } = useSearchContext();
   const [currentExamSlug, setCurrentExamSlug] = useState("");
+  const [discussionResults, setDiscussionResults] = useState([]);
+  const [discussionLoading, setDiscussionLoading] = useState(false);
 
   // Update exam slug when URL changes or context changes
   useEffect(() => {
@@ -70,6 +90,37 @@ const SearchModal = ({ isOpen, onClose }) => {
     const t = setTimeout(() => setDebouncedQuery(searchQuery), 300);
     return () => clearTimeout(t);
   }, [searchQuery]);
+
+  /* ----------------------------- Discussion search API ----------------------------- */
+  useEffect(() => {
+    const q = debouncedQuery.trim();
+    if (!q) {
+      setDiscussionResults([]);
+      setDiscussionLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setDiscussionLoading(true);
+    const params = new URLSearchParams({
+      search: q,
+      limit: "10",
+    });
+    if (activeExamId) params.set("examId", activeExamId);
+    api
+      .get(`/discussion/threads?${params.toString()}`)
+      .then((res) => {
+        if (cancelled) return;
+        const data = res?.data?.data;
+        setDiscussionResults(Array.isArray(data) ? data : []);
+      })
+      .catch(() => {
+        if (!cancelled) setDiscussionResults([]);
+      })
+      .finally(() => {
+        if (!cancelled) setDiscussionLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [debouncedQuery, activeExamId]);
 
   /* ----------------------------- Escape Close ----------------------------- */
   useEffect(() => {
@@ -255,7 +306,7 @@ const SearchModal = ({ isOpen, onClose }) => {
               autoFocus
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search subjects, units, chapters, topics..."
+              placeholder="Search subjects, units, chapters, topics, discussions..."
               className="flex-1 bg-transparent outline-none text-gray-800 placeholder-gray-500 text-lg"
             />
             <button
@@ -274,42 +325,103 @@ const SearchModal = ({ isOpen, onClose }) => {
               </div>
             ) : !searchQuery ? (
               <EmptyState />
-            ) : searchResults.length === 0 ? (
-              <NoResults query={searchQuery} />
+            ) : !normalizedQuery ? (
+              <EmptyState />
             ) : (
-              <div className="p-3">
-                <p className="text-xs text-gray-500 mb-2 px-2">
-                  {searchResults.length} result(s) found
-                </p>
-
-                <div className="space-y-1">
-                  {searchResults.map((r, i) => (
-                    <Link
-                      key={i}
-                      href={r.path}
-                      onClick={onClose}
-                      className="group flex items-start gap-3 rounded-xl px-3 py-3 hover:bg-gray-50 transition"
-                    >
-                      <div className="mt-1">{icons[r.type]}</div>
-
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 group-hover:text-blue-600 truncate">
-                          {r.name}
+              <>
+                {searchResults.length === 0 && !discussionLoading && discussionResults.length === 0 ? (
+                  <NoResults query={searchQuery} />
+                ) : (
+                  <div className="p-3 space-y-4">
+                    {searchResults.length > 0 && (
+                      <section>
+                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2 px-2">
+                          Syllabus — {searchResults.length} result(s)
                         </p>
-                        {r.parent && (
-                          <p className="text-xs text-gray-500 truncate mt-0.5">
-                            {r.parent}
-                          </p>
-                        )}
-                      </div>
+                        <div className="space-y-1">
+                          {searchResults.map((r, i) => (
+                            <Link
+                              key={`syl-${i}`}
+                              href={r.path}
+                              onClick={onClose}
+                              className="group flex items-start gap-3 rounded-xl px-3 py-3 hover:bg-gray-50 transition"
+                            >
+                              <div className="mt-1">{icons[r.type]}</div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-gray-900 group-hover:text-blue-600 truncate">
+                                  {r.name}
+                                </p>
+                                {r.parent && (
+                                  <p className="text-xs text-gray-500 truncate mt-0.5">
+                                    {r.parent}
+                                  </p>
+                                )}
+                              </div>
+                              <span className="text-[10px] uppercase tracking-wide text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+                                {r.type}
+                              </span>
+                            </Link>
+                          ))}
+                        </div>
+                      </section>
+                    )}
 
-                      <span className="text-[10px] uppercase tracking-wide text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
-                        {r.type}
-                      </span>
-                    </Link>
-                  ))}
-                </div>
-              </div>
+                    {(discussionLoading || discussionResults.length > 0) && (
+                      <section>
+                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2 px-2 flex items-center gap-1.5">
+                          <FaComments className="text-indigo-500" />
+                          Discussion — {discussionLoading ? "Searching..." : `${discussionResults.length} result(s)`}
+                        </p>
+                        {discussionLoading && discussionResults.length === 0 ? (
+                          <div className="flex items-center gap-2 px-3 py-4 text-gray-500">
+                            <div className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+                            <span className="text-sm">Loading discussion threads...</span>
+                          </div>
+                        ) : (
+                          <div className="space-y-1">
+                            {discussionResults.map((thread) => {
+                              const path = getThreadDetailPath(thread);
+                              const href = path
+                                ? `${path}?tab=discussion&thread=${encodeURIComponent(thread.slug)}`
+                                : "#";
+                              const snippet = (() => {
+                                if (!thread.content) return "";
+                                const stripped = String(thread.content).replace(/<[^>]+>/g, " ").trim();
+                                return stripped.slice(0, 80) + (stripped.length > 80 ? "…" : "");
+                              })();
+                              return (
+                                <Link
+                                  key={thread._id}
+                                  href={href}
+                                  onClick={onClose}
+                                  className="group flex items-start gap-3 rounded-xl px-3 py-3 hover:bg-gray-50 transition"
+                                >
+                                  <div className="mt-1">
+                                    <FaComments className="text-indigo-600" />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-medium text-gray-900 group-hover:text-indigo-600 truncate">
+                                      {thread.title}
+                                    </p>
+                                    {snippet && (
+                                      <p className="text-xs text-gray-500 truncate mt-0.5">
+                                        {snippet}
+                                      </p>
+                                    )}
+                                  </div>
+                                  <span className="text-[10px] uppercase tracking-wide text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full shrink-0">
+                                    Thread
+                                  </span>
+                                </Link>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </section>
+                    )}
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
