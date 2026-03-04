@@ -351,7 +351,7 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen, showSidebar }) => {
               <Link href="/" className="touch-manipulation flex items-center">
                 <Image
                   src={`${basePath}/logo.png`}
-                  alt="TestPrepKart Logo"
+                  alt="TestprepKart Logo"
                   width={150}
                   height={150}
                   className="w-20 sm:w-24 md:w-28 lg:w-32 xl:w-36 h-auto object-contain"
@@ -607,7 +607,7 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen, showSidebar }) => {
                     <Link href="/" onClick={() => setIsNavMenuOpen(false)} className="shrink-0">
                       <Image
                         src={`${basePath}/logo.png`}
-                        alt="TestPrepKart Logo"
+                        alt="TestprepKart Logo"
                         width={120}
                         height={120}
                         className="h-12 w-auto object-contain"

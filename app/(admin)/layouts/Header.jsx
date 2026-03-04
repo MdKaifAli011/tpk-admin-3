@@ -79,7 +79,7 @@ const Header = memo(({ onMenuToggle }) => {
           <div className="flex items-center">
             <Image
               src={`${basePath}/logo.png`}
-              alt="TestPrepKart Logo"
+              alt="TestprepKart Logo"
               width={150}
               height={150}
               className="h-8 w-auto"

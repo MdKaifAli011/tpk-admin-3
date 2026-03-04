@@ -463,7 +463,7 @@ function HomepageContent() {
             </h2>
             <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
               See what our successful students have to say about their journey
-              with TestPrepKart.
+              with TestprepKart.
             </p>
           </div>
 
