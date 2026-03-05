@@ -91,7 +91,7 @@ const SearchModal = ({ isOpen, onClose }) => {
     return () => clearTimeout(t);
   }, [searchQuery]);
 
-  /* ----------------------------- Discussion search API ----------------------------- */
+  /* ----------------------------- Discussion search API (global: all threads) ----------------------------- */
   useEffect(() => {
     const q = debouncedQuery.trim();
     if (!q) {
@@ -105,7 +105,6 @@ const SearchModal = ({ isOpen, onClose }) => {
       search: q,
       limit: "10",
     });
-    if (activeExamId) params.set("examId", activeExamId);
     api
       .get(`/discussion/threads?${params.toString()}`)
       .then((res) => {
@@ -120,7 +119,7 @@ const SearchModal = ({ isOpen, onClose }) => {
         if (!cancelled) setDiscussionLoading(false);
       });
     return () => { cancelled = true; };
-  }, [debouncedQuery, activeExamId]);
+  }, [debouncedQuery]);
 
   /* ----------------------------- Escape Close ----------------------------- */
   useEffect(() => {
