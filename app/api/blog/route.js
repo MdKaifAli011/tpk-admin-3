@@ -15,6 +15,7 @@ export async function GET(request) {
         const statusFilter = searchParams.get("status") || "all";
         const examId = searchParams.get("examId");
         const limitParam = searchParams.get("limit");
+        const search = searchParams.get("search")?.trim();
         // Assignment filter (for "assigned to this level" on hierarchy pages)
         const assignmentLevel = searchParams.get("assignmentLevel");
         const assignmentSubjectId = searchParams.get("assignmentSubjectId");
@@ -56,6 +57,16 @@ export async function GET(request) {
             if (assignmentTopicId) query.assignmentTopicId = assignmentTopicId;
             if (assignmentSubTopicId) query.assignmentSubTopicId = assignmentSubTopicId;
             if (assignmentDefinitionId) query.assignmentDefinitionId = assignmentDefinitionId;
+        }
+
+        // Text search (name, author, category)
+        if (search) {
+            const regex = new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
+            query.$or = [
+                { name: { $regex: regex } },
+                { author: { $regex: regex } },
+                { category: { $regex: regex } },
+            ];
         }
 
         const limit = limitParam ? Math.min(Math.max(parseInt(limitParam, 10) || 50, 1), 100) : 100;

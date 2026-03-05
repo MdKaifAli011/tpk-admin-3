@@ -8,6 +8,7 @@ import {
   FaFolder,
   FaFileAlt,
   FaComments,
+  FaNewspaper,
 } from "react-icons/fa";
 import Link from "next/link";
 import { useSearchContext } from "../context/SearchContext";
@@ -37,6 +38,8 @@ const SearchModal = ({ isOpen, onClose }) => {
   const [currentExamSlug, setCurrentExamSlug] = useState("");
   const [discussionResults, setDiscussionResults] = useState([]);
   const [discussionLoading, setDiscussionLoading] = useState(false);
+  const [blogResults, setBlogResults] = useState([]);
+  const [blogLoading, setBlogLoading] = useState(false);
 
   // Update exam slug when URL changes or context changes
   useEffect(() => {
@@ -117,6 +120,37 @@ const SearchModal = ({ isOpen, onClose }) => {
       })
       .finally(() => {
         if (!cancelled) setDiscussionLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [debouncedQuery]);
+
+  /* ----------------------------- Blog search API (global: all active blogs) ----------------------------- */
+  useEffect(() => {
+    const q = debouncedQuery.trim();
+    if (!q) {
+      setBlogResults([]);
+      setBlogLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setBlogLoading(true);
+    const params = new URLSearchParams({
+      status: "active",
+      search: q,
+      limit: "10",
+    });
+    api
+      .get(`/blog?${params.toString()}`)
+      .then((res) => {
+        if (cancelled) return;
+        const data = res?.data?.data;
+        setBlogResults(Array.isArray(data) ? data : []);
+      })
+      .catch(() => {
+        if (!cancelled) setBlogResults([]);
+      })
+      .finally(() => {
+        if (!cancelled) setBlogLoading(false);
       });
     return () => { cancelled = true; };
   }, [debouncedQuery]);
@@ -305,7 +339,7 @@ const SearchModal = ({ isOpen, onClose }) => {
               autoFocus
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search subjects, units, chapters, topics, discussions..."
+              placeholder="Search subjects, units, chapters, topics, discussions, blogs..."
               className="flex-1 bg-transparent outline-none text-gray-800 placeholder-gray-500 text-lg"
             />
             <button
@@ -328,7 +362,7 @@ const SearchModal = ({ isOpen, onClose }) => {
               <EmptyState />
             ) : (
               <>
-                {searchResults.length === 0 && !discussionLoading && discussionResults.length === 0 ? (
+                {searchResults.length === 0 && !discussionLoading && discussionResults.length === 0 && !blogLoading && blogResults.length === 0 ? (
                   <NoResults query={searchQuery} />
                 ) : (
                   <div className="p-3 space-y-4">
@@ -410,6 +444,54 @@ const SearchModal = ({ isOpen, onClose }) => {
                                   </div>
                                   <span className="text-[10px] uppercase tracking-wide text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full shrink-0">
                                     Thread
+                                  </span>
+                                </Link>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </section>
+                    )}
+
+                    {(blogLoading || blogResults.length > 0) && (
+                      <section>
+                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2 px-2 flex items-center gap-1.5">
+                          <FaNewspaper className="text-amber-500" />
+                          Blog — {blogLoading ? "Searching..." : `${blogResults.length} result(s)`}
+                        </p>
+                        {blogLoading && blogResults.length === 0 ? (
+                          <div className="flex items-center gap-2 px-3 py-4 text-gray-500">
+                            <div className="w-4 h-4 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
+                            <span className="text-sm">Loading blogs...</span>
+                          </div>
+                        ) : (
+                          <div className="space-y-1">
+                            {blogResults.map((blog) => {
+                              const examSlug = blog.examId?.slug || currentExamSlug || "";
+                              const blogSlug = blog.slug || blog.name?.toLowerCase().replace(/\s+/g, "-") || "";
+                              const href = examSlug && blogSlug ? `/${examSlug}/blog/${blogSlug}` : "#";
+                              const categoryName = blog.categoryId?.name || blog.category || "Blog";
+                              return (
+                                <Link
+                                  key={blog._id}
+                                  href={href}
+                                  onClick={onClose}
+                                  className="group flex items-start gap-3 rounded-xl px-3 py-3 hover:bg-gray-50 transition"
+                                >
+                                  <div className="mt-1">
+                                    <FaNewspaper className="text-amber-600" />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-medium text-gray-900 group-hover:text-amber-600 truncate">
+                                      {blog.name}
+                                    </p>
+                                    <p className="text-xs text-gray-500 truncate mt-0.5">
+                                      {blog.author || "Admin"} · {categoryName}
+                                      {blog.examId?.name && ` · ${blog.examId.name}`}
+                                    </p>
+                                  </div>
+                                  <span className="text-[10px] uppercase tracking-wide text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full shrink-0">
+                                    Blog
                                   </span>
                                 </Link>
                               );
