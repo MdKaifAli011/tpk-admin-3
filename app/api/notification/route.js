@@ -140,7 +140,7 @@ export async function POST(request) {
 
     await connectDB();
     const body = await request.json();
-    const { entityType, entityId, title, message, stripMessage, link, linkLabel, slug, status, iconType, orderNumber } = body;
+    const { entityType, entityId, title, message, stripMessage, link, linkLabel, slug, status, iconType, orderNumber, endDate } = body;
 
     if (!ENTITY_TYPES.includes(entityType)) {
       return errorResponse("entityType is required", 400);
@@ -167,6 +167,7 @@ export async function POST(request) {
       status: status || "active",
       iconType: iconType || "announcement",
       orderNumber: orderNumber ?? 0,
+      endDate: endDate != null && endDate !== "" ? new Date(endDate) : null,
     });
 
     const withPaths = await attachHierarchyPaths([doc]);

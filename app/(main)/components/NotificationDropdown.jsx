@@ -106,7 +106,7 @@ export default function NotificationDropdown() {
         ...(segments.definition && { definition: segments.definition }),
         limit: "10",
       }).toString()}`
-      : `${basePath}/api/notification/list?limit=10&skip=0`;
+      : `${basePath}/api/notification/list?limit=10&skip=0&forHeader=1`;
 
     fetch(url, { headers: token ? { Authorization: `Bearer ${token}` } : {} })
       .then((res) => res.json())

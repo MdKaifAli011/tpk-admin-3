@@ -170,7 +170,8 @@ const NotificationManagement = () => {
   const [formSlug, setFormSlug] = useState("");
   const [formStatus, setFormStatus] = useState("active");
   const [formIconType, setFormIconType] = useState("announcement");
-  // Create form: cascading hierarchy (Exam → Subject → Unit → Chapter → Topic → SubTopic → Definition)
+  const [formEndDate, setFormEndDate] = useState(""); // ISO date string or empty; after this date notification hides from header but stays on landing page
+  // Create form: cascading hierarchy
   const [formExamId, setFormExamId] = useState("");
   const [formSubjectId, setFormSubjectId] = useState("");
   const [formUnitId, setFormUnitId] = useState("");
@@ -561,6 +562,7 @@ const NotificationManagement = () => {
     setFormSlug("");
     setFormStatus("active");
     setFormIconType("announcement");
+    setFormEndDate("");
     setShowForm(true);
     requestAnimationFrame(() => {
       formSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -580,6 +582,7 @@ const NotificationManagement = () => {
     setFormSlug(n.slug || "");
     setFormStatus(n.status || "active");
     setFormIconType(n.iconType || "announcement");
+    setFormEndDate(n.endDate ? new Date(n.endDate).toISOString().slice(0, 16) : "");
     setShowForm(true);
     requestAnimationFrame(() => {
       formSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -609,6 +612,7 @@ const NotificationManagement = () => {
         slug: formSlug.trim() || undefined,
         status: formStatus,
         iconType: formIconType,
+        endDate: formEndDate.trim() ? formEndDate.trim() : null,
       };
       if (editingId) {
         await api.put(`/notification/${editingId}`, payload);
@@ -651,6 +655,7 @@ const NotificationManagement = () => {
         iconType: n.iconType ?? "announcement",
         entityType: n.entityType,
         entityId: n.entityType === "general" ? null : (n.entityId?._id || n.entityId),
+        endDate: n.endDate ?? null,
       });
       success(`Notification ${next === "active" ? "activated" : "deactivated"}`);
       fetchNotifications();
@@ -824,6 +829,17 @@ const NotificationManagement = () => {
                     <option key={o.value} value={o.value}>{o.label}</option>
                   ))}
                 </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">End date (optional)</label>
+                <input
+                  type="datetime-local"
+                  value={formEndDate}
+                  onChange={(e) => setFormEndDate(e.target.value)}
+                  className="w-full max-w-xs px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
+                />
+                <p className="text-xs text-gray-500 mt-1.5">After this date the notification stops showing in the header dropdown but still appears on the Notification landing page.</p>
               </div>
 
               <div className="flex flex-wrap items-center justify-end gap-3 pt-4 border-t border-gray-200">
@@ -1129,6 +1145,7 @@ const NotificationManagement = () => {
                             <th scope="col" className="px-4 py-2.5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider min-w-[180px]">Title</th>
                             <th scope="col" className="px-4 py-2.5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider min-w-[200px]">Strip message (one line for banner)</th>
                             <th scope="col" className="px-4 py-2.5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-36">Content</th>
+                            <th scope="col" className="px-4 py-2.5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-32">End date</th>
                             <th scope="col" className="px-4 py-2.5 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider w-24">Status</th>
                             <th scope="col" className="px-4 py-2.5 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider w-32">Actions</th>
                           </tr>
@@ -1149,6 +1166,9 @@ const NotificationManagement = () => {
                                 <span className={hasContent(n) ? "text-gray-700" : "text-gray-400 italic"}>
                                   {contentDate(n) || "unavailable"}
                                 </span>
+                              </td>
+                              <td className="px-4 py-3 text-sm whitespace-nowrap text-gray-600">
+                                {n.endDate ? formatDate(n.endDate) : "—"}
                               </td>
                               <td className="px-4 py-3 text-center">
                                 <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${n.status === "active" ? "bg-green-100 text-green-800" : n.status === "draft" ? "bg-yellow-100 text-yellow-800" : "bg-gray-100 text-gray-800"}`}>

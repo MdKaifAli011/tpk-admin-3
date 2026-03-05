@@ -153,11 +153,21 @@ export async function GET(request) {
 
     const limit = Math.min(parseInt(searchParams.get("limit") || "50", 10), 100);
 
+    // Exclude notifications that have passed their endDate (header should not show them)
+    const endDateFilter = {
+      $or: [
+        { endDate: null },
+        { endDate: { $exists: false } },
+        { endDate: { $gte: new Date() } },
+      ],
+    };
+
     // No context (e.g. main/landing page): return general only (no exam selected yet)
     if (context.examId == null && context.subjectId == null && context.unitId == null && context.chapterId == null && context.topicId == null && context.subTopicId == null && context.definitionId == null) {
       const list = await Notification.find({
         status: "active",
         entityType: "general",
+        ...endDateFilter,
       })
         .sort({ orderNumber: 1, createdAt: -1 })
         .limit(limit)
@@ -187,6 +197,7 @@ export async function GET(request) {
     const list = await Notification.find({
       status: "active",
       $or: conditions,
+      ...endDateFilter,
     })
       .sort({ orderNumber: 1, createdAt: -1 })
       .limit(limit)
