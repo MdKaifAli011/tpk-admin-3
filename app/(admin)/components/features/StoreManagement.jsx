@@ -551,13 +551,12 @@ export default function StoreManagement() {
                         <td className="px-4 py-3 text-sm font-semibold text-gray-900">{formatPrice(p.price)}</td>
                         <td className="px-4 py-3 text-center">
                           <span
-                            className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
-                              p.status === "active"
+                            className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${p.status === "active"
                                 ? "bg-green-100 text-green-800"
                                 : p.status === "draft"
                                   ? "bg-yellow-100 text-yellow-800"
                                   : "bg-gray-100 text-gray-800"
-                            }`}
+                              }`}
                           >
                             {p.status}
                           </span>
@@ -583,11 +582,10 @@ export default function StoreManagement() {
                             <button
                               type="button"
                               onClick={() => handleToggleStatus(p)}
-                              className={`p-1.5 rounded-lg ${
-                                p.status === "active"
+                              className={`p-1.5 rounded-lg ${p.status === "active"
                                   ? "text-red-600 hover:bg-red-50"
                                   : "text-green-600 hover:bg-green-50"
-                              }`}
+                                }`}
                               title={p.status === "active" ? "Deactivate" : "Activate"}
                             >
                               <FaPowerOff className="w-4 h-4" />

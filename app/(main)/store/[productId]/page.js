@@ -33,16 +33,41 @@ const DEFAULT_COURSE_DETAILS = [
 ];
 
 const DEFAULT_FEATURES = [
-  { icon: "video_library", title: "Live Classes", desc: "Interactive 2-way sessions where you can ask doubts in real-time." },
-  { icon: "assignment", title: "Study Material", desc: "Comprehensive eBooks and practice modules designed by experts." },
-  { icon: "analytics", title: "Performance Analysis", desc: "Detailed insights into your strengths and weaknesses." },
-  { icon: "support_agent", title: "Doubt Clinic", desc: "24/7 dedicated support to clear any conceptual hurdles." },
+  {
+    icon: "video_library",
+    title: "Live Classes",
+    desc: "Interactive 2-way sessions where you can ask doubts in real-time.",
+  },
+  {
+    icon: "assignment",
+    title: "Study Material",
+    desc: "Comprehensive eBooks and practice modules designed by experts.",
+  },
+  {
+    icon: "analytics",
+    title: "Performance Analysis",
+    desc: "Detailed insights into your strengths and weaknesses.",
+  },
+  {
+    icon: "support_agent",
+    title: "Doubt Clinic",
+    desc: "24/7 dedicated support to clear any conceptual hurdles.",
+  },
 ];
 
 const DEFAULT_FAQ = [
-  { q: "How will I access the course after purchase?", a: "After enrollment, you will get login credentials and can access all materials from your student dashboard." },
-  { q: "What is the duration of access?", a: "Most courses come with lifetime access unless otherwise specified. Check the product details for exact validity." },
-  { q: "Can I get a refund?", a: "Please refer to our refund policy. For any queries, contact our support team." },
+  {
+    q: "How will I access the course after purchase?",
+    a: "After enrollment, you will get login credentials and can access all materials from your student dashboard.",
+  },
+  {
+    q: "What is the duration of access?",
+    a: "Most courses come with lifetime access unless otherwise specified. Check the product details for exact validity.",
+  },
+  {
+    q: "Can I get a refund?",
+    a: "Please refer to our refund policy. For any queries, contact our support team.",
+  },
 ];
 
 const SIDEBAR_CALL_PHONE = "+15107069331";
@@ -68,9 +93,15 @@ export default function ProductDetailPage() {
         if (cancelled || !data?.success) return;
         setProduct(data?.data ?? null);
       })
-      .catch(() => { if (!cancelled) setProduct(null); })
-      .finally(() => { if (!cancelled) setLoading(false); });
-    return () => { cancelled = true; };
+      .catch(() => {
+        if (!cancelled) setProduct(null);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [productId]);
 
   if (loading) {
@@ -107,22 +138,37 @@ export default function ProductDetailPage() {
 
   const productForCart = { ...product, id: product.slug || product._id };
   const formatPrice = (p) =>
-    p != null && p !== "" ? new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(Number(p)) : "—";
+    p != null && p !== ""
+      ? new Intl.NumberFormat("en-IN", {
+          style: "currency",
+          currency: "INR",
+          maximumFractionDigits: 0,
+        }).format(Number(p))
+      : "—";
 
   const discount =
     product.originalPrice > 0
-      ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
+      ? Math.round(
+          ((product.originalPrice - product.price) / product.originalPrice) *
+            100,
+        )
       : 0;
 
   const rating = product.rating != null ? Number(product.rating) : 5;
   const reviewCount = product.reviews != null ? Number(product.reviews) : 0;
-  const descriptionTrimmed = product.description != null ? String(product.description).trim() : "";
-  const sidebarDetails = (product.courseDetails && product.courseDetails.length > 0)
-    ? product.courseDetails
-    : DEFAULT_COURSE_DETAILS;
+  const descriptionTrimmed =
+    product.description != null ? String(product.description).trim() : "";
+  const sidebarDetails =
+    product.courseDetails && product.courseDetails.length > 0
+      ? product.courseDetails
+      : DEFAULT_COURSE_DETAILS;
   const callPhone = SIDEBAR_CALL_PHONE;
-  const featureCards = (product.featureCards && product.featureCards.length > 0) ? product.featureCards : DEFAULT_FEATURES;
-  const faqList = (product.faq && product.faq.length > 0) ? product.faq : DEFAULT_FAQ;
+  const featureCards =
+    product.featureCards && product.featureCards.length > 0
+      ? product.featureCards
+      : DEFAULT_FEATURES;
+  const faqList =
+    product.faq && product.faq.length > 0 ? product.faq : DEFAULT_FAQ;
 
   return (
     <>
@@ -141,15 +187,28 @@ export default function ProductDetailPage() {
 
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
             {/* Breadcrumb */}
-            <nav className="flex items-center gap-1.5 mb-4" aria-label="Breadcrumb">
-              <Link href="/" className="text-sm font-medium text-slate-500 hover:text-indigo-600 transition-colors">
+            <nav
+              className="flex items-center gap-1.5 mb-4"
+              aria-label="Breadcrumb"
+            >
+              <Link
+                href="/"
+                className="text-sm font-medium text-slate-500 hover:text-indigo-600 transition-colors"
+              >
                 Home
               </Link>
-              <span className="text-slate-300 select-none" aria-hidden>/</span>
-              <Link href="/store" className="text-sm font-medium text-slate-500 hover:text-indigo-600 transition-colors truncate max-w-[200px] sm:max-w-none">
+              <span className="text-slate-300 select-none" aria-hidden>
+                /
+              </span>
+              <Link
+                href="/store"
+                className="text-sm font-medium text-slate-500 hover:text-indigo-600 transition-colors truncate max-w-[200px] sm:max-w-none"
+              >
                 Store
               </Link>
-              <span className="text-slate-300 select-none" aria-hidden>/</span>
+              <span className="text-slate-300 select-none" aria-hidden>
+                /
+              </span>
               <span className="text-sm font-semibold text-slate-900 bg-slate-100 rounded-md px-2.5 py-1 truncate max-w-[220px] sm:max-w-md">
                 {product.name}
               </span>
@@ -163,7 +222,8 @@ export default function ProductDetailPage() {
                 </h1>
 
                 <p className="text-base sm:text-[17px] text-slate-700 leading-relaxed max-w-2xl mb-5">
-                  {descriptionTrimmed || "Premium resource designed for exam success with expert guidance and focused practice."}
+                  {descriptionTrimmed ||
+                    "Premium resource designed for exam success with expert guidance and focused practice."}
                 </p>
 
                 {/* Meta Row — same as course */}
@@ -174,13 +234,18 @@ export default function ProductDetailPage() {
                         <FaStar
                           key={i}
                           className={`w-3.5 h-3.5 ${
-                            i <= Math.floor(rating) ? "fill-amber-400 text-amber-400" : "fill-slate-200 text-slate-200"
+                            i <= Math.floor(rating)
+                              ? "fill-amber-400 text-amber-400"
+                              : "fill-slate-200 text-slate-200"
                           }`}
                         />
                       ))}
                     </div>
                     <span className="text-sm text-slate-600">
-                      <span className="font-semibold text-slate-900">{rating}</span> · {reviewCount} rating
+                      <span className="font-semibold text-slate-900">
+                        {rating}
+                      </span>{" "}
+                      · {reviewCount} rating
                     </span>
                   </div>
                   <span className="hidden sm:inline h-3 w-px bg-slate-200 shrink-0" />
@@ -298,9 +363,16 @@ export default function ProductDetailPage() {
                   </h2>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     {featureCards.map((f, i) => (
-                      <div key={i} className="p-6 bg-slate-50 rounded-xl border border-slate-200">
-                        <span className="text-indigo-600 text-3xl mb-4 inline-block">📚</span>
-                        <h3 className="text-lg font-bold text-slate-900 mb-2">{f.title}</h3>
+                      <div
+                        key={i}
+                        className="p-6 bg-slate-50 rounded-xl border border-slate-200"
+                      >
+                        <span className="text-indigo-600 text-3xl mb-4 inline-block">
+                          📚
+                        </span>
+                        <h3 className="text-lg font-bold text-slate-900 mb-2">
+                          {f.title}
+                        </h3>
                         <p className="text-sm text-slate-600">{f.desc}</p>
                       </div>
                     ))}
@@ -322,11 +394,17 @@ export default function ProductDetailPage() {
                       >
                         <button
                           type="button"
-                          onClick={() => setExpandedFaq(expandedFaq === i ? null : i)}
+                          onClick={() =>
+                            setExpandedFaq(expandedFaq === i ? null : i)
+                          }
                           className="w-full flex items-center justify-between px-5 py-4 text-left font-bold text-slate-900 hover:bg-slate-50 transition-colors"
                         >
                           {item.q}
-                          {expandedFaq === i ? <FaChevronUp className="w-4 h-4 shrink-0" /> : <FaChevronDown className="w-4 h-4 shrink-0" />}
+                          {expandedFaq === i ? (
+                            <FaChevronUp className="w-4 h-4 shrink-0" />
+                          ) : (
+                            <FaChevronDown className="w-4 h-4 shrink-0" />
+                          )}
                         </button>
                         {expandedFaq === i && (
                           <div className="px-5 pb-4 pt-0">
@@ -341,8 +419,15 @@ export default function ProductDetailPage() {
             </div>
 
             {/* Right — Sticky sidebar (same as course: label #21A58E, value #445050) */}
-            <aside className="lg:col-span-4 order-2 min-w-0 w-full" role="complementary" aria-label="Product summary">
-              <div className="sticky z-10 w-full" style={{ top: "calc(var(--navbar-height, 7.5rem) + 0.5rem)" }}>
+            <aside
+              className="lg:col-span-4 order-2 min-w-0 w-full"
+              role="complementary"
+              aria-label="Product summary"
+            >
+              <div
+                className="sticky z-10 w-full"
+                style={{ top: "calc(var(--navbar-height, 7.5rem) + 0.5rem)" }}
+              >
                 <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
                   <div className="p-4 sm:p-5">
                     <div className="space-y-0">
@@ -350,7 +435,9 @@ export default function ProductDetailPage() {
                         <div
                           key={i}
                           className={`flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 sm:gap-3 py-2.5 text-sm ${
-                            i < sidebarDetails.length - 1 ? "border-b border-slate-100" : ""
+                            i < sidebarDetails.length - 1
+                              ? "border-b border-slate-100"
+                              : ""
                           }`}
                         >
                           <span className="font-medium shrink-0 text-sm text-[#21A58E]">

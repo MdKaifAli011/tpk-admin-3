@@ -378,7 +378,7 @@ const SuccessModal = ({ isOpen, onClose, title, message }) => {
 
 /* ---------- Thread Detail View ---------- */
 // hierarchy: { examId, subjectId, unitId, chapterId, topicId, subTopicId, definitionId } — slug is unique per level
-const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal, examImage, hierarchy = {} }) => {
+const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal, examImage, hierarchy = {}, onOpenThread }) => {
   const [thread, setThread] = useState(null);
   const [replies, setReplies] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -391,6 +391,8 @@ const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal, examImage,
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successContent, setSuccessContent] = useState({ title: "", message: "" });
   const [discussionBanner, setDiscussionBanner] = useState(null);
+  const [relatedThreads, setRelatedThreads] = useState([]);
+  const [relatedLoading, setRelatedLoading] = useState(false);
   const editorRef = useRef(null);
   const repliesRef = useRef(null);
   const searchTimeout = useRef(null);
@@ -485,6 +487,38 @@ const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal, examImage,
   useEffect(() => {
     fetchDetail();
   }, [fetchDetail]);
+
+  const fetchRelatedThreads = useCallback(async () => {
+    const hasHierarchy = hierarchy.examId || hierarchy.subjectId || hierarchy.chapterId || hierarchy.topicId || hierarchy.unitId || hierarchy.subTopicId || hierarchy.definitionId;
+    if (!hasHierarchy || !slug) return;
+    setRelatedLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (hierarchy.examId) params.set("examId", hierarchy.examId);
+      if (hierarchy.subjectId) params.set("subjectId", hierarchy.subjectId);
+      if (hierarchy.unitId) params.set("unitId", hierarchy.unitId);
+      if (hierarchy.chapterId) params.set("chapterId", hierarchy.chapterId);
+      if (hierarchy.topicId) params.set("topicId", hierarchy.topicId);
+      if (hierarchy.subTopicId) params.set("subTopicId", hierarchy.subTopicId);
+      if (hierarchy.definitionId) params.set("definitionId", hierarchy.definitionId);
+      params.set("limit", "6");
+      params.set("page", "1");
+      const res = await api.get(`/discussion/threads?${params.toString()}`);
+      const list = res?.data?.data ?? [];
+      const arr = Array.isArray(list) ? list : [];
+      const filtered = arr.filter((t) => t.slug && t.slug !== slug);
+      setRelatedThreads(filtered.slice(0, 5));
+    } catch (err) {
+      console.error("Failed to fetch related threads", err);
+      setRelatedThreads([]);
+    } finally {
+      setRelatedLoading(false);
+    }
+  }, [hierarchy.examId, hierarchy.subjectId, hierarchy.unitId, hierarchy.chapterId, hierarchy.topicId, hierarchy.subTopicId, hierarchy.definitionId, slug]);
+
+  useEffect(() => {
+    if (thread) fetchRelatedThreads();
+  }, [thread, fetchRelatedThreads]);
 
   const handleVote = async (targetType, id, voteType) => {
     try {
@@ -935,23 +969,44 @@ const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal, examImage,
         {/* Sidebar */}
         <div className="lg:col-span-1 flex flex-col gap-6">
           <Card variant="standard" className="p-5 border-gray-200/60 shadow-sm">
-            <h3 className="text-[11px] font-extrabold text-gray-900 uppercase tracking-widest mb-4 border-b border-gray-50 pb-3">Related Topics</h3>
-            <div className="space-y-5">
-              {[
-                { title: "Difference between Taxon and Category?", meta: "8 replies • Biology • Chapter 1", active: true },
-                { title: "How to memorize the hierarchy of classification?", meta: "24 replies • Biology • Chapter 1" },
-                { title: "Best reference books for Botany?", meta: "45 replies • General" }
-              ].map((item, i) => (
-                <a key={i} href="#" className="block group">
-                  <p className={`text-[13px] font-bold leading-snug mb-1 transition-colors ${item.active ? 'text-blue-600' : 'text-gray-700 group-hover:text-blue-600'}`}>
-                    {item.title}
-                  </p>
-                  <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">{item.meta}</p>
-                </a>
-              ))}
-            </div>
-            <button className="w-full mt-6 py-2 px-4 rounded-xl border border-gray-200 text-[10px] font-extrabold text-gray-500 uppercase tracking-widest hover:bg-gray-50 transition-all border-dashed">
-              View all related discussions
+            <h3 className="text-[11px] font-extrabold text-gray-900 uppercase tracking-widest mb-4 border-b border-gray-50 pb-3">Related threads</h3>
+            {relatedLoading ? (
+              <div className="space-y-3">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="h-12 bg-gray-100 rounded-lg animate-pulse" aria-hidden />
+                ))}
+              </div>
+            ) : relatedThreads.length === 0 ? (
+              <p className="text-[11px] text-gray-500 font-medium">No other threads in this section yet.</p>
+            ) : (
+              <div className="space-y-5">
+                {relatedThreads.map((t) => {
+                  const replyCount = t.replyCount ?? 0;
+                  const chapterName = t.chapterId?.name || t.subjectId?.name || "General";
+                  const meta = `${replyCount} ${replyCount === 1 ? "reply" : "replies"} • ${chapterName}`;
+                  const isCurrent = t.slug === slug;
+                  return (
+                    <button
+                      key={t._id}
+                      type="button"
+                      onClick={() => onOpenThread && onOpenThread(t)}
+                      className="w-full text-left block group"
+                    >
+                      <p className={`text-[13px] font-bold leading-snug mb-1 transition-colors line-clamp-2 ${isCurrent ? "text-blue-600" : "text-gray-700 group-hover:text-blue-600"}`}>
+                        {t.title}
+                      </p>
+                      <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">{meta}</p>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={onBack}
+              className="w-full mt-6 py-2 px-4 rounded-xl border border-gray-200 text-[10px] font-extrabold text-gray-500 uppercase tracking-widest hover:bg-gray-50 transition-all border-dashed"
+            >
+              View all discussions
             </button>
           </Card>
           {/*Academic Integrity*/}
@@ -1646,6 +1701,7 @@ const DiscussionForumTab = ({ entityName, entityType, examId, examSlug, subjectI
             <ThreadDetail
               slug={currentThreadSlug}
               onBack={handleBack}
+              onOpenThread={handleThreadClick}
               guestIdentity={guestIdentity}
               onShowAuthModal={(formId, onSuccess) => {
                 setPendingAction({ formId, onSuccess });
