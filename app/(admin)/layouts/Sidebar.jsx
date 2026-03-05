@@ -102,6 +102,7 @@ const ALL_MENU_ITEMS = [
       { name: "Role Management", href: "/admin/user-role" },
       { name: "Overview Comments", href: "/admin/overview-comments" },
       { name: "Notifications", href: "/admin/notification" },
+      { name: "Store", href: "/admin/store" },
       { name: "Import Self Study Data", href: "/admin/bulk-import" },
       { name: "Meta Import", href: "/admin/seo-import" },
       { name: "URL Export", href: "/admin/url-export" },
