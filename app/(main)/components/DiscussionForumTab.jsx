@@ -1389,7 +1389,7 @@ const DiscussionForumTab = ({ entityName, entityType, examId, examSlug, subjectI
       if (definitionId) params.append("definitionId", definitionId);
 
       if (search) params.append("search", search);
-      if (filter === "New") params.append("sort", "new");
+      if (filter === "New" || filter === "All") params.append("sort", "new"); // recent first at top
       if (filter === "Hot") params.append("sort", "hot");
       if (selectedTag !== "All Categories") params.append("tag", selectedTag);
       params.append("page", listPage);

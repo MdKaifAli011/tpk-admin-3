@@ -51,6 +51,7 @@ const ThreadDetailModeration = () => {
     const [isDataLoading, setIsDataLoading] = useState(true);
     const [replySearch, setReplySearch] = useState("");
     const [replyFilter, setReplyFilter] = useState("all"); // "all", "pending", "approved", "new"
+    const [replySortOrder, setReplySortOrder] = useState("newest"); // "newest" | "oldest" | "top" — recent top by default
     const [lastViewedAt, setLastViewedAt] = useState(null);
     const { toasts, removeToast, success, error: showError } = useToast();
     const searchTimeout = React.useRef(null);
@@ -88,6 +89,7 @@ const ThreadDetailModeration = () => {
             const params = new URLSearchParams();
             params.set("replyLimit", "1000");
             if (search) params.set("replySearch", search);
+            params.set("sort", "new"); // fetch newest first; client applies replySortOrder
             const url = `/discussion/threads/${slug}?${params.toString()}${hierarchyQuery ? `&${hierarchyQuery}` : ""}`;
             const res = await api.get(url);
             if (res.data.success) {
@@ -114,7 +116,7 @@ const ThreadDetailModeration = () => {
 
     useEffect(() => {
         if (slug) fetchDetail(replySearch);
-    }, [slug, hierarchyQuery]); // hierarchyQuery from URL so correct thread is fetched
+    }, [slug, hierarchyQuery]); // reply sort is applied client-side
 
     const handleSearchChange = (e) => {
         const value = e.target.value;
@@ -382,15 +384,33 @@ const ThreadDetailModeration = () => {
         return count;
     };
 
-    // Organize replies into a tree structure first, then apply filter
+    // Sort reply nodes (roots or flat list) by replySortOrder
+    const sortReplyNodes = (nodes, order) => {
+        if (!nodes?.length) return;
+        if (order === "newest") {
+            nodes.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        } else if (order === "oldest") {
+            nodes.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+        } else if (order === "top") {
+            const score = (r) => (r.upvotes?.length ?? 0) - (r.downvotes?.length ?? 0);
+            nodes.sort((a, b) => score(b) - score(a) || new Date(b.createdAt) - new Date(a.createdAt));
+        }
+        nodes.forEach((n) => {
+            if (n.children?.length) sortReplyNodes(n.children, order);
+        });
+    };
+
+    // Organize replies into a tree structure first, then apply filter and sort
     const organizedReplies = useMemo(() => {
         if (replySearch) {
-            // For search, return flat filtered list
-            if (replyFilter === "all") return replies;
-            if (replyFilter === "pending") return replies.filter(r => !r.isApproved);
-            if (replyFilter === "approved") return replies.filter(r => r.isApproved);
-            if (replyFilter === "new") return replies.filter(r => isNewReply(r.createdAt));
-            return replies;
+            // For search, return flat filtered list, sorted
+            let list = replies;
+            if (replyFilter === "pending") list = replies.filter(r => !r.isApproved);
+            else if (replyFilter === "approved") list = replies.filter(r => r.isApproved);
+            else if (replyFilter === "new") list = replies.filter(r => isNewReply(r.createdAt));
+            const arr = [...list];
+            sortReplyNodes(arr, replySortOrder);
+            return arr;
         }
 
         // Build complete tree structure first
@@ -411,13 +431,16 @@ const ThreadDetailModeration = () => {
             }
         });
 
+        // Sort roots and each node's children by replySortOrder
+        sortReplyNodes(roots, replySortOrder);
+
         // Now apply filter while preserving tree structure
         if (replyFilter === "all") {
             return roots;
         }
 
         return filterTree(roots, replyFilter);
-    }, [replies, replyFilter, replySearch, lastViewedAt]);
+    }, [replies, replyFilter, replySearch, lastViewedAt, replySortOrder]);
 
     // Calculate filtered reply count
     const filteredReplyCount = useMemo(() => {
@@ -714,7 +737,44 @@ const ThreadDetailModeration = () => {
                                     </div>
                                 )}
                             </div>
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-3 flex-wrap">
+                                {/* Reply sort: Recent top (default), Oldest first, Most liked */}
+                                <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1 border border-gray-200">
+                                    <span className="px-2 text-[10px] font-bold text-gray-500 uppercase tracking-wider self-center">Sort</span>
+                                    <button
+                                        onClick={() => setReplySortOrder("newest")}
+                                        className={`px-3 py-2 text-xs font-bold rounded-md transition-all ${
+                                            replySortOrder === "newest"
+                                                ? "bg-teal-100 text-teal-800 shadow-sm border border-teal-200"
+                                                : "text-gray-600 hover:text-gray-900"
+                                        }`}
+                                        title="Newest replies first"
+                                    >
+                                        Recent top
+                                    </button>
+                                    <button
+                                        onClick={() => setReplySortOrder("oldest")}
+                                        className={`px-3 py-2 text-xs font-bold rounded-md transition-all ${
+                                            replySortOrder === "oldest"
+                                                ? "bg-teal-100 text-teal-800 shadow-sm border border-teal-200"
+                                                : "text-gray-600 hover:text-gray-900"
+                                        }`}
+                                        title="Oldest replies first"
+                                    >
+                                        Oldest first
+                                    </button>
+                                    <button
+                                        onClick={() => setReplySortOrder("top")}
+                                        className={`px-3 py-2 text-xs font-bold rounded-md transition-all ${
+                                            replySortOrder === "top"
+                                                ? "bg-teal-100 text-teal-800 shadow-sm border border-teal-200"
+                                                : "text-gray-600 hover:text-gray-900"
+                                        }`}
+                                        title="Most upvoted first"
+                                    >
+                                        Most liked
+                                    </button>
+                                </div>
                                 {/* Approval Status Filter */}
                                 <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1 border border-gray-200">
                                     <button
