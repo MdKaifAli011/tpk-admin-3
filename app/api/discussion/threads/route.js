@@ -211,6 +211,26 @@ async function runListCascade(searchParams, params) {
     }
   }
 
+  // 4) Same-branch fallback: no threads at current/parent/child — show other threads from same exam so page isn't blank
+  if (ids.examId) {
+    const sameBranchQuery = { ...baseQuery, examId: ids.examId };
+    total = await Thread.countDocuments(sameBranchQuery);
+    if (total > 0) {
+      const threads = await Thread.find(sameBranchQuery)
+        .sort(sortOption)
+        .skip(skip)
+        .limit(limit)
+        .populate(populateOptions)
+        .lean();
+      return {
+        success: true,
+        data: threads,
+        listSource: "same_branch",
+        pagination: { total, page, limit, pages: Math.ceil(total / limit) },
+      };
+    }
+  }
+
   return {
     success: true,
     data: [],

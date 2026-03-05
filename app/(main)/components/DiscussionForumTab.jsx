@@ -1358,6 +1358,7 @@ const DiscussionForumTab = ({ entityName, entityType, examId, examSlug, subjectI
 
   const [threads, setThreads] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [listSource, setListSource] = useState(null); // "current" | "parent" | "child" | "same_branch" | "none"
   const [search, setSearch] = useState("");
   const [listPage, setListPage] = useState(1);
   const [listPagination, setListPagination] = useState({ pages: 1, total: 0 });
@@ -1399,6 +1400,7 @@ const DiscussionForumTab = ({ entityName, entityType, examId, examSlug, subjectI
       if (res.data.success) {
         setThreads(res.data.data);
         if (res.data.pagination) setListPagination(res.data.pagination);
+        setListSource(res.data.listSource ?? null);
       }
     } catch (error) {
       console.error("Error fetching threads", error);
@@ -1786,12 +1788,18 @@ const DiscussionForumTab = ({ entityName, entityType, examId, examSlug, subjectI
                 </div>
               </Card>
 
+              {/* Same-branch fallback notice: no threads at this level — showing other threads from this exam */}
+              {listSource === "same_branch" && threads.length > 0 && (
+                <div className="flex items-center gap-2 text-[11px] text-amber-800 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+                  <FaComment className="text-amber-600 shrink-0" size={12} />
+                  <span><strong>No discussions at this level yet.</strong> Showing other threads from this exam so you can browse and participate.</span>
+                </div>
+              )}
+
               {/* Thread List */}
               <div className="space-y-3">
                 {loading ? (
-                  <div className="py-8">
-                    <ExamAreaLoading variant="compact" message="Loading threads..." />
-                  </div>
+                  <div className="min-h-[180px]" aria-busy="true" aria-label="Loading threads" />
                 ) : threads.length > 0 ? (
                   <>
                     {threads.map(thread => <ThreadCard key={thread._id} thread={thread} onClick={handleThreadClick} />)}
