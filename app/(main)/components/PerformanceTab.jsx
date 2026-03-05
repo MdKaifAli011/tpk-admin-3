@@ -25,6 +25,7 @@ import { fetchAllStudentTestResults } from "../lib/api";
 import { useStudent } from "../hooks/useStudent";
 import Button from "./Button";
 import Card from "./Card";
+import ExamAreaLoading from "./ExamAreaLoading";
 
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
 const authHref = (pathname, target) => {
@@ -374,18 +375,9 @@ const PerformanceTab = ({
     );
   }
 
-  // Loading state
+  // Loading state — same loader as tab switch for consistent feel
   if (loading) {
-    return (
-      <div className="space-y-4 px-3 sm:px-4 py-3 sm:py-4">
-        <div className="flex items-center justify-center py-12">
-          <div className="text-center">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-emerald-600 border-t-transparent mb-3"></div>
-            <p className="text-sm text-gray-600">Loading performance data...</p>
-          </div>
-        </div>
-      </div>
-    );
+    return <ExamAreaLoading variant="compact" message="Loading performance..." />;
   }
 
   // Error state

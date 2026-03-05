@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState, lazy, Suspense, useEffect, useMemo, useCallback, startTransition } from "react";
+import React, { useState, lazy, Suspense, useEffect, useMemo, useCallback, useRef } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { FaChartLine } from "react-icons/fa";
 import { ExamCardSkeleton } from "./SkeletonLoader";
 import Card from "./Card";
+import ExamAreaLoading from "./ExamAreaLoading";
 
 // Lazy load tabs for code splitting - only load when clicked (true lazy loading)
 // Using dynamic imports with no preloading to ensure components load only when needed
@@ -93,18 +94,34 @@ const TabsClient = ({
   // Initialize activeTab from URL, default to existing logic (Overview)
   const currentTabParam = searchParams.get("tab");
   const [activeTab, setActiveTab] = useState(() => fromUrlParam(currentTabParam));
-  const [loadedTabs, setLoadedTabs] = useState(new Set([fromUrlParam(currentTabParam)])); // Track loaded tabs
+  const [loadedTabs, setLoadedTabs] = useState(new Set([fromUrlParam(currentTabParam)]));
+  const [isTabTransitioning, setIsTabTransitioning] = useState(false);
+  const transitionTimerRef = useRef(null);
+  const MIN_LOADING_MS = 220;
+
+  const clearTransitionTimer = useCallback(() => {
+    if (transitionTimerRef.current) {
+      clearTimeout(transitionTimerRef.current);
+      transitionTimerRef.current = null;
+    }
+  }, []);
 
   // Sync state with URL changes (handling back/forward button)
   useEffect(() => {
     const tabFromUrl = fromUrlParam(searchParams.get("tab"));
     if (tabFromUrl !== activeTab) {
-      startTransition(() => {
-        setActiveTab(tabFromUrl);
-        setLoadedTabs(prev => new Set([...prev, tabFromUrl])); // Mark as loaded
-      });
+      clearTransitionTimer();
+      setIsTabTransitioning(true);
+      setActiveTab(tabFromUrl);
+      setLoadedTabs(prev => new Set([...prev, tabFromUrl]));
+      transitionTimerRef.current = setTimeout(() => {
+        setIsTabTransitioning(false);
+        transitionTimerRef.current = null;
+      }, MIN_LOADING_MS);
     }
-  }, [searchParams, activeTab]);
+  }, [searchParams, activeTab, clearTransitionTimer]);
+
+  useEffect(() => () => clearTransitionTimer(), [clearTransitionTimer]);
 
   // Prefetch tab on hover for better UX (optional optimization)
   const handleTabHover = useCallback((tab) => {
@@ -128,13 +145,17 @@ const TabsClient = ({
   }, [loadedTabs]);
 
   const handleTabChange = useCallback((tab) => {
-    if (tab === activeTab) return; // Prevent unnecessary re-renders
+    if (tab === activeTab) return;
 
-    // Use startTransition for smooth tab switching (non-blocking update)
-    startTransition(() => {
-      setActiveTab(tab);
-      setLoadedTabs(prev => new Set([...prev, tab])); // Mark as loaded
-    });
+    clearTransitionTimer();
+    setIsTabTransitioning(true);
+    setActiveTab(tab);
+    setLoadedTabs(prev => new Set([...prev, tab]));
+
+    transitionTimerRef.current = setTimeout(() => {
+      setIsTabTransitioning(false);
+      transitionTimerRef.current = null;
+    }, MIN_LOADING_MS);
 
     // Create new params to preserve existing query params if any
     const params = new URLSearchParams(searchParams.toString());
@@ -154,7 +175,7 @@ const TabsClient = ({
 
     // Replace URL without page reload/scroll reset
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-  }, [activeTab, searchParams, pathname, router]);
+  }, [activeTab, searchParams, pathname, router, clearTransitionTimer]);
 
   // Render only the active tab to prevent double loading animations
   // Use key prop based on activeTab to force complete remount when switching tabs
@@ -333,20 +354,15 @@ const TabsClient = ({
         </div>
       </nav>
 
-      {/* Tab Content with Lazy Loading */}
-      {/* Render only active tab to prevent double loading animations */}
-      {/* Key prop ensures complete remount when switching tabs, preventing double rendering */}
-      {/* Only wrap in Suspense if tab hasn't been loaded before to prevent flickering */}
+      {/* Tab Content: one loading animation on switch, then tab loads */}
       <div
-        className="text-gray-700 text-sm sm:text-base"
+        className="text-gray-700 text-sm sm:text-base min-h-[220px]"
         key={`tab-wrapper-${activeTab}`}
       >
-        {loadedTabs.has(activeTab) ? (
-          // Tab already loaded - render directly without Suspense to prevent flickering
-          tabContent
+        {isTabTransitioning ? (
+          <ExamAreaLoading variant="compact" message="Loading tab..." />
         ) : (
-          // Tab not loaded yet - use Suspense for lazy loading
-          <Suspense fallback={null}>
+          <Suspense fallback={<ExamAreaLoading variant="compact" message="Loading tab..." />}>
             {tabContent}
           </Suspense>
         )}
