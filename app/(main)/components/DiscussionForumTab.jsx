@@ -20,6 +20,7 @@ import Button from "./Button";
 import DiscussionMetadata from "./DiscussionMetadata";
 import VerticalBannerList from "./BannerCarousel";
 import DiscussionFormModal from "./DiscussionFormModal";
+import DiscussionForumSavePostModal from "./DiscussionForumSavePostModal";
 import { useStudent } from "../hooks/useStudent";
 import ExamAreaLoading from "./ExamAreaLoading";
 import Image from "next/image";
@@ -379,7 +380,7 @@ const SuccessModal = ({ isOpen, onClose, title, message }) => {
 
 /* ---------- Thread Detail View ---------- */
 // hierarchy: { examId, subjectId, unitId, chapterId, topicId, subTopicId, definitionId } — slug is unique per level
-const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal, examImage, hierarchy = {}, onOpenThread }) => {
+const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal, onOpenSavePostRegistrationModal, onStartPost, examImage, hierarchy = {}, onOpenThread }) => {
   const [thread, setThread] = useState(null);
   const [replies, setReplies] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -540,7 +541,7 @@ const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal, examImage,
     }
   };
 
-  const handleSave = async () => {
+  const performSubscribe = async () => {
     try {
       const headers = { "x-guest-id": guestIdentity.id, "x-guest-name": guestIdentity.name };
       const res = await api.post(`/discussion/threads/${slug}/subscribe${hierarchyQuery ? `?${hierarchyQuery.slice(1)}` : ""}`, {}, { headers });
@@ -550,6 +551,21 @@ const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal, examImage,
     } catch (err) {
       console.error("Save failed", err);
     }
+  };
+
+  const handleSave = () => {
+    if (typeof window !== "undefined") {
+      const token = localStorage.getItem("student_token");
+      if (!token && onOpenSavePostRegistrationModal) {
+        onOpenSavePostRegistrationModal(performSubscribe);
+        return;
+      }
+      if (!token) {
+        alert("Please log in to save this post.");
+        return;
+      }
+    }
+    performSubscribe();
   };
 
   const handleReport = async (targetType, id) => {
@@ -692,6 +708,17 @@ const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal, examImage,
           <FaArrowLeft size={10} /> Back to Forum
         </button>
         <div className="flex items-center gap-3">
+          {onStartPost && (
+            <Button
+              onClick={onStartPost}
+              variant="primary"
+              size="sm"
+              className="flex items-center gap-2 font-bold text-[11px] px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white border border-blue-600"
+            >
+              <FaPlus size={10} />
+              Start Post
+            </Button>
+          )}
           <Button
             onClick={handleSave}
             variant="ghost"
@@ -1432,6 +1459,8 @@ const DiscussionForumTab = ({ entityName, entityType, examId, examSlug, subjectI
   const [successContent, setSuccessContent] = useState({ title: "", message: "" });
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [pendingAction, setPendingAction] = useState(null);
+  const [showSavePostRegistrationModal, setShowSavePostRegistrationModal] = useState(false);
+  const savePostAfterRegistrationRef = useRef(null);
 
   const fetchThreads = useCallback(async () => {
     setLoading(true);
@@ -1708,6 +1737,11 @@ const DiscussionForumTab = ({ entityName, entityType, examId, examSlug, subjectI
                 setPendingAction({ formId, onSuccess });
                 setShowAuthModal(true);
               }}
+              onOpenSavePostRegistrationModal={(afterRegistration) => {
+                savePostAfterRegistrationRef.current = afterRegistration;
+                setShowSavePostRegistrationModal(true);
+              }}
+              onStartPost={handleStartCreate}
               examImage={getExamImage}
               hierarchy={{ examId, subjectId, unitId, chapterId, topicId, subTopicId, definitionId }}
             />
@@ -1928,6 +1962,22 @@ const DiscussionForumTab = ({ entityName, entityType, examId, examSlug, subjectI
             setPendingAction(null);
           }}
           formId={pendingAction?.formId || "Discussion-forum-post"}
+        />
+
+        <DiscussionForumSavePostModal
+          isOpen={showSavePostRegistrationModal}
+          onClose={() => {
+            setShowSavePostRegistrationModal(false);
+            savePostAfterRegistrationRef.current = null;
+          }}
+          onRegistrationSuccess={() => {
+            const callback = savePostAfterRegistrationRef.current;
+            if (callback) {
+              callback();
+            }
+            setShowSavePostRegistrationModal(false);
+            savePostAfterRegistrationRef.current = null;
+          }}
         />
       </div>
     </div>
