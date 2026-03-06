@@ -189,7 +189,11 @@ const RegisterPage = () => {
   /* ---------- Handlers ---------- */
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((p) => ({ ...p, [name]: value }));
+    let nextValue = value;
+    if (name === "phoneNumber") {
+      nextValue = value.replace(/\D/g, "");
+    }
+    setFormData((p) => ({ ...p, [name]: nextValue }));
     if (errors[name]) setErrors((p) => ({ ...p, [name]: "" }));
     setError(null);
   };
@@ -207,6 +211,7 @@ const RegisterPage = () => {
       countryCode: country.code,
     }));
     setShowCountryDropdown(false);
+    if (errors.phoneNumber) setErrors((p) => ({ ...p, phoneNumber: "" }));
   };
 
   /* ---------- Validation (keeps your original logic) ---------- */
@@ -262,6 +267,7 @@ const RegisterPage = () => {
 
   const handleBack = () => {
     setStepTransition(true);
+    setErrors({});
     setTimeout(() => {
       setStep(1);
       setStepTransition(false);
@@ -513,15 +519,16 @@ const RegisterPage = () => {
                               value={formData.firstName}
                               onChange={handleChange}
                               placeholder="John"
+                              aria-invalid={!!errors.firstName}
                               className={`w-full pl-9 pr-3 py-2.5 rounded-lg border-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition ${
                                 errors.firstName
-                                  ? "border-red-300 bg-red-50"
+                                  ? "border-red-400 bg-red-50"
                                   : "border-gray-200 bg-gray-50"
                                 }`}
                             />
                           </div>
                           {errors.firstName && (
-                            <p className="mt-1 text-xs text-red-600">
+                            <p className="mt-1.5 text-xs font-medium text-red-600" role="alert">
                               {errors.firstName}
                             </p>
                           )}
@@ -547,15 +554,16 @@ const RegisterPage = () => {
                               value={formData.lastName}
                               onChange={handleChange}
                               placeholder="Doe"
+                              aria-invalid={!!errors.lastName}
                               className={`w-full pl-9 pr-3 py-2.5 rounded-lg border-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition ${
                                 errors.lastName
-                                  ? "border-red-300 bg-red-50"
+                                  ? "border-red-400 bg-red-50"
                                   : "border-gray-200 bg-gray-50"
                                 }`}
                             />
                           </div>
                           {errors.lastName && (
-                            <p className="mt-1 text-xs text-red-600">
+                            <p className="mt-1.5 text-xs font-medium text-red-600" role="alert">
                               {errors.lastName}
                             </p>
                           )}
@@ -572,7 +580,7 @@ const RegisterPage = () => {
                               onClick={() => setShowClassDropdown((s) => !s)}
                               className={`w-full flex items-center justify-between pl-9 pr-3 py-2.5 rounded-lg border-2 text-sm ${
                                 errors.className
-                                  ? "border-red-300 bg-red-50"
+                                  ? "border-red-400 bg-red-50"
                                   : formData.className
                                     ? "border-indigo-500 bg-white"
                                     : "border-gray-200 bg-gray-50"
@@ -625,7 +633,7 @@ const RegisterPage = () => {
                             )}
                           </div>
                           {errors.className && (
-                            <p className="mt-1 text-xs text-red-600">
+                            <p className="mt-1.5 text-xs font-medium text-red-600" role="alert">
                               {errors.className}
                             </p>
                           )}
@@ -682,15 +690,16 @@ const RegisterPage = () => {
                               value={formData.email}
                               onChange={handleChange}
                               placeholder="john.doe@example.com"
+                              aria-invalid={!!errors.email}
                               className={`w-full pl-9 pr-3 py-2.5 rounded-lg border-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition ${
                                 errors.email
-                                  ? "border-red-300 bg-red-50"
+                                  ? "border-red-400 bg-red-50"
                                   : "border-gray-200 bg-gray-50"
                                 }`}
                             />
                           </div>
                           {errors.email && (
-                            <p className="mt-1 text-xs text-red-600">
+                            <p className="mt-1.5 text-xs font-medium text-red-600" role="alert">
                               {errors.email}
                             </p>
                           )}
@@ -788,22 +797,26 @@ const RegisterPage = () => {
                                 name="phoneNumber"
                                 type="tel"
                                 inputMode="numeric"
-                                autoComplete="tel"
+                                pattern="[0-9]*"
+                                autoComplete="tel-national"
+                                maxLength={14}
                                 value={formData.phoneNumber}
                                 onChange={handleChange}
                                 placeholder="1234567890"
+                                aria-invalid={!!errors.phoneNumber}
+                                aria-describedby={errors.phoneNumber ? "phoneNumber-error" : undefined}
                                 className={`w-full pl-20 pr-3 py-2.5 rounded-lg border-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition ${
                                   errors.phoneNumber
-                                    ? "border-red-300 bg-red-50"
+                                    ? "border-red-400 bg-red-50 text-red-900"
                                     : "border-gray-200 bg-gray-50"
-                                  }`}
+                                }`}
                               />
                               <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                                 <FaPhone className="text-xs text-gray-400" />
                               </div>
                             </div>
                             {errors.phoneNumber && (
-                              <p className="mt-1 text-xs text-red-600">
+                              <p id="phoneNumber-error" className="mt-1.5 text-xs font-medium text-red-600" role="alert">
                                 {errors.phoneNumber}
                               </p>
                             )}
@@ -831,9 +844,10 @@ const RegisterPage = () => {
                               value={formData.password}
                               onChange={handleChange}
                               placeholder="Minimum 6 characters"
+                              aria-invalid={!!errors.password}
                               className={`w-full pl-9 pr-12 py-2.5 rounded-lg border-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition ${
                                 errors.password
-                                  ? "border-red-300 bg-red-50"
+                                  ? "border-red-400 bg-red-50"
                                   : "border-gray-200 bg-gray-50"
                                 }`}
                             />
@@ -850,7 +864,7 @@ const RegisterPage = () => {
                             </button>
                           </div>
                           {errors.password && (
-                            <p className="mt-1 text-xs text-red-600">
+                            <p className="mt-1.5 text-xs font-medium text-red-600" role="alert">
                               {errors.password}
                             </p>
                           )}
@@ -878,9 +892,10 @@ const RegisterPage = () => {
                               value={formData.confirmPassword}
                               onChange={handleChange}
                               placeholder="Re-enter your password"
+                              aria-invalid={!!errors.confirmPassword}
                               className={`w-full pl-9 pr-12 py-2.5 rounded-lg border-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition ${
                                 errors.confirmPassword
-                                  ? "border-red-300 bg-red-50"
+                                  ? "border-red-400 bg-red-50"
                                   : "border-gray-200 bg-gray-50"
                                 }`}
                             />
@@ -897,7 +912,7 @@ const RegisterPage = () => {
                             </button>
                           </div>
                           {errors.confirmPassword && (
-                            <p className="mt-1 text-xs text-red-600">
+                            <p className="mt-1.5 text-xs font-medium text-red-600" role="alert">
                               {errors.confirmPassword}
                             </p>
                           )}

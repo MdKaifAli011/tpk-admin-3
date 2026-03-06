@@ -3,6 +3,12 @@ import bcrypt from "bcryptjs";
 
 const studentSchema = new mongoose.Schema(
   {
+    // Numeric public student id (not Mongo ObjectId). Auto-assigned on save.
+    // Used for things like folder naming: /discussion/[examName]/[studentId]/...
+    publicId: {
+      type: Number,
+      default: null,
+    },
     firstName: {
       type: String,
       required: [true, "First name is required"],
@@ -76,6 +82,25 @@ studentSchema.pre("save", async function (next) {
   }
 });
 
+// Assign sequential numeric publicId on first save (if missing)
+studentSchema.pre("save", async function (next) {
+  if (this.publicId !== null && this.publicId !== undefined) return next();
+  try {
+    const UploadCounter =
+      mongoose.models.UploadCounter ||
+      (await import("./UploadCounter.js")).default;
+    const counter = await UploadCounter.findOneAndUpdate(
+      { path: "student/publicId" },
+      { $inc: { last: 1 } },
+      { new: true, upsert: true, setDefaultsOnInsert: true }
+    );
+    this.publicId = counter?.last ?? 1;
+    return next();
+  } catch (error) {
+    return next(error);
+  }
+});
+
 // Method to compare password
 studentSchema.methods.comparePassword = async function (candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
@@ -93,6 +118,7 @@ studentSchema.methods.toJSON = function () {
 studentSchema.index({ status: 1 });
 studentSchema.index({ className: 1 });
 studentSchema.index({ prepared: 1 });
+studentSchema.index({ publicId: 1 }, { unique: true, sparse: true });
 
 // Helper function to perform cascading delete for a student
 // This ensures all related data is deleted when a student is removed
