@@ -969,7 +969,7 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
                     onClick={closeOnMobile}
                     aria-disabled={!videoLibrarySlug}
                   >
-                    <span>Prime Video</span>
+                    <span>Video Library</span>
                   </Link>
                 </li>
 
