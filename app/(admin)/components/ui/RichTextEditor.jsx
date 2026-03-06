@@ -31,6 +31,8 @@ const RichTextEditor = ({
   subtopicId = null,
   definitionId = null,
   hideAdminTools = false,
+  /** Optional custom image upload (e.g. discussion forum). (file: File) => Promise<{ url: string, filename?: string }> */
+  onImageUpload = null,
 }) => {
   const titleCasePreserveAcronyms = (text) => {
     if (!text) return "";
@@ -139,6 +141,8 @@ const RichTextEditor = ({
   const contactFormEditingElementRef = useRef(null);
   const customToolbarStyleRef = useRef(null);
   const imageModalFocusRef = useRef(null);
+  const onImageUploadRef = useRef(onImageUpload);
+  onImageUploadRef.current = onImageUpload;
 
   const [showMediaLibraryModal, setShowMediaLibraryModal] = useState(false);
   const [mediaLibraryItems, setMediaLibraryItems] = useState([]);
@@ -298,21 +302,23 @@ const RichTextEditor = ({
         { name: "tools", items: ["Maximize", "ShowBlocks"] },
         { name: "about", items: ["About"] },
       ];
+      // User side with onImageUpload: use only default CKEditor "Image" (no custom insert button)
       if (hideAdminTools) return base;
+      const insertGroup = {
+        name: "insertCustom",
+        items: [
+          "RTEInsertVideo",
+          "RTEInsertImage",
+          "RTEMediaLibrary",
+          "RTEInsertButton",
+          "RTEInsertForm",
+          "RTEInsertContactForm",
+          "RTEFormLink",
+        ],
+      };
       return [
         ...base.slice(0, base.findIndex((g) => g.name === "insert") + 1),
-        {
-          name: "insertCustom",
-          items: [
-            "RTEInsertVideo",
-            "RTEInsertImage",
-            "RTEMediaLibrary",
-            "RTEInsertButton",
-            "RTEInsertForm",
-            "RTEInsertContactForm",
-            "RTEFormLink",
-          ],
-        },
+        insertGroup,
         ...base.slice(base.findIndex((g) => g.name === "insert") + 1),
       ];
     },
@@ -485,12 +491,11 @@ const RichTextEditor = ({
       ];
       if (!hideAdminTools) extraPluginsList.push("rteInsertTools");
 
-      const editor = CKEDITOR.replace(textareaRef.current, {
+      const editorConfig = {
         height: 420,
         removePlugins: "resize",
         extraPlugins: extraPluginsList.join(","),
         mathJaxLib: MATHJAX_SCRIPT,
-        // Make the iframe content match the site typography + responsive tables.
         contentsCss: [CKEDITOR_CONTENTS_CSS],
         bodyClass: "rich-text-content",
         autoParagraph: true,
@@ -499,7 +504,11 @@ const RichTextEditor = ({
         placeholder: placeholderRef.current,
         readOnly: false,
         toolbar: toolbarConfig,
-      });
+      };
+      if (onImageUploadRef.current) {
+        editorConfig.clipboard_handleImages = false;
+      }
+      const editor = CKEDITOR.replace(textareaRef.current, editorConfig);
 
       editorRef.current = editor;
 
@@ -555,6 +564,112 @@ const RichTextEditor = ({
           }
         } catch (err) {
           console.warn("Could not inject image grid CSS into editor:", err);
+        }
+
+        // User-side only: when onImageUpload is provided, intercept paste/drop so images upload to public/asset/user/... and DB (priority 0 = before CKEditor's default)
+        const customUpload = onImageUploadRef.current;
+        if (customUpload && typeof customUpload === "function") {
+          const ALLOWED = ["image/png", "image/jpeg", "image/jpg", "image/gif", "image/webp"];
+          const uploadOneAndInsert = (file) => {
+            if (!file || !ALLOWED.includes(file.type)) return;
+            compressImageIfNeeded(file).then((fileToUpload) => {
+              if (!fileToUpload) return;
+              customUpload(fileToUpload)
+                .then((res) => {
+                  const url = res?.url;
+                  if (!url) return;
+                  const alt = (res?.filename || file.name || "image").replace(/"/g, "&quot;");
+                  const safeUrl = String(url).replace(/"/g, "&quot;");
+                  editor.insertHtml(`<img src="${safeUrl}" alt="${alt}" style="max-width:100%;height:auto;" loading="lazy" />`);
+                })
+                .catch((err) => {
+                  console.warn("Discussion image upload failed:", err);
+                });
+            });
+          };
+          // Editor-level paste: run before CKEditor's image handler (priority 1) so we can cancel and upload.
+          // At priority 0 dataTransfer may not be set yet; use native event clipboardData.files as fallback.
+          editor.on("paste", (evt) => {
+            const data = evt.data;
+            if (data.dataValue) return; // already has HTML, let default run
+            let file = null;
+            const dt = data.dataTransfer;
+            if (dt && typeof dt.getFilesCount === "function") {
+              for (let i = 0; i < dt.getFilesCount(); i++) {
+                const f = dt.getFile(i);
+                if (f && f.type && ALLOWED.includes(f.type)) {
+                  file = f;
+                  break;
+                }
+              }
+            }
+            if (!file && data.$ && data.$.clipboardData && data.$.clipboardData.files) {
+              const files = data.$.clipboardData.files;
+              for (let i = 0; i < files.length; i++) {
+                if (files[i].type && ALLOWED.includes(files[i].type)) {
+                  file = files[i];
+                  break;
+                }
+              }
+            }
+            if (file) {
+              if (data.$ && data.$.preventDefault) data.$.preventDefault();
+              evt.cancel();
+              evt.stop();
+              uploadOneAndInsert(file);
+            }
+          }, null, null, 0);
+          // Drop: listen on contentDom so we get drop on the editable; intercept files and upload
+          editor.on("contentDom", () => {
+            const editable = editor.editable();
+            if (!editable || !editable.attachListener) return;
+            editable.attachListener(editable, "drop", (evt) => {
+              const raw = evt.data.$;
+              const files = raw?.dataTransfer?.files;
+              if (!files || !files.length) return;
+              for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                if (file.type && ALLOWED.includes(file.type)) {
+                  if (raw.preventDefault) raw.preventDefault();
+                  evt.cancel();
+                  uploadOneAndInsert(file);
+                  return;
+                }
+              }
+            }, null, null, 0);
+          });
+          // Image dialog: when user enters/pastes a data: URL, upload it then insert with stored URL
+          CKEDITOR.on("dialogDefinition", function dialogDefinitionHandler(evt) {
+            if (evt.data.name !== "image" || evt.editor !== editor) return;
+            const def = evt.data.definition;
+            const originalOnOk = def.onOk;
+            def.onOk = function () {
+              const dialog = this;
+              const url = (dialog.getValueOf("info", "txtUrl") || "").trim();
+              if (url && url.toLowerCase().substring(0, 5) === "data:") {
+                fetch(url)
+                  .then((r) => r.blob())
+                  .then((blob) => {
+                    const mime = blob.type || "image/png";
+                    const ext = mime.split("/")[1] === "jpeg" ? "jpg" : (mime.split("/")[1] || "png");
+                    return new File([blob], `image.${ext}`, { type: mime });
+                  })
+                  .then((file) => (ALLOWED.includes(file.type) ? customUpload(file) : Promise.reject(new Error("Unsupported type"))))
+                  .then((res) => {
+                    const newUrl = res?.url;
+                    if (newUrl && dialog.getContentElement("info", "txtUrl")) {
+                      dialog.getContentElement("info", "txtUrl").setValue(newUrl);
+                    }
+                    originalOnOk.call(dialog);
+                  })
+                  .catch(() => {
+                    originalOnOk.call(dialog);
+                  });
+                return;
+              }
+              originalOnOk.call(this);
+            };
+          });
         }
 
         // Add click listener to handle editing existing forms/buttons
@@ -1379,6 +1494,23 @@ const RichTextEditor = ({
 
         const fileToUpload = await compressImageIfNeeded(file);
 
+        if (onImageUpload) {
+          try {
+            const result = await onImageUpload(fileToUpload);
+            const imageUrl = result?.url;
+            const uploadFilename = result?.filename || fileToUpload.name || "image";
+            if (!imageUrl) {
+              setImageError("Upload did not return a URL");
+              return;
+            }
+            urls.push({ url: imageUrl, altText: uploadFilename || fileToUpload.name || "" });
+          } catch (customErr) {
+            setImageError(customErr?.message || customErr?.response?.data?.message || "Failed to upload image");
+            return;
+          }
+          continue;
+        }
+
         // 1) Upload via /api/upload/image (stores in assets/{hierarchy} and creates Media record)
         const formDataUpload = new FormData();
         formDataUpload.append("image", fileToUpload);
@@ -1390,9 +1522,7 @@ const RichTextEditor = ({
         if (subtopicId) formDataUpload.append("subtopicId", subtopicId);
         if (definitionId) formDataUpload.append("definitionId", definitionId);
 
-        const responseUpload = await api.post("/upload/image", formDataUpload, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
+        const responseUpload = await api.post("/upload/image", formDataUpload);
 
         if (!responseUpload.data?.success || !responseUpload.data?.data?.url) {
           setImageError(responseUpload.data?.message || "Failed to upload image");
@@ -1411,9 +1541,7 @@ const RichTextEditor = ({
         formDataMedia.append("sourceUrl", imageUrl);
         formDataMedia.append("sourcePath", uploadPath);
         try {
-          await api.post("/media", formDataMedia, {
-            headers: { "Content-Type": "multipart/form-data" },
-          });
+          await api.post("/media", formDataMedia);
         } catch (mediaErr) {
           console.warn("Media API save failed (upload succeeded):", mediaErr);
           // still use imageUrl for insert
@@ -1579,9 +1707,7 @@ const RichTextEditor = ({
         if (subtopicId) formData.append("subtopicId", subtopicId);
         if (definitionId) formData.append("definitionId", definitionId);
 
-        const response = await api.post("/upload/video", formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
+        const response = await api.post("/upload/video", formData);
 
         if (response.data?.success && response.data?.data?.url) {
           items.push({ url: response.data.data.url, type: "upload", mimeType: file.type });

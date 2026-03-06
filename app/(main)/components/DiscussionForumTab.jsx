@@ -83,18 +83,41 @@ const isHTML = (text = "") => {
   return htmlTagRegex.test(text);
 };
 
+// Rewrite img src: ensure basePath, and use serve-image API for discussion images so they load reliably
+function rewriteContentImageSrc(html) {
+  if (!html || !basePath) return html;
+  return html.replace(
+    /<img([^>]*)\ssrc=["']([^"']+)["']/gi,
+    (match, attrs, src) => {
+      const t = (src || "").trim();
+      if (!t || t.startsWith("data:") || t.startsWith("http://") || t.startsWith("https://")) return match;
+      let pathOnly = t.startsWith("/") ? t : `/${t}`;
+      if (!pathOnly.startsWith(basePath)) pathOnly = `${basePath}${pathOnly}`;
+      const discussionPrefix = `${basePath}/discussion/`;
+      if (pathOnly.startsWith(discussionPrefix)) {
+        const pathUnderDiscussion = pathOnly.slice(discussionPrefix.length);
+        const serveUrl = `${basePath}/api/discussion/serve-image?path=${encodeURIComponent(pathUnderDiscussion)}`;
+        return `<img${attrs} src="${serveUrl}"`;
+      }
+      return `<img${attrs} src="${pathOnly}"`;
+    }
+  );
+}
+
 // Render content - handles both HTML (from RichTextEditor) and markdown
 const renderContent = (text = "") => {
   if (!text) return "";
 
   // If content is already HTML (from RichTextEditor), sanitize and return
   if (isHTML(text)) {
-    return DOMPurify.sanitize(text);
+    const sanitized = DOMPurify.sanitize(text);
+    return rewriteContentImageSrc(sanitized);
   }
 
   // Otherwise, treat as markdown and parse
   const html = marked.parse(text);
-  return DOMPurify.sanitize(html);
+  const sanitized = DOMPurify.sanitize(html);
+  return rewriteContentImageSrc(sanitized);
 };
 
 const timeAgo = (date) => {
@@ -380,7 +403,7 @@ const SuccessModal = ({ isOpen, onClose, title, message }) => {
 
 /* ---------- Thread Detail View ---------- */
 // hierarchy: { examId, subjectId, unitId, chapterId, topicId, subTopicId, definitionId } — slug is unique per level
-const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal, onOpenSavePostRegistrationModal, onStartPost, examImage, hierarchy = {}, onOpenThread }) => {
+const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal, onOpenSavePostRegistrationModal, onStartPost, onImageUpload, examImage, hierarchy = {}, onOpenThread }) => {
   const [thread, setThread] = useState(null);
   const [replies, setReplies] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -960,6 +983,7 @@ const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal, onOpenSave
                     onChange={setReplyContent}
                     placeholder="Type your answer here... Be helpful and polite!"
                     hideAdminTools={true}
+                    onImageUpload={onImageUpload}
                   />
                 </div>
                 <div className="flex flex-col sm:flex-row justify-between items-center mt-6 gap-4 border-t border-gray-100 pt-6">
@@ -1462,6 +1486,26 @@ const DiscussionForumTab = ({ entityName, entityType, examId, examSlug, subjectI
   const [showSavePostRegistrationModal, setShowSavePostRegistrationModal] = useState(false);
   const savePostAfterRegistrationRef = useRef(null);
 
+  const discussionImageUpload = useCallback(async (file) => {
+    const formData = new FormData();
+    formData.append("image", file);
+    if (examId) formData.append("examId", String(examId));
+    const headers = {
+      "x-guest-id": guestIdentity.id || "",
+      "x-guest-name": guestIdentity.name || "",
+    };
+    // Use fetch so browser sets Content-Type to multipart/form-data; boundary=... (axios can send application/json)
+    const token = typeof window !== "undefined" ? localStorage.getItem("student_token") : null;
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    const res = await fetch(`${basePath}/api/discussion/upload/image`, { method: "POST", body: formData, headers });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || err.error || res.statusText || "Upload failed");
+    }
+    const json = await res.json();
+    return json.data || json;
+  }, [guestIdentity.id, guestIdentity.name, examId]);
+
   const fetchThreads = useCallback(async () => {
     setLoading(true);
     try {
@@ -1687,6 +1731,7 @@ const DiscussionForumTab = ({ entityName, entityType, examId, examSlug, subjectI
                         onChange={setNewContent}
                         placeholder="Write your discussion details here... Use the toolbar to format your text."
                         hideAdminTools={true}
+                        onImageUpload={discussionImageUpload}
                       />
                     </div>
                   </div>
@@ -1733,6 +1778,7 @@ const DiscussionForumTab = ({ entityName, entityType, examId, examSlug, subjectI
               onBack={handleBack}
               onOpenThread={handleThreadClick}
               guestIdentity={guestIdentity}
+              onImageUpload={discussionImageUpload}
               onShowAuthModal={(formId, onSuccess) => {
                 setPendingAction({ formId, onSuccess });
                 setShowAuthModal(true);

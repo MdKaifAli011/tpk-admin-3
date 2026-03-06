@@ -312,7 +312,7 @@ const ThreadDetailModeration = () => {
             });
             if (res.data.success) {
                 success("Reply updated successfully");
-                setReplies(replies.map(r => r._id === replyId ? { ...r, content: editContent } : r));
+                setReplies(replies.map(r => r._id === replyId ? { ...r, content: editContent, isApproved: r.isApproved } : r));
                 setEditingReplyId(null);
                 setEditContent("");
                 setOriginalContent("");

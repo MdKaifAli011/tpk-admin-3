@@ -77,6 +77,9 @@ export async function PATCH(request, { params }) {
         const isAdmin = user.type === "User";
         const isAuthor = reply.author && reply.author.toString() === user.id;
 
+        // Preserve isApproved when only editing content so pending indicator is not cleared until approve/delete
+        const previousIsApproved = reply.isApproved;
+
         // Admin actions: Approve/Unapprove
         if (body.isApproved !== undefined) {
             if (!isAdmin) {
@@ -91,6 +94,10 @@ export async function PATCH(request, { params }) {
                 return NextResponse.json({ success: false, message: "Only admins and authors can edit replies" }, { status: 403 });
             }
             reply.content = body.content;
+            // Content-only update: do not change approval state
+            if (body.isApproved === undefined) {
+                reply.isApproved = previousIsApproved;
+            }
         }
 
         await reply.save();
