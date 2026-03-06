@@ -211,9 +211,47 @@ export default function CourseListingClient({ examSlug, examName: examNameProp, 
           <div className="mt-6 pt-5 border-t border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <div className="flex -space-x-1.5 overflow-hidden">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="inline-block h-6 w-6 rounded-full ring-2 ring-white bg-slate-200" aria-hidden />
-                ))}
+                {(() => {
+                  const facultyImages = [];
+                  const seen = new Set();
+                  for (const c of courses) {
+                    if (facultyImages.length >= 3) break;
+                    const img = c.instructorImage && String(c.instructorImage).trim();
+                    const key = img || (c.createdBy || c._id);
+                    if (seen.has(key)) continue;
+                    seen.add(key);
+                    facultyImages.push({ img, name: c.createdBy || "", id: c._id + (img || key) });
+                  }
+                  const placeholders = Math.max(0, 3 - facultyImages.length);
+                  return (
+                    <>
+                      {facultyImages.map(({ img, name, id }) => (
+                        <div
+                          key={id}
+                          className="inline-block h-6 w-6 rounded-full ring-2 ring-white bg-slate-100 overflow-hidden shrink-0"
+                          title={name ? `Instructor: ${name}` : undefined}
+                        >
+                          {img ? (
+                            <Image
+                              src={img}
+                              alt={name || "Faculty"}
+                              width={24}
+                              height={24}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <div className="h-full w-full flex items-center justify-center bg-slate-200 text-[10px] font-bold text-slate-500 uppercase">
+                              {(name || "?").trim().charAt(0)}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                      {Array.from({ length: placeholders }, (_, i) => (
+                        <div key={`ph-${i}`} className="inline-block h-6 w-6 rounded-full ring-2 ring-white bg-slate-200" aria-hidden />
+                      ))}
+                    </>
+                  );
+                })()}
               </div>
               <p className="text-xs text-slate-500">
                 Showing <span className="font-semibold text-slate-800">{from}–{to}</span> of <span className="font-semibold text-slate-800">{total}</span> courses
