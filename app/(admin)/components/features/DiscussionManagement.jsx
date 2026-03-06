@@ -1093,7 +1093,7 @@ const DiscussionManagement = () => {
                         <FaIcons.FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors" size={12} />
                         <input
                             type="text"
-                            placeholder="Search discussions or authors..."
+                            placeholder="Search by title..."
                             value={search}
                             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
                             className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all text-sm text-gray-800 placeholder-gray-400"
@@ -1101,8 +1101,8 @@ const DiscussionManagement = () => {
                     </div>
                 </div>
 
-                {/* Recently Created - so you can see what you just created; can be closed */}
-                {showRecentSection && (
+                {/* Recently Created - hidden when global search is active so only search results show */}
+                {showRecentSection && !search.trim() && (
                 <div ref={recentSectionRef} className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
                     <div className="px-4 py-3 border-b border-gray-200 bg-emerald-50/80 flex items-start justify-between gap-3">
                         <div className="flex-1 min-w-0">
@@ -1178,10 +1178,12 @@ const DiscussionManagement = () => {
                     <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
                         <div className="space-y-0.5">
                             <h2 className="text-xl font-semibold text-gray-900">
-                                Discussions List
+                                {search.trim() ? "Search results" : "Discussions List"}
                             </h2>
                             <p className="text-sm text-gray-600">
-                                Moderate community topics, verify guest posts, and track forum engagement.
+                                {search.trim()
+                                    ? `Showing threads matching "${search.trim()}". Only search results are listed.`
+                                    : "Moderate community topics, verify guest posts, and track forum engagement."}
                             </p>
                         </div>
                     </div>
@@ -1193,6 +1195,7 @@ const DiscussionManagement = () => {
                             onToggleApproval={handleToggleApproval}
                             onDelete={handleDelete}
                             onTogglePin={handleTogglePin}
+                            isSearchMode={!!search.trim()}
                         />
                     </LoadingWrapper>
 

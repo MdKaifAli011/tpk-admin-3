@@ -103,10 +103,7 @@ async function runListCascade(searchParams, params) {
 
   const baseQuery = { isApproved: true };
   if (params.search) {
-    baseQuery.$or = [
-      { title: { $regex: params.search, $options: "i" } },
-      { content: { $regex: params.search, $options: "i" } },
-    ];
+    baseQuery.title = { $regex: params.search, $options: "i" };
   }
   if (params.tag && params.tag !== "All Topics" && params.tag !== "All")
     baseQuery.tags = params.tag;
@@ -329,12 +326,9 @@ export async function GET(request) {
       }
     } // if status='all' or not provided for admin, show all
 
-    // Text Search
+    // Text Search — title only (not content)
     if (search) {
-      query.$or = [
-        { title: { $regex: search, $options: "i" } },
-        { content: { $regex: search, $options: "i" } },
-      ];
+      query.title = { $regex: search, $options: "i" };
     }
 
     // Tag Filter

@@ -3,7 +3,9 @@ import { SEO_DEFAULTS } from "@/constants";
 import { getSiteSettingsCustomCode } from "@/lib/getSiteSettingsCustomCode";
 import { headers } from "next/headers";
 
-export const metadata = {
+const TEST_DOMAIN = "app.testprepkart.in";
+
+const baseMetadata = {
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
   ),
@@ -55,6 +57,15 @@ export const metadata = {
     description: SEO_DEFAULTS.DESCRIPTION,
   },
 };
+
+export async function generateMetadata() {
+  const headersList = await headers();
+  const host = headersList.get("host") || "";
+  return {
+    ...baseMetadata,
+    ...(host === TEST_DOMAIN && { robots: { index: false, follow: false } }),
+  };
+}
 
 export default async function RootLayout({ children }) {
   const headersList = await headers();

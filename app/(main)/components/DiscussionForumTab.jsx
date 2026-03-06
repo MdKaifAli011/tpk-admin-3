@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import {
   FaSearch, FaPlus, FaFilter, FaFire, FaClock, FaComment, FaEye, FaShare,
@@ -936,7 +937,7 @@ const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal, examImage,
                 </div>
                 <div className="flex flex-col sm:flex-row justify-between items-center mt-6 gap-4 border-t border-gray-100 pt-6">
                   <p className="text-[11px] text-gray-400 font-medium tracking-wide">
-                    By posting, you agree to the <a href="#" className="text-blue-600 underline">Community Guidelines</a>.
+                    By posting, you agree to the <Link href="/community-guidelines" className="text-blue-600 underline hover:text-blue-700">Community Guidelines</Link>.
                   </p>
                   <Button
                     onClick={() => handlePostReply()}
@@ -945,7 +946,7 @@ const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal, examImage,
                     size="md"
                     className="w-full sm:w-auto px-10 py-2.5 rounded-xl font-bold text-sm bg-blue-600 hover:bg-blue-700 shadow-md"
                   >
-                    {isSubmitting ? "Posting..." : "Post Answer"}
+                    {isSubmitting ? "Posting..." : "Post Reply"}
                   </Button>
                 </div>
               </div>
