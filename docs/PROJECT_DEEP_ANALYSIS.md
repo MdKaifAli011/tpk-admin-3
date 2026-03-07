@@ -1,4 +1,4 @@
-# TestPrepKart - Deep Project Analysis
+# Testprepkart - Deep Project Analysis
 
 ## 📋 Table of Contents
 1. [Project Overview](#project-overview)
@@ -16,7 +16,7 @@
 
 ## 🎯 Project Overview
 
-**TestPrepKart** is a comprehensive exam preparation platform built with Next.js 16 (App Router), MongoDB, and React. The project serves two distinct user groups:
+**Testprepkart** is a comprehensive exam preparation platform built with Next.js 16 (App Router), MongoDB, and React. The project serves two distinct user groups:
 
 1. **Admin Panel** (`(admin)` group) - Content management system for administrators
 2. **Main App** (`(main)` group) - Student-facing learning platform

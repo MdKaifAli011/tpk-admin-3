@@ -3,9 +3,10 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { FaSave, FaTimes, FaArrowLeft } from "react-icons/fa";
+import { FaSave, FaTimes, FaArrowLeft, FaFolderOpen } from "react-icons/fa";
 import { LoadingSpinner } from "../ui/SkeletonLoader";
 import { ToastContainer, useToast } from "../ui/Toast";
+import MediaPickerModal from "../ui/MediaPickerModal";
 import api from "@/lib/api";
 
 const defaultForm = {
@@ -33,6 +34,7 @@ export default function CourseForm({ courseId, isNew }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
+  const [mediaPickerFor, setMediaPickerFor] = useState(null); // 'instructorImage' | 'image' | 'videoThumbnail' | null
   const { toasts, removeToast, success, error: showError } = useToast();
   const mounted = useRef(true);
 
@@ -308,15 +310,26 @@ export default function CourseForm({ courseId, isNew }) {
             
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Instructor / faculty image URL</label>
-                <input
-                  type="url"
-                  name="instructorImage"
-                  value={form.instructorImage}
-                  onChange={handleChange}
-                  placeholder="https://... (shown next to By [name] on course page)"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
-                  disabled={saving}
-                />
+                <div className="flex gap-2">
+                  <input
+                    type="url"
+                    name="instructorImage"
+                    value={form.instructorImage}
+                    onChange={handleChange}
+                    placeholder="https://... (shown next to By [name] on course page)"
+                    className="flex-1 min-w-0 px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                    disabled={saving}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setMediaPickerFor("instructorImage")}
+                    disabled={saving}
+                    className="flex items-center gap-1.5 px-3 py-2.5 border border-indigo-300 rounded-lg text-sm font-medium text-indigo-700 bg-indigo-50 hover:bg-indigo-100 transition-colors shrink-0"
+                    title="Select from Media Management"
+                  >
+                    <FaFolderOpen className="w-4 h-4" /> Browse
+                  </button>
+                </div>
                 <p className="mt-1 text-xs text-gray-500">Small circular image shown beside the instructor name on the course detail page.</p>
               </div>
               <div>
@@ -375,15 +388,26 @@ export default function CourseForm({ courseId, isNew }) {
               </div>
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Course image URL</label>
-                <input
-                  type="url"
-                  name="image"
-                  value={form.image}
-                  onChange={handleChange}
-                  placeholder="https://..."
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
-                  disabled={saving}
-                />
+                <div className="flex gap-2">
+                  <input
+                    type="url"
+                    name="image"
+                    value={form.image}
+                    onChange={handleChange}
+                    placeholder="https://..."
+                    className="flex-1 min-w-0 px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                    disabled={saving}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setMediaPickerFor("image")}
+                    disabled={saving}
+                    className="flex items-center gap-1.5 px-3 py-2.5 border border-indigo-300 rounded-lg text-sm font-medium text-indigo-700 bg-indigo-50 hover:bg-indigo-100 transition-colors shrink-0"
+                    title="Select from Media Management"
+                  >
+                    <FaFolderOpen className="w-4 h-4" /> Browse
+                  </button>
+                </div>
               </div>
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Video URL (e.g. YouTube)</label>
@@ -400,15 +424,26 @@ export default function CourseForm({ courseId, isNew }) {
               </div>
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Video thumbnail URL (optional)</label>
-                <input
-                  type="url"
-                  name="videoThumbnail"
-                  value={form.videoThumbnail}
-                  onChange={handleChange}
-                  placeholder="Leave empty to use YouTube default thumbnail"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
-                  disabled={saving}
-                />
+                <div className="flex gap-2">
+                  <input
+                    type="url"
+                    name="videoThumbnail"
+                    value={form.videoThumbnail}
+                    onChange={handleChange}
+                    placeholder="Leave empty to use YouTube default thumbnail"
+                    className="flex-1 min-w-0 px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                    disabled={saving}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setMediaPickerFor("videoThumbnail")}
+                    disabled={saving}
+                    className="flex items-center gap-1.5 px-3 py-2.5 border border-indigo-300 rounded-lg text-sm font-medium text-indigo-700 bg-indigo-50 hover:bg-indigo-100 transition-colors shrink-0"
+                    title="Select from Media Management"
+                  >
+                    <FaFolderOpen className="w-4 h-4" /> Browse
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -431,6 +466,24 @@ export default function CourseForm({ courseId, isNew }) {
           </form>
         </div>
       </div>
+
+      <MediaPickerModal
+        isOpen={!!mediaPickerFor}
+        onClose={() => setMediaPickerFor(null)}
+        onSelect={(url) => {
+          if (mediaPickerFor) setForm((prev) => ({ ...prev, [mediaPickerFor]: url }));
+          setMediaPickerFor(null);
+        }}
+        title={
+          mediaPickerFor === "instructorImage"
+            ? "Select instructor / faculty image"
+            : mediaPickerFor === "image"
+              ? "Select course image"
+              : mediaPickerFor === "videoThumbnail"
+                ? "Select video thumbnail"
+                : "Select image from Media"
+        }
+      />
     </>
   );
 }

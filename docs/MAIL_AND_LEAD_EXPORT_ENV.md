@@ -12,7 +12,7 @@ MAIL_USERNAME=donot-reply@testprepkart.in
 MAIL_PASSWORD=your_mail_password_here
 MAIL_ENCRYPTION=ssl
 MAIL_FROM_ADDRESS=donot-reply@testprepkart.in
-MAIL_FROM_NAME=TestPrepKart
+MAIL_FROM_NAME=Testprepkart
 ```
 
 ## Lead export notification

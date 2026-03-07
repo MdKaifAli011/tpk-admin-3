@@ -74,25 +74,25 @@ export async function generateMetadata({ params, searchParams }) {
     } = await import("../../../../../lib/api");
 
     const exam = await fetchExamById(examSlug).catch(() => null);
-    if (!exam) return { title: `${topicSlug || "Topic"} | TestPrepKart` };
+    if (!exam) return { title: `${topicSlug || "Topic"} | Testprepkart` };
 
     const subjects = await fetchSubjectsByExam(exam._id).catch(() => []);
     const subject = findByIdOrSlug(subjects, subjectSlug);
-    if (!subject) return { title: `${topicSlug || "Topic"} | TestPrepKart` };
+    if (!subject) return { title: `${topicSlug || "Topic"} | Testprepkart` };
 
     const units = await fetchUnitsBySubject(subject._id, exam._id).catch(
       () => [],
     );
     const unit = findByIdOrSlug(units, unitSlug);
-    if (!unit) return { title: `${topicSlug || "Topic"} | TestPrepKart` };
+    if (!unit) return { title: `${topicSlug || "Topic"} | Testprepkart` };
 
     const chapters = await fetchChaptersByUnit(unit._id).catch(() => []);
     const chapter = findByIdOrSlug(chapters, chapterSlug);
-    if (!chapter) return { title: `${topicSlug || "Topic"} | TestPrepKart` };
+    if (!chapter) return { title: `${topicSlug || "Topic"} | Testprepkart` };
 
     const topics = await fetchTopicsByChapter(chapter._id).catch(() => []);
     const topic = findByIdOrSlug(topics, topicSlug);
-    if (!topic) return { title: `${topicSlug || "Topic"} | TestPrepKart` };
+    if (!topic) return { title: `${topicSlug || "Topic"} | Testprepkart` };
 
     const fullTopicData = await fetchTopicById(topic._id).catch(() => null);
     const finalTopic = fullTopicData || topic;
@@ -118,7 +118,7 @@ export async function generateMetadata({ params, searchParams }) {
     );
   } catch (error) {
     logger.warn("Error generating topic page metadata:", error);
-    return { title: `${topicSlug || "Topic"} | TestPrepKart` };
+    return { title: `${topicSlug || "Topic"} | Testprepkart` };
   }
 }
 

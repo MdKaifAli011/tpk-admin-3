@@ -4,7 +4,7 @@
 
 // App Configuration
 export const APP_CONFIG = {
-  name: "TestPrepKart",
+  name: "Testprepkart",
   description: "Prepare for your exam with expert guidance and resources",
   url: process.env.NEXT_PUBLIC_APP_URL || "https://testprepkart.com",
 };
@@ -96,7 +96,7 @@ export const PLACEHOLDERS = {
 // SEO Defaults
 export const SEO_DEFAULTS = {
   TITLE:
-    "TestPrepKart | Prepare for your exam with expert guidance and resources",
+    "Testprepkart | Prepare for your exam with expert guidance and resources",
   DESCRIPTION:
     "Prepare for your exam with expert guidance and resources. Get comprehensive study materials, practice tests, and expert guidance for JEE, NEET, SAT, IB and more.",
   KEYWORDS: [

@@ -216,7 +216,7 @@ const ContactForm = () => {
               </div>
 
               <h1 className="text-2xl font-bold text-gray-900 mb-4">
-                Connect With TestprepKart
+                Connect With Testprepkart
               </h1>
 
               <form onSubmit={handleSubmit} className="space-y-3">

@@ -32,7 +32,7 @@ const threadSchema = new mongoose.Schema(
             type: String,
             trim: true,
         },
-        /** When set (e.g. "TestPrepKart" for admin-created threads), show this instead of author/guest on frontend with brand logo */
+        /** When set (e.g. "Testprepkart" for admin-created threads), show this instead of author/guest on frontend with brand logo */
         contributorDisplayName: {
             type: String,
             trim: true,

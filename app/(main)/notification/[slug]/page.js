@@ -80,7 +80,7 @@ export async function generateMetadata({ params }) {
   }).select("title message").lean();
 
   if (!notification) {
-    return { title: "Notification | TestPrepKart" };
+    return { title: "Notification | Testprepkart" };
   }
 
   const desc = notification.message
@@ -88,7 +88,7 @@ export async function generateMetadata({ params }) {
     : notification.title;
 
   return {
-    title: `${notification.title} | Notifications | TestPrepKart`,
+    title: `${notification.title} | Notifications | Testprepkart`,
     description: desc,
   };
 }

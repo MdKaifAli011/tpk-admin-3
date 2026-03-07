@@ -18,7 +18,7 @@ const ContactMegaMenu = ({ onClose }) => {
                   onClick={onClose}
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
                 >
-                  Contact TestprepKart
+                  Contact Testprepkart
                 </Link>
               </li>
               <li>

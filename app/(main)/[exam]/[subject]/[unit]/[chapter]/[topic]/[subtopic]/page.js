@@ -83,33 +83,33 @@ export async function generateMetadata({ params, searchParams }) {
     } = await import("../../../../../../lib/api");
 
     const exam = await fetchExamById(examSlug).catch(() => null);
-    if (!exam) return { title: `${subtopicSlug || "Subtopic"} | TestPrepKart` };
+    if (!exam) return { title: `${subtopicSlug || "Subtopic"} | Testprepkart` };
 
     const subjects = await fetchSubjectsByExam(exam._id).catch(() => []);
     const subject = findByIdOrSlug(subjects, subjectSlug);
     if (!subject)
-      return { title: `${subtopicSlug || "Subtopic"} | TestPrepKart` };
+      return { title: `${subtopicSlug || "Subtopic"} | Testprepkart` };
 
     const units = await fetchUnitsBySubject(subject._id, exam._id).catch(
       () => [],
     );
     const unit = findByIdOrSlug(units, unitSlug);
-    if (!unit) return { title: `${subtopicSlug || "Subtopic"} | TestPrepKart` };
+    if (!unit) return { title: `${subtopicSlug || "Subtopic"} | Testprepkart` };
 
     const chapters = await fetchChaptersByUnit(unit._id).catch(() => []);
     const chapter = findByIdOrSlug(chapters, chapterSlug);
     if (!chapter)
-      return { title: `${subtopicSlug || "Subtopic"} | TestPrepKart` };
+      return { title: `${subtopicSlug || "Subtopic"} | Testprepkart` };
 
     const topics = await fetchTopicsByChapter(chapter._id).catch(() => []);
     const topic = findByIdOrSlug(topics, topicSlug);
     if (!topic)
-      return { title: `${subtopicSlug || "Subtopic"} | TestPrepKart` };
+      return { title: `${subtopicSlug || "Subtopic"} | Testprepkart` };
 
     const subtopics = await fetchSubTopicsByTopic(topic._id).catch(() => []);
     const subtopic = findByIdOrSlug(subtopics, subtopicSlug);
     if (!subtopic)
-      return { title: `${subtopicSlug || "Subtopic"} | TestPrepKart` };
+      return { title: `${subtopicSlug || "Subtopic"} | Testprepkart` };
 
     const fullSubTopicData = await fetchSubTopicById(subtopic._id).catch(
       () => null,
@@ -138,7 +138,7 @@ export async function generateMetadata({ params, searchParams }) {
     );
   } catch (error) {
     logger.warn("Error generating subtopic page metadata:", error);
-    return { title: `${subtopicSlug || "Subtopic"} | TestPrepKart` };
+    return { title: `${subtopicSlug || "Subtopic"} | Testprepkart` };
   }
 }
 

@@ -467,7 +467,7 @@ export async function POST(request) {
       author: user.type === "Guest" ? null : user.id,
       authorType: user.type,
       guestName: user.type === "Guest" ? user.name : undefined,
-      contributorDisplayName: user.type === "User" ? "TestPrepKart" : undefined, // Admin-created threads show as TestPrepKart on frontend
+      contributorDisplayName: user.type === "User" ? "Testprepkart" : undefined, // Admin-created threads show as Testprepkart on frontend
       tags: body.tags || ["General"],
       isApproved: user.type === "User", // Only Admin/User posts are auto-approved, Students and Guests need approval
     });

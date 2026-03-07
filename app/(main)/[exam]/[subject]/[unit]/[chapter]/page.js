@@ -69,23 +69,23 @@ export async function generateMetadata({ params, searchParams }) {
     } = await import("../../../../lib/api");
 
     const exam = await fetchExamById(examSlug).catch(() => null);
-    if (!exam) return { title: `${chapterSlug || "Chapter"} | TestPrepKart` };
+    if (!exam) return { title: `${chapterSlug || "Chapter"} | Testprepkart` };
 
     const subjects = await fetchSubjectsByExam(exam._id).catch(() => []);
     const subject = findByIdOrSlug(subjects, subjectSlug);
     if (!subject)
-      return { title: `${chapterSlug || "Chapter"} | TestPrepKart` };
+      return { title: `${chapterSlug || "Chapter"} | Testprepkart` };
 
     const units = await fetchUnitsBySubject(subject._id, exam._id).catch(
       () => [],
     );
     const unit = findByIdOrSlug(units, unitSlug);
-    if (!unit) return { title: `${chapterSlug || "Chapter"} | TestPrepKart` };
+    if (!unit) return { title: `${chapterSlug || "Chapter"} | Testprepkart` };
 
     const chapters = await fetchChaptersByUnit(unit._id).catch(() => []);
     const chapter = findByIdOrSlug(chapters, chapterSlug);
     if (!chapter)
-      return { title: `${chapterSlug || "Chapter"} | TestPrepKart` };
+      return { title: `${chapterSlug || "Chapter"} | Testprepkart` };
 
     const chapterDetails = await fetchChapterDetailsById(chapter._id).catch(
       () => null,
@@ -108,7 +108,7 @@ export async function generateMetadata({ params, searchParams }) {
     );
   } catch (error) {
     logger.warn("Error generating chapter page metadata:", error);
-    return { title: `${chapterSlug || "Chapter"} | TestPrepKart` };
+    return { title: `${chapterSlug || "Chapter"} | Testprepkart` };
   }
 }
 

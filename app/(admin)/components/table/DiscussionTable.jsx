@@ -187,7 +187,7 @@ const DiscussionTable = ({
                                                             {thread.author?.avatar ? <img src={thread.author.avatar} alt="avatar" className="w-full h-full object-cover" /> : <FaIcons.FaUserCircle size={10} />}
                                                         </div>
                                                         <span className="font-medium">
-                                                            {thread.contributorDisplayName || thread.authorType === "User" || (thread.author?.role && String(thread.author.role).toLowerCase().includes("admin")) ? "TestprepKart" : (thread.author?.firstName ? `${thread.author.firstName} ${thread.author.lastName}` : (thread.author?.name || thread.guestName || "Guest"))}
+                                                            {thread.contributorDisplayName || thread.authorType === "User" || (thread.author?.role && String(thread.author.role).toLowerCase().includes("admin")) ? "Testprepkart" : (thread.author?.firstName ? `${thread.author.firstName} ${thread.author.lastName}` : (thread.author?.name || thread.guestName || "Guest"))}
                                                         </span>
                                                     </div>
                                                     <span className="w-1 h-1 rounded-full bg-gray-300"></span>

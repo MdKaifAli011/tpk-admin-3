@@ -36,8 +36,8 @@ const hierarchyContext = [
 ```
 
 **Result**: 
-- Before: `Biology - NEET - Biology | TestPrepKart`
-- After: `Biology - NEET | TestPrepKart` ✅
+- Before: `Biology - NEET - Biology | Testprepkart`
+- After: `Biology - NEET | Testprepkart` ✅
 
 ### 2. Added generateMetadata to Pages
 
@@ -76,7 +76,7 @@ Add `generateMetadata` to all **page.js** files (not layouts):
 1. Navigate to: `/neet/biology/diversity-in-living-world/the-living-world?tab=discussion`
 2. Do full page refresh (`F5`)
 3. View page source
-4. Should see: `<title>The Living World - Discussion Forum | TestPrepKart</title>`
+4. Should see: `<title>The Living World - Discussion Forum | Testprepkart</title>`
 
 ### Expected Debug Output
 ```

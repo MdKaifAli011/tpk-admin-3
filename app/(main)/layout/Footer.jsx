@@ -25,7 +25,7 @@ const Footer = () => {
     "Prime Videos",
     "Enrollment Form",
     "Online Fee Payment",
-    "TestprepKart Operations",
+    "Testprepkart Operations",
     "Faculty Registration",
     "Downloads",
   ];
@@ -49,7 +49,7 @@ const Footer = () => {
             <Link href="https://www.testprepkart.com">
               <Image
                 src={`${basePath}/logo.png`}
-                  alt="TestPrepKart Logo"
+                  alt="Testprepkart Logo"
                 width={150}
                 height={150}
                 className="w-24 sm:w-28 md:w-32 lg:w-36 h-auto"
@@ -125,7 +125,7 @@ const Footer = () => {
                   href="https://testprepkart-operations.com/"
                   className="text-gray-500 text-sm hover:text-blue-600 transition-colors"
                 >
-                  TestprepKart Operations
+                  Testprepkart Operations
                 </Link>
               </li>
               <li>

@@ -482,7 +482,7 @@ const DiscussionManagement = () => {
                 subTopicId: createSubTopicId || undefined,
                 definitionId: createDefinitionId || undefined,
             };
-            // Ensure admin token is sent so backend sets authorType "User" and contributorDisplayName "TestPrepKart"
+            // Ensure admin token is sent so backend sets authorType "User" and contributorDisplayName "Testprepkart"
             const adminToken = typeof window !== "undefined" ? window.localStorage.getItem("token") : null;
             const headers = adminToken ? { Authorization: `Bearer ${adminToken}` } : {};
             const res = await api.post("/discussion/threads", payload, { headers });

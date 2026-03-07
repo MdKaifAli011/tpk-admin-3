@@ -313,7 +313,7 @@ const ContactPage = () => {
 
             {/* YouTube */}
             <a
-              href="https://www.youtube.com/@TestprepKart"
+              href="https://www.youtube.com/@Testprepkart"
               target="_blank"
               rel="noopener noreferrer"
               className="w-12 h-12 bg-red-600 text-white rounded-full flex items-center justify-center hover:bg-red-700 transition-colors shadow-md hover:shadow-lg"

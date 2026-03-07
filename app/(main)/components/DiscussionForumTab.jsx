@@ -222,7 +222,7 @@ const ThreadCard = ({ thread, onClick }) => {
                 <div className="flex items-center gap-2">
                   <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center overflow-hidden border border-gray-200">
                     {(thread.contributorDisplayName || thread.authorType === "User") ? (
-                      <img src={BRAND_AVATAR_URL} alt="TestprepKart" className="w-full h-full object-cover" />
+                      <img src={BRAND_AVATAR_URL} alt="Testprepkart" className="w-full h-full object-cover" />
                     ) : thread.author?.avatar ? (
                       <img src={thread.author.avatar} alt="av" className="w-full h-full object-cover" />
                     ) : (
@@ -230,7 +230,7 @@ const ThreadCard = ({ thread, onClick }) => {
                     )}
                   </div>
                   <span className="font-semibold text-gray-700">
-                    {(thread.contributorDisplayName || thread.authorType === "User") ? "TestprepKart" : (thread.author?.firstName ? `${thread.author.firstName} ${thread.author.lastName}` : (thread.guestName || "Contributor"))}
+                    {(thread.contributorDisplayName || thread.authorType === "User") ? "Testprepkart" : (thread.author?.firstName ? `${thread.author.firstName} ${thread.author.lastName}` : (thread.guestName || "Contributor"))}
                   </span>
                 </div>
                 <span className="text-gray-300 hidden sm:block">•</span>
@@ -831,7 +831,7 @@ const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal, onOpenSave
                   <div className="flex items-center gap-3 mb-5">
                     <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center overflow-hidden border border-white shadow-sm ring-2 ring-gray-50">
                       {(thread.contributorDisplayName || thread.authorType === "User") ? (
-                        <img src={BRAND_AVATAR_URL} alt="TestprepKart" className="w-full h-full object-cover" />
+                        <img src={BRAND_AVATAR_URL} alt="Testprepkart" className="w-full h-full object-cover" />
                       ) : thread.author?.avatar ? (
                         <img src={thread.author.avatar} alt="av" className="w-full h-full object-cover" />
                       ) : (
@@ -841,10 +841,10 @@ const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal, onOpenSave
                     <div>
                       <div className="flex items-center gap-2">
                         <h4 className="font-bold text-sm text-gray-900 leading-none">
-                          {(thread.contributorDisplayName || thread.authorType === "User") ? "TestprepKart" : (thread.author?.firstName ? `${thread.author.firstName} ${thread.author.lastName}` : (thread.guestName || "Contributor"))}
+                          {(thread.contributorDisplayName || thread.authorType === "User") ? "Testprepkart" : (thread.author?.firstName ? `${thread.author.firstName} ${thread.author.lastName}` : (thread.guestName || "Contributor"))}
                         </h4>
                         <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider ${(thread.contributorDisplayName || thread.authorType === "User") ? "bg-indigo-100 text-indigo-700" : "bg-gray-100 text-gray-400"}`}>
-                          {(thread.contributorDisplayName || thread.authorType === "User") ? "TestprepKart" : (thread.author?.role || "Student")}
+                          {(thread.contributorDisplayName || thread.authorType === "User") ? "Testprepkart" : (thread.author?.role || "Student")}
                         </span>
                       </div>
                       <p className="text-[10px] text-gray-400 font-medium mt-1">Posted {timeAgo(thread.createdAt)} • <FaEye size={8} className="inline mr-1" /> {thread.views || 0}</p>
@@ -1158,9 +1158,9 @@ const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal, onOpenSave
   );
 };
 
-/* Helpers: admin/moderation replies show as TestprepKart */
+/* Helpers: admin/moderation replies show as Testprepkart */
 const getReplyDisplayName = (reply) => {
-  if (reply.authorType === "User") return "TestprepKart";
+  if (reply.authorType === "User") return "Testprepkart";
   return reply.author?.firstName ? `${reply.author.firstName} ${reply.author.lastName}` : (reply.guestName || "Contributor");
 };
 const getReplyDisplayInitial = (reply) => {
@@ -1202,7 +1202,7 @@ const CommentItem = ({ reply, onVote, onReply, onReport, onShare, depth = 0, onS
         <div className="flex items-center gap-2 mb-2">
           <div className={`w-6 h-6 rounded-full flex items-center justify-center overflow-hidden border shadow-xs ${reply.authorType === "User" ? "bg-blue-100 border-blue-200" : "bg-gray-50 border-gray-100"}`}>
             {reply.authorType === "User" ? (
-              <img src={BRAND_AVATAR_URL} alt="TestprepKart" className="w-full h-full object-cover" />
+              <img src={BRAND_AVATAR_URL} alt="Testprepkart" className="w-full h-full object-cover" />
             ) : reply.author?.avatar ? (
               <img src={reply.author.avatar} alt="av" className="w-full h-full object-cover" />
             ) : (
@@ -1214,7 +1214,7 @@ const CommentItem = ({ reply, onVote, onReply, onReport, onShare, depth = 0, onS
           </span>
           {(reply.authorType === "User" || reply.author?.role) && (
             <span className={`text-[7px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider ${reply.authorType === "User" || reply.author?.role === "admin" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-400"}`}>
-              {reply.authorType === "User" ? "TestprepKart" : (reply.author?.role === "admin" ? "TestprepKart" : "Student")}
+              {reply.authorType === "User" ? "Testprepkart" : (reply.author?.role === "admin" ? "Testprepkart" : "Student")}
             </span>
           )}
           <span className="text-gray-300">•</span>
@@ -1310,7 +1310,7 @@ const CommentItem = ({ reply, onVote, onReply, onReport, onShare, depth = 0, onS
           <div className="flex items-center gap-3 mb-4">
             <div className={`w-10 h-10 rounded-full flex items-center justify-center overflow-hidden border shadow-sm ring-2 ring-white ${reply.authorType === "User" ? "bg-blue-100 border-blue-200" : "bg-gray-50 border-gray-100"}`}>
               {reply.authorType === "User" ? (
-                <img src={BRAND_AVATAR_URL} alt="TestprepKart" className="w-full h-full object-cover" />
+                <img src={BRAND_AVATAR_URL} alt="Testprepkart" className="w-full h-full object-cover" />
               ) : reply.author?.avatar ? (
                 <img src={reply.author.avatar} alt="av" className="w-full h-full object-cover" />
               ) : (
@@ -1323,7 +1323,7 @@ const CommentItem = ({ reply, onVote, onReply, onReport, onShare, depth = 0, onS
                   {getReplyDisplayName(reply)}
                 </span>
                 <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider ${reply.authorType === "User" || reply.author?.role === "admin" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-400"}`}>
-                  {reply.authorType === "User" ? "TestprepKart" : (reply.author?.role === "admin" ? "TestprepKart" : (reply.author?.role || "Student"))}
+                  {reply.authorType === "User" ? "Testprepkart" : (reply.author?.role === "admin" ? "Testprepkart" : (reply.author?.role || "Student"))}
                 </span>
               </div>
               <p className="text-[10px] text-gray-400 font-medium mt-1">Answered {timeAgo(reply.createdAt)}</p>

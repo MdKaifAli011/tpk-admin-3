@@ -286,7 +286,7 @@ export default function CourseDetailPage({ courseId }) {
                     value={formData.metaTitle}
                     onChange={handleChange}
                     readOnly={!isEditing}
-                    placeholder="e.g. 1 Yr. JEE Preparation | TestprepKart"
+                    placeholder="e.g. 1 Yr. JEE Preparation | Testprepkart"
                     className={`w-full px-4 py-2.5 rounded-lg border text-sm transition-shadow ${
                       isEditing
                         ? "border-gray-300 text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"

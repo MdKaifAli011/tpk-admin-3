@@ -69,7 +69,7 @@ Copy these into your `.env` file and fill in the values. Never commit real secre
 | `MAIL_PASSWORD` | SMTP password | (your password) |
 | `MAIL_ENCRYPTION` | `ssl` or `tls` | `ssl` |
 | `MAIL_FROM_ADDRESS` | From email address | `donot-reply@testprepkart.in` |
-| `MAIL_FROM_NAME` | From display name | `TestPrepKart` |
+| `MAIL_FROM_NAME` | From display name | `Testprepkart` |
 
 **Lead export email (recipient for CSV when admin exports leads):**
 
@@ -150,7 +150,7 @@ JWT_REFRESH_EXPIRES_IN=7d
 # MAIL_PASSWORD=...
 # MAIL_ENCRYPTION=ssl
 # MAIL_FROM_ADDRESS=...
-# MAIL_FROM_NAME=TestPrepKart
+# MAIL_FROM_NAME=Testprepkart
 # LEAD_EXPORT_MAIL_TO=you@example.com
 ```
 
@@ -194,7 +194,7 @@ MAIL_USERNAME=noreply@yourdomain.com
 MAIL_PASSWORD=REPLACE_WITH_MAIL_PASSWORD
 MAIL_ENCRYPTION=ssl
 MAIL_FROM_ADDRESS=noreply@yourdomain.com
-MAIL_FROM_NAME=TestPrepKart
+MAIL_FROM_NAME=Testprepkart
 LEAD_EXPORT_MAIL_TO=admin@yourdomain.com
 ```
 

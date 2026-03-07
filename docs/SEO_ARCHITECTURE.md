@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-This document explains the comprehensive SEO architecture for the TestPrepKart platform, covering 7-level nested routes, tab-based navigation, and metadata generation strategies.
+This document explains the comprehensive SEO architecture for the Testprepkart platform, covering 7-level nested routes, tab-based navigation, and metadata generation strategies.
 
 ---
 
@@ -268,7 +268,7 @@ if (tab === "practice" && testSlug) {
 
 - **Maximum Length**: 60 characters
 - **Format**: `{Entity Name} - {Tab Context} | {App Name}`
-- **Example**: `Kinematics - Discussion Forum | TestPrepKart`
+- **Example**: `Kinematics - Discussion Forum | Testprepkart`
 
 ### 2. Meta Descriptions
 

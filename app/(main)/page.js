@@ -163,7 +163,7 @@ function HomepageContent() {
     {
       name: "Sarah Johnson",
       role: "SAT 2024, 1520 Score",
-      text: "As an NRI student, finding quality prep material was challenging. TestPrepKart made it easy with their comprehensive resources.",
+      text: "As an NRI student, finding quality prep material was challenging. Testprepkart made it easy with their comprehensive resources.",
       rating: 5,
     },
     {
@@ -463,7 +463,7 @@ function HomepageContent() {
             </h2>
             <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
               See what our successful students have to say about their journey
-              with TestprepKart.
+              with Testprepkart.
             </p>
           </div>
 

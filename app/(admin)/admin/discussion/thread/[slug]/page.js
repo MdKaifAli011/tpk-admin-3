@@ -31,7 +31,7 @@ const timeAgo = (date) => {
 };
 
 const getReplyAuthorDisplayName = (reply) => {
-    if (reply.authorType === "User") return "TestPrepKart";
+    if (reply.authorType === "User") return "Testprepkart";
     return reply.author?.firstName ? `${reply.author.firstName} ${reply.author.lastName}` : (reply.guestName || "Guest User");
 };
 
@@ -647,7 +647,7 @@ const ThreadDetailModeration = () => {
                                 <div className="flex items-center gap-3">
                                     <div className="w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden border border-gray-100 shadow-sm bg-gray-50">
                                         {isThreadAdmin(thread) ? (
-                                            <img src={BRAND_LOGO_URL} alt="TestPrepKart" className="w-full h-full object-cover" />
+                                            <img src={BRAND_LOGO_URL} alt="Testprepkart" className="w-full h-full object-cover" />
                                         ) : thread.author?.avatar ? (
                                             <img src={thread.author.avatar} alt="avatar" className="w-full h-full object-cover" />
                                         ) : (
@@ -656,7 +656,7 @@ const ThreadDetailModeration = () => {
                                     </div>
                                     <div>
                                         <p className="text-sm font-bold text-gray-900 leading-none">
-                                            {isThreadAdmin(thread) ? "TestPrepKart" : (thread.author?.firstName ? `${thread.author.firstName} ${thread.author.lastName}` : (thread.guestName || "Guest User"))}
+                                            {isThreadAdmin(thread) ? "Testprepkart" : (thread.author?.firstName ? `${thread.author.firstName} ${thread.author.lastName}` : (thread.guestName || "Guest User"))}
                                         </p>
                                         <p className="text-[11px] text-gray-500 font-medium mt-1">
                                             Posted {timeAgo(thread.createdAt)}
@@ -1088,7 +1088,7 @@ const ReplyItem = ({ reply, handleToggleReplyApproval, handleDeleteReply, handle
                         <div className="flex items-center gap-2.5 mb-3">
                             <div className={`w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden shadow-sm ${reply.authorType === "User" ? "bg-blue-100 border border-blue-200" : "bg-indigo-50 border border-indigo-100"}`}>
                                 {reply.authorType === "User" ? (
-                                    <img src={BRAND_LOGO_URL} alt="TestPrepKart" className="w-full h-full object-cover" />
+                                    <img src={BRAND_LOGO_URL} alt="Testprepkart" className="w-full h-full object-cover" />
                                 ) : (
                                     <span className="text-[10px] font-bold text-indigo-700">{getReplyAuthorInitial(reply)}</span>
                                 )}
@@ -1097,7 +1097,7 @@ const ReplyItem = ({ reply, handleToggleReplyApproval, handleDeleteReply, handle
                                 <div className="flex items-center gap-2 flex-wrap">
                                     <p className="text-xs font-bold text-gray-900">{getReplyAuthorDisplayName(reply)}</p>
                                     {reply.authorType === "User" && (
-                                        <span className="px-1.5 py-0.5 bg-blue-600 text-white text-[8px] font-bold uppercase tracking-wider rounded">TestPrepKart</span>
+                                        <span className="px-1.5 py-0.5 bg-blue-600 text-white text-[8px] font-bold uppercase tracking-wider rounded">Testprepkart</span>
                                     )}
                                     {isNew && (
                                         <span className="px-2 py-0.5 bg-blue-600 text-white text-[8px] font-bold uppercase tracking-wider rounded-full flex items-center gap-1 animate-pulse">

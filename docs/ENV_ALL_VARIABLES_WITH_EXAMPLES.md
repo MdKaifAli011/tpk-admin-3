@@ -54,7 +54,7 @@ MAIL_USERNAME=donot-reply@testprepkart.in
 MAIL_PASSWORD=your-smtp-password
 MAIL_ENCRYPTION=ssl
 MAIL_FROM_ADDRESS=donot-reply@testprepkart.in
-MAIL_FROM_NAME=TestPrepKart
+MAIL_FROM_NAME=Testprepkart
 LEAD_EXPORT_MAIL_TO=admin@example.com
 
 # Legacy email (fallback if MAIL_* not set)
@@ -119,7 +119,7 @@ ENABLE_SOURCE_MAPS=false
 | `MAIL_PASSWORD` | `your-password` | No | SMTP password. |
 | `MAIL_ENCRYPTION` | `ssl` or `tls` | No | Encryption. |
 | `MAIL_FROM_ADDRESS` | `donot-reply@testprepkart.in` | No | From email. |
-| `MAIL_FROM_NAME` | `TestPrepKart` | No | From display name. |
+| `MAIL_FROM_NAME` | `Testprepkart` | No | From display name. |
 | `LEAD_EXPORT_MAIL_TO` | `admin@example.com` | No | Email to receive lead export CSV. |
 | **Legacy email** (fallback) | | | |
 | `EMAIL_SERVICE` | `smtp` | No | Same as MAIL_MAILER. |
@@ -199,7 +199,7 @@ MAIL_USERNAME=noreply@yourdomain.com
 MAIL_PASSWORD=your-mail-password
 MAIL_ENCRYPTION=ssl
 MAIL_FROM_ADDRESS=noreply@yourdomain.com
-MAIL_FROM_NAME=TestPrepKart
+MAIL_FROM_NAME=Testprepkart
 LEAD_EXPORT_MAIL_TO=admin@yourdomain.com
 ```
 

@@ -57,31 +57,31 @@ export async function generateMetadata({ params, searchParams }) {
     const { fetchExamById, fetchSubjectById, fetchUnitById, fetchChapterById, fetchTopicById, fetchSubTopicById, fetchDefinitionById, fetchDefinitionDetailsById, fetchSubjectsByExam, fetchUnitsBySubject, fetchChaptersByUnit, fetchTopicsByChapter, fetchSubTopicsByTopic, fetchDefinitionsBySubTopic, findByIdOrSlug, createSlug } = await import("../../../../../../../lib/api");
     
     const exam = await fetchExamById(examSlug).catch(() => null);
-    if (!exam) return { title: `${definitionSlug || "Definition"} | TestPrepKart` };
+    if (!exam) return { title: `${definitionSlug || "Definition"} | Testprepkart` };
 
     const subjects = await fetchSubjectsByExam(exam._id).catch(() => []);
     const subject = findByIdOrSlug(subjects, subjectSlug);
-    if (!subject) return { title: `${definitionSlug || "Definition"} | TestPrepKart` };
+    if (!subject) return { title: `${definitionSlug || "Definition"} | Testprepkart` };
 
     const units = await fetchUnitsBySubject(subject._id, exam._id).catch(() => []);
     const unit = findByIdOrSlug(units, unitSlug);
-    if (!unit) return { title: `${definitionSlug || "Definition"} | TestPrepKart` };
+    if (!unit) return { title: `${definitionSlug || "Definition"} | Testprepkart` };
 
     const chapters = await fetchChaptersByUnit(unit._id).catch(() => []);
     const chapter = findByIdOrSlug(chapters, chapterSlug);
-    if (!chapter) return { title: `${definitionSlug || "Definition"} | TestPrepKart` };
+    if (!chapter) return { title: `${definitionSlug || "Definition"} | Testprepkart` };
 
     const topics = await fetchTopicsByChapter(chapter._id).catch(() => []);
     const topic = findByIdOrSlug(topics, topicSlug);
-    if (!topic) return { title: `${definitionSlug || "Definition"} | TestPrepKart` };
+    if (!topic) return { title: `${definitionSlug || "Definition"} | Testprepkart` };
 
     const subtopics = await fetchSubTopicsByTopic(topic._id).catch(() => []);
     const subtopic = findByIdOrSlug(subtopics, subtopicSlug);
-    if (!subtopic) return { title: `${definitionSlug || "Definition"} | TestPrepKart` };
+    if (!subtopic) return { title: `${definitionSlug || "Definition"} | Testprepkart` };
 
     const definitions = await fetchDefinitionsBySubTopic(subtopic._id).catch(() => []);
     const definition = findByIdOrSlug(definitions, definitionSlug);
-    if (!definition) return { title: `${definitionSlug || "Definition"} | TestPrepKart` };
+    if (!definition) return { title: `${definitionSlug || "Definition"} | Testprepkart` };
 
     const fullDefinitionData = await fetchDefinitionById(definition._id).catch(() => null);
     const finalDefinition = fullDefinitionData || definition;
@@ -106,7 +106,7 @@ export async function generateMetadata({ params, searchParams }) {
     );
   } catch (error) {
     logger.warn("Error generating definition page metadata:", error);
-    return { title: `${definitionSlug || "Definition"} | TestPrepKart` };
+    return { title: `${definitionSlug || "Definition"} | Testprepkart` };
   }
 }
 

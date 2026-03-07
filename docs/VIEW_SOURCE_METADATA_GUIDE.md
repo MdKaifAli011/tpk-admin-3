@@ -27,25 +27,25 @@
 
 #### Overview Tab (Default)
 ```html
-<title>Physics - JEE Exam Preparation | TestPrepKart</title>
+<title>Physics - JEE Exam Preparation | Testprepkart</title>
 <meta name="description" content="Prepare for Physics in JEE exam with comprehensive study materials...">
 ```
 
 #### Discussion Forum Tab
 ```html
-<title>Physics - Discussion Forum | TestPrepKart</title>
+<title>Physics - Discussion Forum | Testprepkart</title>
 <meta name="description" content="Join the Physics discussion forum. Ask questions, share study notes...">
 ```
 
 #### Practice Test Tab
 ```html
-<title>Physics - Practice Tests | TestPrepKart</title>
+<title>Physics - Practice Tests | Testprepkart</title>
 <meta name="description" content="Access practice tests for Physics. Improve your exam preparation...">
 ```
 
 #### Performance Tab
 ```html
-<title>Physics - Performance Analytics | TestPrepKart</title>
+<title>Physics - Performance Analytics | Testprepkart</title>
 <meta name="robots" content="noindex, nofollow">
 ```
 

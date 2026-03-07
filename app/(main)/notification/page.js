@@ -2,7 +2,7 @@ import React from "react";
 import NotificationListClient from "../components/NotificationListClient";
 
 export const metadata = {
-  title: "Notifications | TestPrepKart",
+  title: "Notifications | Testprepkart",
   description: "View all your notifications and updates.",
 };
 

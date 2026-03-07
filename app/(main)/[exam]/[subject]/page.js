@@ -54,12 +54,12 @@ export async function generateMetadata({ params, searchParams }) {
     } = await import("../../lib/api");
 
     const exam = await fetchExamById(examSlug).catch(() => null);
-    if (!exam) return { title: `${subjectSlug || "Subject"} | TestPrepKart` };
+    if (!exam) return { title: `${subjectSlug || "Subject"} | Testprepkart` };
 
     const subjects = await fetchSubjectsByExam(exam._id).catch(() => []);
     const subject = findByIdOrSlug(subjects, subjectSlug);
     if (!subject)
-      return { title: `${subjectSlug || "Subject"} | TestPrepKart` };
+      return { title: `${subjectSlug || "Subject"} | Testprepkart` };
 
     const fullSubjectData = await fetchSubjectById(subject._id).catch(
       () => null,
@@ -84,7 +84,7 @@ export async function generateMetadata({ params, searchParams }) {
     );
   } catch (error) {
     logger.warn("Error generating subject page metadata:", error);
-    return { title: `${subjectSlug || "Subject"} | TestPrepKart` };
+    return { title: `${subjectSlug || "Subject"} | Testprepkart` };
   }
 }
 

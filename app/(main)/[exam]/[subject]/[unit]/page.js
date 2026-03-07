@@ -60,17 +60,17 @@ export async function generateMetadata({ params, searchParams }) {
     } = await import("../../../lib/api");
 
     const exam = await fetchExamById(examSlug).catch(() => null);
-    if (!exam) return { title: `${unitSlug || "Unit"} | TestPrepKart` };
+    if (!exam) return { title: `${unitSlug || "Unit"} | Testprepkart` };
 
     const subjects = await fetchSubjectsByExam(exam._id).catch(() => []);
     const subject = findByIdOrSlug(subjects, subjectSlug);
-    if (!subject) return { title: `${unitSlug || "Unit"} | TestPrepKart` };
+    if (!subject) return { title: `${unitSlug || "Unit"} | Testprepkart` };
 
     const units = await fetchUnitsBySubject(subject._id, exam._id).catch(
       () => [],
     );
     const unit = findByIdOrSlug(units, unitSlug);
-    if (!unit) return { title: `${unitSlug || "Unit"} | TestPrepKart` };
+    if (!unit) return { title: `${unitSlug || "Unit"} | Testprepkart` };
 
     const fullUnitData = await fetchUnitById(unit._id).catch(() => null);
     const finalUnit = fullUnitData || unit;
@@ -94,7 +94,7 @@ export async function generateMetadata({ params, searchParams }) {
     );
   } catch (error) {
     logger.warn("Error generating unit page metadata:", error);
-    return { title: `${unitSlug || "Unit"} | TestPrepKart` };
+    return { title: `${unitSlug || "Unit"} | Testprepkart` };
   }
 }
 

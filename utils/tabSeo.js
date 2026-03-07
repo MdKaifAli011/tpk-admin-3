@@ -276,7 +276,7 @@ export async function generateTabAwareMetadata(
     .join(" - ");
 
   // Build title: Entity Name - Parent Hierarchy | App Name
-  // Example: "Biology - NEET | TestPrepKart" (not "Biology - NEET - Biology")
+  // Example: "Biology - NEET | Testprepkart" (not "Biology - NEET - Biology")
   const title = adminTitle && adminTitle.length > 0
     ? adminTitle
     : hierarchyContext

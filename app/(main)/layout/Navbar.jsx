@@ -298,7 +298,7 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen, showSidebar }) => {
             {/* Right: Social Media Icons */}
             <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2 xl:gap-3 shrink-0 order-2 xl:order-3">
               <a
-                href="https://www.youtube.com/@TestprepKart"
+                href="https://www.youtube.com/@Testprepkart"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-[10px] sm:text-xs md:text-sm cursor-pointer hover:text-blue-400 transition-colors touch-manipulation"
@@ -351,7 +351,7 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen, showSidebar }) => {
               <Link href="/" className="touch-manipulation flex items-center">
                 <Image
                   src={`${basePath}/logo.png`}
-                  alt="TestprepKart Logo"
+                  alt="Testprepkart Logo"
                   width={150}
                   height={150}
                   className="w-20 sm:w-24 md:w-28 lg:w-32 xl:w-36 h-auto object-contain"
@@ -607,7 +607,7 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen, showSidebar }) => {
                     <Link href="/" onClick={() => setIsNavMenuOpen(false)} className="shrink-0">
                       <Image
                         src={`${basePath}/logo.png`}
-                        alt="TestprepKart Logo"
+                        alt="Testprepkart Logo"
                         width={120}
                         height={120}
                         className="h-12 w-auto object-contain"
@@ -634,7 +634,7 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen, showSidebar }) => {
                     </button>
                   </div>
                   <p className="text-sm text-gray-700 mb-4 leading-relaxed">
-                    Hi, I&apos;m TestprepKart.
+                    Hi, I&apos;m Testprepkart.
                     <br />
                     Your Partner In Exam Preparation
                   </p>
