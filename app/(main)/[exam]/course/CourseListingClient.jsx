@@ -17,6 +17,7 @@ import {
 } from "react-icons/fa";
 import api from "@/lib/api";
 import { createSlug } from "@/utils/slug";
+import { getFacultiesForExam } from "@/constants";
 import CounselorModal from "@/app/(main)/components/CounselorModal";
 
 const PER_PAGE = 10;
@@ -212,41 +213,50 @@ export default function CourseListingClient({ examSlug, examName: examNameProp, 
             <div className="flex items-center gap-2">
               <div className="flex -space-x-1.5 overflow-hidden">
                 {(() => {
-                  const facultyImages = [];
+                  const toShow = 3;
+                  const fromCourses = [];
                   const seen = new Set();
                   for (const c of courses) {
-                    if (facultyImages.length >= 3) break;
+                    if (fromCourses.length >= toShow) break;
                     const img = c.instructorImage && String(c.instructorImage).trim();
                     const key = img || (c.createdBy || c._id);
                     if (seen.has(key)) continue;
                     seen.add(key);
-                    facultyImages.push({ img, name: c.createdBy || "", id: c._id + (img || key) });
+                    fromCourses.push({ img, name: c.createdBy || "" });
                   }
-                  const placeholders = Math.max(0, 3 - facultyImages.length);
+                  const examFaculties = getFacultiesForExam(examName);
+                  const filled = [...fromCourses];
+                  for (const f of examFaculties) {
+                    if (filled.length >= toShow) break;
+                    const key = (f.imageUrl && String(f.imageUrl).trim()) || f.name;
+                    if (seen.has(key)) continue;
+                    seen.add(key);
+                    filled.push({ img: f.imageUrl, name: f.name || "" });
+                  }
                   return (
                     <>
-                      {facultyImages.map(({ img, name, id }) => (
+                      {filled.map((item, i) => (
                         <div
-                          key={id}
+                          key={`${item.img || item.name}-${i}`}
                           className="inline-block h-6 w-6 rounded-full ring-2 ring-white bg-slate-100 overflow-hidden shrink-0"
-                          title={name ? `Instructor: ${name}` : undefined}
+                          title={item.name ? `Instructor: ${item.name}` : undefined}
                         >
-                          {img ? (
+                          {item.img ? (
                             <Image
-                              src={img}
-                              alt={name || "Faculty"}
+                              src={item.img}
+                              alt={item.name || "Faculty"}
                               width={24}
                               height={24}
                               className="h-full w-full object-cover"
                             />
                           ) : (
                             <div className="h-full w-full flex items-center justify-center bg-slate-200 text-[10px] font-bold text-slate-500 uppercase">
-                              {(name || "?").trim().charAt(0)}
+                              {(item.name || "?").trim().charAt(0)}
                             </div>
                           )}
                         </div>
                       ))}
-                      {Array.from({ length: placeholders }, (_, i) => (
+                      {Array.from({ length: Math.max(0, toShow - filled.length) }, (_, i) => (
                         <div key={`ph-${i}`} className="inline-block h-6 w-6 rounded-full ring-2 ring-white bg-slate-200" aria-hidden />
                       ))}
                     </>
@@ -254,7 +264,13 @@ export default function CourseListingClient({ examSlug, examName: examNameProp, 
                 })()}
               </div>
               <p className="text-xs text-slate-500">
-                Showing <span className="font-semibold text-slate-800">{from}–{to}</span> of <span className="font-semibold text-slate-800">{total}</span> courses
+                {total === 0 ? (
+                  <>No courses</>
+                ) : (
+                  <>
+                    Showing <span className="font-semibold text-slate-800">{from}–{to}</span> of <span className="font-semibold text-slate-800">{total}</span> {total === 1 ? "course" : "courses"}
+                  </>
+                )}
               </p>
             </div>
 
@@ -266,6 +282,12 @@ export default function CourseListingClient({ examSlug, examName: examNameProp, 
               >
                 Get Trial Session
               </button>
+              {/* <Link
+                href="/contact"
+                className="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-white border border-slate-200 text-xs font-semibold text-slate-700 hover:border-indigo-400 hover:text-indigo-600 transition-colors"
+              >
+                Connect with Counselor
+              </Link> */}
               <Link
                 href="/store"
                 className="inline-flex items-center justify-center px-5 py-2 rounded-lg bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-700 transition-colors active:scale-[0.98]"
@@ -422,8 +444,8 @@ function CourseCard({ course, examSlug, formatPrice, layout, listIndex = 0 }) {
           </button>
         </div>
 
-        {/* Title: High Impact Typography */}
-        <h2 className="text-[19px] font-black text-slate-800 mb-3 leading-[1.3] group-hover:text-indigo-600 transition-colors line-clamp-2 tracking-tight">
+        {/* Title */}
+        <h2 className="text-[19px] font-bold text-slate-800 mb-3 leading-[1.3] group-hover:text-indigo-600 transition-colors line-clamp-2 tracking-tight">
           {course.title}
         </h2>
 

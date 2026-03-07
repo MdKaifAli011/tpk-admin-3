@@ -45,7 +45,7 @@ import {
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
 
 const SIDEBAR_COURSE_DETAILS = [
-  { label: "Made For", value: "Grade 12 Going / 12th Studying" },
+  { label: "Course For", value: "Grade 12 Going / 12th Studying" },
   { label: "Mode", value: "Live, 2-way Interactive" },
   { label: "Target", value: "JEE (Main + Advanced)" },
   { label: "Subject Covered", value: "Math, Physics, Chemistry" },
@@ -59,7 +59,7 @@ const SIDEBAR_COURSE_DETAILS = [
 const SIDEBAR_CALL_PHONE = "+15107069331";
 
 const labelToKey = {
-  "Made For": "madeFor",
+  "Course For": "courseFor",
   Mode: "mode",
   Target: "target",
   "Subject Covered": "subjectCovered",
@@ -721,7 +721,7 @@ export default function CourseDetailPage() {
                     className="flex w-full items-center justify-center gap-2 rounded-lg bg-green-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-green-600 transition-colors mb-3"
                   >
                     <FaWhatsapp className="w-4 h-4 shrink-0" />
-                    WhatsApp Connect: {callPhone}
+                    WhatsApp Connect
                   </a>
 
                   <a

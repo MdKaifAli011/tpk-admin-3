@@ -8,6 +8,7 @@ import { LoadingSpinner } from "../ui/SkeletonLoader";
 import { ToastContainer, useToast } from "../ui/Toast";
 import MediaPickerModal from "../ui/MediaPickerModal";
 import api from "@/lib/api";
+import { getFacultiesForExam } from "@/constants";
 
 const defaultForm = {
   examId: "",
@@ -91,6 +92,7 @@ export default function CourseForm({ courseId, isNew }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const saveAndClose = e.nativeEvent?.submitter?.getAttribute?.("data-save-and-close") === "true";
     if (!form.examId?.trim()) {
       showError("Please select an exam first.");
       return;
@@ -130,7 +132,9 @@ export default function CourseForm({ courseId, isNew }) {
         const res = await api.patch(`/course/${courseId}`, payload);
         if (res.data?.success) {
           success("Course updated.");
-          router.push("/admin/course");
+          if (saveAndClose) {
+            router.push("/admin/course");
+          }
         } else {
           showError(res.data?.message || "Update failed");
         }
@@ -230,6 +234,45 @@ export default function CourseForm({ courseId, isNew }) {
                   ))}
                 </select>
               </div>
+
+              {/* Faculty quick-select: show list by exam, auto-fill createdBy + instructorImage */}
+              {form.examId && (() => {
+                const selectedExam = exams.find((e) => e._id === form.examId);
+                const faculties = selectedExam ? getFacultiesForExam(selectedExam.name) : [];
+                if (faculties.length === 0) return null;
+                const selectedIndex = faculties.findIndex(
+                  (f) => (f.name || "").trim() === (form.createdBy || "").trim()
+                );
+                const selectValue = selectedIndex >= 0 ? String(selectedIndex) : "";
+                return (
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Quick select faculty</label>
+                    <select
+                      value={selectValue}
+                      onChange={(e) => {
+                        const idx = e.target.value;
+                        if (idx === "") return;
+                        const f = faculties[Number(idx)];
+                        if (f) {
+                          setForm((prev) => ({
+                            ...prev,
+                            createdBy: f.name,
+                            instructorImage: f.imageUrl || prev.instructorImage,
+                          }));
+                        }
+                      }}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 bg-white"
+                      disabled={saving}
+                    >
+                      <option value="">-- Choose a faculty to fill name and image --</option>
+                      {faculties.map((f, i) => (
+                        <option key={i} value={i}>{f.name}</option>
+                      ))}
+                    </select>
+                    <p className="mt-1 text-xs text-gray-500">Fills &quot;Created by&quot; and &quot;Instructor image URL&quot; below; you can still edit them manually.</p>
+                  </div>
+                );
+              })()}
 
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Card title <span className="text-red-500">*</span></label>
@@ -456,6 +499,17 @@ export default function CourseForm({ courseId, isNew }) {
                 {saving ? <LoadingSpinner size="small" /> : <FaSave className="w-4 h-4" />}
                 {isNew ? "Create course" : "Save changes"}
               </button>
+              {!isNew && (
+                <button
+                  type="submit"
+                  data-save-and-close="true"
+                  disabled={saving}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-500 text-white rounded-lg font-medium hover:bg-indigo-600 disabled:opacity-50"
+                >
+                  {saving ? <LoadingSpinner size="small" /> : <FaSave className="w-4 h-4" />}
+                  Save and Close
+                </button>
+              )}
               <Link
                 href="/admin/course"
                 className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50"
