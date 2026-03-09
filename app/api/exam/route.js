@@ -42,8 +42,17 @@ export async function GET(request) {
     // Build query with case-insensitive status matching
     let query = {};
     if (statusFilter !== "all") {
-      // Use regex for case-insensitive matching
-      query.status = { $regex: new RegExp(`^${statusFilter}$`, "i") };
+      // Include active OR missing/null status so newly created or cloned docs without status still show
+      if (statusFilter === STATUS.ACTIVE) {
+        query.$or = [
+          { status: { $regex: new RegExp(`^${statusFilter}$`, "i") } },
+          { status: { $exists: false } },
+          { status: null },
+          { status: "" },
+        ];
+      } else {
+        query.status = { $regex: new RegExp(`^${statusFilter}$`, "i") };
+      }
     }
 
     // Handle Metadata filtering
@@ -95,9 +104,10 @@ export async function GET(request) {
     // Ensure all returned exams are valid (have name and match status)
     const validExams = exams.filter((exam) => {
       if (!exam || !exam.name) return false;
-      // Double-check status match (case-insensitive)
+      // Double-check status match (case-insensitive); treat missing status as "active" for public list
       if (statusFilter !== "all") {
-        return exam.status && exam.status.toLowerCase() === statusFilter;
+        const s = (exam.status || "active").toLowerCase();
+        return s === statusFilter;
       }
       return true;
     });

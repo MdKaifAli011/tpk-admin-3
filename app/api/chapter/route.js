@@ -13,14 +13,19 @@ import { requireAuth, requireAction } from "@/middleware/authMiddleware";
 // ---------- GET ALL CHAPTERS ----------
 export async function GET(request) {
   try {
-    // Check authentication (all authenticated users can view)
-    const authCheck = await requireAuth(request);
-    if (authCheck.error) {
-      return NextResponse.json(authCheck, { status: authCheck.status || 401 });
+    const { searchParams } = new URL(request.url);
+    const statusFilterParam = searchParams.get("status") || STATUS.ACTIVE;
+    const statusFilter = statusFilterParam.toLowerCase();
+
+    // Allow public access for active chapters only (for frontend self-study pages)
+    if (statusFilter !== STATUS.ACTIVE) {
+      const authCheck = await requireAuth(request);
+      if (authCheck.error) {
+        return NextResponse.json(authCheck, { status: authCheck.status || 401 });
+      }
     }
 
     await connectDB();
-    const { searchParams } = new URL(request.url);
 
     // Parse pagination
     const { page, limit, skip } = parsePagination(searchParams);
@@ -29,8 +34,6 @@ export async function GET(request) {
     const unitId = searchParams.get("unitId");
     const subjectId = searchParams.get("subjectId");
     const examId = searchParams.get("examId");
-    const statusFilterParam = searchParams.get("status") || STATUS.ACTIVE;
-    const statusFilter = statusFilterParam.toLowerCase();
 
     const metaStatus = searchParams.get("metaStatus"); // filled, notFilled
 

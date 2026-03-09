@@ -17,7 +17,8 @@ export async function POST(request) {
         }
 
         await connectDB();
-        const { examId, subjectId } = await request.json();
+        const body = await request.json();
+        const { examId, subjectId, format } = body || {};
 
         if (!examId || !subjectId) {
             return NextResponse.json(
@@ -209,6 +210,24 @@ export async function POST(request) {
         
         const exportData = exportRows;
         console.log(`✅ Export: Built comprehensive export with ${exportData.length} rows (${allUnits.length} Units + ${allChapters.length} Chapters + ${allTopics.length} Topics + ${allSubTopics.length} SubTopics + ${allDefinitions.length} Definitions)`);
+
+        // Return JSON format when requested
+        if (format === "json") {
+            const payload = {
+                success: true,
+                data: exportData,
+                count: exportData.length,
+                totalItems: totalItems,
+                units: allUnits.length,
+                chapters: allChapters.length,
+                topics: allTopics.length,
+                subtopics: allSubTopics.length,
+                definitions: allDefinitions.length,
+                size: Buffer.byteLength(JSON.stringify(exportData), "utf8")
+            };
+            console.log(`📄 Export: Returning JSON with ${exportData.length} rows`);
+            return NextResponse.json(payload);
+        }
 
         // 3. Generate CSV with proper escaping - ONLY NAMES, NO CONTENT
         const headers = ["Unit", "Chapter", "Topic", "SubTopic", "Definition"];

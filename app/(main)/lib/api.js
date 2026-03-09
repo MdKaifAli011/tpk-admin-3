@@ -12,13 +12,14 @@ const createSlugLocal = createSlugUtil;
 // Base path - should match next.config.mjs basePath
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
 
-// Helper to get base URL for server-side requests
-const getBaseUrl = () => {
+// Helper to get base URL for server-side requests (optionally from current request)
+const getBaseUrl = (overrides = {}) => {
   if (typeof window !== "undefined") {
     // Client-side: use basePath for relative URLs
     return basePath;
   }
-  // Server-side (e.g. SSR, server components): use deployment URL in production so fetch() reaches the same app
+  // Server-side: allow explicit baseUrl (from request host) so SSR works when accessed by IP/domain
+  if (overrides.baseUrl) return overrides.baseUrl;
   const vercelUrl = process.env.VERCEL_URL;
   if (vercelUrl) {
     return `https://${vercelUrl}${basePath}`;
@@ -28,10 +29,24 @@ const getBaseUrl = () => {
     const base = appUrl.replace(/\/$/, "");
     return `${base}${basePath}`;
   }
-  // Development or same-host production: localhost
   const port = process.env.PORT || 3000;
   return `http://localhost:${port}${basePath}`;
 };
+
+/** Call from server components to use the request host as API base (fixes 404 when using IP/domain) */
+export async function getServerRequestBaseUrl() {
+  if (typeof window !== "undefined") return null;
+  try {
+    const { headers } = await import("next/headers");
+    const headersList = await headers();
+    const host = headersList.get("host") || headersList.get("x-forwarded-host");
+    const proto = headersList.get("x-forwarded-proto") || "http";
+    if (!host) return null;
+    return `${proto}://${host}${basePath}`;
+  } catch {
+    return null;
+  }
+}
 
 // Request cache for deduplication (prevents duplicate requests)
 const requestCache = new Map();
@@ -45,11 +60,11 @@ const getCacheKey = (url, params = {}) => {
 // Fetch all active exams (with pagination support and request deduplication)
 export const fetchExams = async (options = {}) => {
   try {
-    const { page = 1, limit = 100, status = STATUS.ACTIVE } = options;
+    const { page = 1, limit = 100, status = STATUS.ACTIVE, baseUrl: baseUrlOverride } = options;
 
     // Check if we're on server side
     const isServer = typeof window === "undefined";
-    const baseUrl = getBaseUrl();
+    const baseUrl = getBaseUrl({ baseUrl: baseUrlOverride });
     const url = `${baseUrl}/api/exam?page=${page}&limit=${limit}&status=${status}`;
     const cacheKey = getCacheKey(url, { page, limit, status });
 
@@ -67,6 +82,9 @@ export const fetchExams = async (options = {}) => {
     if (isServer) {
       const response = await fetch(url, {
         cache: "no-store", // Always fetch fresh data for exams
+        headers: {
+          "Cache-Control": "no-cache", // Bypass API in-memory cache so new exams show immediately
+        },
       });
 
       if (!response.ok) {
@@ -127,11 +145,11 @@ export const fetchExams = async (options = {}) => {
 };
 
 // Fetch exam by ID or name/slug
-export const fetchExamById = async (examId) => {
+export const fetchExamById = async (examId, options = {}) => {
   if (!examId) return null;
 
   const isServer = typeof window === "undefined";
-  const baseUrl = getBaseUrl();
+  const baseUrl = getBaseUrl({ baseUrl: options.baseUrl });
 
   try {
     // Try by ID first (only if it looks like an ObjectId)
@@ -171,7 +189,7 @@ export const fetchExamById = async (examId) => {
 
   // Fallback: fetch all exams and find by slug
   try {
-    const exams = await fetchExams({ limit: 100 });
+    const exams = await fetchExams({ limit: 100, baseUrl: options.baseUrl });
     const examIdLower = examId?.toLowerCase();
     const found = exams.find(
       (exam) =>

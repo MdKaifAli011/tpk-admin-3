@@ -104,6 +104,7 @@ const ALL_MENU_ITEMS = [
       { name: "Notifications", href: "/admin/notification" },
       { name: "Store", href: "/admin/store" },
       { name: "Import Self Study Data", href: "/admin/bulk-import" },
+      { name: "Book JSON Import", href: "/admin/book-import" },
       { name: "Meta Import", href: "/admin/seo-import" },
       { name: "URL Export", href: "/admin/url-export" },
       { name: "Site Settings", href: "/admin/site-settings" },
@@ -527,7 +528,7 @@ const Sidebar = memo(({ isOpen, onClose }) => {
           </div>
         </nav>
 
-      
+
       </aside>
     </>
   );

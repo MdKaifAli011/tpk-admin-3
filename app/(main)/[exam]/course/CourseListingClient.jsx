@@ -17,6 +17,7 @@ import {
 } from "react-icons/fa";
 import api from "@/lib/api";
 import { createSlug } from "@/utils/slug";
+import { toTitleCase } from "@/utils/titleCase";
 import { getFacultiesForExam } from "@/constants";
 import CounselorModal from "@/app/(main)/components/CounselorModal";
 
@@ -82,7 +83,7 @@ export default function CourseListingClient({ examSlug, examName: examNameProp, 
     setPage(1);
   }, [examSlug, examIdProp]);
 
-  const examName = examNameProp || examSlug || "Exam";
+  const examName = toTitleCase(examNameProp || examSlug || "Exam");
   const slugForLinks = examSlug || createSlug(examName);
   const from = total === 0 ? 0 : (page - 1) * PER_PAGE + 1;
   const to = total === 0 ? 0 : Math.min(page * PER_PAGE, total);
@@ -222,7 +223,7 @@ export default function CourseListingClient({ examSlug, examName: examNameProp, 
                     const key = img || (c.createdBy || c._id);
                     if (seen.has(key)) continue;
                     seen.add(key);
-                    fromCourses.push({ img, name: c.createdBy || "" });
+                    fromCourses.push({ img, name: (c.createdBy || "") ? toTitleCase(String(c.createdBy)) : "" });
                   }
                   const examFaculties = getFacultiesForExam(examName);
                   const filled = [...fromCourses];
@@ -231,7 +232,7 @@ export default function CourseListingClient({ examSlug, examName: examNameProp, 
                     const key = (f.imageUrl && String(f.imageUrl).trim()) || f.name;
                     if (seen.has(key)) continue;
                     seen.add(key);
-                    filled.push({ img: f.imageUrl, name: f.name || "" });
+                    filled.push({ img: f.imageUrl, name: f.name ? toTitleCase(String(f.name)) : "" });
                   }
                   return (
                     <>
@@ -388,9 +389,9 @@ function CourseCard({ course, examSlug, formatPrice, layout, listIndex = 0 }) {
   };
 
   const metaParts = [];
-  if (course.lessonsRange) metaParts.push({ Icon: FaBookOpen, text: course.lessonsRange });
-  if (course.durationLabel) metaParts.push({ Icon: FaClock, text: course.durationLabel });
-  else if (course.hours) metaParts.push({ Icon: FaClock, text: course.hours });
+  if (course.lessonsRange) metaParts.push({ Icon: FaBookOpen, text: toTitleCase(String(course.lessonsRange)) });
+  if (course.durationLabel) metaParts.push({ Icon: FaClock, text: toTitleCase(String(course.durationLabel)) });
+  else if (course.hours) metaParts.push({ Icon: FaClock, text: toTitleCase(String(course.hours)) });
 
   return (
     <Link
@@ -446,7 +447,7 @@ function CourseCard({ course, examSlug, formatPrice, layout, listIndex = 0 }) {
 
         {/* Title */}
         <h2 className="text-[19px] font-bold text-slate-800 mb-3 leading-[1.3] group-hover:text-indigo-600 transition-colors line-clamp-2 tracking-tight">
-          {course.title}
+          {toTitleCase(course.title || "")}
         </h2>
 
         {/* Meta Row: Clean Separation */}
@@ -478,7 +479,7 @@ function CourseCard({ course, examSlug, formatPrice, layout, listIndex = 0 }) {
               )}
             </div>
             <p className="text-[13px] text-slate-500">
-              By <span className="font-bold text-slate-900 ml-0.5">{course.createdBy}</span>
+              By <span className="font-bold text-slate-900 ml-0.5">{toTitleCase(course.createdBy || "")}</span>
             </p>
           </div>
         )}

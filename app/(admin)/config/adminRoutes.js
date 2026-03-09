@@ -23,6 +23,7 @@ const ROUTE_PERMISSIONS = [
   { path: "/admin/store", minRole: "moderator" },
   { path: "/admin/seo-import", minRole: "super_moderator" },
   { path: "/admin/bulk-import", minRole: "super_moderator" },
+  { path: "/admin/book-import", minRole: "super_moderator" },
   { path: "/admin/url-export", minRole: "moderator" },
   { path: "/admin/analytics", minRole: "super_moderator" },
   { path: "/admin/lead", minRole: "admin" },
@@ -56,10 +57,12 @@ const ROUTE_PERMISSIONS = [
  */
 export function normalizeRole(role) {
   if (!role) return "viewer";
-  return String(role)
-    .toLowerCase()
-    .replace(/\s+/g, "_")
-    .replace(/[^a-z0-9_]/g, "") || "viewer";
+  return (
+    String(role)
+      .toLowerCase()
+      .replace(/\s+/g, "_")
+      .replace(/[^a-z0-9_]/g, "") || "viewer"
+  );
 }
 
 /**
@@ -86,7 +89,7 @@ export function getMinRoleForPath(pathname) {
   if (!pathname) return "admin"; // unknown path = restrict
   const normalized = pathname.replace(/\/$/, "") || "/";
   const entry = ROUTE_PERMISSIONS.find(
-    (r) => normalized === r.path || normalized.startsWith(r.path + "/")
+    (r) => normalized === r.path || normalized.startsWith(r.path + "/"),
   );
   return entry ? entry.minRole : "admin";
 }
@@ -95,7 +98,11 @@ export function getMinRoleForPath(pathname) {
  * Check if a user with userRole can access the given pathname.
  */
 export function canAccessRoute(pathname, userRole) {
-  if (!pathname || pathname.startsWith("/admin/login") || pathname.startsWith("/admin/register")) {
+  if (
+    !pathname ||
+    pathname.startsWith("/admin/login") ||
+    pathname.startsWith("/admin/register")
+  ) {
     return true;
   }
   const minRole = getMinRoleForPath(pathname);

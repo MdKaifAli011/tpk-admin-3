@@ -14,14 +14,9 @@ import { logger } from "@/utils/logger";
 import cacheManager from "@/utils/cacheManager";
 
 // ---------- GET SINGLE EXAM ----------
+// Public access so frontend self-study pages can server-render without auth
 export async function GET(request, { params }) {
   try {
-    // Check authentication (all authenticated users can view)
-    const authCheck = await requireAuth(request);
-    if (authCheck.error) {
-      return NextResponse.json(authCheck, { status: authCheck.status || 401 });
-    }
-
     await connectDB();
     const { id } = await params;
 

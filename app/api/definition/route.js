@@ -16,14 +16,19 @@ import { requireAuth, requireAction } from "@/middleware/authMiddleware";
 // ---------- GET ALL DEFINITIONS ----------
 export async function GET(request) {
   try {
-    // Check authentication (all authenticated users can view)
-    const authCheck = await requireAuth(request);
-    if (authCheck.error) {
-      return NextResponse.json(authCheck, { status: authCheck.status || 401 });
+    const { searchParams } = new URL(request.url);
+    const statusFilterParam = searchParams.get("status") || STATUS.ACTIVE;
+    const statusFilter = statusFilterParam.toLowerCase();
+
+    // Allow public access for active definitions only (for frontend self-study pages)
+    if (statusFilter !== STATUS.ACTIVE) {
+      const authCheck = await requireAuth(request);
+      if (authCheck.error) {
+        return NextResponse.json(authCheck, { status: authCheck.status || 401 });
+      }
     }
 
     await connectDB();
-    const { searchParams } = new URL(request.url);
 
     // Parse pagination
     const { page, limit, skip } = parsePagination(searchParams);
@@ -31,8 +36,6 @@ export async function GET(request) {
     // Get filters (normalize status to lowercase for case-insensitive matching)
     const topicId = searchParams.get("topicId");
     const subTopicId = searchParams.get("subTopicId");
-    const statusFilterParam = searchParams.get("status") || STATUS.ACTIVE;
-    const statusFilter = statusFilterParam.toLowerCase();
 
     const metaStatus = searchParams.get("metaStatus"); // filled, notFilled
 

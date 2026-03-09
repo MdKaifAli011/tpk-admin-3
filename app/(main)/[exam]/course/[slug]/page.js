@@ -41,35 +41,23 @@ import {
   validateCountry,
   validateClassName,
 } from "@/app/(main)/components/utils/formValidation";
+import { toTitleCase } from "@/utils/titleCase";
 
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
 
-const SIDEBAR_COURSE_DETAILS = [
-  { label: "Course For", value: "Grade 12 Going / 12th Studying" },
-  { label: "Mode", value: "Live, 2-way Interactive" },
-  { label: "Target", value: "JEE (Main + Advanced)" },
-  { label: "Subject Covered", value: "Math, Physics, Chemistry" },
-  { label: "Session Length", value: "90 Minutes" },
-  { label: "Tests", value: "Regular Weekly Test" },
-  { label: "Full-Length", value: "All India Test Series" },
-  { label: "Fee (USA/Europe*)", value: "INR 1,79,300" },
-  { label: "Fee (India/ME/SE*)", value: "INR 97,600" },
-  { label: "Time Zone", value: "Adjusted as per different Time Zones" },
+/** Sidebar detail rows: same fields as admin Course Details form (CourseDetailsForm.jsx). Data comes from course API. */
+const SIDEBAR_DETAIL_FIELDS = [
+  { label: "Course For", field: "madeFor" },
+  { label: "Mode", field: "mode" },
+  { label: "Target", field: "target" },
+  { label: "Subject Covered", field: "subjectCovered" },
+  { label: "Session Length", field: "sessionLength" },
+  { label: "Tests", field: "tests" },
+  { label: "Full-Length", field: "fullLength" },
+  { label: "Fee (USA/Europe*)", field: "feeUsaEurope" },
+  { label: "Fee (India/ME/SE*)", field: "feeIndiaMeSe" },
+  { label: "Time Zone", field: "timeZone" },
 ];
-const SIDEBAR_CALL_PHONE = "+15107069331";
-
-const labelToKey = {
-  "Course For": "courseFor",
-  Mode: "mode",
-  Target: "target",
-  "Subject Covered": "subjectCovered",
-  "Session Length": "sessionLength",
-  Tests: "tests",
-  "Full-Length": "fullLength",
-  "Fee (USA/Europe*)": "feeUsaEurope",
-  "Fee (India/ME/SE*)": "feeIndiaMeSe",
-  "Time Zone": "timeZone",
-};
 
 function getYouTubeVideoId(url) {
   if (!url || typeof url !== "string") return null;
@@ -321,27 +309,30 @@ export default function CourseDetailPage() {
   }
 
   const examName = course.examId?.name || examSlug || "Exam";
+  const examNameDisplay = toTitleCase(examName);
+  const courseTitleDisplay = toTitleCase(course.title || "");
   const formatPrice = (p) =>
     p != null && p !== "" ? `$${Number(p).toLocaleString()}` : "—";
   const contentTrimmed =
     course.content != null ? String(course.content).trim() : "";
 
-  const sidebarDetails = SIDEBAR_COURSE_DETAILS.map((row) => {
-    const key = labelToKey[row.label];
-    const fromCourse =
-      key && course[key] != null && String(course[key]).trim() !== "";
-    const value = fromCourse
-      ? String(course[key]).trim()
-      : row.label === "Target"
-        ? examName
-        : row.value;
-    return { label: row.label, value };
-  });
+  const sidebarDetails = SIDEBAR_DETAIL_FIELDS.map(({ label, field }) => {
+    let value =
+      course[field] != null && String(course[field]).trim() !== ""
+        ? String(course[field]).trim()
+        : null;
+    if (label === "Target" && !value) value = examName;
+    return { label: toTitleCase(label), value: value != null ? toTitleCase(String(value)) : null };
+  }).filter((row) => row.value != null && row.value !== "");
 
   const callPhone =
     course.callPhone != null && String(course.callPhone).trim() !== ""
       ? String(course.callPhone).trim()
-      : SIDEBAR_CALL_PHONE;
+      : "";
+  // WhatsApp: show button only when a number exists (course, then env, then site default)
+  const whatsappNumber = (callPhone || process.env.NEXT_PUBLIC_WHATSAPP_PHONE || "15107069331").trim().replace(/\D/g, "");
+  const showWhatsAppButton = whatsappNumber.length > 0;
+  const whatsappUrl = showWhatsAppButton ? `https://api.whatsapp.com/send?phone=${whatsappNumber}` : null;
   const batchClosingDays =
     course.batchClosingDays != null && Number(course.batchClosingDays) >= 0
       ? Number(course.batchClosingDays)
@@ -400,13 +391,13 @@ export default function CourseDetailPage() {
               href={`/${examSlug}/course`}
               className="text-sm font-medium text-slate-500 hover:text-indigo-600 transition-colors truncate max-w-[200px] sm:max-w-none"
             >
-              {examName} Courses
+              {examNameDisplay} Courses
             </Link>
             <span className="text-slate-300 select-none" aria-hidden>
               /
             </span>
             <span className="text-sm font-semibold text-slate-900 bg-slate-100 rounded-md px-2.5 py-1 truncate max-w-[220px] sm:max-w-md">
-              {course.title}
+              {courseTitleDisplay}
             </span>
           </nav>
 
@@ -415,7 +406,7 @@ export default function CourseDetailPage() {
             <div className="lg:col-span-8 min-w-0">
               {/* Title (Improved Scale) */}
               <h1 className="text-3xl sm:text-4xl lg:text-[38px] font-bold text-slate-900 tracking-tight leading-snug mb-3 break-words">
-                {course.title}
+                {courseTitleDisplay}
               </h1>
 
               {/* Description (Improved Readability) */}
@@ -446,7 +437,7 @@ export default function CourseDetailPage() {
 
                   <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 min-w-0 text-sm text-slate-600">
                     <span className="font-bold text-slate-900 truncate">
-                      By {course.createdBy || "Expert"}
+                      By {toTitleCase(course.createdBy || "Expert")}
                     </span>
 
                     <span className="text-slate-300 shrink-0" aria-hidden>
@@ -501,9 +492,9 @@ export default function CourseDetailPage() {
               {/* Price + CTA */}
               <div className="flex flex-wrap items-center gap-4">
                 {/* Price (Stronger Hierarchy) */}
-                <span className="text-3xl sm:text-4xl font-bold text-blue-700 tabular-nums tracking-tight">
+                {/* <span className="text-3xl sm:text-4xl font-bold text-blue-700 tabular-nums tracking-tight">
                   {formatPrice(course.price)}
-                </span>
+                </span> */}
 
                 <Link
                   href={brochureButtonUrl}
@@ -522,7 +513,7 @@ export default function CourseDetailPage() {
                   className="inline-flex items-center justify-center gap-2 rounded-lg border-2 border-indigo-200 bg-white px-5 py-2.5 text-sm font-semibold text-indigo-600 hover:bg-indigo-50 hover:border-indigo-300 transition-colors"
                 >
                   <FaPhone className="w-4 h-4 shrink-0" />
-                  Connect With Counselor
+                  Schedule free trial class
                 </button>
 
                 {batchClosingDays != null && (
@@ -714,15 +705,17 @@ export default function CourseDetailPage() {
                   <p className="mt-4 mb-2 text-sm font-medium text-[#21A58E]">
                     For details about the course
                   </p>
-                  <a
-                    href={`https://wa.me/${callPhone.replace(/\s/g, "")}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-green-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-green-600 transition-colors mb-3"
-                  >
-                    <FaWhatsapp className="w-4 h-4 shrink-0" />
-                    WhatsApp Connect
-                  </a>
+                  {showWhatsAppButton && whatsappUrl ? (
+                    <a
+                      href={whatsappUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#25D366] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#20BD5A] transition-colors mb-3"
+                    >
+                      <FaWhatsapp className="w-4 h-4 shrink-0" />
+                      WhatsApp Connect
+                    </a>
+                  ) : null}
 
                   <a
                     href="https://testprepkart-operations.com/enrollment-form.php"

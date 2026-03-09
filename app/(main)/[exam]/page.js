@@ -14,6 +14,7 @@ import {
   fetchExamDetailsById,
   fetchUnitsBySubject,
   fetchChaptersByUnit,
+  getServerRequestBaseUrl,
 } from "../lib/api";
 import { getExamInfoByExamId } from "@/lib/getExamInfoServer";
 import { ERROR_MESSAGES, PLACEHOLDERS } from "@/constants";
@@ -45,9 +46,10 @@ export async function generateMetadata({ params, searchParams }) {
   }
 
   try {
-    const { fetchExamById, fetchExamDetailsById, createSlug } =
+    const { fetchExamById, fetchExamDetailsById, createSlug, getServerRequestBaseUrl } =
       await import("../lib/api");
-    const exam = await fetchExamById(examSlug).catch(() => null);
+    const serverBaseUrl = await getServerRequestBaseUrl?.();
+    const exam = await fetchExamById(examSlug, { baseUrl: serverBaseUrl ?? undefined }).catch(() => null);
     if (!exam)
       return generateSEO(
         {},
@@ -80,8 +82,11 @@ export async function generateMetadata({ params, searchParams }) {
 const ExamPage = async ({ params }) => {
   const { exam: examId } = await params;
 
+  // Use request host for API calls so SSR works when accessed via IP/domain (e.g. 194.238.17.203:3003)
+  const serverBaseUrl = await getServerRequestBaseUrl?.() ?? null;
+
   // Fetch exam data
-  const exam = await fetchExamById(examId);
+  const exam = await fetchExamById(examId, { baseUrl: serverBaseUrl ?? undefined });
   if (!exam) {
     notFound();
   }

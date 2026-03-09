@@ -67,6 +67,39 @@ const parseCSV = (text) => {
     return { headers, data };
 };
 
+// Normalize object keys to match CSV header style (lowercase, no spaces)
+const normalizeKey = (k) => String(k).toLowerCase().replace(/\s+/g, "");
+
+// Parse JSON file: accept array of objects or { data: array }
+const parseJSON = (text) => {
+    let raw;
+    try {
+        raw = JSON.parse(text);
+    } catch (e) {
+        throw new Error("Invalid JSON: " + (e.message || "parse error"));
+    }
+    let arr = Array.isArray(raw) ? raw : (raw && Array.isArray(raw.data) ? raw.data : null);
+    if (!arr || arr.length === 0) {
+        throw new Error("JSON must be an array of objects or an object with a 'data' array");
+    }
+    const first = arr[0];
+    if (!first || typeof first !== "object" || Array.isArray(first)) {
+        throw new Error("Each JSON row must be an object");
+    }
+    const headers = Object.keys(first).map(normalizeKey);
+    const data = arr.map((row) => {
+        const obj = {};
+        Object.keys(row).forEach((k) => {
+            obj[normalizeKey(k)] = row[k] != null ? String(row[k]) : "";
+        });
+        headers.forEach((h) => {
+            if (!(h in obj)) obj[h] = "";
+        });
+        return obj;
+    });
+    return { headers, data };
+};
+
 const IMPORT_TYPES = [
     { value: "exam", label: "Exams", parents: [] },
     { value: "subject", label: "Subjects", parents: ["exam"] },
@@ -223,25 +256,40 @@ const BulkImportManagement = () => {
     // --- File Handling ---
     const handleFileChange = (e) => {
         const selectedFile = e.target.files[0];
-        if (selectedFile) {
-            if (selectedFile.type !== "text/csv" && !selectedFile.name.endsWith(".csv")) {
-                showError("Please upload a valid CSV file");
-                return;
-            }
-            setFile(selectedFile);
-            setImportStatus("idle");
-            setResults({ success: 0, failed: 0, errors: [] });
+        if (!selectedFile) return;
 
-            // Parse immediately for preview
-            const reader = new FileReader();
-            reader.onload = (evt) => {
-                const text = evt.target.result;
-                const { headers, data } = parseCSV(text);
-                setHeaders(headers);
-                setParsedData(data);
-            };
-            reader.readAsText(selectedFile);
+        const isCSV = selectedFile.type === "text/csv" || selectedFile.name.toLowerCase().endsWith(".csv");
+        const isJSON = selectedFile.type === "application/json" || selectedFile.name.toLowerCase().endsWith(".json");
+
+        if (!isCSV && !isJSON) {
+            showError("Please upload a CSV or JSON file");
+            return;
         }
+
+        setFile(selectedFile);
+        setImportStatus("idle");
+        setResults({ success: 0, failed: 0, errors: [] });
+
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+            const text = evt.target.result;
+            try {
+                if (isJSON) {
+                    const { headers, data } = parseJSON(text);
+                    setHeaders(headers);
+                    setParsedData(data);
+                } else {
+                    const { headers, data } = parseCSV(text);
+                    setHeaders(headers);
+                    setParsedData(data);
+                }
+            } catch (err) {
+                showError(err.message || "Failed to parse file");
+                setHeaders([]);
+                setParsedData([]);
+            }
+        };
+        reader.readAsText(selectedFile);
     };
 
     const downloadTemplate = () => {
@@ -285,6 +333,36 @@ const BulkImportManagement = () => {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+    };
+
+    const downloadJsonTemplate = () => {
+        let sampleRows = [];
+        if (importMode === "context-locked") {
+            sampleRows = [
+                { unit: "Mechanics", chapter: "Motion", topic: "Kinematics", subtopic: "Displacement", definition: "What is Displacement?" },
+                { unit: "Mechanics", chapter: "Motion", topic: "Kinematics", subtopic: "Velocity", definition: "What is Velocity?" },
+                { unit: "Thermodynamics", chapter: "Heat Transfer", topic: "Conduction", subtopic: "Thermal Conductivity", definition: "What is Thermal Conductivity?" }
+            ];
+        } else if (importMode === "hierarchical") {
+            sampleRows = [{ exam: "Physics", subject: "Mechanics", unit: "Motion", chapter: "Kinematics", topic: "Displacement", subtopic: "Vector", definition: "What is Displacement?" }];
+        } else {
+            sampleRows = [{ name: "Example Item", orderNumber: 1 }];
+            if (importType === "chapter") {
+                sampleRows[0].weightage = 10;
+                sampleRows[0].time = 60;
+                sampleRows[0].questions = 20;
+            }
+        }
+        const jsonContent = JSON.stringify(sampleRows, null, 2);
+        const blob = new Blob([jsonContent], { type: "application/json;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", `${importMode === 'context-locked' ? 'context_locked_' : importMode === 'hierarchical' ? 'deep_' : ''}${importType}_import_template.json`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
     };
 
     // --- Export Logic ---
@@ -377,6 +455,60 @@ const BulkImportManagement = () => {
             setExportStatus("error");
             const errorMessage = err.response?.data?.message || err.message || "Export failed. Please try again.";
             showError(errorMessage);
+                setTimeout(() => setExportStatus("idle"), 2000);
+        }
+    };
+
+    const handleExportJson = async () => {
+        if (!parents.examId || !parents.subjectId) {
+            showError("Please select both Exam and Subject to export data.");
+            return;
+        }
+        setExportStatus("exporting");
+        try {
+            success("Preparing JSON export...");
+            const res = await api.post("/bulk-export", {
+                examId: parents.examId,
+                subjectId: parents.subjectId,
+                format: "json"
+            });
+            if (res.data.success && Array.isArray(res.data.data)) {
+                const arr = res.data.data;
+                const totalRows = res.data.count || arr.length;
+                if (totalRows === 0) {
+                    showError("No data found to export for the selected criteria.");
+                    setExportStatus("idle");
+                    return;
+                }
+                const jsonString = JSON.stringify(arr, null, 2);
+                const blob = new Blob([jsonString], { type: "application/json;charset=utf-8;" });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement("a");
+                link.setAttribute("href", url);
+                const examName = dropdownOptions.exams.find(e => e._id === parents.examId)?.name || "Exam";
+                const subjectName = dropdownOptions.subjects.find(s => s._id === parents.subjectId)?.name || "Subject";
+                const date = new Date().toISOString().split("T")[0];
+                const sanitizedExamName = examName.replace(/[^a-z0-9]/gi, "_").toLowerCase();
+                const sanitizedSubjectName = subjectName.replace(/[^a-z0-9]/gi, "_").toLowerCase();
+                link.setAttribute("download", `Export_${sanitizedExamName}_${sanitizedSubjectName}_${date}.json`);
+                document.body.appendChild(link);
+                link.click();
+                setTimeout(() => {
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(url);
+                }, 100);
+                success(`✅ JSON export complete! Downloaded ${totalRows.toLocaleString()} rows.`);
+                setExportStatus("success");
+                setTimeout(() => setExportStatus("idle"), 4000);
+            } else {
+                setExportStatus("error");
+                showError(res.data?.message || "JSON export failed: No data returned");
+                setTimeout(() => setExportStatus("idle"), 2000);
+            }
+        } catch (err) {
+            console.error("JSON export error:", err);
+            setExportStatus("error");
+            showError(err.response?.data?.message || err.message || "JSON export failed.");
             setTimeout(() => setExportStatus("idle"), 2000);
         }
     };
@@ -408,7 +540,7 @@ const BulkImportManagement = () => {
         }
 
         if (!parsedData.length) {
-            showError("No data found in CSV");
+            showError("No data found in file (CSV or JSON)");
             return;
         }
 
@@ -746,16 +878,25 @@ const BulkImportManagement = () => {
                                 Bulk Import Management
                             </h1>
                             <p className="text-xs text-gray-600">
-                                Import bulk data for Exams, Subjects, Units, Chapters, Topics, SubTopics, and Definitions efficiently via CSV upload.
+                                Import bulk data for Exams, Subjects, Units, Chapters, Topics, SubTopics, and Definitions efficiently via CSV or JSON upload.
                             </p>
                         </div>
-                        <button
-                            onClick={downloadTemplate}
-                            className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs font-medium transition-colors flex items-center gap-2"
-                        >
-                            <FaDownload className="w-3 h-3" />
-                            Download Template
-                        </button>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={downloadTemplate}
+                                className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs font-medium transition-colors flex items-center gap-2"
+                            >
+                                <FaDownload className="w-3 h-3" />
+                                Download CSV Template
+                            </button>
+                            <button
+                                onClick={downloadJsonTemplate}
+                                className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-medium transition-colors flex items-center gap-2"
+                            >
+                                <FaDownload className="w-3 h-3" />
+                                Download JSON Template
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -927,35 +1068,48 @@ const BulkImportManagement = () => {
                             <div className="mt-6 pt-6 border-t border-gray-100 flex items-center justify-between">
                                 <div>
                                     <h3 className="text-sm font-medium text-gray-900">Export Options</h3>
-                                    <p className="text-xs text-gray-500 mt-1">Download existing data for the selected Exam and Subject.</p>
+                                    <p className="text-xs text-gray-500 mt-1">Download existing data for the selected Exam and Subject as CSV or JSON.</p>
                                 </div>
-                                <button
-                                    onClick={handleExport}
-                                    disabled={exportStatus === "exporting"}
-                                    className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors flex items-center gap-2 ${exportStatus === "exporting"
-                                        ? "bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed"
-                                        : exportStatus === "success"
-                                            ? "bg-green-50 text-green-700 border border-green-200"
-                                            : "bg-indigo-600 text-white hover:bg-indigo-700 border border-indigo-200 shadow-sm"
-                                        }`}
-                                >
-                                    {exportStatus === "exporting" ? (
-                                        <>
-                                            <FaSpinner className="animate-spin" size={14} />
-                                            Exporting...
-                                        </>
-                                    ) : exportStatus === "success" ? (
-                                        <>
-                                            <FaCheckCircle size={14} />
-                                            Exported!
-                                        </>
-                                    ) : (
-                                        <>
-                                            <FaFileExport size={14} />
-                                            Export Data
-                                        </>
-                                    )}
-                                </button>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={handleExport}
+                                        disabled={exportStatus === "exporting"}
+                                        className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors flex items-center gap-2 ${exportStatus === "exporting"
+                                            ? "bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed"
+                                            : exportStatus === "success"
+                                                ? "bg-green-50 text-green-700 border border-green-200"
+                                                : "bg-indigo-600 text-white hover:bg-indigo-700 border border-indigo-200 shadow-sm"
+                                            }`}
+                                    >
+                                        {exportStatus === "exporting" ? (
+                                            <>
+                                                <FaSpinner className="animate-spin" size={14} />
+                                                Exporting...
+                                            </>
+                                        ) : exportStatus === "success" ? (
+                                            <>
+                                                <FaCheckCircle size={14} />
+                                                Exported!
+                                            </>
+                                        ) : (
+                                            <>
+                                                <FaFileExport size={14} />
+                                                Export CSV
+                                            </>
+                                        )}
+                                    </button>
+                                    <button
+                                        onClick={handleExportJson}
+                                        disabled={exportStatus === "exporting"}
+                                        className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors flex items-center gap-2 ${exportStatus === "exporting"
+                                            ? "bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed"
+                                            : "bg-purple-600 text-white hover:bg-purple-700 border border-purple-200 shadow-sm"
+                                            }`}
+                                    >
+                                        <FaFileExport size={14} />
+                                        Export JSON
+                                    </button>
+                                </div>
                             </div>
                         )}
                     </div>
@@ -964,7 +1118,7 @@ const BulkImportManagement = () => {
                 {/* Upload Section */}
                 <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
                     <h2 className="text-lg font-semibold text-gray-900 mb-4">
-                        Upload CSV File
+                        Upload CSV or JSON File
                     </h2>
 
                     <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:bg-gray-50 transition-colors relative">
@@ -972,7 +1126,7 @@ const BulkImportManagement = () => {
                             type="file"
                             ref={fileInputRef}
                             onChange={handleFileChange}
-                            accept=".csv"
+                            accept=".csv,.json"
                             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                             disabled={importStatus === "processing"}
                         />
@@ -984,8 +1138,8 @@ const BulkImportManagement = () => {
                             </div>
                         ) : (
                             <div>
-                                <p className="text-gray-700 font-medium text-sm">Click or Drag CSV file here</p>
-                                <p className="text-xs text-gray-500 mt-1">Supported format: .csv</p>
+                                <p className="text-gray-700 font-medium text-sm">Click or drag a CSV or JSON file here</p>
+                                <p className="text-xs text-gray-500 mt-1">Supported formats: .csv, .json</p>
                             </div>
                         )}
                     </div>
