@@ -99,8 +99,8 @@ const ExamProgressClient = ({ examId, initialProgress = 0 }) => {
   }, [examId, isAuthenticated]);
 
   return (
-    <div className="text-right">
-      <p className="text-[10px] text-gray-500 mb-1">Progress</p>
+    <div className="text-right min-h-[44px] flex flex-col justify-center" aria-label="Exam progress">
+      <p className="text-[10px] text-gray-600 mb-1">Progress</p>
       <ProgressBar
         progress={progress}
         size="md"

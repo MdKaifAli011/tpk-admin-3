@@ -97,6 +97,7 @@ const TabsClient = ({
   const [loadedTabs, setLoadedTabs] = useState(new Set([fromUrlParam(currentTabParam)]));
   const [isTabTransitioning, setIsTabTransitioning] = useState(false);
   const transitionTimerRef = useRef(null);
+  const pendingTabRef = useRef(null); // tab we just clicked; ignore URL sync until URL catches up
   const MIN_LOADING_MS = 220;
 
   const clearTransitionTimer = useCallback(() => {
@@ -106,9 +107,22 @@ const TabsClient = ({
     }
   }, []);
 
-  // Sync state with URL changes (handling back/forward button)
+  // Sync state with URL only for back/forward. When user clicks a tab we set pendingTabRef
+  // so we don't overwrite activeTab with stale URL before router.replace completes.
   useEffect(() => {
     const tabFromUrl = fromUrlParam(searchParams.get("tab"));
+    const pending = pendingTabRef.current;
+
+    if (pending !== null && pending !== undefined) {
+      // We just clicked a tab; URL might not have updated yet
+      if (tabFromUrl === pending) {
+        pendingTabRef.current = null; // URL caught up
+      }
+      // Don't overwrite activeTab with stale URL
+      return;
+    }
+
+    // No pending click - URL change is from back/forward or initial load
     if (tabFromUrl !== activeTab) {
       clearTransitionTimer();
       setIsTabTransitioning(true);
@@ -148,6 +162,7 @@ const TabsClient = ({
     if (tab === activeTab) return;
 
     clearTransitionTimer();
+    pendingTabRef.current = tab; // so URL-sync effect doesn't overwrite with stale tab
     setIsTabTransitioning(true);
     setActiveTab(tab);
     setLoadedTabs(prev => new Set([...prev, tab]));
@@ -163,8 +178,6 @@ const TabsClient = ({
     params.set("tab", newTabParam);
 
     // Clear tab-specific parameters when switching tabs to avoid URL clutter
-    // This ensures that 'test=slug', 'view=results', 'thread=slug' don't persist when moving to other tabs
-    // Always clear these parameters when switching to any tab (including Performance)
     params.delete("test");
     params.delete("view");
     params.delete("thread");
@@ -173,7 +186,6 @@ const TabsClient = ({
     params.delete("sort");
     params.delete("action");
 
-    // Replace URL without page reload/scroll reset
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   }, [activeTab, searchParams, pathname, router, clearTransitionTimer]);
 
@@ -291,18 +303,22 @@ const TabsClient = ({
   return (
     <Card variant="standard" hover={false} className="overflow-hidden">
       {/* Tab Navigation */}
-      <nav className="flex overflow-x-auto sm:overflow-visible border-b border-gray-200  bg-gradient-to-br from-indigo-50 via-white to-purple-50 scrollbar-hide">
-        <div className="flex min-w-max sm:min-w-0 w-full gap-4 sm:gap-6 md:gap-8 lg:gap-10 xl:gap-12 justify-around px-3 sm:px-4 md:px-6">
+      <nav className="flex overflow-x-auto sm:overflow-visible border-b border-gray-200  bg-gradient-to-br from-indigo-50 via-white to-purple-50 scrollbar-hide" aria-label="Content tabs">
+        <div className="flex min-w-max sm:min-w-0 w-full gap-4 sm:gap-6 md:gap-8 lg:gap-10 xl:gap-12 justify-around px-3 sm:px-4 md:px-6" role="tablist">
           {TABS.map((tab) => {
             const isActive = activeTab === tab;
             const isPerformanceTab = tab === "Performance";
 
             return (
               <button
+                type="button"
                 key={tab}
                 onClick={() => handleTabChange(tab)}
                 onMouseEnter={() => handleTabHover(tab)}
-                className={`relative px-2.5 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-2.5 text-[10px] sm:text-xs md:text-sm font-semibold whitespace-nowrap transition-all duration-300 border-b-2 group overflow-hidden shrink-0 rounded-t-lg cursor-pointer ${isActive
+                aria-label={`Switch to ${tab} tab`}
+                aria-selected={isActive}
+                role="tab"
+                className={`relative px-2.5 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-2.5 min-h-[44px] text-[10px] sm:text-xs md:text-sm font-semibold whitespace-nowrap transition-all duration-300 border-b-2 group overflow-hidden shrink-0 rounded-t-lg cursor-pointer ${isActive
                   ? isPerformanceTab
                     ? "text-emerald-700 border-emerald-600 bg-gradient-to-b from-emerald-50 via-white to-white shadow-sm"
                     : "text-indigo-600 border-indigo-600 bg-white"
@@ -354,10 +370,12 @@ const TabsClient = ({
         </div>
       </nav>
 
-      {/* Tab Content: one loading animation on switch, then tab loads */}
+      {/* Tab Content: one loading animation on switch, then tab loads. Min-height reduces CLS. */}
       <div
-        className="text-gray-700 text-sm sm:text-base min-h-[220px]"
+        className="text-gray-700 text-sm sm:text-base min-h-[280px]"
         key={`tab-wrapper-${activeTab}`}
+        role="tabpanel"
+        aria-label={`${activeTab} content`}
       >
         {isTabTransitioning ? (
           <ExamAreaLoading variant="compact" message="Loading tab..." />

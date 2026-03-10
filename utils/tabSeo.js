@@ -290,6 +290,9 @@ export async function generateTabAwareMetadata(
       ? `Study ${entityData.name} in ${hierarchyContext}. Access comprehensive study materials, practice questions, and expert guidance for exam preparation.`
       : `Study ${entityData.name}. Access comprehensive study materials, practice questions, and expert guidance for exam preparation.`;
 
+  // Ensure description is never empty for SEO (e.g. document must have meta description)
+  const finalDescription = (description && description.trim()) || `Prepare for ${entityData.name} with ${APP_CONFIG.name}. Get study materials, practice tests, and exam preparation resources.`;
+
   // Build keywords: Entity, Parent Hierarchy, relevant terms
   const keywords = adminKeywords && adminKeywords.length > 0
     ? adminKeywords
@@ -299,7 +302,7 @@ export async function generateTabAwareMetadata(
 
   const seoData = {
     title,
-    metaDescription: description,
+    metaDescription: finalDescription,
     keywords,
   };
 

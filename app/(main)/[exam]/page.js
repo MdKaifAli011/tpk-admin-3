@@ -171,12 +171,15 @@ const ExamPage = async ({ params }) => {
     bg-gradient-to-br from-indigo-50 via-white to-purple-50
     border border-indigo-100/60
     shadow-[0_2px_12px_rgba(120,90,200,0.08)]
+    min-h-[72px] sm:min-h-[80px]
   "
+        aria-labelledby="exam-page-title"
       >
         <div className="flex items-start md:items-center justify-between w-full gap-3 sm:gap-4 min-w-0">
           {/* LEFT — Exam Title + Description */}
           <div className="flex flex-col min-w-0 flex-1 leading-tight">
             <h1
+              id="exam-page-title"
               className="
           text-lg sm:text-xl font-bold text-indigo-900
           truncate
@@ -199,8 +202,8 @@ const ExamPage = async ({ params }) => {
             </p>
           </div>
 
-          {/* RIGHT — Exam Progress */}
-          <div className="shrink-0 ml-auto">
+          {/* RIGHT — Exam Progress (reserve space to avoid CLS when it loads) */}
+          <div className="shrink-0 ml-auto min-w-[100px] sm:min-w-[120px]">
             <ExamProgressClient examId={examIdStr} />
           </div>
         </div>
@@ -218,12 +221,14 @@ const ExamPage = async ({ params }) => {
       />
 
       {/* Navigation */}
-      <NavigationClient
-        backUrl="/"
-        backLabel="Back to Home"
-        prevNav={prevNav}
-        nextNav={nextNav}
-      />
+      <nav aria-label="Previous and next exam navigation">
+        <NavigationClient
+          backUrl="/"
+          backLabel="Back to Home"
+          prevNav={prevNav}
+          nextNav={nextNav}
+        />
+      </nav>
 
       {/* Blog Section - assigned to this exam */}
       <AssignedBlogsSection

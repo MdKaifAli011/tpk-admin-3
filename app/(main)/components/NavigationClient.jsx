@@ -14,6 +14,7 @@ const NavigationClient = ({ prevNav, nextNav }) => {
           <Link
             href={prevNav.url}
             title={prevNav.label}
+            aria-label={`Previous: ${prevNav.label}`}
             className="group flex flex-col justify-center rounded-lg min-h-[56px] transition-all duration-200 w-full px-3.5 py-2.5 overflow-hidden bg-gradient-to-br from-indigo-50 via-white to-purple-50 border border-indigo-100/60 shadow-[0_2px_12px_rgba(100,70,200,0.08)] hover:shadow-[0_4px_16px_rgba(100,70,200,0.12)] hover:border-indigo-200"
           >
             <span className="text-[10px] text-indigo-600 font-semibold uppercase tracking-wide mb-1">
@@ -36,6 +37,7 @@ const NavigationClient = ({ prevNav, nextNav }) => {
           <Link
             href={nextNav.url}
             title={nextNav.label}
+            aria-label={`Next: ${nextNav.label}`}
             className="group flex flex-col justify-center rounded-lg min-h-[56px] transition-all duration-200 w-full px-3.5 py-2.5 overflow-hidden bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-[0_2px_12px_rgba(100,70,200,0.2)] hover:shadow-[0_4px_16px_rgba(100,70,200,0.3)] text-right items-end"
           >
             <span className="text-[10px] text-blue-100 font-semibold uppercase tracking-wide mb-1">
