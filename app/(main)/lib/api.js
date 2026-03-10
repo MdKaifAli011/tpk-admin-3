@@ -9,8 +9,8 @@ import { logger } from "@/utils/logger";
 // Create slug utility function for use in this file (local variable)
 const createSlugLocal = createSlugUtil;
 
-// Base path - should match next.config.mjs basePath
-const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
+// Base path - should match next.config.mjs basePath (trim to tolerate spaces in .env)
+const basePath = (process.env.NEXT_PUBLIC_BASE_PATH || "/self-study").replace(/^\s+|\s+$/g, "") || "/self-study";
 
 // Helper to get base URL for server-side requests (optionally from current request)
 const getBaseUrl = (overrides = {}) => {
@@ -33,7 +33,11 @@ const getBaseUrl = (overrides = {}) => {
   return `http://localhost:${port}${basePath}`;
 };
 
-/** Call from server components to use the request host as API base (fixes 404 when using IP/domain) */
+/**
+ * Returns the request host as API base (e.g. https://testprepkart.com/self-study).
+ * Do NOT use for server-side self-requests (fetch to same app) — causes "fetch failed".
+ * Server-side fetches in this file use localhost via getBaseUrl() instead.
+ */
 export async function getServerRequestBaseUrl() {
   if (typeof window !== "undefined") return null;
   try {
@@ -64,6 +68,8 @@ export const fetchExams = async (options = {}) => {
 
     // Check if we're on server side
     const isServer = typeof window === "undefined";
+    // Server-side: always use localhost so we hit the same process (no outgoing request to public host).
+    // Using getServerRequestBaseUrl() caused "fetch failed" when server fetched https://testprepkart.com.
     const baseUrl = getBaseUrl({ baseUrl: baseUrlOverride });
     const url = `${baseUrl}/api/exam?page=${page}&limit=${limit}&status=${status}`;
     const cacheKey = getCacheKey(url, { page, limit, status });
@@ -139,7 +145,12 @@ export const fetchExams = async (options = {}) => {
 
     return result;
   } catch (error) {
-    logger.error("Error fetching exams:", error);
+    const errDetail = {
+      errorMessage: error?.message,
+      errorCode: error?.code,
+      ...(error?.response && { status: error.response?.status, responseData: error.response?.data }),
+    };
+    logger.error("Error fetching exams:", errDetail);
     return [];
   }
 };

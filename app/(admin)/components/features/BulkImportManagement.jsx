@@ -126,6 +126,25 @@ const IMPORT_TYPES = [
     },
 ];
 
+// Context-Locked: lock level determines which parents are fixed and which columns CSV has
+const CONTEXT_LOCK_LEVELS = [
+    { value: "subject", label: "Subject", description: "Lock Exam + Subject → import Units, Chapters, Topics, SubTopics, Definitions" },
+    { value: "unit", label: "Unit", description: "Lock Exam + Subject + Unit → import Chapters, Topics, SubTopics, Definitions" },
+    { value: "chapter", label: "Chapter", description: "Lock up to Chapter → import Topics, SubTopics, Definitions" },
+    { value: "topic", label: "Topic", description: "Lock up to Topic → import SubTopics, Definitions" },
+];
+
+// CSV/JSON columns for each context lock level (only children of the locked level)
+const getContextLockColumns = (lockLevel) => {
+    switch (lockLevel) {
+        case "subject": return ["unit", "chapter", "topic", "subtopic", "definition"];
+        case "unit": return ["chapter", "topic", "subtopic", "definition"];
+        case "chapter": return ["topic", "subtopic", "definition"];
+        case "topic": return ["subtopic", "definition"];
+        default: return ["unit", "chapter", "topic", "subtopic", "definition"];
+    }
+};
+
 const BulkImportManagement = () => {
     const { success, error: showError, toasts, removeToast } = useToast();
 
@@ -167,6 +186,7 @@ const BulkImportManagement = () => {
     const fileInputRef = useRef(null);
 
     const [importMode, setImportMode] = useState("single"); // single, hierarchical, context-locked
+    const [contextLockLevel, setContextLockLevel] = useState("subject"); // subject | unit | chapter | topic
 
     // --- Fetching Logic for Dropdowns ---
     const fetchExams = useCallback(async () => {
@@ -297,14 +317,36 @@ const BulkImportManagement = () => {
         let sampleRows = [];
 
         if (importMode === "context-locked") {
-            // Context-Locked Mode: Simplified structure
-            headers = ["unit", "chapter", "topic", "subtopic", "definition"];
-            sampleRows = [
-                "Mechanics,Motion,Kinematics,Displacement,What is Displacement?",
-                "Mechanics,Motion,Kinematics,Velocity,What is Velocity?",
-                "Mechanics,Laws of Motion,Newton's Laws,First Law,Newton's First Law",
-                "Thermodynamics,Heat Transfer,Conduction,Thermal Conductivity,What is Thermal Conductivity?"
-            ];
+            // Context-Locked Mode: columns depend on lock level
+            const columns = getContextLockColumns(contextLockLevel);
+            headers = columns;
+            if (contextLockLevel === "subject") {
+                sampleRows = [
+                    "Mechanics,Motion,Kinematics,Displacement,What is Displacement?",
+                    "Mechanics,Motion,Kinematics,Velocity,What is Velocity?",
+                    "Mechanics,Laws of Motion,Newton's Laws,First Law,Newton's First Law",
+                    "Thermodynamics,Heat Transfer,Conduction,Thermal Conductivity,What is Thermal Conductivity?"
+                ];
+            } else if (contextLockLevel === "unit") {
+                sampleRows = [
+                    "Motion,Kinematics,Displacement,What is Displacement?",
+                    "Motion,Kinematics,Velocity,What is Velocity?",
+                    "Laws of Motion,Newton's Laws,First Law,Newton's First Law"
+                ];
+            } else if (contextLockLevel === "chapter") {
+                sampleRows = [
+                    "Kinematics,Displacement,What is Displacement?",
+                    "Kinematics,Velocity,What is Velocity?",
+                    "Newton's Laws,First Law,Newton's First Law"
+                ];
+            } else {
+                // topic
+                sampleRows = [
+                    "Displacement,What is Displacement?",
+                    "Velocity,What is Velocity?",
+                    "First Law,Newton's First Law"
+                ];
+            }
         } else if (importMode === "hierarchical") {
             // Deep Hierarchy Headers
             const levels = ['exam', 'subject', 'unit', 'chapter', 'topic', 'subtopic', 'definition'];
@@ -338,11 +380,35 @@ const BulkImportManagement = () => {
     const downloadJsonTemplate = () => {
         let sampleRows = [];
         if (importMode === "context-locked") {
-            sampleRows = [
-                { unit: "Mechanics", chapter: "Motion", topic: "Kinematics", subtopic: "Displacement", definition: "What is Displacement?" },
-                { unit: "Mechanics", chapter: "Motion", topic: "Kinematics", subtopic: "Velocity", definition: "What is Velocity?" },
-                { unit: "Thermodynamics", chapter: "Heat Transfer", topic: "Conduction", subtopic: "Thermal Conductivity", definition: "What is Thermal Conductivity?" }
-            ];
+            const columns = getContextLockColumns(contextLockLevel);
+            if (contextLockLevel === "subject") {
+                sampleRows = [
+                    { unit: "Mechanics", chapter: "Motion", topic: "Kinematics", subtopic: "Displacement", definition: "What is Displacement?" },
+                    { unit: "Mechanics", chapter: "Motion", topic: "Kinematics", subtopic: "Velocity", definition: "What is Velocity?" },
+                    { unit: "Thermodynamics", chapter: "Heat Transfer", topic: "Conduction", subtopic: "Thermal Conductivity", definition: "What is Thermal Conductivity?" }
+                ];
+            } else if (contextLockLevel === "unit") {
+                sampleRows = [
+                    { chapter: "Motion", topic: "Kinematics", subtopic: "Displacement", definition: "What is Displacement?" },
+                    { chapter: "Motion", topic: "Kinematics", subtopic: "Velocity", definition: "What is Velocity?" }
+                ];
+            } else if (contextLockLevel === "chapter") {
+                sampleRows = [
+                    { topic: "Kinematics", subtopic: "Displacement", definition: "What is Displacement?" },
+                    { topic: "Kinematics", subtopic: "Velocity", definition: "What is Velocity?" }
+                ];
+            } else {
+                sampleRows = [
+                    { subtopic: "Displacement", definition: "What is Displacement?" },
+                    { subtopic: "Velocity", definition: "What is Velocity?" }
+                ];
+            }
+            // Ensure all column keys present
+            sampleRows = sampleRows.map(row => {
+                const obj = {};
+                columns.forEach(col => { obj[col] = row[col] ?? ""; });
+                return obj;
+            });
         } else if (importMode === "hierarchical") {
             sampleRows = [{ exam: "Physics", subject: "Mechanics", unit: "Motion", chapter: "Kinematics", topic: "Displacement", subtopic: "Vector", definition: "What is Displacement?" }];
         } else {
@@ -523,9 +589,21 @@ const BulkImportManagement = () => {
 
         // Validate Context based on mode
         if (importMode === "context-locked") {
-            // Context-Locked requires Exam and Subject
+            // Context-Locked requires Exam and Subject; then Unit/Chapter/Topic based on lock level
             if (!parents.examId || !parents.subjectId) {
                 showError("Context-Locked mode requires both Exam and Subject to be selected.");
+                return;
+            }
+            if (contextLockLevel === "unit" && !parents.unitId) {
+                showError("Lock at Unit requires a Unit to be selected.");
+                return;
+            }
+            if (contextLockLevel === "chapter" && (!parents.unitId || !parents.chapterId)) {
+                showError("Lock at Chapter requires Unit and Chapter to be selected.");
+                return;
+            }
+            if (contextLockLevel === "topic" && (!parents.unitId || !parents.chapterId || !parents.topicId)) {
+                showError("Lock at Topic requires Unit, Chapter, and Topic to be selected.");
                 return;
             }
         } else {
@@ -551,34 +629,26 @@ const BulkImportManagement = () => {
         setImportProgressText(`Preparing to import ${parsedData.length} rows...`);
         importStartTimeRef.current = Date.now(); // Track start time
 
-        // Calculate estimated processing time (assuming ~5-10 rows per second average)
-        const estimatedRowsPerSecond = 8; // Conservative estimate
-        const estimatedTotalTime = Math.max((parsedData.length / estimatedRowsPerSecond) * 1000, 10000); // At least 10 seconds
-
-        // Start progress simulation - update every 200ms for smooth animation
-        let currentProgress = 0;
-        const progressStep = 100 / (estimatedTotalTime / 200); // Calculate step size
-
-        // Clear any existing interval
         if (progressIntervalRef.current) {
             clearInterval(progressIntervalRef.current);
+            progressIntervalRef.current = null;
         }
-
-        progressIntervalRef.current = setInterval(() => {
-            const elapsed = Date.now() - importStartTimeRef.current;
-            const estimatedProgress = Math.min((elapsed / estimatedTotalTime) * 100, 95); // Cap at 95% until actual completion
-
-            // Calculate estimated rows processed
-            const estimatedRowsProcessed = Math.min(
-                Math.floor((elapsed / estimatedTotalTime) * parsedData.length),
-                parsedData.length - 1
-            );
-
-            setImportProgress(estimatedProgress);
-            setImportProgressText(
-                `Processing row ${estimatedRowsProcessed + 1} of ${parsedData.length}...`
-            );
-        }, 200); // Update every 200ms
+        // For full-hierarchy import (no stream), use client-side estimated progress
+        if (importMode !== "context-locked") {
+            const estimatedRowsPerSecond = 8;
+            const estimatedTotalTime = Math.max((parsedData.length / estimatedRowsPerSecond) * 1000, 5000);
+            progressIntervalRef.current = setInterval(() => {
+                const elapsed = Date.now() - importStartTimeRef.current;
+                const t = Math.min(elapsed / estimatedTotalTime, 1);
+                const easeOut = 1 - Math.pow(1 - t, 0.85);
+                const estimatedProgress = Math.min(easeOut * 100, 95);
+                const estimatedRowsProcessed = Math.min(Math.floor(easeOut * parsedData.length), Math.max(0, parsedData.length - 1));
+                const remainingMs = Math.max(0, estimatedTotalTime - elapsed);
+                const remainingSec = Math.ceil(remainingMs / 1000);
+                setImportProgress(estimatedProgress);
+                setImportProgressText(remainingSec > 0 ? `Processing row ${estimatedRowsProcessed + 1} of ${parsedData.length} • ~${remainingSec}s remaining` : `Processing row ${parsedData.length} of ${parsedData.length} • Almost done...`);
+            }, 180);
+        }
 
         let successCount = 0;
         let failCount = 0;
@@ -595,75 +665,124 @@ const BulkImportManagement = () => {
 
         try {
             if (importMode === "context-locked") {
-                // --- CONTEXT-LOCKED IMPORT ---
+                // --- CONTEXT-LOCKED IMPORT (with real-time progress stream) ---
                 const payload = {
                     examId: parents.examId,
                     subjectId: parents.subjectId,
-                    data: parsedData
+                    lockLevel: contextLockLevel,
+                    data: parsedData,
+                    stream: true
                 };
+                if (contextLockLevel !== "subject") payload.unitId = parents.unitId || undefined;
+                if (contextLockLevel === "chapter" || contextLockLevel === "topic") payload.chapterId = parents.chapterId || undefined;
+                if (contextLockLevel === "topic") payload.topicId = parents.topicId || undefined;
 
-                // Use extended timeout for bulk imports (5 minutes = 300000ms)
-                const res = await api.post('/bulk-import/context-locked', payload, {
-                    timeout: 300000 // 5 minutes for large imports
-                });
+                const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
+                const url = `${basePath}/api/bulk-import/context-locked`;
+                const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 600000);
 
-                // Clear progress interval
-                if (progressIntervalRef.current) {
-                    clearInterval(progressIntervalRef.current);
-                    progressIntervalRef.current = null;
-                }
+                try {
+                    const res = await fetch(url, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            ...(token ? { Authorization: `Bearer ${token}` } : {})
+                        },
+                        body: JSON.stringify(payload),
+                        signal: controller.signal
+                    });
 
-                if (res.data.success) {
-                    const stats = res.data.data;
-                    successCount = stats.totalProcessed || (stats.definitionsInserted || 0);
-                    failCount = stats.rowsSkipped || 0;
-                    if (stats.skipReasons && stats.skipReasons.length) {
-                        errorLog.push(...stats.skipReasons);
+                    if (!res.ok || !res.body) {
+                        clearTimeout(timeoutId);
+                        const errData = await res.json().catch(() => ({}));
+                        throw new Error(errData.message || `Import failed: ${res.status}`);
                     }
 
-                    // Complete progress bar (100%)
+                    const reader = res.body.getReader();
+                    const decoder = new TextDecoder();
+                    let buffer = "";
+                    let lastResult = null;
+
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) break;
+                        buffer += decoder.decode(value, { stream: true });
+                        const lines = buffer.split("\n");
+                        buffer = lines.pop() || "";
+                        for (const line of lines) {
+                            if (!line.trim()) continue;
+                            try {
+                                const obj = JSON.parse(line);
+                                if (obj.type === "progress") {
+                                    setImportProgress(Math.min(obj.percent || 0, 99));
+                                    setImportProgressText(`Processing row ${obj.processed} of ${obj.total}...`);
+                                } else if (obj.type === "done") {
+                                    lastResult = obj;
+                                } else if (obj.type === "error") {
+                                    throw new Error(obj.message || "Import failed");
+                                }
+                            } catch (parseErr) {
+                                if (parseErr.message === "Import failed" || parseErr.message?.startsWith("Import failed")) throw parseErr;
+                                // ignore JSON parse errors for incomplete chunks
+                            }
+                        }
+                    }
+                    if (buffer.trim()) {
+                        try {
+                            const obj = JSON.parse(buffer);
+                            if (obj.type === "done") lastResult = obj;
+                            else if (obj.type === "progress") {
+                                setImportProgress(Math.min(obj.percent || 0, 99));
+                                setImportProgressText(`Processing row ${obj.processed} of ${obj.total}...`);
+                            }
+                        } catch (_) {}
+                    }
+
+                    clearTimeout(timeoutId);
+
+                    if (!lastResult || !lastResult.success) {
+                        throw new Error(lastResult?.message || "Import did not return success");
+                    }
+
+                    const stats = lastResult.data;
+                    successCount = stats.totalProcessed ?? (stats.definitionsInserted ?? 0);
+                    failCount = stats.rowsSkipped ?? 0;
+                    if (stats.skipReasons?.length) errorLog.push(...stats.skipReasons);
+
+                    if (progressIntervalRef.current) {
+                        clearInterval(progressIntervalRef.current);
+                        progressIntervalRef.current = null;
+                    }
+
                     setImportProgress(100);
                     setImportProgressText(`Completed! Processed ${parsedData.length} rows.`);
 
-                    // Store detailed stats for modal display
                     setImportStats({
                         ...stats,
-                        totalProcessed: stats.totalProcessed || (parsedData.length - failCount),
-                        errorLog: errorLog.slice(0, 50) // Limit to first 50 errors
+                        totalProcessed: stats.totalProcessed ?? (parsedData.length - failCount),
+                        errorLog: (stats.skipReasons || []).slice(0, 50)
                     });
-
-                    // Show success status - modal will display detailed breakdown
                     setImportStatus("success");
-
-                    // Show toast notification (modal will show details)
-                    const statsMessage = `✅ Import completed! Click to view details.`;
-                    success(statsMessage);
-                    console.log(`✅ Import successful:`, stats);
-
-                    // Modal remains open to show results - user can close it manually
-
-                } else {
-                    // Import failed - show detailed error
-                    failCount = parsedData.length;
-                    const errorMsg = res.data.message || res.data.error?.message || "Import failed";
-                    errorLog.push(errorMsg);
-
-                    setImportStatus("error");
-
-                    // Provide user-friendly error messages
-                    let userFriendlyError = errorMsg;
-                    if (errorMsg.includes("duplicate key") || errorMsg.includes("E11000")) {
-                        userFriendlyError = "Some data already exists. The system will update existing items and add new ones. This is normal for incremental imports.";
-                        // This might not be a complete failure - some data might have been imported
-                        console.warn("⚠️ Duplicate key detected - this is expected when adding new data to existing imports");
+                    success("✅ Import completed! Click to view details.");
+                } catch (streamErr) {
+                    clearTimeout(timeoutId);
+                    if (progressIntervalRef.current) {
+                        clearInterval(progressIntervalRef.current);
+                        progressIntervalRef.current = null;
                     }
-
-                    showError(`❌ Import Failed: ${userFriendlyError}`);
-
-                    // Log full error for debugging
-                    console.error("Import API Error:", res.data);
-
-                    // Reset status after 5 seconds
+                    failCount = parsedData.length;
+                    const errorMsg = streamErr.message || streamErr.toString();
+                    errorLog.push(errorMsg);
+                    setImportStatus("error");
+                    setImportStats({
+                        totalCreated: 0,
+                        totalUpdated: 0,
+                        totalProcessed: 0,
+                        errorLog: [errorMsg]
+                    });
+                    showError(streamErr.message || "Import failed");
                     setTimeout(() => setImportStatus("idle"), 5000);
                 }
 
@@ -675,9 +794,9 @@ const BulkImportManagement = () => {
                     data: parsedData
                 };
 
-                // Use extended timeout for bulk imports (5 minutes = 300000ms)
+                // Use extended timeout for bulk imports (10 minutes = 600000ms)
                 const res = await api.post('/bulk-import/hierarchical', payload, {
-                    timeout: 300000 // 5 minutes for large imports
+                    timeout: 600000 // 10 minutes for large imports
                 });
 
                 if (res.data.success) {
@@ -917,7 +1036,7 @@ const BulkImportManagement = () => {
                                 Single Level
                             </button>
                             <button
-                                onClick={() => { setImportMode("context-locked"); setFile(null); setParsedData([]); setResults({ success: 0, failed: 0, errors: [] }); setImportStatus("idle"); }}
+                                onClick={() => { setImportMode("context-locked"); setContextLockLevel("subject"); setParents(p => ({ ...p, unitId: "", chapterId: "", topicId: "", subTopicId: "" })); setFile(null); setParsedData([]); setResults({ success: 0, failed: 0, errors: [] }); setImportStatus("idle"); }}
                                 className={`px-3 py-2 text-xs font-medium rounded-md transition-all ${importMode === "context-locked" ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
                             >
                                 🔒 Context-Locked
@@ -948,22 +1067,53 @@ const BulkImportManagement = () => {
 
                     {/* Context-Locked Info */}
                     {importMode === "context-locked" && (
-                        <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-                            <h3 className="font-semibold text-blue-900 mb-2 text-sm">🔒 Context-Locked Import Mode</h3>
-                            <p className="text-xs text-blue-800 mb-2">
-                                In this mode, <strong>Exam and Subject are LOCKED</strong>. Your CSV will create:
-                            </p>
-                            <ul className="text-xs text-blue-700 list-disc pl-5 space-y-1">
-                                <li>Multiple Units under the selected Subject</li>
-                                <li>Multiple Chapters per Unit</li>
-                                <li>Multiple Topics per Chapter</li>
-                                <li>Multiple SubTopics per Topic</li>
-                                <li>Multiple Definitions per SubTopic</li>
-                            </ul>
-                            <p className="text-xs text-blue-600 mt-2">
-                                ✅ Prevents duplicate data | ✅ Auto-generates slugs | ✅ Maintains strict parent-child relationships
-                            </p>
-                        </div>
+                        <>
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Lock at level</label>
+                                <div className="flex flex-wrap gap-2">
+                                    {CONTEXT_LOCK_LEVELS.map((opt) => (
+                                        <button
+                                            key={opt.value}
+                                            type="button"
+                                            onClick={() => {
+                                                setContextLockLevel(opt.value);
+                                                setFile(null);
+                                                setParsedData([]);
+                                                setHeaders([]);
+                                                setResults({ success: 0, failed: 0, errors: [] });
+                                                setImportStatus("idle");
+                                            }}
+                                            className={`px-3 py-2 text-xs font-medium rounded-lg border transition-all ${
+                                                contextLockLevel === opt.value
+                                                    ? "bg-blue-600 text-white border-blue-600"
+                                                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                                            }`}
+                                            title={opt.description}
+                                        >
+                                            {opt.label}
+                                        </button>
+                                    ))}
+                                </div>
+                                <p className="text-xs text-gray-500 mt-1">{CONTEXT_LOCK_LEVELS.find(o => o.value === contextLockLevel)?.description}</p>
+                            </div>
+                            <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                <h3 className="font-semibold text-blue-900 mb-2 text-sm">🔒 Context-Locked Import Mode</h3>
+                                <p className="text-xs text-blue-800 mb-2">
+                                    In this mode, <strong>Exam and Subject are always LOCKED</strong>
+                                    {contextLockLevel !== "subject" && (
+                                        <>; with <strong>Lock at {CONTEXT_LOCK_LEVELS.find(o => o.value === contextLockLevel)?.label}</strong>, all parents up to that level are fixed.</>
+                                    )}. Your CSV/JSON will create only the levels below the lock:
+                                </p>
+                                <ul className="text-xs text-blue-700 list-disc pl-5 space-y-1">
+                                    {getContextLockColumns(contextLockLevel).map((col) => (
+                                        <li key={col}>{col.charAt(0).toUpperCase() + col.slice(1)}</li>
+                                    ))}
+                                </ul>
+                                <p className="text-xs text-blue-600 mt-2">
+                                    ✅ Prevents duplicate data | ✅ Auto-generates slugs | ✅ Maintains strict parent-child relationships
+                                </p>
+                            </div>
+                        </>
                     )}
 
                     {/* Context Selectors */}
@@ -1003,7 +1153,59 @@ const BulkImportManagement = () => {
                             </div>
                         )}
 
-                        {/* Other levels - Only show for non-context-locked modes */}
+                        {/* Other levels - Single mode: by import type; Context-locked: by lock level */}
+                        {importMode === "context-locked" ? (
+                            <>
+                                {(["unit", "chapter", "topic"].includes(contextLockLevel)) && (
+                                    <div className="space-y-2">
+                                        <label className="block text-sm font-medium text-gray-700">
+                                            Unit <span className="text-red-500">*</span>
+                                        </label>
+                                        <select
+                                            value={parents.unitId}
+                                            onChange={(e) => handleParentChange("unitId", e.target.value)}
+                                            disabled={!parents.subjectId}
+                                            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm disabled:bg-gray-100"
+                                        >
+                                            <option value="">Select Unit</option>
+                                            {dropdownOptions.units.map(u => <option key={u._id} value={u._id}>{u.name}</option>)}
+                                        </select>
+                                    </div>
+                                )}
+                                {(["chapter", "topic"].includes(contextLockLevel)) && (
+                                    <div className="space-y-2">
+                                        <label className="block text-sm font-medium text-gray-700">
+                                            Chapter <span className="text-red-500">*</span>
+                                        </label>
+                                        <select
+                                            value={parents.chapterId}
+                                            onChange={(e) => handleParentChange("chapterId", e.target.value)}
+                                            disabled={!parents.unitId}
+                                            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm disabled:bg-gray-100"
+                                        >
+                                            <option value="">Select Chapter</option>
+                                            {dropdownOptions.chapters.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
+                                        </select>
+                                    </div>
+                                )}
+                                {contextLockLevel === "topic" && (
+                                    <div className="space-y-2">
+                                        <label className="block text-sm font-medium text-gray-700">
+                                            Topic <span className="text-red-500">*</span>
+                                        </label>
+                                        <select
+                                            value={parents.topicId}
+                                            onChange={(e) => handleParentChange("topicId", e.target.value)}
+                                            disabled={!parents.chapterId}
+                                            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm disabled:bg-gray-100"
+                                        >
+                                            <option value="">Select Topic</option>
+                                            {dropdownOptions.topics.map(t => <option key={t._id} value={t._id}>{t.name}</option>)}
+                                        </select>
+                                    </div>
+                                )}
+                            </>
+                        ) : null}
                         {importMode !== "context-locked" && currentTypeConfig?.parents.includes("unit") && (
                             <div className="space-y-2">
                                 <label className="block text-sm font-medium text-gray-700">Unit</label>
@@ -1241,6 +1443,18 @@ const BulkImportManagement = () => {
                                 0% { transform: translateX(-100%); }
                                 100% { transform: translateX(200%); }
                             }
+                            @keyframes pulseRing {
+                                0%, 100% { opacity: 0.4; transform: scale(0.95); }
+                                50% { opacity: 0.15; transform: scale(1.08); }
+                            }
+                            @keyframes progressShine {
+                                0% { left: -100%; }
+                                100% { left: 200%; }
+                            }
+                            @keyframes dotPulse {
+                                0%, 80%, 100% { opacity: 0.3; transform: scale(0.9); }
+                                40% { opacity: 1; transform: scale(1.1); }
+                            }
                             .animate-fadeIn {
                                 animation: fadeIn 0.3s ease-in-out;
                             }
@@ -1302,40 +1516,64 @@ const BulkImportManagement = () => {
                             <div className="overflow-y-auto flex-1 p-6">
                                 {importStatus === "processing" && (
                                     <div className="space-y-6">
-                                        <div className="text-center py-8">
-                                            <FaSpinner className="w-16 h-16 text-blue-600 animate-spin mx-auto mb-4" />
-                                            <p className="text-lg font-semibold text-gray-900 mb-2">
-                                                Processing your import...
+                                        {/* Centered loading state with pulse and spinner */}
+                                        <div className="text-center py-6">
+                                            <div className="relative inline-flex items-center justify-center mb-6">
+                                                {/* Outer pulse ring */}
+                                                <div className="absolute inset-0 rounded-full bg-blue-400/20 animate-pulse" style={{ animation: "pulseRing 2s ease-in-out infinite", width: "88px", height: "88px", margin: "-12px" }} />
+                                                <div className="absolute inset-0 rounded-full bg-blue-300/10" style={{ width: "88px", height: "88px", margin: "-12px" }} />
+                                                <FaSpinner className="w-14 h-14 text-blue-600 animate-spin relative z-10" />
+                                            </div>
+                                            <p className="text-lg font-semibold text-gray-900 mb-1">
+                                                Importing your data
                                             </p>
-                                            <p className="text-sm text-gray-600 mb-4">
+                                            <p className="text-sm text-gray-500 mb-6">
                                                 {importProgressText || "Please wait while we import your data. This may take a few moments."}
                                             </p>
 
-                                            {/* Real-time Progress Bar */}
+                                            {/* Step indicators */}
+                                            <div className="flex justify-center gap-2 mb-6">
+                                                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-100 text-blue-800 text-xs font-medium">
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+                                                    Preparing
+                                                </span>
+                                                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-100 text-blue-800 text-xs font-medium">
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500" style={{ animation: "dotPulse 1.2s ease-in-out infinite" }} />
+                                                    Importing
+                                                </span>
+                                                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-100 text-gray-500 text-xs font-medium">
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-gray-400" />
+                                                    Finalizing
+                                                </span>
+                                            </div>
+
+                                            {/* Progress bar with smooth fill and shine */}
                                             <div className="mt-6 space-y-2">
-                                                <div className="bg-gray-200 rounded-full h-3 overflow-hidden relative shadow-inner">
+                                                <div className="bg-gray-100 rounded-full h-2.5 overflow-hidden relative border border-gray-200/80">
                                                     <div
-                                                        className="bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 h-full rounded-full transition-all duration-300 ease-out relative"
+                                                        className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 transition-all duration-300 ease-out"
                                                         style={{
                                                             width: `${importProgress}%`,
-                                                            minWidth: importProgress > 0 ? "2%" : "0%"
+                                                            minWidth: importProgress > 0 ? "4%" : "0%",
+                                                            boxShadow: "0 0 12px rgba(59, 130, 246, 0.4)"
                                                         }}
-                                                    >
-                                                        {/* Animated shimmer effect - only show when progress > 0 */}
-                                                        {importProgress > 0 && (
+                                                    />
+                                                    {/* Moving shine overlay */}
+                                                    {importProgress > 0 && importProgress < 100 && (
+                                                        <div
+                                                            className="absolute inset-0 rounded-full overflow-hidden"
+                                                            style={{ width: `${importProgress}%`, minWidth: "4%" }}
+                                                        >
                                                             <div
-                                                                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
-                                                                style={{
-                                                                    animation: "shimmer 2s infinite",
-                                                                    transform: "translateX(-100%)"
-                                                                }}
-                                                            ></div>
-                                                        )}
-                                                    </div>
+                                                                className="absolute top-0 bottom-0 w-12 bg-gradient-to-r from-transparent via-white/40 to-transparent"
+                                                                style={{ animation: "progressShine 1.8s ease-in-out infinite" }}
+                                                            />
+                                                        </div>
+                                                    )}
                                                 </div>
-                                                <div className="flex justify-between items-center text-xs text-gray-600 px-1">
-                                                    <span className="font-medium">Progress</span>
-                                                    <span className="font-bold text-blue-600">{Math.round(importProgress)}%</span>
+                                                <div className="flex justify-between items-center text-xs text-gray-500 px-0.5">
+                                                    <span>Progress</span>
+                                                    <span className="font-semibold text-blue-600 tabular-nums">{Math.round(importProgress)}%</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -1519,8 +1757,8 @@ const BulkImportManagement = () => {
                                                 </div>
                                                 <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-3">
                                                     <p className="text-xs text-blue-800">
-                                                        <strong>Note:</strong> The import timeout has been increased to 5 minutes for large files.
-                                                        If your file is very large, the import may take longer than 5 minutes.
+                                                        <strong>Note:</strong> The import timeout has been increased to 10 minutes for large files.
+                                                        If your file is very large, the import may take longer than 10 minutes.
                                                     </p>
                                                 </div>
                                             </div>

@@ -117,9 +117,9 @@ definitionSchema.pre("save", async function (next) {
   next();
 });
 
-// Pre-save hook to auto-generate slug
+// Pre-save hook to auto-generate slug (skip if slug already set, e.g. by bulk import)
 definitionSchema.pre("save", async function (next) {
-  if (this.isModified("name") || this.isNew) {
+  if ((this.isModified("name") || this.isNew) && (!this.slug || this.slug === "")) {
     const baseSlug = createSlug(this.name);
 
     // Check if slug exists within the same subTopic (excluding current document for updates)

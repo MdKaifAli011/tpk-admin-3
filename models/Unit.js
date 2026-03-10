@@ -60,9 +60,9 @@ unitSchema.index({ subjectId: 1, orderNumber: 1 }, { unique: true });
 // Compound index for unique slug per subject
 unitSchema.index({ subjectId: 1, slug: 1 }, { unique: true, sparse: true });
 
-// Pre-save hook to auto-generate slug
+// Pre-save hook to auto-generate slug (skip if slug already set, e.g. by bulk import)
 unitSchema.pre("save", async function (next) {
-  if (this.isModified("name") || this.isNew) {
+  if ((this.isModified("name") || this.isNew) && (!this.slug || this.slug === "")) {
     const baseSlug = createSlug(this.name);
     
     // Check if slug exists within the same subject (excluding current document for updates)
