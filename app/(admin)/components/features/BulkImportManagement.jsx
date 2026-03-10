@@ -448,7 +448,11 @@ const BulkImportManagement = () => {
 
             const res = await api.post("/bulk-export", {
                 examId: parents.examId,
-                subjectId: parents.subjectId
+                subjectId: parents.subjectId,
+                ...(parents.unitId && { unitId: parents.unitId }),
+                ...(parents.chapterId && { chapterId: parents.chapterId }),
+                ...(parents.topicId && { topicId: parents.topicId }),
+                ...(parents.subTopicId && { subTopicId: parents.subTopicId })
             });
 
             if (res.data.success && res.data.data) {
@@ -479,14 +483,20 @@ const BulkImportManagement = () => {
                 const link = document.createElement("a");
                 link.setAttribute("href", url);
 
-                // Filename: export_ExamName_SubjectName_Date.csv
+                // Filename: export_ExamName_SubjectName_[Scope]_Date.csv when scope is selected
                 const examName = dropdownOptions.exams.find(e => e._id === parents.examId)?.name || "Exam";
                 const subjectName = dropdownOptions.subjects.find(s => s._id === parents.subjectId)?.name || "Subject";
                 const date = new Date().toISOString().split('T')[0];
                 const sanitizedExamName = examName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
                 const sanitizedSubjectName = subjectName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+                let scopeLabel = "";
+                if (parents.subTopicId) scopeLabel = dropdownOptions.subTopics?.find(s => s._id === parents.subTopicId)?.name || "subtopic";
+                else if (parents.topicId) scopeLabel = dropdownOptions.topics?.find(t => t._id === parents.topicId)?.name || "topic";
+                else if (parents.chapterId) scopeLabel = dropdownOptions.chapters?.find(c => c._id === parents.chapterId)?.name || "chapter";
+                else if (parents.unitId) scopeLabel = dropdownOptions.units?.find(u => u._id === parents.unitId)?.name || "unit";
+                const scopeSuffix = scopeLabel ? "_" + scopeLabel.replace(/[^a-z0-9]/gi, '_').toLowerCase() : "";
 
-                link.setAttribute("download", `Export_${sanitizedExamName}_${sanitizedSubjectName}_${date}.csv`);
+                link.setAttribute("download", `Export_${sanitizedExamName}_${sanitizedSubjectName}${scopeSuffix}_${date}.csv`);
                 document.body.appendChild(link);
                 link.click();
 
@@ -536,6 +546,10 @@ const BulkImportManagement = () => {
             const res = await api.post("/bulk-export", {
                 examId: parents.examId,
                 subjectId: parents.subjectId,
+                ...(parents.unitId && { unitId: parents.unitId }),
+                ...(parents.chapterId && { chapterId: parents.chapterId }),
+                ...(parents.topicId && { topicId: parents.topicId }),
+                ...(parents.subTopicId && { subTopicId: parents.subTopicId }),
                 format: "json"
             });
             if (res.data.success && Array.isArray(res.data.data)) {
@@ -556,7 +570,13 @@ const BulkImportManagement = () => {
                 const date = new Date().toISOString().split("T")[0];
                 const sanitizedExamName = examName.replace(/[^a-z0-9]/gi, "_").toLowerCase();
                 const sanitizedSubjectName = subjectName.replace(/[^a-z0-9]/gi, "_").toLowerCase();
-                link.setAttribute("download", `Export_${sanitizedExamName}_${sanitizedSubjectName}_${date}.json`);
+                let scopeLabel = "";
+                if (parents.subTopicId) scopeLabel = dropdownOptions.subTopics?.find(s => s._id === parents.subTopicId)?.name || "subtopic";
+                else if (parents.topicId) scopeLabel = dropdownOptions.topics?.find(t => t._id === parents.topicId)?.name || "topic";
+                else if (parents.chapterId) scopeLabel = dropdownOptions.chapters?.find(c => c._id === parents.chapterId)?.name || "chapter";
+                else if (parents.unitId) scopeLabel = dropdownOptions.units?.find(u => u._id === parents.unitId)?.name || "unit";
+                const scopeSuffix = scopeLabel ? "_" + scopeLabel.replace(/[^a-z0-9]/gi, "_").toLowerCase() : "";
+                link.setAttribute("download", `Export_${sanitizedExamName}_${sanitizedSubjectName}${scopeSuffix}_${date}.json`);
                 document.body.appendChild(link);
                 link.click();
                 setTimeout(() => {
@@ -1270,7 +1290,11 @@ const BulkImportManagement = () => {
                             <div className="mt-6 pt-6 border-t border-gray-100 flex items-center justify-between">
                                 <div>
                                     <h3 className="text-sm font-medium text-gray-900">Export Options</h3>
-                                    <p className="text-xs text-gray-500 mt-1">Download existing data for the selected Exam and Subject as CSV or JSON.</p>
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        {parents.unitId || parents.chapterId || parents.topicId || parents.subTopicId
+                                            ? "Downloading selected level and its children only (e.g. selected unit → its chapters, topics, subtopics, definitions)."
+                                            : "Download existing data for the selected Exam and Subject as CSV or JSON. Select Unit/Chapter/Topic/SubTopic above to export only that level and its children."}
+                                    </p>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <button

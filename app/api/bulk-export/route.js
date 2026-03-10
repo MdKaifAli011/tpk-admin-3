@@ -18,7 +18,7 @@ export async function POST(request) {
 
         await connectDB();
         const body = await request.json();
-        const { examId, subjectId, format } = body || {};
+        const { examId, subjectId, unitId: scopeUnitId, chapterId: scopeChapterId, topicId: scopeTopicId, subTopicId: scopeSubTopicId, format } = body || {};
 
         if (!examId || !subjectId) {
             return NextResponse.json(
@@ -27,58 +27,108 @@ export async function POST(request) {
             );
         }
 
-        // Fetch ALL data from the hierarchy - Units, Chapters, Topics, SubTopics, Definitions
+        const examObjId = new mongoose.Types.ObjectId(examId);
+        const subjectObjId = new mongoose.Types.ObjectId(subjectId);
+
+        // Base filter: always restrict to this exam + subject
         const matchFilter = {
-            examId: new mongoose.Types.ObjectId(examId),
-            subjectId: new mongoose.Types.ObjectId(subjectId)
+            examId: examObjId,
+            subjectId: subjectObjId
         };
-        
-        console.log(`🔍 Export: Fetching ALL data for examId=${examId}, subjectId=${subjectId}`);
-        
-        // Fetch ALL units for this exam/subject
-        const allUnits = await Unit.find(matchFilter)
-            .select("_id name orderNumber")
-            .sort({ orderNumber: 1 })
-            .lean();
-        console.log(`📦 Export: Found ${allUnits.length} Units`);
-        
-        const unitIds = allUnits.map(u => u._id);
-        
-        // Fetch ALL chapters for these units
-        const allChapters = await Chapter.find({ unitId: { $in: unitIds } })
-            .select("_id name orderNumber unitId")
-            .sort({ orderNumber: 1 })
-            .lean();
-        console.log(`📦 Export: Found ${allChapters.length} Chapters`);
-        
-        const chapterIds = allChapters.map(c => c._id);
-        
-        // Fetch ALL topics for these chapters
-        const allTopics = await Topic.find({ chapterId: { $in: chapterIds } })
-            .select("_id name orderNumber chapterId")
-            .sort({ orderNumber: 1 })
-            .lean();
-        console.log(`📦 Export: Found ${allTopics.length} Topics`);
-        
-        const topicIds = allTopics.map(t => t._id);
-        
-        // Fetch ALL subtopics for these topics
-        const allSubTopics = await SubTopic.find({ topicId: { $in: topicIds } })
-            .select("_id name orderNumber topicId")
-            .sort({ orderNumber: 1 })
-            .lean();
-        console.log(`📦 Export: Found ${allSubTopics.length} SubTopics`);
-        
-        const subTopicIds = allSubTopics.map(st => st._id);
-        
-        // Fetch ALL definitions for these subtopics
-        const allDefinitions = await Definition.find({ subTopicId: { $in: subTopicIds } })
-            .select("_id name orderNumber unitId chapterId topicId subTopicId")
-            .sort({ orderNumber: 1 })
-            .lean();
-        console.log(`📦 Export: Found ${allDefinitions.length} Definitions`);
+
+        // Scope: if user selected a specific unit/chapter/topic/subtopic, export only that node and its children
+        let allUnits, allChapters, allTopics, allSubTopics, allDefinitions;
+
+        if (scopeSubTopicId) {
+            // Export: selected subtopic + its definitions only (need full hierarchy for row labels)
+            const subTopicObjId = new mongoose.Types.ObjectId(scopeSubTopicId);
+            const oneSubTopic = await SubTopic.findOne({ _id: subTopicObjId, ...matchFilter }).select("_id name orderNumber topicId").lean();
+            if (!oneSubTopic) {
+                return NextResponse.json({ success: false, message: "SubTopic not found for export scope" }, { status: 404 });
+            }
+            const oneTopic = await Topic.findOne({ _id: oneSubTopic.topicId }).select("_id name chapterId").lean();
+            const oneChapter = oneTopic ? await Chapter.findOne({ _id: oneTopic.chapterId }).select("_id name unitId").lean() : null;
+            const oneUnit = oneChapter ? await Unit.findOne({ _id: oneChapter.unitId }).select("_id name orderNumber").lean() : null;
+            allUnits = oneUnit ? [oneUnit] : [];
+            allChapters = oneChapter ? [oneChapter] : [];
+            allTopics = oneTopic ? [oneTopic] : [];
+            allSubTopics = [oneSubTopic];
+            allDefinitions = await Definition.find({ subTopicId: subTopicObjId }).select("_id name orderNumber unitId chapterId topicId subTopicId").sort({ orderNumber: 1 }).lean();
+        } else if (scopeTopicId) {
+            // Export: selected topic + its subtopics + definitions
+            const topicObjId = new mongoose.Types.ObjectId(scopeTopicId);
+            const oneTopic = await Topic.findOne({ _id: topicObjId }).select("_id name orderNumber chapterId").lean();
+            if (!oneTopic) {
+                return NextResponse.json({ success: false, message: "Topic not found for export scope" }, { status: 404 });
+            }
+            const oneChapter = await Chapter.findOne({ _id: oneTopic.chapterId }).select("_id name unitId").lean();
+            const oneUnit = oneChapter ? await Unit.findOne({ _id: oneChapter.unitId }).select("_id name orderNumber").lean() : null;
+            allUnits = oneUnit ? [oneUnit] : [];
+            allChapters = oneChapter ? [oneChapter] : [];
+            allTopics = [oneTopic];
+            allSubTopics = await SubTopic.find({ topicId: topicObjId }).select("_id name orderNumber topicId").sort({ orderNumber: 1 }).lean();
+            const subTopicIds = allSubTopics.map(st => st._id);
+            allDefinitions = await Definition.find({ subTopicId: { $in: subTopicIds } }).select("_id name orderNumber unitId chapterId topicId subTopicId").sort({ orderNumber: 1 }).lean();
+        } else if (scopeChapterId) {
+            // Export: selected chapter + its topics, subtopics, definitions
+            const chapterObjId = new mongoose.Types.ObjectId(scopeChapterId);
+            const oneChapter = await Chapter.findOne({ _id: chapterObjId, ...matchFilter }).select("_id name orderNumber unitId").lean();
+            if (!oneChapter) {
+                return NextResponse.json({ success: false, message: "Chapter not found for export scope" }, { status: 404 });
+            }
+            const oneUnit = await Unit.findOne({ _id: oneChapter.unitId }).select("_id name orderNumber").lean();
+            allUnits = oneUnit ? [oneUnit] : [];
+            allChapters = [oneChapter];
+            allTopics = await Topic.find({ chapterId: chapterObjId }).select("_id name orderNumber chapterId").sort({ orderNumber: 1 }).lean();
+            const topicIds = allTopics.map(t => t._id);
+            allSubTopics = await SubTopic.find({ topicId: { $in: topicIds } }).select("_id name orderNumber topicId").sort({ orderNumber: 1 }).lean();
+            const subTopicIds = allSubTopics.map(st => st._id);
+            allDefinitions = await Definition.find({ subTopicId: { $in: subTopicIds } }).select("_id name orderNumber unitId chapterId topicId subTopicId").sort({ orderNumber: 1 }).lean();
+        } else if (scopeUnitId) {
+            // Export: selected unit + its chapters, topics, subtopics, definitions
+            const unitObjId = new mongoose.Types.ObjectId(scopeUnitId);
+            allUnits = await Unit.find({ _id: unitObjId, ...matchFilter }).select("_id name orderNumber").sort({ orderNumber: 1 }).lean();
+            if (allUnits.length === 0) {
+                return NextResponse.json({ success: false, message: "Unit not found for export scope" }, { status: 404 });
+            }
+            const unitIds = allUnits.map(u => u._id);
+            allChapters = await Chapter.find({ unitId: { $in: unitIds } }).select("_id name orderNumber unitId").sort({ orderNumber: 1 }).lean();
+            const chapterIds = allChapters.map(c => c._id);
+            allTopics = await Topic.find({ chapterId: { $in: chapterIds } }).select("_id name orderNumber chapterId").sort({ orderNumber: 1 }).lean();
+            const topicIds = allTopics.map(t => t._id);
+            allSubTopics = await SubTopic.find({ topicId: { $in: topicIds } }).select("_id name orderNumber topicId").sort({ orderNumber: 1 }).lean();
+            const subTopicIds = allSubTopics.map(st => st._id);
+            allDefinitions = await Definition.find({ subTopicId: { $in: subTopicIds } }).select("_id name orderNumber unitId chapterId topicId subTopicId").sort({ orderNumber: 1 }).lean();
+        } else {
+            // Export: full subject (all units and their children)
+            allUnits = await Unit.find(matchFilter)
+                .select("_id name orderNumber")
+                .sort({ orderNumber: 1 })
+                .lean();
+            const unitIds = allUnits.map(u => u._id);
+            allChapters = await Chapter.find({ unitId: { $in: unitIds } })
+                .select("_id name orderNumber unitId")
+                .sort({ orderNumber: 1 })
+                .lean();
+            const chapterIds = allChapters.map(c => c._id);
+            allTopics = await Topic.find({ chapterId: { $in: chapterIds } })
+                .select("_id name orderNumber chapterId")
+                .sort({ orderNumber: 1 })
+                .lean();
+            const topicIds = allTopics.map(t => t._id);
+            allSubTopics = await SubTopic.find({ topicId: { $in: topicIds } })
+                .select("_id name orderNumber topicId")
+                .sort({ orderNumber: 1 })
+                .lean();
+            const subTopicIds = allSubTopics.map(st => st._id);
+            allDefinitions = await Definition.find({ subTopicId: { $in: subTopicIds } })
+                .select("_id name orderNumber unitId chapterId topicId subTopicId")
+                .sort({ orderNumber: 1 })
+                .lean();
+        }
         
         const totalItems = allUnits.length + allChapters.length + allTopics.length + allSubTopics.length + allDefinitions.length;
+        console.log(`🔍 Export: scope unitId=${scopeUnitId || "all"} chapterId=${scopeChapterId || "-"} topicId=${scopeTopicId || "-"} subTopicId=${scopeSubTopicId || "-"}`);
         console.log(`📊 Export: Total items to export: ${totalItems} (${allUnits.length} Units + ${allChapters.length} Chapters + ${allTopics.length} Topics + ${allSubTopics.length} SubTopics + ${allDefinitions.length} Definitions)`);
 
         // Build comprehensive export data structure
