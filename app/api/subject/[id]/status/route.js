@@ -1,18 +1,27 @@
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import Subject from "@/models/Subject";
-// Import all child models to ensure they're registered before middleware runs
 import Unit from "@/models/Unit";
 import Chapter from "@/models/Chapter";
 import Topic from "@/models/Topic";
 import SubTopic from "@/models/SubTopic";
+import Definition from "@/models/Definition";
 import mongoose from "mongoose";
+import { requireAction } from "@/middleware/authMiddleware";
 import { logger } from "@/utils/logger";
 import cacheManager from "@/utils/cacheManager";
+
+// Not explicitly inactive (user did not deliberately deactivate)
+const notExplicitlyInactive = { $or: [{ explicitlyInactive: { $ne: true } }, { explicitlyInactive: { $exists: false } }] };
 
 // ---------- PATCH SUBJECT STATUS (with Cascading) ----------
 export async function PATCH(request, { params }) {
   try {
+    const authCheck = await requireAction(request, "PATCH");
+    if (authCheck.error) {
+      return NextResponse.json(authCheck, { status: authCheck.status || 403 });
+    }
+
     await connectDB();
     const { id } = await params;
     const body = await request.json();
@@ -27,20 +36,17 @@ export async function PATCH(request, { params }) {
 
     if (!status || !["active", "inactive"].includes(status)) {
       return NextResponse.json(
-        {
-          success: false,
-          message: "Valid status is required (active or inactive)",
-        },
+        { success: false, message: "Valid status is required (active or inactive)" },
         { status: 400 }
       );
     }
 
-    // Update subject status
-    const updated = await Subject.findByIdAndUpdate(
-      id,
-      { status },
-      { new: true }
-    );
+    const updatePayload = {
+      status,
+      explicitlyInactive: status === "inactive",
+    };
+
+    const updated = await Subject.findByIdAndUpdate(id, { $set: updatePayload }, { new: true });
 
     if (!updated) {
       return NextResponse.json(
@@ -49,66 +55,48 @@ export async function PATCH(request, { params }) {
       );
     }
 
-    // Cascading: Update all children status
     logger.info(`Cascading status update to ${status} for subject ${id}`);
 
-    // Find all units in this subject
-    const units = await Unit.find({ subjectId: id });
-    const unitIds = units.map((unit) => unit._id);
+    if (status === "inactive") {
+      const units = await Unit.find({ subjectId: id });
+      const unitIds = units.map((u) => u._id);
+      const chapters = await Chapter.find({ unitId: { $in: unitIds } });
+      const chapterIds = chapters.map((c) => c._id);
+      const topics = await Topic.find({ chapterId: { $in: chapterIds } });
+      const topicIds = topics.map((t) => t._id);
 
-    // Find all chapters in these units
-    const chapters = await Chapter.find({ unitId: { $in: unitIds } });
-    const chapterIds = chapters.map((chapter) => chapter._id);
+      await Promise.all([
+        SubTopic.updateMany({ topicId: { $in: topicIds } }, { $set: { status: "inactive" } }),
+        Topic.updateMany({ chapterId: { $in: chapterIds } }, { $set: { status: "inactive" } }),
+        Chapter.updateMany({ unitId: { $in: unitIds } }, { $set: { status: "inactive" } }),
+        Unit.updateMany({ subjectId: id }, { $set: { status: "inactive" } }),
+        Definition.updateMany({ subjectId: id }, { $set: { status: "inactive" } }),
+      ]);
+    } else {
+      const units = await Unit.find({ subjectId: id, ...notExplicitlyInactive }).select("_id").lean();
+      const unitIds = units.map((u) => u._id);
+      await Unit.updateMany({ subjectId: id, ...notExplicitlyInactive }, { $set: { status: "active" } });
 
-    // Find all topics in these chapters
-    const topics = await Topic.find({ chapterId: { $in: chapterIds } });
-    const topicIds = topics.map((topic) => topic._id);
+      const chapters = await Chapter.find({ unitId: { $in: unitIds }, ...notExplicitlyInactive }).select("_id").lean();
+      const chapterIds = chapters.map((c) => c._id);
+      await Chapter.updateMany({ unitId: { $in: unitIds }, ...notExplicitlyInactive }, { $set: { status: "active" } });
 
-    // Update all subtopics in these topics
-    let subTopicsResult = { modifiedCount: 0 };
-    if (topicIds.length > 0) {
-      subTopicsResult = await SubTopic.updateMany(
-        { topicId: { $in: topicIds } },
-        { $set: { status } }
-      );
+      const topics = await Topic.find({ chapterId: { $in: chapterIds }, ...notExplicitlyInactive }).select("_id").lean();
+      const topicIds = topics.map((t) => t._id);
+      await Topic.updateMany({ chapterId: { $in: chapterIds }, ...notExplicitlyInactive }, { $set: { status: "active" } });
+
+      const subtopics = await SubTopic.find({ topicId: { $in: topicIds }, ...notExplicitlyInactive }).select("_id").lean();
+      const subtopicIds = subtopics.map((st) => st._id);
+      await SubTopic.updateMany({ topicId: { $in: topicIds }, ...notExplicitlyInactive }, { $set: { status: "active" } });
+
+      await Definition.updateMany({ subTopicId: { $in: subtopicIds }, ...notExplicitlyInactive }, { $set: { status: "active" } });
     }
-    logger.info(`Updated ${subTopicsResult.modifiedCount} SubTopics`);
 
-    // Update all topics in these chapters
-    let topicsResult = { modifiedCount: 0 };
-    if (chapterIds.length > 0) {
-      topicsResult = await Topic.updateMany(
-        { chapterId: { $in: chapterIds } },
-        { $set: { status } }
-      );
-    }
-    logger.info(`Updated ${topicsResult.modifiedCount} Topics`);
-
-    // Update all chapters in these units
-    let chaptersResult = { modifiedCount: 0 };
-    if (unitIds.length > 0) {
-      chaptersResult = await Chapter.updateMany(
-        { unitId: { $in: unitIds } },
-        { $set: { status } }
-      );
-    }
-    logger.info(`Updated ${chaptersResult.modifiedCount} Chapters`);
-
-    // Update all units in this subject
-    const unitsResult = await Unit.updateMany(
-      { subjectId: id },
-      { $set: { status } }
-    );
-    logger.info(`Updated ${unitsResult.modifiedCount} Units`);
-
-    // Clear cache for subject queries
     cacheManager.clear("subject");
 
     return NextResponse.json({
       success: true,
-      message: `Subject and all children ${
-        status === "inactive" ? "deactivated" : "activated"
-      } successfully`,
+      message: `Subject and all children ${status === "inactive" ? "deactivated" : "activated"} successfully`,
       data: updated,
     });
   } catch (error) {
@@ -119,4 +107,3 @@ export async function PATCH(request, { params }) {
     );
   }
 }
-

@@ -1354,1046 +1354,1046 @@ const DefinitionManagement = () => {
         skeleton={<SkeletonChaptersTable />}
       >
         <div className="space-y-6">
-        {/* Error Display */}
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <svg
-                  className="h-5 w-5 text-red-400"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <p className="text-sm font-medium">{error}</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Header Section */}
-        <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 rounded-lg border border-gray-200 p-4 shadow-sm">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div>
-              <h1 className="text-xl font-semibold text-gray-900 mb-1">
-                Definition Management
-              </h1>
-              <p className="text-xs text-gray-600">
-                Manage and organize your definitions, create new definitions, and track
-                definition performance across your educational platform.
-              </p>
-            </div>
-            {canCreate ? (
-              <button
-                onClick={handleOpenAddForm}
-                className="px-2 py-1 bg-[#0056FF] hover:bg-[#0044CC] text-white rounded-lg text-xs font-medium transition-colors"
-              >
-                Add New Definition
-              </button>
-            ) : (
-              <button
-                disabled
-                title={getPermissionMessage("create", role)}
-                className="px-2 py-1 bg-gray-300 text-gray-500 rounded-lg text-xs font-medium cursor-not-allowed"
-              >
-                Add New Definition
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Add Definition Form */}
-        {showAddForm && (
-          <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold text-gray-900">
-                Add New Definitions
-              </h2>
-              <button
-                onClick={handleCancelForm}
-                className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-2 rounded-lg transition-colors"
-                disabled={isFormLoading}
-              >
-                <FaTimes className="w-4 h-4" />
-              </button>
-            </div>
-
-            {formError && (
-              <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                  <p className="text-sm font-medium text-red-800">
-                    {formError}
-                  </p>
+          {/* Error Display */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg
+                    className="h-5 w-5 text-red-400"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium">{error}</p>
                 </div>
               </div>
-            )}
-
-            <form onSubmit={handleAddDefinitions} className="space-y-6">
-              {/* Selection Fields */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Exam *
-                  </label>
-                  <select
-                    name="examId"
-                    value={formData.examId}
-                    onChange={handleFormChange}
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value="">Select Exam</option>
-                    {exams.map((exam) => (
-                      <option key={exam._id} value={exam._id}>
-                        {exam.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Subject *
-                  </label>
-                  <select
-                    name="subjectId"
-                    value={formData.subjectId}
-                    onChange={handleFormChange}
-                    required
-                    disabled={!formData.examId}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
-                  >
-                    <option value="">Select Subject</option>
-                    {filteredSubjects.map((subject) => (
-                      <option key={subject._id} value={subject._id}>
-                        {subject.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Unit *
-                  </label>
-                  <select
-                    name="unitId"
-                    value={formData.unitId}
-                    onChange={handleFormChange}
-                    required
-                    disabled={!formData.subjectId}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
-                  >
-                    <option value="">Select Unit</option>
-                    {filteredUnits.map((unit) => (
-                      <option key={unit._id} value={unit._id}>
-                        {unit.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Chapter *
-                  </label>
-                  <select
-                    name="chapterId"
-                    value={formData.chapterId}
-                    onChange={handleFormChange}
-                    required
-                    disabled={!formData.unitId}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
-                  >
-                    <option value="">Select Chapter</option>
-                    {filteredChapters.map((chapter) => (
-                      <option key={chapter._id} value={chapter._id}>
-                        {chapter.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Topic *
-                  </label>
-                  <select
-                    name="topicId"
-                    value={formData.topicId}
-                    onChange={handleFormChange}
-                    required
-                    disabled={!formData.chapterId}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
-                  >
-                    <option value="">Select Topic</option>
-                    {filteredTopics.map((topic) => (
-                      <option key={topic._id} value={topic._id}>
-                        {topic.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-              </div>
-
-              {/* Multiple SubTopic Selection with Individual Textareas */}
-              <div className="space-y-6">
-                <div>
-                  <h3 className="text-sm font-medium text-gray-700 mb-1">
-                    Select SubTopic(s) and Enter Definitions *
-                  </h3>
-                  <p className="text-xs text-gray-500">
-                    Select subtopics and enter definitions for each subtopic separately. Each subtopic has its own textarea.
-                    <span className="text-red-600 font-medium"> Each definition name must be unique within the same subtopic.</span>
-                  </p>
-                </div>
-
-                <div className="space-y-6">
-                  {selectedSubTopics.map((subTopic, index) => {
-                    const subTopicName =
-                      filteredSubTopics.find((st) => st._id === subTopic.subTopicId)
-                        ?.name || "Unselected SubTopic";
-                    const definitionCount = subTopic.definitionsText
-                      .split("\n")
-                      .filter((line) => line.trim().length > 0).length;
-
-                    return (
-                      <div
-                        key={index}
-                        className="border border-gray-200 rounded-lg p-4 bg-gray-50/50"
-                      >
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center gap-3 flex-1">
-                            <div className="flex-1">
-                              <label className="block text-xs font-medium text-gray-700 mb-1.5">
-                                SubTopic {index + 1} *
-                              </label>
-                              <select
-                                value={subTopic.subTopicId}
-                                onChange={(e) =>
-                                  handleSubTopicSelectionChange(
-                                    index,
-                                    e.target.value
-                                  )
-                                }
-                                required
-                                disabled={!formData.topicId}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 text-sm bg-white"
-                              >
-                                <option value="">Select SubTopic</option>
-                                {filteredSubTopics
-                                  .filter(
-                                    (st) =>
-                                      !selectedSubTopics.some(
-                                        (sst, i) =>
-                                          i !== index &&
-                                          sst.subTopicId === st._id
-                                      )
-                                  )
-                                  .map((subTopicOption) => (
-                                    <option
-                                      key={subTopicOption._id}
-                                      value={subTopicOption._id}
-                                    >
-                                      {subTopicOption.name}
-                                    </option>
-                                  ))}
-                              </select>
-                            </div>
-                            {selectedSubTopics.length > 1 && (
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveSubTopic(index)}
-                                className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors mt-6"
-                                title="Remove this subtopic"
-                              >
-                                <FaTimes className="w-4 h-4" />
-                              </button>
-                            )}
-                          </div>
-                        </div>
-
-                        {subTopic.subTopicId && (
-                          <>
-                            <div className="mb-2">
-                              <div className="flex items-center justify-between mb-1.5">
-                                <label className="block text-xs font-medium text-gray-700">
-                                  Definitions for: <span className="text-blue-600 font-semibold">{subTopicName}</span>
-                                </label>
-                                <span className="text-xs text-gray-500">
-                                  Order starts from: <span className="font-semibold">{subTopic.orderNumber}</span>
-                                </span>
-                              </div>
-                              <textarea
-                                value={subTopic.definitionsText}
-                                onChange={(e) =>
-                                  handleSubTopicDefinitionsChange(
-                                    index,
-                                    e.target.value
-                                  )
-                                }
-                                placeholder={`Enter definitions for ${subTopicName}, one per line (unique names only):&#10;Definition 1&#10;Definition 2&#10;Definition 3`}
-                                rows={6}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-y font-mono text-sm bg-white"
-                              />
-                              <div className="mt-1.5 text-xs text-gray-500">
-                                {definitionCount > 0 ? (
-                                  <span className="text-green-600 font-medium">
-                                    {definitionCount} definition(s) entered for this subtopic
-                                    {(() => {
-                                      // Check for duplicates in the entered text
-                                      const lines = subTopic.definitionsText
-                                        .split("\n")
-                                        .map((line) => line.trim())
-                                        .filter((line) => line.length > 0);
-                                      const nameCounts = new Map();
-                                      const hasDuplicates = lines.some((name) => {
-                                        const normalized = name.toLowerCase();
-                                        if (nameCounts.has(normalized)) {
-                                          return true;
-                                        }
-                                        nameCounts.set(normalized, 1);
-                                        return false;
-                                      });
-
-                                      if (hasDuplicates) {
-                                        return (
-                                          <span className="text-red-600 ml-1 font-semibold">
-                                            ⚠️ Duplicate names detected! Please remove duplicates.
-                                          </span>
-                                        );
-                                      }
-                                      return null;
-                                    })()}
-                                  </span>
-                                ) : (
-                                  <span className="text-gray-400">
-                                    Enter definitions, one per line. Each name must be unique.
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    );
-                  })}
-
-                  {/* Add Another SubTopic Button */}
-                  {(() => {
-                    // Check if there are any empty subtopic selections (user hasn't selected a subtopic yet)
-                    const hasEmptySelection = selectedSubTopics.some(
-                      (st) => !st.subTopicId || st.subTopicId === ""
-                    );
-
-                    // Check if there are any unselected subtopics available
-                    const selectedSubTopicIds = selectedSubTopics
-                      .map((st) => st.subTopicId)
-                      .filter(Boolean);
-                    const availableSubTopics = filteredSubTopics.filter(
-                      (st) => !selectedSubTopicIds.includes(st._id)
-                    );
-
-                    // Button should be enabled only if:
-                    // 1. Topic is selected
-                    // 2. No empty subtopic selections exist (all existing selections are filled)
-                    // 3. There are available subtopics to select
-                    const canAddMore =
-                      formData.topicId &&
-                      !hasEmptySelection &&
-                      availableSubTopics.length > 0;
-
-                    return (
-                      <button
-                        type="button"
-                        onClick={handleAddAnotherSubTopic}
-                        disabled={!canAddMore}
-                        className={`text-sm font-medium flex items-center gap-1 px-3 py-1.5 rounded-lg transition-colors ${canAddMore
-                          ? "text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100"
-                          : "text-gray-400 bg-gray-100 cursor-not-allowed"
-                          }`}
-                        title={
-                          !formData.topicId
-                            ? "Please select a topic first"
-                            : hasEmptySelection
-                              ? "Please select a subtopic for the current selection first"
-                              : availableSubTopics.length === 0
-                                ? "All available subtopics are already selected"
-                                : "Add another subtopic"
-                        }
-                      >
-                        <FaPlus className="w-3 h-3" />
-                        Add Another SubTopic
-                      </button>
-                    );
-                  })()}
-                </div>
-
-                {/* Summary */}
-                {selectedSubTopics.some((st) => st.subTopicId && st.definitionsText.trim().length > 0) && (
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                    <div className="text-xs font-medium text-blue-900 mb-1">
-                      Summary:
-                    </div>
-                    <div className="text-xs text-blue-700 space-y-0.5">
-                      {selectedSubTopics
-                        .filter((st) => st.subTopicId && st.definitionsText.trim().length > 0)
-                        .map((subTopic, idx) => {
-                          const subTopicName =
-                            filteredSubTopics.find((st) => st._id === subTopic.subTopicId)
-                              ?.name || "Unknown";
-                          const definitionCount = subTopic.definitionsText
-                            .split("\n")
-                            .filter((line) => line.trim().length > 0).length;
-                          return (
-                            <div key={idx}>
-                              • {subTopicName}: {definitionCount} definition(s)
-                            </div>
-                          );
-                        })}
-                      <div className="mt-2 pt-2 border-t border-blue-200 font-semibold">
-                        Total:{" "}
-                        {selectedSubTopics
-                          .filter((st) => st.subTopicId && st.definitionsText.trim().length > 0)
-                          .reduce((sum, st) => {
-                            return (
-                              sum +
-                              st.definitionsText
-                                .split("\n")
-                                .filter((line) => line.trim().length > 0).length
-                            );
-                          }, 0)}{" "}
-                        definitions will be created
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Form Actions */}
-              <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
-                <button
-                  type="button"
-                  onClick={handleCancelForm}
-                  className="px-3 py-1.5 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium transition-colors"
-                  disabled={isFormLoading}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                  disabled={isFormLoading}
-                >
-                  {isFormLoading ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
-                      Adding...
-                    </>
-                  ) : (
-                    `Add Definitions`
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
-
-        {/* Edit Definition Form */}
-        {showEditForm && editingDefinition && (
-          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
-            <div className="flex items-center gap-2 mb-6">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <FaEdit className="size-3 text-blue-600" />
-              </div>
-              <h2 className="text-sm font-bold text-gray-900">
-                Edit Definition: {editingDefinition.name}
-              </h2>
-            </div>
-
-            {formError && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
-                {formError}
-              </div>
-            )}
-
-            <form onSubmit={handleUpdateDefinition} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Exam *
-                  </label>
-                  <select
-                    name="examId"
-                    value={editFormData.examId}
-                    onChange={handleEditFormChange}
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value="">Select Exam</option>
-                    {exams.map((exam) => (
-                      <option key={exam._id} value={exam._id}>
-                        {exam.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Subject *
-                  </label>
-                  <select
-                    name="subjectId"
-                    value={editFormData.subjectId}
-                    onChange={handleEditFormChange}
-                    required
-                    disabled={!editFormData.examId}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
-                  >
-                    <option value="">Select Subject</option>
-                    {filteredEditSubjects.map((subject) => (
-                      <option key={subject._id} value={subject._id}>
-                        {subject.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Unit *
-                  </label>
-                  <select
-                    name="unitId"
-                    value={editFormData.unitId}
-                    onChange={handleEditFormChange}
-                    required
-                    disabled={!editFormData.subjectId}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
-                  >
-                    <option value="">Select Unit</option>
-                    {filteredEditUnits.map((unit) => (
-                      <option key={unit._id} value={unit._id}>
-                        {unit.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Chapter *
-                  </label>
-                  <select
-                    name="chapterId"
-                    value={editFormData.chapterId}
-                    onChange={handleEditFormChange}
-                    required
-                    disabled={!editFormData.unitId}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
-                  >
-                    <option value="">Select Chapter</option>
-                    {filteredEditChapters.map((chapter) => (
-                      <option key={chapter._id} value={chapter._id}>
-                        {chapter.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Topic *
-                  </label>
-                  <select
-                    name="topicId"
-                    value={editFormData.topicId}
-                    onChange={handleEditFormChange}
-                    required
-                    disabled={!editFormData.chapterId}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
-                  >
-                    <option value="">Select Topic</option>
-                    {filteredEditTopics.map((topic) => (
-                      <option key={topic._id} value={topic._id}>
-                        {topic.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    SubTopic *
-                  </label>
-                  <select
-                    name="subTopicId"
-                    value={editFormData.subTopicId}
-                    onChange={handleEditFormChange}
-                    required
-                    disabled={!editFormData.topicId}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
-                  >
-                    <option value="">Select SubTopic</option>
-                    {filteredEditSubTopics.map((subtopic) => (
-                      <option key={subtopic._id} value={subtopic._id}>
-                        {subtopic.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Definition Name *
-                  </label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={editFormData.name}
-                    onChange={handleEditFormChange}
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Order Number *
-                  </label>
-                  <input
-                    type="number"
-                    name="orderNumber"
-                    value={editFormData.orderNumber}
-                    onChange={handleEditFormChange}
-                    required
-                    min="1"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
-                <button
-                  type="button"
-                  onClick={handleCancelEditForm}
-                  className="px-3 py-1.5 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium transition-colors"
-                  disabled={isFormLoading}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                  disabled={isFormLoading}
-                >
-                  {isFormLoading ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
-                      Updating...
-                    </>
-                  ) : (
-                    "Update Definition"
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
-
-        {/* Definitions Table */}
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
-          <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <h2 className="text-xl font-semibold text-gray-900">
-                  Definitions List
-                </h2>
-                <p className="text-sm text-gray-600 mt-1">
-                  Manage your definitions, view details, and perform actions
-                  {isReorderMode && (
-                    <span className="ml-1.5 text-blue-600 font-medium">— Drag rows within each subtopic, then click Done to save</span>
-                  )}
-                </p>
-              </div>
-              <div className="flex flex-wrap items-center gap-3">
-                {canReorder && !searchQuery.trim() && (
-                  isReorderMode ? (
-                    <button
-                      type="button"
-                      onClick={handleDoneReorder}
-                      disabled={isFormLoading}
-                      className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
-                      title="Save order and exit reorder mode"
-                    >
-                      {isFormLoading ? (
-                        <>
-                          <LoadingSpinner size="small" />
-                          Saving...
-                        </>
-                      ) : (
-                        <>
-                          <FaCheck className="w-4 h-4" />
-                          Done
-                        </>
-                      )}
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => { setIsReorderMode(true); setReorderDraft({}); }}
-                      className="inline-flex items-center gap-2 px-3 py-1.5 bg-gray-500 hover:bg-gray-600 text-white rounded-lg text-sm font-medium transition-colors"
-                      title="Enable drag and drop to reorder definitions per subtopic"
-                    >
-                      <FaGripVertical className="w-4 h-4" />
-                      Reorder position
-                    </button>
-                  )
-                )}
-                {/* Search Bar */}
-                <div className="relative">
-                  <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                  <input
-                    type="text"
-                    placeholder="Search..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full sm:w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                  />
-                </div>
-                <div className="flex items-center gap-2">
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Meta Status:</label>
-                  <select
-                    value={metaFilter}
-                    onChange={(e) => setMetaFilter(e.target.value)}
-                    className="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-medium focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                  >
-                    <option value="all">All Items</option>
-                    <option value="filled">Meta Filled</option>
-                    <option value="notFilled">Meta Not Filled</option>
-                  </select>
-                </div>
-                <button
-                  onClick={() => setShowFilters(!showFilters)}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${showFilters
-                    ? "bg-blue-600 text-white shadow-md"
-                    : "bg-white text-gray-600 border border-gray-200 hover:border-blue-400"
-                    }`}
-                >
-                  <IoFilterOutline/>
-                  Filters
-                  {activeFilterCount > 0 && (
-                    <span className="bg-white text-blue-600 px-1.5 py-0.5 rounded-full text-xs font-medium">
-                      {activeFilterCount}
-                    </span>
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Filter Section */}
-          {showFilters && (
-            <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-4">
-                {/* Filter by Exam */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Filter by Exam
-                  </label>
-                  <select
-                    value={filterExam}
-                    onChange={(e) => {
-                      setFilterExam(e.target.value);
-                      setFilterSubject("");
-                      setFilterUnit("");
-                      setFilterChapter("");
-                      setFilterTopic("");
-                      setFilterSubTopic("");
-                    }}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-all"
-                  >
-                    <option value="">All Exams</option>
-                    {exams.map((exam) => (
-                      <option key={exam._id} value={exam._id}>
-                        {exam.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Filter by Subject */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-700">
-                    Filter by Subject
-                  </label>
-                  <select
-                    value={filterSubject}
-                    onChange={(e) => {
-                      setFilterSubject(e.target.value);
-                      setFilterUnit("");
-                      setFilterChapter("");
-                      setFilterTopic("");
-                      setFilterSubTopic("");
-                    }}
-                    disabled={!filterExam}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm bg-white disabled:bg-gray-100 disabled:text-gray-400"
-                  >
-                    <option value="">
-                      {filterExam ? "Select Exam First" : "All Subjects"}
-                    </option>
-                    {filteredFilterSubjects.map((subject) => (
-                      <option key={subject._id} value={subject._id}>
-                        {subject.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Filter by Unit */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-700">
-                    Filter by Unit
-                  </label>
-                  <select
-                    value={filterUnit}
-                    onChange={(e) => {
-                      setFilterUnit(e.target.value);
-                      setFilterChapter("");
-                      setFilterTopic("");
-                      setFilterSubTopic("");
-                    }}
-                    disabled={!filterSubject}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm bg-white disabled:bg-gray-100 disabled:text-gray-400"
-                  >
-                    <option value="">
-                      {filterSubject ? "Select Subject First" : "All Units"}
-                    </option>
-                    {filteredFilterUnits.map((unit) => (
-                      <option key={unit._id} value={unit._id}>
-                        {unit.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Filter by Chapter */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-700">
-                    Filter by Chapter
-                  </label>
-                  <select
-                    value={filterChapter}
-                    onChange={(e) => {
-                      setFilterChapter(e.target.value);
-                      setFilterTopic("");
-                      setFilterSubTopic("");
-                    }}
-                    disabled={!filterUnit}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm bg-white disabled:bg-gray-100 disabled:text-gray-400"
-                  >
-                    <option value="">
-                      {filterUnit ? "Select Unit First" : "All Chapters"}
-                    </option>
-                    {filteredFilterChapters.map((chapter) => (
-                      <option key={chapter._id} value={chapter._id}>
-                        {chapter.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Filter by Topic */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-700">
-                    Filter by Topic
-                  </label>
-                  <select
-                    value={filterTopic}
-                    onChange={(e) => {
-                      setFilterTopic(e.target.value);
-                      setFilterSubTopic("");
-                    }}
-                    disabled={!filterChapter}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm bg-white disabled:bg-gray-100 disabled:text-gray-400"
-                  >
-                    <option value="">
-                      {filterChapter ? "Select Chapter First" : "All Topics"}
-                    </option>
-                    {filteredFilterTopics.map((topic) => (
-                      <option key={topic._id} value={topic._id}>
-                        {topic.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Filter by SubTopic */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-700">
-                    Filter by SubTopic
-                  </label>
-                  <select
-                    value={filterSubTopic}
-                    onChange={(e) => setFilterSubTopic(e.target.value)}
-                    disabled={!filterTopic}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm bg-white disabled:bg-gray-100 disabled:text-gray-400"
-                  >
-                    <option value="">
-                      {filterTopic ? "Select Topic First" : "All SubTopics"}
-                    </option>
-                    {filteredFilterSubTopics.map((subtopic) => (
-                      <option key={subtopic._id} value={subtopic._id}>
-                        {subtopic.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* Active Filters */}
-              {activeFilterCount > 0 && (
-                <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-gray-200">
-                  <span className="text-xs font-semibold text-gray-600">
-                    Active Filters:
-                  </span>
-                  {filterExam && (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
-                      Exam:{" "}
-                      {exams.find((e) => e._id === filterExam)?.name || "N/A"}
-                      <button
-                        onClick={() => {
-                          setFilterExam("");
-                          setFilterSubject("");
-                          setFilterUnit("");
-                          setFilterChapter("");
-                          setFilterTopic("");
-                          setFilterSubTopic("");
-                        }}
-                        className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"
-                      >
-                        <FaTimes className="w-3 h-3" />
-                      </button>
-                    </span>
-                  )}
-                  {filterSubject && (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
-                      Subject:{" "}
-                      {subjects.find((s) => s._id === filterSubject)?.name ||
-                        "N/A"}
-                      <button
-                        onClick={() => {
-                          setFilterSubject("");
-                          setFilterUnit("");
-                          setFilterChapter("");
-                          setFilterTopic("");
-                          setFilterSubTopic("");
-                        }}
-                        className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"
-                      >
-                        <FaTimes className="w-3 h-3" />
-                      </button>
-                    </span>
-                  )}
-                  {filterUnit && (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
-                      Unit:{" "}
-                      {filterUnits.find((u) => u._id === filterUnit)?.name || "N/A"}
-                      <button
-                        onClick={() => {
-                          setFilterUnit("");
-                          setFilterChapter("");
-                          setFilterTopic("");
-                          setFilterSubTopic("");
-                        }}
-                        className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"
-                      >
-                        <FaTimes className="w-3 h-3" />
-                      </button>
-                    </span>
-                  )}
-                  {filterChapter && (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
-                      Chapter:{" "}
-                      {filterChapters.find((c) => c._id === filterChapter)?.name || "N/A"}
-                      <button
-                        onClick={() => {
-                          setFilterChapter("");
-                          setFilterTopic("");
-                          setFilterSubTopic("");
-                        }}
-                        className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"
-                      >
-                        <FaTimes className="w-3 h-3" />
-                      </button>
-                    </span>
-                  )}
-                  {filterTopic && (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
-                      Topic:{" "}
-                      {filterTopics.find((t) => t._id === filterTopic)?.name || "N/A"}
-                      <button
-                        onClick={() => {
-                          setFilterTopic("");
-                          setFilterSubTopic("");
-                        }}
-                        className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"
-                      >
-                        <FaTimes className="w-3 h-3" />
-                      </button>
-                    </span>
-                  )}
-                  {filterSubTopic && (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
-                      SubTopic:{" "}
-                      {filterSubTopics.find((st) => st._id === filterSubTopic)?.name || "N/A"}
-                      <button
-                        onClick={() => {
-                          setFilterSubTopic("");
-                        }}
-                        className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"
-                      >
-                        <FaTimes className="w-3 h-3" />
-                      </button>
-                    </span>
-                  )}
-                  <button
-                    onClick={clearFilters}
-                    className="ml-auto px-3 py-1 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-full text-xs font-medium transition-colors"
-                  >
-                    Clear All Filters
-                  </button>
-                </div>
-              )}
             </div>
           )}
 
-          <div className="p-2 ">
-            <DefinitionsTable
-              definitions={filteredDefinitions}
-              onEdit={handleEditDefinition}
-              onDelete={handleDeleteDefinition}
-              onToggleStatus={handleToggleStatus}
-              onReorderDraft={handleReorderDraft}
-              reorderDraft={reorderDraft}
-              isReorderAllowed={isReorderMode && !searchQuery.trim()}
-            />
+          {/* Header Section */}
+          <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 rounded-lg border border-gray-200 p-4 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <h1 className="text-xl font-semibold text-gray-900 mb-1">
+                  Definition Management
+                </h1>
+                <p className="text-xs text-gray-600">
+                  Manage and organize your definitions, create new definitions, and track
+                  definition performance across your educational platform.
+                </p>
+              </div>
+              {canCreate ? (
+                <button
+                  onClick={handleOpenAddForm}
+                  className="px-2 py-1 bg-[#0056FF] hover:bg-[#0044CC] text-white rounded-lg text-xs font-medium transition-colors"
+                >
+                  Add New Definition
+                </button>
+              ) : (
+                <button
+                  disabled
+                  title={getPermissionMessage("create", role)}
+                  className="px-2 py-1 bg-gray-300 text-gray-500 rounded-lg text-xs font-medium cursor-not-allowed"
+                >
+                  Add New Definition
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Add Definition Form */}
+          {showAddForm && (
+            <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-semibold text-gray-900">
+                  Add New Definitions
+                </h2>
+                <button
+                  onClick={handleCancelForm}
+                  className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-2 rounded-lg transition-colors"
+                  disabled={isFormLoading}
+                >
+                  <FaTimes className="w-4 h-4" />
+                </button>
+              </div>
+
+              {formError && (
+                <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                    <p className="text-sm font-medium text-red-800">
+                      {formError}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              <form onSubmit={handleAddDefinitions} className="space-y-6">
+                {/* Selection Fields */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Exam *
+                    </label>
+                    <select
+                      name="examId"
+                      value={formData.examId}
+                      onChange={handleFormChange}
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="">Select Exam</option>
+                      {exams.map((exam) => (
+                        <option key={exam._id} value={exam._id}>
+                          {exam.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Subject *
+                    </label>
+                    <select
+                      name="subjectId"
+                      value={formData.subjectId}
+                      onChange={handleFormChange}
+                      required
+                      disabled={!formData.examId}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
+                    >
+                      <option value="">Select Subject</option>
+                      {filteredSubjects.map((subject) => (
+                        <option key={subject._id} value={subject._id}>
+                          {subject.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Unit *
+                    </label>
+                    <select
+                      name="unitId"
+                      value={formData.unitId}
+                      onChange={handleFormChange}
+                      required
+                      disabled={!formData.subjectId}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
+                    >
+                      <option value="">Select Unit</option>
+                      {filteredUnits.map((unit) => (
+                        <option key={unit._id} value={unit._id}>
+                          {unit.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Chapter *
+                    </label>
+                    <select
+                      name="chapterId"
+                      value={formData.chapterId}
+                      onChange={handleFormChange}
+                      required
+                      disabled={!formData.unitId}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
+                    >
+                      <option value="">Select Chapter</option>
+                      {filteredChapters.map((chapter) => (
+                        <option key={chapter._id} value={chapter._id}>
+                          {chapter.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Topic *
+                    </label>
+                    <select
+                      name="topicId"
+                      value={formData.topicId}
+                      onChange={handleFormChange}
+                      required
+                      disabled={!formData.chapterId}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
+                    >
+                      <option value="">Select Topic</option>
+                      {filteredTopics.map((topic) => (
+                        <option key={topic._id} value={topic._id}>
+                          {topic.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                </div>
+
+                {/* Multiple SubTopic Selection with Individual Textareas */}
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-700 mb-1">
+                      Select SubTopic(s) and Enter Definitions *
+                    </h3>
+                    <p className="text-xs text-gray-500">
+                      Select subtopics and enter definitions for each subtopic separately. Each subtopic has its own textarea.
+                      <span className="text-red-600 font-medium"> Each definition name must be unique within the same subtopic.</span>
+                    </p>
+                  </div>
+
+                  <div className="space-y-6">
+                    {selectedSubTopics.map((subTopic, index) => {
+                      const subTopicName =
+                        filteredSubTopics.find((st) => st._id === subTopic.subTopicId)
+                          ?.name || "Unselected SubTopic";
+                      const definitionCount = subTopic.definitionsText
+                        .split("\n")
+                        .filter((line) => line.trim().length > 0).length;
+
+                      return (
+                        <div
+                          key={index}
+                          className="border border-gray-200 rounded-lg p-4 bg-gray-50/50"
+                        >
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-3 flex-1">
+                              <div className="flex-1">
+                                <label className="block text-xs font-medium text-gray-700 mb-1.5">
+                                  SubTopic {index + 1} *
+                                </label>
+                                <select
+                                  value={subTopic.subTopicId}
+                                  onChange={(e) =>
+                                    handleSubTopicSelectionChange(
+                                      index,
+                                      e.target.value
+                                    )
+                                  }
+                                  required
+                                  disabled={!formData.topicId}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 text-sm bg-white"
+                                >
+                                  <option value="">Select SubTopic</option>
+                                  {filteredSubTopics
+                                    .filter(
+                                      (st) =>
+                                        !selectedSubTopics.some(
+                                          (sst, i) =>
+                                            i !== index &&
+                                            sst.subTopicId === st._id
+                                        )
+                                    )
+                                    .map((subTopicOption) => (
+                                      <option
+                                        key={subTopicOption._id}
+                                        value={subTopicOption._id}
+                                      >
+                                        {subTopicOption.name}
+                                      </option>
+                                    ))}
+                                </select>
+                              </div>
+                              {selectedSubTopics.length > 1 && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveSubTopic(index)}
+                                  className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors mt-6"
+                                  title="Remove this subtopic"
+                                >
+                                  <FaTimes className="w-4 h-4" />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+
+                          {subTopic.subTopicId && (
+                            <>
+                              <div className="mb-2">
+                                <div className="flex items-center justify-between mb-1.5">
+                                  <label className="block text-xs font-medium text-gray-700">
+                                    Definitions for: <span className="text-blue-600 font-semibold">{subTopicName}</span>
+                                  </label>
+                                  <span className="text-xs text-gray-500">
+                                    Order starts from: <span className="font-semibold">{subTopic.orderNumber}</span>
+                                  </span>
+                                </div>
+                                <textarea
+                                  value={subTopic.definitionsText}
+                                  onChange={(e) =>
+                                    handleSubTopicDefinitionsChange(
+                                      index,
+                                      e.target.value
+                                    )
+                                  }
+                                  placeholder={`Enter definitions for ${subTopicName}, one per line (unique names only):&#10;Definition 1&#10;Definition 2&#10;Definition 3`}
+                                  rows={6}
+                                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-y font-mono text-sm bg-white"
+                                />
+                                <div className="mt-1.5 text-xs text-gray-500">
+                                  {definitionCount > 0 ? (
+                                    <span className="text-green-600 font-medium">
+                                      {definitionCount} definition(s) entered for this subtopic
+                                      {(() => {
+                                        // Check for duplicates in the entered text
+                                        const lines = subTopic.definitionsText
+                                          .split("\n")
+                                          .map((line) => line.trim())
+                                          .filter((line) => line.length > 0);
+                                        const nameCounts = new Map();
+                                        const hasDuplicates = lines.some((name) => {
+                                          const normalized = name.toLowerCase();
+                                          if (nameCounts.has(normalized)) {
+                                            return true;
+                                          }
+                                          nameCounts.set(normalized, 1);
+                                          return false;
+                                        });
+
+                                        if (hasDuplicates) {
+                                          return (
+                                            <span className="text-red-600 ml-1 font-semibold">
+                                              ⚠️ Duplicate names detected! Please remove duplicates.
+                                            </span>
+                                          );
+                                        }
+                                        return null;
+                                      })()}
+                                    </span>
+                                  ) : (
+                                    <span className="text-gray-400">
+                                      Enter definitions, one per line. Each name must be unique.
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      );
+                    })}
+
+                    {/* Add Another SubTopic Button */}
+                    {(() => {
+                      // Check if there are any empty subtopic selections (user hasn't selected a subtopic yet)
+                      const hasEmptySelection = selectedSubTopics.some(
+                        (st) => !st.subTopicId || st.subTopicId === ""
+                      );
+
+                      // Check if there are any unselected subtopics available
+                      const selectedSubTopicIds = selectedSubTopics
+                        .map((st) => st.subTopicId)
+                        .filter(Boolean);
+                      const availableSubTopics = filteredSubTopics.filter(
+                        (st) => !selectedSubTopicIds.includes(st._id)
+                      );
+
+                      // Button should be enabled only if:
+                      // 1. Topic is selected
+                      // 2. No empty subtopic selections exist (all existing selections are filled)
+                      // 3. There are available subtopics to select
+                      const canAddMore =
+                        formData.topicId &&
+                        !hasEmptySelection &&
+                        availableSubTopics.length > 0;
+
+                      return (
+                        <button
+                          type="button"
+                          onClick={handleAddAnotherSubTopic}
+                          disabled={!canAddMore}
+                          className={`text-sm font-medium flex items-center gap-1 px-3 py-1.5 rounded-lg transition-colors ${canAddMore
+                            ? "text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100"
+                            : "text-gray-400 bg-gray-100 cursor-not-allowed"
+                            }`}
+                          title={
+                            !formData.topicId
+                              ? "Please select a topic first"
+                              : hasEmptySelection
+                                ? "Please select a subtopic for the current selection first"
+                                : availableSubTopics.length === 0
+                                  ? "All available subtopics are already selected"
+                                  : "Add another subtopic"
+                          }
+                        >
+                          <FaPlus className="w-3 h-3" />
+                          Add Another SubTopic
+                        </button>
+                      );
+                    })()}
+                  </div>
+
+                  {/* Summary */}
+                  {selectedSubTopics.some((st) => st.subTopicId && st.definitionsText.trim().length > 0) && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                      <div className="text-xs font-medium text-blue-900 mb-1">
+                        Summary:
+                      </div>
+                      <div className="text-xs text-blue-700 space-y-0.5">
+                        {selectedSubTopics
+                          .filter((st) => st.subTopicId && st.definitionsText.trim().length > 0)
+                          .map((subTopic, idx) => {
+                            const subTopicName =
+                              filteredSubTopics.find((st) => st._id === subTopic.subTopicId)
+                                ?.name || "Unknown";
+                            const definitionCount = subTopic.definitionsText
+                              .split("\n")
+                              .filter((line) => line.trim().length > 0).length;
+                            return (
+                              <div key={idx}>
+                                • {subTopicName}: {definitionCount} definition(s)
+                              </div>
+                            );
+                          })}
+                        <div className="mt-2 pt-2 border-t border-blue-200 font-semibold">
+                          Total:{" "}
+                          {selectedSubTopics
+                            .filter((st) => st.subTopicId && st.definitionsText.trim().length > 0)
+                            .reduce((sum, st) => {
+                              return (
+                                sum +
+                                st.definitionsText
+                                  .split("\n")
+                                  .filter((line) => line.trim().length > 0).length
+                              );
+                            }, 0)}{" "}
+                          definitions will be created
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Form Actions */}
+                <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+                  <button
+                    type="button"
+                    onClick={handleCancelForm}
+                    className="px-3 py-1.5 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium transition-colors"
+                    disabled={isFormLoading}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    disabled={isFormLoading}
+                  >
+                    {isFormLoading ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
+                        Adding...
+                      </>
+                    ) : (
+                      `Add Definitions`
+                    )}
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* Edit Definition Form */}
+          {showEditForm && editingDefinition && (
+            <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
+              <div className="flex items-center gap-2 mb-6">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <FaEdit className="size-3 text-blue-600" />
+                </div>
+                <h2 className="text-sm font-bold text-gray-900">
+                  Edit Definition: {editingDefinition.name}
+                </h2>
+              </div>
+
+              {formError && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+                  {formError}
+                </div>
+              )}
+
+              <form onSubmit={handleUpdateDefinition} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Exam *
+                    </label>
+                    <select
+                      name="examId"
+                      value={editFormData.examId}
+                      onChange={handleEditFormChange}
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="">Select Exam</option>
+                      {exams.map((exam) => (
+                        <option key={exam._id} value={exam._id}>
+                          {exam.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Subject *
+                    </label>
+                    <select
+                      name="subjectId"
+                      value={editFormData.subjectId}
+                      onChange={handleEditFormChange}
+                      required
+                      disabled={!editFormData.examId}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
+                    >
+                      <option value="">Select Subject</option>
+                      {filteredEditSubjects.map((subject) => (
+                        <option key={subject._id} value={subject._id}>
+                          {subject.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Unit *
+                    </label>
+                    <select
+                      name="unitId"
+                      value={editFormData.unitId}
+                      onChange={handleEditFormChange}
+                      required
+                      disabled={!editFormData.subjectId}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
+                    >
+                      <option value="">Select Unit</option>
+                      {filteredEditUnits.map((unit) => (
+                        <option key={unit._id} value={unit._id}>
+                          {unit.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Chapter *
+                    </label>
+                    <select
+                      name="chapterId"
+                      value={editFormData.chapterId}
+                      onChange={handleEditFormChange}
+                      required
+                      disabled={!editFormData.unitId}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
+                    >
+                      <option value="">Select Chapter</option>
+                      {filteredEditChapters.map((chapter) => (
+                        <option key={chapter._id} value={chapter._id}>
+                          {chapter.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Topic *
+                    </label>
+                    <select
+                      name="topicId"
+                      value={editFormData.topicId}
+                      onChange={handleEditFormChange}
+                      required
+                      disabled={!editFormData.chapterId}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
+                    >
+                      <option value="">Select Topic</option>
+                      {filteredEditTopics.map((topic) => (
+                        <option key={topic._id} value={topic._id}>
+                          {topic.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      SubTopic *
+                    </label>
+                    <select
+                      name="subTopicId"
+                      value={editFormData.subTopicId}
+                      onChange={handleEditFormChange}
+                      required
+                      disabled={!editFormData.topicId}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
+                    >
+                      <option value="">Select SubTopic</option>
+                      {filteredEditSubTopics.map((subtopic) => (
+                        <option key={subtopic._id} value={subtopic._id}>
+                          {subtopic.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Definition Name *
+                    </label>
+                    <input
+                      type="text"
+                      name="name"
+                      value={editFormData.name}
+                      onChange={handleEditFormChange}
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Order Number *
+                    </label>
+                    <input
+                      type="number"
+                      name="orderNumber"
+                      value={editFormData.orderNumber}
+                      onChange={handleEditFormChange}
+                      required
+                      min="1"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+                  <button
+                    type="button"
+                    onClick={handleCancelEditForm}
+                    className="px-3 py-1.5 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium transition-colors"
+                    disabled={isFormLoading}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    disabled={isFormLoading}
+                  >
+                    {isFormLoading ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
+                        Updating...
+                      </>
+                    ) : (
+                      "Update Definition"
+                    )}
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* Definitions Table */}
+          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
+            <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900">
+                    Definitions List
+                  </h2>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Manage your definitions, view details, and perform actions
+                    {isReorderMode && (
+                      <span className="ml-1.5 text-blue-600 font-medium">— Drag rows within each subtopic, then click Done to save</span>
+                    )}
+                  </p>
+                </div>
+                <div className="flex flex-wrap items-center gap-3">
+                  {canReorder && !searchQuery.trim() && (
+                    isReorderMode ? (
+                      <button
+                        type="button"
+                        onClick={handleDoneReorder}
+                        disabled={isFormLoading}
+                        className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+                        title="Save order and exit reorder mode"
+                      >
+                        {isFormLoading ? (
+                          <>
+                            <LoadingSpinner size="small" />
+                            Saving...
+                          </>
+                        ) : (
+                          <>
+                            <FaCheck className="w-4 h-4" />
+                            Done
+                          </>
+                        )}
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => { setIsReorderMode(true); setReorderDraft({}); }}
+                        className="inline-flex items-center gap-2 px-3 py-1.5 bg-gray-500 hover:bg-gray-600 text-white rounded-lg text-sm font-medium transition-colors"
+                        title="Enable drag and drop to reorder definitions per subtopic"
+                      >
+                        <FaGripVertical className="w-4 h-4" />
+                        Reorder position
+                      </button>
+                    )
+                  )}
+                  {/* Search Bar */}
+                  <div className="relative">
+                    <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <input
+                      type="text"
+                      placeholder="Search..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full sm:w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Meta Status:</label>
+                    <select
+                      value={metaFilter}
+                      onChange={(e) => setMetaFilter(e.target.value)}
+                      className="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-medium focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                    >
+                      <option value="all">All Items</option>
+                      <option value="filled">Meta Filled</option>
+                      <option value="notFilled">Meta Not Filled</option>
+                    </select>
+                  </div>
+                  <button
+                    onClick={() => setShowFilters(!showFilters)}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${showFilters
+                      ? "bg-blue-600 text-white shadow-md"
+                      : "bg-white text-gray-600 border border-gray-200 hover:border-blue-400"
+                      }`}
+                  >
+                    <IoFilterOutline />
+                    Filters
+                    {activeFilterCount > 0 && (
+                      <span className="bg-white text-blue-600 px-1.5 py-0.5 rounded-full text-xs font-medium">
+                        {activeFilterCount}
+                      </span>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Filter Section */}
+            {showFilters && (
+              <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-4">
+                  {/* Filter by Exam */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Filter by Exam
+                    </label>
+                    <select
+                      value={filterExam}
+                      onChange={(e) => {
+                        setFilterExam(e.target.value);
+                        setFilterSubject("");
+                        setFilterUnit("");
+                        setFilterChapter("");
+                        setFilterTopic("");
+                        setFilterSubTopic("");
+                      }}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-all"
+                    >
+                      <option value="">All Exams</option>
+                      {exams.map((exam) => (
+                        <option key={exam._id} value={exam._id}>
+                          {exam.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Filter by Subject */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-gray-700">
+                      Filter by Subject
+                    </label>
+                    <select
+                      value={filterSubject}
+                      onChange={(e) => {
+                        setFilterSubject(e.target.value);
+                        setFilterUnit("");
+                        setFilterChapter("");
+                        setFilterTopic("");
+                        setFilterSubTopic("");
+                      }}
+                      disabled={!filterExam}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm bg-white disabled:bg-gray-100 disabled:text-gray-400"
+                    >
+                      <option value="">
+                        {filterExam ? "Select Exam First" : "All Subjects"}
+                      </option>
+                      {filteredFilterSubjects.map((subject) => (
+                        <option key={subject._id} value={subject._id}>
+                          {subject.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Filter by Unit */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-gray-700">
+                      Filter by Unit
+                    </label>
+                    <select
+                      value={filterUnit}
+                      onChange={(e) => {
+                        setFilterUnit(e.target.value);
+                        setFilterChapter("");
+                        setFilterTopic("");
+                        setFilterSubTopic("");
+                      }}
+                      disabled={!filterSubject}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm bg-white disabled:bg-gray-100 disabled:text-gray-400"
+                    >
+                      <option value="">
+                        {filterSubject ? "Select Subject First" : "All Units"}
+                      </option>
+                      {filteredFilterUnits.map((unit) => (
+                        <option key={unit._id} value={unit._id}>
+                          {unit.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Filter by Chapter */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-gray-700">
+                      Filter by Chapter
+                    </label>
+                    <select
+                      value={filterChapter}
+                      onChange={(e) => {
+                        setFilterChapter(e.target.value);
+                        setFilterTopic("");
+                        setFilterSubTopic("");
+                      }}
+                      disabled={!filterUnit}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm bg-white disabled:bg-gray-100 disabled:text-gray-400"
+                    >
+                      <option value="">
+                        {filterUnit ? "Select Unit First" : "All Chapters"}
+                      </option>
+                      {filteredFilterChapters.map((chapter) => (
+                        <option key={chapter._id} value={chapter._id}>
+                          {chapter.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Filter by Topic */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-gray-700">
+                      Filter by Topic
+                    </label>
+                    <select
+                      value={filterTopic}
+                      onChange={(e) => {
+                        setFilterTopic(e.target.value);
+                        setFilterSubTopic("");
+                      }}
+                      disabled={!filterChapter}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm bg-white disabled:bg-gray-100 disabled:text-gray-400"
+                    >
+                      <option value="">
+                        {filterChapter ? "Select Chapter First" : "All Topics"}
+                      </option>
+                      {filteredFilterTopics.map((topic) => (
+                        <option key={topic._id} value={topic._id}>
+                          {topic.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Filter by SubTopic */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-gray-700">
+                      Filter by SubTopic
+                    </label>
+                    <select
+                      value={filterSubTopic}
+                      onChange={(e) => setFilterSubTopic(e.target.value)}
+                      disabled={!filterTopic}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm bg-white disabled:bg-gray-100 disabled:text-gray-400"
+                    >
+                      <option value="">
+                        {filterTopic ? "Select Topic First" : "All SubTopics"}
+                      </option>
+                      {filteredFilterSubTopics.map((subtopic) => (
+                        <option key={subtopic._id} value={subtopic._id}>
+                          {subtopic.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Active Filters */}
+                {activeFilterCount > 0 && (
+                  <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-gray-200">
+                    <span className="text-xs font-semibold text-gray-600">
+                      Active Filters:
+                    </span>
+                    {filterExam && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
+                        Exam:{" "}
+                        {exams.find((e) => e._id === filterExam)?.name || "N/A"}
+                        <button
+                          onClick={() => {
+                            setFilterExam("");
+                            setFilterSubject("");
+                            setFilterUnit("");
+                            setFilterChapter("");
+                            setFilterTopic("");
+                            setFilterSubTopic("");
+                          }}
+                          className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"
+                        >
+                          <FaTimes className="w-3 h-3" />
+                        </button>
+                      </span>
+                    )}
+                    {filterSubject && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
+                        Subject:{" "}
+                        {subjects.find((s) => s._id === filterSubject)?.name ||
+                          "N/A"}
+                        <button
+                          onClick={() => {
+                            setFilterSubject("");
+                            setFilterUnit("");
+                            setFilterChapter("");
+                            setFilterTopic("");
+                            setFilterSubTopic("");
+                          }}
+                          className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"
+                        >
+                          <FaTimes className="w-3 h-3" />
+                        </button>
+                      </span>
+                    )}
+                    {filterUnit && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
+                        Unit:{" "}
+                        {filterUnits.find((u) => u._id === filterUnit)?.name || "N/A"}
+                        <button
+                          onClick={() => {
+                            setFilterUnit("");
+                            setFilterChapter("");
+                            setFilterTopic("");
+                            setFilterSubTopic("");
+                          }}
+                          className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"
+                        >
+                          <FaTimes className="w-3 h-3" />
+                        </button>
+                      </span>
+                    )}
+                    {filterChapter && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
+                        Chapter:{" "}
+                        {filterChapters.find((c) => c._id === filterChapter)?.name || "N/A"}
+                        <button
+                          onClick={() => {
+                            setFilterChapter("");
+                            setFilterTopic("");
+                            setFilterSubTopic("");
+                          }}
+                          className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"
+                        >
+                          <FaTimes className="w-3 h-3" />
+                        </button>
+                      </span>
+                    )}
+                    {filterTopic && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
+                        Topic:{" "}
+                        {filterTopics.find((t) => t._id === filterTopic)?.name || "N/A"}
+                        <button
+                          onClick={() => {
+                            setFilterTopic("");
+                            setFilterSubTopic("");
+                          }}
+                          className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"
+                        >
+                          <FaTimes className="w-3 h-3" />
+                        </button>
+                      </span>
+                    )}
+                    {filterSubTopic && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
+                        SubTopic:{" "}
+                        {filterSubTopics.find((st) => st._id === filterSubTopic)?.name || "N/A"}
+                        <button
+                          onClick={() => {
+                            setFilterSubTopic("");
+                          }}
+                          className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"
+                        >
+                          <FaTimes className="w-3 h-3" />
+                        </button>
+                      </span>
+                    )}
+                    <button
+                      onClick={clearFilters}
+                      className="ml-auto px-3 py-1 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-full text-xs font-medium transition-colors"
+                    >
+                      Clear All Filters
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="p-2 ">
+              <DefinitionsTable
+                definitions={filteredDefinitions}
+                onEdit={handleEditDefinition}
+                onDelete={handleDeleteDefinition}
+                onToggleStatus={handleToggleStatus}
+                onReorderDraft={handleReorderDraft}
+                reorderDraft={reorderDraft}
+                isReorderAllowed={isReorderMode && !searchQuery.trim()}
+              />
+            </div>
           </div>
         </div>
-      </div>
-    </LoadingWrapper>
+      </LoadingWrapper>
     </>
   );
 };

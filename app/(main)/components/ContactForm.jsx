@@ -237,6 +237,7 @@ const ContactForm = () => {
                 )}
 
                 <div>
+                  <label htmlFor="name" className="sr-only">Name</label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
                       <FaUser className="text-gray-400 text-xs" />
@@ -260,6 +261,7 @@ const ContactForm = () => {
                 </div>
 
                 <div>
+                  <label htmlFor="email" className="sr-only">Email Address</label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
                       <FaEnvelope className="text-gray-400 text-xs" />
@@ -285,6 +287,7 @@ const ContactForm = () => {
                 </div>
 
                 <div>
+                  <label htmlFor="country" className="sr-only">Country</label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none z-10">
                       <FaGlobe className="text-gray-400 text-xs" />
@@ -315,6 +318,7 @@ const ContactForm = () => {
                 </div>
 
                 <div>
+                  <label htmlFor="className" className="sr-only">Class</label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none z-10">
                       <FaGraduationCap className="text-gray-400 text-xs" />

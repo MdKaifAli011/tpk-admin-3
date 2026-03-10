@@ -4,10 +4,41 @@
 :root {
   --font-geist-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-geist-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  /* CLS: stable navbar height before JS measures (main uses pt-[var(--navbar-height)]) */
+  --navbar-height: 72px;
 }
 
 body {
   font-family: var(--font-geist-sans);
+}
+
+/* LCP: skip painting below-fold sections until near viewport */
+.lcp-below-fold {
+  content-visibility: auto;
+}
+
+/* LCP/CLS: stable hero section and right-slot reserve on all hierarchy pages */
+.hero-section {
+  min-height: 72px;
+}
+@media (min-width: 640px) {
+  .hero-section {
+    min-height: 80px;
+  }
+}
+.hero-right-slot {
+  min-width: 100px;
+  min-height: 44px;
+}
+@media (min-width: 640px) {
+  .hero-right-slot {
+    min-width: 120px;
+  }
+}
+
+/* CLS: reserve space for tab content so layout doesn't shift when tab loads */
+.tab-content-reserve {
+  min-height: 280px;
 }
 
 

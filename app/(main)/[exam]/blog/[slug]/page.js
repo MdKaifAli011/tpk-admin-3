@@ -72,18 +72,12 @@ const BlogDetailPage = async ({ params }) => {
     <div className="space-y-4">
       {/* Header Section */}
       <section
-        className="
-          rounded-xl
-          p-3 sm:p-4
-          bg-gradient-to-br from-indigo-50 via-white to-purple-50
-          border border-indigo-100/60
-          shadow-[0_2px_12px_rgba(120,90,200,0.08)]
-        "
+        className="hero-section rounded-xl p-3 sm:p-4 bg-gradient-to-br from-indigo-50 via-white to-purple-50 border border-indigo-100/60 shadow-[0_2px_12px_rgba(120,90,200,0.08)]"
+        aria-labelledby="blog-title"
       >
         <div className="flex flex-col gap-3 sm:gap-4">
-          {/* Title */}
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-indigo-900 mb-2">
+            <h1 id="blog-title" className="text-xl sm:text-2xl font-bold text-indigo-900 mb-2">
               {displayTitle}
             </h1>
             <div className="flex flex-wrap items-center gap-3 text-xs text-gray-600">
@@ -110,15 +104,15 @@ const BlogDetailPage = async ({ params }) => {
         </div>
       </section>
 
-      {/* Blog Image */}
+      {/* Blog Image - reserve aspect ratio to prevent CLS */}
       {blog.image && (
-        <div className="relative w-full h-50 sm:h-80 md:h-96 rounded-xl overflow-hidden bg-gray-50">
+        <div className="relative w-full aspect-video min-h-[200px] sm:min-h-[280px] md:min-h-[320px] rounded-xl overflow-hidden bg-gray-100">
           <Image
             src={imageSrc}
-            alt={displayTitle}
+            alt=""
             fill
             className="object-cover"
-            sizes="100vw"
+            sizes="(max-width: 768px) 100vw, 720px"
             unoptimized={isExternalImage}
             priority
           />

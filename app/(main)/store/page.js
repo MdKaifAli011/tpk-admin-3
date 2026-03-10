@@ -77,7 +77,7 @@ export default function StorePage() {
 
       <div className="min-h-screen bg-white text-slate-900 space-y-6 mt-6">
         {/* Hero — same as course listing */}
-        <section className="relative rounded-xl p-3 sm:p-4 bg-gradient-to-br from-indigo-50 via-white to-purple-50 border border-indigo-100/60 shadow-[0_2px_12px_rgba(100,70,200,0.08)]">
+        <section className="hero-section relative rounded-xl p-3 sm:p-4 bg-gradient-to-br from-indigo-50 via-white to-purple-50 border border-indigo-100/60 shadow-[0_2px_12px_rgba(100,70,200,0.08)]" aria-labelledby="store-title">
           <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-50/50 rounded-full blur-3xl opacity-60 pointer-events-none" />
           <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-50/50 rounded-full blur-3xl opacity-60 pointer-events-none" />
 
@@ -125,7 +125,7 @@ export default function StorePage() {
                   </span>
                 </div>
 
-                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900 tracking-tight leading-tight mb-2">
+                <h1 id="store-title" className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900 tracking-tight leading-tight mb-2">
                   Master Your Future with <span className="text-indigo-600">Elite Resources</span>
                 </h1>
 

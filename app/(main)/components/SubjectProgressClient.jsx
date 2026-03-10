@@ -213,8 +213,19 @@ const SubjectProgressClient = ({
       }
     };
 
-    // Check on mount
-    calculateProgress();
+    // Defer initial fetch until after first paint to avoid competing with LCP
+    const runAfterPaint = () => {
+      if (typeof requestAnimationFrame !== "undefined") {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => calculateProgress());
+        });
+      } else {
+        setTimeout(() => calculateProgress(), 100);
+      }
+    };
+    const timeoutId = setTimeout(runAfterPaint, 0);
+
+    // Check on mount (deferred above)
 
     // Listen for custom progress-updated event (from unit progress updates)
     const handleProgressUpdate = async () => {
@@ -241,6 +252,7 @@ const SubjectProgressClient = ({
     }
 
     return () => {
+      clearTimeout(timeoutId);
       window.removeEventListener("progress-updated", handleProgressUpdate);
       window.removeEventListener(
         "chapterProgressUpdate",

@@ -62,6 +62,10 @@ const definitionSchema = new mongoose.Schema(
       enum: ["active", "inactive"],
       default: "active",
     },
+    explicitlyInactive: {
+      type: Boolean,
+      default: false,
+    },
     visitStats: {
       totalVisits: { type: Number, default: 0 },
       todayVisits: { type: Number, default: 0 },

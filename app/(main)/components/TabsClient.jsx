@@ -7,11 +7,10 @@ import { ExamCardSkeleton } from "./SkeletonLoader";
 import Card from "./Card";
 import ExamAreaLoading from "./ExamAreaLoading";
 
-// Lazy load tabs for code splitting - only load when clicked (true lazy loading)
-// Using dynamic imports with no preloading to ensure components load only when needed
-const OverviewTab = lazy(() =>
-  import("./OverviewTab").catch(() => ({ default: () => <div>Failed to load Overview</div> }))
-);
+// Overview tab: static import for LCP — default/first visible content must render on first paint
+import OverviewTab from "./OverviewTab";
+
+// Lazy load non-default tabs for code splitting (load only when clicked)
 const DiscussionForumTab = lazy(() =>
   import("./DiscussionForumTab").catch(() => ({ default: () => <div>Failed to load Discussion Forum</div> }))
 );
@@ -370,15 +369,18 @@ const TabsClient = ({
         </div>
       </nav>
 
-      {/* Tab Content: one loading animation on switch, then tab loads. Min-height reduces CLS. */}
+      {/* Tab Content: min-height reduces CLS and reserves space for LCP */}
       <div
-        className="text-gray-700 text-sm sm:text-base min-h-[280px]"
+        className="tab-content-reserve text-gray-700 text-sm sm:text-base"
         key={`tab-wrapper-${activeTab}`}
         role="tabpanel"
         aria-label={`${activeTab} content`}
       >
         {isTabTransitioning ? (
           <ExamAreaLoading variant="compact" message="Loading tab..." />
+        ) : activeTab === "Overview" ? (
+          // Overview: no Suspense so LCP (main content) paints immediately
+          tabContent
         ) : (
           <Suspense fallback={<ExamAreaLoading variant="compact" message="Loading tab..." />}>
             {tabContent}

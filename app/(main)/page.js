@@ -202,7 +202,7 @@ function HomepageContent() {
       {/* =======================================================
           HERO SECTION (PREMIUM & CONVERSION-FOCUSED)
       ======================================================= */}
-      <section className="relative overflow-hidden">
+      <section className="hero-section relative overflow-hidden" aria-labelledby="home-hero-title">
 
 
 
@@ -224,7 +224,7 @@ function HomepageContent() {
             </div>
 
             {/* Main Headline - Value Proposition */}
-            <h1 className="text-xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold leading-[1.1] text-gray-900">
+            <h1 id="home-hero-title" className="text-xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold leading-[1.1] text-gray-900">
               Your{" "}
               <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 bg-clip-text text-transparent">
                 Exam

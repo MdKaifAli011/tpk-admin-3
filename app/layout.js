@@ -58,6 +58,12 @@ const baseMetadata = {
   },
 };
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+};
+
 export async function generateMetadata() {
   const headersList = await headers();
   const host = headersList.get("host") || "";
@@ -76,8 +82,14 @@ export default async function RootLayout({ children }) {
     ? { headerCode: "", footerCode: "" }
     : await getSiteSettingsCustomCode();
 
+  const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
+
   return (
     <html lang="en">
+      <head>
+        {/* Preload LCP image (logo) so it loads before Navbar mounts */}
+        <link rel="preload" href={`${basePath}/logo.png`} as="image" />
+      </head>
       <body
         className="antialiased"
         suppressHydrationWarning

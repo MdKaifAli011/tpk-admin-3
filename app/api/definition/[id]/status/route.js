@@ -36,10 +36,10 @@ export async function PATCH(request, { params }) {
       );
     }
 
-    // Update definition status
+    // Update definition status and remember user's explicit choice
     const updated = await Definition.findByIdAndUpdate(
       id,
-      { status },
+      { $set: { status, explicitlyInactive: status === "inactive" } },
       { new: true }
     );
 

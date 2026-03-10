@@ -182,6 +182,25 @@ const RichContent = forwardRef(({ html = "" }, ref) => {
     };
   }, []);
 
+  // LCP: prioritize first image in content, lazy-load the rest
+  useEffect(() => {
+    if (!containerRef.current || !html) return;
+    const container = containerRef.current;
+    const imgs = container.querySelectorAll("img");
+    imgs.forEach((img, index) => {
+      if (index === 0) {
+        img.setAttribute("fetchpriority", "high");
+        img.setAttribute("loading", "eager");
+        img.setAttribute("decoding", "async");
+        if (!img.hasAttribute("sizes")) {
+          img.setAttribute("sizes", "(max-width: 768px) 100vw, 720px");
+        }
+      } else {
+        img.setAttribute("loading", "lazy");
+      }
+    });
+  }, [html]);
+
   // Handle interaction clicks (Buttons and Videos)
   useEffect(() => {
     if (!containerRef.current || !html) return;
@@ -281,6 +300,17 @@ const RichContent = forwardRef(({ html = "" }, ref) => {
     let isMounted = true;
 
     if (!html || typeof window === "undefined") {
+      return () => {
+        isMounted = false;
+      };
+    }
+
+    // Load MathJax only when content contains math (reduces TBT and unused JS)
+    const hasMath =
+      /\\\([\s\S]*?\\\)|\\\[[\s\S]*?\\\]|\$\$[\s\S]*?\$\$/.test(html) ||
+      html.includes("\\(") ||
+      html.includes("\\[");
+    if (!hasMath) {
       return () => {
         isMounted = false;
       };
@@ -499,6 +529,16 @@ const RichContent = forwardRef(({ html = "" }, ref) => {
         formIndex++;
       }
     }
+
+    // LCP: first image gets high priority so it can be LCP; rest get lazy
+    let firstImg = true;
+    processedHtml = processedHtml.replace(/<img(?=[\s>])/gi, () => {
+      if (firstImg) {
+        firstImg = false;
+        return '<img fetchpriority="high" loading="eager" decoding="async" sizes="(max-width: 768px) 100vw, 720px" ';
+      }
+      return '<img loading="lazy" ';
+    });
 
     return { processedHtml, forms: formsFound };
   }, [html]);

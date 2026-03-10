@@ -150,6 +150,7 @@ export default function NotificationDropdown() {
         onClick={() => setOpen(!open)}
         className="p-2 sm:p-2.5 md:p-2 text-gray-600 hover:text-blue-600 active:text-blue-700 transition-colors touch-manipulation flex items-center justify-center min-w-[44px] min-h-[44px] relative"
         aria-label={unreadCount > 0 ? `Notifications (${unreadCount} unread)` : "Notifications"}
+        aria-expanded={open}
         title={unreadCount > 0 ? `${unreadCount} unread notification${unreadCount !== 1 ? "s" : ""}` : "Notifications"}
       >
         <FaBell className="text-base sm:text-lg md:text-xl" />
@@ -168,7 +169,8 @@ export default function NotificationDropdown() {
             <button
               type="button"
               onClick={markAllRead}
-              className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+              className="text-sm text-blue-600 hover:text-blue-800 font-medium min-h-[44px] flex items-center"
+              aria-label="Mark all notifications as read"
             >
               Mark all read
             </button>

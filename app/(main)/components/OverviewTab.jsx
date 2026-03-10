@@ -10,15 +10,10 @@ import Card from "./Card";
 import { createSlug } from "../lib/api";
 import { hasMoreContent } from "../lib/utils/contentUtils";
 
-
-// Lazy load DefinitionPreviewClient - only needed for subtopic pages
 const DefinitionPreviewClient = lazy(() => import("./DefinitionPreviewClient"));
 import UnitsSectionClient from "./UnitsSectionClient";
 import ChaptersSectionClient from "./ChaptersSectionClient";
-import DeepUnitChapterTracker from "./DeepUnitChapterTracker";
 import ClientOnly from "./ClientOnly";
-import ExamPrepDashboard from "./ExamPrepDashboard";
-import PreparationProgressDashboard from "./PreparationProgressDashboard";
 import {
   getStoredHoursPerDay,
   setStoredHoursPerDay,
@@ -29,8 +24,13 @@ import {
   broadcastExamPrepSync,
 } from "../lib/examPrepStorage";
 import { useClientToday, getPrepDaysRemaining } from "../hooks/useClientToday";
-import SyllabusTrackerSection from "./SyllabusTrackerSection";
 import api from "@/lib/api";
+
+// Lazy load below-the-fold sections to reduce TBT and main bundle
+const ExamPrepDashboard = lazy(() => import("./ExamPrepDashboard"));
+const PreparationProgressDashboard = lazy(() => import("./PreparationProgressDashboard"));
+const SyllabusTrackerSection = lazy(() => import("./SyllabusTrackerSection"));
+const DeepUnitChapterTracker = lazy(() => import("./DeepUnitChapterTracker"));
 
 // SubTopic Preview Component with Fixed 400px Height
 const SubTopicPreview = ({
@@ -224,8 +224,10 @@ const OverviewTab = ({
 
   const hoursCbRef = useRef(handleHoursPerDayChange);
   const accuracyCbRef = useRef(handleAccuracyChange);
-  hoursCbRef.current = handleHoursPerDayChange;
-  accuracyCbRef.current = handleAccuracyChange;
+  useEffect(() => {
+    hoursCbRef.current = handleHoursPerDayChange;
+    accuracyCbRef.current = handleAccuracyChange;
+  }, [handleHoursPerDayChange, handleAccuracyChange]);
 
   const onHoursPerDayChangeStable = useCallback((n) => {
     hoursCbRef.current(n);
@@ -246,10 +248,29 @@ const OverviewTab = ({
 
   return (
     <div className="space-y-2 px-3 sm:px-4 py-3 sm:py-4">
-      {/* Exam dashboards: client-only to avoid hydration mismatch (React #418) from date/count */}
+      {/* LCP: Main prose content first so text/image paints immediately */}
+      <div
+        className="prose prose-sm sm:prose max-w-none prose-headings:text-gray-900 prose-headings:font-bold prose-p:text-gray-700 prose-p:leading-normal prose-a:text-indigo-600 prose-a:no-underline hover:prose-a:underline prose-strong:text-gray-900 prose-code:text-indigo-700 prose-pre:bg-gray-50"
+        suppressHydrationWarning
+      >
+        {content ? (
+          <RichContent html={content} />
+        ) : (
+          <Card variant="standard" className="p-4 sm:p-6 text-center">
+            <p className="text-gray-600 font-medium mb-2">
+              No content available for this {entityType}.
+            </p>
+            <p className="text-sm text-gray-500">
+              Content can be added from the admin panel.
+            </p>
+          </Card>
+        )}
+      </div>
+
+      {/* Exam dashboards: client-only, lazy-loaded to reduce TBT */}
       {entityType === "exam" && examId && (
-        <ClientOnly fallback={<div className="mb-6 min-h-[200px]" aria-hidden="true" />}>
-          <>
+        <ClientOnly fallback={<div className="mb-6 min-h-[200px] animate-pulse rounded-xl bg-gray-100/50" aria-hidden="true" />}>
+          <Suspense fallback={<div className="mb-6 min-h-[200px] rounded-xl bg-gray-100/50" aria-hidden="true" />}>
             <div className="mb-6">
               <ExamPrepDashboard
                 examId={examId}
@@ -271,45 +292,29 @@ const OverviewTab = ({
                 timeRequiredFallback={timeRequiredFallback}
               />
             </div>
-          </>
+          </Suspense>
         </ClientOnly>
       )}
 
-      {/* Syllabus Tracker (Subject → Unit → Chapter) - sliders + checklists, instant updates */}
+      {/* Syllabus Tracker - lazy loaded */}
       {entityType === "exam" && examId && examSlug && subjectsWithUnits && subjectsWithUnits.length > 0 && (
         <div className="mb-8">
-          <SyllabusTrackerSection
-            examId={examId}
-            subjectsWithUnits={subjectsWithUnits}
-            examSlug={examSlug}
-            examName={entityName || "Exam"}
-          />
+          <Suspense fallback={<div className="min-h-[120px] rounded-xl bg-gray-100/50" aria-hidden="true" />}>
+            <SyllabusTrackerSection
+              examId={examId}
+              subjectsWithUnits={subjectsWithUnits}
+              examSlug={examSlug}
+              examName={entityName || "Exam"}
+            />
+          </Suspense>
         </div>
       )}
-
-      <div
-        className="prose prose-sm sm:prose max-w-none prose-headings:text-gray-900 prose-headings:font-bold prose-p:text-gray-700 prose-p:leading-normal prose-a:text-indigo-600 prose-a:no-underline hover:prose-a:underline prose-strong:text-gray-900 prose-code:text-indigo-700 prose-pre:bg-gray-50"
-        suppressHydrationWarning
-      >
-        {content ? (
-          <RichContent html={content} />
-        ) : (
-          <Card variant="standard" className="p-4 sm:p-6 text-center">
-            <p className="text-gray-600 font-medium mb-2">
-              No content available for this {entityType}.
-            </p>
-            <p className="text-sm text-gray-500">
-              Content can be added from the admin panel.
-            </p>
-          </Card>
-        )}
-      </div>
 
       {/* Subjects and Units Grid - only for exam type */}
       {entityType === "exam" &&
         subjectsWithUnits &&
         subjectsWithUnits.length > 0 && (
-          <div className="mt-4">
+          <div className="mt-4 lcp-below-fold">
             <div className="flex items-center gap-2 mb-3">
               <div className="h-0.5 w-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full"></div>
               <h3 className="text-xl sm:text-2xl font-bold text-gray-900">
@@ -410,7 +415,7 @@ const OverviewTab = ({
         )}
 
 
-      {/* Deep Unit & Chapter Syllabus Tracker - expandable units with chapters, one per subject */}
+      {/* Deep Unit & Chapter Syllabus Tracker - lazy loaded */}
       {entityType === "exam" &&
         examSlug &&
         subjectsWithUnits &&
@@ -425,14 +430,15 @@ const OverviewTab = ({
             {subjectsWithUnits
               .filter((subject) => subject.units && subject.units.length > 0)
               .map((subject) => (
-                <DeepUnitChapterTracker
-                  key={subject._id}
-                  units={subject.units}
-                  examSlug={examSlug}
-                  subjectSlug={subject.slug || createSlug(subject.name)}
-                  examName={entityName || "Exam"}
-                  subjectName={subject.name}
-                />
+                <Suspense key={subject._id} fallback={<div className="min-h-[80px] rounded-lg bg-gray-100/50" />}>
+                  <DeepUnitChapterTracker
+                    units={subject.units}
+                    examSlug={examSlug}
+                    subjectSlug={subject.slug || createSlug(subject.name)}
+                    examName={entityName || "Exam"}
+                    subjectName={subject.name}
+                  />
+                </Suspense>
               ))}
           </div>
         )}

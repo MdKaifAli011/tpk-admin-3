@@ -993,843 +993,843 @@ const TopicManagement = () => {
         isLoading={isDataLoading}
         skeleton={<SkeletonChaptersTable />}
       >
-      <div className="space-y-6">
-        {/* Error Display */}
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <svg
-                  className="h-5 w-5 text-red-400"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <p className="text-sm font-medium">{error}</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Header Section */}
-        <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 rounded-lg border border-gray-200 p-4 shadow-sm">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div>
-              <h1 className="text-xl font-semibold text-gray-900 mb-1">
-                Topic Management
-              </h1>
-              <p className="text-xs text-gray-600">
-                Manage and organize your topics, create new topics, and track
-                topic performance across your educational platform.
-              </p>
-            </div>
-            {canCreate ? (
-              <button
-                onClick={handleOpenAddForm}
-                className="px-2 py-1 bg-[#0056FF] hover:bg-[#0044CC] text-white rounded-lg text-xs font-medium transition-colors"
-              >
-                Add New Topic
-              </button>
-            ) : (
-              <button
-                disabled
-                title={getPermissionMessage("create", role)}
-                className="px-2 py-1 bg-gray-300 text-gray-500 rounded-lg text-xs font-medium cursor-not-allowed"
-              >
-                Add New Topic
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Add Topic Form */}
-        {showAddForm && (
-          <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold text-gray-900">
-                Add New Topics
-              </h2>
-              <button
-                onClick={handleCancelForm}
-                className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-2 rounded-lg transition-colors"
-                disabled={isFormLoading}
-              >
-                <FaTimes className="w-4 h-4" />
-              </button>
-            </div>
-
-            {formError && (
-              <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                  <p className="text-sm font-medium text-red-800">
-                    {formError}
-                  </p>
-                </div>
-              </div>
-            )}
-
-            <form onSubmit={handleAddTopics} className="space-y-6">
-              {/* Selection Fields */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Exam *
-                  </label>
-                  <select
-                    name="examId"
-                    value={formData.examId}
-                    onChange={handleFormChange}
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        <div className="space-y-6">
+          {/* Error Display */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg
+                    className="h-5 w-5 text-red-400"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
                   >
-                    <option value="">Select Exam</option>
-                    {exams.map((exam) => (
-                      <option key={exam._id} value={exam._id}>
-                        {exam.name}
-                      </option>
-                    ))}
-                  </select>
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
                 </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Subject *
-                  </label>
-                  <select
-                    name="subjectId"
-                    value={formData.subjectId}
-                    onChange={handleFormChange}
-                    required
-                    disabled={!formData.examId}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
-                  >
-                    <option value="">Select Subject</option>
-                    {filteredSubjects.map((subject) => (
-                      <option key={subject._id} value={subject._id}>
-                        {subject.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Unit *
-                  </label>
-                  <select
-                    name="unitId"
-                    value={formData.unitId}
-                    onChange={handleFormChange}
-                    required
-                    disabled={!formData.subjectId}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
-                  >
-                    <option value="">Select Unit</option>
-                    {filteredUnits.map((unit) => (
-                      <option key={unit._id} value={unit._id}>
-                        {unit.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-              </div>
-
-              {/* Multiple Chapter Selection with Individual Textareas */}
-              <div className="space-y-6">
-                <div>
-                  <h3 className="text-sm font-medium text-gray-700 mb-1">
-                    Select Chapter(s) and Enter Topics *
-                  </h3>
-                  <p className="text-xs text-gray-500">
-                    Select chapters and enter topics for each chapter separately. Each chapter has its own textarea.
-                  </p>
-                </div>
-
-                <div className="space-y-6">
-                  {selectedChapters.map((chapter, index) => {
-                    const chapterName =
-                      filteredChapters.find((ch) => ch._id === chapter.chapterId)
-                        ?.name || "Unselected Chapter";
-                    const topicCount = chapter.topicsText
-                      .split("\n")
-                      .filter((line) => line.trim().length > 0).length;
-
-                    return (
-                      <div
-                        key={index}
-                        className="border border-gray-200 rounded-lg p-4 bg-gray-50/50"
-                      >
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center gap-3 flex-1">
-                            <div className="flex-1">
-                              <label className="block text-xs font-medium text-gray-700 mb-1.5">
-                                Chapter {index + 1} *
-                              </label>
-                              <select
-                                value={chapter.chapterId}
-                                onChange={(e) =>
-                                  handleChapterSelectionChange(
-                                    index,
-                                    e.target.value
-                                  )
-                                }
-                                required
-                                disabled={!formData.unitId}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 text-sm bg-white"
-                              >
-                                <option value="">Select Chapter</option>
-                                {filteredChapters
-                                  .filter(
-                                    (ch) =>
-                                      !selectedChapters.some(
-                                        (sc, i) =>
-                                          i !== index &&
-                                          sc.chapterId === ch._id
-                                      )
-                                  )
-                                  .map((chapterOption) => (
-                                    <option
-                                      key={chapterOption._id}
-                                      value={chapterOption._id}
-                                    >
-                                      {chapterOption.name}
-                                    </option>
-                                  ))}
-                              </select>
-                            </div>
-                            {selectedChapters.length > 1 && (
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveChapter(index)}
-                                className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors mt-6"
-                                title="Remove this chapter"
-                              >
-                                <FaTimes className="w-4 h-4" />
-                              </button>
-                            )}
-                          </div>
-                        </div>
-
-                        {chapter.chapterId && (
-                          <>
-                            <div className="mb-2">
-                              <div className="flex items-center justify-between mb-1.5">
-                                <label className="block text-xs font-medium text-gray-700">
-                                  Topics for: <span className="text-blue-600 font-semibold">{chapterName}</span>
-                                </label>
-                                <span className="text-xs text-gray-500">
-                                  Order starts from: <span className="font-semibold">{chapter.orderNumber}</span>
-                                </span>
-                              </div>
-                              <textarea
-                                value={chapter.topicsText}
-                                onChange={(e) =>
-                                  handleChapterTopicsChange(
-                                    index,
-                                    e.target.value
-                                  )
-                                }
-                                placeholder={`Enter topics for ${chapterName}, one per line:&#10;Topic 1&#10;Topic 2&#10;Topic 3`}
-                                rows={6}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-y font-mono text-sm bg-white"
-                              />
-                              <div className="mt-1.5 text-xs text-gray-500">
-                                {topicCount > 0 ? (
-                                  <span className="text-green-600 font-medium">
-                                    {topicCount} topic(s) entered for this chapter
-                                  </span>
-                                ) : (
-                                  <span className="text-gray-400">
-                                    Enter topics, one per line
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    );
-                  })}
-
-                  {/* Add Another Chapter Button */}
-                  {(() => {
-                    // Check if there are any empty chapter selections (user hasn't selected a chapter yet)
-                    const hasEmptySelection = selectedChapters.some(
-                      (ch) => !ch.chapterId || ch.chapterId === ""
-                    );
-
-                    // Check if there are any unselected chapters available
-                    const selectedChapterIds = selectedChapters
-                      .map((ch) => ch.chapterId)
-                      .filter(Boolean);
-                    const availableChapters = filteredChapters.filter(
-                      (ch) => !selectedChapterIds.includes(ch._id)
-                    );
-
-                    // Button should be enabled only if:
-                    // 1. Unit is selected
-                    // 2. No empty chapter selections exist (all existing selections are filled)
-                    // 3. There are available chapters to select
-                    const canAddMore =
-                      formData.unitId &&
-                      !hasEmptySelection &&
-                      availableChapters.length > 0;
-
-                    return (
-                      <button
-                        type="button"
-                        onClick={handleAddAnotherChapter}
-                        disabled={!canAddMore}
-                        className={`text-sm font-medium flex items-center gap-1 px-3 py-1.5 rounded-lg transition-colors ${canAddMore
-                          ? "text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100"
-                          : "text-gray-400 bg-gray-100 cursor-not-allowed"
-                          }`}
-                        title={
-                          !formData.unitId
-                            ? "Please select a unit first"
-                            : hasEmptySelection
-                              ? "Please select a chapter for the current selection first"
-                              : availableChapters.length === 0
-                                ? "All available chapters are already selected"
-                                : "Add another chapter"
-                        }
-                      >
-                        <FaPlus className="w-3 h-3" />
-                        Add Another Chapter
-                      </button>
-                    );
-                  })()}
-                </div>
-
-                {/* Summary */}
-                {selectedChapters.some((ch) => ch.chapterId && ch.topicsText.trim().length > 0) && (
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                    <div className="text-xs font-medium text-blue-900 mb-1">
-                      Summary:
-                    </div>
-                    <div className="text-xs text-blue-700 space-y-0.5">
-                      {selectedChapters
-                        .filter((ch) => ch.chapterId && ch.topicsText.trim().length > 0)
-                        .map((chapter, idx) => {
-                          const chapterName =
-                            filteredChapters.find((ch) => ch._id === chapter.chapterId)
-                              ?.name || "Unknown";
-                          const topicCount = chapter.topicsText
-                            .split("\n")
-                            .filter((line) => line.trim().length > 0).length;
-                          return (
-                            <div key={idx}>
-                              • {chapterName}: {topicCount} topic(s)
-                            </div>
-                          );
-                        })}
-                      <div className="mt-2 pt-2 border-t border-blue-200 font-semibold">
-                        Total:{" "}
-                        {selectedChapters
-                          .filter((ch) => ch.chapterId && ch.topicsText.trim().length > 0)
-                          .reduce((sum, ch) => {
-                            return (
-                              sum +
-                              ch.topicsText
-                                .split("\n")
-                                .filter((line) => line.trim().length > 0).length
-                            );
-                          }, 0)}{" "}
-                        topics will be created
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Form Actions */}
-              <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
-                <button
-                  type="button"
-                  onClick={handleCancelForm}
-                  className="px-3 py-1.5 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium transition-colors"
-                  disabled={isFormLoading}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                  disabled={isFormLoading}
-                >
-                  {isFormLoading ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
-                      Adding...
-                    </>
-                  ) : (
-                    `Add Topics`
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
-
-        {/* Edit Topic Form */}
-        {showEditForm && editingTopic && (
-          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
-            <div className="flex items-center gap-2 mb-6">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <FaEdit className="size-3 text-blue-600" />
-              </div>
-              <h2 className="text-sm font-bold text-gray-900">
-                Edit Topic: {editingTopic.name}
-              </h2>
-            </div>
-
-            {formError && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
-                {formError}
-              </div>
-            )}
-
-            <form onSubmit={handleUpdateTopic} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Exam *
-                  </label>
-                  <select
-                    name="examId"
-                    value={editFormData.examId}
-                    onChange={handleEditFormChange}
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value="">Select Exam</option>
-                    {exams.map((exam) => (
-                      <option key={exam._id} value={exam._id}>
-                        {exam.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Subject *
-                  </label>
-                  <select
-                    name="subjectId"
-                    value={editFormData.subjectId}
-                    onChange={handleEditFormChange}
-                    required
-                    disabled={!editFormData.examId}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
-                  >
-                    <option value="">Select Subject</option>
-                    {filteredEditSubjects.map((subject) => (
-                      <option key={subject._id} value={subject._id}>
-                        {subject.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Unit *
-                  </label>
-                  <select
-                    name="unitId"
-                    value={editFormData.unitId}
-                    onChange={handleEditFormChange}
-                    required
-                    disabled={!editFormData.subjectId}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
-                  >
-                    <option value="">Select Unit</option>
-                    {filteredEditUnits.map((unit) => (
-                      <option key={unit._id} value={unit._id}>
-                        {unit.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Chapter *
-                  </label>
-                  <select
-                    name="chapterId"
-                    value={editFormData.chapterId}
-                    onChange={handleEditFormChange}
-                    required
-                    disabled={!editFormData.unitId}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
-                  >
-                    <option value="">Select Chapter</option>
-                    {filteredEditChapters.map((chapter) => (
-                      <option key={chapter._id} value={chapter._id}>
-                        {chapter.name}
-                      </option>
-                    ))}
-                  </select>
+                <div className="ml-3">
+                  <p className="text-sm font-medium">{error}</p>
                 </div>
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Topic Name *
-                  </label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={editFormData.name}
-                    onChange={handleEditFormChange}
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Order Number *
-                  </label>
-                  <input
-                    type="number"
-                    name="orderNumber"
-                    value={editFormData.orderNumber}
-                    onChange={handleEditFormChange}
-                    required
-                    min="1"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
-                <button
-                  type="button"
-                  onClick={handleCancelEditForm}
-                  className="px-3 py-1.5 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium transition-colors"
-                  disabled={isFormLoading}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                  disabled={isFormLoading}
-                >
-                  {isFormLoading ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
-                      Updating...
-                    </>
-                  ) : (
-                    "Update Topic"
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
-
-        {/* Topics Table */}
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
-          <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <h2 className="text-xl font-semibold text-gray-900">
-                  Topics List
-                </h2>
-                <p className="text-sm text-gray-600 mt-1">
-                  Manage your topics, view details, and perform actions
-                  {isReorderMode && (
-                    <span className="ml-1.5 text-blue-600 font-medium">— Drag rows within each chapter, then click Done to save</span>
-                  )}
-                </p>
-              </div>
-              <div className="flex flex-wrap items-center gap-3">
-                {canReorder && !searchQuery.trim() && (
-                  isReorderMode ? (
-                    <button
-                      type="button"
-                      onClick={handleDoneReorder}
-                      disabled={isFormLoading}
-                      className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
-                      title="Save order and exit reorder mode"
-                    >
-                      {isFormLoading ? (
-                        <>
-                          <LoadingSpinner size="small" />
-                          Saving...
-                        </>
-                      ) : (
-                        <>
-                          <FaCheck className="w-4 h-4" />
-                          Done
-                        </>
-                      )}
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => { setIsReorderMode(true); setReorderDraft({}); }}
-                      className="inline-flex items-center gap-2 px-3 py-1.5 bg-gray-500 hover:bg-gray-600 text-white rounded-lg text-sm font-medium transition-colors"
-                      title="Enable drag and drop to reorder topics per chapter"
-                    >
-                      <FaGripVertical className="w-4 h-4" />
-                      Reorder position
-                    </button>
-                  )
-                )}
-                {/* Search Bar */}
-                <div className="relative">
-                  <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                  <input
-                    type="text"
-                    placeholder="Search..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full sm:w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                  />
-                </div>
-                <div className="flex items-center gap-2">
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Meta Status:</label>
-                  <select
-                    value={metaFilter}
-                    onChange={(e) => setMetaFilter(e.target.value)}
-                    className="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-medium focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                  >
-                    <option value="all">All Items</option>
-                    <option value="filled">Meta Filled</option>
-                    <option value="notFilled">Meta Not Filled</option>
-                  </select>
-                </div>
-                <button
-                  onClick={() => setShowFilters(!showFilters)}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${showFilters
-                    ? "bg-blue-600 text-white shadow-md"
-                    : "bg-white text-gray-600 border border-gray-200 hover:border-blue-400"
-                    }`}
-                >
-                 <IoFilterOutline />
-                  Filters
-                  {activeFilterCount > 0 && (
-                    <span className="bg-white text-blue-600 px-1.5 py-0.5 rounded-full text-xs font-medium">
-                      {activeFilterCount}
-                    </span>
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Filter Section */}
-          {showFilters && (
-            <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-                {/* Filter by Exam */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Filter by Exam
-                  </label>
-                  <select
-                    value={filterExam}
-                    onChange={(e) => {
-                      setFilterExam(e.target.value);
-                      setFilterSubject("");
-                      setFilterUnit("");
-                      setFilterChapter("");
-                    }}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-all"
-                  >
-                    <option value="">All Exams</option>
-                    {exams.map((exam) => (
-                      <option key={exam._id} value={exam._id}>
-                        {exam.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Filter by Subject */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-700">
-                    Filter by Subject
-                  </label>
-                  <select
-                    value={filterSubject}
-                    onChange={(e) => {
-                      setFilterSubject(e.target.value);
-                      setFilterUnit("");
-                      setFilterChapter("");
-                    }}
-                    disabled={!filterExam}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm bg-white disabled:bg-gray-100 disabled:text-gray-400"
-                  >
-                    <option value="">
-                      {filterExam ? "Select Exam First" : "All Subjects"}
-                    </option>
-                    {filteredFilterSubjects.map((subject) => (
-                      <option key={subject._id} value={subject._id}>
-                        {subject.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Filter by Unit */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-700">
-                    Filter by Unit
-                  </label>
-                  <select
-                    value={filterUnit}
-                    onChange={(e) => {
-                      setFilterUnit(e.target.value);
-                      setFilterChapter("");
-                    }}
-                    disabled={!filterSubject}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm bg-white disabled:bg-gray-100 disabled:text-gray-400"
-                  >
-                    <option value="">
-                      {filterSubject ? "Select Subject First" : "All Units"}
-                    </option>
-                    {filteredFilterUnits.map((unit) => (
-                      <option key={unit._id} value={unit._id}>
-                        {unit.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Filter by Chapter */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-700">
-                    Filter by Chapter
-                  </label>
-                  <select
-                    value={filterChapter}
-                    onChange={(e) => setFilterChapter(e.target.value)}
-                    disabled={!filterUnit}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm bg-white disabled:bg-gray-100 disabled:text-gray-400"
-                  >
-                    <option value="">
-                      {filterUnit ? "Select Unit First" : "All Chapters"}
-                    </option>
-                    {filteredFilterChapters.map((chapter) => (
-                      <option key={chapter._id} value={chapter._id}>
-                        {chapter.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* Active Filters */}
-              {activeFilterCount > 0 && (
-                <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-gray-200">
-                  <span className="text-xs font-semibold text-gray-600">
-                    Active Filters:
-                  </span>
-                  {filterExam && (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
-                      Exam:{" "}
-                      {exams.find((e) => e._id === filterExam)?.name || "N/A"}
-                      <button
-                        onClick={() => {
-                          setFilterExam("");
-                          setFilterSubject("");
-                          setFilterUnit("");
-                          setFilterChapter("");
-                        }}
-                        className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"
-                      >
-                        <FaTimes className="w-3 h-3" />
-                      </button>
-                    </span>
-                  )}
-                  {filterSubject && (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
-                      Subject:{" "}
-                      {subjects.find((s) => s._id === filterSubject)?.name ||
-                        "N/A"}
-                      <button
-                        onClick={() => {
-                          setFilterSubject("");
-                          setFilterUnit("");
-                          setFilterChapter("");
-                        }}
-                        className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"
-                      >
-                        <FaTimes className="w-3 h-3" />
-                      </button>
-                    </span>
-                  )}
-                  {filterUnit && (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
-                      Unit:{" "}
-                      {filterUnits.find((u) => u._id === filterUnit)?.name || "N/A"}
-                      <button
-                        onClick={() => {
-                          setFilterUnit("");
-                          setFilterChapter("");
-                        }}
-                        className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"
-                      >
-                        <FaTimes className="w-3 h-3" />
-                      </button>
-                    </span>
-                  )}
-                  {filterChapter && (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
-                      Chapter:{" "}
-                      {filterChapters.find((c) => c._id === filterChapter)?.name ||
-                        "N/A"}
-                      <button
-                        onClick={() => setFilterChapter("")}
-                        className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"
-                      >
-                        <FaTimes className="w-3 h-3" />
-                      </button>
-                    </span>
-                  )}
-                  <button
-                    onClick={clearFilters}
-                    className="ml-auto px-3 py-1 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-full text-xs font-medium transition-colors"
-                  >
-                    Clear All Filters
-                  </button>
-                </div>
-              )}
             </div>
           )}
 
-          <div className="p-2">
-            <TopicsTable
-              topics={filteredTopics}
-              onEdit={handleEditTopic}
-              onDelete={handleDeleteTopic}
-              onToggleStatus={handleToggleStatus}
-              onBulkToggleStatus={handleBulkToggleStatus}
-              onReorderDraft={handleReorderDraft}
-              reorderDraft={reorderDraft}
-              isReorderAllowed={isReorderMode && !searchQuery.trim()}
-            />
+          {/* Header Section */}
+          <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 rounded-lg border border-gray-200 p-4 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <h1 className="text-xl font-semibold text-gray-900 mb-1">
+                  Topic Management
+                </h1>
+                <p className="text-xs text-gray-600">
+                  Manage and organize your topics, create new topics, and track
+                  topic performance across your educational platform.
+                </p>
+              </div>
+              {canCreate ? (
+                <button
+                  onClick={handleOpenAddForm}
+                  className="px-2 py-1 bg-[#0056FF] hover:bg-[#0044CC] text-white rounded-lg text-xs font-medium transition-colors"
+                >
+                  Add New Topic
+                </button>
+              ) : (
+                <button
+                  disabled
+                  title={getPermissionMessage("create", role)}
+                  className="px-2 py-1 bg-gray-300 text-gray-500 rounded-lg text-xs font-medium cursor-not-allowed"
+                >
+                  Add New Topic
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Add Topic Form */}
+          {showAddForm && (
+            <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-semibold text-gray-900">
+                  Add New Topics
+                </h2>
+                <button
+                  onClick={handleCancelForm}
+                  className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-2 rounded-lg transition-colors"
+                  disabled={isFormLoading}
+                >
+                  <FaTimes className="w-4 h-4" />
+                </button>
+              </div>
+
+              {formError && (
+                <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                    <p className="text-sm font-medium text-red-800">
+                      {formError}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              <form onSubmit={handleAddTopics} className="space-y-6">
+                {/* Selection Fields */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Exam *
+                    </label>
+                    <select
+                      name="examId"
+                      value={formData.examId}
+                      onChange={handleFormChange}
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="">Select Exam</option>
+                      {exams.map((exam) => (
+                        <option key={exam._id} value={exam._id}>
+                          {exam.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Subject *
+                    </label>
+                    <select
+                      name="subjectId"
+                      value={formData.subjectId}
+                      onChange={handleFormChange}
+                      required
+                      disabled={!formData.examId}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
+                    >
+                      <option value="">Select Subject</option>
+                      {filteredSubjects.map((subject) => (
+                        <option key={subject._id} value={subject._id}>
+                          {subject.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Unit *
+                    </label>
+                    <select
+                      name="unitId"
+                      value={formData.unitId}
+                      onChange={handleFormChange}
+                      required
+                      disabled={!formData.subjectId}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
+                    >
+                      <option value="">Select Unit</option>
+                      {filteredUnits.map((unit) => (
+                        <option key={unit._id} value={unit._id}>
+                          {unit.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                </div>
+
+                {/* Multiple Chapter Selection with Individual Textareas */}
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-700 mb-1">
+                      Select Chapter(s) and Enter Topics *
+                    </h3>
+                    <p className="text-xs text-gray-500">
+                      Select chapters and enter topics for each chapter separately. Each chapter has its own textarea.
+                    </p>
+                  </div>
+
+                  <div className="space-y-6">
+                    {selectedChapters.map((chapter, index) => {
+                      const chapterName =
+                        filteredChapters.find((ch) => ch._id === chapter.chapterId)
+                          ?.name || "Unselected Chapter";
+                      const topicCount = chapter.topicsText
+                        .split("\n")
+                        .filter((line) => line.trim().length > 0).length;
+
+                      return (
+                        <div
+                          key={index}
+                          className="border border-gray-200 rounded-lg p-4 bg-gray-50/50"
+                        >
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-3 flex-1">
+                              <div className="flex-1">
+                                <label className="block text-xs font-medium text-gray-700 mb-1.5">
+                                  Chapter {index + 1} *
+                                </label>
+                                <select
+                                  value={chapter.chapterId}
+                                  onChange={(e) =>
+                                    handleChapterSelectionChange(
+                                      index,
+                                      e.target.value
+                                    )
+                                  }
+                                  required
+                                  disabled={!formData.unitId}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 text-sm bg-white"
+                                >
+                                  <option value="">Select Chapter</option>
+                                  {filteredChapters
+                                    .filter(
+                                      (ch) =>
+                                        !selectedChapters.some(
+                                          (sc, i) =>
+                                            i !== index &&
+                                            sc.chapterId === ch._id
+                                        )
+                                    )
+                                    .map((chapterOption) => (
+                                      <option
+                                        key={chapterOption._id}
+                                        value={chapterOption._id}
+                                      >
+                                        {chapterOption.name}
+                                      </option>
+                                    ))}
+                                </select>
+                              </div>
+                              {selectedChapters.length > 1 && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveChapter(index)}
+                                  className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors mt-6"
+                                  title="Remove this chapter"
+                                >
+                                  <FaTimes className="w-4 h-4" />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+
+                          {chapter.chapterId && (
+                            <>
+                              <div className="mb-2">
+                                <div className="flex items-center justify-between mb-1.5">
+                                  <label className="block text-xs font-medium text-gray-700">
+                                    Topics for: <span className="text-blue-600 font-semibold">{chapterName}</span>
+                                  </label>
+                                  <span className="text-xs text-gray-500">
+                                    Order starts from: <span className="font-semibold">{chapter.orderNumber}</span>
+                                  </span>
+                                </div>
+                                <textarea
+                                  value={chapter.topicsText}
+                                  onChange={(e) =>
+                                    handleChapterTopicsChange(
+                                      index,
+                                      e.target.value
+                                    )
+                                  }
+                                  placeholder={`Enter topics for ${chapterName}, one per line:&#10;Topic 1&#10;Topic 2&#10;Topic 3`}
+                                  rows={6}
+                                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-y font-mono text-sm bg-white"
+                                />
+                                <div className="mt-1.5 text-xs text-gray-500">
+                                  {topicCount > 0 ? (
+                                    <span className="text-green-600 font-medium">
+                                      {topicCount} topic(s) entered for this chapter
+                                    </span>
+                                  ) : (
+                                    <span className="text-gray-400">
+                                      Enter topics, one per line
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      );
+                    })}
+
+                    {/* Add Another Chapter Button */}
+                    {(() => {
+                      // Check if there are any empty chapter selections (user hasn't selected a chapter yet)
+                      const hasEmptySelection = selectedChapters.some(
+                        (ch) => !ch.chapterId || ch.chapterId === ""
+                      );
+
+                      // Check if there are any unselected chapters available
+                      const selectedChapterIds = selectedChapters
+                        .map((ch) => ch.chapterId)
+                        .filter(Boolean);
+                      const availableChapters = filteredChapters.filter(
+                        (ch) => !selectedChapterIds.includes(ch._id)
+                      );
+
+                      // Button should be enabled only if:
+                      // 1. Unit is selected
+                      // 2. No empty chapter selections exist (all existing selections are filled)
+                      // 3. There are available chapters to select
+                      const canAddMore =
+                        formData.unitId &&
+                        !hasEmptySelection &&
+                        availableChapters.length > 0;
+
+                      return (
+                        <button
+                          type="button"
+                          onClick={handleAddAnotherChapter}
+                          disabled={!canAddMore}
+                          className={`text-sm font-medium flex items-center gap-1 px-3 py-1.5 rounded-lg transition-colors ${canAddMore
+                            ? "text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100"
+                            : "text-gray-400 bg-gray-100 cursor-not-allowed"
+                            }`}
+                          title={
+                            !formData.unitId
+                              ? "Please select a unit first"
+                              : hasEmptySelection
+                                ? "Please select a chapter for the current selection first"
+                                : availableChapters.length === 0
+                                  ? "All available chapters are already selected"
+                                  : "Add another chapter"
+                          }
+                        >
+                          <FaPlus className="w-3 h-3" />
+                          Add Another Chapter
+                        </button>
+                      );
+                    })()}
+                  </div>
+
+                  {/* Summary */}
+                  {selectedChapters.some((ch) => ch.chapterId && ch.topicsText.trim().length > 0) && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                      <div className="text-xs font-medium text-blue-900 mb-1">
+                        Summary:
+                      </div>
+                      <div className="text-xs text-blue-700 space-y-0.5">
+                        {selectedChapters
+                          .filter((ch) => ch.chapterId && ch.topicsText.trim().length > 0)
+                          .map((chapter, idx) => {
+                            const chapterName =
+                              filteredChapters.find((ch) => ch._id === chapter.chapterId)
+                                ?.name || "Unknown";
+                            const topicCount = chapter.topicsText
+                              .split("\n")
+                              .filter((line) => line.trim().length > 0).length;
+                            return (
+                              <div key={idx}>
+                                • {chapterName}: {topicCount} topic(s)
+                              </div>
+                            );
+                          })}
+                        <div className="mt-2 pt-2 border-t border-blue-200 font-semibold">
+                          Total:{" "}
+                          {selectedChapters
+                            .filter((ch) => ch.chapterId && ch.topicsText.trim().length > 0)
+                            .reduce((sum, ch) => {
+                              return (
+                                sum +
+                                ch.topicsText
+                                  .split("\n")
+                                  .filter((line) => line.trim().length > 0).length
+                              );
+                            }, 0)}{" "}
+                          topics will be created
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Form Actions */}
+                <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+                  <button
+                    type="button"
+                    onClick={handleCancelForm}
+                    className="px-3 py-1.5 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium transition-colors"
+                    disabled={isFormLoading}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    disabled={isFormLoading}
+                  >
+                    {isFormLoading ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
+                        Adding...
+                      </>
+                    ) : (
+                      `Add Topics`
+                    )}
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* Edit Topic Form */}
+          {showEditForm && editingTopic && (
+            <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
+              <div className="flex items-center gap-2 mb-6">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <FaEdit className="size-3 text-blue-600" />
+                </div>
+                <h2 className="text-sm font-bold text-gray-900">
+                  Edit Topic: {editingTopic.name}
+                </h2>
+              </div>
+
+              {formError && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+                  {formError}
+                </div>
+              )}
+
+              <form onSubmit={handleUpdateTopic} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Exam *
+                    </label>
+                    <select
+                      name="examId"
+                      value={editFormData.examId}
+                      onChange={handleEditFormChange}
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="">Select Exam</option>
+                      {exams.map((exam) => (
+                        <option key={exam._id} value={exam._id}>
+                          {exam.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Subject *
+                    </label>
+                    <select
+                      name="subjectId"
+                      value={editFormData.subjectId}
+                      onChange={handleEditFormChange}
+                      required
+                      disabled={!editFormData.examId}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
+                    >
+                      <option value="">Select Subject</option>
+                      {filteredEditSubjects.map((subject) => (
+                        <option key={subject._id} value={subject._id}>
+                          {subject.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Unit *
+                    </label>
+                    <select
+                      name="unitId"
+                      value={editFormData.unitId}
+                      onChange={handleEditFormChange}
+                      required
+                      disabled={!editFormData.subjectId}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
+                    >
+                      <option value="">Select Unit</option>
+                      {filteredEditUnits.map((unit) => (
+                        <option key={unit._id} value={unit._id}>
+                          {unit.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Chapter *
+                    </label>
+                    <select
+                      name="chapterId"
+                      value={editFormData.chapterId}
+                      onChange={handleEditFormChange}
+                      required
+                      disabled={!editFormData.unitId}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
+                    >
+                      <option value="">Select Chapter</option>
+                      {filteredEditChapters.map((chapter) => (
+                        <option key={chapter._id} value={chapter._id}>
+                          {chapter.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Topic Name *
+                    </label>
+                    <input
+                      type="text"
+                      name="name"
+                      value={editFormData.name}
+                      onChange={handleEditFormChange}
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Order Number *
+                    </label>
+                    <input
+                      type="number"
+                      name="orderNumber"
+                      value={editFormData.orderNumber}
+                      onChange={handleEditFormChange}
+                      required
+                      min="1"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+                  <button
+                    type="button"
+                    onClick={handleCancelEditForm}
+                    className="px-3 py-1.5 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium transition-colors"
+                    disabled={isFormLoading}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    disabled={isFormLoading}
+                  >
+                    {isFormLoading ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
+                        Updating...
+                      </>
+                    ) : (
+                      "Update Topic"
+                    )}
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* Topics Table */}
+          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
+            <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900">
+                    Topics List
+                  </h2>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Manage your topics, view details, and perform actions
+                    {isReorderMode && (
+                      <span className="ml-1.5 text-blue-600 font-medium">— Drag rows within each chapter, then click Done to save</span>
+                    )}
+                  </p>
+                </div>
+                <div className="flex flex-wrap items-center gap-3">
+                  {canReorder && !searchQuery.trim() && (
+                    isReorderMode ? (
+                      <button
+                        type="button"
+                        onClick={handleDoneReorder}
+                        disabled={isFormLoading}
+                        className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+                        title="Save order and exit reorder mode"
+                      >
+                        {isFormLoading ? (
+                          <>
+                            <LoadingSpinner size="small" />
+                            Saving...
+                          </>
+                        ) : (
+                          <>
+                            <FaCheck className="w-4 h-4" />
+                            Done
+                          </>
+                        )}
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => { setIsReorderMode(true); setReorderDraft({}); }}
+                        className="inline-flex items-center gap-2 px-3 py-1.5 bg-gray-500 hover:bg-gray-600 text-white rounded-lg text-sm font-medium transition-colors"
+                        title="Enable drag and drop to reorder topics per chapter"
+                      >
+                        <FaGripVertical className="w-4 h-4" />
+                        Reorder position
+                      </button>
+                    )
+                  )}
+                  {/* Search Bar */}
+                  <div className="relative">
+                    <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <input
+                      type="text"
+                      placeholder="Search..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full sm:w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Meta Status:</label>
+                    <select
+                      value={metaFilter}
+                      onChange={(e) => setMetaFilter(e.target.value)}
+                      className="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-medium focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                    >
+                      <option value="all">All Items</option>
+                      <option value="filled">Meta Filled</option>
+                      <option value="notFilled">Meta Not Filled</option>
+                    </select>
+                  </div>
+                  <button
+                    onClick={() => setShowFilters(!showFilters)}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${showFilters
+                      ? "bg-blue-600 text-white shadow-md"
+                      : "bg-white text-gray-600 border border-gray-200 hover:border-blue-400"
+                      }`}
+                  >
+                    <IoFilterOutline />
+                    Filters
+                    {activeFilterCount > 0 && (
+                      <span className="bg-white text-blue-600 px-1.5 py-0.5 rounded-full text-xs font-medium">
+                        {activeFilterCount}
+                      </span>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Filter Section */}
+            {showFilters && (
+              <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                  {/* Filter by Exam */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Filter by Exam
+                    </label>
+                    <select
+                      value={filterExam}
+                      onChange={(e) => {
+                        setFilterExam(e.target.value);
+                        setFilterSubject("");
+                        setFilterUnit("");
+                        setFilterChapter("");
+                      }}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-all"
+                    >
+                      <option value="">All Exams</option>
+                      {exams.map((exam) => (
+                        <option key={exam._id} value={exam._id}>
+                          {exam.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Filter by Subject */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-gray-700">
+                      Filter by Subject
+                    </label>
+                    <select
+                      value={filterSubject}
+                      onChange={(e) => {
+                        setFilterSubject(e.target.value);
+                        setFilterUnit("");
+                        setFilterChapter("");
+                      }}
+                      disabled={!filterExam}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm bg-white disabled:bg-gray-100 disabled:text-gray-400"
+                    >
+                      <option value="">
+                        {filterExam ? "Select Exam First" : "All Subjects"}
+                      </option>
+                      {filteredFilterSubjects.map((subject) => (
+                        <option key={subject._id} value={subject._id}>
+                          {subject.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Filter by Unit */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-gray-700">
+                      Filter by Unit
+                    </label>
+                    <select
+                      value={filterUnit}
+                      onChange={(e) => {
+                        setFilterUnit(e.target.value);
+                        setFilterChapter("");
+                      }}
+                      disabled={!filterSubject}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm bg-white disabled:bg-gray-100 disabled:text-gray-400"
+                    >
+                      <option value="">
+                        {filterSubject ? "Select Subject First" : "All Units"}
+                      </option>
+                      {filteredFilterUnits.map((unit) => (
+                        <option key={unit._id} value={unit._id}>
+                          {unit.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Filter by Chapter */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-gray-700">
+                      Filter by Chapter
+                    </label>
+                    <select
+                      value={filterChapter}
+                      onChange={(e) => setFilterChapter(e.target.value)}
+                      disabled={!filterUnit}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm bg-white disabled:bg-gray-100 disabled:text-gray-400"
+                    >
+                      <option value="">
+                        {filterUnit ? "Select Unit First" : "All Chapters"}
+                      </option>
+                      {filteredFilterChapters.map((chapter) => (
+                        <option key={chapter._id} value={chapter._id}>
+                          {chapter.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Active Filters */}
+                {activeFilterCount > 0 && (
+                  <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-gray-200">
+                    <span className="text-xs font-semibold text-gray-600">
+                      Active Filters:
+                    </span>
+                    {filterExam && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
+                        Exam:{" "}
+                        {exams.find((e) => e._id === filterExam)?.name || "N/A"}
+                        <button
+                          onClick={() => {
+                            setFilterExam("");
+                            setFilterSubject("");
+                            setFilterUnit("");
+                            setFilterChapter("");
+                          }}
+                          className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"
+                        >
+                          <FaTimes className="w-3 h-3" />
+                        </button>
+                      </span>
+                    )}
+                    {filterSubject && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
+                        Subject:{" "}
+                        {subjects.find((s) => s._id === filterSubject)?.name ||
+                          "N/A"}
+                        <button
+                          onClick={() => {
+                            setFilterSubject("");
+                            setFilterUnit("");
+                            setFilterChapter("");
+                          }}
+                          className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"
+                        >
+                          <FaTimes className="w-3 h-3" />
+                        </button>
+                      </span>
+                    )}
+                    {filterUnit && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
+                        Unit:{" "}
+                        {filterUnits.find((u) => u._id === filterUnit)?.name || "N/A"}
+                        <button
+                          onClick={() => {
+                            setFilterUnit("");
+                            setFilterChapter("");
+                          }}
+                          className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"
+                        >
+                          <FaTimes className="w-3 h-3" />
+                        </button>
+                      </span>
+                    )}
+                    {filterChapter && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
+                        Chapter:{" "}
+                        {filterChapters.find((c) => c._id === filterChapter)?.name ||
+                          "N/A"}
+                        <button
+                          onClick={() => setFilterChapter("")}
+                          className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"
+                        >
+                          <FaTimes className="w-3 h-3" />
+                        </button>
+                      </span>
+                    )}
+                    <button
+                      onClick={clearFilters}
+                      className="ml-auto px-3 py-1 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-full text-xs font-medium transition-colors"
+                    >
+                      Clear All Filters
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="p-2">
+              <TopicsTable
+                topics={filteredTopics}
+                onEdit={handleEditTopic}
+                onDelete={handleDeleteTopic}
+                onToggleStatus={handleToggleStatus}
+                onBulkToggleStatus={handleBulkToggleStatus}
+                onReorderDraft={handleReorderDraft}
+                reorderDraft={reorderDraft}
+                isReorderAllowed={isReorderMode && !searchQuery.trim()}
+              />
+            </div>
           </div>
         </div>
-      </div>
-    </LoadingWrapper>
+      </LoadingWrapper>
     </>
   );
 };

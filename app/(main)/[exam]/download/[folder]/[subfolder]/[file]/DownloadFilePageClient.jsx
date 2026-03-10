@@ -229,7 +229,7 @@ const DownloadFilePageClient = ({
     <>
       <div className="space-y-6 bg-gray-50/80 min-h-screen pb-8">
         {/* Header - breadcrumb style + file dropdown */}
-        <section className="rounded-xl p-4 sm:p-5 bg-white border border-gray-200 shadow-sm">
+        <section className="hero-section rounded-xl p-4 sm:p-5 bg-white border border-gray-200 shadow-sm" aria-labelledby="download-file-title">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-col gap-2 min-w-0">
               <Link
@@ -239,7 +239,7 @@ const DownloadFilePageClient = ({
                 <FaArrowLeft className="w-4 h-4 shrink-0" />
                 Back to Study Material
               </Link>
-              <h1 className="text-base sm:text-lg font-bold text-gray-800 uppercase tracking-wide truncate max-w-[200px] sm:max-w-[480px]" title={`${examName} / ${currentFolder.name} / ${currentSubfolder.name} / ${file.name}`}>
+              <h1 id="download-file-title" className="text-base sm:text-lg font-bold text-gray-800 uppercase tracking-wide truncate max-w-[200px] sm:max-w-[480px]" title={`${examName} / ${currentFolder.name} / ${currentSubfolder.name} / ${file.name}`}>
                 {examName} / {currentFolder.name} / {currentSubfolder.name}
               </h1>
               <p className="text-xs text-gray-500 truncate">

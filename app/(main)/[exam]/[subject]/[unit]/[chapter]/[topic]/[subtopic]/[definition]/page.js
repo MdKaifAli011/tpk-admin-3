@@ -289,46 +289,23 @@ const DefinitionPage = async ({ params }) => {
       <div className="space-y-4">
 {/* Premium Educational Header */}
 <section
-  className="
-    rounded-xl
-    p-3 sm:p-4
-    bg-gradient-to-br from-indigo-50 via-white to-purple-50
-    border border-indigo-100/60
-    shadow-[0_2px_12px_rgba(120,90,200,0.08)]
-  "
+  className="hero-section rounded-xl p-3 sm:p-4 bg-gradient-to-br from-indigo-50 via-white to-purple-50 border border-indigo-100/60 shadow-[0_2px_12px_rgba(120,90,200,0.08)]"
+  aria-labelledby="definition-page-title"
 >
   <div className="flex items-start md:items-center justify-between w-full gap-3 sm:gap-4 min-w-0">
-
-    {/* LEFT — Definition Title + Breadcrumb */}
     <div className="flex flex-col min-w-0 flex-1 leading-tight">
-
-      {/* Definition Name */}
       <h1
-        className="
-          text-base sm:text-lg md:text-xl font-bold text-indigo-900
-          truncate
-          w-full
-        "
+        id="definition-page-title"
+        className="text-base sm:text-lg md:text-xl font-bold text-indigo-900 truncate w-full"
         title={definition.name}
       >
         {definition.name}
       </h1>
-
-      {/* Breadcrumb */}
-      <p
-        className="
-          text-[10px] sm:text-xs text-gray-600 mt-0.5
-          truncate
-          w-full
-        "
-        title={`${fetchedExam.name} > ${subject.name} > ${unit.name} > ${chapter.name} > ${topic.name} > ${subTopic.name} > ${definition.name}`}
-      >
+      <p className="text-[10px] sm:text-xs text-gray-600 mt-0.5 truncate w-full" title={`${fetchedExam.name} > ${subject.name} > ${unit.name} > ${chapter.name} > ${topic.name} > ${subTopic.name} > ${definition.name}`}>
         {fetchedExam.name} &gt; {subject.name} &gt; {unit.name} &gt; {chapter.name} &gt; {topic.name} &gt; {subTopic.name} &gt; {definition.name}
       </p>
     </div>
-
-    {/* RIGHT — Unit Progress */}
-    <div className="shrink-0 ml-auto">
+    <div className="hero-right-slot shrink-0 ml-auto flex flex-col justify-center">
       <UnitProgressClient
         unitId={unit._id}
         unitName={unit.name}

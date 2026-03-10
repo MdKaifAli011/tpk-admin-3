@@ -26,6 +26,11 @@ const examSchema = new mongoose.Schema(
       enum: ["active", "inactive", "draft"],
       default: "active",
     },
+    // When true, parent activate cascade will not set this to active (user explicitly deactivated this)
+    explicitlyInactive: {
+      type: Boolean,
+      default: false,
+    },
     image: {
       type: String, // URL to the image
       trim: true,

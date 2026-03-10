@@ -1,12 +1,21 @@
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import SubTopic from "@/models/SubTopic";
+import Definition from "@/models/Definition";
 import mongoose from "mongoose";
+import { requireAction } from "@/middleware/authMiddleware";
 import { logger } from "@/utils/logger";
 
-// ---------- PATCH SUBTOPIC STATUS ----------
+const notExplicitlyInactive = { $or: [{ explicitlyInactive: { $ne: true } }, { explicitlyInactive: { $exists: false } }] };
+
+// ---------- PATCH SUBTOPIC STATUS (with cascade to Definitions) ----------
 export async function PATCH(request, { params }) {
   try {
+    const authCheck = await requireAction(request, "PATCH");
+    if (authCheck.error) {
+      return NextResponse.json(authCheck, { status: authCheck.status || 403 });
+    }
+
     await connectDB();
     const { id } = await params;
     const body = await request.json();
@@ -21,18 +30,14 @@ export async function PATCH(request, { params }) {
 
     if (!status || !["active", "inactive"].includes(status)) {
       return NextResponse.json(
-        {
-          success: false,
-          message: "Valid status is required (active or inactive)",
-        },
+        { success: false, message: "Valid status is required (active or inactive)" },
         { status: 400 }
       );
     }
 
-    // Update subtopic status
     const updated = await SubTopic.findByIdAndUpdate(
       id,
-      { $set: { status } },
+      { $set: { status, explicitlyInactive: status === "inactive" } },
       { new: true }
     );
 
@@ -43,11 +48,15 @@ export async function PATCH(request, { params }) {
       );
     }
 
+    if (status === "inactive") {
+      await Definition.updateMany({ subTopicId: id }, { $set: { status: "inactive" } });
+    } else {
+      await Definition.updateMany({ subTopicId: id, ...notExplicitlyInactive }, { $set: { status: "active" } });
+    }
+
     return NextResponse.json({
       success: true,
-      message: `SubTopic ${
-        status === "inactive" ? "deactivated" : "activated"
-      } successfully`,
+      message: `SubTopic ${status === "inactive" ? "deactivated" : "activated"} successfully`,
       data: updated,
     });
   } catch (error) {

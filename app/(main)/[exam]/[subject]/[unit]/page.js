@@ -191,42 +191,23 @@ const UnitPage = async ({ params }) => {
       />
       {/* Premium Educational Header */}
       <section
-        className="
-    rounded-xl
-    p-3 sm:p-4
-    bg-gradient-to-br from-indigo-50 via-white to-purple-50
-    border border-indigo-100/60
-    shadow-[0_2px_12px_rgba(120,90,200,0.08)]
-  "
+        className="hero-section rounded-xl p-3 sm:p-4 bg-gradient-to-br from-indigo-50 via-white to-purple-50 border border-indigo-100/60 shadow-[0_2px_12px_rgba(120,90,200,0.08)]"
+        aria-labelledby="unit-page-title"
       >
         <div className="flex items-start sm:items-center justify-between w-full gap-3 sm:gap-4 min-w-0">
-          {/* LEFT — Title + Breadcrumb */}
           <div className="flex flex-col min-w-0 flex-1 leading-tight">
             <h1
-              className="
-          text-base sm:text-lg md:text-xl font-bold text-indigo-900
-          truncate
-          w-full
-        "
+              id="unit-page-title"
+              className="text-base sm:text-lg md:text-xl font-bold text-indigo-900 truncate w-full"
               title={unit.name}
             >
               {unit.name}
             </h1>
-
-            <p
-              className="
-          text-[10px] sm:text-xs text-gray-600 mt-0.5
-          truncate
-          w-full
-        "
-              title={`${fetchedExam.name} > ${subject.name} > ${unit.name}`}
-            >
+            <p className="text-[10px] sm:text-xs text-gray-600 mt-0.5 truncate w-full" title={`${fetchedExam.name} > ${subject.name} > ${unit.name}`}>
               {fetchedExam.name} &gt; {subject.name} &gt; {unit.name}
             </p>
           </div>
-
-          {/* RIGHT — Unit Progress */}
-          <div className="shrink-0 ml-auto">
+          <div className="hero-right-slot shrink-0 ml-auto flex flex-col justify-center">
             <UnitProgressClient
               unitId={unit._id}
               unitName={unit.name}

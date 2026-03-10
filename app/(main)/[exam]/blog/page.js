@@ -82,18 +82,13 @@ const BlogPage = async ({ params }) => {
       <div className="space-y-4">
         {/* 1. Header Section - Matching ExamPage Style Exactly */}
         <section
-          className="
-          rounded-xl
-          p-3 sm:p-4
-          bg-gradient-to-br from-indigo-50 via-white to-purple-50
-          border border-indigo-100/60
-          shadow-[0_2px_12px_rgba(120,90,200,0.08)]
-        "
+          className="hero-section rounded-xl p-3 sm:p-4 bg-gradient-to-br from-indigo-50 via-white to-purple-50 border border-indigo-100/60 shadow-[0_2px_12px_rgba(120,90,200,0.08)]"
+          aria-labelledby="blog-list-title"
         >
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between w-full gap-3 sm:gap-4">
-            {/* LEFT — Title + Description */}
             <div className="flex flex-col min-w-0 leading-tight flex-1">
               <h1
+                id="blog-list-title"
                 className="
                     text-lg sm:text-xl font-bold text-indigo-900
                     truncate

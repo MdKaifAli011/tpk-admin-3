@@ -1,8 +1,13 @@
 import { fileURLToPath } from "url";
 import { dirname, resolve } from "path";
+import bundleAnalyzer from "@next/bundle-analyzer";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
+const withBundleAnalyzer = bundleAnalyzer({
+  enabled: process.env.ANALYZE === "true",
+});
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -27,8 +32,11 @@ const nextConfig = {
 
   images: {
     formats: ["image/avif", "image/webp"],
-    minimumCacheTTL: 60,
+    minimumCacheTTL: 31536000, // 1 year for immutable optimized images
     dangerouslyAllowSVG: true,
+    // Serve appropriately sized images on mobile to reduce payload (Improve image delivery)
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256],
     remotePatterns: [
       { protocol: "https", hostname: "**" },
       { protocol: "http", hostname: "**" },
@@ -45,9 +53,24 @@ const nextConfig = {
   },
 
   async headers() {
+    const basePath = "/self-study";
     return [
+      // Long cache for static chunks and assets (reduces repeat-visit load, helps Lighthouse "efficient cache")
       {
-        source: "/self-study/:path*",
+        source: `${basePath}/_next/static/:path*`,
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
+        ],
+      },
+      // Cache for LCP image and other public assets (fixes "Use efficient cache lifetimes")
+      {
+        source: `${basePath}/logo.png`,
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
+        ],
+      },
+      {
+        source: `${basePath}/:path*`,
         headers: [
           { key: "X-DNS-Prefetch-Control", value: "on" },
           {
@@ -83,4 +106,4 @@ const nextConfig = {
   },
 };
 
-export default nextConfig;
+export default withBundleAnalyzer(nextConfig);

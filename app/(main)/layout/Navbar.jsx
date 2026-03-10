@@ -80,19 +80,15 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen, showSidebar }) => {
     // Set initial height immediately
     updateNavbarHeight();
 
-    const resizeObserver = new ResizeObserver(updateNavbarHeight);
+    const resizeObserver = new ResizeObserver(() => {
+      requestAnimationFrame(updateNavbarHeight);
+    });
     resizeObserver.observe(navbar);
 
-    const timeouts = [
-      setTimeout(updateNavbarHeight, 0),
-      setTimeout(updateNavbarHeight, 100),
-      setTimeout(updateNavbarHeight, 300),
-    ];
-
+    const t = requestAnimationFrame(updateNavbarHeight);
     return () => {
       resizeObserver.disconnect();
-      window.removeEventListener("resize", updateNavbarHeight);
-      timeouts.forEach(clearTimeout);
+      cancelAnimationFrame(t);
     };
   }, []);
 
@@ -365,8 +361,12 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen, showSidebar }) => {
 
             {/* Center: Category Button & Navigation Links */}
             <div className="hidden lg:flex items-center gap-3 xl:gap-4 flex-1 justify-center font-semibold min-w-0 px-2">
-              {/* Category Button */}
-              <button className="flex items-center justify-center gap-2 px-3 xl:px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors text-sm font-medium text-gray-700 whitespace-nowrap shrink-0">
+              {/* Category Button - accessible name and min touch target 44px */}
+              <button
+                type="button"
+                aria-label="Open category menu"
+                className="flex items-center justify-center gap-2 px-3 xl:px-4 py-2 min-w-[44px] min-h-[44px] bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors text-sm font-medium text-gray-700 whitespace-nowrap shrink-0"
+              >
                 <FaTh className="text-sm shrink-0" />
                 <span>Category</span>
               </button>
@@ -382,6 +382,8 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen, showSidebar }) => {
                   >
                     <button
                       type="button"
+                      aria-label={`Open ${link.name} menu`}
+                      aria-expanded={activeMegaMenu === link.key}
                       onClick={() => {
                         // Clear any pending timeouts
                         if (hoverTimeoutRef.current) {
@@ -489,8 +491,11 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen, showSidebar }) => {
               {isAuthenticated && !isLoading ? (
                 <div className="hidden md:block user-menu-container relative">
                   <button
+                    type="button"
                     onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                    className="flex items-center justify-center gap-1.5 xl:gap-2 px-2 xl:px-3 py-1.5 xl:py-2 text-xs xl:text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors whitespace-nowrap touch-manipulation min-h-[44px]"
+                    aria-label={isUserMenuOpen ? "Close user menu" : "Open user menu"}
+                    aria-expanded={isUserMenuOpen}
+                    className="flex items-center justify-center gap-1.5 xl:gap-2 px-2 xl:px-3 py-1.5 xl:py-2 min-w-[44px] min-h-[44px] text-xs xl:text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors whitespace-nowrap touch-manipulation"
                   >
                     <FaUser className="text-xs sm:text-sm shrink-0" />
                     <span className="max-w-[100px] xl:max-w-[120px] truncate">
@@ -516,8 +521,10 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen, showSidebar }) => {
                         )}
                       </div>
                       <button
+                        type="button"
                         onClick={handleLogout}
-                        className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                        className="w-full flex items-center gap-2 px-4 py-2 min-h-[44px] text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                        aria-label="Log out"
                       >
                         <FaSignOutAlt className="text-xs" />
                         <span>Logout</span>
@@ -538,7 +545,8 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen, showSidebar }) => {
               {/* Enroll Now Button */}
               <Link
                 href="/contact"
-                className="px-2 sm:px-2 py-2 sm:py-2 text-xs sm:text-sm font-semibold text-white bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 rounded-lg hover:from-indigo-700 hover:via-purple-700 hover:to-pink-600 active:from-indigo-800 active:via-purple-800 active:to-pink-700 transition-all shadow-md hover:shadow-lg whitespace-nowrap touch-manipulation flex items-center justify-center "
+                className="px-2 sm:px-2 py-2 sm:py-2 min-w-[44px] min-h-[44px] text-xs sm:text-sm font-semibold text-white bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 rounded-lg hover:from-indigo-700 hover:via-purple-700 hover:to-pink-600 active:from-indigo-800 active:via-purple-800 active:to-pink-700 transition-all shadow-md hover:shadow-lg whitespace-nowrap touch-manipulation flex items-center justify-center"
+                aria-label="Enroll now - go to contact"
               >
                 <span className="hidden sm:inline">Enroll Now</span>
                 <span className="sm:hidden">Enroll</span>

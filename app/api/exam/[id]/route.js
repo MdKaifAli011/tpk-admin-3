@@ -6,6 +6,7 @@ import Unit from "@/models/Unit";
 import Chapter from "@/models/Chapter";
 import Topic from "@/models/Topic";
 import SubTopic from "@/models/SubTopic";
+import Definition from "@/models/Definition";
 import mongoose from "mongoose";
 import { successResponse, errorResponse, handleApiError, notFoundResponse } from "@/utils/apiResponse";
 import { ERROR_MESSAGES } from "@/constants";
@@ -132,7 +133,11 @@ export async function PATCH(request, { params }) {
     }
 
     const updateData = {};
-    if (status) updateData.status = status;
+    if (status) {
+      updateData.status = status;
+      // User toggled this exam: remember explicit choice so cascade activate won't overwrite children
+      updateData.explicitlyInactive = status === "inactive";
+    }
     if (orderNumber !== undefined) updateData.orderNumber = orderNumber;
 
     if (Object.keys(updateData).length === 0) {
@@ -144,72 +149,56 @@ export async function PATCH(request, { params }) {
       return notFoundResponse(ERROR_MESSAGES.EXAM_NOT_FOUND);
     }
 
+    // Filter: not explicitly inactive (user did not deliberately deactivate this item)
+    const notExplicitlyInactive = { $or: [{ explicitlyInactive: { $ne: true } }, { explicitlyInactive: { $exists: false } }] };
+
     // Cascading: Update all children status if status changed
     if (status) {
       logger.info(`Cascading status update to ${status} for exam ${id}`);
 
-      // Find all subjects in this exam
-      const subjects = await Subject.find({ examId: id });
-      const subjectIds = subjects.map((subject) => subject._id);
+      if (status === "inactive") {
+        // Deactivate: set all children to inactive (do not change explicitlyInactive)
+        const subjects = await Subject.find({ examId: id });
+        const subjectIds = subjects.map((s) => s._id);
+        const units = await Unit.find({ subjectId: { $in: subjectIds } });
+        const unitIds = units.map((u) => u._id);
+        const chapters = await Chapter.find({ unitId: { $in: unitIds } });
+        const chapterIds = chapters.map((c) => c._id);
+        const topics = await Topic.find({ chapterId: { $in: chapterIds } });
+        const topicIds = topics.map((t) => t._id);
 
-      // Find all units in these subjects
-      const units = await Unit.find({ subjectId: { $in: subjectIds } });
-      const unitIds = units.map((unit) => unit._id);
+        await Promise.all([
+          SubTopic.updateMany({ topicId: { $in: topicIds } }, { $set: { status: "inactive" } }),
+          Topic.updateMany({ chapterId: { $in: chapterIds } }, { $set: { status: "inactive" } }),
+          Chapter.updateMany({ unitId: { $in: unitIds } }, { $set: { status: "inactive" } }),
+          Unit.updateMany({ subjectId: { $in: subjectIds } }, { $set: { status: "inactive" } }),
+          Subject.updateMany({ examId: id }, { $set: { status: "inactive" } }),
+          Definition.updateMany({ examId: id }, { $set: { status: "inactive" } }),
+        ]);
+      } else {
+        // Activate: only set children to active if they are not explicitly inactive
+        const subjects = await Subject.find({ examId: id, ...notExplicitlyInactive }).select("_id").lean();
+        const subjectIds = subjects.map((s) => s._id);
+        await Subject.updateMany({ examId: id, ...notExplicitlyInactive }, { $set: { status: "active" } });
 
-      // Find all chapters in these units
-      const chapters = await Chapter.find({ unitId: { $in: unitIds } });
-      const chapterIds = chapters.map((chapter) => chapter._id);
+        const units = await Unit.find({ subjectId: { $in: subjectIds }, ...notExplicitlyInactive }).select("_id").lean();
+        const unitIds = units.map((u) => u._id);
+        await Unit.updateMany({ subjectId: { $in: subjectIds }, ...notExplicitlyInactive }, { $set: { status: "active" } });
 
-      // Find all topics in these chapters
-      const topics = await Topic.find({ chapterId: { $in: chapterIds } });
-      const topicIds = topics.map((topic) => topic._id);
+        const chapters = await Chapter.find({ unitId: { $in: unitIds }, ...notExplicitlyInactive }).select("_id").lean();
+        const chapterIds = chapters.map((c) => c._id);
+        await Chapter.updateMany({ unitId: { $in: unitIds }, ...notExplicitlyInactive }, { $set: { status: "active" } });
 
-      // Update all subtopics in these topics
-      let subTopicsResult = { modifiedCount: 0 };
-      if (topicIds.length > 0) {
-        subTopicsResult = await SubTopic.updateMany(
-          { topicId: { $in: topicIds } },
-          { $set: { status } }
-        );
+        const topics = await Topic.find({ chapterId: { $in: chapterIds }, ...notExplicitlyInactive }).select("_id").lean();
+        const topicIds = topics.map((t) => t._id);
+        await Topic.updateMany({ chapterId: { $in: chapterIds }, ...notExplicitlyInactive }, { $set: { status: "active" } });
+
+        const subtopics = await SubTopic.find({ topicId: { $in: topicIds }, ...notExplicitlyInactive }).select("_id").lean();
+        const subtopicIds = subtopics.map((st) => st._id);
+        await SubTopic.updateMany({ topicId: { $in: topicIds }, ...notExplicitlyInactive }, { $set: { status: "active" } });
+
+        await Definition.updateMany({ subTopicId: { $in: subtopicIds }, ...notExplicitlyInactive }, { $set: { status: "active" } });
       }
-      logger.info(`Updated ${subTopicsResult.modifiedCount} SubTopics`);
-
-      // Update all topics in these chapters
-      let topicsResult = { modifiedCount: 0 };
-      if (chapterIds.length > 0) {
-        topicsResult = await Topic.updateMany(
-          { chapterId: { $in: chapterIds } },
-          { $set: { status } }
-        );
-      }
-      logger.info(`Updated ${topicsResult.modifiedCount} Topics`);
-
-      // Update all chapters in these units
-      let chaptersResult = { modifiedCount: 0 };
-      if (unitIds.length > 0) {
-        chaptersResult = await Chapter.updateMany(
-          { unitId: { $in: unitIds } },
-          { $set: { status } }
-        );
-      }
-      logger.info(`Updated ${chaptersResult.modifiedCount} Chapters`);
-
-      // Update all units in these subjects
-      let unitsResult = { modifiedCount: 0 };
-      if (subjectIds.length > 0) {
-        unitsResult = await Unit.updateMany(
-          { subjectId: { $in: subjectIds } },
-          { $set: { status } }
-        );
-      }
-      logger.info(`Updated ${unitsResult.modifiedCount} Units`);
-
-      // Update all subjects in this exam
-      const subjectsResult = await Subject.updateMany(
-        { examId: id },
-        { $set: { status } }
-      );
-      logger.info(`Updated ${subjectsResult.modifiedCount} Subjects`);
     }
 
     // Clear cache for exam queries
