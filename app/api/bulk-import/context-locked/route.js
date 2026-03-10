@@ -44,33 +44,21 @@ export const maxDuration = 600; // 10 minutes in seconds
  */
 
 // Helper: Title case conversion
-const toTitleCase = (str) => {
-    if (!str) return str;
-    const exceptions = ['and', 'or', 'of', 'in', 'on', 'at', 'the', 'a', 'an'];
-    return str
-        .toLowerCase()
-        .split(' ')
-        .map((word, index) => {
-            if (index === 0 || !exceptions.includes(word)) {
-                return word.charAt(0).toUpperCase() + word.slice(1);
-            }
-            return word;
-        })
-        .join(' ');
-};
+// Helper: trim only — preserve exact CSV capitalization (no title case)
+const trimName = (str) => (str != null && String(str).trim() !== "" ? String(str).trim() : "");
 
 // Helper: Find or Create Unit (with override support)
 const findOrCreateUnit = async (name, subjectId, examId, existingSlugs) => {
-    const normalizedName = toTitleCase(name.trim());
+    const trimmedName = trimName(name);
 
     let unit = await Unit.findOne({
-        name: { $regex: new RegExp(`^${normalizedName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') },
+        name: { $regex: new RegExp(`^${trimmedName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') },
         subjectId,
         examId
     });
 
     // Generate unique slug
-    const baseSlug = createSlug(normalizedName);
+    const baseSlug = createSlug(trimmedName);
     const checkSlugExists = async (slug, excludeId) => {
         const query = { subjectId, examId, slug };
         if (excludeId) query._id = { $ne: excludeId };
@@ -94,7 +82,7 @@ const findOrCreateUnit = async (name, subjectId, examId, existingSlugs) => {
         
         try {
             unit = await Unit.create({
-                name: normalizedName,
+                name: trimmedName,
                 slug,
                 examId,
                 subjectId,
@@ -105,14 +93,14 @@ const findOrCreateUnit = async (name, subjectId, examId, existingSlugs) => {
         } catch (createErr) {
             // Handle duplicate key errors (slug or orderNumber conflict)
             if (createErr.code === 11000) {
-                console.warn(`⚠️ Unit creation conflict detected for "${normalizedName}". Attempting to find existing...`);
+                console.warn(`⚠️ Unit creation conflict detected for "${trimmedName}". Attempting to find existing...`);
                 // Try to find by slug if orderNumber conflict
                 const existingBySlug = await Unit.findOne({ subjectId, examId, slug });
                 if (existingBySlug) {
                     console.log(`✅ Found existing Unit by slug, updating instead...`);
                     unit = await Unit.findByIdAndUpdate(
                         existingBySlug._id,
-                        { name: normalizedName },
+                        { name: trimmedName },
                         { new: true, runValidators: true }
                     );
                     return { unit, wasCreated: false };
@@ -125,14 +113,14 @@ const findOrCreateUnit = async (name, subjectId, examId, existingSlugs) => {
     } else {
         // Override existing unit - update name and regenerate slug if name changed
         // If name changed significantly, regenerate slug; otherwise keep existing
-        const nameChanged = unit.name.toLowerCase() !== normalizedName.toLowerCase();
+        const nameChanged = unit.name.toLowerCase() !== trimmedName.toLowerCase();
         const finalSlug = (nameChanged || !unit.slug) ? slug : (unit.slug || slug);
         const unitIdForRefetch = unit._id;
         
         unit = await Unit.findByIdAndUpdate(
             unit._id, 
             { 
-                name: normalizedName,
+                name: trimmedName,
                 slug: finalSlug // Regenerate if name changed or missing
             }, 
             { new: true, runValidators: true }
@@ -157,17 +145,17 @@ const findOrCreateUnit = async (name, subjectId, examId, existingSlugs) => {
 
 // Helper: Find or Create Chapter (with override support)
 const findOrCreateChapter = async (name, unitId, subjectId, examId, rowData, existingSlugs) => {
-    const normalizedName = toTitleCase(name.trim());
+    const trimmedName = trimName(name);
 
     let chapter = await Chapter.findOne({
-        name: { $regex: new RegExp(`^${normalizedName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') },
+        name: { $regex: new RegExp(`^${trimmedName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') },
         unitId,
         subjectId,
         examId
     });
 
     // Generate unique slug
-    const baseSlug = createSlug(normalizedName);
+    const baseSlug = createSlug(trimmedName);
     const checkSlugExists = async (slug, excludeId) => {
         const query = { unitId, subjectId, examId, slug };
         if (excludeId) query._id = { $ne: excludeId };
@@ -190,7 +178,7 @@ const findOrCreateChapter = async (name, unitId, subjectId, examId, rowData, exi
         
         try {
             chapter = await Chapter.create({
-                name: normalizedName,
+                name: trimmedName,
                 slug,
                 examId,
                 subjectId,
@@ -205,13 +193,13 @@ const findOrCreateChapter = async (name, unitId, subjectId, examId, rowData, exi
         } catch (createErr) {
             // Handle duplicate key errors
             if (createErr.code === 11000) {
-                console.warn(`⚠️ Chapter creation conflict for "${normalizedName}". Finding existing...`);
+                console.warn(`⚠️ Chapter creation conflict for "${trimmedName}". Finding existing...`);
                 const existingBySlug = await Chapter.findOne({ unitId, subjectId, examId, slug });
                 if (existingBySlug) {
                     chapter = await Chapter.findByIdAndUpdate(
                         existingBySlug._id,
                         { 
-                            name: normalizedName,
+                            name: trimmedName,
                             weightage: rowData.weightage ? parseInt(rowData.weightage) : existingBySlug.weightage,
                             time: rowData.time ? parseInt(rowData.time) : existingBySlug.time,
                             questions: rowData.questions ? parseInt(rowData.questions) : existingBySlug.questions
@@ -226,11 +214,11 @@ const findOrCreateChapter = async (name, unitId, subjectId, examId, rowData, exi
         }
     } else {
         // Override existing chapter - update all fields and regenerate slug if name changed
-        const nameChanged = chapter.name.toLowerCase() !== normalizedName.toLowerCase();
+        const nameChanged = chapter.name.toLowerCase() !== trimmedName.toLowerCase();
         const finalSlug = (nameChanged || !chapter.slug) ? slug : (chapter.slug || slug);
         
         const updatePayload = { 
-            name: normalizedName,
+            name: trimmedName,
             slug: finalSlug // Regenerate if name changed or missing
         };
         if (rowData.weightage !== undefined) updatePayload.weightage = parseInt(rowData.weightage) || 0;
@@ -259,10 +247,10 @@ const findOrCreateChapter = async (name, unitId, subjectId, examId, rowData, exi
 
 // Helper: Find or Create Topic (with override support)
 const findOrCreateTopic = async (name, chapterId, unitId, subjectId, examId, existingSlugs) => {
-    const normalizedName = toTitleCase(name.trim());
+    const trimmedName = trimName(name);
 
     let topic = await Topic.findOne({
-        name: { $regex: new RegExp(`^${normalizedName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') },
+        name: { $regex: new RegExp(`^${trimmedName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') },
         chapterId,
         unitId,
         subjectId,
@@ -270,7 +258,7 @@ const findOrCreateTopic = async (name, chapterId, unitId, subjectId, examId, exi
     });
 
     // Generate unique slug
-    const baseSlug = createSlug(normalizedName);
+    const baseSlug = createSlug(trimmedName);
     const checkSlugExists = async (slug, excludeId) => {
         const query = { chapterId, unitId, subjectId, examId, slug };
         if (excludeId) query._id = { $ne: excludeId };
@@ -293,7 +281,7 @@ const findOrCreateTopic = async (name, chapterId, unitId, subjectId, examId, exi
         
         try {
             topic = await Topic.create({
-                name: normalizedName,
+                name: trimmedName,
                 slug,
                 examId,
                 subjectId,
@@ -306,12 +294,12 @@ const findOrCreateTopic = async (name, chapterId, unitId, subjectId, examId, exi
         } catch (createErr) {
             // Handle duplicate key errors
             if (createErr.code === 11000) {
-                console.warn(`⚠️ Topic creation conflict for "${normalizedName}". Finding existing...`);
+                console.warn(`⚠️ Topic creation conflict for "${trimmedName}". Finding existing...`);
                 const existingBySlug = await Topic.findOne({ chapterId, unitId, subjectId, examId, slug });
                 if (existingBySlug) {
                     topic = await Topic.findByIdAndUpdate(
                         existingBySlug._id,
-                        { name: normalizedName },
+                        { name: trimmedName },
                         { new: true, runValidators: true }
                     );
                     return { topic, wasCreated: false };
@@ -322,14 +310,14 @@ const findOrCreateTopic = async (name, chapterId, unitId, subjectId, examId, exi
         }
     } else {
         // Override existing topic - update name and regenerate slug if name changed
-        const nameChanged = topic.name.toLowerCase() !== normalizedName.toLowerCase();
+        const nameChanged = topic.name.toLowerCase() !== trimmedName.toLowerCase();
         const finalSlug = (nameChanged || !topic.slug) ? slug : (topic.slug || slug);
         const topicIdForRefetch = topic._id;
         
         topic = await Topic.findByIdAndUpdate(
             topic._id, 
             { 
-                name: normalizedName,
+                name: trimmedName,
                 slug: finalSlug // Regenerate if name changed or missing
             }, 
             { new: true, runValidators: true }
@@ -354,10 +342,10 @@ const findOrCreateTopic = async (name, chapterId, unitId, subjectId, examId, exi
 
 // Helper: Find or Create SubTopic (with override support)
 const findOrCreateSubTopic = async (name, topicId, chapterId, unitId, subjectId, examId, existingSlugs) => {
-    const normalizedName = toTitleCase(name.trim());
+    const trimmedName = trimName(name);
 
     let subTopic = await SubTopic.findOne({
-        name: { $regex: new RegExp(`^${normalizedName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') },
+        name: { $regex: new RegExp(`^${trimmedName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') },
         topicId,
         chapterId,
         unitId,
@@ -366,7 +354,7 @@ const findOrCreateSubTopic = async (name, topicId, chapterId, unitId, subjectId,
     });
 
     // Generate unique slug
-    const baseSlug = createSlug(normalizedName);
+    const baseSlug = createSlug(trimmedName);
     const checkSlugExists = async (slug, excludeId) => {
         const query = { topicId, chapterId, unitId, subjectId, examId, slug };
         if (excludeId) query._id = { $ne: excludeId };
@@ -389,7 +377,7 @@ const findOrCreateSubTopic = async (name, topicId, chapterId, unitId, subjectId,
         
         try {
             subTopic = await SubTopic.create({
-                name: normalizedName,
+                name: trimmedName,
                 slug,
                 examId,
                 subjectId,
@@ -403,12 +391,12 @@ const findOrCreateSubTopic = async (name, topicId, chapterId, unitId, subjectId,
         } catch (createErr) {
             // Handle duplicate key errors
             if (createErr.code === 11000) {
-                console.warn(`⚠️ SubTopic creation conflict for "${normalizedName}". Finding existing...`);
+                console.warn(`⚠️ SubTopic creation conflict for "${trimmedName}". Finding existing...`);
                 const existingBySlug = await SubTopic.findOne({ topicId, chapterId, unitId, subjectId, examId, slug });
                 if (existingBySlug) {
                     subTopic = await SubTopic.findByIdAndUpdate(
                         existingBySlug._id,
-                        { name: normalizedName },
+                        { name: trimmedName },
                         { new: true, runValidators: true }
                     );
                     return { subTopic, wasCreated: false };
@@ -419,14 +407,14 @@ const findOrCreateSubTopic = async (name, topicId, chapterId, unitId, subjectId,
         }
     } else {
         // Override existing subtopic - update name and regenerate slug if name changed
-        const nameChanged = subTopic.name.toLowerCase() !== normalizedName.toLowerCase();
+        const nameChanged = subTopic.name.toLowerCase() !== trimmedName.toLowerCase();
         const finalSlug = (nameChanged || !subTopic.slug) ? slug : (subTopic.slug || slug);
         const subTopicIdForRefetch = subTopic._id;
         
         subTopic = await SubTopic.findByIdAndUpdate(
             subTopic._id, 
             { 
-                name: normalizedName,
+                name: trimmedName,
                 slug: finalSlug // Regenerate if name changed or missing
             }, 
             { new: true, runValidators: true }
@@ -451,13 +439,13 @@ const findOrCreateSubTopic = async (name, topicId, chapterId, unitId, subjectId,
 
 // Helper: Create or Update Definition (with override support and slug verification)
 const createDefinition = async (name, subTopicId, topicId, chapterId, unitId, subjectId, examId, existingSlugs, orderCounters) => {
-    const normalizedName = toTitleCase(name.trim());
+    const trimmedName = trimName(name);
 
     // Check for duplicate (chapterId is optional, so handle null case)
     // Definition uniqueness is based on: name, subTopicId, topicId, unitId, subjectId, examId
     // chapterId is optional and doesn't affect uniqueness
     const duplicateQuery = {
-        name: { $regex: new RegExp(`^${normalizedName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') },
+        name: { $regex: new RegExp(`^${trimmedName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') },
         subTopicId,
         topicId,
         unitId,
@@ -471,7 +459,7 @@ const createDefinition = async (name, subTopicId, topicId, chapterId, unitId, su
     const existing = await Definition.findOne(duplicateQuery);
 
     // Generate unique slug (chapterId is optional, so handle null case)
-    const baseSlug = createSlug(normalizedName);
+    const baseSlug = createSlug(trimmedName);
     const checkSlugExists = async (slug, excludeId) => {
         // Definition uniqueness is based on subTopicId + slug (not chapterId)
         // So we don't need to include chapterId in the slug uniqueness check
@@ -486,13 +474,13 @@ const createDefinition = async (name, subTopicId, topicId, chapterId, unitId, su
 
     if (existing) {
         // Override existing definition - update name and regenerate slug if name changed
-        const nameChanged = existing.name.toLowerCase() !== normalizedName.toLowerCase();
+        const nameChanged = existing.name.toLowerCase() !== trimmedName.toLowerCase();
         const finalSlug = (nameChanged || !existing.slug) ? slug : (existing.slug || slug);
         
         let updated = await Definition.findByIdAndUpdate(
             existing._id, 
             { 
-                name: normalizedName,
+                name: trimmedName,
                 slug: finalSlug // Regenerate if name changed or missing
             }, 
             { new: true, runValidators: true }
@@ -542,7 +530,7 @@ const createDefinition = async (name, subTopicId, topicId, chapterId, unitId, su
 
     try {
         const definition = await Definition.create({
-            name: normalizedName,
+            name: trimmedName,
             slug,
             examId,
             subjectId,
@@ -565,11 +553,11 @@ const createDefinition = async (name, subTopicId, topicId, chapterId, unitId, su
     } catch (createErr) {
         // Handle duplicate key errors (orderNumber or slug conflict)
         if (createErr.code === 11000) {
-            console.warn(`⚠️ Definition creation conflict for "${normalizedName}". Attempting recovery...`);
+            console.warn(`⚠️ Definition creation conflict for "${trimmedName}". Attempting recovery...`);
             
             // Try to find existing definition and update it
             const recoveryQuery = {
-                name: { $regex: new RegExp(`^${normalizedName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') },
+                name: { $regex: new RegExp(`^${trimmedName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') },
                 subTopicId,
                 topicId,
                 unitId,
@@ -584,7 +572,7 @@ const createDefinition = async (name, subTopicId, topicId, chapterId, unitId, su
                 let updated = await Definition.findByIdAndUpdate(
                     existingDef._id,
                     { 
-                        name: normalizedName,
+                        name: trimmedName,
                         slug: existingDef.slug || slug // Keep existing slug if present
                     },
                     { new: true, runValidators: true }
@@ -604,7 +592,7 @@ const createDefinition = async (name, subTopicId, topicId, chapterId, unitId, su
             orderCounters.set(orderKey, alternativeOrder);
             
             const definition = await Definition.create({
-                name: normalizedName,
+                name: trimmedName,
                 slug,
                 examId,
                 subjectId,
@@ -765,7 +753,7 @@ export async function POST(request) {
         const maxTopicOrderByChapter = new Map();
         const maxSubTopicOrderByTopic = new Map();
 
-        const normName = (s) => (s ? toTitleCase(String(s).trim()) : "");
+        const normName = (s) => (s ? String(s).trim() : "");
         const normKey = (s) => (s ? String(s).trim().toLowerCase() : "");
 
         if (useFastImport) {

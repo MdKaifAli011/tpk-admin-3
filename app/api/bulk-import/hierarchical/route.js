@@ -72,9 +72,6 @@ export async function POST(request) {
         
         console.log(`🔄 Starting hierarchical import of ${data.length} rows from level: ${HIERARCHY[startIndex].level}...`);
 
-        // Import title case utility
-        const { toTitleCase } = await import("@/utils/titleCase");
-
         for (let rowIndex = 0; rowIndex < data.length; rowIndex++) {
             const row = data[rowIndex];
             const currentChain = { ...parentIds };
@@ -91,8 +88,8 @@ export async function POST(request) {
                     // If name is missing, stop processing this branch
                     if (!rawName) break;
 
-                    // Apply title case
-                    const name = toTitleCase(rawName);
+                    // Use name exactly as in CSV (trimmed only, no title case)
+                    const name = rawName;
 
                     // Resolve Parent ID
                     let parentId = null;
