@@ -10,8 +10,10 @@ import SubTopicsTable from "../table/SubTopicsTable";
 import { LoadingWrapper, SkeletonChaptersTable, LoadingSpinner } from "../ui/SkeletonLoader";
 import { FaEdit, FaPlus, FaTimes, FaLock, FaSearch, FaCheck, FaGripVertical } from "react-icons/fa";
 import { ToastContainer, useToast } from "../ui/Toast";
+import StatusCascadeModal from "../ui/StatusCascadeModal";
 import api from "@/lib/api";
 import { getSubTopicListCache, setSubTopicListCache } from "@/lib/subTopicListCache";
+import { invalidateListCachesFrom } from "@/lib/listCacheInvalidation";
 import { usePermissions, getPermissionMessage } from "../../hooks/usePermissions";
 import { IoFilterOutline } from "react-icons/io5";
 
@@ -65,6 +67,8 @@ const SubTopicsManagement = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isReorderMode, setIsReorderMode] = useState(false);
   const [reorderDraft, setReorderDraft] = useState({});
+  const [cascadeModalOpen, setCascadeModalOpen] = useState(false);
+  const [cascadeItem, setCascadeItem] = useState(null);
   const isFetchingRef = useRef(false);
   const [metaFilter, setMetaFilter] = useState("all"); // all, filled, notFilled
 
@@ -854,9 +858,8 @@ const SubTopicsManagement = () => {
         const newSubTopics = Array.isArray(response.data.data)
           ? response.data.data
           : [response.data.data];
-        const newList = [...subTopics, ...newSubTopics];
-        setSubTopics(newList);
-        setSubTopicListCache(newList, metaFilter);
+        invalidateListCachesFrom("subtopic");
+        await fetchSubTopics();
         handleCancelForm();
         success(
           `${newSubTopics.length} sub topic(s) created successfully for ${validTopics.length} topic(s)`
@@ -937,11 +940,8 @@ const SubTopicsManagement = () => {
       });
 
       if (response.data.success) {
-        setSubTopics((prevSubTopics) =>
-          prevSubTopics.map((st) =>
-            st._id === editingSubTopic._id ? response.data.data : st
-          )
-        );
+        invalidateListCachesFrom("subtopic");
+        await fetchSubTopics();
         handleCancelEditForm();
         success(
           `Sub Topic "${response.data.data.name}" updated successfully`
@@ -985,9 +985,8 @@ const SubTopicsManagement = () => {
       const response = await api.delete(`/subtopic/${subTopicToDelete._id}`);
 
       if (response.data.success) {
-        const newList = subTopics.filter((st) => st._id !== subTopicToDelete._id);
-        setSubTopics(newList);
-        setSubTopicListCache(newList, metaFilter);
+        invalidateListCachesFrom("subtopic");
+        await fetchSubTopics();
         success(
           `Sub Topic "${subTopicToDelete.name}" deleted successfully`
         );
@@ -1007,47 +1006,42 @@ const SubTopicsManagement = () => {
     }
   };
 
-  const handleToggleStatus = async (subTopic) => {
-    const currentStatus = subTopic.status || "active";
-    const newStatus = currentStatus === "active" ? "inactive" : "active";
+  const handleToggleStatus = (subTopic) => {
+    setCascadeItem(subTopic);
+    setCascadeModalOpen(true);
+  };
+
+  const handleCascadeConfirm = async (newStatus, cascadeMode) => {
+    if (!cascadeItem) return;
     const action = newStatus === "inactive" ? "deactivate" : "activate";
-
-    if (
-      window.confirm(
-        `Are you sure you want to ${action} "${subTopic.name}"? All its children will also be ${action}d.`
-      )
-    ) {
-      try {
-        setIsFormLoading(true);
-        setError(null);
-
-        const response = await api.patch(`/subtopic/${subTopic._id}/status`, {
-          status: newStatus,
-        });
-
-        if (response.data.success) {
-          const newList = subTopics.map((st) =>
-            st._id === subTopic._id ? { ...st, status: newStatus } : st
-          );
-          setSubTopics(newList);
-          setSubTopicListCache(newList, metaFilter);
-          success(`SubTopic "${subTopic.name}" ${action}d successfully`);
-        } else {
-          throw new Error(
-            response.data.message || `Failed to ${action} sub topic`
-          );
-        }
-      } catch (error) {
-        console.error(`❌ Error ${action}ing subtopic:`, error);
-        setError(
-          error.response?.data?.message ||
+    try {
+      setIsFormLoading(true);
+      setError(null);
+      const response = await api.patch(`/subtopic/${cascadeItem._id}/status`, {
+        status: newStatus,
+        cascadeMode: cascadeMode || "respect_manual",
+      });
+      if (response.data.success) {
+        invalidateListCachesFrom("subtopic");
+        await fetchSubTopics();
+        success(`SubTopic "${cascadeItem.name}" ${action}d successfully`);
+        setCascadeModalOpen(false);
+        setCascadeItem(null);
+      } else {
+        throw new Error(
+          response.data.message || `Failed to ${action} sub topic`
+        );
+      }
+    } catch (error) {
+      console.error(`❌ Error ${action}ing subtopic:`, error);
+      setError(
+        error.response?.data?.message ||
           error.message ||
           `Failed to ${action} subtopic`
-        );
-        showError(error.response?.data?.message || error.message || `Failed to ${action} subtopic`);
-      } finally {
-        setIsFormLoading(false);
-      }
+      );
+      showError(error.response?.data?.message || error.message || `Failed to ${action} subtopic`);
+    } finally {
+      setIsFormLoading(false);
     }
   };
 
@@ -1084,6 +1078,7 @@ const SubTopicsManagement = () => {
       await Promise.all(
         topicIds.map((topicId) => saveReorderForTopic(topicId, reorderDraft[topicId]))
       );
+      invalidateListCachesFrom("subtopic");
       await fetchSubTopics();
       setReorderDraft({});
       setIsReorderMode(false);
@@ -1099,6 +1094,15 @@ const SubTopicsManagement = () => {
   return (
     <>
       <ToastContainer toasts={toasts} removeToast={removeToast} />
+      <StatusCascadeModal
+        open={cascadeModalOpen}
+        onClose={() => { setCascadeModalOpen(false); setCascadeItem(null); }}
+        levelLabel="Sub Topic"
+        itemName={cascadeItem?.name}
+        currentStatus={cascadeItem?.status || "active"}
+        onConfirm={handleCascadeConfirm}
+        loading={isFormLoading}
+      />
       <LoadingWrapper
         isLoading={isDataLoading}
         skeleton={<SkeletonChaptersTable />}

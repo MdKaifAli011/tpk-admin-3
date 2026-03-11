@@ -50,7 +50,7 @@ const SubTopicsTable = ({
     e.dataTransfer.effectAllowed = "move";
     e.dataTransfer.setData("text/plain", String(index));
     e.dataTransfer.setData("application/json", JSON.stringify({ topicId, index }));
-    try { e.target.closest("tr")?.classList.add("opacity-50", "ring-2", "ring-blue-400"); } catch (_) {}
+    try { e.target.closest("tr")?.classList.add("opacity-50", "ring-2", "ring-blue-400"); } catch (_) { }
   };
 
   const handleDragOver = (e, topicId, index) => {
@@ -73,7 +73,7 @@ const SubTopicsTable = ({
     try {
       const parsed = JSON.parse(payload || "{}");
       if (parsed.topicId) payloadTopicId = parsed.topicId;
-    } catch (_) {}
+    } catch (_) { }
     if (payloadTopicId !== topicId || Number.isNaN(fromIndex) || fromIndex === toIndex) {
       setDragOver({ topicId: null, index: null });
       setDragged({ topicId: null, index: null });
@@ -81,7 +81,7 @@ const SubTopicsTable = ({
     }
     setDragOver({ topicId: null, index: null });
     setDragged({ topicId: null, index: null });
-    try { e.target.closest("tr")?.classList.remove("opacity-50", "ring-2", "ring-blue-400"); } catch (_) {}
+    try { e.target.closest("tr")?.classList.remove("opacity-50", "ring-2", "ring-blue-400"); } catch (_) { }
     const group = groupedSubTopics.find((g) => g.topicId === topicId);
     if (!group) return;
     const currentList = reorderDraft[topicId] ?? [...group.subTopics].sort((a, b) => (a.orderNumber || 0) - (b.orderNumber || 0));
@@ -94,7 +94,7 @@ const SubTopicsTable = ({
   const handleDragEnd = (e) => {
     setDragged({ topicId: null, index: null });
     setDragOver({ topicId: null, index: null });
-    try { e.target.closest("tr")?.classList.remove("opacity-50", "ring-2", "ring-blue-400"); } catch (_) {}
+    try { e.target.closest("tr")?.classList.remove("opacity-50", "ring-2", "ring-blue-400"); } catch (_) { }
   };
 
   // Group subTopics by Exam → Subject → Unit → Chapter → Topic
@@ -285,9 +285,8 @@ const SubTopicsTable = ({
                         onDragOver={(e) => handleDragOver(e, group.topicId, subTopicIndex)}
                         onDrop={(e) => handleDrop(e, group.topicId, subTopicIndex)}
                         onDragEnd={handleDragEnd}
-                        className={`hover:bg-gray-50 transition-colors ${subTopic.status === "inactive" ? "opacity-60" : ""} ${
-                          isDraggedRow ? "opacity-50 ring-2 ring-blue-400" : ""
-                        } ${isDragOverRow ? "bg-blue-50 border-y-2 border-blue-200" : ""}`}
+                        className={`hover:bg-gray-50 transition-colors ${subTopic.status === "inactive" ? "opacity-60" : ""} ${isDraggedRow ? "opacity-50 ring-2 ring-blue-400" : ""
+                          } ${isDragOverRow ? "bg-blue-50 border-y-2 border-blue-200" : ""}`}
                       >
                         {canDrag && (
                           <td
@@ -468,9 +467,8 @@ const SubTopicsTable = ({
                     onDragOver={(e) => handleDragOver(e, group.topicId, subTopicIndex)}
                     onDrop={(e) => handleDrop(e, group.topicId, subTopicIndex)}
                     onDragEnd={handleDragEnd}
-                    className={`p-1.5 hover:bg-gray-50 transition-colors ${subTopic.status === "inactive" ? "opacity-60" : ""} ${
-                      isDraggedRow ? "opacity-50 ring-2 ring-blue-400 rounded" : ""
-                    } ${isDragOverRow ? "bg-blue-50 border-2 border-blue-200 rounded" : ""}`}
+                    className={`p-1.5 hover:bg-gray-50 transition-colors ${subTopic.status === "inactive" ? "opacity-60" : ""} ${isDraggedRow ? "opacity-50 ring-2 ring-blue-400 rounded" : ""
+                      } ${isDragOverRow ? "bg-blue-50 border-2 border-blue-200 rounded" : ""}`}
                   >
                     <div className="flex justify-between items-start gap-2">
                       {canDrag && (

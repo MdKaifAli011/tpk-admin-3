@@ -52,7 +52,8 @@ const chapterSchema = new mongoose.Schema(
       enum: ["active", "inactive"],
       default: "active",
     },
-    explicitlyInactive: {
+    /** True when admin manually set this item to inactive; cascade activate will skip it and its subtree */
+    manualInactive: {
       type: Boolean,
       default: false,
     },
@@ -63,7 +64,7 @@ const chapterSchema = new mongoose.Schema(
       lastUpdated: { type: Date },
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // Add compound index to ensure unique orderNumber per unit within an exam
@@ -74,7 +75,10 @@ chapterSchema.index({ unitId: 1, slug: 1 }, { unique: true, sparse: true });
 
 // Pre-save hook to auto-generate slug (skip if slug already set, e.g. by bulk import)
 chapterSchema.pre("save", async function (next) {
-  if ((this.isModified("name") || this.isNew) && (!this.slug || this.slug === "")) {
+  if (
+    (this.isModified("name") || this.isNew) &&
+    (!this.slug || this.slug === "")
+  ) {
     const baseSlug = createSlug(this.name);
 
     // Check if slug exists within the same unit (excluding current document for updates)
@@ -90,7 +94,7 @@ chapterSchema.pre("save", async function (next) {
     this.slug = await generateUniqueSlug(
       baseSlug,
       checkExists,
-      this._id || null
+      this._id || null,
     );
   }
   next();
@@ -102,7 +106,7 @@ chapterSchema.pre("findOneAndDelete", async function () {
     const chapter = await this.model.findOne(this.getQuery());
     if (chapter) {
       console.log(
-        `🗑️ Cascading delete: Deleting all entities for chapter ${chapter._id}`
+        `🗑️ Cascading delete: Deleting all entities for chapter ${chapter._id}`,
       );
 
       // Get models - dynamically import if not already registered
@@ -129,7 +133,9 @@ chapterSchema.pre("findOneAndDelete", async function () {
       const [definitions, topics, practiceSubCategories] = await Promise.all([
         Definition.find({ chapterId: chapter._id }).select("_id").lean(),
         Topic.find({ chapterId: chapter._id }).select("_id").lean(),
-        PracticeSubCategory.find({ chapterId: chapter._id }).select("_id").lean(),
+        PracticeSubCategory.find({ chapterId: chapter._id })
+          .select("_id")
+          .lean(),
       ]);
 
       const definitionIds = definitions.map((d) => d._id);
@@ -137,7 +143,7 @@ chapterSchema.pre("findOneAndDelete", async function () {
       const practiceSubCategoryIds = practiceSubCategories.map((sc) => sc._id);
 
       console.log(
-        `🗑️ Found ${definitions.length} definitions, ${topics.length} topics, and ${practiceSubCategories.length} practice subcategories for chapter ${chapter._id}`
+        `🗑️ Found ${definitions.length} definitions, ${topics.length} topics, and ${practiceSubCategories.length} practice subcategories for chapter ${chapter._id}`,
       );
 
       // Step 2: Delete all independent entities in parallel
@@ -154,24 +160,32 @@ chapterSchema.pre("findOneAndDelete", async function () {
       ]);
 
       console.log(
-        `🗑️ Cascading delete: Deleted ${chapterDetailsResult.deletedCount} ChapterDetails, ${definitionsResult.deletedCount} Definitions, ${topicsResult.deletedCount} Topics, ${practiceSubCategoriesResult.deletedCount} PracticeSubCategories for chapter ${chapter._id}`
+        `🗑️ Cascading delete: Deleted ${chapterDetailsResult.deletedCount} ChapterDetails, ${definitionsResult.deletedCount} Definitions, ${topicsResult.deletedCount} Topics, ${practiceSubCategoriesResult.deletedCount} PracticeSubCategories for chapter ${chapter._id}`,
       );
 
       // Step 3: Delete dependent entities in parallel
-      const [definitionDetailsResult, subTopicsResult, practiceQuestionsResult] = await Promise.all([
+      const [
+        definitionDetailsResult,
+        subTopicsResult,
+        practiceQuestionsResult,
+      ] = await Promise.all([
         definitionIds.length > 0
-          ? DefinitionDetails.deleteMany({ definitionId: { $in: definitionIds } })
+          ? DefinitionDetails.deleteMany({
+              definitionId: { $in: definitionIds },
+            })
           : Promise.resolve({ deletedCount: 0 }),
         topicIds.length > 0
           ? SubTopic.deleteMany({ topicId: { $in: topicIds } })
           : Promise.resolve({ deletedCount: 0 }),
         practiceSubCategoryIds.length > 0
-          ? PracticeQuestion.deleteMany({ subCategoryId: { $in: practiceSubCategoryIds } })
+          ? PracticeQuestion.deleteMany({
+              subCategoryId: { $in: practiceSubCategoryIds },
+            })
           : Promise.resolve({ deletedCount: 0 }),
       ]);
 
       console.log(
-        `🗑️ Cascading delete: Deleted ${definitionDetailsResult.deletedCount} DefinitionDetails, ${subTopicsResult.deletedCount} SubTopics, ${practiceQuestionsResult.deletedCount} PracticeQuestions for chapter ${chapter._id}`
+        `🗑️ Cascading delete: Deleted ${definitionDetailsResult.deletedCount} DefinitionDetails, ${subTopicsResult.deletedCount} SubTopics, ${practiceQuestionsResult.deletedCount} PracticeQuestions for chapter ${chapter._id}`,
       );
     }
   } catch (error) {

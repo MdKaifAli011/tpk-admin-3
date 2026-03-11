@@ -52,7 +52,8 @@ const topicSchema = new mongoose.Schema(
       enum: ["active", "inactive"],
       default: "active",
     },
-    explicitlyInactive: {
+    /** True when admin manually set this item to inactive; cascade activate will skip it and its subtree */
+    manualInactive: {
       type: Boolean,
       default: false,
     },

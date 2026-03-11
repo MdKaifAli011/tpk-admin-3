@@ -18,8 +18,10 @@ import {
   FaCheck,
 } from "react-icons/fa";
 import { ToastContainer, useToast } from "../ui/Toast";
+import StatusCascadeModal from "../ui/StatusCascadeModal";
 import api from "@/lib/api";
 import { getExamListCache, setExamListCache } from "@/lib/examListCache";
+import { invalidateListCachesFrom } from "@/lib/listCacheInvalidation";
 import { usePermissions, getPermissionMessage } from "../../hooks/usePermissions";
 import { useRouter } from "next/navigation";
 import { IoFilterOutline } from "react-icons/io5";
@@ -47,6 +49,8 @@ const ExamManagement = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isReorderMode, setIsReorderMode] = useState(false);
   const [reorderDraft, setReorderDraft] = useState(null);
+  const [cascadeModalOpen, setCascadeModalOpen] = useState(false);
+  const [cascadeItem, setCascadeItem] = useState(null);
 
   // Fetch exams from API (and update cache)
   const fetchExams = React.useCallback(async () => {
@@ -138,9 +142,8 @@ const ExamManagement = () => {
       const response = await api.post("/exam", payload);
 
       if (response.data.success) {
-        const newList = [...exams, response.data.data];
-        setExams(newList);
-        setExamListCache(newList, metaFilter);
+        invalidateListCachesFrom("exam");
+        await fetchExams();
         success(`Exam "${formData.name}" added successfully!`);
         // Reset form
         setFormData({
@@ -252,9 +255,8 @@ const ExamManagement = () => {
       const response = await api.put(`/exam/${editingExam._id}`, payload);
 
       if (response.data.success) {
-        const newList = exams.map((e) => (e._id === editingExam._id ? response.data.data : e));
-        setExams(newList);
-        setExamListCache(newList, metaFilter);
+        invalidateListCachesFrom("exam");
+        await fetchExams();
         success("Exam updated successfully!");
         handleCancelForm();
       } else {
@@ -288,9 +290,8 @@ const ExamManagement = () => {
         const response = await api.delete(`/exam/${exam._id}`);
 
         if (response.data.success) {
-          const newList = exams.filter((e) => e._id !== exam._id);
-          setExams(newList);
-          setExamListCache(newList, metaFilter);
+          invalidateListCachesFrom("exam");
+          await fetchExams();
           success(`Exam "${exam.name}" deleted successfully!`);
         } else {
           setError(response.data.message || "Failed to delete exam");
@@ -343,6 +344,7 @@ const ExamManagement = () => {
       setIsFormLoading(true);
       setError(null);
       await saveReorderForExams(reorderDraft);
+      invalidateListCachesFrom("exam");
       await fetchExams();
       setReorderDraft(null);
       setIsReorderMode(false);
@@ -355,50 +357,57 @@ const ExamManagement = () => {
     }
   };
 
-  const handleToggleStatus = async (exam) => {
-    const currentStatus = exam.status || "active";
-    const newStatus = currentStatus === "active" ? "inactive" : "active";
+  const handleToggleStatus = (exam) => {
+    setCascadeItem(exam);
+    setCascadeModalOpen(true);
+  };
+
+  const handleCascadeConfirm = async (newStatus, cascadeMode) => {
+    if (!cascadeItem) return;
     const action = newStatus === "inactive" ? "deactivate" : "activate";
-
-    if (
-      window.confirm(
-        `Are you sure you want to ${action} "${exam.name}"? All its children will also be ${action}d.`
-      )
-    ) {
-      try {
-        setIsFormLoading(true);
-        setError(null);
-
-        const response = await api.patch(`/exam/${exam._id}`, {
-          status: newStatus,
-        });
-
-        if (response.data.success) {
-          // Refetch exams to get updated status from database
-          await fetchExams();
-          success(
-            `Exam "${exam.name}" and all children ${action}d successfully!`
-          );
-        } else {
-          setError(response.data.message || `Failed to ${action} exam`);
-          showError(response.data.message || `Failed to ${action} exam`);
-        }
-      } catch (error) {
-        console.error(`Error ${action}ing exam:`, error);
-        const errorMessage =
-          error.response?.data?.message ||
-          `Failed to ${action} exam. Please try again.`;
-        setError(errorMessage);
-        showError(errorMessage);
-      } finally {
-        setIsFormLoading(false);
+    try {
+      setIsFormLoading(true);
+      setError(null);
+      const response = await api.patch(`/exam/${cascadeItem._id}`, {
+        status: newStatus,
+        cascadeMode: cascadeMode || "respect_manual",
+      });
+      if (response.data.success) {
+        invalidateListCachesFrom("exam");
+        await fetchExams();
+        success(
+          `Exam "${cascadeItem.name}" and children ${action}d successfully!`
+        );
+        setCascadeModalOpen(false);
+        setCascadeItem(null);
+      } else {
+        setError(response.data.message || `Failed to ${action} exam`);
+        showError(response.data.message || `Failed to ${action} exam`);
       }
+    } catch (error) {
+      console.error(`Error ${action}ing exam:`, error);
+      const errorMessage =
+        error.response?.data?.message ||
+        `Failed to ${action} exam. Please try again.`;
+      setError(errorMessage);
+      showError(errorMessage);
+    } finally {
+      setIsFormLoading(false);
     }
   };
 
   return (
     <>
       <ToastContainer toasts={toasts} removeToast={removeToast} />
+      <StatusCascadeModal
+        open={cascadeModalOpen}
+        onClose={() => { setCascadeModalOpen(false); setCascadeItem(null); }}
+        levelLabel="Exam"
+        itemName={cascadeItem?.name}
+        currentStatus={cascadeItem?.status || "active"}
+        onConfirm={handleCascadeConfirm}
+        loading={isFormLoading}
+      />
       <div className="space-y-6">
         {/* Page Header */}
         <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 rounded-lg border border-gray-200 p-4 shadow-sm">

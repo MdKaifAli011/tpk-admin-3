@@ -62,7 +62,8 @@ const definitionSchema = new mongoose.Schema(
       enum: ["active", "inactive"],
       default: "active",
     },
-    explicitlyInactive: {
+    /** True when admin manually set this item to inactive; cascade activate will skip it and its subtree */
+    manualInactive: {
       type: Boolean,
       default: false,
     },
@@ -73,7 +74,7 @@ const definitionSchema = new mongoose.Schema(
       lastUpdated: { type: Date },
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // Add compound index to ensure unique orderNumber per subTopic within an exam
@@ -82,14 +83,11 @@ definitionSchema.index({ subTopicId: 1, orderNumber: 1 }, { unique: true });
 // Compound index for unique slug per subTopic
 definitionSchema.index(
   { subTopicId: 1, slug: 1 },
-  { unique: true, sparse: true }
+  { unique: true, sparse: true },
 );
 
 // Compound index to ensure unique definition name per subTopic (case-insensitive check is done in API)
-definitionSchema.index(
-  { subTopicId: 1, name: 1 },
-  { unique: true }
-);
+definitionSchema.index({ subTopicId: 1, name: 1 }, { unique: true });
 
 // Pre-save hook to auto-populate chapterId from topicId if missing (for backward compatibility)
 definitionSchema.pre("save", async function (next) {
@@ -110,7 +108,7 @@ definitionSchema.pre("save", async function (next) {
         console.log(
           `✅ Auto-populated chapterId ${topic.chapterId} from topicId ${
             this.topicId
-          } for definition ${this._id || "new"}`
+          } for definition ${this._id || "new"}`,
         );
       }
     } catch (error) {
@@ -123,7 +121,10 @@ definitionSchema.pre("save", async function (next) {
 
 // Pre-save hook to auto-generate slug (skip if slug already set, e.g. by bulk import)
 definitionSchema.pre("save", async function (next) {
-  if ((this.isModified("name") || this.isNew) && (!this.slug || this.slug === "")) {
+  if (
+    (this.isModified("name") || this.isNew) &&
+    (!this.slug || this.slug === "")
+  ) {
     const baseSlug = createSlug(this.name);
 
     // Check if slug exists within the same subTopic (excluding current document for updates)
@@ -139,7 +140,7 @@ definitionSchema.pre("save", async function (next) {
     this.slug = await generateUniqueSlug(
       baseSlug,
       checkExists,
-      this._id || null
+      this._id || null,
     );
   }
   next();
@@ -151,7 +152,7 @@ definitionSchema.pre("findOneAndDelete", async function () {
     const definition = await this.model.findOne(this.getQuery());
     if (definition) {
       console.log(
-        `🗑️ Cascading delete: Deleting details for definition ${definition._id}`
+        `🗑️ Cascading delete: Deleting details for definition ${definition._id}`,
       );
 
       // Get model - use mongoose.model() to ensure model is loaded
@@ -163,7 +164,7 @@ definitionSchema.pre("findOneAndDelete", async function () {
         definitionId: definition._id,
       });
       console.log(
-        `🗑️ Cascading delete: Deleted ${result.deletedCount} DefinitionDetails for definition ${definition._id}`
+        `🗑️ Cascading delete: Deleted ${result.deletedCount} DefinitionDetails for definition ${definition._id}`,
       );
     }
   } catch (error) {

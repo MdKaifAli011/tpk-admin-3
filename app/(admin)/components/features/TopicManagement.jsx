@@ -10,8 +10,10 @@ import TopicsTable from "../table/TopicsTable";
 import { LoadingWrapper, SkeletonChaptersTable, LoadingSpinner } from "../ui/SkeletonLoader";
 import { FaEdit, FaPlus, FaTimes, FaLock, FaSearch, FaCheck, FaGripVertical } from "react-icons/fa";
 import { ToastContainer, useToast } from "../ui/Toast";
+import StatusCascadeModal from "../ui/StatusCascadeModal";
 import api from "@/lib/api";
 import { getTopicListCache, setTopicListCache } from "@/lib/topicListCache";
+import { invalidateListCachesFrom } from "@/lib/listCacheInvalidation";
 import { usePermissions, getPermissionMessage } from "../../hooks/usePermissions";
 import { IoFilterOutline } from "react-icons/io5";
 
@@ -60,6 +62,8 @@ const TopicManagement = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isReorderMode, setIsReorderMode] = useState(false);
   const [reorderDraft, setReorderDraft] = useState({});
+  const [cascadeModalOpen, setCascadeModalOpen] = useState(false);
+  const [cascadeItem, setCascadeItem] = useState(null);
   const isFetchingRef = useRef(false);
   const [metaFilter, setMetaFilter] = useState("all"); // all, filled, notFilled
 
@@ -704,9 +708,8 @@ const TopicManagement = () => {
         const newTopics = Array.isArray(response.data.data)
           ? response.data.data
           : [response.data.data];
-        const newList = [...topics, ...newTopics];
-        setTopics(newList);
-        setTopicListCache(newList, metaFilter);
+        invalidateListCachesFrom("topic");
+        await fetchTopics();
         handleCancelForm();
         success(
           `${newTopics.length} topic(s) created successfully for ${validChapters.length} chapter(s)`
@@ -780,11 +783,8 @@ const TopicManagement = () => {
       });
 
       if (response.data.success) {
-        const newList = topics.map((t) =>
-          t._id === editingTopic._id ? response.data.data : t
-        );
-        setTopics(newList);
-        setTopicListCache(newList, metaFilter);
+        invalidateListCachesFrom("topic");
+        await fetchTopics();
         handleCancelEditForm();
         success(
           `Topic "${response.data.data.name}" updated successfully`
@@ -828,9 +828,8 @@ const TopicManagement = () => {
       const response = await api.delete(`/topic/${topicToDelete._id}`);
 
       if (response.data.success) {
-        const newList = topics.filter((t) => t._id !== topicToDelete._id);
-        setTopics(newList);
-        setTopicListCache(newList, metaFilter);
+        invalidateListCachesFrom("topic");
+        await fetchTopics();
         success(`Topic "${topicToDelete.name}" deleted successfully`);
       } else {
         throw new Error(response.data.message || "Failed to delete topic");
@@ -848,47 +847,42 @@ const TopicManagement = () => {
     }
   };
 
-  const handleToggleStatus = async (topic) => {
-    const currentStatus = topic.status || "active";
-    const newStatus = currentStatus === "active" ? "inactive" : "active";
+  const handleToggleStatus = (topic) => {
+    setCascadeItem(topic);
+    setCascadeModalOpen(true);
+  };
+
+  const handleCascadeConfirm = async (newStatus, cascadeMode) => {
+    if (!cascadeItem) return;
     const action = newStatus === "inactive" ? "deactivate" : "activate";
-
-    if (
-      window.confirm(
-        `Are you sure you want to ${action} "${topic.name}"? All its children will also be ${action}d.`
-      )
-    ) {
-      try {
-        setIsFormLoading(true);
-        setError(null);
-
-        const response = await api.patch(`/topic/${topic._id}/status`, {
-          status: newStatus,
-        });
-
-        if (response.data.success) {
-          const newList = topics.map((t) =>
-            t._id === topic._id ? { ...t, status: newStatus } : t
-          );
-          setTopics(newList);
-          setTopicListCache(newList, metaFilter);
-          success(
-            `Topic "${topic.name}" and all children ${action}d successfully`
-          );
-        } else {
-          throw new Error(response.data.message || `Failed to ${action} topic`);
-        }
-      } catch (error) {
-        console.error(`❌ Error ${action}ing topic:`, error);
-        setError(
-          error.response?.data?.message ||
+    try {
+      setIsFormLoading(true);
+      setError(null);
+      const response = await api.patch(`/topic/${cascadeItem._id}/status`, {
+        status: newStatus,
+        cascadeMode: cascadeMode || "respect_manual",
+      });
+      if (response.data.success) {
+        invalidateListCachesFrom("topic");
+        await fetchTopics();
+        success(
+          `Topic "${cascadeItem.name}" and children ${action}d successfully`
+        );
+        setCascadeModalOpen(false);
+        setCascadeItem(null);
+      } else {
+        throw new Error(response.data.message || `Failed to ${action} topic`);
+      }
+    } catch (error) {
+      console.error(`❌ Error ${action}ing topic:`, error);
+      setError(
+        error.response?.data?.message ||
           error.message ||
           `Failed to ${action} topic`
-        );
-        showError(error.response?.data?.message || error.message || `Failed to ${action} topic`);
-      } finally {
-        setIsFormLoading(false);
-      }
+      );
+      showError(error.response?.data?.message || error.message || `Failed to ${action} topic`);
+    } finally {
+      setIsFormLoading(false);
     }
   };
 
@@ -913,12 +907,8 @@ const TopicManagement = () => {
       );
       const allOk = results.every((r) => r?.data?.success);
       if (allOk) {
-        const ids = new Set(selectedTopics.map((t) => t._id));
-        const newList = topics.map((t) =>
-          ids.has(t._id) ? { ...t, status: newStatus } : t
-        );
-        setTopics(newList);
-        setTopicListCache(newList, metaFilter);
+        invalidateListCachesFrom("topic");
+        await fetchTopics();
         success(
           n === 1
             ? `Topic ${action}d successfully`
@@ -974,6 +964,7 @@ const TopicManagement = () => {
       await Promise.all(
         chapterIds.map((chapterId) => saveReorderForChapter(chapterId, reorderDraft[chapterId]))
       );
+      invalidateListCachesFrom("topic");
       await fetchTopics();
       setReorderDraft({});
       setIsReorderMode(false);
@@ -989,6 +980,15 @@ const TopicManagement = () => {
   return (
     <>
       <ToastContainer toasts={toasts} removeToast={removeToast} />
+      <StatusCascadeModal
+        open={cascadeModalOpen}
+        onClose={() => { setCascadeModalOpen(false); setCascadeItem(null); }}
+        levelLabel="Topic"
+        itemName={cascadeItem?.name}
+        currentStatus={cascadeItem?.status || "active"}
+        onConfirm={handleCascadeConfirm}
+        loading={isFormLoading}
+      />
       <LoadingWrapper
         isLoading={isDataLoading}
         skeleton={<SkeletonChaptersTable />}

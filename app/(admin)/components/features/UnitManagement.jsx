@@ -26,8 +26,10 @@ import {
   FaGripVertical,
 } from "react-icons/fa";
 import { ToastContainer, useToast } from "../ui/Toast";
+import StatusCascadeModal from "../ui/StatusCascadeModal";
 import api from "@/lib/api";
 import { getUnitListCache, setUnitListCache } from "@/lib/unitListCache";
+import { invalidateListCachesFrom } from "@/lib/listCacheInvalidation";
 import { usePermissions, getPermissionMessage } from "../../hooks/usePermissions";
 import { IoFilterOutline } from "react-icons/io5";
 
@@ -66,6 +68,8 @@ const UnitsManagement = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isReorderMode, setIsReorderMode] = useState(false);
   const [reorderDraft, setReorderDraft] = useState({});
+  const [cascadeModalOpen, setCascadeModalOpen] = useState(false);
+  const [cascadeItem, setCascadeItem] = useState(null);
   const { toasts, removeToast, success, error: showError } = useToast();
   const isFetchingRef = useRef(false);
   const [metaFilter, setMetaFilter] = useState("all"); // all, filled, notFilled
@@ -288,9 +292,8 @@ const UnitsManagement = () => {
       }
 
       if (createdUnits.length > 0) {
-        const newList = [...units, ...createdUnits];
-        setUnits(newList);
-        setUnitListCache(newList, metaFilter);
+        invalidateListCachesFrom("unit");
+        await fetchUnits();
         success(`${createdUnits.length} unit(s) added successfully!`);
 
         // Reset form
@@ -440,11 +443,8 @@ const UnitsManagement = () => {
       });
 
       if (response.data.success) {
-        const newList = units.map((u) =>
-          u._id === editingUnit._id ? response.data.data : u
-        );
-        setUnits(newList);
-        setUnitListCache(newList, metaFilter);
+        invalidateListCachesFrom("unit");
+        await fetchUnits();
         success("Unit updated successfully!");
 
         // Reset form
@@ -489,9 +489,8 @@ const UnitsManagement = () => {
         const response = await api.delete(`/unit/${unitToDelete._id}`);
 
         if (response.data.success) {
-          const newList = units.filter((u) => u._id !== unitToDelete._id);
-          setUnits(newList);
-          setUnitListCache(newList, metaFilter);
+          invalidateListCachesFrom("unit");
+          await fetchUnits();
           success(`Unit "${unitToDelete.name}" deleted successfully!`);
         } else {
           setError(response.data.message || "Failed to delete unit");
@@ -510,47 +509,42 @@ const UnitsManagement = () => {
     }
   };
 
-  const handleToggleStatus = async (unit) => {
-    const currentStatus = unit.status || "active";
-    const newStatus = currentStatus === "active" ? "inactive" : "active";
+  const handleToggleStatus = (unit) => {
+    setCascadeItem(unit);
+    setCascadeModalOpen(true);
+  };
+
+  const handleCascadeConfirm = async (newStatus, cascadeMode) => {
+    if (!cascadeItem) return;
     const action = newStatus === "inactive" ? "deactivate" : "activate";
-
-    if (
-      window.confirm(
-        `Are you sure you want to ${action} "${unit.name}"? All its children will also be ${action}d.`
-      )
-    ) {
-      try {
-        setIsFormLoading(true);
-        setError(null);
-
-        const response = await api.patch(`/unit/${unit._id}/status`, {
-          status: newStatus,
-        });
-
-        if (response.data.success) {
-          const newList = units.map((u) =>
-            u._id === unit._id ? { ...u, status: newStatus } : u
-          );
-          setUnits(newList);
-          setUnitListCache(newList, metaFilter);
-          success(
-            `Unit "${unit.name}" and all children ${action}d successfully!`
-          );
-        } else {
-          setError(response.data.message || `Failed to ${action} unit`);
-          showError(response.data.message || `Failed to ${action} unit`);
-        }
-      } catch (error) {
-        console.error(`Error ${action}ing unit:`, error);
-        const errorMessage =
-          error.response?.data?.message ||
-          `Failed to ${action} unit. Please try again.`;
-        setError(errorMessage);
-        showError(errorMessage);
-      } finally {
-        setIsFormLoading(false);
+    try {
+      setIsFormLoading(true);
+      setError(null);
+      const response = await api.patch(`/unit/${cascadeItem._id}/status`, {
+        status: newStatus,
+        cascadeMode: cascadeMode || "respect_manual",
+      });
+      if (response.data.success) {
+        invalidateListCachesFrom("unit");
+        await fetchUnits();
+        success(
+          `Unit "${cascadeItem.name}" and children ${action}d successfully!`
+        );
+        setCascadeModalOpen(false);
+        setCascadeItem(null);
+      } else {
+        setError(response.data.message || `Failed to ${action} unit`);
+        showError(response.data.message || `Failed to ${action} unit`);
       }
+    } catch (error) {
+      console.error(`Error ${action}ing unit:`, error);
+      const errorMessage =
+        error.response?.data?.message ||
+        `Failed to ${action} unit. Please try again.`;
+      setError(errorMessage);
+      showError(errorMessage);
+    } finally {
+      setIsFormLoading(false);
     }
   };
 
@@ -587,6 +581,7 @@ const UnitsManagement = () => {
       await Promise.all(
         subjectIds.map((subjectId) => saveReorderForSubject(subjectId, reorderDraft[subjectId]))
       );
+      invalidateListCachesFrom("unit");
       await fetchUnits();
       setReorderDraft({});
       setIsReorderMode(false);
@@ -602,6 +597,15 @@ const UnitsManagement = () => {
   return (
     <>
       <ToastContainer toasts={toasts} removeToast={removeToast} />
+      <StatusCascadeModal
+        open={cascadeModalOpen}
+        onClose={() => { setCascadeModalOpen(false); setCascadeItem(null); }}
+        levelLabel="Unit"
+        itemName={cascadeItem?.name}
+        currentStatus={cascadeItem?.status || "active"}
+        onConfirm={handleCascadeConfirm}
+        loading={isFormLoading}
+      />
       <div className="space-y-6">
         {/* Page Header */}
         <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 rounded-lg border border-gray-200 p-4 shadow-sm">

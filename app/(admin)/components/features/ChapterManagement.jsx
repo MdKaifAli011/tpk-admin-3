@@ -26,8 +26,10 @@ import {
   FaFilter,
 } from "react-icons/fa";
 import { ToastContainer, useToast } from "../ui/Toast";
+import StatusCascadeModal from "../ui/StatusCascadeModal";
 import api from "@/lib/api";
 import { getChapterListCache, setChapterListCache } from "@/lib/chapterListCache";
+import { invalidateListCachesFrom } from "@/lib/listCacheInvalidation";
 import { usePermissions, getPermissionMessage } from "../../hooks/usePermissions";
 import { IoFilterCircle, IoFilterOutline } from "react-icons/io5";
 
@@ -80,6 +82,8 @@ const ChaptersManagement = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isReorderMode, setIsReorderMode] = useState(false);
   const [reorderDraft, setReorderDraft] = useState({});
+  const [cascadeModalOpen, setCascadeModalOpen] = useState(false);
+  const [cascadeItem, setCascadeItem] = useState(null);
   const { toasts, removeToast, success, error: showError } = useToast();
   const isFetchingRef = useRef(false);
   const [metaFilter, setMetaFilter] = useState("all"); // all, filled, notFilled
@@ -558,7 +562,8 @@ const ChaptersManagement = () => {
       }
 
       // Add all created chapters to the list
-      setChapters((prev) => [...prev, ...createdChapters]);
+      invalidateListCachesFrom("chapter");
+      await fetchChapters();
 
       if (createdChapters.length === 1) {
         success(`Chapter "${createdChapters[0].name}" added successfully!`);
@@ -699,11 +704,8 @@ const ChaptersManagement = () => {
       });
 
       if (response.data.success) {
-        const newList = chapters.map((c) =>
-          c._id === editingChapter._id ? response.data.data : c
-        );
-        setChapters(newList);
-        setChapterListCache(newList, metaFilter);
+        invalidateListCachesFrom("chapter");
+        await fetchChapters();
         success("Chapter updated successfully!");
 
         // Reset form
@@ -756,10 +758,8 @@ const ChaptersManagement = () => {
       const response = await api.delete(`/chapter/${chapterToDelete._id}`);
 
       if (response.data.success) {
-        // Remove the chapter from the list
-        setChapters((prev) =>
-          prev.filter((c) => c._id !== chapterToDelete._id)
-        );
+        invalidateListCachesFrom("chapter");
+        await fetchChapters();
         success(`Chapter "${chapterToDelete.name}" deleted successfully!`);
       } else {
         setError(response.data.message || "Failed to delete chapter");
@@ -777,47 +777,42 @@ const ChaptersManagement = () => {
     }
   };
 
-  const handleToggleStatus = async (chapter) => {
-    const currentStatus = chapter.status || "active";
-    const newStatus = currentStatus === "active" ? "inactive" : "active";
+  const handleToggleStatus = (chapter) => {
+    setCascadeItem(chapter);
+    setCascadeModalOpen(true);
+  };
+
+  const handleCascadeConfirm = async (newStatus, cascadeMode) => {
+    if (!cascadeItem) return;
     const action = newStatus === "inactive" ? "deactivate" : "activate";
-
-    if (
-      window.confirm(
-        `Are you sure you want to ${action} "${chapter.name}"? All its children will also be ${action}d.`
-      )
-    ) {
-      try {
-        setIsFormLoading(true);
-        setError(null);
-
-        const response = await api.patch(`/chapter/${chapter._id}/status`, {
-          status: newStatus,
-        });
-
-        if (response.data.success) {
-          const newList = chapters.map((c) =>
-            c._id === chapter._id ? { ...c, status: newStatus } : c
-          );
-          setChapters(newList);
-          setChapterListCache(newList, metaFilter);
-          success(
-            `Chapter "${chapter.name}" and all children ${action}d successfully!`
-          );
-        } else {
-          setError(response.data.message || `Failed to ${action} chapter`);
-          showError(response.data.message || `Failed to ${action} chapter`);
-        }
-      } catch (error) {
-        console.error(`Error ${action}ing chapter:`, error);
-        const errorMessage =
-          error.response?.data?.message ||
-          `Failed to ${action} chapter. Please try again.`;
-        setError(errorMessage);
-        showError(errorMessage);
-      } finally {
-        setIsFormLoading(false);
+    try {
+      setIsFormLoading(true);
+      setError(null);
+      const response = await api.patch(`/chapter/${cascadeItem._id}/status`, {
+        status: newStatus,
+        cascadeMode: cascadeMode || "respect_manual",
+      });
+      if (response.data.success) {
+        invalidateListCachesFrom("chapter");
+        await fetchChapters();
+        success(
+          `Chapter "${cascadeItem.name}" and children ${action}d successfully!`
+        );
+        setCascadeModalOpen(false);
+        setCascadeItem(null);
+      } else {
+        setError(response.data.message || `Failed to ${action} chapter`);
+        showError(response.data.message || `Failed to ${action} chapter`);
       }
+    } catch (error) {
+      console.error(`Error ${action}ing chapter:`, error);
+      const errorMessage =
+        error.response?.data?.message ||
+        `Failed to ${action} chapter. Please try again.`;
+      setError(errorMessage);
+      showError(errorMessage);
+    } finally {
+      setIsFormLoading(false);
     }
   };
 
@@ -854,6 +849,7 @@ const ChaptersManagement = () => {
       await Promise.all(
         unitIds.map((unitId) => saveReorderForUnit(unitId, reorderDraft[unitId]))
       );
+      invalidateListCachesFrom("chapter");
       await fetchChapters();
       setReorderDraft({});
       setIsReorderMode(false);
@@ -869,6 +865,15 @@ const ChaptersManagement = () => {
   return (
     <>
       <ToastContainer toasts={toasts} removeToast={removeToast} />
+      <StatusCascadeModal
+        open={cascadeModalOpen}
+        onClose={() => { setCascadeModalOpen(false); setCascadeItem(null); }}
+        levelLabel="Chapter"
+        itemName={cascadeItem?.name}
+        currentStatus={cascadeItem?.status || "active"}
+        onConfirm={handleCascadeConfirm}
+        loading={isFormLoading}
+      />
       <div className="space-y-6">
         {/* Page Header */}
         <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 rounded-lg border border-gray-200 p-4 shadow-sm">

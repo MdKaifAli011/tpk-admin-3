@@ -13,6 +13,7 @@ import {
 import api from "@/lib/api";
 import { useToast, ToastContainer } from "../ui/Toast";
 import { usePermissions, getBulkImportPermissions, getBulkImportPermissionMessage } from "../../hooks/usePermissions";
+import { invalidateAllListCaches } from "@/lib/listCacheInvalidation";
 
 // Helper to parse CSV (handling quotes)
 const parseCSV = (text) => {
@@ -785,6 +786,7 @@ const BulkImportManagement = () => {
                         errorLog: (stats.skipReasons || []).slice(0, 50)
                     });
                     setImportStatus("success");
+                    invalidateAllListCaches();
                     success("✅ Import completed! Click to view details.");
                 } catch (streamErr) {
                     clearTimeout(timeoutId);
@@ -845,6 +847,7 @@ const BulkImportManagement = () => {
                     }
 
                     success(statsMessage);
+                    invalidateAllListCaches();
                     console.log(`✅ Hierarchical import successful:`, stats);
                 } else {
                     failCount = parsedData.length;
@@ -902,7 +905,10 @@ const BulkImportManagement = () => {
             }
 
             setImportStatus(failCount > 0 ? "error" : "success");
-            if (successCount > 0 && importMode !== "context-locked") success(`Successfully imported ${successCount} items!`);
+            if (successCount > 0) {
+                invalidateAllListCaches();
+                if (importMode !== "context-locked") success(`Successfully imported ${successCount} items!`);
+            }
             if (failCount > 0) showError(`Failed to import ${failCount} items.`);
 
             // Clear progress interval on error or completion

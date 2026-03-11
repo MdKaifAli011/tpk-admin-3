@@ -18,8 +18,10 @@ import {
   FaGripVertical,
 } from "react-icons/fa";
 import { ToastContainer, useToast } from "../ui/Toast";
+import StatusCascadeModal from "../ui/StatusCascadeModal";
 import api from "@/lib/api";
 import { getSubjectListCache, setSubjectListCache } from "@/lib/subjectListCache";
+import { invalidateListCachesFrom } from "@/lib/listCacheInvalidation";
 import { usePermissions, getPermissionMessage } from "../../hooks/usePermissions";
 import { IoFilterOutline } from "react-icons/io5";
 
@@ -43,6 +45,8 @@ const SubjectManagement = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isReorderMode, setIsReorderMode] = useState(false);
   const [reorderDraft, setReorderDraft] = useState({});
+  const [cascadeModalOpen, setCascadeModalOpen] = useState(false);
+  const [cascadeItem, setCascadeItem] = useState(null);
   const { toasts, removeToast, success, error: showError } = useToast();
   const isFetchingRef = useRef(false);
   const [metaFilter, setMetaFilter] = useState("all"); // all, filled, notFilled
@@ -200,9 +204,8 @@ const SubjectManagement = () => {
       const response = await api.post("/subject", payload);
 
       if (response.data?.success) {
-        const newList = [...subjects, response.data.data];
-        setSubjects(newList);
-        setSubjectListCache(newList, metaFilter);
+        invalidateListCachesFrom("subject");
+        await fetchSubjects();
         success(`Subject "${formData.name}" added successfully!`);
         // Reset form
         setFormData({ name: "", examId: "", orderNumber: "" });
@@ -279,11 +282,8 @@ const SubjectManagement = () => {
       const response = await api.put(`/subject/${editingSubject._id}`, payload);
 
       if (response.data?.success) {
-        const newList = subjects.map((s) =>
-          s._id === editingSubject._id ? response.data.data : s
-        );
-        setSubjects(newList);
-        setSubjectListCache(newList, metaFilter);
+        invalidateListCachesFrom("subject");
+        await fetchSubjects();
         success("Subject updated successfully!");
         handleCancelForm();
       } else {
@@ -323,9 +323,8 @@ const SubjectManagement = () => {
       const response = await api.delete(`/subject/${subjectToDelete._id}`);
 
       if (response.data?.success) {
-        const newList = subjects.filter((s) => s._id !== subjectToDelete._id);
-        setSubjects(newList);
-        setSubjectListCache(newList, metaFilter);
+        invalidateListCachesFrom("subject");
+        await fetchSubjects();
         success(`Subject "${subjectToDelete.name}" deleted successfully!`);
       } else {
         setError(response.data?.message || "Failed to delete subject");
@@ -364,7 +363,7 @@ const SubjectManagement = () => {
         });
 
         if (response.data.success) {
-          // Refetch subjects to get updated practiceDisabled from database
+          invalidateListCachesFrom("subject");
           await fetchSubjects();
           success(
             `Practice tests ${action}d successfully for "${subject.name}" and all children!`
@@ -386,45 +385,43 @@ const SubjectManagement = () => {
     }
   };
 
-  // ✅ Handle Toggle Status
-  const handleToggleStatus = async (subject) => {
-    const currentStatus = subject.status || "active";
-    const newStatus = currentStatus === "active" ? "inactive" : "active";
+  // ✅ Handle Toggle Status (opens modal for cascade options)
+  const handleToggleStatus = (subject) => {
+    setCascadeItem(subject);
+    setCascadeModalOpen(true);
+  };
+
+  const handleCascadeConfirm = async (newStatus, cascadeMode) => {
+    if (!cascadeItem) return;
     const action = newStatus === "inactive" ? "deactivate" : "activate";
-
-    if (
-      window.confirm(
-        `Are you sure you want to ${action} "${subject.name}"? All its children will also be ${action}d.`
-      )
-    ) {
-      try {
-        setIsFormLoading(true);
-        setError(null);
-
-        const response = await api.patch(`/subject/${subject._id}/status`, {
-          status: newStatus,
-        });
-
-        if (response.data.success) {
-          // Refetch subjects to get updated status from database
-          await fetchSubjects();
-          success(
-            `Subject "${subject.name}" and all children ${action}d successfully!`
-          );
-        } else {
-          setError(response.data.message || `Failed to ${action} subject`);
-          showError(response.data.message || `Failed to ${action} subject`);
-        }
-      } catch (error) {
-        console.error(`Error ${action}ing subject:`, error);
-        const errorMessage =
-          error.response?.data?.message ||
-          `Failed to ${action} subject. Please try again.`;
-        setError(errorMessage);
-        showError(errorMessage);
-      } finally {
-        setIsFormLoading(false);
+    try {
+      setIsFormLoading(true);
+      setError(null);
+      const response = await api.patch(`/subject/${cascadeItem._id}/status`, {
+        status: newStatus,
+        cascadeMode: cascadeMode || "respect_manual",
+      });
+      if (response.data.success) {
+        invalidateListCachesFrom("subject");
+        await fetchSubjects();
+        success(
+          `Subject "${cascadeItem.name}" and children ${action}d successfully!`
+        );
+        setCascadeModalOpen(false);
+        setCascadeItem(null);
+      } else {
+        setError(response.data.message || `Failed to ${action} subject`);
+        showError(response.data.message || `Failed to ${action} subject`);
       }
+    } catch (err) {
+      console.error(`Error ${action}ing subject:`, err);
+      const errorMessage =
+        err.response?.data?.message ||
+        `Failed to ${action} subject. Please try again.`;
+      setError(errorMessage);
+      showError(errorMessage);
+    } finally {
+      setIsFormLoading(false);
     }
   };
 
@@ -462,6 +459,7 @@ const SubjectManagement = () => {
       await Promise.all(
         examIds.map((examId) => saveReorderForExam(examId, reorderDraft[examId]))
       );
+      invalidateListCachesFrom("subject");
       await fetchSubjects();
       setReorderDraft({});
       setIsReorderMode(false);
@@ -477,6 +475,15 @@ const SubjectManagement = () => {
   return (
     <>
       <ToastContainer toasts={toasts} removeToast={removeToast} />
+      <StatusCascadeModal
+        open={cascadeModalOpen}
+        onClose={() => { setCascadeModalOpen(false); setCascadeItem(null); }}
+        levelLabel="Subject"
+        itemName={cascadeItem?.name}
+        currentStatus={cascadeItem?.status || "active"}
+        onConfirm={handleCascadeConfirm}
+        loading={isFormLoading}
+      />
       <div className="space-y-6">
         {/* Header Section */}
         <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 rounded-lg border border-gray-200 p-4 shadow-sm">

@@ -1,18 +1,17 @@
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import Exam from "@/models/Exam";
-import Subject from "@/models/Subject";
-import Unit from "@/models/Unit";
-import Chapter from "@/models/Chapter";
-import Topic from "@/models/Topic";
-import SubTopic from "@/models/SubTopic";
-import Definition from "@/models/Definition";
 import mongoose from "mongoose";
-import { successResponse, errorResponse, handleApiError, notFoundResponse } from "@/utils/apiResponse";
+import {
+  successResponse,
+  errorResponse,
+  handleApiError,
+  notFoundResponse,
+} from "@/utils/apiResponse";
 import { ERROR_MESSAGES } from "@/constants";
 import { requireAction, requireAuth } from "@/middleware/authMiddleware";
-import { logger } from "@/utils/logger";
 import cacheManager from "@/utils/cacheManager";
+import { cascadeExamStatus } from "@/lib/cascadeStatus";
 
 // ---------- GET SINGLE EXAM ----------
 // Public access so frontend self-study pages can server-render without auth
@@ -87,15 +86,20 @@ export async function PUT(request, { params }) {
     if (status) updateData.status = status;
     if (orderNumber !== undefined) updateData.orderNumber = orderNumber;
     if (body.image !== undefined) updateData.image = body.image;
-    if (body.description !== undefined) updateData.description = body.description;
+    if (body.description !== undefined)
+      updateData.description = body.description;
 
     // Debug logging
     console.log("Updating Exam with data:", updateData);
 
-    const updated = await Exam.findByIdAndUpdate(id, { $set: updateData }, {
-      new: true,
-      runValidators: true,
-    });
+    const updated = await Exam.findByIdAndUpdate(
+      id,
+      { $set: updateData },
+      {
+        new: true,
+        runValidators: true,
+      },
+    );
 
     console.log("Exam updated in DB:", updated);
 
@@ -126,17 +130,22 @@ export async function PATCH(request, { params }) {
       return errorResponse("Invalid exam ID", 400);
     }
 
-    const { status, orderNumber } = body;
+    const { status, orderNumber, cascadeMode } = body;
+    const mode = ["respect_manual", "force_all", "direct_only"].includes(cascadeMode)
+      ? cascadeMode
+      : "respect_manual";
 
     if (status && !["active", "inactive"].includes(status)) {
-      return errorResponse("Valid status is required (active or inactive)", 400);
+      return errorResponse(
+        "Valid status is required (active or inactive)",
+        400,
+      );
     }
 
     const updateData = {};
     if (status) {
       updateData.status = status;
-      // User toggled this exam: remember explicit choice so cascade activate won't overwrite children
-      updateData.explicitlyInactive = status === "inactive";
+      updateData.manualInactive = status === "inactive";
     }
     if (orderNumber !== undefined) updateData.orderNumber = orderNumber;
 
@@ -144,69 +153,24 @@ export async function PATCH(request, { params }) {
       return errorResponse("No valid update fields provided", 400);
     }
 
-    const updated = await Exam.findByIdAndUpdate(id, { $set: updateData }, { new: true });
+    const updated = await Exam.findByIdAndUpdate(
+      id,
+      { $set: updateData },
+      { new: true },
+    );
     if (!updated) {
       return notFoundResponse(ERROR_MESSAGES.EXAM_NOT_FOUND);
     }
 
-    // Filter: not explicitly inactive (user did not deliberately deactivate this item)
-    const notExplicitlyInactive = { $or: [{ explicitlyInactive: { $ne: true } }, { explicitlyInactive: { $exists: false } }] };
-
-    // Cascading: Update all children status if status changed
     if (status) {
-      logger.info(`Cascading status update to ${status} for exam ${id}`);
-
-      if (status === "inactive") {
-        // Deactivate: set all children to inactive (do not change explicitlyInactive)
-        const subjects = await Subject.find({ examId: id });
-        const subjectIds = subjects.map((s) => s._id);
-        const units = await Unit.find({ subjectId: { $in: subjectIds } });
-        const unitIds = units.map((u) => u._id);
-        const chapters = await Chapter.find({ unitId: { $in: unitIds } });
-        const chapterIds = chapters.map((c) => c._id);
-        const topics = await Topic.find({ chapterId: { $in: chapterIds } });
-        const topicIds = topics.map((t) => t._id);
-
-        await Promise.all([
-          SubTopic.updateMany({ topicId: { $in: topicIds } }, { $set: { status: "inactive" } }),
-          Topic.updateMany({ chapterId: { $in: chapterIds } }, { $set: { status: "inactive" } }),
-          Chapter.updateMany({ unitId: { $in: unitIds } }, { $set: { status: "inactive" } }),
-          Unit.updateMany({ subjectId: { $in: subjectIds } }, { $set: { status: "inactive" } }),
-          Subject.updateMany({ examId: id }, { $set: { status: "inactive" } }),
-          Definition.updateMany({ examId: id }, { $set: { status: "inactive" } }),
-        ]);
-      } else {
-        // Activate: only set children to active if they are not explicitly inactive
-        const subjects = await Subject.find({ examId: id, ...notExplicitlyInactive }).select("_id").lean();
-        const subjectIds = subjects.map((s) => s._id);
-        await Subject.updateMany({ examId: id, ...notExplicitlyInactive }, { $set: { status: "active" } });
-
-        const units = await Unit.find({ subjectId: { $in: subjectIds }, ...notExplicitlyInactive }).select("_id").lean();
-        const unitIds = units.map((u) => u._id);
-        await Unit.updateMany({ subjectId: { $in: subjectIds }, ...notExplicitlyInactive }, { $set: { status: "active" } });
-
-        const chapters = await Chapter.find({ unitId: { $in: unitIds }, ...notExplicitlyInactive }).select("_id").lean();
-        const chapterIds = chapters.map((c) => c._id);
-        await Chapter.updateMany({ unitId: { $in: unitIds }, ...notExplicitlyInactive }, { $set: { status: "active" } });
-
-        const topics = await Topic.find({ chapterId: { $in: chapterIds }, ...notExplicitlyInactive }).select("_id").lean();
-        const topicIds = topics.map((t) => t._id);
-        await Topic.updateMany({ chapterId: { $in: chapterIds }, ...notExplicitlyInactive }, { $set: { status: "active" } });
-
-        const subtopics = await SubTopic.find({ topicId: { $in: topicIds }, ...notExplicitlyInactive }).select("_id").lean();
-        const subtopicIds = subtopics.map((st) => st._id);
-        await SubTopic.updateMany({ topicId: { $in: topicIds }, ...notExplicitlyInactive }, { $set: { status: "active" } });
-
-        await Definition.updateMany({ subTopicId: { $in: subtopicIds }, ...notExplicitlyInactive }, { $set: { status: "active" } });
-      }
+      await cascadeExamStatus(id, status, mode);
     }
 
-    // Clear cache for exam queries
     cacheManager.clear("exam");
 
     return successResponse(
       updated,
-      `Exam and all children ${status === "inactive" ? "deactivated" : "activated"} successfully`
+      `Exam and all children ${status === "inactive" ? "deactivated" : "activated"} successfully`,
     );
   } catch (error) {
     return handleApiError(error, "Failed to update exam");
@@ -235,7 +199,10 @@ export async function DELETE(request, { params }) {
     }
 
     // Re-sequence orderNumber to 1, 2, 3, ... (unique, no gaps)
-    const remaining = await Exam.find({}).sort({ orderNumber: 1, createdAt: 1 }).select("_id").lean();
+    const remaining = await Exam.find({})
+      .sort({ orderNumber: 1, createdAt: 1 })
+      .select("_id")
+      .lean();
     if (remaining.length > 0) {
       const tempUpdates = remaining.map((exam, index) => ({
         updateOne: {
@@ -261,4 +228,3 @@ export async function DELETE(request, { params }) {
     return handleApiError(error, ERROR_MESSAGES.DELETE_FAILED);
   }
 }
-

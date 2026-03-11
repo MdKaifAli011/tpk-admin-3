@@ -12,6 +12,7 @@ import { FaEdit, FaPlus, FaTimes, FaLock, FaSearch, FaCheck, FaGripVertical } fr
 import { ToastContainer, useToast } from "../ui/Toast";
 import api from "@/lib/api";
 import { getDefinitionListCache, setDefinitionListCache } from "@/lib/definitionListCache";
+import { invalidateListCachesFrom } from "@/lib/listCacheInvalidation";
 import { usePermissions, getPermissionMessage } from "../../hooks/usePermissions";
 import { IoFilterOutline } from "react-icons/io5";
 
@@ -1076,7 +1077,8 @@ const DefinitionManagement = () => {
         const newDefinitions = Array.isArray(response.data.data)
           ? response.data.data
           : [response.data.data];
-        setDefinitions((prevDefinitions) => [...prevDefinitions, ...newDefinitions]);
+        invalidateListCachesFrom("definition");
+        await fetchDefinitions();
         handleCancelForm();
         success(
           `${newDefinitions.length} definition(s) created successfully for ${validSubTopics.length} subtopic(s)`
@@ -1189,11 +1191,8 @@ const DefinitionManagement = () => {
       });
 
       if (response.data.success) {
-        const newList = definitions.map((d) =>
-          d._id === editingDefinition._id ? response.data.data : d
-        );
-        setDefinitions(newList);
-        setDefinitionListCache(newList, metaFilter);
+        invalidateListCachesFrom("definition");
+        await fetchDefinitions();
         handleCancelEditForm();
         success(
           `Definition "${response.data.data.name}" updated successfully`
@@ -1237,9 +1236,8 @@ const DefinitionManagement = () => {
       const response = await api.delete(`/definition/${definitionToDelete._id}`);
 
       if (response.data.success) {
-        setDefinitions((prevDefinitions) =>
-          prevDefinitions.filter((d) => d._id !== definitionToDelete._id)
-        );
+        invalidateListCachesFrom("definition");
+        await fetchDefinitions();
         success(`Definition "${definitionToDelete.name}" deleted successfully`);
       } else {
         throw new Error(response.data.message || "Failed to delete definition");
@@ -1276,11 +1274,8 @@ const DefinitionManagement = () => {
         });
 
         if (response.data.success) {
-          const newList = definitions.map((d) =>
-            d._id === definition._id ? { ...d, status: newStatus } : d
-          );
-          setDefinitions(newList);
-          setDefinitionListCache(newList, metaFilter);
+          invalidateListCachesFrom("definition");
+          await fetchDefinitions();
           success(
             `Definition "${definition.name}" ${action}d successfully`
           );
@@ -1334,6 +1329,7 @@ const DefinitionManagement = () => {
       await Promise.all(
         subTopicIds.map((subTopicId) => saveReorderForSubTopic(subTopicId, reorderDraft[subTopicId]))
       );
+      invalidateListCachesFrom("definition");
       await fetchDefinitions();
       setReorderDraft({});
       setIsReorderMode(false);

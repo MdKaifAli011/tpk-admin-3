@@ -50,7 +50,7 @@ const ChaptersTable = ({
     e.dataTransfer.effectAllowed = "move";
     e.dataTransfer.setData("text/plain", String(index));
     e.dataTransfer.setData("application/json", JSON.stringify({ unitId, index }));
-    try { e.target.closest("tr")?.classList.add("opacity-50", "ring-2", "ring-blue-400"); } catch (_) {}
+    try { e.target.closest("tr")?.classList.add("opacity-50", "ring-2", "ring-blue-400"); } catch (_) { }
   };
 
   const handleDragOver = (e, unitId, index) => {
@@ -73,7 +73,7 @@ const ChaptersTable = ({
     try {
       const parsed = JSON.parse(payload || "{}");
       if (parsed.unitId) payloadUnitId = parsed.unitId;
-    } catch (_) {}
+    } catch (_) { }
     if (payloadUnitId !== unitId || Number.isNaN(fromIndex) || fromIndex === toIndex) {
       setDragOver({ unitId: null, index: null });
       setDragged({ unitId: null, index: null });
@@ -81,7 +81,7 @@ const ChaptersTable = ({
     }
     setDragOver({ unitId: null, index: null });
     setDragged({ unitId: null, index: null });
-    try { e.target.closest("tr")?.classList.remove("opacity-50", "ring-2", "ring-blue-400"); } catch (_) {}
+    try { e.target.closest("tr")?.classList.remove("opacity-50", "ring-2", "ring-blue-400"); } catch (_) { }
     const group = groupedChapters.find((g) => g.unitId === unitId);
     if (!group) return;
     const currentList = reorderDraft[unitId] ?? [...group.chapters].sort((a, b) => (a.orderNumber || 0) - (b.orderNumber || 0));
@@ -94,7 +94,7 @@ const ChaptersTable = ({
   const handleDragEnd = (e) => {
     setDragged({ unitId: null, index: null });
     setDragOver({ unitId: null, index: null });
-    try { e.target.closest("tr")?.classList.remove("opacity-50", "ring-2", "ring-blue-400"); } catch (_) {}
+    try { e.target.closest("tr")?.classList.remove("opacity-50", "ring-2", "ring-blue-400"); } catch (_) { }
   };
 
   // Group chapters by Exam → Subject → Unit
@@ -265,9 +265,8 @@ const ChaptersTable = ({
                         onDragOver={(e) => handleDragOver(e, group.unitId, chapterIndex)}
                         onDrop={(e) => handleDrop(e, group.unitId, chapterIndex)}
                         onDragEnd={handleDragEnd}
-                        className={`hover:bg-gray-50 transition-colors ${chapter.status === "inactive" ? "opacity-60" : ""} ${
-                          isDraggedRow ? "opacity-50 ring-2 ring-blue-400" : ""
-                        } ${isDragOverRow ? "bg-blue-50 border-y-2 border-blue-200" : ""}`}
+                        className={`hover:bg-gray-50 transition-colors ${chapter.status === "inactive" ? "opacity-60" : ""} ${isDraggedRow ? "opacity-50 ring-2 ring-blue-400" : ""
+                          } ${isDragOverRow ? "bg-blue-50 border-y-2 border-blue-200" : ""}`}
                       >
                         {canDrag && (
                           <td
@@ -435,9 +434,8 @@ const ChaptersTable = ({
                     onDragOver={(e) => handleDragOver(e, group.unitId, chapterIndex)}
                     onDrop={(e) => handleDrop(e, group.unitId, chapterIndex)}
                     onDragEnd={handleDragEnd}
-                    className={`p-1.5 hover:bg-gray-50 transition-colors ${chapter.status === "inactive" ? "opacity-60" : ""} ${
-                      isDraggedRow ? "opacity-50 ring-2 ring-blue-400 rounded" : ""
-                    } ${isDragOverRow ? "bg-blue-50 border-2 border-blue-200 rounded" : ""}`}
+                    className={`p-1.5 hover:bg-gray-50 transition-colors ${chapter.status === "inactive" ? "opacity-60" : ""} ${isDraggedRow ? "opacity-50 ring-2 ring-blue-400 rounded" : ""
+                      } ${isDragOverRow ? "bg-blue-50 border-2 border-blue-200 rounded" : ""}`}
                   >
                     <div className="flex justify-between items-start gap-2">
                       {canDrag && (

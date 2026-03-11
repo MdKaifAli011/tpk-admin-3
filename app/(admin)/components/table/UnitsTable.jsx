@@ -41,7 +41,7 @@ const UnitsTable = ({ units, onEdit, onDelete, onToggleStatus, onReorderDraft, r
     e.dataTransfer.effectAllowed = "move";
     e.dataTransfer.setData("text/plain", String(index));
     e.dataTransfer.setData("application/json", JSON.stringify({ subjectId, index }));
-    try { e.target.closest("tr")?.classList.add("opacity-50", "ring-2", "ring-blue-400"); } catch (_) {}
+    try { e.target.closest("tr")?.classList.add("opacity-50", "ring-2", "ring-blue-400"); } catch (_) { }
   };
 
   const handleDragOver = (e, subjectId, index) => {
@@ -64,7 +64,7 @@ const UnitsTable = ({ units, onEdit, onDelete, onToggleStatus, onReorderDraft, r
     try {
       const parsed = JSON.parse(payload || "{}");
       if (parsed.subjectId) payloadSubjectId = parsed.subjectId;
-    } catch (_) {}
+    } catch (_) { }
     if (payloadSubjectId !== subjectId || Number.isNaN(fromIndex) || fromIndex === toIndex) {
       setDragOver({ subjectId: null, index: null });
       setDragged({ subjectId: null, index: null });
@@ -72,7 +72,7 @@ const UnitsTable = ({ units, onEdit, onDelete, onToggleStatus, onReorderDraft, r
     }
     setDragOver({ subjectId: null, index: null });
     setDragged({ subjectId: null, index: null });
-    try { e.target.closest("tr")?.classList.remove("opacity-50", "ring-2", "ring-blue-400"); } catch (_) {}
+    try { e.target.closest("tr")?.classList.remove("opacity-50", "ring-2", "ring-blue-400"); } catch (_) { }
     const group = groupedUnits.find((g) => g.subjectId === subjectId);
     if (!group) return;
     const currentList = reorderDraft[subjectId] ?? [...group.units].sort((a, b) => (a.orderNumber || 0) - (b.orderNumber || 0));
@@ -85,7 +85,7 @@ const UnitsTable = ({ units, onEdit, onDelete, onToggleStatus, onReorderDraft, r
   const handleDragEnd = (e) => {
     setDragged({ subjectId: null, index: null });
     setDragOver({ subjectId: null, index: null });
-    try { e.target.closest("tr")?.classList.remove("opacity-50", "ring-2", "ring-blue-400"); } catch (_) {}
+    try { e.target.closest("tr")?.classList.remove("opacity-50", "ring-2", "ring-blue-400"); } catch (_) { }
   };
 
   // Group units by Exam → Subject
@@ -234,9 +234,8 @@ const UnitsTable = ({ units, onEdit, onDelete, onToggleStatus, onReorderDraft, r
                         onDragOver={(e) => handleDragOver(e, group.subjectId, unitIndex)}
                         onDrop={(e) => handleDrop(e, group.subjectId, unitIndex)}
                         onDragEnd={handleDragEnd}
-                        className={`hover:bg-gray-50 transition-colors ${unit.status === "inactive" ? "opacity-60" : ""} ${
-                          isDragged ? "opacity-50 ring-2 ring-blue-400" : ""
-                        } ${isDragOver ? "bg-blue-50 border-y-2 border-blue-200" : ""}`}
+                        className={`hover:bg-gray-50 transition-colors ${unit.status === "inactive" ? "opacity-60" : ""} ${isDragged ? "opacity-50 ring-2 ring-blue-400" : ""
+                          } ${isDragOver ? "bg-blue-50 border-y-2 border-blue-200" : ""}`}
                       >
                         {canDrag && (
                           <td
@@ -407,9 +406,8 @@ const UnitsTable = ({ units, onEdit, onDelete, onToggleStatus, onReorderDraft, r
                     onDragOver={(e) => handleDragOver(e, group.subjectId, unitIndex)}
                     onDrop={(e) => handleDrop(e, group.subjectId, unitIndex)}
                     onDragEnd={handleDragEnd}
-                    className={`p-1.5 hover:bg-gray-50 transition-colors ${unit.status === "inactive" ? "opacity-60" : ""} ${
-                      isDragged ? "opacity-50 ring-2 ring-blue-400 rounded" : ""
-                    } ${isDragOver ? "bg-blue-50 border-2 border-blue-200 rounded" : ""}`}
+                    className={`p-1.5 hover:bg-gray-50 transition-colors ${unit.status === "inactive" ? "opacity-60" : ""} ${isDragged ? "opacity-50 ring-2 ring-blue-400 rounded" : ""
+                      } ${isDragOver ? "bg-blue-50 border-2 border-blue-200 rounded" : ""}`}
                   >
                     <div className="flex justify-between items-start gap-2">
                       {canDrag && (
