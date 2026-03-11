@@ -46,7 +46,7 @@ const Footer = () => {
           {/* Column 1: Brand and CTA */}
           <div className="space-y-4">
             {/* Logo */}
-            <Link href="https://www.testprepkart.com">
+            <Link href="https://www.testprepkart.com" aria-label="Testprepkart home">
               <Image
                 src={`${basePath}/logo.png`}
                   alt="Testprepkart Logo"
@@ -67,7 +67,8 @@ const Footer = () => {
             {/* CTA Button */}
             <Link
               href="https://www.testprepkart.com/contact"
-              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 text-white rounded-lg hover:from-indigo-700 hover:via-purple-700 hover:to-pink-600 transition-all shadow-md hover:shadow-lg"
+              className="inline-flex items-center justify-center gap-2 min-h-[44px] min-w-[44px] px-4 py-2 text-sm font-semibold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 text-white rounded-lg hover:from-indigo-700 hover:via-purple-700 hover:to-pink-600 transition-all shadow-md hover:shadow-lg"
+              aria-label="Contact us"
             >
               <span>Contact Us</span>
               <FaArrowRight className="text-sm" />
@@ -212,19 +213,19 @@ const Footer = () => {
 
             {/* Legal Links */}
             <div className="flex flex-wrap items-center justify-center md:justify-end gap-3">
-              <Link href="https://www.testprepkart.com/policies/terms-and-conditions" className="hover:text-blue-600 transition-colors">
+              <Link href="https://www.testprepkart.com/policies/terms-and-conditions" className="inline-flex items-center min-h-[44px] hover:text-blue-600 transition-colors" aria-label="Terms of service">
                 Terms of service
               </Link>
-              <span className="text-gray-300">|</span>
-              <Link href="https://www.testprepkart.com/policies/privacy-policy" className="hover:text-blue-600 transition-colors">
+              <span className="text-gray-300" aria-hidden="true">|</span>
+              <Link href="https://www.testprepkart.com/policies/privacy-policy" className="inline-flex items-center min-h-[44px] hover:text-blue-600 transition-colors" aria-label="Privacy policy">
                 Privacy policy
               </Link>
-              <span className="text-gray-300">|</span>
-              <Link href="https://www.testprepkart.com/policies/refund-policy" className="hover:text-blue-600 transition-colors">
+              <span className="text-gray-300" aria-hidden="true">|</span>
+              <Link href="https://www.testprepkart.com/policies/refund-policy" className="inline-flex items-center min-h-[44px] hover:text-blue-600 transition-colors" aria-label="Refund policy">
                 Refund Policy
               </Link>
-              <span className="text-gray-300">|</span>
-              <Link href="https://www.testprepkart.com/register" className="hover:text-blue-600 transition-colors">
+              <span className="text-gray-300" aria-hidden="true">|</span>
+              <Link href="https://www.testprepkart.com/register" className="inline-flex items-center min-h-[44px] hover:text-blue-600 transition-colors" aria-label="Login and register">
                 Login & Register
               </Link>
             </div>
