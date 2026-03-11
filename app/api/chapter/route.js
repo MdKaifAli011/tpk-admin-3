@@ -136,9 +136,8 @@ export async function POST(request) {
       return NextResponse.json(authCheck, { status: authCheck.status || 403 });
     }
 
-    await connectDB();
     const body = await request.json();
-    const { name, examId, subjectId, unitId, orderNumber, weightage, time, questions, status } = body;
+    const { name, examId, subjectId, unitId, orderNumber, weightage, time, questions, status, upsert } = body;
 
     // Validation
     if (!name || !examId || !subjectId || !unitId) {
@@ -174,6 +173,30 @@ export async function POST(request) {
     });
 
     if (existingChapter) {
+      if (upsert === true) {
+        const updateData = { name: chapterName };
+        if (orderNumber !== undefined) updateData.orderNumber = orderNumber;
+        if (weightage !== undefined) updateData.weightage = weightage;
+        if (time !== undefined) updateData.time = time;
+        if (questions !== undefined) updateData.questions = questions;
+        if (status) updateData.status = status;
+        const updated = await Chapter.findByIdAndUpdate(
+          existingChapter._id,
+          { $set: updateData },
+          { new: true, runValidators: true }
+        )
+          .populate("examId", "name status")
+          .populate("subjectId", "name")
+          .populate("unitId", "name orderNumber")
+          .lean();
+        return NextResponse.json({
+          success: true,
+          message: "Chapter updated successfully",
+          data: updated,
+          updated: true,
+          timestamp: new Date().toISOString(),
+        }, { status: 200 });
+      }
       return errorResponse("Chapter name already exists in this unit", 409);
     }
 

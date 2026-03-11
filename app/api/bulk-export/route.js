@@ -18,13 +18,25 @@ export async function POST(request) {
 
         await connectDB();
         const body = await request.json();
-        const { examId, subjectId, unitId: scopeUnitId, chapterId: scopeChapterId, topicId: scopeTopicId, subTopicId: scopeSubTopicId, format } = body || {};
+        const { examId, subjectId, unitId: scopeUnitId, chapterId: scopeChapterId, topicId: scopeTopicId, subTopicId: scopeSubTopicId, format, singleLevel, exportLevel, contextLockLevel } = body || {};
 
         if (!examId || !subjectId) {
             return NextResponse.json(
                 { success: false, message: "Exam and Subject are required for export" },
                 { status: 400 }
             );
+        }
+
+        // Context-locked export: require scope for unit/chapter/topic
+        const lockLevel = (contextLockLevel && String(contextLockLevel).toLowerCase()) || "";
+        if (lockLevel === "unit" && !scopeUnitId) {
+            return NextResponse.json({ success: false, message: "Unit is required for context-locked export at Unit level" }, { status: 400 });
+        }
+        if (lockLevel === "chapter" && (!scopeUnitId || !scopeChapterId)) {
+            return NextResponse.json({ success: false, message: "Unit and Chapter are required for context-locked export at Chapter level" }, { status: 400 });
+        }
+        if (lockLevel === "topic" && (!scopeUnitId || !scopeChapterId || !scopeTopicId)) {
+            return NextResponse.json({ success: false, message: "Unit, Chapter, and Topic are required for context-locked export at Topic level" }, { status: 400 });
         }
 
         const examObjId = new mongoose.Types.ObjectId(examId);
@@ -126,9 +138,35 @@ export async function POST(request) {
                 .sort({ orderNumber: 1 })
                 .lean();
         }
-        
+
+        // Single-level export: only the selected level's data, no children (use exportLevel to decide what to keep)
+        if (singleLevel === true && exportLevel) {
+            const level = String(exportLevel).toLowerCase();
+            if (level === "unit") {
+                allChapters = [];
+                allTopics = [];
+                allSubTopics = [];
+                allDefinitions = [];
+            } else if (level === "chapter") {
+                allTopics = [];
+                allSubTopics = [];
+                allDefinitions = [];
+            } else if (level === "topic") {
+                allSubTopics = [];
+                allDefinitions = [];
+            } else if (level === "subtopic") {
+                allDefinitions = [];
+            } else if (level === "exam" || level === "subject") {
+                allUnits = [];
+                allChapters = [];
+                allTopics = [];
+                allSubTopics = [];
+                allDefinitions = [];
+            }
+        }
+
         const totalItems = allUnits.length + allChapters.length + allTopics.length + allSubTopics.length + allDefinitions.length;
-        console.log(`🔍 Export: scope unitId=${scopeUnitId || "all"} chapterId=${scopeChapterId || "-"} topicId=${scopeTopicId || "-"} subTopicId=${scopeSubTopicId || "-"}`);
+        console.log(`🔍 Export: scope unitId=${scopeUnitId || "all"} chapterId=${scopeChapterId || "-"} topicId=${scopeTopicId || "-"} subTopicId=${scopeSubTopicId || "-"} singleLevel=${!!singleLevel} exportLevel=${exportLevel || "-"}`);
         console.log(`📊 Export: Total items to export: ${totalItems} (${allUnits.length} Units + ${allChapters.length} Chapters + ${allTopics.length} Topics + ${allSubTopics.length} SubTopics + ${allDefinitions.length} Definitions)`);
 
         // Build comprehensive export data structure
@@ -261,26 +299,70 @@ export async function POST(request) {
         const exportData = exportRows;
         console.log(`✅ Export: Built comprehensive export with ${exportData.length} rows (${allUnits.length} Units + ${allChapters.length} Chapters + ${allTopics.length} Topics + ${allSubTopics.length} SubTopics + ${allDefinitions.length} Definitions)`);
 
+        // Context-locked export: filter to children only and use lock-level columns (same structure as import)
+        const CONTEXT_LOCK_COLUMNS = {
+            subject: ["unit", "chapter", "topic", "subtopic", "definition"],
+            unit: ["chapter", "topic", "subtopic", "definition"],
+            chapter: ["topic", "subtopic", "definition"],
+            topic: ["subtopic", "definition"],
+        };
+        const CONTEXT_LOCK_HEADERS = {
+            subject: ["Unit", "Chapter", "Topic", "SubTopic", "Definition"],
+            unit: ["Chapter", "Topic", "SubTopic", "Definition"],
+            chapter: ["Topic", "SubTopic", "Definition"],
+            topic: ["SubTopic", "Definition"],
+        };
+        let dataToExport = exportData;
+        let isContextLocked = lockLevel && CONTEXT_LOCK_COLUMNS[lockLevel];
+        if (isContextLocked) {
+            const allowedTypes = { subject: ["unit", "chapter", "topic", "subtopic", "definition"], unit: ["chapter", "topic", "subtopic", "definition"], chapter: ["topic", "subtopic", "definition"], topic: ["subtopic", "definition"] }[lockLevel];
+            dataToExport = exportData.filter((row) => allowedTypes.includes(row.type));
+        }
+
+        // Single-level: only the selected level's column in file (Unit → only "Unit"; Chapter → only "Chapter"; etc.)
+        const FULL_COLUMNS = ["unit", "chapter", "topic", "subtopic", "definition"];
+        const FULL_HEADERS = ["Unit", "Chapter", "Topic", "SubTopic", "Definition"];
+        let columnsToUse = FULL_COLUMNS;
+        let headersToUse = FULL_HEADERS;
+        if (isContextLocked) {
+            columnsToUse = CONTEXT_LOCK_COLUMNS[lockLevel];
+            headersToUse = CONTEXT_LOCK_HEADERS[lockLevel];
+        } else if (singleLevel === true && exportLevel) {
+            const level = String(exportLevel).toLowerCase();
+            const colIndex = FULL_COLUMNS.indexOf(level);
+            if (colIndex >= 0) {
+                columnsToUse = [FULL_COLUMNS[colIndex]];
+                headersToUse = [FULL_HEADERS[colIndex]];
+            }
+        }
+
         // Return JSON format when requested
         if (format === "json") {
+            const dataForJson = (singleLevel === true && columnsToUse.length < FULL_COLUMNS.length) || isContextLocked
+                ? dataToExport.map(row => {
+                    const out = {};
+                    columnsToUse.forEach((col, i) => { out[headersToUse[i]] = row[col] ?? ""; });
+                    return out;
+                })
+                : dataToExport;
             const payload = {
                 success: true,
-                data: exportData,
-                count: exportData.length,
+                data: dataForJson,
+                count: dataForJson.length,
                 totalItems: totalItems,
                 units: allUnits.length,
                 chapters: allChapters.length,
                 topics: allTopics.length,
                 subtopics: allSubTopics.length,
                 definitions: allDefinitions.length,
-                size: Buffer.byteLength(JSON.stringify(exportData), "utf8")
+                size: Buffer.byteLength(JSON.stringify(dataForJson), "utf8")
             };
-            console.log(`📄 Export: Returning JSON with ${exportData.length} rows`);
+            console.log(`📄 Export: Returning JSON with ${dataForJson.length} rows, columns: ${headersToUse.join(", ")}`);
             return NextResponse.json(payload);
         }
 
-        // 3. Generate CSV with proper escaping - ONLY NAMES, NO CONTENT
-        const headers = ["Unit", "Chapter", "Topic", "SubTopic", "Definition"];
+        // Generate CSV - use only selected columns when single-level
+        const headers = headersToUse;
 
         // CSV Escaping Helper - handles all edge cases
         const escapeCSV = (value) => {
@@ -300,23 +382,16 @@ export async function POST(request) {
         let processedCount = 0;
         let errorCount = 0;
         
-        const csvRows = exportData.map((row, index) => {
+        const csvRows = dataToExport.map((row, index) => {
             try {
                 processedCount++;
-                const csvRow = [
-                    escapeCSV(row.unit || ""),
-                    escapeCSV(row.chapter || ""),
-                    escapeCSV(row.topic || ""),
-                    escapeCSV(row.subtopic || ""),
-                    escapeCSV(row.definition || "")
-                ].join(",");
-                
+                const values = columnsToUse.map(col => escapeCSV(row[col] ?? ""));
+                const csvRow = values.join(",");
                 return csvRow;
             } catch (error) {
                 errorCount++;
-                console.error(`❌ Error processing row ${index + 1}/${exportData.length}:`, error, row);
-                // Return empty row on error to maintain row count
-                return ["", "", "", "", ""].join(",");
+                console.error(`❌ Error processing row ${index + 1}/${dataToExport.length}:`, error, row);
+                return columnsToUse.map(() => "").join(",");
             }
         });
 

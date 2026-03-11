@@ -138,6 +138,7 @@ export async function POST(request) {
 
     // Normalize to array to support both single and multiple creations
     const items = Array.isArray(body) ? body : [body];
+    const upsertFlag = items[0]?.upsert === true;
 
     // Basic shape validation
     for (const item of items) {
@@ -211,6 +212,28 @@ export async function POST(request) {
         chapterId,
       });
       if (existingTopic) {
+        if (upsertFlag) {
+          const updateData = { name: topicName };
+          if (item.orderNumber !== undefined) updateData.orderNumber = item.orderNumber;
+          if (item.status) updateData.status = item.status;
+          const updated = await Topic.findByIdAndUpdate(
+            existingTopic._id,
+            { $set: updateData },
+            { new: true, runValidators: true }
+          )
+            .populate("examId", "name status")
+            .populate("subjectId", "name")
+            .populate("unitId", "name orderNumber")
+            .populate("chapterId", "name orderNumber")
+            .lean();
+          return NextResponse.json({
+            success: true,
+            message: "Topic updated successfully",
+            data: updated,
+            updated: true,
+            timestamp: new Date().toISOString(),
+          }, { status: 200 });
+        }
         return NextResponse.json(
           {
             success: false,

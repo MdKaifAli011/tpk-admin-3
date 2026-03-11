@@ -196,6 +196,7 @@ export async function POST(request) {
       );
 
     const createdIds = [];
+    const upsertFlag = items[0]?.upsert === true;
     for (const item of items) {
       const { name, topicId } = item;
 
@@ -218,6 +219,29 @@ export async function POST(request) {
         topicId,
       });
       if (existingSubTopic) {
+        if (upsertFlag) {
+          const updateData = { name: subTopicName };
+          if (item.orderNumber !== undefined) updateData.orderNumber = item.orderNumber;
+          if (item.status) updateData.status = item.status;
+          const updated = await SubTopic.findByIdAndUpdate(
+            existingSubTopic._id,
+            { $set: updateData },
+            { new: true, runValidators: true }
+          )
+            .populate("examId", "name status")
+            .populate("subjectId", "name")
+            .populate("unitId", "name orderNumber")
+            .populate("chapterId", "name orderNumber")
+            .populate("topicId", "name orderNumber")
+            .lean();
+          return NextResponse.json({
+            success: true,
+            message: "Sub topic updated successfully",
+            data: updated,
+            updated: true,
+            timestamp: new Date().toISOString(),
+          }, { status: 200 });
+        }
         return NextResponse.json(
           {
             success: false,

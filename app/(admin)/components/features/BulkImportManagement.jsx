@@ -127,6 +127,9 @@ const IMPORT_TYPES = [
     },
 ];
 
+// Map parent name to state key (subtopic -> subTopicId)
+const getParentIdKey = (parent) => parent === "subtopic" ? "subTopicId" : `${parent}Id`;
+
 // Context-Locked: lock level determines which parents are fixed and which columns CSV has
 const CONTEXT_LOCK_LEVELS = [
     { value: "subject", label: "Subject", description: "Lock Exam + Subject → import Units, Chapters, Topics, SubTopics, Definitions" },
@@ -144,6 +147,14 @@ const getContextLockColumns = (lockLevel) => {
         case "topic": return ["subtopic", "definition"];
         default: return ["unit", "chapter", "topic", "subtopic", "definition"];
     }
+};
+
+// Single-level mode: only the selected type column in file (Unit → only "Unit"; Chapter → only "Chapter"; etc.)
+const getSingleLevelColumns = (importType) => {
+    const typeColumn = importType === "subtopic" ? "SubTopic" : (importType.charAt(0).toUpperCase() + importType.slice(1));
+    const cols = [typeColumn];
+    if (importType === "chapter") cols.push("weightage", "time", "questions");
+    return cols;
 };
 
 const BulkImportManagement = () => {
@@ -357,8 +368,17 @@ const BulkImportManagement = () => {
                 headers.push(levels[i]);
             }
             sampleRows = ["Physics,Mechanics,Motion,Kinematics,Displacement,What is Displacement?"];
+        } else if (importMode === "single") {
+            // Single-level: only selected type column (Unit → only "Unit"; Chapter → only "Chapter"; etc.)
+            headers = getSingleLevelColumns(importType);
+            if (importType === "chapter") {
+                sampleRows = ["Example Chapter,10,60,20"];
+            } else {
+                const label = importType === "subtopic" ? "Example Sub Topic" : "Example " + (importType.charAt(0).toUpperCase() + importType.slice(1));
+                sampleRows = [label];
+            }
         } else {
-            // Simple Mode headers
+            // Fallback: simple headers
             headers = ["name", "orderNumber"];
             if (importType === "chapter") headers.push("weightage", "time", "questions");
             sampleRows = [importType === "chapter" ? "Example Chapter,1,10,60,20" : "Example Item,1"];
@@ -372,7 +392,7 @@ const BulkImportManagement = () => {
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.setAttribute("href", url);
-        link.setAttribute("download", `${importMode === 'context-locked' ? 'context_locked_' : importMode === 'hierarchical' ? 'deep_' : ''}${importType}_import_template.csv`);
+        link.setAttribute("download", `${importMode === 'context-locked' ? 'context_locked_' : importMode === 'hierarchical' ? 'deep_' : importMode === 'single' ? 'single_' : ''}${importType}_import_template.csv`);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -412,6 +432,23 @@ const BulkImportManagement = () => {
             });
         } else if (importMode === "hierarchical") {
             sampleRows = [{ exam: "Physics", subject: "Mechanics", unit: "Motion", chapter: "Kinematics", topic: "Displacement", subtopic: "Vector", definition: "What is Displacement?" }];
+        } else if (importMode === "single") {
+            const cols = getSingleLevelColumns(importType);
+            const typeKey = importType === "subtopic" ? "subtopic" : importType;
+            sampleRows = [{ [typeKey]: "Example Item" }];
+            if (importType === "chapter") {
+                sampleRows[0].weightage = 10;
+                sampleRows[0].time = 60;
+                sampleRows[0].questions = 20;
+            }
+            sampleRows = sampleRows.map(row => {
+                const obj = {};
+                cols.forEach(col => {
+                    const key = col.toLowerCase().replace(/\s+/g, "");
+                    obj[col] = row[key] ?? (col === "weightage" || col === "time" || col === "questions" ? 0 : "");
+                });
+                return obj;
+            });
         } else {
             sampleRows = [{ name: "Example Item", orderNumber: 1 }];
             if (importType === "chapter") {
@@ -425,7 +462,7 @@ const BulkImportManagement = () => {
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.setAttribute("href", url);
-        link.setAttribute("download", `${importMode === 'context-locked' ? 'context_locked_' : importMode === 'hierarchical' ? 'deep_' : ''}${importType}_import_template.json`);
+        link.setAttribute("download", `${importMode === 'context-locked' ? 'context_locked_' : importMode === 'hierarchical' ? 'deep_' : importMode === 'single' ? 'single_' : ''}${importType}_import_template.json`);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -437,6 +474,33 @@ const BulkImportManagement = () => {
         if (!parents.examId || !parents.subjectId) {
             showError("Please select both Exam and Subject to export data.");
             return;
+        }
+        // Single-level export: require scope parent for the selected level (which unit's chapters, which chapter's topics, etc.)
+        if (importMode === "single") {
+            const currentTypeConfig = IMPORT_TYPES.find(t => t.value === importType);
+            for (const parent of currentTypeConfig.parents) {
+                const key = getParentIdKey(parent);
+                if (!parents[key]) {
+                    const label = parent === "subtopic" ? "Sub Topic" : (parent.charAt(0).toUpperCase() + parent.slice(1));
+                    showError(`To export ${importType}s, please select ${parent === "exam" ? "an" : "a"} ${label} first.`);
+                    return;
+                }
+            }
+        }
+        // Context-locked export: require scope for the selected lock level
+        if (importMode === "context-locked") {
+            if (contextLockLevel === "unit" && !parents.unitId) {
+                showError("To export at Unit level, please select a Unit first.");
+                return;
+            }
+            if (contextLockLevel === "chapter" && (!parents.unitId || !parents.chapterId)) {
+                showError("To export at Chapter level, please select Unit and Chapter first.");
+                return;
+            }
+            if (contextLockLevel === "topic" && (!parents.unitId || !parents.chapterId || !parents.topicId)) {
+                showError("To export at Topic level, please select Unit, Chapter, and Topic first.");
+                return;
+            }
         }
 
         setExportStatus("exporting");
@@ -453,7 +517,9 @@ const BulkImportManagement = () => {
                 ...(parents.unitId && { unitId: parents.unitId }),
                 ...(parents.chapterId && { chapterId: parents.chapterId }),
                 ...(parents.topicId && { topicId: parents.topicId }),
-                ...(parents.subTopicId && { subTopicId: parents.subTopicId })
+                ...(parents.subTopicId && { subTopicId: parents.subTopicId }),
+                ...(importMode === "single" && { singleLevel: true, exportLevel: importType }),
+                ...(importMode === "context-locked" && { contextLockLevel })
             });
 
             if (res.data.success && res.data.data) {
@@ -541,6 +607,31 @@ const BulkImportManagement = () => {
             showError("Please select both Exam and Subject to export data.");
             return;
         }
+        if (importMode === "single") {
+            const currentTypeConfig = IMPORT_TYPES.find(t => t.value === importType);
+            for (const parent of currentTypeConfig.parents) {
+                const key = getParentIdKey(parent);
+                if (!parents[key]) {
+                    const label = parent === "subtopic" ? "Sub Topic" : (parent.charAt(0).toUpperCase() + parent.slice(1));
+                    showError(`To export ${importType}s, please select ${parent === "exam" ? "an" : "a"} ${label} first.`);
+                    return;
+                }
+            }
+        }
+        if (importMode === "context-locked") {
+            if (contextLockLevel === "unit" && !parents.unitId) {
+                showError("To export at Unit level, please select a Unit first.");
+                return;
+            }
+            if (contextLockLevel === "chapter" && (!parents.unitId || !parents.chapterId)) {
+                showError("To export at Chapter level, please select Unit and Chapter first.");
+                return;
+            }
+            if (contextLockLevel === "topic" && (!parents.unitId || !parents.chapterId || !parents.topicId)) {
+                showError("To export at Topic level, please select Unit, Chapter, and Topic first.");
+                return;
+            }
+        }
         setExportStatus("exporting");
         try {
             success("Preparing JSON export...");
@@ -551,6 +642,8 @@ const BulkImportManagement = () => {
                 ...(parents.chapterId && { chapterId: parents.chapterId }),
                 ...(parents.topicId && { topicId: parents.topicId }),
                 ...(parents.subTopicId && { subTopicId: parents.subTopicId }),
+                ...(importMode === "single" && { singleLevel: true, exportLevel: importType }),
+                ...(importMode === "context-locked" && { contextLockLevel }),
                 format: "json"
             });
             if (res.data.success && Array.isArray(res.data.data)) {
@@ -631,8 +724,10 @@ const BulkImportManagement = () => {
             // Other modes validate based on importType
             const currentTypeConfig = IMPORT_TYPES.find(t => t.value === importType);
             for (const parent of currentTypeConfig.parents) {
-                if (!parents[`${parent}Id`]) {
-                    showError(`Please select a ${parent} first.`);
+                const key = getParentIdKey(parent);
+                if (!parents[key]) {
+                    const label = parent === "subtopic" ? "Sub Topic" : (parent.charAt(0).toUpperCase() + parent.slice(1));
+                    showError(`Please select ${parent === "exam" ? "an" : "a"} ${label} first.`);
                     return;
                 }
             }
@@ -674,13 +769,16 @@ const BulkImportManagement = () => {
         let successCount = 0;
         let failCount = 0;
         const errorLog = [];
+        let createdCount = 0;
+        let updatedCount = 0;
+        let overriddenList = [];
 
         // Prepare Base Payload from Parents
         const basePayload = {};
         if (importMode !== "context-locked") {
             const currentTypeConfig = IMPORT_TYPES.find(t => t.value === importType);
             currentTypeConfig.parents.forEach(p => {
-                basePayload[`${p}Id`] = parents[`${p}Id`];
+                basePayload[getParentIdKey(p)] = parents[getParentIdKey(p)];
             });
         }
 
@@ -855,20 +953,25 @@ const BulkImportManagement = () => {
                 }
 
             } else {
-                // --- SIMPLE IMPORT ---
+                // --- SIMPLE IMPORT (single-level): only selected type, no children
                 const total = parsedData.length;
+                // In single-level, file may use type column name (Unit, Chapter, etc.) -> normalized to row.unit, row.chapter, etc.
+                const nameKey = importMode === "single" ? importType : "name";
 
                 for (let i = 0; i < total; i++) {
                     const row = parsedData[i];
-                    if (!row.name) continue;
+                    const nameValue = row.name ?? row[nameKey];
+                    if (!nameValue) continue;
 
                     try {
                         const payload = {
                             ...basePayload,
-                            name: row.name,
+                            name: nameValue,
                             orderNumber: row.ordernumber,
                             status: "active"
                         };
+                        // If item already exists in parent scope, update it (override); else create (upsert)
+                        if (["unit", "chapter", "topic", "subtopic"].includes(importType)) payload.upsert = true;
 
                         // Type specific fields
                         if (importType === 'chapter') {
@@ -880,28 +983,41 @@ const BulkImportManagement = () => {
                         const res = await api.post(`/${importType}`, payload);
 
                         if (res.data.success) {
-                            successCount++;
+                            if (res.data.updated === true) {
+                                updatedCount++;
+                                overriddenList.push(nameValue);
+                            } else {
+                                createdCount++;
+                            }
                         } else {
                             failCount++;
-                            errorLog.push(`Row ${i + 1} (${row.name}): ${res.data.message}`);
+                            errorLog.push(`Row ${i + 1} (${nameValue}): ${res.data.message}`);
                         }
                     } catch (err) {
                         failCount++;
-                        errorLog.push(`Row ${i + 1} (${row.name}): ${err.response?.data?.message || err.message}`);
+                        errorLog.push(`Row ${i + 1} (${nameValue}): ${err.response?.data?.message || err.message}`);
                     }
                 }
+                successCount = createdCount + updatedCount;
             }
 
             setResults({ success: successCount, failed: failCount, errors: errorLog });
 
             // Store stats for modal
             if (importMode !== "context-locked") {
-                setImportStats({
-                    totalCreated: successCount,
-                    totalUpdated: 0,
+                const stats = {
                     totalProcessed: successCount,
                     errorLog: errorLog.slice(0, 50)
-                });
+                };
+                if (importMode === "single" && (createdCount > 0 || updatedCount > 0)) {
+                    stats.totalCreated = createdCount;
+                    stats.totalUpdated = updatedCount;
+                    if (overriddenList && overriddenList.length > 0) stats.overriddenList = overriddenList;
+                } else {
+                    stats.totalCreated = successCount;
+                    stats.totalUpdated = 0;
+                }
+                setImportStats(stats);
             }
 
             setImportStatus(failCount > 0 ? "error" : "success");
@@ -1234,7 +1350,9 @@ const BulkImportManagement = () => {
                         ) : null}
                         {importMode !== "context-locked" && currentTypeConfig?.parents.includes("unit") && (
                             <div className="space-y-2">
-                                <label className="block text-sm font-medium text-gray-700">Unit</label>
+                                <label className="block text-sm font-medium text-gray-700">
+                                    Unit {importMode === "single" && importType === "chapter" && <span className="text-gray-500 font-normal">(chapters of this unit)</span>}
+                                </label>
                                 <select
                                     value={parents.unitId}
                                     onChange={(e) => handleParentChange("unitId", e.target.value)}
@@ -1249,7 +1367,9 @@ const BulkImportManagement = () => {
 
                         {importMode !== "context-locked" && currentTypeConfig?.parents.includes("chapter") && (
                             <div className="space-y-2">
-                                <label className="block text-sm font-medium text-gray-700">Chapter</label>
+                                <label className="block text-sm font-medium text-gray-700">
+                                    Chapter {importMode === "single" && importType === "topic" && <span className="text-gray-500 font-normal">(topics of this chapter)</span>}
+                                </label>
                                 <select
                                     value={parents.chapterId}
                                     onChange={(e) => handleParentChange("chapterId", e.target.value)}
@@ -1264,7 +1384,9 @@ const BulkImportManagement = () => {
 
                         {importMode !== "context-locked" && currentTypeConfig?.parents.includes("topic") && (
                             <div className="space-y-2">
-                                <label className="block text-sm font-medium text-gray-700">Topic</label>
+                                <label className="block text-sm font-medium text-gray-700">
+                                    Topic {importMode === "single" && importType === "subtopic" && <span className="text-gray-500 font-normal">(subtopics of this topic)</span>}
+                                </label>
                                 <select
                                     value={parents.topicId}
                                     onChange={(e) => handleParentChange("topicId", e.target.value)}
@@ -1279,7 +1401,9 @@ const BulkImportManagement = () => {
 
                         {importMode !== "context-locked" && currentTypeConfig?.parents.includes("subtopic") && (
                             <div className="space-y-2">
-                                <label className="block text-sm font-medium text-gray-700">SubTopic</label>
+                                <label className="block text-sm font-medium text-gray-700">
+                                    Sub Topic {importMode === "single" && importType === "definition" && <span className="text-gray-500 font-normal">(definitions of this subtopic)</span>}
+                                </label>
                                 <select
                                     value={parents.subTopicId}
                                     onChange={(e) => handleParentChange("subTopicId", e.target.value)}
@@ -1297,9 +1421,11 @@ const BulkImportManagement = () => {
                                 <div>
                                     <h3 className="text-sm font-medium text-gray-900">Export Options</h3>
                                     <p className="text-xs text-gray-500 mt-1">
-                                        {parents.unitId || parents.chapterId || parents.topicId || parents.subTopicId
-                                            ? "Downloading selected level and its children only (e.g. selected unit → its chapters, topics, subtopics, definitions)."
-                                            : "Download existing data for the selected Exam and Subject as CSV or JSON. Select Unit/Chapter/Topic/SubTopic above to export only that level and its children."}
+                                        {importMode === "single"
+                                            ? `Single level: export/import only ${importType}s. ${importType === "unit" ? "Select Exam and Subject." : importType === "chapter" ? "Select Exam, Subject, and Unit (chapters of that unit)." : importType === "topic" ? "Select Exam, Subject, Unit, and Chapter (topics of that chapter)." : importType === "subtopic" ? "Select Exam, Subject, Unit, Chapter, and Topic (subtopics of that topic)." : "Select Exam, Subject, Unit, Chapter, Topic, and Sub Topic (definitions of that subtopic)."}`
+                                            : parents.unitId || parents.chapterId || parents.topicId || parents.subTopicId
+                                                ? "Downloading selected level and its children. Select Unit/Chapter/Topic/SubTopic to scope."
+                                                : "Download existing data for the selected Exam and Subject as CSV or JSON. Select Unit/Chapter/Topic/SubTopic above to export that level and its children."}
                                     </p>
                                 </div>
                                 <div className="flex items-center gap-2">
@@ -1628,7 +1754,7 @@ const BulkImportManagement = () => {
                                                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                                                     <div className="flex items-center gap-2 mb-2">
                                                         <FaSpinner className="w-5 h-5 text-blue-600" />
-                                                        <span className="text-sm font-bold text-blue-800">Updated</span>
+                                                        <span className="text-sm font-bold text-blue-800">Updated (Overridden)</span>
                                                     </div>
                                                     <p className="text-2xl font-bold text-blue-900">{importStats.totalUpdated}</p>
                                                     <p className="text-xs text-blue-700 mt-1">Existing items updated</p>
@@ -1713,6 +1839,22 @@ const BulkImportManagement = () => {
                                                     </div>
                                                 </div>
                                             )}
+
+                                        {/* Overridden list (units/items that already existed and were updated) */}
+                                        {importStats.overriddenList && importStats.overriddenList.length > 0 && (
+                                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                                <div className="flex items-center gap-2 mb-3">
+                                                    <FaSpinner className="w-5 h-5 text-blue-600" />
+                                                    <span className="text-sm font-bold text-blue-800">Overridden ({importStats.overriddenList.length})</span>
+                                                </div>
+                                                <p className="text-xs text-blue-700 mb-2">These items already existed and were updated:</p>
+                                                <ul className="max-h-48 overflow-y-auto space-y-1 text-sm text-blue-900 list-disc list-inside">
+                                                    {importStats.overriddenList.map((name, i) => (
+                                                        <li key={i}>{name}</li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        )}
 
                                         {/* Warnings/Errors */}
                                         {importStats.rowsSkipped > 0 && (

@@ -67,7 +67,7 @@ const SubTopicPreview = ({
   return (
     <div className="space-y-3">
       {subTopicUrl ? (
-        <Link href={subTopicUrl} className="group/link">
+        <Link href={subTopicUrl} className="group/link" aria-label={`Subtopic: ${subTopic.name}`}>
           <h3 className="text-lg sm:text-xl font-bold text-indigo-700 group-hover/link:text-indigo-500 group-hover/link:underline transition-all duration-200 cursor-pointer mb-3 inline-block">
             {subTopic.name}
           </h3>
@@ -581,10 +581,10 @@ const OverviewTab = ({
           </div>
 
           {/* SubTopics Grid - for topic type */}
-          <div className="mt-4">
+          <div className="mt-4" role="region" aria-labelledby="subtopics-heading">
             <div className="flex items-center gap-2 mb-3">
-              <div className="h-0.5 w-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full"></div>
-              <h3 className="text-base sm:text-lg font-bold text-gray-900">
+              <div className="h-0.5 w-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full" aria-hidden />
+              <h3 id="subtopics-heading" className="text-base sm:text-lg font-bold text-gray-900">
                 Subtopics
               </h3>
             </div>
@@ -620,6 +620,7 @@ const OverviewTab = ({
                               fill="none"
                               stroke="currentColor"
                               viewBox="0 0 24 24"
+                              aria-hidden
                             >
                               <path
                                 strokeLinecap="round"
@@ -640,6 +641,7 @@ const OverviewTab = ({
                     key={subTopic._id || index}
                     href={subTopicUrl}
                     className="block"
+                    aria-label={`Subtopic: ${subTopic.name}`}
                   >
                     {SubTopicCard}
                   </Link>
@@ -704,7 +706,7 @@ const OverviewTab = ({
               );
 
               return chapterUrl ? (
-                <Link key={chapter._id || index} href={chapterUrl}>
+                <Link key={chapter._id || index} href={chapterUrl} aria-label={`Chapter: ${chapter.name}`}>
                   {ChapterCard}
                 </Link>
               ) : (
@@ -862,6 +864,7 @@ const OverviewTab = ({
                               fill="none"
                               stroke="currentColor"
                               viewBox="0 0 24 24"
+                              aria-hidden
                             >
                               <path
                                 strokeLinecap="round"

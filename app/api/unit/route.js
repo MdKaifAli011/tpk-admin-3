@@ -149,9 +149,8 @@ export async function POST(request) {
       return NextResponse.json(authCheck, { status: authCheck.status || 403 });
     }
 
-    await connectDB();
     const body = await request.json();
-    const { name, orderNumber, subjectId, examId, status } = body;
+    const { name, orderNumber, subjectId, examId, status, upsert } = body;
 
     // Validate required fields
     if (!name || !subjectId || !examId) {
@@ -193,6 +192,28 @@ export async function POST(request) {
       subjectId,
     });
     if (existingUnit) {
+      if (upsert === true) {
+        // Update existing unit (override) and return
+        const updateData = { name: unitName };
+        if (orderNumber !== undefined) updateData.orderNumber = orderNumber;
+        if (status) updateData.status = status;
+        const updated = await Unit.findByIdAndUpdate(
+          existingUnit._id,
+          { $set: updateData },
+          { new: true, runValidators: true }
+        )
+          .populate("subjectId", "name")
+          .populate("examId", "name status")
+          .lean();
+        cacheManager.clear("units-");
+        return NextResponse.json({
+          success: true,
+          message: "Unit updated successfully",
+          data: updated,
+          updated: true,
+          timestamp: new Date().toISOString(),
+        }, { status: 200 });
+      }
       return errorResponse("Unit with this name already exists in this subject", 409);
     }
 

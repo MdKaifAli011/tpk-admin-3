@@ -1,6 +1,5 @@
 import React from "react";
 import { notFound } from "next/navigation";
-import { FaFileAlt } from "react-icons/fa";
 import TabsClient from "../../../../../components/TabsClient";
 import NavigationClient from "../../../../../components/NavigationClient";
 import ChaptersSectionClient from "../../../../../components/ChaptersSectionClient";
@@ -8,7 +7,6 @@ import UnitProgressClient from "../../../../../components/UnitProgressClient";
 import ProgressTracker from "../../../../../components/ProgressTracker";
 import ConditionalTestListTable from "../../../../../components/ConditionalTestListTable";
 import VisitTracker from "../../../../../components/VisitTracker";
-import { ERROR_MESSAGES } from "@/constants";
 import {
   fetchExamById,
   fetchSubjectsByExam,
@@ -289,7 +287,7 @@ const TopicPage = async ({ params }) => {
                 {fetchedExam.name} &gt; {subject.name} &gt; {unit.name} &gt; {chapter.name} &gt; {topic.name}
               </p>
             </div>
-            <div className="hero-right-slot shrink-0 ml-auto flex flex-col justify-center">
+          <div className="hero-right-slot shrink-0 ml-auto flex flex-col justify-center min-h-[44px]">
               <UnitProgressClient
                 unitId={unit._id}
                 unitName={unit.name}
@@ -321,12 +319,14 @@ const TopicPage = async ({ params }) => {
           topicSlug={topicSlugValue}
         />
         {/* Navigation */}
-        <NavigationClient
-          backUrl={`/${examSlug}/${subjectSlugValue}/${unitSlugValue}/${chapterSlugValue}`}
-          backLabel={`Back to ${chapter.name}`}
-          prevNav={prevNav}
-          nextNav={nextNav}
-        />
+        <nav aria-label="Previous and next topic navigation">
+          <NavigationClient
+            backUrl={`/${examSlug}/${subjectSlugValue}/${unitSlugValue}/${chapterSlugValue}`}
+            backLabel={`Back to ${chapter.name}`}
+            prevNav={prevNav}
+            nextNav={nextNav}
+          />
+        </nav>
 
         {/* Test List Table */}
         <ConditionalTestListTable
