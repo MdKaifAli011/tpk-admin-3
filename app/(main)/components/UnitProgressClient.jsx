@@ -489,7 +489,7 @@ const UnitProgressClient = ({ unitId, unitName, initialProgress = 0 }) => {
       <div className="w-full sm:w-auto text-left sm:text-right">
   
         {/* Label */}
-        <p className="text-[10px] sm:text-xs text-gray-500 mb-1 sm:mb-1.5 font-medium leading-none">
+        <p className="text-[10px] sm:text-xs text-gray-600 mb-1 sm:mb-1.5 font-medium leading-none">
           Unit Progress
         </p>
   

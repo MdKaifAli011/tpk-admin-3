@@ -59,7 +59,7 @@ const Footer = () => {
               />
             </Link>
             {/* Description */}
-            <p className="text-gray-500 text-sm leading-relaxed">
+            <p className="text-gray-600 text-sm leading-relaxed">
               Enabling students prepare and crack toughest examinations
               worldwide for over a decade with problem solving aptitude!
             </p>
@@ -71,7 +71,7 @@ const Footer = () => {
               aria-label="Contact us"
             >
               <span>Contact Us</span>
-              <FaArrowRight className="text-sm" />
+              <FaArrowRight className="text-sm" aria-hidden />
             </Link>
           </div>
 
@@ -84,7 +84,7 @@ const Footer = () => {
               <li>
                 <Link
                   href="https://www.testprepkart.com/jee/parent_counseling"
-                  className="text-gray-500 text-sm hover:text-blue-600 transition-colors"
+                  className="text-gray-600 text-sm hover:text-blue-600 transition-colors"
                 >
                   Connect With Counselor
                 </Link>
@@ -92,7 +92,7 @@ const Footer = () => {
               <li>
                 <Link
                   href="https://www.testprepkart.com/explore/"
-                  className="text-gray-500 text-sm hover:text-blue-600 transition-colors"
+                  className="text-gray-600 text-sm hover:text-blue-600 transition-colors"
                 >
                   University Admissions
                 </Link>
@@ -100,7 +100,7 @@ const Footer = () => {
               <li>
                 <Link
                   href="https://www.testprepkart.com/prime-videos"
-                  className="text-gray-500 text-sm hover:text-blue-600 transition-colors"
+                  className="text-gray-600 text-sm hover:text-blue-600 transition-colors"
                 >
                   Prime Videos
                 </Link>
@@ -108,7 +108,7 @@ const Footer = () => {
               <li>
                 <Link
                   href="https://testprepkart-operations.com/enrollment-form.php"
-                  className="text-gray-500 text-sm hover:text-blue-600 transition-colors"
+                  className="text-gray-600 text-sm hover:text-blue-600 transition-colors"
                 >
                   Enrollment Form
                 </Link>
@@ -116,7 +116,7 @@ const Footer = () => {
               <li>
                 <Link
                   href="https://www.testprepkart.com/fee-payment"
-                  className="text-gray-500 text-sm hover:text-blue-600 transition-colors"
+                  className="text-gray-600 text-sm hover:text-blue-600 transition-colors"
                 >
                   Online Fee Payment
                 </Link>
@@ -124,7 +124,7 @@ const Footer = () => {
               <li>
                 <Link
                   href="https://testprepkart-operations.com/"
-                  className="text-gray-500 text-sm hover:text-blue-600 transition-colors"
+                  className="text-gray-600 text-sm hover:text-blue-600 transition-colors"
                 >
                   Testprepkart Operations
                 </Link>
@@ -132,7 +132,7 @@ const Footer = () => {
               <li>
                 <Link
                   href="https://testprepkart-operations.com/faculty_registration.php"
-                  className="text-gray-500 text-sm hover:text-blue-600 transition-colors"
+                  className="text-gray-600 text-sm hover:text-blue-600 transition-colors"
                 >
                   Faculty Registration
                 </Link>
@@ -150,7 +150,7 @@ const Footer = () => {
                 <li key={index}>
                   <Link
                     href={`https://www.testprepkart.com/${link.toLowerCase().replace(/ /g, '-')}`}
-                    className="text-gray-500 text-sm hover:text-blue-600 transition-colors"
+                    className="text-gray-600 text-sm hover:text-blue-600 transition-colors"
                   >
                     {link}
                   </Link>
@@ -165,23 +165,23 @@ const Footer = () => {
               Contact Details
             </h3>
             <ul className="space-y-3">
-              <li className="flex items-start gap-2 text-gray-500 text-sm">
+              <li className="flex items-start gap-2 text-gray-600 text-sm">
                 <FaPhone className="text-gray-400 mt-0.5 shrink-0 text-sm" />
                 <span>Phone: +91 0120 4525484</span>
               </li>
-              <li className="flex items-start gap-2 text-gray-500 text-sm">
+              <li className="flex items-start gap-2 text-gray-600 text-sm">
                 <FaWhatsapp className="text-gray-400 mt-0.5 shrink-0 text-sm" />
                 <span>Whatsapp: +1 (510) 706-9331</span>
               </li>
-              <li className="flex items-start gap-2 text-gray-500 text-sm">
+              <li className="flex items-start gap-2 text-gray-600 text-sm">
                 <FaPhone className="text-gray-400 mt-0.5 shrink-0 text-sm" />
                 <span>Admission: +91 8800123492</span>
               </li>
-              <li className="flex items-start gap-2 text-gray-500 text-sm">
+              <li className="flex items-start gap-2 text-gray-600 text-sm">
                 <FaEnvelope className="text-gray-400 mt-0.5 shrink-0 text-sm" />
                 <span>E-mail: contact@rayofhopebihar.org</span>
               </li>
-              <li className="flex items-start gap-2 text-gray-500 text-sm">
+              <li className="flex items-start gap-2 text-gray-600 text-sm">
                 <FaBuilding className="text-gray-400 mt-0.5 shrink-0 text-sm" />
                 <span>
                   Head Office: F 377, Sector 63, Noida, Uttar Pradesh, India
@@ -204,7 +204,7 @@ const Footer = () => {
       {/* Bottom Section - Copyright and Legal Links */}
       <div className="border-t border-gray-200 bg-white">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-gray-500">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-gray-600">
             {/* Copyright */}
             <p className="text-center md:text-left">
               Copyright © 2024 CounselKart Educational Services Pvt. Ltd.. All

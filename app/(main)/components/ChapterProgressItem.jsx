@@ -359,7 +359,7 @@ const ChapterProgressItem = ({
           }`}
       >
         {isCompleted && (
-          <FaCheck className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-white drop-shadow-md animate-in fade-in zoom-in duration-200" />
+          <FaCheck className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-white drop-shadow-md animate-in fade-in zoom-in duration-200" aria-hidden />
         )}
       </div>
     </label>
@@ -389,7 +389,7 @@ const ChapterProgressItem = ({
           />
           <div className="min-w-0 flex-1">
             {href ? (
-              <Link href={href} className="block group/link">
+              <Link href={href} className="block group/link" aria-label={`Chapter: ${chapter.name}`}>
                 <p className="text-sm font-semibold text-gray-900 sm:text-base group-hover/link:text-indigo-600 transition-all duration-200 break-words line-clamp-2 leading-normal group-hover/link:translate-x-0.5">
                   {chapter.name}
                 </p>
@@ -399,12 +399,12 @@ const ChapterProgressItem = ({
                 {chapter.name}
               </p>
             )}
-            <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500 sm:text-sm">
+            <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-600 sm:text-sm">
               <span className="font-medium text-emerald-600">
                 Weightage: {weightage}
               </span>
               <span className="inline-flex items-center gap-1">
-                <FaEye className="text-gray-400" />
+                <FaEye className="text-gray-600" aria-hidden />
                 {engagement}
               </span>
             </div>
@@ -587,7 +587,7 @@ const ChapterProgressItem = ({
                 className="inline-flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 shadow-sm transition-all duration-200 hover:scale-110 hover:shadow-md"
                 title="Completed"
               >
-                <FaCheck className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white drop-shadow-sm" />
+                <FaCheck className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white drop-shadow-sm" aria-hidden />
               </span>
             )}
           </div>

@@ -1,7 +1,5 @@
-import React from "react";
+import React, { Suspense } from "react";
 import { notFound } from "next/navigation";
-import { FaGraduationCap } from "react-icons/fa";
-import ListItem from "../components/ListItem";
 import TabsClient from "../components/TabsClient";
 import NavigationClient from "../components/NavigationClient";
 import ExamProgressClient from "../components/ExamProgressClient";
@@ -16,15 +14,20 @@ import {
   fetchChaptersByUnit,
 } from "../lib/api";
 import { getExamInfoByExamId } from "@/lib/getExamInfoServer";
-import { ERROR_MESSAGES, PLACEHOLDERS } from "@/constants";
 import { getNextExam, getPreviousExam } from "../lib/hierarchicalNavigation";
-import Link from "next/link";
-import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
-import { generateTabAwareMetadata, extractSearchParams } from "@/utils/tabSeo";
+import {
+  generateTabAwareMetadata,
+  extractSearchParams,
+} from "@/utils/tabSeo";
 import { generateMetadata as generateSEO } from "@/utils/seo";
 import { logger } from "@/utils/logger";
-import OverviewCommentSection from "@/app/(main)/components/OverviewCommentSection";
 import AssignedBlogsSection from "@/app/(main)/components/AssignedBlogsSection";
+import nextDynamic from "next/dynamic";
+
+const OverviewCommentSection = nextDynamic(
+  () => import("@/app/(main)/components/OverviewCommentSection"),
+  { ssr: true, loading: () => null }
+);
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -181,7 +184,7 @@ const ExamPage = async ({ params }) => {
               Smart study tools for your {exam.name} exam.
             </p>
           </div>
-          <div className="hero-right-slot shrink-0 ml-auto flex flex-col justify-center">
+          <div className="hero-right-slot shrink-0 ml-auto flex flex-col justify-center min-h-[44px]">
             <ExamProgressClient examId={examIdStr} />
           </div>
         </div>
@@ -209,13 +212,15 @@ const ExamPage = async ({ params }) => {
       </nav>
 
       {/* Blog Section - assigned to this exam */}
-      <AssignedBlogsSection
-        examSlug={examSlug}
-        examId={exam._id}
-        assignmentLevel="exam"
-      />
+      <Suspense fallback={<div className="min-h-[120px]" aria-hidden />}>
+        <AssignedBlogsSection
+          examSlug={examSlug}
+          examId={exam._id}
+          assignmentLevel="exam"
+        />
+      </Suspense>
 
-      {/* Overview Comment Section */}
+      {/* Overview Comment Section - lazy loaded for smaller initial bundle */}
       <OverviewCommentSection entityType="exam" entityId={examIdStr} />
     </div>
   );

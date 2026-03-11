@@ -713,10 +713,14 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
 
           {/* Search */}
           {tree.length > 0 && (
-            <div className="mb-2.5">
+            <div className="mb-2.5" role="search">
+              <label htmlFor="sidebar-search" className="sr-only">
+                Search subjects, units, chapters, and topics
+              </label>
               <div className="relative">
-                <FaSearch className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
+                <FaSearch className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs" aria-hidden />
                 <input
+                  id="sidebar-search"
                   type="search"
                   aria-label="Search subjects, units, chapters, and topics"
                   value={searchQuery}
@@ -749,25 +753,28 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
                 {shouldShowSubjectsButton && (
                   <div className="mb-2.5">
                     <button
+                      type="button"
                       onClick={() => toggleMenu('subjects')}
                       className={`w-full flex items-center justify-between px-3 py-2 font-semibold rounded-lg cursor-pointer transition-all duration-200 ${
                         activeMenu === 'subjects'
                           ? "bg-indigo-100/60 shadow-sm text-indigo-900"
                           : "text-black hover:text-indigo-600 hover:bg-gray-50"
                       }`}
+                      aria-label={activeMenu === 'subjects' ? "Collapse subjects menu" : "Expand subjects menu"}
+                      aria-expanded={activeMenu === 'subjects'}
                     >
                       <span>Subjects</span>
                       {activeMenu === 'subjects' ? (
-                        <FaChevronDown className="text-[10px] text-gray-400" />
+                        <FaChevronDown className="text-[10px] text-gray-400" aria-hidden />
                       ) : (
-                        <FaChevronRight className="text-[10px] text-gray-400" />
+                        <FaChevronRight className="text-[10px] text-gray-400" aria-hidden />
                       )}
                     </button>
                   </div>
                 )}
                 
                 {/* Keep tree mounted; hide with CSS when another menu is active to avoid remounting */}
-                <div className={`mb-4 space-y-0.5 ${activeMenu !== 'subjects' ? 'hidden' : ''}`}>
+                <nav className={`mb-4 space-y-0.5 ${activeMenu !== 'subjects' ? 'hidden' : ''}`} aria-label="Subjects and units">
                   <SidebarNavigationTree
                     tree={listToRender}
                     activeExamSlug={activeExamSlug}
@@ -784,7 +791,7 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
                     topicSlugFromPath={topicSlugFromPath}
                     activeItemRef={activeItemRef}
                   />
-                </div>
+                </nav>
               </>
             )}
 
@@ -796,18 +803,21 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
                   <li>
                     <div>
                       <button
+                        type="button"
                         onClick={() => toggleMenu('blog')}
                         className={`w-full flex items-center justify-between px-3 py-2 font-semibold rounded-lg cursor-pointer transition-all duration-200 ${
                           isBlogPath
                             ? "bg-indigo-100/60 shadow-sm text-indigo-900"
                             : "text-black hover:text-indigo-600 hover:bg-gray-50"
                         }`}
+                        aria-label={activeMenu === 'blog' ? "Collapse blog menu" : "Expand blog menu"}
+                        aria-expanded={activeMenu === 'blog'}
                       >
                         <span>Blog</span>
                         {activeMenu === 'blog' ? (
-                          <FaChevronDown className="text-[10px] text-gray-400" />
+                          <FaChevronDown className="text-[10px] text-gray-400" aria-hidden />
                         ) : (
-                          <FaChevronRight className="text-[10px] text-gray-400" />
+                          <FaChevronRight className="text-[10px] text-gray-400" aria-hidden />
                         )}
                       </button>
                       {activeMenu === 'blog' && (
@@ -822,6 +832,7 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
                                   : "text-black hover:text-indigo-600 hover:bg-gray-50"
                               }`}
                               onClick={closeOnMobile}
+                              aria-label="View all blogs"
                             >
                               All Blogs
                             </Link>
@@ -867,18 +878,21 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
                   <li>
                     <div>
                       <button
+                        type="button"
                         onClick={() => toggleMenu('download')}
                         className={`w-full flex items-center justify-between px-3 py-2 font-semibold rounded-lg cursor-pointer transition-all duration-200 ${
                           isDownloadPath
                             ? "text-indigo-600 bg-indigo-50"
                             : "text-black hover:text-indigo-600 hover:bg-gray-50"
                         }`}
+                        aria-label={activeMenu === 'download' ? "Collapse download menu" : "Expand download menu"}
+                        aria-expanded={activeMenu === 'download'}
                       >
                         <span>Download</span>
                         {activeMenu === 'download' ? (
-                          <FaChevronDown className="text-[10px] text-gray-400" />
+                          <FaChevronDown className="text-[10px] text-gray-400" aria-hidden />
                         ) : (
-                          <FaChevronRight className="text-[10px] text-gray-400" />
+                          <FaChevronRight className="text-[10px] text-gray-400" aria-hidden />
                         )}
                       </button>
                       {activeMenu === 'download' && (
@@ -893,6 +907,7 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
                                   : "text-gray-600 hover:text-indigo-600 hover:bg-gray-50"
                               }`}
                               onClick={closeOnMobile}
+                              aria-label="View all download folders"
                             >
                               All Folders
                             </Link>
@@ -947,6 +962,7 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
                           : "text-black hover:text-indigo-600 hover:bg-gray-50"
                       }`}
                       onClick={closeOnMobile}
+                      aria-label={activeExam ? `${activeExam.name} courses` : "Courses"}
                     >
                       <span>{activeExam ? `${activeExam.name} Courses` : "Course"}</span>
                     </Link>
@@ -959,18 +975,27 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
 
                 {/* Video Library only at /{examSlug}/video-library (no /video-library path) */}
                 <li>
-                  <Link
-                    href={videoLibrarySlug ? `/${videoLibrarySlug}/video-library` : "#"}
-                    className={`w-full flex items-center justify-between px-3 py-2 font-semibold rounded-lg transition-all duration-200 ${
-                      isVideoLibraryPath
-                        ? "bg-indigo-100/60 shadow-sm text-indigo-900"
-                        : "text-black hover:text-indigo-600 hover:bg-gray-50"
-                    } ${!videoLibrarySlug ? "pointer-events-none opacity-60" : ""}`}
-                    onClick={closeOnMobile}
-                    aria-disabled={!videoLibrarySlug}
-                  >
-                    <span>Video Library</span>
-                  </Link>
+                  {videoLibrarySlug ? (
+                    <Link
+                      href={`/${videoLibrarySlug}/video-library`}
+                      className={`w-full flex items-center justify-between px-3 py-2 font-semibold rounded-lg transition-all duration-200 ${
+                        isVideoLibraryPath
+                          ? "bg-indigo-100/60 shadow-sm text-indigo-900"
+                          : "text-black hover:text-indigo-600 hover:bg-gray-50"
+                      }`}
+                      onClick={closeOnMobile}
+                      aria-label="Video Library"
+                    >
+                      <span>Video Library</span>
+                    </Link>
+                  ) : (
+                    <span
+                      className="w-full flex items-center justify-between px-3 py-2 font-semibold rounded-lg text-gray-400 cursor-not-allowed"
+                      aria-disabled
+                    >
+                      <span>Video Library</span>
+                    </span>
+                  )}
                 </li>
 
                 {/* Notifications — /notification */}
@@ -983,6 +1008,7 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
                         : "text-black hover:text-indigo-600 hover:bg-gray-50"
                     }`}
                     onClick={closeOnMobile}
+                    aria-label="Notifications"
                   >
                     <span>Notifications</span>
                   </Link>

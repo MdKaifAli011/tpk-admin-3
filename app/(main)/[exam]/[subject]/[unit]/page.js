@@ -207,7 +207,7 @@ const UnitPage = async ({ params }) => {
               {fetchedExam.name} &gt; {subject.name} &gt; {unit.name}
             </p>
           </div>
-          <div className="hero-right-slot shrink-0 ml-auto flex flex-col justify-center">
+          <div className="hero-right-slot shrink-0 ml-auto flex flex-col justify-center min-h-[44px]">
             <UnitProgressClient
               unitId={unit._id}
               unitName={unit.name}
@@ -234,12 +234,14 @@ const UnitPage = async ({ params }) => {
       />
 
       {/* Navigation */}
-      <NavigationClient
-        backUrl={`/${examSlug}/${subjectSlugValue}`}
-        backLabel={`Back to ${subject.name}`}
-        prevNav={prevNav}
-        nextNav={nextNav}
-      />
+      <nav aria-label="Previous and next unit navigation">
+        <NavigationClient
+          backUrl={`/${examSlug}/${subjectSlugValue}`}
+          backLabel={`Back to ${subject.name}`}
+          prevNav={prevNav}
+          nextNav={nextNav}
+        />
+      </nav>
 
       {/* Test List Table */}
       <ConditionalTestListTable

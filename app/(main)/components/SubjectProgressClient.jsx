@@ -267,7 +267,7 @@ const SubjectProgressClient = ({
   return (
     <>
       <div className="w-full md:w-auto text-left md:text-right">
-        <p className="text-xs text-gray-500 mb-1.5 uppercase tracking-wide">
+        <p className="text-xs text-gray-600 mb-1.5 uppercase tracking-wide">
           Subject Progress
         </p>
         <ProgressBar

@@ -2150,10 +2150,12 @@ const PracticeTestList = ({
                   Submit Test?
                 </h3>
                 <button
+                  type="button"
                   onClick={() => setShowSubmitModal(false)}
-                  className="text-gray-400 hover:text-gray-600 transition-colors p-1"
+                  className="text-gray-400 hover:text-gray-600 transition-colors p-1 min-h-[44px] min-w-[44px] flex items-center justify-center"
+                  aria-label="Close submit confirmation"
                 >
-                  <FaTimes className="text-sm" />
+                  <FaTimes className="text-sm" aria-hidden />
                 </button>
               </div>
 
@@ -2335,17 +2337,19 @@ const PracticeTestList = ({
               <button
                 type="button"
                 onClick={() => handleToggleMarked(currentQuestion._id)}
-                className={`inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition-colors
-                  ${markedForReview.has(currentQuestion._id)
+                className={`inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition-colors min-h-[44px] ${
+                  markedForReview.has(currentQuestion._id)
                     ? "border-yellow-400 bg-yellow-50 text-yellow-800 hover:bg-yellow-100"
                     : "border-gray-300 bg-gray-50 text-gray-700 hover:bg-gray-100"
-                  }`}
+                }`}
+                aria-label={markedForReview.has(currentQuestion._id) ? "Unmark for review" : "Mark for review"}
               >
                 <FaFlag
                   className={`text-xs ${markedForReview.has(currentQuestion._id)
                     ? "text-yellow-500"
                     : "text-gray-500"
                     }`}
+                  aria-hidden
                 />
                 {markedForReview.has(currentQuestion._id)
                   ? "Marked for Review"
@@ -2380,7 +2384,7 @@ const PracticeTestList = ({
                   const cur = idx === currentQuestionIndex;
 
                   let cls =
-                    "aspect-square max-w-8 mx-auto rounded-full flex items-center justify-center text-xs font-medium border transition-colors duration-150 cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2";
+                    "aspect-square min-h-[44px] min-w-[44px] max-w-10 rounded-full flex items-center justify-center text-xs font-medium border transition-colors duration-150 cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2";
 
                   if (cur)
                     cls +=
@@ -2396,7 +2400,7 @@ const PracticeTestList = ({
                       " bg-yellow-400 text-gray-900 border-yellow-500 focus:ring-yellow-400";
                   else
                     cls +=
-                      "w-8 h-8 bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200 focus:ring-gray-400";
+                      " bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200 focus:ring-gray-400";
 
                   return (
                     <button

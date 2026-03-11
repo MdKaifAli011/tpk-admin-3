@@ -349,6 +349,7 @@ const TabsClient = ({
                         ? "text-emerald-600 animate-pulse"
                         : "text-emerald-500 group-hover:scale-110 group-hover:rotate-[-5deg]"
                         }`}
+                      aria-hidden
                     />
                   )}
                   <span className="relative inline-block">

@@ -22,7 +22,7 @@ const NavigationClient = ({ prevNav, nextNav }) => {
             </span>
 
             <div className="flex items-center gap-1.5 min-w-0 overflow-hidden">
-              <FaChevronLeft className="text-indigo-600 group-hover:text-indigo-700 text-xs shrink-0 transition-colors duration-200" />
+              <FaChevronLeft className="text-indigo-600 group-hover:text-indigo-700 text-xs shrink-0 transition-colors duration-200" aria-hidden />
               <span className="text-xs sm:text-sm font-medium text-gray-900 group-hover:text-indigo-600 truncate min-w-0 flex-1 transition-colors duration-200 leading-snug" title={prevNav.label}>
                 {prevNav.label}
               </span>
@@ -48,7 +48,7 @@ const NavigationClient = ({ prevNav, nextNav }) => {
               <span className="text-xs sm:text-sm font-semibold text-white truncate min-w-0 flex-1 text-right leading-snug" title={nextNav.label}>
                 {nextNav.label}
               </span>
-              <FaChevronRight className="text-white text-xs shrink-0 group-hover:translate-x-0.5 transition-all duration-200" />
+              <FaChevronRight className="text-white text-xs shrink-0 group-hover:translate-x-0.5 transition-all duration-200" aria-hidden />
             </div>
           </Link>
         ) : (

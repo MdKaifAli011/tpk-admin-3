@@ -18,10 +18,11 @@ const AssignedBlogsSectionClient = ({ posts, examSlug }) => {
       <div className="flex justify-end pt-2">
         <Link
           href={`/${examSlug}/blog`}
-          className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg transition-colors"
+          className="inline-flex items-center justify-center gap-2 min-h-[44px] px-4 py-2.5 text-sm font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg transition-colors"
+          aria-label="View all articles in blog"
         >
           View all articles
-          <FaArrowRight className="w-4 h-4" />
+          <FaArrowRight className="w-4 h-4" aria-hidden />
         </Link>
       </div>
     </div>

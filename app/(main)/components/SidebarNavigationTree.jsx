@@ -91,7 +91,7 @@ const SidebarNavigationTree = memo(function SidebarNavigationTree({
       {tree.map((subject) => {
         const isActive = subject.slug === subjectSlugFromPath;
         const isOpen = openSubjectId === subject.id;
-        const subjectHref = activeExamSlug ? `/${activeExamSlug}/${subject.slug}` : "#";
+        const subjectHref = activeExamSlug ? `/${activeExamSlug}/${subject.slug}` : null;
 
         return (
           <div key={subject.id} ref={isActive ? activeItemRef : null}>
@@ -108,19 +108,28 @@ const SidebarNavigationTree = memo(function SidebarNavigationTree({
                 }
               `}
             >
-              <Link
-                href={subjectHref}
-                onClick={closeOnMobile}
-                title={typeof subject.name === "string" ? subject.name : undefined}
-                className="flex-1 overflow-hidden text-left cursor-pointer hover:opacity-80 transition-opacity pr-2 min-w-0"
-              >
-                <TextEllipsis
-                  maxW="max-w-full"
-                  fontSize="text-[15px]"
+              {subjectHref ? (
+                <Link
+                  href={subjectHref}
+                  onClick={closeOnMobile}
+                  title={typeof subject.name === "string" ? subject.name : undefined}
+                  className="flex-1 overflow-hidden text-left cursor-pointer hover:opacity-80 transition-opacity pr-2 min-w-0"
+                  aria-label={labelForSidebar(subject.name)}
                 >
-                  <span className="sidebar-label-text">{labelForSidebar(subject.name)}</span>
-                </TextEllipsis>
-              </Link>
+                  <TextEllipsis
+                    maxW="max-w-full"
+                    fontSize="text-[15px]"
+                  >
+                    <span className="sidebar-label-text">{labelForSidebar(subject.name)}</span>
+                  </TextEllipsis>
+                </Link>
+              ) : (
+                <span className="flex-1 overflow-hidden text-left pr-2 min-w-0 text-inherit">
+                  <TextEllipsis maxW="max-w-full" fontSize="text-[15px]">
+                    <span className="sidebar-label-text">{labelForSidebar(subject.name)}</span>
+                  </TextEllipsis>
+                </span>
+              )}
 
               {subject.units?.length > 0 && (
                 <button
@@ -139,6 +148,7 @@ const SidebarNavigationTree = memo(function SidebarNavigationTree({
                       ${isOpen ? "rotate-180" : ""}
                       ${isActive ? "text-indigo-600" : "text-slate-400"}
                     `}
+                    aria-hidden
                   />
                 </button>
               )}
@@ -170,19 +180,28 @@ const SidebarNavigationTree = memo(function SidebarNavigationTree({
                           }
                         `}
                       >
-                        <Link
-                          href={activeExamSlug ? `/${activeExamSlug}/${subject.slug}/${unit.slug}` : "#"}
-                          onClick={closeOnMobile}
-                          title={typeof unit.name === "string" ? unit.name : undefined}
-                          className="flex-1 overflow-hidden text-left cursor-pointer hover:opacity-80 transition-opacity pr-2 min-w-0"
-                        >
-                          <TextEllipsis
-                            maxW="max-w-full"
-                            fontSize="text-sm"
+                        {activeExamSlug ? (
+                          <Link
+                            href={`/${activeExamSlug}/${subject.slug}/${unit.slug}`}
+                            onClick={closeOnMobile}
+                            title={typeof unit.name === "string" ? unit.name : undefined}
+                            className="flex-1 overflow-hidden text-left cursor-pointer hover:opacity-80 transition-opacity pr-2 min-w-0"
+                            aria-label={labelForSidebar(unit.name)}
                           >
-                            <span className="sidebar-label-text">{labelForSidebar(unit.name)}</span>
-                          </TextEllipsis>
-                        </Link>
+                            <TextEllipsis
+                              maxW="max-w-full"
+                              fontSize="text-sm"
+                            >
+                              <span className="sidebar-label-text">{labelForSidebar(unit.name)}</span>
+                            </TextEllipsis>
+                          </Link>
+                        ) : (
+                          <span className="flex-1 overflow-hidden text-left pr-2 min-w-0 text-inherit">
+                            <TextEllipsis maxW="max-w-full" fontSize="text-sm">
+                              <span className="sidebar-label-text">{labelForSidebar(unit.name)}</span>
+                            </TextEllipsis>
+                          </span>
+                        )}
 
                         {unit.chapters?.length > 0 && (
                           <button
@@ -201,6 +220,7 @@ const SidebarNavigationTree = memo(function SidebarNavigationTree({
                                 ${isUnitOpen ? "rotate-180" : ""}
                                 ${isUnitActive ? "text-emerald-700" : "text-emerald-400"}
                               `}
+                              aria-hidden
                             />
                           </button>
                         )}
@@ -234,19 +254,28 @@ const SidebarNavigationTree = memo(function SidebarNavigationTree({
                                     }
                                   `}
                                 >
-                                  <Link
-                                    href={activeExamSlug ? `/${activeExamSlug}/${subject.slug}/${unit.slug}/${chapter.slug}` : "#"}
-                                    onClick={closeOnMobile}
-                                    title={typeof chapter.name === "string" ? chapter.name : undefined}
-                                    className="flex-1 overflow-hidden text-left cursor-pointer hover:opacity-80 transition-opacity pr-2 min-w-0"
-                                  >
-                                    <TextEllipsis
-                                      maxW="max-w-full"
-                                      fontSize="text-sm"
+                                  {activeExamSlug ? (
+                                    <Link
+                                      href={`/${activeExamSlug}/${subject.slug}/${unit.slug}/${chapter.slug}`}
+                                      onClick={closeOnMobile}
+                                      title={typeof chapter.name === "string" ? chapter.name : undefined}
+                                      className="flex-1 overflow-hidden text-left cursor-pointer hover:opacity-80 transition-opacity pr-2 min-w-0"
+                                      aria-label={labelForSidebar(chapter.name)}
                                     >
-                                      <span className="sidebar-label-text">{labelForSidebar(chapter.name)}</span>
-                                    </TextEllipsis>
-                                  </Link>
+                                      <TextEllipsis
+                                        maxW="max-w-full"
+                                        fontSize="text-sm"
+                                      >
+                                        <span className="sidebar-label-text">{labelForSidebar(chapter.name)}</span>
+                                      </TextEllipsis>
+                                    </Link>
+                                  ) : (
+                                    <span className="flex-1 overflow-hidden text-left pr-2 min-w-0 text-inherit">
+                                      <TextEllipsis maxW="max-w-full" fontSize="text-sm">
+                                        <span className="sidebar-label-text">{labelForSidebar(chapter.name)}</span>
+                                      </TextEllipsis>
+                                    </span>
+                                  )}
 
                                   {chapter.topics?.length > 0 && (
                                     <button
@@ -272,6 +301,7 @@ const SidebarNavigationTree = memo(function SidebarNavigationTree({
                                             : "text-indigo-400"
                                           }
                                         `}
+                                        aria-hidden
                                       />
                                     </button>
                                   )}
@@ -286,9 +316,9 @@ const SidebarNavigationTree = memo(function SidebarNavigationTree({
                                         topic.slug === topicSlugFromPath;
                                       const topicHref = activeExamSlug
                                         ? `/${activeExamSlug}/${subject.slug}/${unit.slug}/${chapter.slug}/${topic.slug}`
-                                        : "#";
+                                        : null;
 
-                                      return (
+                                      return topicHref ? (
                                         <Link
                                           key={topic.id}
                                           ref={
@@ -299,18 +329,31 @@ const SidebarNavigationTree = memo(function SidebarNavigationTree({
                                           title={typeof topic.name === "string" ? topic.name : undefined}
                                           className={`
                                             block w-full text-left px-2 py-1.5 rounded-md
-                                            transition-all duration-200 truncate cursor-pointer
+                                            transition-all duration-200 truncate cursor-pointer flex items-center
                                             hover:opacity-80
                                             ${isTopicActive
                                               ? "bg-rose-100/60 text-rose-700 font-medium shadow-sm"
                                               : "text-rose-700 hover:bg-rose-50 font-normal"
                                             }
                                           `}
+                                          aria-label={labelForSidebar(topic.name)}
                                         >
                                           <TextEllipsis maxW="max-w-full">
                                             <span className="sidebar-label-text">{labelForSidebar(topic.name)}</span>
                                           </TextEllipsis>
                                         </Link>
+                                      ) : (
+                                        <span
+                                          key={topic.id}
+                                          className={`
+                                            block w-full text-left px-2 py-1.5 rounded-md truncate text-rose-700 flex items-center
+                                            ${isTopicActive ? "bg-rose-100/60 font-medium" : ""}
+                                          `}
+                                        >
+                                          <TextEllipsis maxW="max-w-full">
+                                            <span className="sidebar-label-text">{labelForSidebar(topic.name)}</span>
+                                          </TextEllipsis>
+                                        </span>
                                       );
                                     })}
                                   </div>

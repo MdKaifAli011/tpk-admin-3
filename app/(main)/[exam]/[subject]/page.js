@@ -179,7 +179,7 @@ const SubjectPage = async ({ params }) => {
               {fetchedExam.name} &gt; {subject.name}
             </p>
           </div>
-          <div className="hero-right-slot shrink-0 ml-auto flex flex-col justify-center">
+          <div className="hero-right-slot shrink-0 ml-auto flex flex-col justify-center min-h-[44px]">
             <SubjectProgressClient
               subjectId={subject._id}
               subjectName={subject.name}
@@ -202,12 +202,14 @@ const SubjectPage = async ({ params }) => {
         practiceDisabled={subject.practiceDisabled || false}
       />
       {/* Navigation */}
-      <NavigationClient
-        backUrl={`/${examSlug}`}
-        backLabel={`Back to ${fetchedExam.name}`}
-        prevNav={prevNav}
-        nextNav={nextNav}
-      />
+      <nav aria-label="Previous and next subject navigation">
+        <NavigationClient
+          backUrl={`/${examSlug}`}
+          backLabel={`Back to ${fetchedExam.name}`}
+          prevNav={prevNav}
+          nextNav={nextNav}
+        />
+      </nav>
 
       {/* Test List Table */}
       <ConditionalTestListTable

@@ -153,7 +153,7 @@ export default function NotificationDropdown() {
         aria-expanded={open}
         title={unreadCount > 0 ? `${unreadCount} unread notification${unreadCount !== 1 ? "s" : ""}` : "Notifications"}
       >
-        <FaBell className="text-base sm:text-lg md:text-xl" />
+        <FaBell className="text-base sm:text-lg md:text-xl" aria-hidden />
         {unreadCount > 0 && (
           <span
             className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white"
@@ -194,7 +194,7 @@ export default function NotificationDropdown() {
                         className="flex gap-3 px-4 py-3 hover:bg-gray-50 transition-colors"
                       >
                         <span className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center bg-blue-100 text-blue-600">
-                          <Icon className="w-4 h-4" />
+                          <Icon className="w-4 h-4" aria-hidden />
                         </span>
                         <div className="min-w-0 flex-1">
                           <p className="text-sm font-medium text-gray-900 line-clamp-2">{n.title}</p>
@@ -211,7 +211,8 @@ export default function NotificationDropdown() {
             <Link
               href="/notification"
               onClick={() => setOpen(false)}
-              className="block text-center text-sm font-medium text-blue-600 hover:text-blue-800"
+              className="flex text-center text-sm font-medium text-blue-600 hover:text-blue-800 min-h-[44px] items-center justify-center"
+              aria-label="View all notifications"
             >
               View all notifications
             </Link>

@@ -2,6 +2,7 @@ import "./globals.css";
 import { SEO_DEFAULTS } from "@/constants";
 import { getSiteSettingsCustomCode } from "@/lib/getSiteSettingsCustomCode";
 import { headers } from "next/headers";
+import DeferredCustomCode from "./components/DeferredCustomCode";
 
 const TEST_DOMAIN = "app.testprepkart.in";
 
@@ -87,32 +88,15 @@ export default async function RootLayout({ children }) {
   return (
     <html lang="en">
       <head>
-        {/* Preload LCP image (logo) so it loads before Navbar mounts */}
+        <meta name="description" content={SEO_DEFAULTS.DESCRIPTION} />
         <link rel="preload" href={`${basePath}/logo.png`} as="image" />
       </head>
       <body
         className="antialiased"
         suppressHydrationWarning
       >
-        {headerCode?.trim() ? (
-          <div
-            data-custom-code-injected="server"
-            dangerouslySetInnerHTML={{ __html: headerCode }}
-            style={{ display: "none" }}
-            suppressHydrationWarning
-            aria-hidden
-          />
-        ) : null}
+        <DeferredCustomCode headerCode={headerCode} footerCode={footerCode} />
         {children}
-        {footerCode?.trim() ? (
-          <div
-            data-custom-code-injected="server"
-            dangerouslySetInnerHTML={{ __html: footerCode }}
-            style={{ display: "none" }}
-            suppressHydrationWarning
-            aria-hidden
-          />
-        ) : null}
       </body>
     </html>
   );

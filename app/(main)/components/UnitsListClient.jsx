@@ -255,7 +255,7 @@ const UnitsListClient = ({ units, subjectId, examSlug, subjectSlug }) => {
         <p className="text-sm font-semibold text-gray-900 sm:text-base mb-1">
           No units available
         </p>
-        <p className="text-xs text-gray-500 sm:text-sm">
+        <p className="text-xs text-gray-600 sm:text-sm">
           Units will appear here once they are added to this subject.
         </p>
       </div>
@@ -285,7 +285,7 @@ const UnitsListClient = ({ units, subjectId, examSlug, subjectSlug }) => {
 
         const statusMarkup = isCompleted ? (
           <span className="inline-flex h-6 w-6 items-center justify-center rounded border border-emerald-200 bg-emerald-500 text-white">
-            <FaCheck className="text-xs" />
+            <FaCheck className="text-xs" aria-hidden />
           </span>
         ) : (
           <span className="text-xs font-medium text-gray-400">Progress</span>
@@ -313,12 +313,12 @@ const UnitsListClient = ({ units, subjectId, examSlug, subjectSlug }) => {
                       {unit.name}
                     </p>
                   </Link>
-                  <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500 sm:text-sm">
+                  <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-600 sm:text-sm">
                     <span className="font-medium text-emerald-600">
                       Weightage: {weightage}
                     </span>
                     <span className="inline-flex items-center gap-1">
-                      <FaEye className="text-gray-400" />
+                      <FaEye className="text-gray-600" aria-hidden />
                       {engagement}
                     </span>
                   </div>

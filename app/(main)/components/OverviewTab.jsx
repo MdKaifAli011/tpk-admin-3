@@ -103,10 +103,11 @@ const SubTopicPreview = ({
                   <Link
                     href={subTopicUrl}
                     onClick={handleReadMore}
-                    className="group inline-flex items-center gap-2.5 px-5 py-2 bg-gradient-to-r from-indigo-600 via-indigo-600 to-indigo-700 hover:from-indigo-700 hover:via-indigo-700 hover:to-indigo-800 text-white text-sm font-semibold rounded-xl transition-all duration-300 hover:shadow-[0_8px_20px_rgba(99,102,241,0.35)] transform hover:scale-[1.02] active:scale-[0.98] shadow-[0_4px_12px_rgba(99,102,241,0.25)] disabled:opacity-70 disabled:cursor-not-allowed"
+                    className="group inline-flex items-center gap-2.5 px-5 py-2 bg-gradient-to-r from-indigo-600 via-indigo-600 to-indigo-700 hover:from-indigo-700 hover:via-indigo-700 hover:to-indigo-800 text-white text-sm font-semibold rounded-xl transition-all duration-300 hover:shadow-[0_8px_20px_rgba(99,102,241,0.35)] transform hover:scale-[1.02] active:scale-[0.98] shadow-[0_4px_12px_rgba(99,102,241,0.25)] disabled:opacity-70 disabled:cursor-not-allowed min-h-[44px]"
+                    aria-label={`Read more about ${subTopic.name}`}
                   >
                     <span className="tracking-wide">Read More</span>
-                    <FaChevronDown className="w-3 h-3 transition-transform duration-300 group-hover:translate-y-1" />
+                    <FaChevronDown className="w-3 h-3 transition-transform duration-300 group-hover:translate-y-1" aria-hidden />
                   </Link>
                 </div>
               )}
@@ -248,6 +249,8 @@ const OverviewTab = ({
 
   return (
     <div className="space-y-2 px-3 sm:px-4 py-3 sm:py-4">
+      {/* Heading order: h2 for Overview so document has h1 -> h2 -> h3 */}
+      <h2 className="sr-only">Overview content</h2>
       {/* LCP: Main prose content first so text/image paints immediately */}
       <div
         className="prose prose-sm sm:prose max-w-none prose-headings:text-gray-900 prose-headings:font-bold prose-p:text-gray-700 prose-p:leading-normal prose-a:text-indigo-600 prose-a:no-underline hover:prose-a:underline prose-strong:text-gray-900 prose-code:text-indigo-700 prose-pre:bg-gray-50"

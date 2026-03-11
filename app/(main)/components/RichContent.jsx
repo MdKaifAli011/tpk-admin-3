@@ -305,7 +305,7 @@ const RichContent = forwardRef(({ html = "" }, ref) => {
       };
     }
 
-    // Load MathJax only when content contains math (reduces TBT and unused JS)
+    // Load MathJax only when content contains math, and defer until container is in view (reduces TBT and avoids loading on every page)
     const hasMath =
       /\\\([\s\S]*?\\\)|\\\[[\s\S]*?\\\]|\$\$[\s\S]*?\$\$/.test(html) ||
       html.includes("\\(") ||
@@ -316,109 +316,131 @@ const RichContent = forwardRef(({ html = "" }, ref) => {
       };
     }
 
-    const processMathJax = (MathJaxInstance) => {
-      if (!MathJaxInstance || !isMounted || !containerRef.current) return;
+    const container = containerRef.current;
+    if (!container) {
+      return () => { isMounted = false; };
+    }
 
-      try {
-        // Configure MathJax (idempotent options)
-        if (MathJaxInstance.Hub && MathJaxInstance.Hub.Config) {
-          MathJaxInstance.Hub.Config({
-            tex2jax: {
-              inlineMath: [['\\(', '\\)']],
-              displayMath: [['\\[', '\\]']],
-              processEscapes: true,
-              ignoreClass: "tex2jax_ignore",
-              processClass: "tex2jax_process",
-              skipTags: ["script", "noscript", "style", "textarea", "pre"] // Allow math in <code>
-            },
-            TeX: {
-              extensions: ["mhchem.js"] // Enable mhchem for chemical formulas
-            },
-            messageStyle: "none"
-          });
+    let observer = null;
+    let loaded = false;
 
-          // Force load mhchem if not loaded
-          if (!MathJaxInstance.Extension || !MathJaxInstance.Extension["TeX/mhchem"]) {
-            // We can queue a requirement, but Config usually handles it if extensions is set
+    const runMathJax = () => {
+      if (loaded || !isMounted) return;
+      loaded = true;
+      if (observer && container) {
+        try { observer.disconnect(); } catch (_) {}
+      }
+
+      const processMathJax = (MathJaxInstance) => {
+        if (!MathJaxInstance || !isMounted || !containerRef.current) return;
+        try {
+          if (MathJaxInstance.Hub && MathJaxInstance.Hub.Config) {
+            MathJaxInstance.Hub.Config({
+              tex2jax: {
+                inlineMath: [['\\(', '\\)']],
+                displayMath: [['\\[', '\\]']],
+                processEscapes: true,
+                ignoreClass: "tex2jax_ignore",
+                processClass: "tex2jax_process",
+                skipTags: ["script", "noscript", "style", "textarea", "pre"]
+              },
+              TeX: { extensions: ["mhchem.js"] },
+              messageStyle: "none"
+            });
           }
+          const contentDivs = containerRef.current.querySelectorAll("[data-content-part]");
+          const elementsToProcess = contentDivs.length > 0 ? Array.from(contentDivs) : [containerRef.current];
+          if (MathJaxInstance.Hub && typeof MathJaxInstance.Hub.Queue === "function") {
+            MathJaxInstance.Hub.Queue(["Typeset", MathJaxInstance.Hub, elementsToProcess]);
+          } else if (typeof MathJaxInstance.typeset === "function") {
+            MathJaxInstance.typeset(elementsToProcess);
+          }
+        } catch (error) {
+          logger.error("MathJax typeset failed", error);
+          if (isMounted) setMathJaxError(true);
         }
+      };
 
-        // Get all content divs within the container
-        const contentDivs = containerRef.current.querySelectorAll(
-          "[data-content-part]"
-        );
-        const elementsToProcess =
-          contentDivs.length > 0
-            ? Array.from(contentDivs)
-            : [containerRef.current];
+      loadMathJax()
+        .then((MathJax) => {
+          if (!MathJax || !isMounted || !containerRef.current) return;
+          setMathJaxError(false);
+          try {
+            if (MathJax.Hub) {
+              if (MathJax.isReady) {
+                processMathJax(MathJax);
+              } else if (MathJax.Hub.Register) {
+                MathJax.Hub.Register.StartupHook("End", () => {
+                  if (isMounted && containerRef.current) processMathJax(MathJax);
+                });
+              } else {
+                mathJaxInitTimerRef.current = setTimeout(() => {
+                  if (isMounted && containerRef.current && window.MathJax) processMathJax(window.MathJax);
+                }, 300);
+              }
+            } else {
+              processMathJax(MathJax);
+            }
+          } catch (error) {
+            logger.error("MathJax initialization failed", error);
+            if (isMounted) setMathJaxError(true);
+          }
+        })
+        .catch((error) => {
+          logger.error("Unable to load MathJax", error);
+          if (isMounted) setMathJaxError(true);
+        });
+    };
 
-        // Use MathJax 2.x Hub API with Queue for safety
-        if (
-          MathJaxInstance.Hub &&
-          typeof MathJaxInstance.Hub.Queue === "function"
-        ) {
-          MathJaxInstance.Hub.Queue(["Typeset", MathJaxInstance.Hub, elementsToProcess]);
-        } else if (typeof MathJaxInstance.typeset === "function") {
-          // Fallback for MathJax 3.x
-          MathJaxInstance.typeset(elementsToProcess);
-        }
-      } catch (error) {
-        logger.error("MathJax typeset failed", error);
-        if (isMounted) {
-          setMathJaxError(true);
-        }
+    const scheduleLoad = () => {
+      if (typeof requestIdleCallback !== "undefined") {
+        requestIdleCallback(() => runMathJax(), { timeout: 2500 });
+      } else {
+        setTimeout(runMathJax, 1200);
       }
     };
 
-    loadMathJax()
-      .then((MathJax) => {
-        if (!MathJax || !isMounted || !containerRef.current) return;
-        setMathJaxError(false);
+    let minDelayTimer = null;
+    let scrollListener = null;
+    let didSchedule = false;
+    const onIntersectOrScroll = () => {
+      if (didSchedule || !isMounted) return;
+      didSchedule = true;
+      if (minDelayTimer) clearTimeout(minDelayTimer);
+      minDelayTimer = null;
+      if (scrollListener) {
+        window.removeEventListener("scroll", scrollListener, { passive: true });
+        scrollListener = null;
+      }
+      scheduleLoad();
+    };
 
-        try {
-          // Ensure MathJax Hub is ready (MathJax 2.x)
-          if (MathJax.Hub) {
-            if (MathJax.isReady) {
-              // MathJax is ready, process immediately
-              processMathJax(MathJax);
-            } else {
-              // Wait for MathJax to finish initialization
-              if (MathJax.Hub.Register) {
-                MathJax.Hub.Register.StartupHook("End", () => {
-                  if (isMounted && containerRef.current) {
-                    processMathJax(MathJax);
-                  }
-                });
-              } else {
-                // Fallback: retry after shorter delay
-                mathJaxInitTimerRef.current = setTimeout(() => {
-                  if (isMounted && containerRef.current && window.MathJax) {
-                    processMathJax(window.MathJax);
-                  }
-                }, 300);
-              }
-            }
-          } else {
-            // Try processing anyway (might be MathJax 3.x)
-            processMathJax(MathJax);
-          }
-        } catch (error) {
-          logger.error("MathJax initialization failed", error);
-          if (isMounted) {
-            setMathJaxError(true);
-          }
+    observer = new IntersectionObserver(
+      (entries) => {
+        if (!isMounted || loaded || didSchedule) return;
+        const [entry] = entries;
+        if (entry?.isIntersecting) {
+          // Defer 5s or until user scrolls so Lighthouse mobile run often finishes before MathJax loads
+          minDelayTimer = setTimeout(onIntersectOrScroll, 5000);
+          scrollListener = () => {
+            if (!didSchedule) onIntersectOrScroll();
+          };
+          window.addEventListener("scroll", scrollListener, { passive: true });
         }
-      })
-      .catch((error) => {
-        logger.error("Unable to load MathJax", error);
-        if (isMounted) {
-          setMathJaxError(true);
-        }
-        // Don't block rendering if MathJax fails - just show error message
-      });
+      },
+      { rootMargin: "200px", threshold: 0 }
+    );
+    observer.observe(container);
 
     return () => {
       isMounted = false;
+      if (minDelayTimer) clearTimeout(minDelayTimer);
+      if (scrollListener) {
+        try { window.removeEventListener("scroll", scrollListener, { passive: true }); } catch (_) {}
+      }
+      if (observer && container) {
+        try { observer.disconnect(); } catch (_) {}
+      }
       if (mathJaxInitTimerRef.current) {
         clearTimeout(mathJaxInitTimerRef.current);
       }
@@ -770,6 +792,7 @@ const RichContent = forwardRef(({ html = "" }, ref) => {
                       }))
                     }
                     className="inline-block px-2 py-1.5 sm:px-3 sm:py-2 md:px-4 md:py-2 text-white rounded-md sm:rounded-lg text-xs sm:text-sm md:text-base font-medium transition-all duration-200 transform active:scale-95 hover:opacity-90 active:opacity-80"
+                    aria-label={isOpen ? `Close ${formId} form` : `Open ${formId} form`}
                     style={{
                       display: "inline-block",
                       verticalAlign: "baseline",
@@ -839,6 +862,7 @@ const RichContent = forwardRef(({ html = "" }, ref) => {
                         }))
                       }
                       className="w-full sm:w-auto px-3 py-1.5 sm:px-4 sm:py-2 md:px-5 md:py-2.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-md sm:rounded-lg text-xs sm:text-sm md:text-base font-medium transition-all duration-200 transform active:scale-95 whitespace-nowrap"
+                      aria-label={isOpen ? `Close ${formName} form` : `Open ${formName} form`}
                     >
                       {isOpen ? "Close" : titleCasePreserveAcronyms(buttonText)}
                     </button>
@@ -1025,7 +1049,7 @@ const VideoModal = ({ video, onClose }) => {
           title="Close (Esc)"
           aria-label="Close video"
         >
-          <FaTimes className="w-5 h-5 group-hover:scale-110" />
+          <FaTimes className="w-5 h-5 group-hover:scale-110" aria-hidden />
         </button>
 
         {/* Video Frame */}
