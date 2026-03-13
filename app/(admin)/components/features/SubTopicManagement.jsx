@@ -1029,6 +1029,58 @@ const SubTopicsManagement = () => {
     }
   };
 
+  const handleBulkToggleStatus = async (selectedSubTopics, newStatus) => {
+    if (!selectedSubTopics || selectedSubTopics.length === 0) return Promise.resolve();
+    const action = newStatus === "inactive" ? "deactivate" : "activate";
+    const n = selectedSubTopics.length;
+    if (
+      !window.confirm(
+        `Are you sure you want to ${action} ${n} subtopic${n === 1 ? "" : "s"}? Their definitions will also be ${action}d.`
+      )
+    ) {
+      return Promise.resolve();
+    }
+    try {
+      setIsFormLoading(true);
+      setError(null);
+      const results = await Promise.all(
+        selectedSubTopics.map((st) =>
+          api.patch(`/subtopic/${st._id}/status`, { status: newStatus })
+        )
+      );
+      const allOk = results.every((r) => r?.data?.success);
+      if (allOk) {
+        invalidateListCachesFrom("subtopic");
+        await fetchSubTopics();
+        success(
+          n === 1
+            ? `SubTopic ${action}d successfully`
+            : `${n} subtopics ${action}d successfully`
+        );
+      } else {
+        throw new Error(
+          results.find((r) => !r?.data?.success)?.data?.message ||
+            `Failed to ${action} some subtopics`
+        );
+      }
+    } catch (error) {
+      console.error(`Error bulk ${action}ing subtopics:`, error);
+      setError(
+        error.response?.data?.message ||
+          error.message ||
+          `Failed to ${action} subtopics`
+      );
+      showError(
+        error.response?.data?.message ||
+          error.message ||
+          `Failed to ${action} subtopics`
+      );
+      throw error;
+    } finally {
+      setIsFormLoading(false);
+    }
+  };
+
   const saveReorderForTopic = async (topicId, newOrderedSubTopics) => {
     const payload = {
       subTopics: newOrderedSubTopics.map((st, i) => ({
@@ -2050,6 +2102,7 @@ const SubTopicsManagement = () => {
                 onEdit={handleEditSubTopic}
                 onDelete={handleDeleteSubTopic}
                 onToggleStatus={handleToggleStatus}
+                onBulkToggleStatus={handleBulkToggleStatus}
                 onReorderDraft={handleReorderDraft}
                 reorderDraft={reorderDraft}
                 isReorderAllowed={isReorderMode && !searchQuery.trim()}

@@ -1282,6 +1282,58 @@ const DefinitionManagement = () => {
     }
   };
 
+  const handleBulkToggleStatus = async (selectedDefinitions, newStatus) => {
+    if (!selectedDefinitions || selectedDefinitions.length === 0) return Promise.resolve();
+    const action = newStatus === "inactive" ? "deactivate" : "activate";
+    const n = selectedDefinitions.length;
+    if (
+      !window.confirm(
+        `Are you sure you want to ${action} ${n} definition${n === 1 ? "" : "s"}?`
+      )
+    ) {
+      return Promise.resolve();
+    }
+    try {
+      setIsFormLoading(true);
+      setError(null);
+      const results = await Promise.all(
+        selectedDefinitions.map((d) =>
+          api.patch(`/definition/${d._id}/status`, { status: newStatus })
+        )
+      );
+      const allOk = results.every((r) => r?.data?.success);
+      if (allOk) {
+        invalidateListCachesFrom("definition");
+        await fetchDefinitions();
+        success(
+          n === 1
+            ? `Definition ${action}d successfully`
+            : `${n} definitions ${action}d successfully`
+        );
+      } else {
+        throw new Error(
+          results.find((r) => !r?.data?.success)?.data?.message ||
+            `Failed to ${action} some definitions`
+        );
+      }
+    } catch (error) {
+      console.error(`Error bulk ${action}ing definitions:`, error);
+      setError(
+        error.response?.data?.message ||
+          error.message ||
+          `Failed to ${action} definitions`
+      );
+      showError(
+        error.response?.data?.message ||
+          error.message ||
+          `Failed to ${action} definitions`
+      );
+      throw error;
+    } finally {
+      setIsFormLoading(false);
+    }
+  };
+
   const saveReorderForSubTopic = async (subTopicId, newOrderedDefinitions) => {
     const payload = {
       definitions: newOrderedDefinitions.map((d, i) => ({
@@ -2417,6 +2469,7 @@ const DefinitionManagement = () => {
                 onEdit={handleEditDefinition}
                 onDelete={handleDeleteDefinition}
                 onToggleStatus={handleToggleStatus}
+                onBulkToggleStatus={handleBulkToggleStatus}
                 onReorderDraft={handleReorderDraft}
                 reorderDraft={reorderDraft}
                 isReorderAllowed={isReorderMode && !searchQuery.trim()}
