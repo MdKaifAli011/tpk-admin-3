@@ -13,6 +13,7 @@ const ChaptersTable = ({
   onEdit,
   onDelete,
   onToggleStatus,
+  onBulkToggleStatus,
   onReorderDraft,
   reorderDraft = {},
   isReorderAllowed = true,
@@ -21,8 +22,41 @@ const ChaptersTable = ({
   const router = useRouter();
   const [dragged, setDragged] = useState({ unitId: null, index: null });
   const [dragOver, setDragOver] = useState({ unitId: null, index: null });
+  const [selectedByUnit, setSelectedByUnit] = useState({});
 
   const canDrag = Boolean(canReorder && onReorderDraft && isReorderAllowed);
+  const canBulkToggle = Boolean(canReorder && onBulkToggleStatus);
+
+  const getSelectedForUnit = (unitId) => selectedByUnit[unitId] || new Set();
+  const toggleChapterSelection = (unitId, chapterId) => {
+    setSelectedByUnit((prev) => {
+      const set = new Set(prev[unitId] || []);
+      if (set.has(chapterId)) set.delete(chapterId);
+      else set.add(chapterId);
+      const next = { ...prev };
+      if (set.size === 0) delete next[unitId];
+      else next[unitId] = set;
+      return next;
+    });
+  };
+  const toggleSelectAllInUnit = (unitId, unitChapters) => {
+    const current = getSelectedForUnit(unitId);
+    const allIds = unitChapters.map((c) => c._id).filter(Boolean);
+    const allSelected = allIds.length > 0 && allIds.every((id) => current.has(id));
+    setSelectedByUnit((prev) => {
+      const next = { ...prev };
+      if (allSelected) delete next[unitId];
+      else next[unitId] = new Set(allIds);
+      return next;
+    });
+  };
+  const clearUnitSelection = (unitId) => {
+    setSelectedByUnit((prev) => {
+      const next = { ...prev };
+      delete next[unitId];
+      return next;
+    });
+  };
 
   // Use embedded visitStats (cron 3–4am); if missing show "—"
   const getVisitStats = (chapter) => chapter?.visitStats;
@@ -173,37 +207,99 @@ const ChaptersTable = ({
             className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm"
             style={{ animationDelay: `${groupIndex * 0.1}s` }}
           >
-            {/* Breadcrumb Header */}
+            {/* Breadcrumb Header + Bulk actions */}
             <div className="bg-gray-50 px-3 py-2 border-b border-gray-200">
-              <div className="flex items-center gap-1.5 flex-wrap text-xs font-medium text-white">
-                <span
-                  className="px-2 py-0.5 rounded-full"
-                  style={{ backgroundColor: "#10B981" }}
-                >
-                  {group.examName}
-                </span>
-                <span className="text-gray-400">›</span>
-                <span
-                  className="px-2 py-0.5 rounded-full"
-                  style={{ backgroundColor: "#9333EA" }}
-                >
-                  {group.subjectName}
-                </span>
-                <span className="text-gray-400">›</span>
-                <span
-                  className="px-2 py-0.5 rounded-full"
-                  style={{ backgroundColor: "#0056FF" }}
-                >
-                  {group.unitName}
-                </span>
-                <span className="text-gray-400">›</span>
-                <span
-                  className="px-2 py-0.5 rounded-full"
-                  style={{ backgroundColor: "#374151" }}
-                >
-                  {sortedChapters.length}{" "}
-                  {sortedChapters.length === 1 ? "Chapter" : "Chapters"}
-                </span>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-1.5 flex-wrap text-xs font-medium text-white">
+                  <span
+                    className="px-2 py-0.5 rounded-full"
+                    style={{ backgroundColor: "#10B981" }}
+                  >
+                    {group.examName}
+                  </span>
+                  <span className="text-gray-400">›</span>
+                  <span
+                    className="px-2 py-0.5 rounded-full"
+                    style={{ backgroundColor: "#9333EA" }}
+                  >
+                    {group.subjectName}
+                  </span>
+                  <span className="text-gray-400">›</span>
+                  <span
+                    className="px-2 py-0.5 rounded-full"
+                    style={{ backgroundColor: "#0056FF" }}
+                  >
+                    {group.unitName}
+                  </span>
+                  <span className="text-gray-400">›</span>
+                  <span
+                    className="px-2 py-0.5 rounded-full"
+                    style={{ backgroundColor: "#374151" }}
+                  >
+                    {sortedChapters.length}{" "}
+                    {sortedChapters.length === 1 ? "Chapter" : "Chapters"}
+                  </span>
+                </div>
+                {canBulkToggle && (() => {
+                  const selectedIds = getSelectedForUnit(group.unitId);
+                  const count = selectedIds.size;
+                  const selectedChapters = sortedChapters.filter((c) => c._id && selectedIds.has(c._id));
+                  if (count === 0) {
+                    return (
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); toggleSelectAllInUnit(group.unitId, sortedChapters); }}
+                        className="px-2.5 py-1 text-xs font-medium rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors"
+                      >
+                        Select all in this unit
+                      </button>
+                    );
+                  }
+                  return (
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-xs font-medium text-gray-600">
+                        {count} selected
+                      </span>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const p = onBulkToggleStatus(selectedChapters, "active");
+                          if (p && typeof p.then === "function") {
+                            p.then(() => clearUnitSelection(group.unitId)).catch(() => {});
+                          } else {
+                            clearUnitSelection(group.unitId);
+                          }
+                        }}
+                        className="px-2.5 py-1 text-xs font-medium rounded-lg bg-green-100 text-green-800 hover:bg-green-200 transition-colors"
+                      >
+                        Activate
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const p = onBulkToggleStatus(selectedChapters, "inactive");
+                          if (p && typeof p.then === "function") {
+                            p.then(() => clearUnitSelection(group.unitId)).catch(() => {});
+                          } else {
+                            clearUnitSelection(group.unitId);
+                          }
+                        }}
+                        className="px-2.5 py-1 text-xs font-medium rounded-lg bg-red-100 text-red-800 hover:bg-red-200 transition-colors"
+                      >
+                        Deactivate
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); clearUnitSelection(group.unitId); }}
+                        className="px-2.5 py-1 text-xs font-medium rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors"
+                      >
+                        Clear
+                      </button>
+                    </div>
+                  );
+                })()}
               </div>
             </div>
 
@@ -212,6 +308,17 @@ const ChaptersTable = ({
               <table className="min-w-full divide-y divide-gray-200 table-fixed">
                 <thead className="bg-gray-50">
                   <tr>
+                    {canBulkToggle && (
+                      <th className="px-1 py-1 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-10">
+                        <input
+                          type="checkbox"
+                          checked={sortedChapters.length > 0 && sortedChapters.every((c) => getSelectedForUnit(group.unitId).has(c._id))}
+                          onChange={() => toggleSelectAllInUnit(group.unitId, sortedChapters)}
+                          className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 h-4 w-4"
+                          title="Select all in this unit"
+                        />
+                      </th>
+                    )}
                     {canDrag && (
                       <th className="px-1 py-1 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-10">
                         Move
@@ -268,6 +375,17 @@ const ChaptersTable = ({
                         className={`hover:bg-gray-50 transition-colors ${chapter.status === "inactive" ? "opacity-60" : ""} ${isDraggedRow ? "opacity-50 ring-2 ring-blue-400" : ""
                           } ${isDragOverRow ? "bg-blue-50 border-y-2 border-blue-200" : ""}`}
                       >
+                        {canBulkToggle && (
+                          <td className="px-1 py-2 text-center w-10" onClick={(e) => e.stopPropagation()}>
+                            <input
+                              type="checkbox"
+                              checked={getSelectedForUnit(group.unitId).has(chapter._id)}
+                              onChange={() => toggleChapterSelection(group.unitId, chapter._id)}
+                              className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 h-4 w-4"
+                              title="Select chapter"
+                            />
+                          </td>
+                        )}
                         {canDrag && (
                           <td
                             className="px-1 py-2 text-center w-10 cursor-grab active:cursor-grabbing"
@@ -438,6 +556,17 @@ const ChaptersTable = ({
                       } ${isDragOverRow ? "bg-blue-50 border-2 border-blue-200 rounded" : ""}`}
                   >
                     <div className="flex justify-between items-start gap-2">
+                      {canBulkToggle && (
+                        <div className="shrink-0 pt-0.5" onClick={(e) => e.stopPropagation()}>
+                          <input
+                            type="checkbox"
+                            checked={getSelectedForUnit(group.unitId).has(chapter._id)}
+                            onChange={() => toggleChapterSelection(group.unitId, chapter._id)}
+                            className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 h-4 w-4"
+                            title="Select chapter"
+                          />
+                        </div>
+                      )}
                       {canDrag && (
                         <div
                           className="shrink-0 pt-0.5 cursor-grab active:cursor-grabbing text-gray-400"

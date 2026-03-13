@@ -812,6 +812,58 @@ const ChaptersManagement = () => {
     }
   };
 
+  const handleBulkToggleStatus = async (selectedChapters, newStatus) => {
+    if (!selectedChapters || selectedChapters.length === 0) return Promise.resolve();
+    const action = newStatus === "inactive" ? "deactivate" : "activate";
+    const n = selectedChapters.length;
+    if (
+      !window.confirm(
+        `Are you sure you want to ${action} ${n} chapter${n === 1 ? "" : "s"}? Their topics and related content will also be ${action}d.`
+      )
+    ) {
+      return Promise.resolve();
+    }
+    try {
+      setIsFormLoading(true);
+      setError(null);
+      const results = await Promise.all(
+        selectedChapters.map((chapter) =>
+          api.patch(`/chapter/${chapter._id}/status`, { status: newStatus })
+        )
+      );
+      const allOk = results.every((r) => r?.data?.success);
+      if (allOk) {
+        invalidateListCachesFrom("chapter");
+        await fetchChapters();
+        success(
+          n === 1
+            ? `Chapter ${action}d successfully`
+            : `${n} chapters ${action}d successfully`
+        );
+      } else {
+        throw new Error(
+          results.find((r) => !r?.data?.success)?.data?.message ||
+            `Failed to ${action} some chapters`
+        );
+      }
+    } catch (error) {
+      console.error(`Error bulk ${action}ing chapters:`, error);
+      setError(
+        error.response?.data?.message ||
+          error.message ||
+          `Failed to ${action} chapters`
+      );
+      showError(
+        error.response?.data?.message ||
+          error.message ||
+          `Failed to ${action} chapters`
+      );
+      throw error;
+    } finally {
+      setIsFormLoading(false);
+    }
+  };
+
   const saveReorderForUnit = async (unitId, newOrderedChapters) => {
     const payload = {
       chapters: newOrderedChapters.map((c, i) => ({
@@ -1802,6 +1854,7 @@ const ChaptersManagement = () => {
                   onEdit={handleEditChapter}
                   onDelete={handleDeleteChapter}
                   onToggleStatus={handleToggleStatus}
+                  onBulkToggleStatus={handleBulkToggleStatus}
                   onReorderDraft={handleReorderDraft}
                   reorderDraft={reorderDraft}
                   isReorderAllowed={isReorderMode && !searchQuery.trim()}
