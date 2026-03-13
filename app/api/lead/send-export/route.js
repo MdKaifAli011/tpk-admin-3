@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAuth } from "@/middleware/authMiddleware";
-import { config } from "@/config/config";
+import { getEmailSettings } from "@/lib/getEmailSettings";
 import { sendMail } from "@/lib/mailer";
 import { successResponse, errorResponse } from "@/utils/apiResponse";
 
@@ -31,9 +31,10 @@ export async function POST(request) {
     const dateTimeStr = now.toISOString().slice(0, 16).replace("T", " ");
     const subject = `${dateTimeStr} (${count}) & (${total})`;
 
-    const to = config.leadExportMailTo;
+    const settings = await getEmailSettings();
+    const to = (settings.leadExportMailTo || "").trim();
     if (!to) {
-      return errorResponse("Lead export email (LEAD_EXPORT_MAIL_TO) not configured", 500);
+      return errorResponse("Lead export email not configured. Set it in Admin → Email & Notifications.", 500);
     }
 
     const filename = `leads_${now.toISOString().split("T")[0]}.csv`;

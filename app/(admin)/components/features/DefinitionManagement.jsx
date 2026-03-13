@@ -11,13 +11,27 @@ import { LoadingWrapper, SkeletonChaptersTable, LoadingSpinner } from "../ui/Ske
 import { FaEdit, FaPlus, FaTimes, FaLock, FaSearch, FaCheck, FaGripVertical } from "react-icons/fa";
 import { ToastContainer, useToast } from "../ui/Toast";
 import api from "@/lib/api";
-import { getDefinitionListCache, setDefinitionListCache } from "@/lib/definitionListCache";
+import { setDefinitionListCache } from "@/lib/definitionListCache";
 import { invalidateListCachesFrom } from "@/lib/listCacheInvalidation";
 import { usePermissions, getPermissionMessage } from "../../hooks/usePermissions";
 import { IoFilterOutline } from "react-icons/io5";
+import { useFilterPersistence } from "../../hooks/useFilterPersistence";
+import PaginationBar from "../ui/PaginationBar";
 
 const DefinitionManagement = () => {
   const { canCreate, canEdit, canDelete, canReorder, role } = usePermissions();
+  const [filterState, setFilterState] = useFilterPersistence("definition", {
+    filterExam: "",
+    filterSubject: "",
+    filterUnit: "",
+    filterChapter: "",
+    filterTopic: "",
+    filterSubTopic: "",
+    searchQuery: "",
+    metaFilter: "all",
+  });
+  const { page, limit, filterExam, filterSubject, filterUnit, filterChapter, filterTopic, filterSubTopic, searchQuery, metaFilter } = filterState;
+
   const { toasts, removeToast, success, error: showError } = useToast();
   const [showAddForm, setShowAddForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
@@ -26,16 +40,22 @@ const DefinitionManagement = () => {
   const [isFormLoading, setIsFormLoading] = useState(false);
   const [error, setError] = useState(null);
   const [definitions, setDefinitions] = useState([]);
+  const [pagination, setPagination] = useState({
+    total: 0,
+    totalPages: 0,
+    hasNextPage: false,
+    hasPrevPage: false,
+  });
   const [exams, setExams] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [units, setUnits] = useState([]);
-  const [filterUnits, setFilterUnits] = useState([]); // Separate units for filter section
+  const [filterUnits, setFilterUnits] = useState([]);
   const [chapters, setChapters] = useState([]);
-  const [filterChapters, setFilterChapters] = useState([]); // Separate chapters for filter section
+  const [filterChapters, setFilterChapters] = useState([]);
   const [topics, setTopics] = useState([]);
-  const [filterTopics, setFilterTopics] = useState([]); // Separate topics for filter section
+  const [filterTopics, setFilterTopics] = useState([]);
   const [subTopics, setSubTopics] = useState([]);
-  const [filterSubTopics, setFilterSubTopics] = useState([]); // Separate subtopics for filter section
+  const [filterSubTopics, setFilterSubTopics] = useState([]);
   const [formData, setFormData] = useState({
     name: "",
     examId: "",
@@ -62,31 +82,43 @@ const DefinitionManagement = () => {
   const [nextOrderNumber, setNextOrderNumber] = useState(1);
   const [formError, setFormError] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
-  const [filterExam, setFilterExam] = useState("");
-  const [filterSubject, setFilterSubject] = useState("");
-  const [filterUnit, setFilterUnit] = useState("");
-  const [filterChapter, setFilterChapter] = useState("");
-  const [filterTopic, setFilterTopic] = useState("");
-  const [filterSubTopic, setFilterSubTopic] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
   const [isReorderMode, setIsReorderMode] = useState(false);
   const [reorderDraft, setReorderDraft] = useState({});
   const isFetchingRef = useRef(false);
-  const [metaFilter, setMetaFilter] = useState("all"); // all, filled, notFilled
 
-  // Fetch definitions from API using Axios (and update cache)
+  // Fetch definitions from API with server-side topicId/subTopicId + pagination
   const fetchDefinitions = useCallback(async () => {
     if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
     try {
-      isFetchingRef.current = true;
       setIsDataLoading(true);
       setError(null);
-      const response = await api.get(`/definition?status=all&limit=10000&metaStatus=${metaFilter}`);
+      const params = new URLSearchParams();
+      params.set("status", "all");
+      params.set("metaStatus", metaFilter);
+      params.set("page", String(page));
+      params.set("limit", String(limit));
+      if (filterExam) params.set("examId", filterExam);
+      if (filterSubject) params.set("subjectId", filterSubject);
+      if (filterUnit) params.set("unitId", filterUnit);
+      if (filterChapter) params.set("chapterId", filterChapter);
+      if (filterTopic) params.set("topicId", filterTopic);
+      if (filterSubTopic) params.set("subTopicId", filterSubTopic);
+      const response = await api.get(`/definition?${params.toString()}`);
 
       if (response.data.success) {
         const fetchedDefinitions = response.data.data || [];
         setDefinitions(fetchedDefinitions);
         setDefinitionListCache(fetchedDefinitions, metaFilter);
+        const pag = response.data?.pagination;
+        if (pag) {
+          setPagination({
+            total: pag.total ?? 0,
+            totalPages: pag.totalPages ?? 0,
+            hasNextPage: !!pag.hasNextPage,
+            hasPrevPage: !!pag.hasPrevPage,
+          });
+        }
       } else {
         throw new Error(response.data.message || "Failed to fetch definitions");
       }
@@ -101,19 +133,11 @@ const DefinitionManagement = () => {
       setIsDataLoading(false);
       isFetchingRef.current = false;
     }
-  }, [metaFilter]);
+  }, [metaFilter, page, limit, filterExam, filterSubject, filterUnit, filterChapter, filterTopic, filterSubTopic]);
 
-  // Load definitions: use cache when returning from detail (no API call), otherwise fetch once
   useEffect(() => {
-    const cached = getDefinitionListCache(metaFilter);
-    if (cached != null && Array.isArray(cached)) {
-      setDefinitions(cached);
-      setIsDataLoading(false);
-      setError(null);
-      return;
-    }
     fetchDefinitions();
-  }, [metaFilter, fetchDefinitions]);
+  }, [fetchDefinitions]);
 
   // Fetch exams from API
   const fetchExams = useCallback(async () => {
@@ -252,9 +276,7 @@ const DefinitionManagement = () => {
 
 
   useEffect(() => {
-    fetchExams();
-    fetchSubjects();
-    // Don't fetch units, topics, and subtopics on mount - will fetch when parent is selected
+    Promise.all([fetchExams(), fetchSubjects()]);
   }, [fetchExams, fetchSubjects]);
 
   // Auto-clear error after 5 seconds with cleanup
@@ -574,50 +596,9 @@ const DefinitionManagement = () => {
     );
   }, [filterSubTopics, filterTopic]);
 
-  // Filter definitions based on filters
+  // Filter definitions by search only (hierarchy filter is done by API)
   const filteredDefinitions = useMemo(() => {
     let result = definitions;
-    if (filterExam) {
-      result = result.filter(
-        (definition) =>
-          definition.examId?._id === filterExam || definition.examId === filterExam
-      );
-    }
-    if (filterSubject) {
-      result = result.filter(
-        (definition) =>
-          definition.subjectId?._id === filterSubject ||
-          definition.subjectId === filterSubject
-      );
-    }
-    if (filterUnit) {
-      result = result.filter(
-        (definition) =>
-          definition.unitId?._id === filterUnit || definition.unitId === filterUnit
-      );
-    }
-    if (filterChapter) {
-      result = result.filter(
-        (definition) =>
-          definition.chapterId?._id === filterChapter ||
-          definition.chapterId === filterChapter
-      );
-    }
-    if (filterTopic) {
-      result = result.filter(
-        (definition) =>
-          definition.topicId?._id === filterTopic ||
-          definition.topicId === filterTopic
-      );
-    }
-    if (filterSubTopic) {
-      result = result.filter(
-        (definition) =>
-          definition.subTopicId?._id === filterSubTopic ||
-          definition.subTopicId === filterSubTopic
-      );
-    }
-    // Search filter
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim();
       result = result.filter((definition) =>
@@ -625,7 +606,7 @@ const DefinitionManagement = () => {
       );
     }
     return result;
-  }, [definitions, filterExam, filterSubject, filterUnit, filterChapter, filterTopic, filterSubTopic, searchQuery]);
+  }, [definitions, searchQuery]);
 
   // Get active filter count
   const activeFilterCount =
@@ -634,16 +615,21 @@ const DefinitionManagement = () => {
     (filterUnit ? 1 : 0) +
     (filterChapter ? 1 : 0) +
     (filterTopic ? 1 : 0) +
-    (filterSubTopic ? 1 : 0);
+    (filterSubTopic ? 1 : 0) +
+    (searchQuery ? 1 : 0);
 
   // Clear all filters
   const clearFilters = () => {
-    setFilterExam("");
-    setFilterSubject("");
-    setFilterUnit("");
-    setFilterChapter("");
-    setFilterTopic("");
-    setFilterSubTopic("");
+    setFilterState({
+      filterExam: "",
+      filterSubject: "",
+      filterUnit: "",
+      filterChapter: "",
+      filterTopic: "",
+      filterSubTopic: "",
+      searchQuery: "",
+      page: 1,
+    });
   };
 
   const handleFormChange = (e) => {
@@ -2065,7 +2051,7 @@ const DefinitionManagement = () => {
                       type="text"
                       placeholder="Search..."
                       value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onChange={(e) => setFilterState((prev) => ({ ...prev, searchQuery: e.target.value, page: 1 }))}
                       className="w-full sm:w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                     />
                   </div>
@@ -2073,7 +2059,7 @@ const DefinitionManagement = () => {
                     <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Meta Status:</label>
                     <select
                       value={metaFilter}
-                      onChange={(e) => setMetaFilter(e.target.value)}
+                      onChange={(e) => setFilterState((prev) => ({ ...prev, metaFilter: e.target.value, page: 1 }))}
                       className="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-medium focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                     >
                       <option value="all">All Items</option>
@@ -2112,12 +2098,16 @@ const DefinitionManagement = () => {
                     <select
                       value={filterExam}
                       onChange={(e) => {
-                        setFilterExam(e.target.value);
-                        setFilterSubject("");
-                        setFilterUnit("");
-                        setFilterChapter("");
-                        setFilterTopic("");
-                        setFilterSubTopic("");
+                        setFilterState((prev) => ({
+                          ...prev,
+                          filterExam: e.target.value,
+                          filterSubject: "",
+                          filterUnit: "",
+                          filterChapter: "",
+                          filterTopic: "",
+                          filterSubTopic: "",
+                          page: 1,
+                        }));
                       }}
                       className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-all"
                     >
@@ -2138,11 +2128,15 @@ const DefinitionManagement = () => {
                     <select
                       value={filterSubject}
                       onChange={(e) => {
-                        setFilterSubject(e.target.value);
-                        setFilterUnit("");
-                        setFilterChapter("");
-                        setFilterTopic("");
-                        setFilterSubTopic("");
+                        setFilterState((prev) => ({
+                          ...prev,
+                          filterSubject: e.target.value,
+                          filterUnit: "",
+                          filterChapter: "",
+                          filterTopic: "",
+                          filterSubTopic: "",
+                          page: 1,
+                        }));
                       }}
                       disabled={!filterExam}
                       className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm bg-white disabled:bg-gray-100 disabled:text-gray-400"
@@ -2166,10 +2160,14 @@ const DefinitionManagement = () => {
                     <select
                       value={filterUnit}
                       onChange={(e) => {
-                        setFilterUnit(e.target.value);
-                        setFilterChapter("");
-                        setFilterTopic("");
-                        setFilterSubTopic("");
+                        setFilterState((prev) => ({
+                          ...prev,
+                          filterUnit: e.target.value,
+                          filterChapter: "",
+                          filterTopic: "",
+                          filterSubTopic: "",
+                          page: 1,
+                        }));
                       }}
                       disabled={!filterSubject}
                       className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm bg-white disabled:bg-gray-100 disabled:text-gray-400"
@@ -2193,9 +2191,13 @@ const DefinitionManagement = () => {
                     <select
                       value={filterChapter}
                       onChange={(e) => {
-                        setFilterChapter(e.target.value);
-                        setFilterTopic("");
-                        setFilterSubTopic("");
+                        setFilterState((prev) => ({
+                          ...prev,
+                          filterChapter: e.target.value,
+                          filterTopic: "",
+                          filterSubTopic: "",
+                          page: 1,
+                        }));
                       }}
                       disabled={!filterUnit}
                       className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm bg-white disabled:bg-gray-100 disabled:text-gray-400"
@@ -2219,8 +2221,12 @@ const DefinitionManagement = () => {
                     <select
                       value={filterTopic}
                       onChange={(e) => {
-                        setFilterTopic(e.target.value);
-                        setFilterSubTopic("");
+                        setFilterState((prev) => ({
+                          ...prev,
+                          filterTopic: e.target.value,
+                          filterSubTopic: "",
+                          page: 1,
+                        }));
                       }}
                       disabled={!filterChapter}
                       className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm bg-white disabled:bg-gray-100 disabled:text-gray-400"
@@ -2243,7 +2249,7 @@ const DefinitionManagement = () => {
                     </label>
                     <select
                       value={filterSubTopic}
-                      onChange={(e) => setFilterSubTopic(e.target.value)}
+                      onChange={(e) => setFilterState((prev) => ({ ...prev, filterSubTopic: e.target.value, page: 1 }))}
                       disabled={!filterTopic}
                       className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm bg-white disabled:bg-gray-100 disabled:text-gray-400"
                     >
@@ -2271,12 +2277,16 @@ const DefinitionManagement = () => {
                         {exams.find((e) => e._id === filterExam)?.name || "N/A"}
                         <button
                           onClick={() => {
-                            setFilterExam("");
-                            setFilterSubject("");
-                            setFilterUnit("");
-                            setFilterChapter("");
-                            setFilterTopic("");
-                            setFilterSubTopic("");
+                            setFilterState((prev) => ({
+                              ...prev,
+                              filterExam: "",
+                              filterSubject: "",
+                              filterUnit: "",
+                              filterChapter: "",
+                              filterTopic: "",
+                              filterSubTopic: "",
+                              page: 1,
+                            }));
                           }}
                           className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"
                         >
@@ -2291,11 +2301,15 @@ const DefinitionManagement = () => {
                           "N/A"}
                         <button
                           onClick={() => {
-                            setFilterSubject("");
-                            setFilterUnit("");
-                            setFilterChapter("");
-                            setFilterTopic("");
-                            setFilterSubTopic("");
+                            setFilterState((prev) => ({
+                              ...prev,
+                              filterSubject: "",
+                              filterUnit: "",
+                              filterChapter: "",
+                              filterTopic: "",
+                              filterSubTopic: "",
+                              page: 1,
+                            }));
                           }}
                           className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"
                         >
@@ -2309,10 +2323,14 @@ const DefinitionManagement = () => {
                         {filterUnits.find((u) => u._id === filterUnit)?.name || "N/A"}
                         <button
                           onClick={() => {
-                            setFilterUnit("");
-                            setFilterChapter("");
-                            setFilterTopic("");
-                            setFilterSubTopic("");
+                            setFilterState((prev) => ({
+                              ...prev,
+                              filterUnit: "",
+                              filterChapter: "",
+                              filterTopic: "",
+                              filterSubTopic: "",
+                              page: 1,
+                            }));
                           }}
                           className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"
                         >
@@ -2326,9 +2344,13 @@ const DefinitionManagement = () => {
                         {filterChapters.find((c) => c._id === filterChapter)?.name || "N/A"}
                         <button
                           onClick={() => {
-                            setFilterChapter("");
-                            setFilterTopic("");
-                            setFilterSubTopic("");
+                            setFilterState((prev) => ({
+                              ...prev,
+                              filterChapter: "",
+                              filterTopic: "",
+                              filterSubTopic: "",
+                              page: 1,
+                            }));
                           }}
                           className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"
                         >
@@ -2342,8 +2364,12 @@ const DefinitionManagement = () => {
                         {filterTopics.find((t) => t._id === filterTopic)?.name || "N/A"}
                         <button
                           onClick={() => {
-                            setFilterTopic("");
-                            setFilterSubTopic("");
+                            setFilterState((prev) => ({
+                              ...prev,
+                              filterTopic: "",
+                              filterSubTopic: "",
+                              page: 1,
+                            }));
                           }}
                           className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"
                         >
@@ -2356,10 +2382,19 @@ const DefinitionManagement = () => {
                         SubTopic:{" "}
                         {filterSubTopics.find((st) => st._id === filterSubTopic)?.name || "N/A"}
                         <button
-                          onClick={() => {
-                            setFilterSubTopic("");
-                          }}
+                          onClick={() => setFilterState((prev) => ({ ...prev, filterSubTopic: "", page: 1 }))}
                           className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"
+                        >
+                          <FaTimes className="w-3 h-3" />
+                        </button>
+                      </span>
+                    )}
+                    {searchQuery && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">
+                        Search: &quot;{searchQuery}&quot;
+                        <button
+                          onClick={() => setFilterState((prev) => ({ ...prev, searchQuery: "", page: 1 }))}
+                          className="hover:bg-gray-200 rounded-full p-0.5 transition-colors"
                         >
                           <FaTimes className="w-3 h-3" />
                         </button>
@@ -2385,6 +2420,16 @@ const DefinitionManagement = () => {
                 onReorderDraft={handleReorderDraft}
                 reorderDraft={reorderDraft}
                 isReorderAllowed={isReorderMode && !searchQuery.trim()}
+              />
+              <PaginationBar
+                page={page}
+                limit={limit}
+                total={pagination.total}
+                totalPages={pagination.totalPages}
+                hasNextPage={pagination.hasNextPage}
+                hasPrevPage={pagination.hasPrevPage}
+                onPageChange={(p) => setFilterState((prev) => ({ ...prev, page: p }))}
+                onLimitChange={(l) => setFilterState((prev) => ({ ...prev, limit: l, page: 1 }))}
               />
             </div>
           </div>

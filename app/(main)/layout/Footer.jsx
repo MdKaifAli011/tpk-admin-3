@@ -49,7 +49,7 @@ const Footer = () => {
             <Link href="https://www.testprepkart.com" aria-label="Testprepkart home">
               <Image
                 src={`${basePath}/logo.png`}
-                alt="Testprepkart Logo"
+                  alt="Testprepkart Logo"
                 width={150}
                 height={150}
                 className="w-24 sm:w-28 md:w-32 lg:w-36 h-auto"
@@ -66,7 +66,7 @@ const Footer = () => {
 
             {/* CTA Button */}
             <Link
-              href="/contact"
+              href="https://www.testprepkart.com/contact"
               className="inline-flex items-center justify-center gap-2 min-h-[44px] min-w-[44px] px-4 py-2 text-sm font-semibold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 text-white rounded-lg hover:from-indigo-700 hover:via-purple-700 hover:to-pink-600 transition-all shadow-md hover:shadow-lg"
               aria-label="Contact us"
             >
@@ -179,7 +179,7 @@ const Footer = () => {
               </li>
               <li className="flex items-start gap-2 text-gray-600 text-sm">
                 <FaEnvelope className="text-gray-400 mt-0.5 shrink-0 text-sm" />
-                <span>E-mail: info@testprepkart.com</span>
+                <span>E-mail: contact@rayofhopebihar.org</span>
               </li>
               <li className="flex items-start gap-2 text-gray-600 text-sm">
                 <FaBuilding className="text-gray-400 mt-0.5 shrink-0 text-sm" />
@@ -191,51 +191,11 @@ const Footer = () => {
 
             {/* Social Media Icons */}
             <div className="flex items-center gap-3 mt-6">
-
-
-
-              {/* Facebook */}
-              <a
-                href="https://www.facebook.com/testprepkart"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <FaFacebook className="text-gray-400 text-lg cursor-pointer hover:text-blue-600 transition-colors" />
-              </a>
-              {/* Instagram */}
-              <a
-                href="https://www.instagram.com/testprepkartonline"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <FaInstagram className="text-gray-400 text-lg cursor-pointer hover:text-pink-600 transition-colors" />
-              </a>
-              {/* YouTube */}
-              <a
-                href="https://www.youtube.com/@Testprepkart"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <FaYoutube className="text-gray-400 text-lg cursor-pointer hover:text-red-600 transition-colors" />
-              </a>
-              {/* LinkedIn */}
-              <a
-                href="https://www.linkedin.com/company/testprepkart"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <FaLinkedin className="text-gray-400 text-lg cursor-pointer hover:text-blue-700 transition-colors" />
-              </a>
-
-              {/* WhatsApp */}
-              <a
-                href="https://api.whatsapp.com/send?phone=15107069331"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <FaWhatsapp className="text-gray-400 text-lg cursor-pointer hover:text-green-500 transition-colors" />
-              </a>
-
+              <FaYoutube className="text-gray-400 text-lg cursor-pointer hover:text-red-600 transition-colors" />
+              <FaFacebook className="text-gray-400 text-lg cursor-pointer hover:text-blue-600 transition-colors" />
+              <FaTwitter className="text-gray-400 text-lg cursor-pointer hover:text-blue-400 transition-colors" />
+              <FaInstagram className="text-gray-400 text-lg cursor-pointer hover:text-pink-600 transition-colors" />
+              <FaLinkedin className="text-gray-400 text-lg cursor-pointer hover:text-blue-700 transition-colors" />
             </div>
           </div>
         </div>

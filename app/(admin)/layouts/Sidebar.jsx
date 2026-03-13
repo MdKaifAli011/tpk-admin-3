@@ -108,6 +108,7 @@ const ALL_MENU_ITEMS = [
       { name: "Meta Import", href: "/admin/seo-import" },
       { name: "URL Export", href: "/admin/url-export" },
       { name: "Site Settings", href: "/admin/site-settings" },
+      { name: "Email & Notifications", href: "/admin/email-settings" },
     ],
   },
 ];
@@ -138,8 +139,25 @@ const Sidebar = memo(({ isOpen, onClose }) => {
     }
   }, []);
 
+  // Debounce refetch on focus: only if last fetch was > 60s ago
+  const discussionCountsLastFetchedRef = React.useRef(0);
+  const DISCUSSION_DEBOUNCE_MS = 60 * 1000;
+
   useEffect(() => {
-    fetchDiscussionCounts();
+    fetchDiscussionCounts().then(() => {
+      discussionCountsLastFetchedRef.current = Date.now();
+    });
+  }, [fetchDiscussionCounts]);
+
+  useEffect(() => {
+    const onFocus = () => {
+      const now = Date.now();
+      if (now - discussionCountsLastFetchedRef.current < DISCUSSION_DEBOUNCE_MS) return;
+      discussionCountsLastFetchedRef.current = now;
+      fetchDiscussionCounts();
+    };
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
   }, [fetchDiscussionCounts]);
 
   // Update counts when discussion page approves/unapproves/deletes (no extra API call)
@@ -160,7 +178,12 @@ const Sidebar = memo(({ isOpen, onClose }) => {
         setDiscussionReplyPendingCount((prev) => Math.max(0, prev + d.delta));
       }
     };
-    const handleRefetch = () => fetchDiscussionCounts();
+    const handleRefetch = () => {
+      discussionCountsLastFetchedRef.current = 0;
+      fetchDiscussionCounts().then(() => {
+        discussionCountsLastFetchedRef.current = Date.now();
+      });
+    };
     window.addEventListener("admin-discussion-pending-updated", handleUpdate);
     window.addEventListener("admin-discussion-reply-pending-updated", handleReplyPendingUpdate);
     window.addEventListener("admin-discussion-pending-refetch", handleRefetch);
@@ -169,13 +192,6 @@ const Sidebar = memo(({ isOpen, onClose }) => {
       window.removeEventListener("admin-discussion-reply-pending-updated", handleReplyPendingUpdate);
       window.removeEventListener("admin-discussion-pending-refetch", handleRefetch);
     };
-  }, [fetchDiscussionCounts]);
-
-  // Refetch on window focus so new pending (e.g. from student) shows
-  useEffect(() => {
-    const onFocus = () => fetchDiscussionCounts();
-    window.addEventListener("focus", onFocus);
-    return () => window.removeEventListener("focus", onFocus);
   }, [fetchDiscussionCounts]);
 
   // Overview Comments pending count (single fetch + event updates)
@@ -190,8 +206,24 @@ const Sidebar = memo(({ isOpen, onClose }) => {
     }
   }, []);
 
+  const overviewCommentLastFetchedRef = React.useRef(0);
+  const OVERVIEW_DEBOUNCE_MS = 60 * 1000;
+
   useEffect(() => {
-    fetchOverviewCommentPendingCount();
+    fetchOverviewCommentPendingCount().then(() => {
+      overviewCommentLastFetchedRef.current = Date.now();
+    });
+  }, [fetchOverviewCommentPendingCount]);
+
+  useEffect(() => {
+    const onFocus = () => {
+      const now = Date.now();
+      if (now - overviewCommentLastFetchedRef.current < OVERVIEW_DEBOUNCE_MS) return;
+      overviewCommentLastFetchedRef.current = now;
+      fetchOverviewCommentPendingCount();
+    };
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
   }, [fetchOverviewCommentPendingCount]);
 
   useEffect(() => {
@@ -203,19 +235,18 @@ const Sidebar = memo(({ isOpen, onClose }) => {
         setOverviewCommentPendingCount((c) => Math.max(0, c + d.delta));
       }
     };
-    const handleRefetch = () => fetchOverviewCommentPendingCount();
+    const handleRefetch = () => {
+      overviewCommentLastFetchedRef.current = 0;
+      fetchOverviewCommentPendingCount().then(() => {
+        overviewCommentLastFetchedRef.current = Date.now();
+      });
+    };
     window.addEventListener("admin-overview-comment-pending-updated", handleUpdate);
     window.addEventListener("admin-overview-comment-pending-refetch", handleRefetch);
     return () => {
       window.removeEventListener("admin-overview-comment-pending-updated", handleUpdate);
       window.removeEventListener("admin-overview-comment-pending-refetch", handleRefetch);
     };
-  }, [fetchOverviewCommentPendingCount]);
-
-  useEffect(() => {
-    const onFocus = () => fetchOverviewCommentPendingCount();
-    window.addEventListener("focus", onFocus);
-    return () => window.removeEventListener("focus", onFocus);
   }, [fetchOverviewCommentPendingCount]);
 
   // Get user role from localStorage (memoized)

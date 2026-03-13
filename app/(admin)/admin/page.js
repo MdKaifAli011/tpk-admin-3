@@ -17,6 +17,7 @@ import {
   FaGraduationCap,
   FaImage,
   FaCog,
+  FaEnvelope,
 } from "react-icons/fa";
 import { LoadingSpinner } from "../components/ui/SkeletonLoader";
 import api from "@/lib/api";
@@ -200,6 +201,15 @@ const AdminDashboard = () => {
         color: "from-slate-500 to-slate-600",
         bgColor: "bg-slate-50",
         textColor: "text-slate-600",
+        count: 0,
+      },
+      {
+        name: "Email & Notifications",
+        href: "/admin/email-settings",
+        icon: FaEnvelope,
+        color: "from-indigo-500 to-indigo-600",
+        bgColor: "bg-indigo-50",
+        textColor: "text-indigo-600",
         count: 0,
       },
     ];

@@ -1,6 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
-import Link from "next/link";
+import React from "react";
 import ContactForm from "../components/ContactForm";
 import {
   FaPhone,
@@ -22,26 +21,8 @@ import {
 } from "react-icons/fa";
 import CounselorModal from "../components/CounselorModal";
 import TrialModal from "../components/TrialModal";
-import { fetchExams, createSlug } from "../lib/api";
-import { STATUS } from "@/constants";
 
 const ContactPage = () => {
-  const [exams, setExams] = useState([]);
-
-  useEffect(() => {
-    let cancelled = false;
-    const load = async () => {
-      try {
-        const list = await fetchExams({ limit: 50, status: STATUS.ACTIVE });
-        if (!cancelled && Array.isArray(list)) setExams(list);
-      } catch (e) {
-        if (!cancelled) setExams([]);
-      }
-    };
-    load();
-    return () => { cancelled = true; };
-  }, []);
-
   const contactInfo = [
     {
       icon: FaPhone,
@@ -55,7 +36,7 @@ const ContactPage = () => {
     {
       icon: FaEnvelope,
       title: "Our Email Address",
-      details: [{ label: "", value: "info@testprepkart.com" }],
+      details: [{ label: "", value: "contact@rayofhopebihar.org" }],
       color: "bg-purple-50 text-purple-600",
     },
     {
@@ -101,22 +82,17 @@ const ContactPage = () => {
     {
       icon: FaChalkboardTeacher,
       title: "Explore our courses",
-      description: exams.length > 0 ? exams.map((e) => e.name).join(", ") : "NEET, JEE, SAT, AP, IB, CBSE",
+      description: "NEET, JEE, SAT, AP, IB, CBSE",
       color: "bg-purple-500",
       type: "explore",
-      items: exams.length > 0
-        ? exams.map((exam) => ({
-            name: exam.name,
-            url: `/${createSlug(exam.name)}/course`,
-          }))
-        : [
-            { name: "NEET", url: "/neet/course" },
-            { name: "JEE", url: "/jee/course" },
-            { name: "SAT", url: "/sat/course" },
-            { name: "AP", url: "/ap/course" },
-            { name: "IB", url: "/ib/course" },
-            { name: "CBSE", url: "/cbse/course" },
-          ],
+      items: [
+        { name: "NEET", url: "https://www.testprepkart.com/neet" },
+        { name: "JEE", url: "https://www.testprepkart.com/jee" },
+        { name: "SAT", url: "https://www.testprepkart.com/sat" },
+        { name: "AP", url: "https://www.testprepkart.com/ap" },
+        { name: "IB", url: "https://www.testprepkart.com/ib" },
+        { name: "CBSE", url: "https://www.testprepkart.com/cbse" },
+      ],
     },
   ];
 
@@ -259,14 +235,16 @@ const ContactPage = () => {
                 {item.type === "explore" ? (
                   <div className="flex flex-wrap gap-2 mt-2">
                     {item.items.map((course, idx) => (
-                      <Link
+                      <a
                         key={idx}
                         href={course.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="px-2 py-1 bg-purple-50 text-purple-700 text-xs font-bold rounded-md hover:bg-purple-100 transition-colors uppercase"
                         onClick={(e) => e.stopPropagation()}
                       >
                         {course.name}
-                      </Link>
+                      </a>
                     ))}
                   </div>
                 ) : (
@@ -311,17 +289,16 @@ const ContactPage = () => {
               <FaInstagram className="text-xl" />
             </a>
 
-            {/* YouTube */}
+            {/* Twitter / X */}
             <a
-              href="https://www.youtube.com/@Testprepkart"
+              href="https://twitter.com/testprepkart"
               target="_blank"
               rel="noopener noreferrer"
-              className="w-12 h-12 bg-red-600 text-white rounded-full flex items-center justify-center hover:bg-red-700 transition-colors shadow-md hover:shadow-lg"
-              aria-label="YouTube"
+              className="w-12 h-12 bg-blue-400 text-white rounded-full flex items-center justify-center hover:bg-blue-500 transition-colors shadow-md hover:shadow-lg"
+              aria-label="Twitter"
             >
-              <FaYoutube className="text-xl" />
+              <FaTwitter className="text-xl" />
             </a>
-
 
             {/* LinkedIn */}
             <a
@@ -334,7 +311,17 @@ const ContactPage = () => {
               <FaLinkedin className="text-xl" />
             </a>
 
-           
+            {/* YouTube */}
+            <a
+              href="https://www.youtube.com/@Testprepkart"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-12 h-12 bg-red-600 text-white rounded-full flex items-center justify-center hover:bg-red-700 transition-colors shadow-md hover:shadow-lg"
+              aria-label="YouTube"
+            >
+              <FaYoutube className="text-xl" />
+            </a>
+
             {/* WhatsApp (optional – remove if not needed) */}
             <a
               href="https://api.whatsapp.com/send?phone=15107069331"

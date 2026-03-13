@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Header from "./layouts/Header";
 import Sidebar from "./layouts/Sidebar";
@@ -7,16 +7,18 @@ import AuthGuard from "./components/auth/AuthGuard";
 import ErrorBoundary from "../../components/ErrorBoundary";
 import api from "../../lib/api";
 
+const AUTH_VERIFY_CACHE_MS = 45 * 1000; // 45 seconds – skip refetch if verified recently
+
 export default function AdminLayout({ children }) {
   const router = useRouter();
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const lastVerifiedRef = useRef(0);
 
   useEffect(() => {
     const checkAuth = async () => {
-      // If on login/register pages, don't check auth
       if (
         pathname?.endsWith("/admin/login") ||
         pathname?.endsWith("/admin/register")
@@ -27,30 +29,45 @@ export default function AdminLayout({ children }) {
 
       const token = localStorage.getItem("token");
       if (!token) {
-        // No token, redirect to login
         localStorage.removeItem("user");
-        // NOTE: Next.js basePath is applied automatically for internal navigation.
         router.push("/admin/login");
         setIsLoading(false);
         return;
       }
 
+      const now = Date.now();
+      const useCache = now - lastVerifiedRef.current < AUTH_VERIFY_CACHE_MS;
+
+      if (useCache) {
+        setIsAuthenticated(true);
+        setIsLoading(false);
+        // Refetch in background; only redirect if it fails
+        api.get("/auth/verify").then((response) => {
+          if (response?.data?.success && response?.data?.data) {
+            lastVerifiedRef.current = Date.now();
+            localStorage.setItem("user", JSON.stringify(response.data.data));
+          }
+        }).catch(() => {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          router.push("/admin/login");
+          setIsAuthenticated(false);
+        });
+        return;
+      }
+
       try {
-        // CRITICAL: Verify token with server AND check if user exists in database
-        // This ensures deleted users are immediately logged out
         const response = await api.get("/auth/verify");
 
         if (response.data.success && response.data.data) {
-          // User exists and token is valid
           const userData = response.data.data;
           localStorage.setItem("user", JSON.stringify(userData));
+          lastVerifiedRef.current = Date.now();
           setIsAuthenticated(true);
         } else {
-          // User not found or token invalid
           throw new Error("User not found or token invalid");
         }
       } catch (error) {
-        // Token invalid, expired, or user deleted from database
         console.error("Auth verification failed:", error);
         localStorage.removeItem("token");
         localStorage.removeItem("user");

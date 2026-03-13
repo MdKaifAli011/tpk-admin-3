@@ -36,6 +36,10 @@ export async function GET(request) {
     // Get filters (normalize status to lowercase for case-insensitive matching)
     const topicId = searchParams.get("topicId");
     const subTopicId = searchParams.get("subTopicId");
+    const examId = searchParams.get("examId");
+    const subjectId = searchParams.get("subjectId");
+    const unitId = searchParams.get("unitId");
+    const chapterId = searchParams.get("chapterId");
 
     const metaStatus = searchParams.get("metaStatus"); // filled, notFilled
 
@@ -52,6 +56,30 @@ export async function GET(request) {
         return errorResponse("Invalid subTopicId", 400);
       }
       filter.subTopicId = subTopicId;
+    }
+    if (examId) {
+      if (!mongoose.Types.ObjectId.isValid(examId)) {
+        return errorResponse("Invalid examId", 400);
+      }
+      filter.examId = examId;
+    }
+    if (subjectId) {
+      if (!mongoose.Types.ObjectId.isValid(subjectId)) {
+        return errorResponse("Invalid subjectId", 400);
+      }
+      filter.subjectId = subjectId;
+    }
+    if (unitId) {
+      if (!mongoose.Types.ObjectId.isValid(unitId)) {
+        return errorResponse("Invalid unitId", 400);
+      }
+      filter.unitId = unitId;
+    }
+    if (chapterId) {
+      if (!mongoose.Types.ObjectId.isValid(chapterId)) {
+        return errorResponse("Invalid chapterId", 400);
+      }
+      filter.chapterId = chapterId;
     }
     if (statusFilter !== "all") {
       filter.status = { $regex: new RegExp(`^${statusFilter}$`, "i") };

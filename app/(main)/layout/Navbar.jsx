@@ -658,12 +658,12 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen, showSidebar }) => {
                   <ul className="space-y-2.5 text-sm">
                     <li>
                       <a
-                        href="mailto:info@testprepkart.com"
+                        href="mailto:contact@rayofhopebihar.org"
                         className="flex items-center gap-2.5 text-gray-700 hover:text-indigo-600 transition-colors"
-                        aria-label="Email info@testprepkart.com"
+                        aria-label="Email contact@rayofhopebihar.org"
                       >
                         <FaEnvelope className="text-xs shrink-0" aria-hidden />
-                        <span className="break-all">info@testprepkart.com</span>
+                        <span className="break-all">contact@rayofhopebihar.org</span>
                       </a>
                     </li>
                     <li>

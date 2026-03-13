@@ -12,13 +12,26 @@ import { FaEdit, FaPlus, FaTimes, FaLock, FaSearch, FaCheck, FaGripVertical } fr
 import { ToastContainer, useToast } from "../ui/Toast";
 import StatusCascadeModal from "../ui/StatusCascadeModal";
 import api from "@/lib/api";
-import { getSubTopicListCache, setSubTopicListCache } from "@/lib/subTopicListCache";
+import { setSubTopicListCache } from "@/lib/subTopicListCache";
 import { invalidateListCachesFrom } from "@/lib/listCacheInvalidation";
 import { usePermissions, getPermissionMessage } from "../../hooks/usePermissions";
 import { IoFilterOutline } from "react-icons/io5";
+import { useFilterPersistence } from "../../hooks/useFilterPersistence";
+import PaginationBar from "../ui/PaginationBar";
 
 const SubTopicsManagement = () => {
   const { canCreate, canEdit, canDelete, canReorder, role } = usePermissions();
+  const [filterState, setFilterState] = useFilterPersistence("subtopic", {
+    filterExam: "",
+    filterSubject: "",
+    filterUnit: "",
+    filterChapter: "",
+    filterTopic: "",
+    searchQuery: "",
+    metaFilter: "all",
+  });
+  const { page, limit, filterExam, filterSubject, filterUnit, filterChapter, filterTopic, searchQuery, metaFilter } = filterState;
+
   const { toasts, removeToast, success, error: showError } = useToast();
   const [showAddForm, setShowAddForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
@@ -27,14 +40,20 @@ const SubTopicsManagement = () => {
   const [isFormLoading, setIsFormLoading] = useState(false);
   const [error, setError] = useState(null);
   const [subTopics, setSubTopics] = useState([]);
+  const [pagination, setPagination] = useState({
+    total: 0,
+    totalPages: 0,
+    hasNextPage: false,
+    hasPrevPage: false,
+  });
   const [exams, setExams] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [units, setUnits] = useState([]);
-  const [filterUnits, setFilterUnits] = useState([]); // Separate units for filter section
+  const [filterUnits, setFilterUnits] = useState([]);
   const [chapters, setChapters] = useState([]);
-  const [filterChapters, setFilterChapters] = useState([]); // Separate chapters for filter section
+  const [filterChapters, setFilterChapters] = useState([]);
   const [topics, setTopics] = useState([]);
-  const [filterTopics, setFilterTopics] = useState([]); // Separate topics for filter section
+  const [filterTopics, setFilterTopics] = useState([]);
   const [formData, setFormData] = useState({
     name: "",
     examId: "",
@@ -59,32 +78,44 @@ const SubTopicsManagement = () => {
   const [nextOrderNumber, setNextOrderNumber] = useState(1);
   const [formError, setFormError] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
-  const [filterExam, setFilterExam] = useState("");
-  const [filterSubject, setFilterSubject] = useState("");
-  const [filterUnit, setFilterUnit] = useState("");
-  const [filterChapter, setFilterChapter] = useState("");
-  const [filterTopic, setFilterTopic] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
   const [isReorderMode, setIsReorderMode] = useState(false);
   const [reorderDraft, setReorderDraft] = useState({});
   const [cascadeModalOpen, setCascadeModalOpen] = useState(false);
   const [cascadeItem, setCascadeItem] = useState(null);
   const isFetchingRef = useRef(false);
-  const [metaFilter, setMetaFilter] = useState("all"); // all, filled, notFilled
 
-  // Fetch sub topics from API using Axios (and update cache)
+  // Fetch sub topics from API with server-side topicId + pagination
   const fetchSubTopics = useCallback(async () => {
     if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
     try {
-      isFetchingRef.current = true;
       setIsDataLoading(true);
       setError(null);
-      const response = await api.get(`/subtopic?status=all&limit=10000&metaStatus=${metaFilter}`);
+      const params = new URLSearchParams();
+      params.set("status", "all");
+      params.set("metaStatus", metaFilter);
+      params.set("page", String(page));
+      params.set("limit", String(limit));
+      if (filterExam) params.set("examId", filterExam);
+      if (filterSubject) params.set("subjectId", filterSubject);
+      if (filterUnit) params.set("unitId", filterUnit);
+      if (filterChapter) params.set("chapterId", filterChapter);
+      if (filterTopic) params.set("topicId", filterTopic);
+      const response = await api.get(`/subtopic?${params.toString()}`);
 
       if (response.data.success) {
         const fetchedSubTopics = response.data.data || [];
         setSubTopics(fetchedSubTopics);
         setSubTopicListCache(fetchedSubTopics, metaFilter);
+        const pag = response.data?.pagination;
+        if (pag) {
+          setPagination({
+            total: pag.total ?? 0,
+            totalPages: pag.totalPages ?? 0,
+            hasNextPage: !!pag.hasNextPage,
+            hasPrevPage: !!pag.hasPrevPage,
+          });
+        }
       } else {
         throw new Error(response.data.message || "Failed to fetch sub topics");
       }
@@ -99,19 +130,11 @@ const SubTopicsManagement = () => {
       setIsDataLoading(false);
       isFetchingRef.current = false;
     }
-  }, [metaFilter]);
+  }, [metaFilter, page, limit, filterExam, filterSubject, filterUnit, filterChapter, filterTopic]);
 
-  // Load sub topics: use cache when returning from detail (no API call), otherwise fetch once
   useEffect(() => {
-    const cached = getSubTopicListCache(metaFilter);
-    if (cached != null && Array.isArray(cached)) {
-      setSubTopics(cached);
-      setIsDataLoading(false);
-      setError(null);
-      return;
-    }
     fetchSubTopics();
-  }, [metaFilter, fetchSubTopics]);
+  }, [fetchSubTopics]);
 
   // Fetch exams from API
   const fetchExams = useCallback(async () => {
@@ -205,11 +228,9 @@ const SubTopicsManagement = () => {
     }
   }, []);
 
-  // Load exams and subjects on component mount
+  // Load exams and subjects in parallel on mount
   useEffect(() => {
-    fetchExams();
-    fetchSubjects();
-    // Don't fetch units, chapters, and topics on mount - will fetch when parent is selected
+    Promise.all([fetchExams(), fetchSubjects()]);
   }, [fetchExams, fetchSubjects]);
 
   // Auto-clear error after 5 seconds with cleanup
@@ -459,43 +480,9 @@ const SubTopicsManagement = () => {
     );
   }, [filterTopics, filterChapter]);
 
-  // Filter subTopics based on filters
+  // Filter subTopics by search only (hierarchy filter is done by API)
   const filteredSubTopics = useMemo(() => {
     let result = subTopics;
-    if (filterExam) {
-      result = result.filter(
-        (subTopic) =>
-          subTopic.examId?._id === filterExam || subTopic.examId === filterExam
-      );
-    }
-    if (filterSubject) {
-      result = result.filter(
-        (subTopic) =>
-          subTopic.subjectId?._id === filterSubject ||
-          subTopic.subjectId === filterSubject
-      );
-    }
-    if (filterUnit) {
-      result = result.filter(
-        (subTopic) =>
-          subTopic.unitId?._id === filterUnit || subTopic.unitId === filterUnit
-      );
-    }
-    if (filterChapter) {
-      result = result.filter(
-        (subTopic) =>
-          subTopic.chapterId?._id === filterChapter ||
-          subTopic.chapterId === filterChapter
-      );
-    }
-    if (filterTopic) {
-      result = result.filter(
-        (subTopic) =>
-          subTopic.topicId?._id === filterTopic ||
-          subTopic.topicId === filterTopic
-      );
-    }
-    // Search filter
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim();
       result = result.filter((subTopic) =>
@@ -503,15 +490,7 @@ const SubTopicsManagement = () => {
       );
     }
     return result;
-  }, [
-    subTopics,
-    filterExam,
-    filterSubject,
-    filterUnit,
-    filterChapter,
-    filterTopic,
-    searchQuery,
-  ]);
+  }, [subTopics, searchQuery]);
 
   // Get active filter count
   const activeFilterCount =
@@ -519,15 +498,20 @@ const SubTopicsManagement = () => {
     (filterSubject ? 1 : 0) +
     (filterUnit ? 1 : 0) +
     (filterChapter ? 1 : 0) +
-    (filterTopic ? 1 : 0);
+    (filterTopic ? 1 : 0) +
+    (searchQuery ? 1 : 0);
 
   // Clear all filters
   const clearFilters = () => {
-    setFilterExam("");
-    setFilterSubject("");
-    setFilterUnit("");
-    setFilterChapter("");
-    setFilterTopic("");
+    setFilterState({
+      filterExam: "",
+      filterSubject: "",
+      filterUnit: "",
+      filterChapter: "",
+      filterTopic: "",
+      searchQuery: "",
+      page: 1,
+    });
     setFilterTopics([]);
   };
 
@@ -1745,7 +1729,9 @@ const SubTopicsManagement = () => {
                       type="text"
                       placeholder="Search..."
                       value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onChange={(e) =>
+                        setFilterState({ searchQuery: e.target.value, page: 1 })
+                      }
                       className="w-full sm:w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                     />
                   </div>
@@ -1753,7 +1739,9 @@ const SubTopicsManagement = () => {
                     <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Meta Status:</label>
                     <select
                       value={metaFilter}
-                      onChange={(e) => setMetaFilter(e.target.value)}
+                      onChange={(e) =>
+                        setFilterState({ metaFilter: e.target.value, page: 1 })
+                      }
                       className="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-medium focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                     >
                       <option value="all">All Items</option>
@@ -1792,11 +1780,14 @@ const SubTopicsManagement = () => {
                     <select
                       value={filterExam}
                       onChange={(e) => {
-                        setFilterExam(e.target.value);
-                        setFilterSubject("");
-                        setFilterUnit("");
-                        setFilterChapter("");
-                        setFilterTopic("");
+                        setFilterState({
+                          filterExam: e.target.value,
+                          filterSubject: "",
+                          filterUnit: "",
+                          filterChapter: "",
+                          filterTopic: "",
+                          page: 1,
+                        });
                         setFilterTopics([]);
                       }}
                       className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm bg-white"
@@ -1818,10 +1809,13 @@ const SubTopicsManagement = () => {
                     <select
                       value={filterSubject}
                       onChange={(e) => {
-                        setFilterSubject(e.target.value);
-                        setFilterUnit("");
-                        setFilterChapter("");
-                        setFilterTopic("");
+                        setFilterState({
+                          filterSubject: e.target.value,
+                          filterUnit: "",
+                          filterChapter: "",
+                          filterTopic: "",
+                          page: 1,
+                        });
                         setFilterTopics([]);
                       }}
                       disabled={!filterExam}
@@ -1846,9 +1840,12 @@ const SubTopicsManagement = () => {
                     <select
                       value={filterUnit}
                       onChange={(e) => {
-                        setFilterUnit(e.target.value);
-                        setFilterChapter("");
-                        setFilterTopic("");
+                        setFilterState({
+                          filterUnit: e.target.value,
+                          filterChapter: "",
+                          filterTopic: "",
+                          page: 1,
+                        });
                         setFilterTopics([]);
                       }}
                       disabled={!filterSubject}
@@ -1873,11 +1870,12 @@ const SubTopicsManagement = () => {
                     <select
                       value={filterChapter}
                       onChange={(e) => {
-                        setFilterChapter(e.target.value);
-                        setFilterTopic("");
-                        if (!e.target.value) {
-                          setFilterTopics([]);
-                        }
+                        setFilterState({
+                          filterChapter: e.target.value,
+                          filterTopic: "",
+                          page: 1,
+                        });
+                        if (!e.target.value) setFilterTopics([]);
                       }}
                       disabled={!filterUnit}
                       className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm bg-white disabled:bg-gray-100 disabled:text-gray-400"
@@ -1900,7 +1898,9 @@ const SubTopicsManagement = () => {
                     </label>
                     <select
                       value={filterTopic}
-                      onChange={(e) => setFilterTopic(e.target.value)}
+                      onChange={(e) =>
+                        setFilterState({ filterTopic: e.target.value, page: 1 })
+                      }
                       disabled={!filterChapter}
                       className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm bg-white disabled:bg-gray-100 disabled:text-gray-400"
                     >
@@ -1928,11 +1928,14 @@ const SubTopicsManagement = () => {
                         {exams.find((e) => e._id === filterExam)?.name || "N/A"}
                         <button
                           onClick={() => {
-                            setFilterExam("");
-                            setFilterSubject("");
-                            setFilterUnit("");
-                            setFilterChapter("");
-                            setFilterTopic("");
+                            setFilterState({
+                              filterExam: "",
+                              filterSubject: "",
+                              filterUnit: "",
+                              filterChapter: "",
+                              filterTopic: "",
+                              page: 1,
+                            });
                             setFilterTopics([]);
                           }}
                           className="hover:bg-green-200 rounded-full p-0.5 transition-colors"
@@ -1948,10 +1951,13 @@ const SubTopicsManagement = () => {
                           "N/A"}
                         <button
                           onClick={() => {
-                            setFilterSubject("");
-                            setFilterUnit("");
-                            setFilterChapter("");
-                            setFilterTopic("");
+                            setFilterState({
+                              filterSubject: "",
+                              filterUnit: "",
+                              filterChapter: "",
+                              filterTopic: "",
+                              page: 1,
+                            });
                             setFilterTopics([]);
                           }}
                           className="hover:bg-purple-200 rounded-full p-0.5 transition-colors"
@@ -1966,9 +1972,12 @@ const SubTopicsManagement = () => {
                         {filterUnits.find((u) => u._id === filterUnit)?.name || "N/A"}
                         <button
                           onClick={() => {
-                            setFilterUnit("");
-                            setFilterChapter("");
-                            setFilterTopic("");
+                            setFilterState({
+                              filterUnit: "",
+                              filterChapter: "",
+                              filterTopic: "",
+                              page: 1,
+                            });
                             setFilterTopics([]);
                           }}
                           className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"
@@ -1984,8 +1993,11 @@ const SubTopicsManagement = () => {
                           "N/A"}
                         <button
                           onClick={() => {
-                            setFilterChapter("");
-                            setFilterTopic("");
+                            setFilterState({
+                              filterChapter: "",
+                              filterTopic: "",
+                              page: 1,
+                            });
                             setFilterTopics([]);
                           }}
                           className="hover:bg-indigo-200 rounded-full p-0.5 transition-colors"
@@ -1999,8 +2011,23 @@ const SubTopicsManagement = () => {
                         Topic:{" "}
                         {filterTopics.find((t) => t._id === filterTopic)?.name || "N/A"}
                         <button
-                          onClick={() => setFilterTopic("")}
+                          onClick={() =>
+                            setFilterState({ filterTopic: "", page: 1 })
+                          }
                           className="hover:bg-orange-200 rounded-full p-0.5 transition-colors"
+                        >
+                          <FaTimes className="w-3 h-3" />
+                        </button>
+                      </span>
+                    )}
+                    {searchQuery && (
+                      <span className="inline-flex items-center gap-1 px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-semibold">
+                        Search: {searchQuery}
+                        <button
+                          onClick={() =>
+                            setFilterState({ searchQuery: "", page: 1 })
+                          }
+                          className="hover:bg-gray-200 rounded-full p-0.5 transition-colors"
                         >
                           <FaTimes className="w-3 h-3" />
                         </button>
@@ -2026,6 +2053,16 @@ const SubTopicsManagement = () => {
                 onReorderDraft={handleReorderDraft}
                 reorderDraft={reorderDraft}
                 isReorderAllowed={isReorderMode && !searchQuery.trim()}
+              />
+              <PaginationBar
+                page={page}
+                limit={limit}
+                total={pagination.total}
+                totalPages={pagination.totalPages}
+                hasNextPage={pagination.hasNextPage}
+                hasPrevPage={pagination.hasPrevPage}
+                onPageChange={(p) => setFilterState({ page: p })}
+                onLimitChange={(l) => setFilterState({ limit: l, page: 1 })}
               />
             </div>
           </div>

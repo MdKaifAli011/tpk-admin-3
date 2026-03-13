@@ -24,6 +24,12 @@ export const PAGINATION = {
   MIN_LIMIT: 5,
 };
 
+// Admin list pages: page size options and default
+export const ADMIN_PAGINATION = {
+  PAGE_SIZE_OPTIONS: [50, 100, 500, 1000],
+  DEFAULT_PAGE_SIZE: 50,
+};
+
 // Status Values
 export const STATUS = {
   ACTIVE: "active",
