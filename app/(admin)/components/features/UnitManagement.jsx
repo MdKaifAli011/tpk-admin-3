@@ -563,6 +563,58 @@ const UnitsManagement = () => {
     }
   };
 
+  const handleBulkToggleStatus = async (selectedUnits, newStatus) => {
+    if (!selectedUnits || selectedUnits.length === 0) return Promise.resolve();
+    const action = newStatus === "inactive" ? "deactivate" : "activate";
+    const n = selectedUnits.length;
+    if (
+      !window.confirm(
+        `Are you sure you want to ${action} ${n} unit${n === 1 ? "" : "s"}? Their chapters and related content will also be ${action}d.`
+      )
+    ) {
+      return Promise.resolve();
+    }
+    try {
+      setIsFormLoading(true);
+      setError(null);
+      const results = await Promise.all(
+        selectedUnits.map((u) =>
+          api.patch(`/unit/${u._id}/status`, { status: newStatus })
+        )
+      );
+      const allOk = results.every((r) => r?.data?.success);
+      if (allOk) {
+        invalidateListCachesFrom("unit");
+        await fetchUnits();
+        success(
+          n === 1
+            ? `Unit ${action}d successfully`
+            : `${n} units ${action}d successfully`
+        );
+      } else {
+        throw new Error(
+          results.find((r) => !r?.data?.success)?.data?.message ||
+            `Failed to ${action} some units`
+        );
+      }
+    } catch (error) {
+      console.error(`Error bulk ${action}ing units:`, error);
+      setError(
+        error.response?.data?.message ||
+          error.message ||
+          `Failed to ${action} units`
+      );
+      showError(
+        error.response?.data?.message ||
+          error.message ||
+          `Failed to ${action} units`
+      );
+      throw error;
+    } finally {
+      setIsFormLoading(false);
+    }
+  };
+
   const saveReorderForSubject = async (subjectId, newOrderedUnits) => {
     const payload = {
       units: newOrderedUnits.map((u, i) => ({
@@ -1301,6 +1353,7 @@ const UnitsManagement = () => {
                     onEdit={handleEditUnit}
                     onDelete={handleDeleteUnit}
                     onToggleStatus={handleToggleStatus}
+                    onBulkToggleStatus={handleBulkToggleStatus}
                     onReorderDraft={handleReorderDraft}
                     reorderDraft={reorderDraft}
                     isReorderAllowed={isReorderMode && !searchQuery.trim()}
