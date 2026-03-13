@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import Link from "next/link";
 import { FaSave, FaEnvelope, FaPaperPlane, FaInfoCircle, FaKey } from "react-icons/fa";
 import { ToastContainer, useToast } from "../ui/Toast";
 import { LoadingSpinner } from "../ui/SkeletonLoader";
@@ -137,6 +138,11 @@ export default function EmailSettingsManagement() {
             <p className="text-sm text-gray-600 mt-1">
               Configure SMTP for sending emails and set notification recipients (e.g. lead export).
               Values saved here override <code className="bg-gray-200 px-1 rounded">.env</code>. If nothing is saved yet, the app uses .env (if set).
+            </p>
+            <p className="text-sm text-gray-600 mt-2">
+              <Link href="/admin/email-templates" className="text-indigo-600 hover:underline">
+                Manage email templates by activity →
+              </Link>
             </p>
           </div>
 

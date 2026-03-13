@@ -8,6 +8,8 @@ import {
   handleApiError,
 } from "@/utils/apiResponse";
 import { requireAuth } from "@/middleware/authMiddleware";
+import { sendMail } from "@/lib/mailer";
+import { getEmailTemplateContent } from "@/lib/getEmailTemplateContent";
 
 export async function GET(request) {
   try {
@@ -174,6 +176,15 @@ export async function POST(request) {
       isUpdated,
       previousStatus: previousStatus || null,
     };
+
+    // Auto-reply to lead (fire-and-forget)
+    const formLabel = body.form_name || body.form_id || "";
+    getEmailTemplateContent("lead_auto_reply", { form_name: formLabel }).then(
+      ({ subject, text, html }) =>
+        sendMail({ to: email, subject, text, html }).catch((err) =>
+          console.error("Lead auto-reply email error:", err)
+        )
+    );
 
     return successResponse(responseData, message, isUpdated ? 200 : 201);
   } catch (error) {

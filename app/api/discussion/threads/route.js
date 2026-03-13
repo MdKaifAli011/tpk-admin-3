@@ -18,6 +18,9 @@ import {
   getParentLevel,
   getParentIds,
 } from "@/lib/discussionListFallback";
+import { sendMail } from "@/lib/mailer";
+import { getEmailTemplateContent } from "@/lib/getEmailTemplateContent";
+import { getAuthorEmail } from "@/lib/getAuthorEmail";
 
 // Helper to get user from request (either Student, Admin, or Guest)
 async function getUser(request) {
@@ -471,6 +474,22 @@ export async function POST(request) {
       tags: body.tags || ["General"],
       isApproved: user.type === "User", // Only Admin/User posts are auto-approved, Students and Guests need approval
     });
+
+    // Confirmation email to author (Student/User only)
+    if (user.type !== "Guest") {
+      getAuthorEmail(newThread.author, newThread.authorType).then((email) => {
+        if (!email) return;
+        getEmailTemplateContent("thread_created", {
+          thread_title: newThread.title,
+          is_approved: newThread.isApproved,
+          is_pending: newThread.isApproved ? "now live" : "pending moderation",
+        }).then(({ subject, text, html }) =>
+          sendMail({ to: email, subject, text, html }).catch((err) =>
+            console.error("Thread created email error:", err)
+          )
+        );
+      });
+    }
 
     return NextResponse.json({
       success: true,

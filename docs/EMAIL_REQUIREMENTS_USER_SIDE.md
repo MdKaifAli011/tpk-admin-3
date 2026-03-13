@@ -1,4 +1,4 @@
-# Email Requirements – User Side (Main App)
+ implemented | implemented | implemented (no checkout API yet) | implemented |# Email Requirements – User Side (Main App)
 
 This document lists **all user-facing flows** in the **(main)** app that either **already send email** or **could/should send email**. It is based on a deep read of `app/(main)`, related API routes, and the existing mailer setup.
 
@@ -8,27 +8,27 @@ See also: **[When / where we send email TO the student](#when--where-we-send-ema
 
 ## When / where we send email TO the student
 
-All scenarios where the **student** (or logged-in user / lead) should receive an email. **None are implemented yet** except where marked.
+All scenarios where the **student** (or logged-in user / lead) should receive an email. Implemented items are marked below.
 
 | # | When / where | Trigger (API or action) | Email to student | Status |
 |---|--------------|--------------------------|------------------|--------|
-| 1 | **After student registration** | `POST /api/student/auth/register` | Welcome email: “Your account is created”, login link, quick start. | Not implemented |
+| 1 | **After student registration** | `POST /api/student/auth/register` | Welcome email: “Your account is created”, login link, quick start. | **Implemented** |
 | 2 | **Email verification** (if you add it) | Student clicks “Verify email” or after register | Verification link or “Your email is verified”. | Not implemented |
-| 3 | **Contact / inquiry submitted** | User submits contact form → `POST /api/lead` | Auto-reply: “We received your message. We’ll get back to you soon.” | Not implemented |
-| 4 | **Download request** | User enters email in Download modal → `POST /api/lead` | “We received your download request” and/or download link. | Not implemented |
-| 5 | **Trial / demo request** | User submits Trial modal → `POST /api/lead` | “We received your trial request. Our team will contact you.” | Not implemented |
-| 6 | **Counselor / consultation request** | User submits Counselor modal → `POST /api/lead` | “We received your request. A counselor will contact you at [email].” | Not implemented |
-| 7 | **Course contact form** | User submits course contact → `POST /api/lead` | Same as contact: “We received your request.” | Not implemented |
-| 8 | **Generic form (FormRenderer)** | User submits any public form → `POST /api/lead` | Optional auto-reply: “Thank you for submitting.” | Not implemented |
-| 9 | **Discussion: thread created** | Student/guest creates thread → `POST /api/discussion/threads` | “Your thread was posted” (or “pending moderation”). | Not implemented |
-| 10 | **Discussion: thread approved** | Admin approves pending thread | “Your thread is now live.” [to thread author] | Not implemented |
-| 11 | **Discussion: new reply on their thread** | Someone replies → `POST /api/discussion/replies` | “Someone replied to your thread: [title]” + link. [to thread author] | Not implemented |
-| 12 | **Discussion: new reply (subscribers)** | Someone replies on a thread they subscribed to | “New reply on a thread you follow” + link. [to subscribers] | Not implemented |
-| 13 | **Discussion: their reply approved** | Admin approves pending reply | “Your reply was approved and is now visible.” [to reply author] | Not implemented |
-| 14 | **Blog: comment submitted** | Student/guest posts comment → `POST /api/blog/[id]/comment` | “Your comment was received and is pending moderation.” (optional) | Not implemented |
-| 15 | **Overview comment submitted** | User posts comment on self-study page → `POST /api/overview-comment` | Optional: “Thank you for your comment. It will be reviewed.” | Not implemented |
-| 16 | **Practice / test result** | Student submits test → `POST /api/student/test-results` | Result summary: score, correct/incorrect, link to review. | Not implemented |
-| 17 | **Store order confirmation** | Student completes checkout (when implemented) | “Order confirmed” + order details, next steps. | Not implemented |
+| 3 | **Contact / inquiry submitted** | User submits contact form → `POST /api/lead` | Auto-reply: “We received your message. We’ll get back to you soon.” | **Implemented** |
+| 4 | **Download request** | User enters email in Download modal → `POST /api/lead` | “We received your download request” and/or download link. | **Implemented** |
+| 5 | **Trial / demo request** | User submits Trial modal → `POST /api/lead` | “We received your trial request. Our team will contact you.” | **Implemented** |
+| 6 | **Counselor / consultation request** | User submits Counselor modal → `POST /api/lead` | “We received your request. A counselor will contact you at [email].” | **Implemented** |
+| 7 | **Course contact form** | User submits course contact → `POST /api/lead` | Same as contact: “We received your request.” | **Implemented** |
+| 8 | **Generic form (FormRenderer)** | User submits any public form → `POST /api/lead` | Optional auto-reply: “Thank you for submitting.” | **Implemented** |
+| 9 | **Discussion: thread created** | Student/guest creates thread → `POST /api/discussion/threads` | “Your thread was posted” (or “pending moderation”). | **Implemented** |
+| 10 | **Discussion: thread approved** | Admin approves pending thread | “Your thread is now live.” [to thread author] | **Implemented** |
+| 11 | **Discussion: new reply on their thread** | Someone replies → `POST /api/discussion/replies` | “Someone replied to your thread: [title]” + link. [to thread author] | **Implemented** |
+| 12 | **Discussion: new reply (subscribers)** | Someone replies on a thread they subscribed to | “New reply on a thread you follow” + link. [to subscribers] | **Implemented** |
+| 13 | **Discussion: their reply approved** | Admin approves pending reply | “Your reply was approved and is now visible.” [to reply author] | **Implemented** |
+| 14 | **Blog: comment submitted** | Student/guest posts comment → `POST /api/blog/[id]/comment` | “Your comment was received and is pending moderation.” (optional) | **Implemented** |
+| 15 | **Overview comment submitted** | User posts comment on self-study page → `POST /api/overview-comment` | Optional: “Thank you for your comment. It will be reviewed.” | **Implemented** |
+| 16 | **Practice / test result** | Student submits test → `POST /api/student/test-results` | Result summary: score, correct/incorrect, link to review. | **Implemented** |
+| 17 | **Store order confirmation** | Student completes checkout (when implemented) | “Order confirmed” + order details, next steps. | Not implemented (no checkout API yet) |
 | 18 | **Important notification** | Admin creates a notification → `POST /api/notification` | Optional: “New announcement: [title]” with link to notification. | Not implemented |
 | 19 | **Login / security** (optional) | First-time login or new device | “New login to your account” (optional). | Not implemented |
 | 20 | **Password reset** (if you add it) | User requests reset | Reset link with expiry. | Not implemented |
@@ -45,7 +45,15 @@ All scenarios where the **student** (or logged-in user / lead) should receive an
 |---|--------|--------------|------------|------------|
 | 1 | **Lead export (admin)** | Admin exports leads to CSV and chooses “Send email” | `POST /api/lead/send-export` | CSV attached and sent to **Lead export email** (configured in Admin → Email & Notifications). |
 
-No other user-side or admin-side flows currently send email.
+| 2 | **Lead auto-reply** | User submits any form that POSTs to `/api/lead` | `POST /api/lead` | Auto-reply to submitter: "We received your request" (optionally includes form_id/form_name). |
+| 3 | **Student welcome** | Student completes registration | `POST /api/student/auth/register` | Welcome email to student. |
+| 4 | **Discussion thread created** | Student/User creates thread | `POST /api/discussion/threads` | Confirmation to author (live or pending moderation). |
+| 5 | **Discussion thread approved** | Admin approves thread | `PATCH /api/discussion/threads/[slug]` (isApproved: true) | "Your thread is now live" to thread author. |
+| 6 | **Discussion new reply** | Someone posts reply | `POST /api/discussion/replies` | "Someone replied to your thread" to thread author; "New reply on a thread you follow" to subscribers. |
+| 7 | **Discussion reply approved** | Admin approves reply | `PATCH /api/discussion/replies/[id]` (isApproved: true) | "Your reply was approved" to reply author. |
+| 8 | **Blog comment received** | User posts blog comment | `POST /api/blog/[id]/comment` | "Your comment was received and is pending moderation" to commenter. |
+| 9 | **Overview comment received** | User posts overview comment | `POST /api/overview-comment` | "Thank you for your comment. It will be reviewed." to commenter. |
+| 10 | **Test result summary** | Student submits test | `POST /api/student/test-results` | Result summary (score, percentage) to student. |
 
 ---
 

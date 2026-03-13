@@ -106,7 +106,15 @@ function relativeTime(dateStr) {
   return d.toLocaleDateString();
 }
 
-export default function NotificationListClient() {
+export default function NotificationListClient({
+  examSlug = null,
+  subjectSlug = null,
+  unitSlug = null,
+  chapterSlug = null,
+  topicSlug = null,
+  subtopicSlug = null,
+  definitionSlug = null,
+}) {
   const [list, setList] = useState([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -115,9 +123,20 @@ export default function NotificationListClient() {
   const limit = 20;
   const hasMore = list.length < total;
 
+  const queryParams = new URLSearchParams();
+  queryParams.set("limit", String(limit));
+  queryParams.set("skip", "0");
+  if (examSlug) queryParams.set("exam", examSlug);
+  if (subjectSlug) queryParams.set("subject", subjectSlug);
+  if (unitSlug) queryParams.set("unit", unitSlug);
+  if (chapterSlug) queryParams.set("chapter", chapterSlug);
+  if (topicSlug) queryParams.set("topic", topicSlug);
+  if (subtopicSlug) queryParams.set("subtopic", subtopicSlug);
+  if (definitionSlug) queryParams.set("definition", definitionSlug);
+
   useEffect(() => {
     let cancelled = false;
-    fetch(`${basePath}/api/notification/list?limit=${limit}&skip=0`)
+    fetch(`${basePath}/api/notification/list?${queryParams.toString()}`)
       .then((res) => res.json())
       .then((data) => {
         if (!cancelled && data?.success) {
@@ -138,12 +157,23 @@ export default function NotificationListClient() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [examSlug, subjectSlug, unitSlug, chapterSlug, topicSlug, subtopicSlug, definitionSlug]);
+
+  const loadMoreParams = new URLSearchParams();
+  loadMoreParams.set("limit", String(limit));
+  loadMoreParams.set("skip", String(skip));
+  if (examSlug) loadMoreParams.set("exam", examSlug);
+  if (subjectSlug) loadMoreParams.set("subject", subjectSlug);
+  if (unitSlug) loadMoreParams.set("unit", unitSlug);
+  if (chapterSlug) loadMoreParams.set("chapter", chapterSlug);
+  if (topicSlug) loadMoreParams.set("topic", topicSlug);
+  if (subtopicSlug) loadMoreParams.set("subtopic", subtopicSlug);
+  if (definitionSlug) loadMoreParams.set("definition", definitionSlug);
 
   const loadMore = () => {
     if (loadingMore || !hasMore) return;
     setLoadingMore(true);
-    fetch(`${basePath}/api/notification/list?limit=${limit}&skip=${skip}`)
+    fetch(`${basePath}/api/notification/list?${loadMoreParams.toString()}`)
       .then((res) => res.json())
       .then((data) => {
         if (data?.success) {

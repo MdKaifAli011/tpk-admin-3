@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import Thread from "@/models/Thread";
+import { buildThreadQuery } from "@/lib/discussionThreadQuery";
 import { verifyToken } from "@/lib/auth";
 import { verifyStudentToken } from "@/lib/studentAuth";
 

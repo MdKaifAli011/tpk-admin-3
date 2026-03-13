@@ -9,6 +9,8 @@ import {
 } from "@/utils/apiResponse";
 import { verifyStudentToken } from "@/lib/studentAuth";
 import { requireAuth } from "@/middleware/authMiddleware";
+import { sendMail } from "@/lib/mailer";
+import { getEmailTemplateContent } from "@/lib/getEmailTemplateContent";
 import Exam from "@/models/Exam";
 import Subject from "@/models/Subject";
 import Unit from "@/models/Unit";
@@ -213,6 +215,16 @@ export async function POST(request) {
     const newComment = await OverviewComment.create(commentData);
     if (studentId) {
       await newComment.populate("studentId", "firstName lastName email");
+    }
+
+    // Confirmation email to commenter (fire-and-forget)
+    const toEmail = studentId ? (newComment.studentId?.email || null) : commentEmail;
+    if (toEmail) {
+      getEmailTemplateContent("overview_comment_received", {}).then(({ subject, text, html }) =>
+        sendMail({ to: toEmail, subject, text, html }).catch((err) =>
+          console.error("Overview comment confirmation email error:", err)
+        )
+      );
     }
 
     return successResponse(

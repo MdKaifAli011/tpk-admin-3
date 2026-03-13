@@ -50,6 +50,7 @@ const ROUTE_PERMISSIONS = [
   { path: "/admin/exam", minRole: "viewer" },
   { path: "/admin/site-settings", minRole: "admin" },
   { path: "/admin/email-settings", minRole: "admin" },
+  { path: "/admin/email-templates", minRole: "admin" },
   { path: "/admin", minRole: "viewer" },
 ].sort((a, b) => b.path.length - a.path.length);
 

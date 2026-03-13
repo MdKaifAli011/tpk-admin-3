@@ -243,11 +243,13 @@ export const fetchExamById = async (examId, options = {}) => {
   }
 };
 
-// Fetch prime video tree (YouTube videos from editor content, one call)
-export const fetchPrimeVideo = async () => {
+// Fetch prime video tree (YouTube videos from editor content, one call).
+// When examSlug is provided, only that exam's videos are returned (for /[exam]/video-library).
+export const fetchPrimeVideo = async (examSlug = null) => {
   const isServer = typeof window === "undefined";
   const baseUrl = getBaseUrl();
-  const url = `${baseUrl}/api/video-library`;
+  const params = examSlug ? `?exam=${encodeURIComponent(examSlug)}` : "";
+  const url = `${baseUrl}/api/video-library${params}`;
   try {
     if (isServer) {
       const response = await fetch(url, { cache: "no-store" });
@@ -255,7 +257,7 @@ export const fetchPrimeVideo = async () => {
       const json = await response.json();
       return json.success ? json : { success: false, data: { exams: [], nodes: [] } };
     }
-    const response = await api.get("/video-library");
+    const response = await api.get(examSlug ? `/video-library?exam=${encodeURIComponent(examSlug)}` : "/video-library");
     return response.data?.success ? response.data : { success: false, data: { exams: [], nodes: [] } };
   } catch (err) {
     logger.warn("fetchPrimeVideo error:", err?.message);

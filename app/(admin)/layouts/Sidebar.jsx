@@ -109,6 +109,7 @@ const ALL_MENU_ITEMS = [
       { name: "URL Export", href: "/admin/url-export" },
       { name: "Site Settings", href: "/admin/site-settings" },
       { name: "Email & Notifications", href: "/admin/email-settings" },
+      { name: "Email Templates", href: "/admin/email-templates" },
     ],
   },
 ];

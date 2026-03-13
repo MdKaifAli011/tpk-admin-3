@@ -1,9 +1,11 @@
-
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import Reply from "@/models/Reply";
 import Thread from "@/models/Thread";
 import { verifyStudentToken } from "@/lib/studentAuth";
+import { sendMail } from "@/lib/mailer";
+import { getEmailTemplateContent } from "@/lib/getEmailTemplateContent";
+import { getAuthorEmail, getSubscriberEmails } from "@/lib/getAuthorEmail";
 
 // Helper to get user
 async function getUser(request) {
@@ -55,6 +57,31 @@ export async function POST(request) {
             guestName: user.type === "Guest" ? user.name : user.type === "User" ? "Testprepkart" : undefined,
             isApproved: user.type === "User", // Only Admin/User replies are auto-approved, Students and Guests need approval
         });
+
+        // Notify thread author and subscribers (fire-and-forget)
+        (async () => {
+            try {
+                const thread = await Thread.findById(threadId).select("title slug author authorType subscribers").lean();
+                if (!thread) return;
+                const replyAuthorEmail = user.type === "Guest" ? null : await getAuthorEmail(reply.author, reply.authorType);
+                const authorEmail = await getAuthorEmail(thread.author, thread.authorType);
+                const subEmails = await getSubscriberEmails(thread.subscribers || []);
+                const toSend = new Set([authorEmail, ...subEmails].filter(Boolean));
+                toSend.delete(replyAuthorEmail);
+                const vars = { thread_title: thread.title, thread_slug: thread.slug };
+                const [contentAuthor, contentSub] = await Promise.all([
+                    getEmailTemplateContent("new_reply_author", vars),
+                    getEmailTemplateContent("new_reply_subscriber", vars),
+                ]);
+                for (const email of toSend) {
+                    const isThreadAuthor = email === authorEmail;
+                    const { subject, text, html } = isThreadAuthor ? contentAuthor : contentSub;
+                    await sendMail({ to: email, subject, text, html });
+                }
+            } catch (err) {
+                console.error("New reply notification email error:", err);
+            }
+        })();
 
         return NextResponse.json({
             success: true,

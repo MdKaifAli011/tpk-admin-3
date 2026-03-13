@@ -573,7 +573,19 @@ const NotificationManagement = () => {
     setEditingId(n._id);
     setEditingNotification(n);
     setFormEntityType(n.entityType || "exam");
-    setFormEntityId(n.entityType === "general" ? "" : (n.entityId?._id ? n.entityId._id : n.entityId));
+    const eid = n.entityType === "general" ? "" : (n.entityId?._id ? n.entityId._id : n.entityId);
+    setFormEntityId(eid);
+    if (n.entityType === "exam" || n.entityType === "exam_with_children") {
+      setFormExamId(eid || "");
+    } else {
+      setFormExamId("");
+    }
+    setFormSubjectId("");
+    setFormUnitId("");
+    setFormChapterId("");
+    setFormTopicId("");
+    setFormSubTopicId("");
+    setFormDefinitionId("");
     setFormTitle(n.title || "");
     setFormMessage(n.message || "");
     setFormStripMessage(n.stripMessage || "");

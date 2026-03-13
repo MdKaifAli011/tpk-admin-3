@@ -1,9 +1,12 @@
-
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import Reply from "@/models/Reply";
+import Thread from "@/models/Thread";
 import { verifyStudentToken } from "@/lib/studentAuth"; // For student
 import { verifyToken } from "@/lib/auth"; // For admin
+import { sendMail } from "@/lib/mailer";
+import { getEmailTemplateContent } from "@/lib/getEmailTemplateContent";
+import { getAuthorEmail } from "@/lib/getAuthorEmail";
 
 // Helper to get user from request
 async function getUser(request) {
@@ -79,6 +82,7 @@ export async function PATCH(request, { params }) {
 
         // Preserve isApproved when only editing content so pending indicator is not cleared until approve/delete
         const previousIsApproved = reply.isApproved;
+        const justApproved = body.isApproved === true;
 
         // Admin actions: Approve/Unapprove
         if (body.isApproved !== undefined) {
@@ -101,6 +105,23 @@ export async function PATCH(request, { params }) {
         }
 
         await reply.save();
+
+        // Notify reply author when reply is approved (Student/User only)
+        if (justApproved && reply.authorType !== "Guest") {
+            (async () => {
+                try {
+                    const thread = await Thread.findById(reply.threadId).select("title").lean();
+                    const threadTitle = thread?.title || "Discussion";
+                    const email = await getAuthorEmail(reply.author, reply.authorType);
+                    if (email) {
+                        const { subject, text, html } = await getEmailTemplateContent("reply_approved", { thread_title: threadTitle });
+                        await sendMail({ to: email, subject, text, html });
+                    }
+                } catch (err) {
+                    console.error("Reply approved email error:", err);
+                }
+            })();
+        }
 
         return NextResponse.json({
             success: true,

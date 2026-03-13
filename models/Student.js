@@ -59,6 +59,14 @@ const studentSchema = new mongoose.Schema(
     lastLogin: {
       type: Date,
     },
+    passwordResetToken: {
+      type: String,
+      select: false,
+    },
+    passwordResetExpires: {
+      type: Date,
+      select: false,
+    },
     leadId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Lead",

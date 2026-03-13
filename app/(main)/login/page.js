@@ -263,7 +263,11 @@ const LoginPage = () => {
                 {/* Forgot */}
                 <div className="flex justify-end -mt-2">
                   <Link
-                    href="#"
+                    href={
+                      searchParams.get("redirect")
+                        ? `/forgot-password?redirect=${encodeURIComponent(searchParams.get("redirect"))}`
+                        : "/forgot-password"
+                    }
                     className="text-xs font-semibold text-indigo-600 hover:underline"
                   >
                     Forgot Password?

@@ -27,14 +27,15 @@ export default function MainLayoutClient({ children }) {
 
   // Memoize showSidebar to prevent unnecessary recalculations
   const showSidebar = useMemo(() => {
-    // No sidebar on: home, contact, calculator, store, notification, site-level pages, or exam-level pages (e.g. /neet/pages/landing)
+    // No sidebar on: home, contact, calculator, store, auth (login, register, forgot-password, reset-password), site-level pages, or exam-level pages
     const isExamPagesRoute = pathname?.match(/^\/[^/]+\/pages(\/|$)/);
     return (
       pathname !== "/" &&
       pathname !== "/contact" &&
       !pathname?.startsWith("/calculator") &&
       !pathname?.startsWith("/store") &&
-
+      !pathname?.startsWith("/forgot-password") &&
+      !pathname?.startsWith("/reset-password") &&
       !pathname?.startsWith("/pages") &&
       !isExamPagesRoute
     );
@@ -88,7 +89,7 @@ export default function MainLayoutClient({ children }) {
      -------------------------------------------------------- */
   useEffect(() => {
     const checkStudentAuth = async () => {
-      if (pathname?.includes("/login") || pathname?.includes("/register")) return;
+      if (pathname?.includes("/login") || pathname?.includes("/register") || pathname?.includes("/forgot-password") || pathname?.includes("/reset-password")) return;
       const studentToken = localStorage.getItem("student_token");
       if (!studentToken) return;
       try {

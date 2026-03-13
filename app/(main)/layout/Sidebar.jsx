@@ -156,7 +156,11 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
   const isBlogPath = pathSegments[1] === "blog";
   const isCoursePath = pathSegments[1] === "course";
   const isVideoLibraryPath = pathSegments[1] === "video-library";
-  const isNotificationPath = pathSegments[0] === "notification";
+  const isNotificationPath = pathSegments[0] === "notification" || pathSegments[1] === "notification";
+  const notificationHref =
+    examSlugFromPath && !["blog", "download", "contact", "login", "register", "calculator", "notification"].includes(examSlugFromPath)
+      ? `/${examSlugFromPath}/notification`
+      : "/notification";
 
   const activeExam = useMemo(
     () => exams.find((e) => e._id === activeExamId) || null,
@@ -998,10 +1002,10 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
                   )}
                 </li>
 
-                {/* Notifications — /notification */}
+                {/* Notifications — /[exam]/notification when in exam context, else /notification */}
                 <li>
                   <Link
-                    href="/notification"
+                    href={notificationHref}
                     className={`w-full flex items-center gap-2 px-3 py-2 font-semibold rounded-lg transition-all duration-200 ${
                       isNotificationPath
                         ? "bg-indigo-100/60 shadow-sm text-indigo-900"

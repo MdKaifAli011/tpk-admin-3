@@ -20,7 +20,7 @@ export default async function ExamVideoLibraryPage({ params }) {
   let currentSlug = slug;
 
   try {
-    const result = await fetchPrimeVideo();
+    const result = await fetchPrimeVideo(slug);
     const data = result?.data;
     exams = data?.exams || [];
 

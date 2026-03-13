@@ -1,19 +1,40 @@
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import ContentVideo from "@/models/ContentVideo";
+import Exam from "@/models/Exam";
 
 export const dynamic = "force-dynamic";
 
 /**
  * GET /api/video-library
- * Returns all YouTube/Shorts videos from editor content, grouped by hierarchy.
- * One call, no parsing of long content (videos are synced at save time).
+ * Returns YouTube/Shorts videos from editor content, grouped by hierarchy.
+ * Query param: exam (slug) – when provided, only videos for that exam are returned.
+ * Without exam: returns all videos (all exams).
  */
-export async function GET() {
+export async function GET(request) {
   try {
     await connectDB();
 
-    const docs = await ContentVideo.find({})
+    const { searchParams } = new URL(request.url);
+    const examSlug = searchParams.get("exam")?.trim();
+    let filter = {};
+    if (examSlug) {
+      const exam = await Exam.findOne({
+        $or: [
+          { slug: examSlug },
+          { name: { $regex: new RegExp(`^${examSlug.replace(/-/g, " ")}$`, "i") } },
+        ],
+        status: { $in: ["active", "draft"] },
+      })
+        .select("_id")
+        .lean();
+      if (!exam) {
+        return NextResponse.json({ success: true, data: { exams: [], nodes: [] } });
+      }
+      filter = { examId: exam._id };
+    }
+
+    const docs = await ContentVideo.find(filter)
       .sort({ examName: 1, subjectName: 1, unitName: 1, chapterName: 1, topicName: 1, subTopicName: 1, definitionName: 1 })
       .lean();
 

@@ -4,6 +4,9 @@ import { buildThreadQuery } from "@/lib/discussionThreadQuery";
 import Thread from "@/models/Thread";
 import Reply from "@/models/Reply";
 import Student from "@/models/Student";
+import { sendMail } from "@/lib/mailer";
+import { getEmailTemplateContent } from "@/lib/getEmailTemplateContent";
+import { getAuthorEmail } from "@/lib/getAuthorEmail";
 // Import models needed for populate
 import Exam from "@/models/Exam";
 import Subject from "@/models/Subject";
@@ -270,6 +273,7 @@ export async function PATCH(request, { params }) {
             thread.isPinned = body.isPinned;
         }
 
+        const wasApproved = body.isApproved === true;
         if (body.isApproved !== undefined) {
             if (!isAdmin) return NextResponse.json({ success: false, message: "Only admins can approve threads" }, { status: 403 });
             thread.isApproved = body.isApproved;
@@ -281,6 +285,21 @@ export async function PATCH(request, { params }) {
         if (body.isSolved !== undefined && (isAuthor || isAdmin)) thread.isSolved = body.isSolved;
 
         await thread.save();
+
+        // Notify author when thread is approved (Student/User only)
+        if (wasApproved && thread.authorType !== "Guest") {
+            getAuthorEmail(thread.author, thread.authorType).then((email) => {
+                if (!email) return;
+                getEmailTemplateContent("thread_approved", {
+                    thread_title: thread.title,
+                    thread_slug: thread.slug,
+                }).then(({ subject, text, html }) =>
+                    sendMail({ to: email, subject, text, html }).catch((err) =>
+                        console.error("Thread approved email error:", err)
+                    )
+                );
+            });
+        }
 
         return NextResponse.json({ success: true, data: thread, message: "Thread updated" });
 

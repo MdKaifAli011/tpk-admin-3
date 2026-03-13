@@ -9,6 +9,8 @@ import {
   handleApiError,
 } from "@/utils/apiResponse";
 import { getJwtSecret } from "@/lib/auth";
+import { sendMail } from "@/lib/mailer";
+import { getEmailTemplateContent } from "@/lib/getEmailTemplateContent";
 
 export async function POST(request) {
   try {
@@ -123,6 +125,15 @@ export async function POST(request) {
     // Link lead to student
     student.leadId = lead._id;
     await student.save();
+
+    // Welcome email (fire-and-forget)
+    const studentName = `${student.firstName || ""} ${student.lastName || ""}`.trim() || "Student";
+    getEmailTemplateContent("student_welcome", { name: studentName }).then(
+      ({ subject, text, html }) =>
+        sendMail({ to: student.email, subject, text, html }).catch((err) =>
+          console.error("Student welcome email error:", err)
+        )
+    );
 
     // Generate JWT token
     const jwtSecret = getJwtSecret();

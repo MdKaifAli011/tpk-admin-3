@@ -9,6 +9,8 @@ import {
   handleApiError,
 } from "@/utils/apiResponse";
 import { verifyStudentToken } from "@/lib/studentAuth";
+import { sendMail } from "@/lib/mailer";
+import { getEmailTemplateContent } from "@/lib/getEmailTemplateContent";
 
 // GET: Fetch comments for a blog (public access for approved comments)
 export async function GET(request, { params }) {
@@ -151,6 +153,16 @@ export async function POST(request, { params }) {
     // Populate student info if available
     if (studentId) {
       await newComment.populate("studentId", "firstName lastName email");
+    }
+
+    // Confirmation email to commenter (fire-and-forget)
+    const toEmail = studentId ? (newComment.studentId?.email || null) : commentEmail;
+    if (toEmail) {
+      getEmailTemplateContent("blog_comment_received", {}).then(({ subject, text, html }) =>
+        sendMail({ to: toEmail, subject, text, html }).catch((err) =>
+          console.error("Blog comment confirmation email error:", err)
+        )
+      );
     }
 
     return successResponse(
