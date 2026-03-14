@@ -17,7 +17,7 @@ const emailSettingsSchema = new mongoose.Schema(
     mailPassword: { type: String, default: "" },
     mailEncryption: { type: String, default: "ssl" },
     mailFromAddress: { type: String, default: "" },
-    mailFromName: { type: String, default: "TestPrepKart" },
+    mailFromName: { type: String, default: "TestprepKart" },
     // Notifications: recipient addresses (comma-separated for multiple)
     leadExportMailTo: { type: String, default: "" },
     // Reserved for future: e.g. notificationMailTo, formSubmissionMailTo

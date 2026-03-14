@@ -22,7 +22,7 @@ export default function EmailSettingsManagement() {
     mailPassword: "",
     mailEncryption: "ssl",
     mailFromAddress: "",
-    mailFromName: "TestPrepKart",
+    mailFromName: "TestprepKart",
     leadExportMailTo: "",
   });
   const [mailPasswordMasked, setMailPasswordMasked] = useState("");
@@ -51,7 +51,7 @@ export default function EmailSettingsManagement() {
             mailPassword: "",
             mailEncryption: d.mailEncryption ?? "ssl",
             mailFromAddress: d.mailFromAddress ?? "",
-            mailFromName: d.mailFromName ?? "TestPrepKart",
+            mailFromName: d.mailFromName ?? "TestprepKart",
             leadExportMailTo: d.leadExportMailTo ?? "",
           });
           setMailPasswordMasked(d.mailPasswordMasked ?? "");
@@ -235,7 +235,7 @@ export default function EmailSettingsManagement() {
                     name="mailFromName"
                     value={form.mailFromName}
                     onChange={handleChange}
-                    placeholder="TestPrepKart"
+                    placeholder="TestprepKart"
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                   />
                 </div>
