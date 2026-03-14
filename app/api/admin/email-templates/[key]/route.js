@@ -4,9 +4,11 @@ import EmailTemplate from "@/models/EmailTemplate";
 import { successResponse, errorResponse, handleApiError } from "@/utils/apiResponse";
 import { requireAuth } from "@/middleware/authMiddleware";
 import { EMAIL_TEMPLATE_KEYS, EMAIL_TEMPLATE_META } from "@/lib/emailTemplateRegistry";
+import { getDefaultContent, getDefaultTemplateSampleVars } from "@/lib/getEmailTemplateContent";
 
 /**
  * GET - Single template by key. Admin only.
+ * Query: ?default=1 - return built-in default content (subject, bodyText, bodyHtml) with sample vars.
  */
 export async function GET(request, { params }) {
   try {
@@ -18,6 +20,16 @@ export async function GET(request, { params }) {
     const { key } = await params;
     if (!key || !EMAIL_TEMPLATE_KEYS.includes(key)) {
       return errorResponse("Invalid template key", 400);
+    }
+
+    const { searchParams } = new URL(request.url);
+    if (searchParams.get("default") === "1") {
+      const sampleVars = getDefaultTemplateSampleVars(key);
+      const { subject, text, html } = getDefaultContent(key, sampleVars);
+      return successResponse(
+        { subject, bodyText: text, bodyHtml: html },
+        "Default template preview"
+      );
     }
 
     await connectDB();

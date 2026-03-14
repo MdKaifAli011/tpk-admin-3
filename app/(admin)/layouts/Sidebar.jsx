@@ -95,24 +95,72 @@ const ALL_MENU_ITEMS = [
     icon: FaUserCog,
     sectionStart: true,
     children: [
-      { name: "Media Management", href: "/admin/media" },
-      { name: "Lead Management", href: "/admin/lead" },
-      { name: "Students", href: "/admin/student" },
-      { name: "Forms", href: "/admin/form" },
-      { name: "Role Management", href: "/admin/user-role" },
-      { name: "Overview Comments", href: "/admin/overview-comments" },
-      { name: "Notifications", href: "/admin/notification" },
-      { name: "Store", href: "/admin/store" },
-      { name: "Import Self Study Data", href: "/admin/bulk-import" },
-      { name: "Book JSON Import", href: "/admin/book-import" },
-      { name: "Meta Import", href: "/admin/seo-import" },
-      { name: "URL Export", href: "/admin/url-export" },
-      { name: "Site Settings", href: "/admin/site-settings" },
-      { name: "Email & Notifications", href: "/admin/email-settings" },
-      { name: "Email Templates", href: "/admin/email-templates" },
+      {
+        name: "Users & Access",
+        children: [
+          { name: "Lead Management", href: "/admin/lead" },
+          { name: "Students", href: "/admin/student" },
+          { name: "Role Management", href: "/admin/user-role" },
+        ],
+      },
+      {
+        name: "Content & Media",
+        children: [
+          { name: "Media Management", href: "/admin/media" },
+          { name: "Forms", href: "/admin/form" },
+          { name: "Overview Comments", href: "/admin/overview-comments" },
+          { name: "Notifications", href: "/admin/notification" },
+          { name: "Store", href: "/admin/store" },
+        ],
+      },
+      {
+        name: "Email",
+        children: [
+          { name: "Email & Notifications", href: "/admin/email-settings" },
+          { name: "Email Templates", href: "/admin/email-templates" },
+        ],
+      },
+      {
+        name: "Import & Export",
+        children: [
+          { name: "Import Self Study Data", href: "/admin/bulk-import" },
+          { name: "Book JSON Import", href: "/admin/book-import" },
+          { name: "Meta Import", href: "/admin/seo-import" },
+          { name: "URL Export", href: "/admin/url-export" },
+        ],
+      },
+      {
+        name: "Settings",
+        children: [
+          { name: "Site Settings", href: "/admin/site-settings" },
+        ],
+      },
     ],
   },
 ];
+
+/** Recursively collect all hrefs from an item (for permissions and active check). */
+function getAllHrefs(item) {
+  if (item.href) return [item.href];
+  if (Array.isArray(item.children)) return item.children.flatMap(getAllHrefs);
+  return [];
+}
+
+/** Recursively filter item tree by route permission; keeps structure. */
+function filterItemByRole(item, role) {
+  if (item.href) return canAccessRoute(item.href, role) ? item : null;
+  if (Array.isArray(item.children)) {
+    const filtered = item.children.map((c) => filterItemByRole(c, role)).filter(Boolean);
+    return filtered.length ? { ...item, children: filtered } : null;
+  }
+  return null;
+}
+
+/** Flatten to list of links for active-child resolution (respects nesting). */
+function flattenLinks(children) {
+  if (!children?.length) return [];
+  return children.flatMap((c) => (c.href ? [c] : flattenLinks(c.children)));
+}
 
 const Sidebar = memo(({ isOpen, onClose }) => {
   const pathname = usePathname();
@@ -277,22 +325,21 @@ const Sidebar = memo(({ isOpen, onClose }) => {
     return () => window.removeEventListener("storage", handleStorageChange);
   }, [pathname]); // Update when pathname changes
 
-  // Filter menu items by route permission: show section only if user can access at least one child
+  // Filter menu items by route permission; support nested Admin children
   const MENU_ITEMS = useMemo(() => {
     const role = normalizeRole(userRole);
     return ALL_MENU_ITEMS.filter((item) => {
       if (!item.children) return canAccessRoute(item.href, role);
-      const allowedChildren = item.children.filter((child) =>
-        canAccessRoute(child.href, role)
-      );
-      return allowedChildren.length > 0;
+      const hrefs = item.children.flatMap((c) => (c.href ? [c.href] : getAllHrefs(c)));
+      return hrefs.some((href) => canAccessRoute(href, role));
     }).map((item) => {
       if (!item.children) return item;
+      const isNested = item.children.some((c) => Array.isArray(c.children));
       return {
         ...item,
-        children: item.children.filter((child) =>
-          canAccessRoute(child.href, role)
-        ),
+        children: isNested
+          ? item.children.map((c) => filterItemByRole(c, role)).filter(Boolean)
+          : item.children.filter((child) => canAccessRoute(child.href, role)),
       };
     });
   }, [userRole]);
@@ -307,14 +354,14 @@ const Sidebar = memo(({ isOpen, onClose }) => {
   };
 
   /**
-   * Among sibling children, only the most specific (longest) href that matches pathname is active.
-   * Fixes "double active" e.g. /admin/download/file making both "Folder" and "Files" active.
+   * Among sibling children (or flattened nested links), the most specific (longest) href that matches pathname is active.
    */
   const getActiveChildHref = (children) => {
-    if (!children?.length) return null;
+    const links = flattenLinks(children);
+    if (!links.length) return null;
     let best = null;
     let bestLen = 0;
-    for (const child of children) {
+    for (const child of links) {
       const h = (child.href || "").replace(/\/$/, "");
       if (normalizedPath !== h && !normalizedPath.startsWith(h + "/")) continue;
       if (h.length > bestLen) {
@@ -326,24 +373,37 @@ const Sidebar = memo(({ isOpen, onClose }) => {
   };
 
   const toggleMenu = (name) => {
-    setExpandedMenus((prev) => ({
-      ...prev,
-      [name]: !prev[name],
-    }));
+    setExpandedMenus((prev) => ({ ...prev, [name]: !prev[name] }));
   };
 
-  // Auto-expand menu if current path matches (use filtered MENU_ITEMS)
+  const toggleNestedMenu = (parentName, groupName) => {
+    const key = `${parentName}::${groupName}`;
+    setExpandedMenus((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const isNestedExpanded = (parentName, groupName) => expandedMenus[`${parentName}::${groupName}`];
+
+  // Auto-expand top-level and nested menus when current path matches
   useEffect(() => {
+    const updates = {};
     MENU_ITEMS.forEach((item) => {
-      if (item.children) {
-        const hasActiveChild = item.children.some((child) =>
-          isActive(child.href)
-        );
-        if (hasActiveChild) {
-          setExpandedMenus((prev) => ({ ...prev, [item.name]: true }));
-        }
+      if (!item.children) return;
+      const links = flattenLinks(item.children);
+      const hasActiveChild = links.some((link) => isActive(link.href));
+      if (hasActiveChild) {
+        updates[item.name] = true;
+        item.children.forEach((child) => {
+          if (child.children) {
+            const groupLinks = flattenLinks(child.children);
+            const groupHasActive = groupLinks.some((link) => isActive(link.href));
+            if (groupHasActive) updates[`${item.name}::${child.name}`] = true;
+          }
+        });
       }
     });
+    if (Object.keys(updates).length) {
+      setExpandedMenus((prev) => ({ ...prev, ...updates }));
+    }
   }, [pathname, userRole, MENU_ITEMS]);
 
   return (
@@ -453,15 +513,80 @@ const Sidebar = memo(({ isOpen, onClose }) => {
                         </span>
                       )}
                       {isExpanded ? (
-                        <FaChevronDown className={`text-xs flex-shrink-0 ${hasActiveChild || active ? "text-white" : "text-gray-500"}`} />
+                        <FaChevronDown className={`text-xs shrink-0 ${hasActiveChild || active ? "text-white" : "text-gray-500"}`} />
                       ) : (
-                        <FaChevronRight className={`text-xs flex-shrink-0 ${hasActiveChild || active ? "text-white" : "text-gray-500"}`} />
+                        <FaChevronRight className={`text-xs shrink-0 ${hasActiveChild || active ? "text-white" : "text-gray-500"}`} />
                       )}
                     </button>
                     {isExpanded && (
                       <div className="ml-4 mt-1 space-y-1">
                         {children.map((child) => {
                           const activeChildHref = getActiveChildHref(children);
+                          if (child.children) {
+                            const nestedExpanded = isNestedExpanded(name, child.name);
+                            const groupLinks = flattenLinks(child.children);
+                            const groupActiveHref = getActiveChildHref(child.children);
+                            return (
+                              <div key={child.name} className="space-y-0.5">
+                                <button
+                                  type="button"
+                                  onClick={() => toggleNestedMenu(name, child.name)}
+                                  className={`
+                                    group w-full flex items-center gap-3 px-3 py-2 text-xs rounded-lg transition-colors text-left
+                                    ${groupActiveHref ? "bg-gray-100 text-gray-900 font-medium" : "text-gray-600 font-normal hover:bg-gray-50 hover:text-gray-900"}
+                                  `}
+                                >
+                                  <span className="w-2 h-2 rounded-full bg-current opacity-50 block shrink-0" />
+                                  <span className="flex-1 whitespace-nowrap overflow-hidden text-ellipsis">{child.name}</span>
+                                  {nestedExpanded ? (
+                                    <FaChevronDown className="text-[10px] text-gray-500 shrink-0" />
+                                  ) : (
+                                    <FaChevronRight className="text-[10px] text-gray-500 shrink-0" />
+                                  )}
+                                </button>
+                                {nestedExpanded && (
+                                  <div className="ml-3 mt-0.5 space-y-0.5 border-l border-gray-200 pl-2">
+                                    {child.children.map((link) => {
+                                      const linkActive = groupActiveHref !== null && link.href === groupActiveHref;
+                                      return (
+                                        <Link
+                                          key={link.name}
+                                          href={link.href}
+                                          onClick={onClose}
+                                          className={`
+                                            group flex items-center gap-3 px-2 py-1.5 text-xs rounded-md transition-colors
+                                            ${linkActive
+                                              ? "bg-blue-100 text-blue-700 font-medium"
+                                              : "text-gray-600 font-normal hover:bg-gray-50 hover:text-gray-900"
+                                            }
+                                          `}
+                                        >
+                                          <span className="relative shrink-0">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-current opacity-50 block" />
+                                            {link.name === "Overview Comments" && overviewCommentPendingCount > 0 && (
+                                              <span
+                                                className="absolute -top-0.5 -left-0.5 w-2 h-2 rounded-full bg-green-500 ring-2 ring-white animate-pulse"
+                                                title={`${overviewCommentPendingCount} pending`}
+                                                aria-hidden
+                                              />
+                                            )}
+                                          </span>
+                                          <span className="flex-1 whitespace-nowrap overflow-hidden text-ellipsis flex items-center gap-1.5">
+                                            {link.name}
+                                            {link.name === "Overview Comments" && overviewCommentPendingCount > 0 && (
+                                              <span className="shrink-0 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 rounded-full text-[10px] font-bold bg-green-500 text-white">
+                                                {overviewCommentPendingCount > 99 ? "99+" : overviewCommentPendingCount}
+                                              </span>
+                                            )}
+                                          </span>
+                                        </Link>
+                                      );
+                                    })}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          }
                           const childActive = activeChildHref !== null && child.href === activeChildHref;
                           return (
                             <Link
@@ -546,7 +671,7 @@ const Sidebar = memo(({ isOpen, onClose }) => {
                   }
                 >
                   <Icon
-                    className={`text-base flex-shrink-0 ${active
+                    className={`text-base shrink-0 ${active
                       ? "text-white"
                       : "text-gray-500 group-hover:text-gray-700"
                       }`}

@@ -8,6 +8,8 @@ import {
   FaChevronRight,
   FaInfoCircle,
   FaCode,
+  FaEye,
+  FaTimes,
 } from "react-icons/fa";
 import { ToastContainer, useToast } from "../ui/Toast";
 import { LoadingSpinner } from "../ui/SkeletonLoader";
@@ -18,6 +20,8 @@ export default function EmailTemplatesManagement() {
   const [loading, setLoading] = useState(true);
   const [savingKey, setSavingKey] = useState(null);
   const [expandedKey, setExpandedKey] = useState(null);
+  const [defaultPreview, setDefaultPreview] = useState(null);
+  const [loadingDefaultKey, setLoadingDefaultKey] = useState(null);
   const { toasts, removeToast, success, error: showError } = useToast();
   const mounted = useRef(true);
 
@@ -118,6 +122,30 @@ export default function EmailTemplatesManagement() {
 
   const toggleExpanded = (key) => {
     setExpandedKey((prev) => (prev === key ? null : key));
+  };
+
+  const handleViewDefault = async (t) => {
+    setLoadingDefaultKey(t.key);
+    try {
+      const res = await api.get(`/admin/email-templates/${t.key}`, {
+        params: { default: 1 },
+      });
+      if (res.data?.success && res.data.data) {
+        setDefaultPreview({
+          key: t.key,
+          name: t.name,
+          subject: res.data.data.subject ?? "",
+          bodyText: res.data.data.bodyText ?? "",
+          bodyHtml: res.data.data.bodyHtml ?? "",
+        });
+      } else {
+        showError("Could not load default template");
+      }
+    } catch (err) {
+      showError(err?.response?.data?.message || "Failed to load default template");
+    } finally {
+      setLoadingDefaultKey(null);
+    }
   };
 
   if (loading) {
@@ -252,6 +280,19 @@ export default function EmailTemplatesManagement() {
                         </button>
                         <button
                           type="button"
+                          onClick={() => handleViewDefault(t)}
+                          disabled={savingKey === t.key || loadingDefaultKey === t.key}
+                          className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 disabled:opacity-50"
+                        >
+                          {loadingDefaultKey === t.key ? (
+                            <LoadingSpinner size="small" />
+                          ) : (
+                            <FaEye className="w-4 h-4" />
+                          )}
+                          View default template
+                        </button>
+                        <button
+                          type="button"
                           onClick={() => handleResetToDefault(t.key)}
                           disabled={savingKey === t.key}
                           className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 disabled:opacity-50"
@@ -267,6 +308,59 @@ export default function EmailTemplatesManagement() {
           </div>
         </div>
       </div>
+
+      {/* Modal: View default template */}
+      {defaultPreview && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={() => setDefaultPreview(null)}>
+          <div
+            className="bg-white rounded-xl shadow-xl max-w-3xl w-full max-h-[90vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+              <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <FaEye className="text-indigo-600" />
+                Default template: {defaultPreview.name}
+              </h2>
+              <button
+                type="button"
+                onClick={() => setDefaultPreview(null)}
+                className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg"
+                aria-label="Close"
+              >
+                <FaTimes className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
+                <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg font-mono text-sm text-gray-800">
+                  {defaultPreview.subject || "(empty)"}
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Plain text body</label>
+                <pre className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg font-mono text-xs text-gray-800 whitespace-pre-wrap max-h-40 overflow-y-auto">
+                  {defaultPreview.bodyText || "(empty)"}
+                </pre>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">HTML preview</label>
+                <div className="border border-gray-200 rounded-lg overflow-hidden bg-gray-50">
+                  <iframe
+                    title="HTML preview"
+                    srcDoc={defaultPreview.bodyHtml || "<p>(empty)</p>"}
+                    className="w-full h-80 border-0"
+                    sandbox="allow-same-origin"
+                  />
+                </div>
+              </div>
+              <p className="text-xs text-gray-500">
+                This is the built-in default with sample placeholder values. Reset to default in the form above to use this content.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
