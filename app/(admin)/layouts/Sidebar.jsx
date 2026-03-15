@@ -33,6 +33,8 @@ const ALL_MENU_ITEMS = [
       { name: "Topics", href: "/admin/topic" },
       { name: "Sub Topics", href: "/admin/sub-topic" },
       { name: "Definitions", href: "/admin/definitions" },
+      { name: "Overview Comments", href: "/admin/overview-comments" },
+      { name: "Result Page", href: "/admin/result-page" },
     ],
   },
   {
@@ -108,7 +110,6 @@ const ALL_MENU_ITEMS = [
         children: [
           { name: "Media Management", href: "/admin/media" },
           { name: "Forms", href: "/admin/form" },
-          { name: "Overview Comments", href: "/admin/overview-comments" },
           { name: "Notifications", href: "/admin/notification" },
           { name: "Store", href: "/admin/store" },
         ],
@@ -482,7 +483,7 @@ const Sidebar = memo(({ isOpen, onClose }) => {
                             aria-hidden
                           />
                         )}
-                        {name === "Admin" && overviewCommentPendingCount > 0 && (
+                        {name === "Self Study" && overviewCommentPendingCount > 0 && (
                           <span
                             className="absolute -top-0.5 -left-0.5 w-2.5 h-2.5 rounded-full bg-green-500 ring-2 ring-white animate-pulse"
                             title={`${overviewCommentPendingCount} pending`}
@@ -507,7 +508,7 @@ const Sidebar = memo(({ isOpen, onClose }) => {
                           )}
                         </span>
                       )}
-                      {name === "Admin" && overviewCommentPendingCount > 0 && (
+                      {name === "Self Study" && overviewCommentPendingCount > 0 && (
                         <span className="shrink-0 inline-flex items-center justify-center min-w-5 h-5 px-2 rounded-full text-[10px] font-bold bg-green-500 text-white" title={`${overviewCommentPendingCount} pending`}>
                           {overviewCommentPendingCount > 99 ? "99+" : overviewCommentPendingCount}
                         </span>

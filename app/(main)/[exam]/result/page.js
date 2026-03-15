@@ -79,6 +79,7 @@ export default async function ExamResultPage({ params }) {
         examName={examName}
         examSlug={examSlugForLinks}
         currentYear={currentYear}
+        bannerImage={exam.resultBannerUrl ?? process.env.NEXT_PUBLIC_RESULT_BANNER_IMAGE}
       />
 
       <nav aria-label="Previous and next exam navigation">
