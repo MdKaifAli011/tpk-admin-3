@@ -33,6 +33,7 @@ import { invalidateListCachesFrom } from "@/lib/listCacheInvalidation";
 import { usePermissions, getPermissionMessage } from "../../hooks/usePermissions";
 import { IoFilterCircle, IoFilterOutline } from "react-icons/io5";
 import { useFilterPersistence } from "../../hooks/useFilterPersistence";
+import { useDebouncedSearchQuery } from "../../hooks/useDebouncedSearchQuery";
 import PaginationBar from "../ui/PaginationBar";
 
 const ChaptersManagement = () => {
@@ -45,6 +46,7 @@ const ChaptersManagement = () => {
     metaFilter: "all",
   });
   const { page, limit, filterExam, filterSubject, filterUnit, searchQuery, metaFilter } = filterState;
+  const [searchInput, setSearchInput] = useDebouncedSearchQuery(searchQuery, setFilterState);
 
   const [showAddForm, setShowAddForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
@@ -115,6 +117,7 @@ const ChaptersManagement = () => {
       if (filterExam) params.set("examId", filterExam);
       if (filterSubject) params.set("subjectId", filterSubject);
       if (filterUnit) params.set("unitId", filterUnit);
+      if (searchQuery.trim()) params.set("search", searchQuery.trim());
       const response = await api.get(`/chapter?${params.toString()}`);
 
       if (response.data.success) {
@@ -140,7 +143,7 @@ const ChaptersManagement = () => {
       setIsDataLoading(false);
       isFetchingRef.current = false;
     }
-  }, [metaFilter, page, limit, filterExam, filterSubject, filterUnit]);
+  }, [metaFilter, page, limit, filterExam, filterSubject, filterUnit, searchQuery]);
 
   useEffect(() => {
     fetchChapters();
@@ -312,14 +315,8 @@ const ChaptersManagement = () => {
     );
   }, [filterUnits, filterSubject]);
 
-  // Filter chapters by search (client-side on current page)
-  const filteredChapters = useMemo(() => {
-    if (!searchQuery.trim()) return chapters;
-    const query = searchQuery.toLowerCase().trim();
-    return chapters.filter((chapter) =>
-      chapter.name?.toLowerCase().includes(query)
-    );
-  }, [chapters, searchQuery]);
+  // Search is done server-side
+  const filteredChapters = chapters;
 
   // Get active filter count
   const activeFilterCount =
@@ -1582,10 +1579,8 @@ const ChaptersManagement = () => {
                 <div className="relative min-w-[200px] sm:min-w-[240px]">
                   <input
                     type="text"
-                    value={searchQuery}
-                    onChange={(e) =>
-                      setFilterState({ searchQuery: e.target.value, page: 1 })
-                    }
+value={searchInput}
+                      onChange={(e) => setSearchInput(e.target.value)}
                     placeholder="Search chapters..."
                     className="w-full pl-9 pr-8 py-1.5 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                   />

@@ -6,10 +6,9 @@ import { successResponse, errorResponse, handleApiError } from "@/utils/apiRespo
 import { requireAuth } from "@/middleware/authMiddleware";
 
 const currentYear = new Date().getFullYear();
-const defaultSessions = [currentYear, currentYear - 1, currentYear - 2, currentYear - 3, currentYear - 4];
 
 /**
- * GET - Admin: get result page content for an exam. Creates default doc if not exists.
+ * GET - Admin: get result page content for an exam + year. Query: ?year=2025
  */
 export async function GET(request, { params }) {
   try {
@@ -19,28 +18,28 @@ export async function GET(request, { params }) {
     }
     const { examId } = await params;
     if (!examId) return errorResponse("Exam ID required", 400);
+    const { searchParams } = new URL(request.url);
+    const yearParam = searchParams.get("year");
+    const year = yearParam ? parseInt(yearParam, 10) : null;
+    if (year == null || Number.isNaN(year)) {
+      return errorResponse("Query parameter year is required (e.g. ?year=2025)", 400);
+    }
     await connectDB();
     const exam = await Exam.findById(examId).select("_id name slug").lean();
     if (!exam) return errorResponse("Exam not found", 404);
-    let doc = await ExamResultPage.findOne({ examId: exam._id }).lean();
+    let doc = await ExamResultPage.findOne({ examId: exam._id, year }).lean();
+    if (!doc && year === currentYear) {
+      doc = await ExamResultPage.findOne({ examId: exam._id, year: null }).lean();
+    }
     if (!doc) {
-      const created = await ExamResultPage.create({
-        examId: exam._id,
-        sessions: defaultSessions,
-        toppers: [],
-        targetAchievers: [],
-        highlights: [],
-        studentTestimonials: [],
-        parentTestimonials: [],
-      });
-      doc = created.toObject();
+      return errorResponse("No result page for this year. Add the year first.", 404);
     }
     const data = {
       examId: String(doc.examId),
+      year: doc.year,
       bannerImage: doc.bannerImage ?? "",
       bannerTitle: doc.bannerTitle ?? "",
       bannerSubtitle: doc.bannerSubtitle ?? "",
-      sessions: Array.isArray(doc.sessions) && doc.sessions.length ? doc.sessions : defaultSessions,
       toppers: doc.toppers ?? [],
       targetAchievers: doc.targetAchievers ?? [],
       highlights: doc.highlights ?? [],
@@ -55,7 +54,7 @@ export async function GET(request, { params }) {
 }
 
 /**
- * PATCH - Admin: update result page content for an exam.
+ * PATCH - Admin: update result page content for an exam + year. Query: ?year=2025
  */
 export async function PATCH(request, { params }) {
   try {
@@ -65,6 +64,12 @@ export async function PATCH(request, { params }) {
     }
     const { examId } = await params;
     if (!examId) return errorResponse("Exam ID required", 400);
+    const { searchParams } = new URL(request.url);
+    const yearParam = searchParams.get("year");
+    const year = yearParam ? parseInt(yearParam, 10) : null;
+    if (year == null || Number.isNaN(year)) {
+      return errorResponse("Query parameter year is required (e.g. ?year=2025)", 400);
+    }
     await connectDB();
     const exam = await Exam.findById(examId).select("_id").lean();
     if (!exam) return errorResponse("Exam not found", 404);
@@ -73,7 +78,6 @@ export async function PATCH(request, { params }) {
     if (typeof body.bannerImage === "string") update.bannerImage = body.bannerImage.trim();
     if (typeof body.bannerTitle === "string") update.bannerTitle = body.bannerTitle.trim();
     if (typeof body.bannerSubtitle === "string") update.bannerSubtitle = body.bannerSubtitle.trim();
-    if (Array.isArray(body.sessions)) update.sessions = body.sessions.filter((n) => typeof n === "number");
     if (Array.isArray(body.toppers)) {
       update.toppers = body.toppers.map((t) => ({
         name: String(t?.name ?? "").trim(),
@@ -81,7 +85,6 @@ export async function PATCH(request, { params }) {
         location: String(t?.location ?? "").trim(),
         attempt: String(t?.attempt ?? "").trim(),
         image: String(t?.image ?? "").trim(),
-        year: typeof t?.year === "number" ? t.year : null,
       }));
     }
     if (Array.isArray(body.targetAchievers)) {
@@ -108,18 +111,26 @@ export async function PATCH(request, { params }) {
         text: String(t?.text ?? "").trim(),
       }));
     }
-    const doc = await ExamResultPage.findOneAndUpdate(
-      { examId: exam._id },
+    let doc = await ExamResultPage.findOneAndUpdate(
+      { examId: exam._id, year },
       { $set: update },
-      { new: true, upsert: true }
+      { new: true }
     ).lean();
+    if (!doc && year === currentYear) {
+      doc = await ExamResultPage.findOneAndUpdate(
+        { examId: exam._id, year: null },
+        { $set: update },
+        { new: true }
+      ).lean();
+    }
+    if (!doc) return errorResponse("No result page for this year.", 404);
     return successResponse(
       {
         examId: String(doc.examId),
+        year: doc.year,
         bannerImage: doc.bannerImage ?? "",
         bannerTitle: doc.bannerTitle ?? "",
         bannerSubtitle: doc.bannerSubtitle ?? "",
-        sessions: doc.sessions ?? [],
         toppers: doc.toppers ?? [],
         targetAchievers: doc.targetAchievers ?? [],
         highlights: doc.highlights ?? [],

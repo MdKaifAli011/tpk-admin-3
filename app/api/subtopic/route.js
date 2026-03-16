@@ -40,6 +40,7 @@ export async function GET(request) {
     const chapterId = searchParams.get("chapterId");
 
     const metaStatus = searchParams.get("metaStatus"); // filled, notFilled
+    const search = searchParams.get("search")?.trim();
 
     // Build query with case-insensitive status matching
     const filter = {};
@@ -75,6 +76,10 @@ export async function GET(request) {
     }
     if (statusFilter !== "all") {
       filter.status = { $regex: new RegExp(`^${statusFilter}$`, "i") };
+    }
+    if (search) {
+      const escapeRegex = (s) => String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      filter.name = { $regex: new RegExp(escapeRegex(search), "i") };
     }
 
     // Handle Metadata filtering

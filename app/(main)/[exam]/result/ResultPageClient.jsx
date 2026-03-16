@@ -1,11 +1,9 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import Link from "next/link";
 import { FaTrophy, FaQuoteLeft, FaStar, FaCheckCircle } from "react-icons/fa";
-import api from "@/lib/api";
 
-const DEFAULT_SESSIONS = [2025, 2024, 2023, 2022, 2021];
 const DEFAULT_HIGHLIGHTS = [
   "143 NRI students cleared the exam in their first attempt.",
   "Top achievers from Oman, UAE, Saudi Arabia, Singapore, Japan, and more.",
@@ -13,44 +11,19 @@ const DEFAULT_HIGHLIGHTS = [
   "Testprepkart continues to empower NRI students with top-notch guidance.",
 ];
 
-export default function ResultPageClient({ examName, examSlug, currentYear, bannerImage: initialBannerImage }) {
-  const [content, setContent] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [selectedYear, setSelectedYear] = useState(currentYear);
+export default function ResultPageClient({ examName, examSlug, initialData, initialYear, yearsList }) {
+  const content = initialData || {};
+  const displayYear = initialYear ?? new Date().getFullYear();
+  const years = Array.isArray(yearsList) && yearsList.length ? yearsList : [displayYear];
 
-  useEffect(() => {
-    let cancelled = false;
-    const fetchContent = async () => {
-      try {
-        const res = await api.get(`/result-page/${examSlug}`);
-        if (!cancelled && res.data?.success && res.data.data) {
-          setContent(res.data.data);
-          const sessions = res.data.data.sessions || DEFAULT_SESSIONS;
-          if (sessions.length && !sessions.includes(selectedYear)) {
-            setSelectedYear(sessions[0]);
-          }
-        }
-      } catch (err) {
-        if (!cancelled) setContent(null);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
-    fetchContent();
-    return () => { cancelled = true; };
-  }, [examSlug]);
-
-  const sessions = content?.sessions?.length ? content.sessions : DEFAULT_SESSIONS;
-  const displayYear = sessions.includes(selectedYear) ? selectedYear : sessions[0] ?? currentYear;
-  const bannerImage = content?.bannerImage ?? initialBannerImage ?? "";
-  const bannerTitle = content?.bannerTitle?.trim() || `${examName} Result ${displayYear}`;
-  const bannerSubtitle = content?.bannerSubtitle?.trim() || "Celebrate our toppers and connect with target achievers. Your success story could be next.";
-  const toppersRaw = content?.toppers ?? [];
-  const toppers = toppersRaw.filter((t) => t.year == null || t.year === displayYear);
-  const targetAchievers = content?.targetAchievers ?? [];
-  const highlights = content?.highlights?.length ? content.highlights : DEFAULT_HIGHLIGHTS;
-  const studentTestimonials = content?.studentTestimonials ?? [];
-  const parentTestimonials = content?.parentTestimonials ?? [];
+  const bannerImage = content.bannerImage ?? "";
+  const bannerTitle = (content.bannerTitle || "").trim() || `${examName} Result ${displayYear}`;
+  const bannerSubtitle = (content.bannerSubtitle || "").trim() || "Celebrate our toppers and connect with target achievers. Your success story could be next.";
+  const toppers = content.toppers ?? [];
+  const targetAchievers = content.targetAchievers ?? [];
+  const highlights = (content.highlights && content.highlights.length) ? content.highlights : DEFAULT_HIGHLIGHTS;
+  const studentTestimonials = content.studentTestimonials ?? [];
+  const parentTestimonials = content.parentTestimonials ?? [];
 
   return (
     <div className="space-y-10">
@@ -70,7 +43,7 @@ export default function ResultPageClient({ examName, examSlug, currentYear, bann
         <div className={`absolute inset-0 rounded-xl ${bannerImage ? "bg-black/60" : "bg-black/20"}`} aria-hidden />
         <div className="relative z-10 w-full px-6 sm:px-8 py-12 sm:py-16 text-center">
           <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-3 drop-shadow-md">
-            {loading ? "…" : bannerTitle}
+            {bannerTitle}
           </h2>
           <p className="text-white/90 text-sm sm:text-base md:text-lg max-w-2xl mx-auto drop-shadow-sm">
             {bannerSubtitle}
@@ -87,17 +60,23 @@ export default function ResultPageClient({ examName, examSlug, currentYear, bann
           Testprepkart {examName} {displayYear} Result – Connect with target achievers.
         </p>
         <div className="flex flex-wrap gap-2 mt-6">
-          {sessions.map((year) => (
-            <button
-              key={year}
-              type="button"
-              onClick={() => setSelectedYear(year)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                selectedYear === year ? "bg-indigo-600 text-white shadow-md" : "bg-white border border-gray-200 text-gray-700 hover:bg-indigo-50 hover:border-indigo-200"
-              }`}
-            >
-              {examName} Result {year}
-            </button>
+          {years.map((y) => (
+            y === displayYear ? (
+              <span
+                key={y}
+                className="px-4 py-2 rounded-lg text-sm font-medium bg-indigo-600 text-white shadow-md"
+              >
+                {examName} Result {y}
+              </span>
+            ) : (
+              <Link
+                key={y}
+                href={`/${examSlug}/result/${y}`}
+                className="px-4 py-2 rounded-lg text-sm font-medium bg-white border border-gray-200 text-gray-700 hover:bg-indigo-50 hover:border-indigo-200 transition-colors"
+              >
+                {examName} Result {y}
+              </Link>
+            )
           ))}
         </div>
       </section>
@@ -113,7 +92,14 @@ export default function ResultPageClient({ examName, examSlug, currentYear, bann
             toppers.map((topper, i) => (
               <article key={i} className="bg-white rounded-xl border border-gray-200 shadow-md hover:shadow-lg transition-shadow overflow-hidden flex flex-col w-full">
                 <div className="relative w-full h-[200px] sm:h-[220px] flex items-center justify-center bg-gradient-to-b from-indigo-50/95 to-purple-100/95 shrink-0">
-                  {topper.image ? (
+                  {topper.image && (topper.image.includes("youtube") || topper.image.includes("youtu.be")) ? (
+                    <iframe
+                      title=""
+                      src={topper.image.replace("watch?v=", "embed/").replace("youtu.be/", "youtube.com/embed/")}
+                      className="absolute inset-0 w-full h-full"
+                      allowFullScreen
+                    />
+                  ) : topper.image ? (
                     <img
                       src={topper.image}
                       alt=""
@@ -146,7 +132,7 @@ export default function ResultPageClient({ examName, examSlug, currentYear, bann
         </div>
       </section>
 
-      {/* Target Achievers – same card style as Toppers */}
+      {/* Target Achievers */}
       <section aria-labelledby="achievers-title">
         <h2 id="achievers-title" className="text-xl sm:text-2xl font-bold text-gray-900 mb-2 flex items-center gap-2">
           <FaTrophy className="text-amber-500" />
@@ -161,7 +147,14 @@ export default function ResultPageClient({ examName, examSlug, currentYear, bann
                 className="bg-white rounded-xl border border-gray-200 shadow-md hover:shadow-lg transition-shadow overflow-hidden flex flex-col w-full"
               >
                 <div className="relative w-full h-[200px] sm:h-[220px] flex items-center justify-center bg-gradient-to-b from-indigo-50/95 to-purple-100/95 shrink-0 overflow-hidden">
-                  {a.image ? (
+                  {a.image && (a.image.includes("youtube") || a.image.includes("youtu.be")) ? (
+                    <iframe
+                      title=""
+                      src={a.image.replace("watch?v=", "embed/").replace("youtu.be/", "youtube.com/embed/")}
+                      className="absolute inset-0 w-full h-full"
+                      allowFullScreen
+                    />
+                  ) : a.image ? (
                     <img
                       src={a.image}
                       alt=""

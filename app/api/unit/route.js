@@ -33,6 +33,7 @@ export async function GET(request) {
     const examId = searchParams.get("examId");
 
     const metaStatus = searchParams.get("metaStatus"); // filled, notFilled
+    const search = searchParams.get("search")?.trim();
 
     // Build query with case-insensitive status matching
     const query = {};
@@ -44,6 +45,10 @@ export async function GET(request) {
     }
     if (statusFilter !== "all") {
       query.status = { $regex: new RegExp(`^${statusFilter}$`, "i") };
+    }
+    if (search) {
+      const escapeRegex = (s) => String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      query.name = { $regex: new RegExp(escapeRegex(search), "i") };
     }
 
     // Handle Metadata filtering
@@ -66,11 +71,10 @@ export async function GET(request) {
       }
     }
 
-    // Create cache key
+    // Create cache key (skip cache when search is active)
     const cacheKey = `units-${JSON.stringify(query)}-${page}-${limit}`;
 
-    // Check cache (only for active status queries to avoid stale data)
-    if (statusFilter === STATUS.ACTIVE) {
+    if (statusFilter === STATUS.ACTIVE && !search) {
       const cached = cacheManager.get(cacheKey);
       if (cached) {
         return NextResponse.json(cached);

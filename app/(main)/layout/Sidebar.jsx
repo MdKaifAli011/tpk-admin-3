@@ -48,6 +48,7 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [blogCategories, setBlogCategories] = useState([]);
   const [downloadFolders, setDownloadFolders] = useState([]);
+  const [resultYears, setResultYears] = useState([]);
   const [activeMenu, setActiveMenu] = useState(null);
 
   // internal caches & dedupe
@@ -156,6 +157,7 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
   const isBlogPath = pathSegments[1] === "blog";
   const isCoursePath = pathSegments[1] === "course";
   const isResultPath = pathSegments[1] === "result";
+  const resultYearFromPath = isResultPath && pathSegments[2] ? parseInt(pathSegments[2], 10) : null;
   const isVideoLibraryPath = pathSegments[1] === "video-library";
   const isNotificationPath = pathSegments[0] === "notification" || pathSegments[1] === "notification";
   const notificationHref =
@@ -219,16 +221,16 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
       logger.warn("transformTreeData: Empty treeData received");
       return [];
     }
-    
+
     const exam = treeData[0];
     if (!exam) {
       logger.warn("transformTreeData: No exam found in treeData", { treeDataLength: treeData.length });
       return [];
     }
-    
+
     if (!exam.subjects || !Array.isArray(exam.subjects) || exam.subjects.length === 0) {
-      logger.warn("transformTreeData: No subjects found in exam", { 
-        examId: exam._id || exam.id, 
+      logger.warn("transformTreeData: No subjects found in exam", {
+        examId: exam._id || exam.id,
         examName: exam.name,
         hasSubjects: !!exam.subjects,
         subjectsType: typeof exam.subjects,
@@ -302,7 +304,7 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
 
       try {
         const key = `tree-${examId}`;
-        
+
         if (pendingApiRequestsRef.current.has(key)) {
           pendingApiRequestsRef.current.delete(key);
         }
@@ -311,7 +313,7 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
         pendingApiRequestsRef.current.set(key, promise);
 
         const treeData = await promise;
-        
+
         if (!treeLoadingRef.current.has(examId)) {
           pendingApiRequestsRef.current.delete(key);
           return;
@@ -341,14 +343,14 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
           setTree(transformed);
           setError("");
           setTreeLoading(false);
-          
+
           // Emit custom event for search modal
           if (typeof window !== "undefined") {
             window.dispatchEvent(new CustomEvent("treeDataUpdated", {
-              detail: { 
-                tree: transformed, 
+              detail: {
+                tree: transformed,
                 activeExamId: examId,
-                exams: exams 
+                exams: exams
               }
             }));
           }
@@ -366,7 +368,7 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
           setTree([]);
           setTreeLoading(false);
         }
-        
+
         pendingApiRequestsRef.current.delete(`tree-${examId}`);
       } finally {
         treeLoadingRef.current.delete(examId);
@@ -405,7 +407,7 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
   // load tree when activeExamId changes
   useEffect(() => {
     let previousExamId = activeExamId;
-    
+
     if (!activeExamId) {
       setTree([]);
       setTreeLoading(false);
@@ -421,6 +423,9 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
     setOpenSubjectId(null);
     setOpenUnitId(null);
     setOpenChapterId(null);
+    setBlogCategories([]);
+    setDownloadFolders([]);
+    setResultYears([]);
     setError("");
     setTree([]);
     setTreeLoading(true);
@@ -481,6 +486,26 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
     };
     loadDownloadFolders();
 
+    const loadResultYears = async () => {
+      if (!activeExamSlug) {
+        setResultYears([]);
+        return;
+      }
+      try {
+        const api = (await import("@/lib/api")).default;
+        const res = await api.get(`/result-page/${activeExamSlug}`);
+        if (res?.data?.success && res?.data?.data?.years) {
+          setResultYears(res.data.data.years);
+        } else {
+          setResultYears([]);
+        }
+      } catch (err) {
+        logger.error("Error loading result years:", err);
+        setResultYears([]);
+      }
+    };
+    loadResultYears();
+
     return () => {
       if (previousExamId && previousExamId !== activeExamId) {
         const prevKey = `tree-${previousExamId}`;
@@ -488,7 +513,7 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
         treeLoadingRef.current.delete(previousExamId);
       }
     };
-  }, [activeExamId, loadTree]);
+  }, [activeExamId, activeExamSlug, loadTree]);
 
   // Auto-expand menu based on path: on notification only Notifications is active; others stay collapsed
   useEffect(() => {
@@ -498,12 +523,14 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
       setActiveMenu('blog');
     } else if (isDownloadPath) {
       setActiveMenu('download');
+    } else if (isResultPath) {
+      setActiveMenu('result');
     } else if (isVideoLibraryPath) {
       setActiveMenu('video-library');
     } else {
       setActiveMenu('subjects');
     }
-  }, [pathname, isNotificationPath, isBlogPath, isDownloadPath, isVideoLibraryPath]);
+  }, [pathname, isNotificationPath, isBlogPath, isDownloadPath, isResultPath, isVideoLibraryPath]);
 
   // debounced query filtered tree (token-based / bag-of-words: "laws of motion class 9" matches any combination)
   const normalizedQuery = debouncedQuery.trim().toLowerCase();
@@ -677,11 +704,10 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
 
       {/* Sidebar - Premium Compact 300px (280px on mobile) */}
       <aside
-        className={`fixed left-0 z-[40] w-[280px] sm:w-[300px] min-w-[280px] sm:min-w-[300px] max-w-[280px] sm:max-w-[300px] bg-white/98 backdrop-blur-md border-r border-gray-200/80 transform transition-transform duration-300 ease-out ${
-          sidebarOpen && isOpen
+        className={`fixed left-0 z-[40] w-[280px] sm:w-[300px] min-w-[280px] sm:min-w-[300px] max-w-[280px] sm:max-w-[300px] bg-white/98 backdrop-blur-md border-r border-gray-200/80 transform transition-transform duration-300 ease-out ${sidebarOpen && isOpen
             ? "translate-x-0"
             : "-translate-x-full lg:translate-x-0"
-        } ${!isOpen ? "lg:hidden" : ""} lg:flex lg:flex-col`}
+          } ${!isOpen ? "lg:hidden" : ""} lg:flex lg:flex-col`}
         style={{
           top: `${navbarHeight}px`,
           height: `calc(100vh - ${navbarHeight}px)`,
@@ -707,7 +733,7 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
                   setTreeLoading(true);
                   setError("");
                 }
-                
+
                 setActiveExamId(exam._id);
                 const slug = exam.slug || createSlug(exam.name);
                 router.push(`/${slug}`);
@@ -760,11 +786,10 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
                     <button
                       type="button"
                       onClick={() => toggleMenu('subjects')}
-                      className={`w-full flex items-center justify-between px-3 py-2 font-semibold rounded-lg cursor-pointer transition-all duration-200 ${
-                        activeMenu === 'subjects'
+                      className={`w-full flex items-center justify-between px-3 py-2 font-semibold rounded-lg cursor-pointer transition-all duration-200 ${activeMenu === 'subjects'
                           ? "bg-indigo-100/60 shadow-sm text-indigo-900"
                           : "text-black hover:text-indigo-600 hover:bg-gray-50"
-                      }`}
+                        }`}
                       aria-label={activeMenu === 'subjects' ? "Collapse subjects menu" : "Expand subjects menu"}
                       aria-expanded={activeMenu === 'subjects'}
                     >
@@ -777,7 +802,7 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
                     </button>
                   </div>
                 )}
-                
+
                 {/* Keep tree mounted; hide with CSS when another menu is active to avoid remounting */}
                 <nav className={`mb-4 space-y-0.5 ${activeMenu !== 'subjects' ? 'hidden' : ''}`} aria-label="Subjects and units">
                   <SidebarNavigationTree
@@ -810,11 +835,10 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
                       <button
                         type="button"
                         onClick={() => toggleMenu('blog')}
-                        className={`w-full flex items-center justify-between px-3 py-2 font-semibold rounded-lg cursor-pointer transition-all duration-200 ${
-                          isBlogPath
+                        className={`w-full flex items-center justify-between px-3 py-2 font-semibold rounded-lg cursor-pointer transition-all duration-200 ${isBlogPath
                             ? "bg-indigo-100/60 shadow-sm text-indigo-900"
                             : "text-black hover:text-indigo-600 hover:bg-gray-50"
-                        }`}
+                          }`}
                         aria-label={activeMenu === 'blog' ? "Collapse blog menu" : "Expand blog menu"}
                         aria-expanded={activeMenu === 'blog'}
                       >
@@ -830,12 +854,11 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
                           <li>
                             <Link
                               href={`/${activeExamSlug}/blog`}
-                              className={`block px-2 py-1.5 font-normal text-[14px] rounded-md transition-all duration-200 ${
-                                pathname === `/${activeExamSlug}/blog` ||
-                                pathname === `/${activeExamSlug}/blog/`
+                              className={`block px-2 py-1.5 font-normal text-[14px] rounded-md transition-all duration-200 ${pathname === `/${activeExamSlug}/blog` ||
+                                  pathname === `/${activeExamSlug}/blog/`
                                   ? "text-indigo-600 bg-indigo-50 font-normal text-[14px]"
                                   : "text-black hover:text-indigo-600 hover:bg-gray-50"
-                              }`}
+                                }`}
                               onClick={closeOnMobile}
                               aria-label="View all blogs"
                             >
@@ -851,11 +874,10 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
                                 <li key={category._id || category.id}>
                                   <Link
                                     href={categoryPath}
-                                    className={`block px-2 py-1.5 rounded-md font-light text-[14px] transition-all duration-200 ${
-                                      isActive
+                                    className={`block px-2 py-1.5 rounded-md font-light text-[14px] transition-all duration-200 ${isActive
                                         ? "bg-indigo-100/60 shadow-sm text-indigo-900"
                                         : "text-black hover:text-indigo-600 hover:bg-gray-50"
-                                    }`}
+                                      }`}
                                     onClick={closeOnMobile}
                                   >
                                     {category.name}
@@ -885,11 +907,10 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
                       <button
                         type="button"
                         onClick={() => toggleMenu('download')}
-                        className={`w-full flex items-center justify-between px-3 py-2 font-semibold rounded-lg cursor-pointer transition-all duration-200 ${
-                          isDownloadPath
+                        className={`w-full flex items-center justify-between px-3 py-2 font-semibold rounded-lg cursor-pointer transition-all duration-200 ${isDownloadPath
                             ? "text-indigo-600 bg-indigo-50"
                             : "text-black hover:text-indigo-600 hover:bg-gray-50"
-                        }`}
+                          }`}
                         aria-label={activeMenu === 'download' ? "Collapse download menu" : "Expand download menu"}
                         aria-expanded={activeMenu === 'download'}
                       >
@@ -905,12 +926,11 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
                           <li>
                             <Link
                               href={`/${activeExamSlug}/download`}
-                              className={`block px-2 py-1.5 font-normal text-[14px] rounded-md transition-all duration-200 ${
-                                pathname === `/${activeExamSlug}/download` ||
-                                pathname === `/${activeExamSlug}/download/`
+                              className={`block px-2 py-1.5 font-normal text-[14px] rounded-md transition-all duration-200 ${pathname === `/${activeExamSlug}/download` ||
+                                  pathname === `/${activeExamSlug}/download/`
                                   ? "text-indigo-600 bg-indigo-50 font-normal text-[14px]"
                                   : "text-gray-600 hover:text-indigo-600 hover:bg-gray-50"
-                              }`}
+                                }`}
                               onClick={closeOnMobile}
                               aria-label="View all download folders"
                             >
@@ -929,11 +949,10 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
                                 <li key={folder._id}>
                                   <Link
                                     href={folderPath}
-                                    className={`block px-2 py-1.5 font-normal text-[14px] rounded-md transition-all duration-200 ${
-                                      isActive
+                                    className={`block px-2 py-1.5 font-normal text-[14px] rounded-md transition-all duration-200 ${isActive
                                         ? "text-indigo-600 font-normal text-[14px] bg-indigo-50"
                                         : "text-gray-600 font-normal text-[14px] hover:text-indigo-600 hover:bg-gray-50"
-                                    }`}
+                                      }`}
                                     onClick={closeOnMobile}
                                   >
                                     {folder.name}
@@ -961,11 +980,10 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
                   <li>
                     <Link
                       href={`/${activeExamSlug}/course`}
-                      className={`w-full flex items-center justify-between px-3 py-2 font-semibold rounded-lg transition-all duration-200 ${
-                        isCoursePath
+                      className={`w-full flex items-center justify-between px-3 py-2 font-semibold rounded-lg transition-all duration-200 ${isCoursePath
                           ? "bg-indigo-100/60 shadow-sm text-indigo-900"
                           : "text-black hover:text-indigo-600 hover:bg-gray-50"
-                      }`}
+                        }`}
                       onClick={closeOnMobile}
                       aria-label={activeExam ? `${activeExam.name} courses` : "Courses"}
                     >
@@ -978,21 +996,70 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
                   </li>
                 )}
 
-                {/* Result — /{examSlug}/result */}
+                {/* Result — expandable with years as submenu */}
                 {activeExamSlug ? (
                   <li>
-                    <Link
-                      href={`/${activeExamSlug}/result`}
-                      className={`w-full flex items-center justify-between px-3 py-2 font-semibold rounded-lg transition-all duration-200 ${
-                        isResultPath
-                          ? "bg-indigo-100/60 shadow-sm text-indigo-900"
-                          : "text-black hover:text-indigo-600 hover:bg-gray-50"
-                      }`}
-                      onClick={closeOnMobile}
-                      aria-label={activeExam ? `${activeExam.name} result` : "Result"}
-                    >
-                      <span>Result</span>
-                    </Link>
+                    <div>
+                      <button
+                        type="button"
+                        onClick={() => toggleMenu('result')}
+                        className={`w-full flex items-center justify-between px-3 py-2 font-semibold rounded-lg cursor-pointer transition-all duration-200 ${isResultPath
+                            ? "bg-indigo-100/60 shadow-sm text-indigo-900"
+                            : "text-black hover:text-indigo-600 hover:bg-gray-50"
+                          }`}
+                        aria-label={activeMenu === 'result' ? "Collapse result menu" : "Expand result menu"}
+                        aria-expanded={activeMenu === 'result'}
+                      >
+                        <span>Result</span>
+                        {activeMenu === 'result' ? (
+                          <FaChevronDown className="text-[10px] text-gray-400" aria-hidden />
+                        ) : (
+                          <FaChevronRight className="text-[10px] text-gray-400" aria-hidden />
+                        )}
+                      </button>
+                      {activeMenu === 'result' && (
+                        <ul className="ml-3 mt-1 space-y-0.5 border-l border-gray-200 pl-2">
+                          <li>
+                            <Link
+                              href={`/${activeExamSlug}/result`}
+                              className={`block px-2 py-1.5 font-normal text-[14px] rounded-md transition-all duration-200 ${pathname === `/${activeExamSlug}/result` ||
+                                  pathname === `/${activeExamSlug}/result/`
+                                    ? "text-indigo-600 bg-indigo-50 font-normal text-[14px]"
+                                    : "text-gray-600 hover:text-indigo-600 hover:bg-gray-50"
+                                }`}
+                              onClick={closeOnMobile}
+                              aria-label="View all result years"
+                            >
+                              All years
+                            </Link>
+                          </li>
+                          {resultYears.length > 0 ? (
+                            resultYears.map((year) => {
+                              const yearPath = `/${activeExamSlug}/result/${year}`;
+                              const isActive = pathname === yearPath || (isResultPath && resultYearFromPath === year);
+                              return (
+                                <li key={year}>
+                                  <Link
+                                    href={yearPath}
+                                    className={`block px-2 py-1.5 rounded-md font-light text-[14px] transition-all duration-200 ${isActive
+                                        ? "bg-indigo-100/60 shadow-sm text-indigo-900"
+                                        : "text-gray-600 hover:text-indigo-600 hover:bg-gray-50"
+                                      }`}
+                                    onClick={closeOnMobile}
+                                  >
+                                    Result {year}
+                                  </Link>
+                                </li>
+                              );
+                            })
+                          ) : (
+                            <li className="px-2 py-1.5 text-[11px] sm:text-xs text-gray-400 italic">
+                              No years
+                            </li>
+                          )}
+                        </ul>
+                      )}
+                    </div>
                   </li>
                 ) : (
                   <li className="px-3 py-2 text-xs sm:text-sm font-medium text-gray-400">
@@ -1005,11 +1072,10 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
                   {videoLibrarySlug ? (
                     <Link
                       href={`/${videoLibrarySlug}/video-library`}
-                      className={`w-full flex items-center justify-between px-3 py-2 font-semibold rounded-lg transition-all duration-200 ${
-                        isVideoLibraryPath
+                      className={`w-full flex items-center justify-between px-3 py-2 font-semibold rounded-lg transition-all duration-200 ${isVideoLibraryPath
                           ? "bg-indigo-100/60 shadow-sm text-indigo-900"
                           : "text-black hover:text-indigo-600 hover:bg-gray-50"
-                      }`}
+                        }`}
                       onClick={closeOnMobile}
                       aria-label="Video Library"
                     >
@@ -1029,11 +1095,10 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
                 <li>
                   <Link
                     href={notificationHref}
-                    className={`w-full flex items-center gap-2 px-3 py-2 font-semibold rounded-lg transition-all duration-200 ${
-                      isNotificationPath
+                    className={`w-full flex items-center gap-2 px-3 py-2 font-semibold rounded-lg transition-all duration-200 ${isNotificationPath
                         ? "bg-indigo-100/60 shadow-sm text-indigo-900"
                         : "text-black hover:text-indigo-600 hover:bg-gray-50"
-                    }`}
+                      }`}
                     onClick={closeOnMobile}
                     aria-label="Notifications"
                   >

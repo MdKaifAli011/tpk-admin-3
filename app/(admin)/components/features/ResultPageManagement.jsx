@@ -10,20 +10,28 @@ import {
   FaChevronDown,
   FaChevronRight,
   FaImage,
+  FaCalendarPlus,
+  FaList,
 } from "react-icons/fa";
 import { ToastContainer, useToast } from "../ui/Toast";
 import { LoadingSpinner } from "../ui/SkeletonLoader";
 import api from "@/lib/api";
 
-const emptyTopper = () => ({ name: "", percentile: "", location: "", attempt: "", image: "", year: null });
+const emptyTopper = () => ({ name: "", percentile: "", location: "", attempt: "", image: "" });
 const emptyAchiever = () => ({ title: "", description: "", image: "" });
 const emptyTestimonial = () => ({ name: "", location: "", text: "" });
+const currentYear = new Date().getFullYear();
 
 export default function ResultPageManagement() {
   const [exams, setExams] = useState([]);
   const [selectedExamId, setSelectedExamId] = useState("");
+  const [years, setYears] = useState([]);
+  const [selectedYear, setSelectedYear] = useState(null);
+  const [newYearInput, setNewYearInput] = useState(currentYear);
+  const [addingYear, setAddingYear] = useState(false);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [loadingYears, setLoadingYears] = useState(false);
   const [loadingContent, setLoadingContent] = useState(false);
   const [saving, setSaving] = useState(false);
   const [expandedSection, setExpandedSection] = useState("banner");
@@ -44,31 +52,89 @@ export default function ResultPageManagement() {
     } finally {
       setLoading(false);
     }
-  }, [selectedExamId]);
+  }, [selectedExamId, showError]);
 
-  const fetchContent = useCallback(async (examId) => {
-    if (!examId) return;
+  const fetchYears = useCallback(async (examId) => {
+    if (!examId) {
+      setYears([]);
+      return;
+    }
+    try {
+      setLoadingYears(true);
+      const res = await api.get(`/admin/result-page/${examId}/years`);
+      if (res.data?.success && res.data.data?.years) {
+        setYears(res.data.data.years);
+      } else {
+        setYears([]);
+      }
+    } catch (err) {
+      showError(err?.response?.data?.message || "Failed to load years");
+      setYears([]);
+    } finally {
+      setLoadingYears(false);
+    }
+  }, [showError]);
+
+  const fetchContent = useCallback(async (examId, year) => {
+    if (!examId || year == null) return;
     try {
       setLoadingContent(true);
-      const res = await api.get(`/admin/result-page/${examId}`);
+      const res = await api.get(`/admin/result-page/${examId}?year=${year}`);
       if (res.data?.success && res.data.data) {
         setData(res.data.data);
+      } else {
+        setData(null);
       }
     } catch (err) {
       showError(err?.response?.data?.message || "Failed to load result page");
+      setData(null);
     } finally {
       setLoadingContent(false);
     }
-  }, []);
+  }, [showError]);
 
   useEffect(() => {
     fetchExams();
-  }, []);
+  }, [fetchExams]);
 
   useEffect(() => {
-    if (selectedExamId) fetchContent(selectedExamId);
-    else setData(null);
-  }, [selectedExamId, fetchContent]);
+    if (selectedExamId) fetchYears(selectedExamId);
+    else setYears([]);
+  }, [selectedExamId, fetchYears]);
+
+  useEffect(() => {
+    if (selectedExamId && selectedYear != null) {
+      fetchContent(selectedExamId, selectedYear);
+    } else {
+      setData(null);
+    }
+  }, [selectedExamId, selectedYear, fetchContent]);
+
+  const handleAddYear = async (e) => {
+    e.preventDefault();
+    if (!selectedExamId) return;
+    const year = parseInt(String(newYearInput), 10);
+    if (Number.isNaN(year) || year < 2000 || year > 2100) {
+      showError("Enter a valid year (2000-2100)");
+      return;
+    }
+    setAddingYear(true);
+    try {
+      const res = await api.post(`/admin/result-page/${selectedExamId}/years`, { year });
+      if (res.data?.success) {
+        success(`Year ${year} added.`);
+        setYears((prev) => [...prev, year].sort((a, b) => b - a));
+        setSelectedYear(year);
+        setNewYearInput(currentYear);
+      } else {
+        showError(res.data?.message || "Failed to add year");
+      }
+    } catch (err) {
+      showError(err?.response?.data?.message || "Failed to add year");
+    } finally {
+      setAddingYear(false);
+    }
+  };
 
   const update = (path, value) => {
     setData((prev) => {
@@ -108,14 +174,13 @@ export default function ResultPageManagement() {
   };
 
   const handleSave = async () => {
-    if (!selectedExamId || !data) return;
+    if (!selectedExamId || selectedYear == null || !data) return;
     setSaving(true);
     try {
-      const res = await api.patch(`/admin/result-page/${selectedExamId}`, {
+      const res = await api.patch(`/admin/result-page/${selectedExamId}?year=${selectedYear}`, {
         bannerImage: data.bannerImage,
         bannerTitle: data.bannerTitle,
         bannerSubtitle: data.bannerSubtitle,
-        sessions: data.sessions,
         toppers: data.toppers,
         targetAchievers: data.targetAchievers,
         highlights: data.highlights,
@@ -139,6 +204,8 @@ export default function ResultPageManagement() {
     setExpandedSection((s) => (s === id ? "" : id));
   };
 
+  const selectedExam = exams.find((e) => e._id === selectedExamId);
+
   if (loading) {
     return (
       <div className="flex justify-center py-12">
@@ -147,24 +214,26 @@ export default function ResultPageManagement() {
     );
   }
 
-  const selectedExam = exams.find((e) => e._id === selectedExamId);
-
   return (
     <>
       <ToastContainer toasts={toasts} removeToast={removeToast} />
       <div className="space-y-6">
         <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
-            <h1 className="text-xl font-semibold text-gray-900">Result Page Content</h1>
+            <h1 className="text-xl font-semibold text-gray-900">Result Page Management</h1>
             <p className="text-sm text-gray-600 mt-1">
-              Manage banner, sessions, toppers, target achievers, highlights, and testimonials for the public result page.
+              Select an exam, create or choose a year, then edit Banner, Toppers, Target Achievers, Highlights, and Testimonials for that year.
             </p>
             <div className="mt-4 flex flex-wrap items-center gap-4">
               <label className="flex items-center gap-2">
                 <span className="text-sm font-medium text-gray-700">Exam</span>
                 <select
                   value={selectedExamId}
-                  onChange={(e) => setSelectedExamId(e.target.value)}
+                  onChange={(e) => {
+                    setSelectedExamId(e.target.value);
+                    setSelectedYear(null);
+                    setData(null);
+                  }}
                   className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
                 >
                   <option value="">Select exam</option>
@@ -188,155 +257,199 @@ export default function ResultPageManagement() {
             </div>
           </div>
 
-          {loadingContent ? (
-            <div className="flex justify-center py-12">
-              <LoadingSpinner size="large" />
-            </div>
-          ) : data ? (
-            <div className="p-6 space-y-4">
-              {/* Banner */}
-              <Section title="Banner" icon={FaImage} expanded={expandedSection === "banner"} onToggle={() => toggleSection("banner")}>
-                <div className="space-y-3">
-                  <InputRow label="Banner image URL" value={data.bannerImage} onChange={(v) => update("bannerImage", v)} placeholder="https://..." />
-                  <InputRow label="Banner title" value={data.bannerTitle} onChange={(v) => update("bannerTitle", v)} placeholder="e.g. JEE Result 2025" />
-                  <InputRow label="Banner subtitle" value={data.bannerSubtitle} onChange={(v) => update("bannerSubtitle", v)} textarea placeholder="Short line under title" />
-                </div>
-              </Section>
-
-              {/* Sessions */}
-              <Section title="Result sessions (years)" icon={FaTrophy} expanded={expandedSection === "sessions"} onToggle={() => toggleSection("sessions")}>
-                <div className="space-y-2">
-                  <p className="text-xs text-gray-500">Comma-separated years, e.g. 2025,2024,2023</p>
-                  <input
-                    type="text"
-                    value={(data.sessions || []).join(", ")}
-                    onChange={(e) => {
-                      const val = e.target.value
-                        .split(",")
-                        .map((n) => parseInt(n.trim(), 10))
-                        .filter((n) => !Number.isNaN(n));
-                      update("sessions", val);
-                    }}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
-                    placeholder="2025, 2024, 2023"
-                  />
-                </div>
-              </Section>
-
-              {/* Toppers */}
-              <Section title="Toppers" icon={FaTrophy} expanded={expandedSection === "toppers"} onToggle={() => toggleSection("toppers")}>
-                <Repeater
-                  items={data.toppers || []}
-                  onAdd={() => addArrayItem("toppers", emptyTopper)}
-                  onRemove={(i) => removeArrayItem("toppers", i)}
-                  label="Topper"
-                >
-                  {(item, i) => (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-2">
-                      <input placeholder="Name" value={item.name} onChange={(e) => updateArray("toppers", i, "name", e.target.value)} className="rounded border px-2 py-1.5 text-sm" />
-                      <input placeholder="Percentile" value={item.percentile} onChange={(e) => updateArray("toppers", i, "percentile", e.target.value)} className="rounded border px-2 py-1.5 text-sm" />
-                      <input placeholder="Location" value={item.location} onChange={(e) => updateArray("toppers", i, "location", e.target.value)} className="rounded border px-2 py-1.5 text-sm" />
-                      <input placeholder="Attempt" value={item.attempt} onChange={(e) => updateArray("toppers", i, "attempt", e.target.value)} className="rounded border px-2 py-1.5 text-sm sm:col-span-2" />
-                      <input placeholder="Image URL" value={item.image} onChange={(e) => updateArray("toppers", i, "image", e.target.value)} className="rounded border px-2 py-1.5 text-sm" />
-                      <input type="number" placeholder="Year" value={item.year ?? ""} onChange={(e) => updateArray("toppers", i, "year", e.target.value ? parseInt(e.target.value, 10) : null)} className="rounded border px-2 py-1.5 text-sm" />
-                    </div>
-                  )}
-                </Repeater>
-              </Section>
-
-              {/* Target Achievers */}
-              <Section title="Target Achievers" icon={FaTrophy} expanded={expandedSection === "achievers"} onToggle={() => toggleSection("achievers")}>
-                <Repeater
-                  items={data.targetAchievers || []}
-                  onAdd={() => addArrayItem("targetAchievers", emptyAchiever)}
-                  onRemove={(i) => removeArrayItem("targetAchievers", i)}
-                  label="Story"
-                >
-                  {(item, i) => (
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                      <input placeholder="Title" value={item.title} onChange={(e) => updateArray("targetAchievers", i, "title", e.target.value)} className="rounded border px-2 py-1.5 text-sm" />
-                      <input placeholder="Image URL" value={item.image} onChange={(e) => updateArray("targetAchievers", i, "image", e.target.value)} className="rounded border px-2 py-1.5 text-sm" />
-                      <textarea placeholder="Description" value={item.description} onChange={(e) => updateArray("targetAchievers", i, "description", e.target.value)} className="rounded border px-2 py-1.5 text-sm" rows={2} />
-                    </div>
-                  )}
-                </Repeater>
-              </Section>
-
-              {/* Highlights */}
-              <Section title="Highlights" icon={FaTrophy} expanded={expandedSection === "highlights"} onToggle={() => toggleSection("highlights")}>
-                <Repeater
-                  items={data.highlights || []}
-                  onAdd={() => setData((p) => ({ ...p, highlights: [...(p.highlights || []), ""] }))}
-                  onRemove={(i) => removeArrayItem("highlights", i)}
-                  label="Highlight"
-                >
-                  {(item, i) => (
-                    <input
-                      placeholder="Highlight text"
-                      value={typeof item === "string" ? item : ""}
-                      onChange={(e) => {
-                        setData((p) => {
-                          const h = [...(p.highlights || [])];
-                          h[i] = e.target.value;
-                          return { ...p, highlights: h };
-                        });
-                      }}
-                      className="w-full rounded border px-2 py-1.5 text-sm"
-                    />
-                  )}
-                </Repeater>
-              </Section>
-
-              {/* What Our Students Say */}
-              <Section title="What Our Students Say" icon={FaQuoteLeft} expanded={expandedSection === "students"} onToggle={() => toggleSection("students")}>
-                <Repeater
-                  items={data.studentTestimonials || []}
-                  onAdd={() => addArrayItem("studentTestimonials", emptyTestimonial)}
-                  onRemove={(i) => removeArrayItem("studentTestimonials", i)}
-                  label="Testimonial"
-                >
-                  {(item, i) => (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      <input placeholder="Name" value={item.name} onChange={(e) => updateArray("studentTestimonials", i, "name", e.target.value)} className="rounded border px-2 py-1.5 text-sm" />
-                      <input placeholder="Location" value={item.location} onChange={(e) => updateArray("studentTestimonials", i, "location", e.target.value)} className="rounded border px-2 py-1.5 text-sm" />
-                      <textarea placeholder="Quote" value={item.text} onChange={(e) => updateArray("studentTestimonials", i, "text", e.target.value)} className="rounded border px-2 py-1.5 text-sm sm:col-span-2" rows={3} />
-                    </div>
-                  )}
-                </Repeater>
-              </Section>
-
-              {/* What Our Parents Say */}
-              <Section title="What Our Parents Say" icon={FaQuoteLeft} expanded={expandedSection === "parents"} onToggle={() => toggleSection("parents")}>
-                <Repeater
-                  items={data.parentTestimonials || []}
-                  onAdd={() => addArrayItem("parentTestimonials", emptyTestimonial)}
-                  onRemove={(i) => removeArrayItem("parentTestimonials", i)}
-                  label="Testimonial"
-                >
-                  {(item, i) => (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      <input placeholder="Name" value={item.name} onChange={(e) => updateArray("parentTestimonials", i, "name", e.target.value)} className="rounded border px-2 py-1.5 text-sm" />
-                      <input placeholder="Location" value={item.location} onChange={(e) => updateArray("parentTestimonials", i, "location", e.target.value)} className="rounded border px-2 py-1.5 text-sm" />
-                      <textarea placeholder="Quote" value={item.text} onChange={(e) => updateArray("parentTestimonials", i, "text", e.target.value)} className="rounded border px-2 py-1.5 text-sm sm:col-span-2" rows={3} />
-                    </div>
-                  )}
-                </Repeater>
-              </Section>
-
-              <div className="pt-4 border-t">
-                <button
-                  type="button"
-                  onClick={handleSave}
-                  disabled={saving}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50"
-                >
-                  {saving ? <LoadingSpinner size="small" color="white" /> : <FaSave />}
-                  {saving ? "Saving…" : "Save Result Page"}
-                </button>
-              </div>
-            </div>
+          {!selectedExamId ? (
+            <div className="p-6 text-gray-500 text-sm">Select an exam to manage result years and content.</div>
           ) : (
-            <div className="p-6 text-gray-500 text-sm">Select an exam to edit result page content.</div>
+            <div className="p-6 space-y-6">
+              {/* Add year + Years list */}
+              <section className="border border-gray-200 rounded-lg p-4 bg-gray-50/50">
+                <h2 className="flex items-center gap-2 font-medium text-gray-900 mb-3">
+                  <FaCalendarPlus className="text-indigo-600" />
+                  Result years
+                </h2>
+                <form onSubmit={handleAddYear} className="flex flex-wrap items-center gap-3 mb-4">
+                  <input
+                    type="number"
+                    min={2000}
+                    max={2100}
+                    value={newYearInput}
+                    onChange={(e) => setNewYearInput(e.target.value)}
+                    className="w-24 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                  />
+                  <button
+                    type="submit"
+                    disabled={addingYear}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50"
+                  >
+                    {addingYear ? <LoadingSpinner size="small" color="white" /> : <FaPlus />}
+                    Add year
+                  </button>
+                </form>
+                {loadingYears ? (
+                  <div className="flex justify-center py-4">
+                    <LoadingSpinner size="small" />
+                  </div>
+                ) : years.length === 0 ? (
+                  <p className="text-sm text-gray-500">No years yet. Add a year above to create the first result page for this exam.</p>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {years.map((y) => (
+                      <button
+                        key={y}
+                        type="button"
+                        onClick={() => setSelectedYear(y)}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                          selectedYear === y
+                            ? "bg-indigo-600 text-white shadow-md"
+                            : "bg-white border border-gray-200 text-gray-700 hover:bg-indigo-50 hover:border-indigo-200"
+                        }`}
+                      >
+                        {y}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </section>
+
+              {/* Content form for selected year */}
+              {selectedYear != null && (
+                <>
+                  <h2 className="flex items-center gap-2 font-medium text-gray-900">
+                    <FaList className="text-indigo-600" />
+                    Edit content for year {selectedYear}
+                  </h2>
+                  {loadingContent ? (
+                    <div className="flex justify-center py-12">
+                      <LoadingSpinner size="large" />
+                    </div>
+                  ) : data ? (
+                    <div className="space-y-4">
+                      <Section title="Banner" icon={FaImage} expanded={expandedSection === "banner"} onToggle={() => toggleSection("banner")}>
+                        <div className="space-y-3">
+                          <InputRow label="Banner image URL" value={data.bannerImage} onChange={(v) => update("bannerImage", v)} placeholder="https://..." />
+                          <InputRow label="Banner title" value={data.bannerTitle} onChange={(v) => update("bannerTitle", v)} placeholder={`e.g. ${selectedExam?.name} Result ${selectedYear}`} />
+                          <InputRow label="Banner subtitle" value={data.bannerSubtitle} onChange={(v) => update("bannerSubtitle", v)} textarea placeholder="Short line under title" />
+                        </div>
+                      </Section>
+
+                      <Section title="Toppers" icon={FaTrophy} expanded={expandedSection === "toppers"} onToggle={() => toggleSection("toppers")}>
+                        <p className="text-xs text-gray-500 mb-2">Image URL or YouTube video URL</p>
+                        <Repeater
+                          items={data.toppers || []}
+                          onAdd={() => addArrayItem("toppers", emptyTopper)}
+                          onRemove={(i) => removeArrayItem("toppers", i)}
+                          label="Topper"
+                        >
+                          {(item, i) => (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2">
+                              <input placeholder="Name" value={item.name} onChange={(e) => updateArray("toppers", i, "name", e.target.value)} className="rounded border px-2 py-1.5 text-sm" />
+                              <input placeholder="Percentile" value={item.percentile} onChange={(e) => updateArray("toppers", i, "percentile", e.target.value)} className="rounded border px-2 py-1.5 text-sm" />
+                              <input placeholder="Location" value={item.location} onChange={(e) => updateArray("toppers", i, "location", e.target.value)} className="rounded border px-2 py-1.5 text-sm" />
+                              <input placeholder="Attempt" value={item.attempt} onChange={(e) => updateArray("toppers", i, "attempt", e.target.value)} className="rounded border px-2 py-1.5 text-sm" />
+                              <input placeholder="Image URL or YouTube" value={item.image} onChange={(e) => updateArray("toppers", i, "image", e.target.value)} className="rounded border px-2 py-1.5 text-sm" />
+                            </div>
+                          )}
+                        </Repeater>
+                      </Section>
+
+                      <Section title="Target Achievers" icon={FaTrophy} expanded={expandedSection === "achievers"} onToggle={() => toggleSection("achievers")}>
+                        <p className="text-xs text-gray-500 mb-2">Image URL or YouTube video URL</p>
+                        <Repeater
+                          items={data.targetAchievers || []}
+                          onAdd={() => addArrayItem("targetAchievers", emptyAchiever)}
+                          onRemove={(i) => removeArrayItem("targetAchievers", i)}
+                          label="Story"
+                        >
+                          {(item, i) => (
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                              <input placeholder="Title" value={item.title} onChange={(e) => updateArray("targetAchievers", i, "title", e.target.value)} className="rounded border px-2 py-1.5 text-sm" />
+                              <input placeholder="Image URL or YouTube" value={item.image} onChange={(e) => updateArray("targetAchievers", i, "image", e.target.value)} className="rounded border px-2 py-1.5 text-sm" />
+                              <textarea placeholder="Description" value={item.description} onChange={(e) => updateArray("targetAchievers", i, "description", e.target.value)} className="rounded border px-2 py-1.5 text-sm sm:col-span-3" rows={2} />
+                            </div>
+                          )}
+                        </Repeater>
+                      </Section>
+
+                      <Section title="Highlights" icon={FaTrophy} expanded={expandedSection === "highlights"} onToggle={() => toggleSection("highlights")}>
+                        <Repeater
+                          items={data.highlights || []}
+                          onAdd={() => setData((p) => ({ ...p, highlights: [...(p.highlights || []), ""] }))}
+                          onRemove={(i) => removeArrayItem("highlights", i)}
+                          label="Highlight"
+                        >
+                          {(item, i) => (
+                            <input
+                              placeholder="Highlight text"
+                              value={typeof item === "string" ? item : ""}
+                              onChange={(e) => {
+                                setData((p) => {
+                                  const h = [...(p.highlights || [])];
+                                  h[i] = e.target.value;
+                                  return { ...p, highlights: h };
+                                });
+                              }}
+                              className="w-full rounded border px-2 py-1.5 text-sm"
+                            />
+                          )}
+                        </Repeater>
+                      </Section>
+
+                      <Section title="What Our Students Say" icon={FaQuoteLeft} expanded={expandedSection === "students"} onToggle={() => toggleSection("students")}>
+                        <Repeater
+                          items={data.studentTestimonials || []}
+                          onAdd={() => addArrayItem("studentTestimonials", emptyTestimonial)}
+                          onRemove={(i) => removeArrayItem("studentTestimonials", i)}
+                          label="Testimonial"
+                        >
+                          {(item, i) => (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              <input placeholder="Name" value={item.name} onChange={(e) => updateArray("studentTestimonials", i, "name", e.target.value)} className="rounded border px-2 py-1.5 text-sm" />
+                              <input placeholder="Location" value={item.location} onChange={(e) => updateArray("studentTestimonials", i, "location", e.target.value)} className="rounded border px-2 py-1.5 text-sm" />
+                              <textarea placeholder="Quote" value={item.text} onChange={(e) => updateArray("studentTestimonials", i, "text", e.target.value)} className="rounded border px-2 py-1.5 text-sm sm:col-span-2" rows={3} />
+                            </div>
+                          )}
+                        </Repeater>
+                      </Section>
+
+                      <Section title="What Our Parents Say" icon={FaQuoteLeft} expanded={expandedSection === "parents"} onToggle={() => toggleSection("parents")}>
+                        <Repeater
+                          items={data.parentTestimonials || []}
+                          onAdd={() => addArrayItem("parentTestimonials", emptyTestimonial)}
+                          onRemove={(i) => removeArrayItem("parentTestimonials", i)}
+                          label="Testimonial"
+                        >
+                          {(item, i) => (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              <input placeholder="Name" value={item.name} onChange={(e) => updateArray("parentTestimonials", i, "name", e.target.value)} className="rounded border px-2 py-1.5 text-sm" />
+                              <input placeholder="Location" value={item.location} onChange={(e) => updateArray("parentTestimonials", i, "location", e.target.value)} className="rounded border px-2 py-1.5 text-sm" />
+                              <textarea placeholder="Quote" value={item.text} onChange={(e) => updateArray("parentTestimonials", i, "text", e.target.value)} className="rounded border px-2 py-1.5 text-sm sm:col-span-2" rows={3} />
+                            </div>
+                          )}
+                        </Repeater>
+                      </Section>
+
+                      <div className="pt-4 border-t">
+                        <button
+                          type="button"
+                          onClick={handleSave}
+                          disabled={saving}
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50"
+                        >
+                          {saving ? <LoadingSpinner size="small" color="white" /> : <FaSave />}
+                          {saving ? "Saving…" : "Save Result Page"}
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="py-6 text-gray-500 text-sm">Failed to load content for this year.</div>
+                  )}
+                </>
+              )}
+
+              {selectedExamId && selectedYear == null && years.length > 0 && (
+                <p className="text-sm text-gray-500">Click a year above to edit its content.</p>
+              )}
+            </div>
           )}
         </div>
       </div>

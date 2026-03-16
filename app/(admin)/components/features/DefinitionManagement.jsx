@@ -16,6 +16,7 @@ import { invalidateListCachesFrom } from "@/lib/listCacheInvalidation";
 import { usePermissions, getPermissionMessage } from "../../hooks/usePermissions";
 import { IoFilterOutline } from "react-icons/io5";
 import { useFilterPersistence } from "../../hooks/useFilterPersistence";
+import { useDebouncedSearchQuery } from "../../hooks/useDebouncedSearchQuery";
 import PaginationBar from "../ui/PaginationBar";
 
 const DefinitionManagement = () => {
@@ -31,6 +32,7 @@ const DefinitionManagement = () => {
     metaFilter: "all",
   });
   const { page, limit, filterExam, filterSubject, filterUnit, filterChapter, filterTopic, filterSubTopic, searchQuery, metaFilter } = filterState;
+  const [searchInput, setSearchInput] = useDebouncedSearchQuery(searchQuery, setFilterState);
 
   const { toasts, removeToast, success, error: showError } = useToast();
   const [showAddForm, setShowAddForm] = useState(false);
@@ -104,6 +106,7 @@ const DefinitionManagement = () => {
       if (filterChapter) params.set("chapterId", filterChapter);
       if (filterTopic) params.set("topicId", filterTopic);
       if (filterSubTopic) params.set("subTopicId", filterSubTopic);
+      if (searchQuery.trim()) params.set("search", searchQuery.trim());
       const response = await api.get(`/definition?${params.toString()}`);
 
       if (response.data.success) {
@@ -133,7 +136,7 @@ const DefinitionManagement = () => {
       setIsDataLoading(false);
       isFetchingRef.current = false;
     }
-  }, [metaFilter, page, limit, filterExam, filterSubject, filterUnit, filterChapter, filterTopic, filterSubTopic]);
+  }, [metaFilter, page, limit, filterExam, filterSubject, filterUnit, filterChapter, filterTopic, filterSubTopic, searchQuery]);
 
   useEffect(() => {
     fetchDefinitions();
@@ -596,17 +599,8 @@ const DefinitionManagement = () => {
     );
   }, [filterSubTopics, filterTopic]);
 
-  // Filter definitions by search only (hierarchy filter is done by API)
-  const filteredDefinitions = useMemo(() => {
-    let result = definitions;
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase().trim();
-      result = result.filter((definition) =>
-        definition.name?.toLowerCase().includes(query)
-      );
-    }
-    return result;
-  }, [definitions, searchQuery]);
+  // Search is done server-side
+  const filteredDefinitions = definitions;
 
   // Get active filter count
   const activeFilterCount =
@@ -2102,8 +2096,8 @@ const DefinitionManagement = () => {
                     <input
                       type="text"
                       placeholder="Search..."
-                      value={searchQuery}
-                      onChange={(e) => setFilterState((prev) => ({ ...prev, searchQuery: e.target.value, page: 1 }))}
+                      value={searchInput}
+                      onChange={(e) => setSearchInput(e.target.value)}
                       className="w-full sm:w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                     />
                   </div>

@@ -25,6 +25,7 @@ import { invalidateListCachesFrom } from "@/lib/listCacheInvalidation";
 import { usePermissions, getPermissionMessage } from "../../hooks/usePermissions";
 import { IoFilterOutline } from "react-icons/io5";
 import { useFilterPersistence } from "../../hooks/useFilterPersistence";
+import { useDebouncedSearchQuery } from "../../hooks/useDebouncedSearchQuery";
 import PaginationBar from "../ui/PaginationBar";
 
 const SubjectManagement = () => {
@@ -35,6 +36,7 @@ const SubjectManagement = () => {
     metaFilter: "all",
   });
   const { page, limit, filterExam, searchQuery, metaFilter } = filterState;
+  const [searchInput, setSearchInput] = useDebouncedSearchQuery(searchQuery, setFilterState);
 
   const [showAddForm, setShowAddForm] = useState(false);
   const [isDataLoading, setIsDataLoading] = useState(false);
@@ -76,6 +78,7 @@ const SubjectManagement = () => {
       params.set("page", String(page));
       params.set("limit", String(limit));
       if (filterExam) params.set("examId", filterExam);
+      if (searchQuery.trim()) params.set("search", searchQuery.trim());
       const response = await api.get(`/subject?${params.toString()}`);
 
       if (response.data?.success) {
@@ -105,7 +108,7 @@ const SubjectManagement = () => {
       setIsDataLoading(false);
       isFetchingRef.current = false;
     }
-  }, [metaFilter, page, limit, filterExam]);
+  }, [metaFilter, page, limit, filterExam, searchQuery]);
 
   useEffect(() => {
     fetchSubjects();
@@ -140,12 +143,8 @@ const SubjectManagement = () => {
     }
   }, [formData.examId, showAddForm, editingSubject, subjects]);
 
-  // Filter subjects by search (client-side on current page)
-  const filteredSubjects = useMemo(() => {
-    if (!searchQuery.trim()) return subjects;
-    const query = searchQuery.toLowerCase().trim();
-    return subjects.filter((s) => s.name?.toLowerCase().includes(query));
-  }, [subjects, searchQuery]);
+  // Search is done server-side
+  const filteredSubjects = subjects;
 
   // Get active filter count
   const activeFilterCount = (filterExam ? 1 : 0) + (searchQuery ? 1 : 0);
@@ -691,10 +690,8 @@ const SubjectManagement = () => {
                 <div className="relative min-w-[200px] sm:min-w-[240px]">
                   <input
                     type="text"
-                    value={searchQuery}
-                    onChange={(e) =>
-                      setFilterState({ searchQuery: e.target.value, page: 1 })
-                    }
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
                     placeholder="Search subjects..."
                     className="w-full pl-9 pr-8 py-1.5 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                   />

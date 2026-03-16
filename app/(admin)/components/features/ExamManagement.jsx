@@ -26,6 +26,7 @@ import { usePermissions, getPermissionMessage } from "../../hooks/usePermissions
 import { useRouter } from "next/navigation";
 import { IoFilterOutline } from "react-icons/io5";
 import { useFilterPersistence } from "../../hooks/useFilterPersistence";
+import { useDebouncedSearchQuery } from "../../hooks/useDebouncedSearchQuery";
 import PaginationBar from "../ui/PaginationBar";
 
 const ExamManagement = () => {
@@ -36,6 +37,7 @@ const ExamManagement = () => {
     searchQuery: "",
   });
   const { page, limit, metaFilter, searchQuery } = filterState;
+  const [searchInput, setSearchInput] = useDebouncedSearchQuery(searchQuery, setFilterState);
 
   const [showAddForm, setShowAddForm] = useState(false);
   const [isDataLoading, setIsDataLoading] = useState(false);
@@ -71,9 +73,14 @@ const ExamManagement = () => {
     try {
       setIsDataLoading(true);
       setError(null);
-      const response = await api.get(
-        `/exam?status=all&metaStatus=${metaFilter}&page=${page}&limit=${limit}`
-      );
+      const params = new URLSearchParams({
+        status: "all",
+        metaStatus: metaFilter,
+        page: String(page),
+        limit: String(limit),
+      });
+      if (searchQuery.trim()) params.set("search", searchQuery.trim());
+      const response = await api.get(`/exam?${params.toString()}`);
 
       if (response.data?.success) {
         const data = response.data.data || [];
@@ -101,19 +108,15 @@ const ExamManagement = () => {
       setIsDataLoading(false);
       isFetchingRef.current = false;
     }
-  }, [metaFilter, page, limit]);
+  }, [metaFilter, page, limit, searchQuery]);
 
   // Load exams when filter or pagination changes
   useEffect(() => {
     fetchExams();
   }, [fetchExams]);
 
-  // Client-side filtering for search (within current page)
-  const filteredExams = useMemo(() => {
-    if (!searchQuery.trim()) return exams;
-    const q = searchQuery.toLowerCase().trim();
-    return exams.filter((exam) => exam.name?.toLowerCase().includes(q));
-  }, [exams, searchQuery]);
+  // Search is done server-side; no client-side filter needed
+  const filteredExams = exams;
 
   // Set orderNumber when editing (not needed for adding since it's auto-generated)
   useEffect(() => {
@@ -676,10 +679,8 @@ const ExamManagement = () => {
                 <div className="relative min-w-[200px] sm:min-w-[240px]">
                   <input
                     type="text"
-                    value={searchQuery}
-                    onChange={(e) =>
-                      setFilterState({ searchQuery: e.target.value, page: 1 })
-                    }
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
                     placeholder="Search exams..."
                     className="w-full pl-9 pr-8 py-1.5 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                   />

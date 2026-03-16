@@ -38,6 +38,7 @@ export async function GET(request) {
     const { page, limit, skip } = parsePagination(searchParams);
 
     const metaStatus = searchParams.get("metaStatus"); // filled, notFilled
+    const search = searchParams.get("search")?.trim();
 
     // Build query with case-insensitive status matching
     let query = {};
@@ -75,13 +76,18 @@ export async function GET(request) {
       }
     }
 
-    // Create cache key
-    const cacheKey = `exams-${statusFilter}-${page}-${limit}`;
+    // Server-side search by name (case-insensitive)
+    if (search) {
+      const escapeRegex = (s) => String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      query.name = { $regex: new RegExp(escapeRegex(search), "i") };
+    }
 
-    // Check cache (only for active status, and skip cache for admin requests)
-    // Skip cache if request has no-cache header (for immediate updates)
+    // Create cache key (skip cache when search is active)
+    const cacheKey = `exams-${statusFilter}-${page}-${limit}${search ? `-${search}` : ""}`;
+
+    // Check cache (only for active status, skip when search or no-cache header)
     const noCache = request.headers.get("cache-control") === "no-cache";
-    if (!noCache && statusFilter === STATUS.ACTIVE) {
+    if (!noCache && statusFilter === STATUS.ACTIVE && !search) {
       const cached = cacheManager.get(cacheKey);
       if (cached) {
         return NextResponse.json(cached);

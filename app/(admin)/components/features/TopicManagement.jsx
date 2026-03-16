@@ -17,6 +17,7 @@ import { invalidateListCachesFrom } from "@/lib/listCacheInvalidation";
 import { usePermissions, getPermissionMessage } from "../../hooks/usePermissions";
 import { IoFilterOutline } from "react-icons/io5";
 import { useFilterPersistence } from "../../hooks/useFilterPersistence";
+import { useDebouncedSearchQuery } from "../../hooks/useDebouncedSearchQuery";
 import PaginationBar from "../ui/PaginationBar";
 
 const TopicManagement = () => {
@@ -30,6 +31,7 @@ const TopicManagement = () => {
     metaFilter: "all",
   });
   const { page, limit, filterExam, filterSubject, filterUnit, filterChapter, searchQuery, metaFilter } = filterState;
+  const [searchInput, setSearchInput] = useDebouncedSearchQuery(searchQuery, setFilterState);
 
   const { toasts, removeToast, success, error: showError } = useToast();
   const [showAddForm, setShowAddForm] = useState(false);
@@ -95,6 +97,7 @@ const TopicManagement = () => {
       if (filterSubject) params.set("subjectId", filterSubject);
       if (filterUnit) params.set("unitId", filterUnit);
       if (filterChapter) params.set("chapterId", filterChapter);
+      if (searchQuery.trim()) params.set("search", searchQuery.trim());
       const response = await api.get(`/topic?${params.toString()}`);
 
       if (response.data.success) {
@@ -124,7 +127,7 @@ const TopicManagement = () => {
       setIsDataLoading(false);
       isFetchingRef.current = false;
     }
-  }, [metaFilter, page, limit, filterExam, filterSubject, filterUnit, filterChapter]);
+  }, [metaFilter, page, limit, filterExam, filterSubject, filterUnit, filterChapter, searchQuery]);
 
   useEffect(() => {
     fetchTopics();
@@ -380,17 +383,8 @@ const TopicManagement = () => {
     );
   }, [filterChapters, filterUnit]);
 
-  // Filter topics by search only (hierarchy filter is done by API)
-  const filteredTopics = useMemo(() => {
-    let result = topics;
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase().trim();
-      result = result.filter((topic) =>
-        topic.name?.toLowerCase().includes(query)
-      );
-    }
-    return result;
-  }, [topics, searchQuery]);
+  // Search is done server-side
+  const filteredTopics = topics;
 
   // Get active filter count
   const activeFilterCount =
@@ -1589,10 +1583,8 @@ const TopicManagement = () => {
                     <input
                       type="text"
                       placeholder="Search..."
-                      value={searchQuery}
-                      onChange={(e) =>
-                        setFilterState({ searchQuery: e.target.value, page: 1 })
-                      }
+                      value={searchInput}
+                      onChange={(e) => setSearchInput(e.target.value)}
                       className="w-full sm:w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                     />
                   </div>
