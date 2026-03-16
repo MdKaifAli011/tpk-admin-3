@@ -27,13 +27,14 @@ export default function MainLayoutClient({ children }) {
 
   // Memoize showSidebar to prevent unnecessary recalculations
   const showSidebar = useMemo(() => {
-    // No sidebar on: home, contact, calculator, store, auth (login, register, forgot-password, reset-password), site-level pages, or exam-level pages
+    // No sidebar on: home, contact, calculator, store, explore, auth, site-level pages, or exam-level pages
     const isExamPagesRoute = pathname?.match(/^\/[^/]+\/pages(\/|$)/);
     return (
       pathname !== "/" &&
       pathname !== "/contact" &&
       !pathname?.startsWith("/calculator") &&
       !pathname?.startsWith("/store") &&
+      !pathname?.startsWith("/explore") &&
       !pathname?.startsWith("/forgot-password") &&
       !pathname?.startsWith("/reset-password") &&
       !pathname?.startsWith("/pages") &&

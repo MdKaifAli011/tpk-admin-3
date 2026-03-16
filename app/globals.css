@@ -21,15 +21,18 @@ body {
 .hero-section {
   min-height: 72px;
 }
+
 @media (min-width: 640px) {
   .hero-section {
     min-height: 80px;
   }
 }
+
 .hero-right-slot {
   min-width: 100px;
   min-height: 44px;
 }
+
 @media (min-width: 640px) {
   .hero-right-slot {
     min-width: 120px;
