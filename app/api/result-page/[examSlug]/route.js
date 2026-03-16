@@ -36,11 +36,17 @@ export async function GET(request, { params }) {
         { status: 404 }
       );
     }
-    const allYears = await ExamResultPage.find({ examId: exam._id })
-      .distinct("year")
-      .then((arr) => arr.filter((y) => y != null));
-    const hasLegacy = await ExamResultPage.exists({ examId: exam._id, year: null });
-    const years = [...new Set([...(hasLegacy ? [currentYear] : []), ...allYears])].sort((a, b) => b - a);
+    const docs = await ExamResultPage.find({
+      examId: exam._id,
+      $or: [{ status: "active" }, { status: { $exists: false } }],
+    })
+      .select("year")
+      .lean();
+    const yearSet = new Set();
+    for (const d of docs) {
+      yearSet.add(d.year != null ? d.year : currentYear);
+    }
+    const years = [...yearSet].sort((a, b) => b - a);
     const examName = exam.name || examSlug;
     const examSlugForLinks = exam.slug || createSlug(examName);
     return NextResponse.json({

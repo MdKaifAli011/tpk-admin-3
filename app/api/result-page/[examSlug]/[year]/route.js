@@ -42,9 +42,10 @@ export async function GET(request, { params }) {
         { status: 404 }
       );
     }
-    let doc = await ExamResultPage.findOne({ examId: exam._id, year }).lean().exec();
+    const statusFilter = { $or: [{ status: "active" }, { status: { $exists: false } }] };
+    let doc = await ExamResultPage.findOne({ examId: exam._id, year, ...statusFilter }).lean().exec();
     if (!doc && year === currentYear) {
-      doc = await ExamResultPage.findOne({ examId: exam._id, year: null }).lean().exec();
+      doc = await ExamResultPage.findOne({ examId: exam._id, year: null, ...statusFilter }).lean().exec();
     }
     const examName = exam.name || examSlug;
     const examSlugForLinks = exam.slug || createSlug(examName);

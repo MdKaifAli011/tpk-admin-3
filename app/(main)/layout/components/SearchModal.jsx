@@ -15,6 +15,14 @@ import { useSearchContext } from "../context/SearchContext";
 import { tokenizeQuery, textMatchesTokens, getSearchableText } from "../utils/searchTokens";
 import api from "@/lib/api";
 
+function createSlug(name) {
+  if (!name || typeof name !== "string") return "";
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
+
 /** Build path for a discussion thread (hierarchy slugs). Same logic as DiscussionForumTab.getThreadDetailPath. */
 function getThreadDetailPath(thread) {
   if (!thread?.slug) return null;
@@ -34,8 +42,16 @@ function getThreadDetailPath(thread) {
 const SearchModal = ({ isOpen, onClose }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
-  const { tree, treeLoading, activeExamSlug, activeExamId } = useSearchContext();
+  const { tree, treeLoading, activeExamSlug, activeExamId, exams } = useSearchContext();
   const [currentExamSlug, setCurrentExamSlug] = useState("");
+
+  /** Scope: when on an exam/nested page (URL has exam slug), search only that exam's data. */
+  const scopeExamSlug = currentExamSlug || activeExamSlug || "";
+  const scopeExamId = useMemo(() => {
+    if (!scopeExamSlug || !exams?.length) return null;
+    const exam = exams.find((e) => (e.slug || createSlug(e.name)) === scopeExamSlug);
+    return exam?._id || null;
+  }, [scopeExamSlug, exams]);
   const [discussionResults, setDiscussionResults] = useState([]);
   const [discussionLoading, setDiscussionLoading] = useState(false);
   const [blogResults, setBlogResults] = useState([]);
@@ -94,7 +110,7 @@ const SearchModal = ({ isOpen, onClose }) => {
     return () => clearTimeout(t);
   }, [searchQuery]);
 
-  /* ----------------------------- Discussion search API (global: all threads) ----------------------------- */
+  /* ----------------------------- Discussion search API (scoped to current exam when on exam page) ----------------------------- */
   useEffect(() => {
     const q = debouncedQuery.trim();
     if (!q) {
@@ -108,6 +124,7 @@ const SearchModal = ({ isOpen, onClose }) => {
       search: q,
       limit: "10",
     });
+    if (scopeExamId) params.set("examId", scopeExamId);
     api
       .get(`/discussion/threads?${params.toString()}`)
       .then((res) => {
@@ -122,9 +139,9 @@ const SearchModal = ({ isOpen, onClose }) => {
         if (!cancelled) setDiscussionLoading(false);
       });
     return () => { cancelled = true; };
-  }, [debouncedQuery]);
+  }, [debouncedQuery, scopeExamId]);
 
-  /* ----------------------------- Blog search API (global: all active blogs) ----------------------------- */
+  /* ----------------------------- Blog search API (scoped to current exam when on exam page) ----------------------------- */
   useEffect(() => {
     const q = debouncedQuery.trim();
     if (!q) {
@@ -139,6 +156,7 @@ const SearchModal = ({ isOpen, onClose }) => {
       search: q,
       limit: "10",
     });
+    if (scopeExamId) params.set("examId", scopeExamId);
     api
       .get(`/blog?${params.toString()}`)
       .then((res) => {
@@ -153,7 +171,7 @@ const SearchModal = ({ isOpen, onClose }) => {
         if (!cancelled) setBlogLoading(false);
       });
     return () => { cancelled = true; };
-  }, [debouncedQuery]);
+  }, [debouncedQuery, scopeExamId]);
 
   /* ----------------------------- Escape Close ----------------------------- */
   useEffect(() => {
@@ -181,17 +199,23 @@ const SearchModal = ({ isOpen, onClose }) => {
     return () => document.removeEventListener("keydown", handleCtrlK);
   }, [isOpen, onClose]);
 
-  /* ----------------------------- Tree Filter (token-based / bag-of-words) ------------------------------ */
+  /* ----------------------------- Tree Filter (token-based; only for current exam's tree) ------------------------------ */
   const normalizedQuery = debouncedQuery.trim().toLowerCase();
   const tokens = useMemo(() => tokenizeQuery(normalizedQuery), [normalizedQuery]);
 
+  /** Use tree only when it belongs to the scope exam (same as URL exam). Otherwise we'd show another exam's syllabus. */
+  const treeForScope = useMemo(() => {
+    if (!scopeExamSlug || activeExamSlug !== scopeExamSlug) return [];
+    return tree || [];
+  }, [tree, scopeExamSlug, activeExamSlug]);
+
   const filteredTree = useMemo(() => {
-    if (!normalizedQuery || !tokens.length) return tree;
+    if (!normalizedQuery || !tokens.length) return treeForScope;
 
     const nodeMatches = (searchableText) =>
       textMatchesTokens(searchableText, tokens);
 
-    return tree
+    return treeForScope
       .map((subject) => {
         const subjectText = getSearchableText(subject);
         const subjectMatch = nodeMatches(subjectText);
@@ -242,9 +266,9 @@ const SearchModal = ({ isOpen, onClose }) => {
         return null;
       })
       .filter(Boolean);
-  }, [tree, normalizedQuery, tokens]);
+  }, [treeForScope, normalizedQuery, tokens]);
 
-  /* --------------------------- Search Results (token-based match) ----------------------------- */
+  /* --------------------------- Search Results (token-based match; paths use scope exam slug) ----------------------------- */
   const searchResults = useMemo(() => {
     const results = [];
     if (!tokens.length) return results;
@@ -252,13 +276,14 @@ const SearchModal = ({ isOpen, onClose }) => {
     const nodeMatches = (searchableText) =>
       textMatchesTokens(searchableText, tokens);
 
+    const pathPrefix = scopeExamSlug || currentExamSlug || "";
     filteredTree.forEach((subject) => {
       const subjectText = getSearchableText(subject);
       if (nodeMatches(subjectText)) {
         results.push({
           type: "subject",
           name: subject.name,
-          path: `/${currentExamSlug}/${subject.slug}`,
+          path: `/${pathPrefix}/${subject.slug}`,
         });
       }
 
@@ -269,7 +294,7 @@ const SearchModal = ({ isOpen, onClose }) => {
             type: "unit",
             name: unit.name,
             parent: subject.name,
-            path: `/${currentExamSlug}/${subject.slug}/${unit.slug}`,
+            path: `/${pathPrefix}/${subject.slug}/${unit.slug}`,
           });
         }
 
@@ -284,7 +309,7 @@ const SearchModal = ({ isOpen, onClose }) => {
               type: "chapter",
               name: chapter.name,
               parent: `${subject.name} › ${unit.name}`,
-              path: `/${currentExamSlug}/${subject.slug}/${unit.slug}/${chapter.slug}`,
+              path: `/${pathPrefix}/${subject.slug}/${unit.slug}/${chapter.slug}`,
             });
           }
 
@@ -300,7 +325,7 @@ const SearchModal = ({ isOpen, onClose }) => {
                 type: "topic",
                 name: topic.name,
                 parent: `${subject.name} › ${unit.name} › ${chapter.name}`,
-                path: `/${currentExamSlug}/${subject.slug}/${unit.slug}/${chapter.slug}/${topic.slug}`,
+                path: `/${pathPrefix}/${subject.slug}/${unit.slug}/${chapter.slug}/${topic.slug}`,
               });
             }
           });
@@ -309,7 +334,7 @@ const SearchModal = ({ isOpen, onClose }) => {
     });
 
     return results;
-  }, [filteredTree, tokens, currentExamSlug]);
+  }, [filteredTree, tokens, scopeExamSlug, currentExamSlug]);
 
   const icons = {
     subject: <FaBook className="text-blue-600" />,

@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import {
   FaUser,
   FaEnvelope,
@@ -31,8 +32,14 @@ import {
   validateCountry,
   validateClassName,
 } from "./utils/formValidation";
+import { getFormPlaceholderImageSrc } from "./utils/formPlaceholderImage";
 
 const CommentFormModal = ({ isOpen, onClose, onSubmit, initialComment = "", blogId, initialData = {} }) => {
+  const pathname = usePathname();
+  const { src: formPlaceholderSrc, fallbackSrc: formPlaceholderFallback } = getFormPlaceholderImageSrc(pathname, basePath);
+  const [formPlaceholderImgSrc, setFormPlaceholderImgSrc] = useState(formPlaceholderSrc);
+  useEffect(() => setFormPlaceholderImgSrc(formPlaceholderSrc), [formPlaceholderSrc]);
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -292,9 +299,10 @@ const CommentFormModal = ({ isOpen, onClose, onSubmit, initialComment = "", blog
 
             {/* Image */}
             <img
-              src={`${basePath}/images/form-placeholder.png`}
+              src={formPlaceholderImgSrc}
               alt="Form illustration"
               className="absolute inset-0 w-full h-full object-cover"
+              onError={() => setFormPlaceholderImgSrc(formPlaceholderFallback)}
             />
 
             {/* Optional overlay */}

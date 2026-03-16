@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import {
   FaUser,
   FaEnvelope,
@@ -35,6 +36,7 @@ import {
   validateConfirmPassword,
 } from "./utils/formValidation";
 import Button from "./Button";
+import { getFormPlaceholderImageSrc } from "./utils/formPlaceholderImage";
 
 const DiscussionForumSavePostModal = ({
   isOpen,
@@ -42,6 +44,11 @@ const DiscussionForumSavePostModal = ({
   onRegistrationSuccess,
   formId = "Discussion-forum-save-post",
 }) => {
+  const pathname = usePathname();
+  const { src: formPlaceholderSrc, fallbackSrc: formPlaceholderFallback } = getFormPlaceholderImageSrc(pathname, basePath, { variant: "discussion" });
+  const [formPlaceholderImgSrc, setFormPlaceholderImgSrc] = useState(formPlaceholderSrc);
+  useEffect(() => setFormPlaceholderImgSrc(formPlaceholderSrc), [formPlaceholderSrc]);
+
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -375,9 +382,10 @@ const DiscussionForumSavePostModal = ({
           <div className="hidden lg:block relative h-full overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500" />
             <img
-              src={`${basePath}/images/form-placeholder.png`}
+              src={formPlaceholderImgSrc}
               alt="Registration illustration"
               className="absolute inset-0 w-full h-full object-cover"
+              onError={() => setFormPlaceholderImgSrc(formPlaceholderFallback)}
             />
             <div className="absolute inset-0 bg-black/10" />
           </div>

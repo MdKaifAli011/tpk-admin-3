@@ -38,6 +38,8 @@ const examResultPageSchema = new mongoose.Schema(
     },
     /** Year for this result page (e.g. 2025, 2026). One document per exam per year. Legacy: null = single doc per exam. */
     year: { type: Number, default: null },
+    /** active = shown on public result page; inactive = hidden. */
+    status: { type: String, enum: ["active", "inactive"], default: "active" },
     bannerImage: { type: String, trim: true, default: "" },
     bannerTitle: { type: String, trim: true, default: "" },
     bannerSubtitle: { type: String, trim: true, default: "" },

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   FaSave,
   FaTrophy,
@@ -12,7 +12,10 @@ import {
   FaImage,
   FaCalendarPlus,
   FaList,
+  FaEdit,
+  FaExternalLinkAlt,
 } from "react-icons/fa";
+import Link from "next/link";
 import { ToastContainer, useToast } from "../ui/Toast";
 import { LoadingSpinner } from "../ui/SkeletonLoader";
 import api from "@/lib/api";
@@ -21,6 +24,23 @@ const emptyTopper = () => ({ name: "", percentile: "", location: "", attempt: ""
 const emptyAchiever = () => ({ title: "", description: "", image: "" });
 const emptyTestimonial = () => ({ name: "", location: "", text: "" });
 const currentYear = new Date().getFullYear();
+
+const StatusBadge = ({ status, onClick }) => {
+  const s = status === "inactive" ? "inactive" : "active";
+  const styles =
+    s === "active"
+      ? "bg-green-100 text-green-800 hover:bg-green-200"
+      : "bg-red-100 text-red-800 hover:bg-red-200";
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`px-2 py-0.5 rounded-full text-xs font-medium transition-colors ${styles}`}
+    >
+      {s.charAt(0).toUpperCase() + s.slice(1)}
+    </button>
+  );
+};
 
 export default function ResultPageManagement() {
   const [exams, setExams] = useState([]);
@@ -35,7 +55,10 @@ export default function ResultPageManagement() {
   const [loadingContent, setLoadingContent] = useState(false);
   const [saving, setSaving] = useState(false);
   const [expandedSection, setExpandedSection] = useState("banner");
+  const [actionLoading, setActionLoading] = useState(null);
   const { toasts, removeToast, success, error: showError } = useToast();
+  const showErrorRef = useRef(showError);
+  showErrorRef.current = showError;
 
   const fetchExams = useCallback(async () => {
     try {
@@ -43,16 +66,14 @@ export default function ResultPageManagement() {
       const res = await api.get("/admin/result-page");
       if (res.data?.success && Array.isArray(res.data.data)) {
         setExams(res.data.data);
-        if (!selectedExamId && res.data.data.length > 0) {
-          setSelectedExamId(res.data.data[0]._id);
-        }
+        setSelectedExamId((prev) => prev || res.data.data[0]?._id || "");
       }
     } catch (err) {
-      showError(err?.response?.data?.message || "Failed to load exams");
+      showErrorRef.current(err?.response?.data?.message || "Failed to load exams");
     } finally {
       setLoading(false);
     }
-  }, [selectedExamId, showError]);
+  }, []);
 
   const fetchYears = useCallback(async (examId) => {
     if (!examId) {
@@ -68,12 +89,12 @@ export default function ResultPageManagement() {
         setYears([]);
       }
     } catch (err) {
-      showError(err?.response?.data?.message || "Failed to load years");
+      showErrorRef.current(err?.response?.data?.message || "Failed to load years");
       setYears([]);
     } finally {
       setLoadingYears(false);
     }
-  }, [showError]);
+  }, []);
 
   const fetchContent = useCallback(async (examId, year) => {
     if (!examId || year == null) return;
@@ -86,12 +107,12 @@ export default function ResultPageManagement() {
         setData(null);
       }
     } catch (err) {
-      showError(err?.response?.data?.message || "Failed to load result page");
+      showErrorRef.current(err?.response?.data?.message || "Failed to load result page");
       setData(null);
     } finally {
       setLoadingContent(false);
     }
-  }, [showError]);
+  }, []);
 
   useEffect(() => {
     fetchExams();
@@ -123,7 +144,7 @@ export default function ResultPageManagement() {
       const res = await api.post(`/admin/result-page/${selectedExamId}/years`, { year });
       if (res.data?.success) {
         success(`Year ${year} added.`);
-        setYears((prev) => [...prev, year].sort((a, b) => b - a));
+        setYears((prev) => [...prev, { year, status: "active" }].sort((a, b) => b.year - a.year));
         setSelectedYear(year);
         setNewYearInput(currentYear);
       } else {
@@ -204,6 +225,61 @@ export default function ResultPageManagement() {
     setExpandedSection((s) => (s === id ? "" : id));
   };
 
+  const handleToggleStatus = useCallback(
+    async (item) => {
+      if (!selectedExamId || !item) return;
+      const newStatus = item.status === "inactive" ? "active" : "inactive";
+      const action = newStatus === "inactive" ? "deactivate" : "activate";
+      if (!window.confirm(`Are you sure you want to ${action} result year ${item.year}?`)) return;
+      setActionLoading(`status-${item.year}`);
+      try {
+        const res = await api.patch(`/admin/result-page/${selectedExamId}/years`, {
+          year: item.year,
+          status: newStatus,
+        });
+        if (res.data?.success) {
+          await fetchYears(selectedExamId);
+          success(`Year ${item.year} ${action}d successfully.`);
+        } else {
+          showErrorRef.current(res.data?.message || `Failed to ${action}`);
+        }
+      } catch (err) {
+        showErrorRef.current(err?.response?.data?.message || `Failed to ${action}`);
+      } finally {
+        setActionLoading(null);
+      }
+    },
+    [selectedExamId, fetchYears]
+  );
+
+  const handleDeleteYear = useCallback(
+    async (year) => {
+      if (!selectedExamId || year == null) return;
+      if (!window.confirm(`Are you sure you want to delete result year ${year}? This cannot be undone.`)) return;
+      setActionLoading(`delete-${year}`);
+      try {
+        const res = await api.delete(`/admin/result-page/${selectedExamId}/years`, {
+          data: { year },
+        });
+        if (res.data?.success) {
+          if (selectedYear === year) {
+            setSelectedYear(null);
+            setData(null);
+          }
+          await fetchYears(selectedExamId);
+          success(`Year ${year} deleted.`);
+        } else {
+          showErrorRef.current(res.data?.message || "Failed to delete");
+        }
+      } catch (err) {
+        showErrorRef.current(err?.response?.data?.message || "Failed to delete");
+      } finally {
+        setActionLoading(null);
+      }
+    },
+    [selectedExamId, selectedYear, fetchYears]
+  );
+
   const selectedExam = exams.find((e) => e._id === selectedExamId);
 
   if (loading) {
@@ -245,14 +321,15 @@ export default function ResultPageManagement() {
                 </select>
               </label>
               {selectedExam && (
-                <a
+                <Link
                   href={`/${selectedExam.slug}/result`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-sm text-indigo-600 hover:underline"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition-colors"
                 >
-                  View result page →
-                </a>
+                  <FaExternalLinkAlt className="text-xs" />
+                  See all result years
+                </Link>
               )}
             </div>
           </div>
@@ -261,52 +338,127 @@ export default function ResultPageManagement() {
             <div className="p-6 text-gray-500 text-sm">Select an exam to manage result years and content.</div>
           ) : (
             <div className="p-6 space-y-6">
-              {/* Add year + Years list */}
-              <section className="border border-gray-200 rounded-lg p-4 bg-gray-50/50">
-                <h2 className="flex items-center gap-2 font-medium text-gray-900 mb-3">
-                  <FaCalendarPlus className="text-indigo-600" />
-                  Result years
-                </h2>
-                <form onSubmit={handleAddYear} className="flex flex-wrap items-center gap-3 mb-4">
-                  <input
-                    type="number"
-                    min={2000}
-                    max={2100}
-                    value={newYearInput}
-                    onChange={(e) => setNewYearInput(e.target.value)}
-                    className="w-24 rounded-lg border border-gray-300 px-3 py-2 text-sm"
-                  />
-                  <button
-                    type="submit"
-                    disabled={addingYear}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50"
-                  >
-                    {addingYear ? <LoadingSpinner size="small" color="white" /> : <FaPlus />}
-                    Add year
-                  </button>
-                </form>
+              {/* Add year + Years table */}
+              <section className="border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm">
+                <div className="px-4 py-3 border-b border-gray-200 bg-gray-50 flex flex-wrap items-center justify-between gap-3">
+                  <h2 className="flex items-center gap-2 font-medium text-gray-900">
+                    <FaCalendarPlus className="text-indigo-600" />
+                    Result years
+                  </h2>
+                  <form onSubmit={handleAddYear} className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min={2000}
+                      max={2100}
+                      value={newYearInput}
+                      onChange={(e) => setNewYearInput(e.target.value)}
+                      className="w-24 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                      aria-label="Year to add"
+                    />
+                    <button
+                      type="submit"
+                      disabled={addingYear}
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50"
+                    >
+                      {addingYear ? <LoadingSpinner size="small" color="white" /> : <FaPlus />}
+                      Add year
+                    </button>
+                  </form>
+                </div>
                 {loadingYears ? (
-                  <div className="flex justify-center py-4">
+                  <div className="flex justify-center py-8">
                     <LoadingSpinner size="small" />
                   </div>
                 ) : years.length === 0 ? (
-                  <p className="text-sm text-gray-500">No years yet. Add a year above to create the first result page for this exam.</p>
+                  <p className="p-6 text-sm text-gray-500">No years yet. Add a year above to create the first result page for this exam.</p>
                 ) : (
-                  <div className="flex flex-wrap gap-2">
-                    {years.map((y) => (
-                      <button
-                        key={y}
-                        type="button"
-                        onClick={() => setSelectedYear(y)}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                          selectedYear === y
-                            ? "bg-indigo-600 text-white shadow-md"
-                            : "bg-white border border-gray-200 text-gray-700 hover:bg-indigo-50 hover:border-indigo-200"
-                        }`}
-                      >
-                        {y}
-                      </button>
-                    ))}
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12">
+                            #
+                          </th>
+                          <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Year
+                          </th>
+                          <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-28">
+                            Status
+                          </th>
+                          <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Actions
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {years.map((item, index) => {
+                          const y = item.year;
+                          const isActive = item.status !== "inactive";
+                          const rowBusy = actionLoading != null;
+                          return (
+                            <tr
+                              key={y}
+                              className={`hover:bg-gray-50 transition-colors ${selectedYear === y ? "bg-indigo-50/70" : ""} ${!isActive ? "opacity-70" : ""}`}
+                            >
+                              <td className="px-4 py-2.5 whitespace-nowrap text-sm text-gray-500">
+                                {index + 1}
+                              </td>
+                              <td className="px-4 py-2.5 whitespace-nowrap">
+                                <span className={`text-sm font-medium ${selectedYear === y ? "text-indigo-700" : "text-gray-900"}`}>
+                                  {y}
+                                </span>
+                              </td>
+                              <td className="px-4 py-2.5 whitespace-nowrap">
+                                <StatusBadge
+                                  status={item.status}
+                                  onClick={() => !rowBusy && handleToggleStatus(item)}
+                                />
+                              </td>
+                              <td className="px-4 py-2.5 whitespace-nowrap text-right">
+                                <div className="flex items-center justify-end gap-1">
+                                  <button
+                                    type="button"
+                                    disabled={rowBusy}
+                                    onClick={() => setSelectedYear(y)}
+                                    className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors disabled:opacity-50 ${
+                                      selectedYear === y
+                                        ? "bg-indigo-600 text-white"
+                                        : "bg-indigo-50 text-indigo-700 hover:bg-indigo-100"
+                                    }`}
+                                    title="Edit content for this year"
+                                  >
+                                    <FaEdit className="text-xs" />
+                                    Edit
+                                  </button>
+                                  {selectedExam?.slug && (
+                                    <Link
+                                      href={`/${selectedExam.slug}/result/${y}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
+                                      title="View result page"
+                                    >
+                                      <FaExternalLinkAlt className="text-xs" />
+                                      View
+                                    </Link>
+                                  )}
+                                  <button
+                                    type="button"
+                                    disabled={rowBusy}
+                                    onClick={() => !rowBusy && handleDeleteYear(y)}
+                                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-red-50 text-red-700 hover:bg-red-100 transition-colors disabled:opacity-50"
+                                    title="Delete this year"
+                                  >
+                                    <FaTrash className="text-xs" />
+                                    Delete
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
                   </div>
                 )}
               </section>
@@ -447,7 +599,7 @@ export default function ResultPageManagement() {
               )}
 
               {selectedExamId && selectedYear == null && years.length > 0 && (
-                <p className="text-sm text-gray-500">Click a year above to edit its content.</p>
+                <p className="text-sm text-gray-500">Click Edit in the table above to edit content for a year.</p>
               )}
             </div>
           )}

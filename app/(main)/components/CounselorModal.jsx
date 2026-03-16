@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import {
     FaUser,
     FaEnvelope,
@@ -31,6 +32,7 @@ import {
     validateCountry,
     validateClassName,
 } from "./utils/formValidation";
+import { getFormPlaceholderImageSrc } from "./utils/formPlaceholderImage";
 
 const CounselorModal = ({
     isOpen,
@@ -42,6 +44,11 @@ const CounselorModal = ({
     successMessage = "Thank you! Your request has been sent. A counselor will contact you shortly.",
     submitButtonText = "Request Connection",
 }) => {
+    const pathname = usePathname();
+    const { src: formPlaceholderSrc, fallbackSrc: formPlaceholderFallback } = getFormPlaceholderImageSrc(pathname, basePath);
+    const [formPlaceholderImgSrc, setFormPlaceholderImgSrc] = useState(formPlaceholderSrc);
+    useEffect(() => setFormPlaceholderImgSrc(formPlaceholderSrc), [formPlaceholderSrc]);
+
     const [formData, setFormData] = useState({
         name: "",
         email: "",
@@ -254,9 +261,10 @@ const CounselorModal = ({
                     <div className="hidden lg:block relative h-full overflow-hidden">
                         <div className="absolute inset-0 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600" />
                         <img
-                            src={`${basePath}/images/form-placeholder.png`}
+                            src={formPlaceholderImgSrc}
                             alt="Counselor illustration"
                             className="absolute inset-0 w-full h-full object-cover"
+                            onError={() => setFormPlaceholderImgSrc(formPlaceholderFallback)}
                         />
                         <div className="absolute inset-0 bg-black/10" />
                     </div>

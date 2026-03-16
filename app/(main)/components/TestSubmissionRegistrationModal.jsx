@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import {
   FaUser,
   FaEnvelope,
@@ -36,6 +37,7 @@ import {
   validateConfirmPassword,
 } from "./utils/formValidation";
 import Button from "./Button";
+import { getFormPlaceholderImageSrc } from "./utils/formPlaceholderImage";
 
 const TestSubmissionRegistrationModal = ({
   isOpen,
@@ -44,6 +46,11 @@ const TestSubmissionRegistrationModal = ({
   testName,
   formId = "registration-practice", // Default form ID for practice test registration
 }) => {
+  const pathname = usePathname();
+  const { src: formPlaceholderSrc, fallbackSrc: formPlaceholderFallback } = getFormPlaceholderImageSrc(pathname, basePath);
+  const [formPlaceholderImgSrc, setFormPlaceholderImgSrc] = useState(formPlaceholderSrc);
+  useEffect(() => setFormPlaceholderImgSrc(formPlaceholderSrc), [formPlaceholderSrc]);
+
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -395,9 +402,10 @@ const TestSubmissionRegistrationModal = ({
 
             {/* Image */}
             <img
-              src={`${basePath}/images/form-placeholder.png`}
+              src={formPlaceholderImgSrc}
               alt="Registration illustration"
               className="absolute inset-0 w-full h-full object-cover"
+              onError={() => setFormPlaceholderImgSrc(formPlaceholderFallback)}
             />
 
             {/* Optional overlay */}
