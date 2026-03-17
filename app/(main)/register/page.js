@@ -17,12 +17,20 @@ import {
   FaCheckCircle,
   FaStar,
   FaChevronDown,
+  FaSyncAlt,
 } from "react-icons/fa";
 import Image from "next/image";
 import api from "../../../lib/api.js";
 import Navbar from "../layout/Navbar";
 import Footer from "../layout/Footer";
 import { SearchProvider } from "../layout/context/SearchContext";
+import { useVerification } from "../components/hooks/useVerification";
+import {
+  validatePhoneNumber,
+  validateEmail,
+  validatePassword,
+  validateConfirmPassword,
+} from "../components/utils/formValidation";
 
 // Base path - should match next.config.mjs basePath
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
@@ -146,6 +154,17 @@ const RegisterPage = () => {
   const [error, setError] = useState(null);
   const [errors, setErrors] = useState({});
 
+  const {
+    verificationQuestion,
+    userVerificationAnswer,
+    generateVerification,
+    handleVerificationChange,
+    validateVerification,
+    getVerificationBlockStatus,
+    recordVerificationFailure,
+    resetVerificationFailures,
+  } = useVerification();
+
   /* ---------- Load available exams (your original behavior) ---------- */
   useEffect(() => {
     const loadExams = async () => {
@@ -165,6 +184,11 @@ const RegisterPage = () => {
     };
     loadExams();
   }, []);
+
+  /* ---------- Generate verification when entering step 2 ---------- */
+  useEffect(() => {
+    if (step === 2) generateVerification();
+  }, [step, generateVerification]);
 
   /* ---------- Close dropdowns when clicking outside ---------- */
   useEffect(() => {
@@ -229,27 +253,37 @@ const RegisterPage = () => {
   const validateStep2 = () => {
     const newErrors = {};
 
-    if (!formData.email.trim())
-      newErrors.email = "Email is required";
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email))
-      newErrors.email = "Please enter a valid email";
-
-    const phone = formData.phoneNumber.trim();
-    if (!phone) {
-      newErrors.phoneNumber = "Mobile number is required";
-    } else if (!/^\d+$/.test(phone)) {
-      newErrors.phoneNumber = "Mobile number must contain only digits";
-    } else if (phone.length < 6 || phone.length > 14) {
-      newErrors.phoneNumber = "Mobile number must be between 6 and 14 digits";
+    const blockStatus = getVerificationBlockStatus();
+    if (blockStatus.blocked && blockStatus.retryAfterMs != null) {
+      const minutes = Math.ceil(blockStatus.retryAfterMs / 60000);
+      newErrors.verification = `Too many failed verification attempts. Please try again in ${minutes} minute${minutes !== 1 ? "s" : ""}.`;
+      setErrors(newErrors);
+      return false;
     }
 
-    if (!formData.password)
-      newErrors.password = "Password is required";
-    else if (formData.password.length < 6)
-      newErrors.password = "Password must be at least 6 characters";
+    const emailErr = validateEmail(formData.email);
+    if (emailErr) newErrors.email = emailErr;
 
-    if (formData.password !== formData.confirmPassword)
-      newErrors.confirmPassword = "Passwords do not match";
+    const phoneErr = validatePhoneNumber(
+      formData.phoneNumber,
+      formData.countryCode,
+      formData.country || "India"
+    );
+    if (phoneErr) newErrors.phoneNumber = phoneErr;
+
+    const passwordErr = validatePassword(formData.password);
+    if (passwordErr) newErrors.password = passwordErr;
+
+    const confirmErr = validateConfirmPassword(
+      formData.password,
+      formData.confirmPassword
+    );
+    if (confirmErr) newErrors.confirmPassword = confirmErr;
+
+    if (!validateVerification()) {
+      newErrors.verification = "Please complete the verification";
+      recordVerificationFailure();
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -307,6 +341,7 @@ const RegisterPage = () => {
       });
 
       if (response.data.success) {
+        resetVerificationFailures();
         // Store token
         if (typeof window !== "undefined") {
           localStorage.setItem("student_token", response.data.data.token);
@@ -420,7 +455,11 @@ const RegisterPage = () => {
               <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-6 border border-white/20">
                 {/* Error box */}
                 {error && (
-                  <div className="mb-4 p-3 bg-red-50 border-l-4 border-red-500 rounded-lg text-xs text-red-700 animate-[shake_0.3s_ease-in-out]">
+                  <div
+                    className="mb-4 p-3 bg-red-50 border-l-4 border-red-500 rounded-lg text-xs text-red-700 animate-[shake_0.3s_ease-in-out]"
+                    role="alert"
+                    aria-live="polite"
+                  >
                     <div className="flex items-center gap-2">⚠️ {error}</div>
                   </div>
                 )}
@@ -641,7 +680,7 @@ const RegisterPage = () => {
 
                         <button
                           type="submit"
-                          className="w-full mt-3 py-2.5 rounded-lg text-white font-bold text-sm bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+                          className="w-full mt-3 py-2.5 rounded-lg text-white font-bold text-sm bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 shadow-lg hover:shadow-xl flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition"
                         >
                           Continue <FaArrowRight className="text-xs" />
                         </button>
@@ -918,6 +957,63 @@ const RegisterPage = () => {
                           )}
                         </div>
 
+                        {/* Verification (captcha) */}
+                        <div>
+                          <label className="block text-xs font-semibold text-gray-700 mb-1">
+                            Verification <span className="text-red-500">*</span>
+                          </label>
+                          <div
+                            className={`flex flex-col gap-2 p-3 rounded-lg border-2 transition ${
+                              errors.verification
+                                ? "border-red-400 bg-red-50"
+                                : "border-gray-200 bg-gray-50"
+                            }`}
+                          >
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-sm font-medium text-gray-700 tabular-nums">
+                                {verificationQuestion}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  generateVerification();
+                                  setErrors((p) => ({ ...p, verification: "" }));
+                                }}
+                                className="p-1.5 rounded-lg text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 transition focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                title="Refresh verification"
+                                aria-label="Refresh verification"
+                              >
+                                <FaSyncAlt className="text-sm" />
+                              </button>
+                            </div>
+                            <input
+                              type="text"
+                              inputMode={verificationQuestion.includes("=") ? "numeric" : "text"}
+                              value={userVerificationAnswer}
+                              onChange={(e) =>
+                                handleVerificationChange(e.target.value, setErrors)
+                              }
+                              placeholder={
+                                verificationQuestion.includes("=")
+                                  ? "Enter answer"
+                                  : "Enter code"
+                              }
+                              aria-invalid={!!errors.verification}
+                              aria-describedby={errors.verification ? "verification-error" : undefined}
+                              className="w-full px-3 py-2 rounded-lg border-2 border-gray-200 text-sm font-semibold text-center focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                            />
+                          </div>
+                          {errors.verification && (
+                            <p
+                              id="verification-error"
+                              className="mt-1.5 text-xs font-medium text-red-600"
+                              role="alert"
+                            >
+                              {errors.verification}
+                            </p>
+                          )}
+                        </div>
+
                         {/* Preparing For (exams) */}
                         <div>
                           <label className="block text-xs font-semibold text-gray-700 mb-1">
@@ -961,7 +1057,7 @@ const RegisterPage = () => {
                         <button
                           type="submit"
                           disabled={loading}
-                          className="w-full mt-2 py-2.5 rounded-lg text-white font-bold text-sm bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 shadow-lg hover:shadow-xl flex items-center justify-center gap-2 disabled:opacity-50"
+                          className="w-full mt-2 py-2.5 rounded-lg text-white font-bold text-sm bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 shadow-lg hover:shadow-xl flex items-center justify-center gap-2 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition"
                         >
                           {loading ? (
                             <>
