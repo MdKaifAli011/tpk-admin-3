@@ -42,6 +42,7 @@ const DefinitionManagement = () => {
   const [isFormLoading, setIsFormLoading] = useState(false);
   const [error, setError] = useState(null);
   const [definitions, setDefinitions] = useState([]);
+  const [countsBySubTopic, setCountsBySubTopic] = useState({});
   const [pagination, setPagination] = useState({
     total: 0,
     totalPages: 0,
@@ -112,6 +113,7 @@ const DefinitionManagement = () => {
       if (response.data.success) {
         const fetchedDefinitions = response.data.data || [];
         setDefinitions(fetchedDefinitions);
+        setCountsBySubTopic(response.data.countsBySubTopic || {});
         setDefinitionListCache(fetchedDefinitions, metaFilter);
         const pag = response.data?.pagination;
         if (pag) {
@@ -2460,6 +2462,7 @@ const DefinitionManagement = () => {
             <div className="p-2 ">
               <DefinitionsTable
                 definitions={filteredDefinitions}
+                countsBySubTopic={countsBySubTopic}
                 onEdit={handleEditDefinition}
                 onDelete={handleDeleteDefinition}
                 onToggleStatus={handleToggleStatus}

@@ -6,8 +6,10 @@ import api from "@/lib/api";
 /**
  * Injects script/link/meta from an HTML string into the DOM so scripts execute.
  * Scripts added via innerHTML do not run; we create new script elements and append.
+ * @param {HTMLElement} target - Where to append (e.g. document.head or document.body)
+ * @param {HTMLElement} [hiddenTarget] - If set, non-script nodes go here (hidden) to avoid duplicate visible UI after footer
  */
-function injectCode(htmlString, target) {
+function injectCode(htmlString, target, hiddenTarget = null) {
   if (!htmlString || typeof htmlString !== "string" || !target) return;
   const trimmed = htmlString.trim();
   if (!trimmed) return;
@@ -35,18 +37,18 @@ function injectCode(htmlString, target) {
         }
         Array.from(node.attributes || []).forEach((attr) => {
           if (attr.name !== "src" && attr.name !== "async" && attr.name !== "defer") {
-            try { script.setAttribute(attr.name, attr.value); } catch (_) {}
+            try { script.setAttribute(attr.name, attr.value); } catch (_) { }
           }
         });
         target.appendChild(script);
       } else {
+        const dest = hiddenTarget || target;
         try {
-          target.appendChild(document.importNode(node, true));
+          dest.appendChild(document.importNode(node, true));
         } catch (_) {
-          // fallback: append clone if importNode fails
           try {
-            target.appendChild(node.cloneNode(true));
-          } catch (_) {}
+            dest.appendChild(node.cloneNode(true));
+          } catch (_) { }
         }
       }
     }
@@ -75,11 +77,18 @@ export default function CustomCodeInjector() {
           injected.current.header = true;
         }
         if (footerCode && typeof footerCode === "string" && !injected.current.footer) {
-          injectCode(footerCode, document.body);
+          // Scripts go to body so they run; any other HTML (nav, blog, comment, copyright) goes into a hidden container
+          // so we don't show duplicate footer/nav/blog/comment content after the app Footer.
+          const footerHidden = document.createElement("div");
+          footerHidden.setAttribute("data-custom-footer-hidden", "true");
+          footerHidden.setAttribute("aria-hidden", "true");
+          footerHidden.style.cssText = "position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);";
+          document.body.appendChild(footerHidden);
+          injectCode(footerCode, document.body, footerHidden);
           injected.current.footer = true;
         }
       })
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   return null;

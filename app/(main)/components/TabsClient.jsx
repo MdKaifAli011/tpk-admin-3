@@ -166,6 +166,11 @@ const TabsClient = ({
     setActiveTab(tab);
     setLoadedTabs(prev => new Set([...prev, tab]));
 
+    // Scroll to top when switching tabs so the new tab content is in view
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
     transitionTimerRef.current = setTimeout(() => {
       setIsTabTransitioning(false);
       transitionTimerRef.current = null;
@@ -300,9 +305,13 @@ const TabsClient = ({
 
 
   return (
-    <Card variant="standard" hover={false} className="overflow-hidden">
-      {/* Tab Navigation */}
-      <nav className="flex overflow-x-auto sm:overflow-visible border-b border-gray-200  bg-gradient-to-br from-indigo-50 via-white to-purple-50 scrollbar-hide" aria-label="Content tabs">
+    <Card variant="standard" hover={false} className="overflow-visible">
+      {/* Tab Navigation — sticky so Overview/Discussion/Practice/Performance stay on top while scrolling */}
+      <nav
+        className="sticky z-[45] flex overflow-x-auto sm:overflow-visible border-b border-gray-200 bg-gradient-to-br from-indigo-50 via-white to-purple-50 scrollbar-hide shadow-[0_1px_3px_0_rgba(0,0,0,0.04)] rounded-t-xl"
+        style={{ top: "var(--navbar-height, 7.5rem)" }}
+        aria-label="Content tabs"
+      >
         <div className="flex min-w-max sm:min-w-0 w-full gap-4 sm:gap-6 md:gap-8 lg:gap-10 xl:gap-12 justify-around px-3 sm:px-4 md:px-6" role="tablist">
           {TABS.map((tab) => {
             const isActive = activeTab === tab;

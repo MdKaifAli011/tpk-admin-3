@@ -54,6 +54,7 @@ const ChaptersManagement = () => {
   const [isDataLoading, setIsDataLoading] = useState(false);
   const [isFormLoading, setIsFormLoading] = useState(false);
   const [chapters, setChapters] = useState([]);
+  const [countsByUnit, setCountsByUnit] = useState({});
   const [pagination, setPagination] = useState({
     total: 0,
     totalPages: 0,
@@ -123,6 +124,7 @@ const ChaptersManagement = () => {
       if (response.data.success) {
         const fetchedChapters = response.data.data || [];
         setChapters(fetchedChapters);
+        setCountsByUnit(response.data.countsByUnit || {});
         setChapterListCache(fetchedChapters, metaFilter);
         const pag = response.data?.pagination;
         if (pag) {
@@ -1846,6 +1848,7 @@ value={searchInput}
               <>
                 <ChaptersTable
                   chapters={filteredChapters}
+                  countsByUnit={countsByUnit}
                   onEdit={handleEditChapter}
                   onDelete={handleDeleteChapter}
                   onToggleStatus={handleToggleStatus}

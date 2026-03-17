@@ -65,6 +65,7 @@ const UnitsManagement = () => {
   const [isDataLoading, setIsDataLoading] = useState(false);
   const [isFormLoading, setIsFormLoading] = useState(false);
   const [units, setUnits] = useState([]);
+  const [countsBySubject, setCountsBySubject] = useState({});
   const [pagination, setPagination] = useState({
     total: 0,
     totalPages: 0,
@@ -163,6 +164,7 @@ const UnitsManagement = () => {
       if (response.data.success) {
         const fetchedUnits = response.data.data || [];
         setUnits(fetchedUnits);
+        setCountsBySubject(response.data.countsBySubject || {});
         const pag = response.data?.pagination;
         if (pag) {
           setPagination({
@@ -1345,6 +1347,7 @@ const UnitsManagement = () => {
                 >
                   <UnitsTable
                     units={filteredUnits}
+                    countsBySubject={countsBySubject}
                     onEdit={handleEditUnit}
                     onDelete={handleDeleteUnit}
                     onToggleStatus={handleToggleStatus}

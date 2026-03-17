@@ -8,7 +8,7 @@ import {
   getPermissionMessage,
 } from "../../hooks/usePermissions";
 
-const SubjectTable = ({ subjects, onEdit, onDelete, onToggleStatus, onTogglePractice, onReorderDraft, reorderDraft = {}, isReorderAllowed = true }) => {
+const SubjectTable = ({ subjects, countsByExam = {}, onEdit, onDelete, onToggleStatus, onTogglePractice, onReorderDraft, reorderDraft = {}, isReorderAllowed = true }) => {
   const { canEdit, canDelete, canReorder, role } = usePermissions();
   const router = useRouter();
   const [dragged, setDragged] = useState({ examId: null, index: null });
@@ -175,21 +175,27 @@ const SubjectTable = ({ subjects, onEdit, onDelete, onToggleStatus, onTogglePrac
                 {group.examName}
               </span>
               <span className="text-gray-400">›</span>
-              {/* Subject Count */}
-              <span
-                className="px-2 py-0.5 rounded-full"
-                style={{ backgroundColor: "#6B7280" }}
-              >
-                {group.subjects.length}{" "}
-                {group.subjects.length === 1 ? "Subject" : "Subjects"}
-              </span>
+              {/* Subject Count — show actual total for this exam when available */}
+              {(() => {
+                const examIdKey = group.examId?.toString?.() ?? String(group.examId);
+                const total = countsByExam[examIdKey] ?? group.subjects.length;
+                return (
+                  <span
+                    className="px-2 py-0.5 rounded-full"
+                    style={{ backgroundColor: "#6B7280" }}
+                    title={total !== group.subjects.length ? `Showing ${group.subjects.length} of ${total}` : undefined}
+                  >
+                    {total} {total === 1 ? "Subject" : "Subjects"}
+                  </span>
+                );
+              })()}
             </div>
           </div>
 
           {/* Table */}
           <div className="hidden lg:block overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200 table-fixed">
-              <thead className="bg-gray-50">
+              <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
                   {canDrag && (
                     <th className="px-1 py-1 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-10">
@@ -250,7 +256,9 @@ const SubjectTable = ({ subjects, onEdit, onDelete, onToggleStatus, onTogglePrac
                       <td
                         className={`px-2 py-1 whitespace-nowrap text-sm font-medium cursor-pointer hover:text-blue-600 transition-colors ${subject.status === "inactive"
                           ? "text-gray-500 line-through"
-                          : "text-gray-900"
+                          : subject.contentInfo?.detailsStatus === "publish"
+                            ? "text-green-700 font-semibold"
+                            : "text-gray-900"
                           }`}
                         onClick={() => handleSubjectClick(subject)}
                         title={subject.name}
@@ -449,7 +457,9 @@ const SubjectTable = ({ subjects, onEdit, onDelete, onToggleStatus, onTogglePrac
                       <h3
                         className={`text-sm font-semibold mb-1 ${subject.status === "inactive"
                           ? "text-gray-500 line-through"
-                          : "text-gray-900"
+                          : subject.contentInfo?.detailsStatus === "publish"
+                            ? "text-green-700"
+                            : "text-gray-900"
                           }`}
                         title={subject.name}
                       >

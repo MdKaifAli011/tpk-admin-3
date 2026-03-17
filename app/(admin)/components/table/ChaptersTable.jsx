@@ -10,6 +10,7 @@ import {
 
 const ChaptersTable = ({
   chapters,
+  countsByUnit = {},
   onEdit,
   onDelete,
   onToggleStatus,
@@ -232,13 +233,19 @@ const ChaptersTable = ({
                     {group.unitName}
                   </span>
                   <span className="text-gray-400">›</span>
-                  <span
-                    className="px-2 py-0.5 rounded-full"
-                    style={{ backgroundColor: "#374151" }}
-                  >
-                    {sortedChapters.length}{" "}
-                    {sortedChapters.length === 1 ? "Chapter" : "Chapters"}
-                  </span>
+                  {(() => {
+                    const unitIdKey = group.unitId?.toString?.() ?? String(group.unitId);
+                    const total = countsByUnit[unitIdKey] ?? sortedChapters.length;
+                    return (
+                      <span
+                        className="px-2 py-0.5 rounded-full"
+                        style={{ backgroundColor: "#374151" }}
+                        title={total !== sortedChapters.length ? `Showing ${sortedChapters.length} of ${total}` : undefined}
+                      >
+                        {total} {total === 1 ? "Chapter" : "Chapters"}
+                      </span>
+                    );
+                  })()}
                 </div>
                 {canBulkToggle && (() => {
                   const selectedIds = getSelectedForUnit(group.unitId);
@@ -266,7 +273,7 @@ const ChaptersTable = ({
                           e.stopPropagation();
                           const p = onBulkToggleStatus(selectedChapters, "active");
                           if (p && typeof p.then === "function") {
-                            p.then(() => clearUnitSelection(group.unitId)).catch(() => {});
+                            p.then(() => clearUnitSelection(group.unitId)).catch(() => { });
                           } else {
                             clearUnitSelection(group.unitId);
                           }
@@ -281,7 +288,7 @@ const ChaptersTable = ({
                           e.stopPropagation();
                           const p = onBulkToggleStatus(selectedChapters, "inactive");
                           if (p && typeof p.then === "function") {
-                            p.then(() => clearUnitSelection(group.unitId)).catch(() => {});
+                            p.then(() => clearUnitSelection(group.unitId)).catch(() => { });
                           } else {
                             clearUnitSelection(group.unitId);
                           }
@@ -306,7 +313,7 @@ const ChaptersTable = ({
             {/* Desktop Table */}
             <div className="hidden lg:block overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200 table-fixed">
-                <thead className="bg-gray-50">
+                <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
                     {canBulkToggle && (
                       <th className="px-1 py-1 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-10">
@@ -408,7 +415,9 @@ const ChaptersTable = ({
                             onClick={() => handleChapterClick(chapter._id)}
                             className={`cursor-pointer text-sm font-medium hover:text-blue-600 transition-colors ${chapter.status === "inactive"
                               ? "text-gray-500 line-through"
-                              : "text-gray-900"
+                              : chapter.contentInfo?.detailsStatus === "publish"
+                                ? "text-green-700 font-semibold"
+                                : "text-gray-900"
                               }`}
                             title={chapter.name}
                           >
@@ -581,7 +590,9 @@ const ChaptersTable = ({
                           onClick={() => handleChapterClick(chapter._id)}
                           className={`text-sm font-semibold mb-1 cursor-pointer hover:text-blue-600 transition-colors ${chapter.status === "inactive"
                             ? "text-gray-500 line-through"
-                            : "text-gray-900"
+                            : chapter.contentInfo?.detailsStatus === "publish"
+                              ? "text-green-700"
+                              : "text-gray-900"
                             }`}
                           title={chapter.name}
                         >

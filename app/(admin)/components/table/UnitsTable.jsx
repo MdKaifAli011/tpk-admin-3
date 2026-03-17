@@ -8,7 +8,7 @@ import {
   getPermissionMessage,
 } from "../../hooks/usePermissions";
 
-const UnitsTable = ({ units, onEdit, onDelete, onToggleStatus, onBulkToggleStatus, onReorderDraft, reorderDraft = {}, isReorderAllowed = true }) => {
+const UnitsTable = ({ units, countsBySubject = {}, onEdit, onDelete, onToggleStatus, onBulkToggleStatus, onReorderDraft, reorderDraft = {}, isReorderAllowed = true }) => {
   const { canEdit, canDelete, canReorder, role } = usePermissions();
   const router = useRouter();
   const [dragged, setDragged] = useState({ subjectId: null, index: null });
@@ -208,14 +208,20 @@ const UnitsTable = ({ units, onEdit, onDelete, onToggleStatus, onBulkToggleStatu
                     {group.subjectName}
                   </span>
                   <span className="text-gray-400">›</span>
-                  {/* Units */}
-                  <span
-                    className="px-2 py-0.5 rounded-full"
-                    style={{ backgroundColor: "#6B7280" }}
-                  >
-                    {sortedUnits.length}{" "}
-                    {sortedUnits.length === 1 ? "Unit" : "Units"}
-                  </span>
+                  {/* Units — show actual total for this subject when available */}
+                  {(() => {
+                    const subjectIdKey = group.subjectId?.toString?.() ?? String(group.subjectId);
+                    const total = countsBySubject[subjectIdKey] ?? sortedUnits.length;
+                    return (
+                      <span
+                        className="px-2 py-0.5 rounded-full"
+                        style={{ backgroundColor: "#6B7280" }}
+                        title={total !== sortedUnits.length ? `Showing ${sortedUnits.length} of ${total}` : undefined}
+                      >
+                        {total} {total === 1 ? "Unit" : "Units"}
+                      </span>
+                    );
+                  })()}
                 </div>
                 {canBulkToggle && (() => {
                   const selectedIds = getSelectedForSubject(group.subjectId);
@@ -243,7 +249,7 @@ const UnitsTable = ({ units, onEdit, onDelete, onToggleStatus, onBulkToggleStatu
                           e.stopPropagation();
                           const p = onBulkToggleStatus(selectedUnits, "active");
                           if (p && typeof p.then === "function") {
-                            p.then(() => clearSubjectSelection(group.subjectId)).catch(() => {});
+                            p.then(() => clearSubjectSelection(group.subjectId)).catch(() => { });
                           } else {
                             clearSubjectSelection(group.subjectId);
                           }
@@ -258,7 +264,7 @@ const UnitsTable = ({ units, onEdit, onDelete, onToggleStatus, onBulkToggleStatu
                           e.stopPropagation();
                           const p = onBulkToggleStatus(selectedUnits, "inactive");
                           if (p && typeof p.then === "function") {
-                            p.then(() => clearSubjectSelection(group.subjectId)).catch(() => {});
+                            p.then(() => clearSubjectSelection(group.subjectId)).catch(() => { });
                           } else {
                             clearSubjectSelection(group.subjectId);
                           }
@@ -283,7 +289,7 @@ const UnitsTable = ({ units, onEdit, onDelete, onToggleStatus, onBulkToggleStatu
             {/* Desktop Table */}
             <div className="hidden lg:block overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200 table-fixed">
-                <thead className="bg-gray-50">
+                <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
                     {canBulkToggle && (
                       <th className="px-1 py-1 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-10">
@@ -376,7 +382,9 @@ const UnitsTable = ({ units, onEdit, onDelete, onToggleStatus, onBulkToggleStatu
                             onClick={() => handleUnitClick(unit)}
                             className={`cursor-pointer text-sm font-medium hover:text-blue-600 transition-colors ${unit.status === "inactive"
                               ? "text-gray-500 line-through"
-                              : "text-gray-900"
+                              : unit.contentInfo?.detailsStatus === "publish"
+                                ? "text-green-700 font-semibold"
+                                : "text-gray-900"
                               }`}
                             title={unit.name}
                           >
@@ -552,7 +560,9 @@ const UnitsTable = ({ units, onEdit, onDelete, onToggleStatus, onBulkToggleStatu
                           onClick={() => handleUnitClick(unit)}
                           className={`text-sm font-semibold mb-1 cursor-pointer hover:text-blue-600 transition-colors ${unit.status === "inactive"
                             ? "text-gray-500 line-through"
-                            : "text-gray-900"
+                            : unit.contentInfo?.detailsStatus === "publish"
+                              ? "text-green-700"
+                              : "text-gray-900"
                             }`}
                           title={unit.name}
                         >

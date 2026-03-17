@@ -124,7 +124,7 @@ export async function GET(request) {
     const examDetails = await ExamDetails.find({
       examId: { $in: examIds },
     })
-      .select("examId content title metaDescription keywords createdAt updatedAt")
+      .select("examId content title metaDescription keywords status createdAt updatedAt")
       .lean();
 
     // Create a map of examId to content info
@@ -136,6 +136,7 @@ export async function GET(request) {
         hasContent,
         hasMeta,
         contentDate: hasContent ? (detail.updatedAt || detail.createdAt) : null,
+        detailsStatus: detail.status || "draft",
       });
     });
 
@@ -145,6 +146,7 @@ export async function GET(request) {
         hasContent: false,
         hasMeta: false,
         contentDate: null,
+        detailsStatus: "draft",
       };
       return {
         ...exam,

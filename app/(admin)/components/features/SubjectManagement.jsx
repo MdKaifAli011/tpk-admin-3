@@ -43,6 +43,7 @@ const SubjectManagement = () => {
   const [isFormLoading, setIsFormLoading] = useState(false);
   const [error, setError] = useState(null);
   const [subjects, setSubjects] = useState([]);
+  const [countsByExam, setCountsByExam] = useState({});
   const [pagination, setPagination] = useState({
     total: 0,
     totalPages: 0,
@@ -85,6 +86,7 @@ const SubjectManagement = () => {
         const fetchedSubjects = response.data.data || [];
         if (Array.isArray(fetchedSubjects)) {
           setSubjects(fetchedSubjects);
+          setCountsByExam(response.data.countsByExam || {});
           setSubjectListCache(fetchedSubjects, metaFilter);
         }
         const pag = response.data?.pagination;
@@ -859,6 +861,7 @@ const SubjectManagement = () => {
               <>
                 <SubjectTable
                   subjects={filteredSubjects}
+                  countsByExam={countsByExam}
                   onEdit={handleEditSubject}
                   onDelete={handleDeleteSubject}
                   onToggleStatus={handleToggleStatus}

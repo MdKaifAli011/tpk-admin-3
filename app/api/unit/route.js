@@ -103,7 +103,7 @@ export async function GET(request) {
     const unitDetails = await UnitDetails.find({
       unitId: { $in: unitIds },
     })
-      .select("unitId content title metaDescription keywords createdAt updatedAt")
+      .select("unitId content title metaDescription keywords status createdAt updatedAt")
       .lean();
 
     // Create a map of unitId to content info
@@ -115,6 +115,7 @@ export async function GET(request) {
         hasContent,
         hasMeta,
         contentDate: hasContent ? (detail.updatedAt || detail.createdAt) : null,
+        detailsStatus: detail.status || "draft",
       });
     });
 
@@ -124,6 +125,7 @@ export async function GET(request) {
         hasContent: false,
         hasMeta: false,
         contentDate: null,
+        detailsStatus: "draft",
       };
       return {
         ...unit,
@@ -132,6 +134,19 @@ export async function GET(request) {
     });
 
     const response = createPaginationResponse(unitsWithContent, total, page, limit);
+
+    // Admin list: include actual counts per subject for breadcrumb pills
+    if (statusFilter === "all") {
+      const countsBySubject = await Unit.aggregate([
+        { $match: query },
+        { $group: { _id: "$subjectId", count: { $sum: 1 } } },
+      ]).exec();
+      const map = {};
+      countsBySubject.forEach(({ _id, count }) => {
+        if (_id) map[_id.toString()] = count;
+      });
+      response.countsBySubject = map;
+    }
 
     // Cache the response (only for active status)
     if (statusFilter === STATUS.ACTIVE) {

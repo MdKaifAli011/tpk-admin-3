@@ -115,7 +115,7 @@ const ExamTable = ({ exams, onEdit, onDelete, onView, onToggleStatus, onManageIn
       {/* Desktop Table View */}
       <div className="hidden md:block overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200 table-fixed">
-          <thead className="bg-gray-50">
+          <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
               {canDrag && (
                 <th className="px-1 py-1 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-10">
@@ -179,7 +179,9 @@ const ExamTable = ({ exams, onEdit, onDelete, onView, onToggleStatus, onManageIn
                       onClick={() => handleExamClick(exam)}
                       className={`text-sm font-medium truncate cursor-pointer hover:text-blue-600 transition-colors ${exam.status === "inactive"
                         ? "text-gray-500 line-through"
-                        : "text-gray-900"
+                        : exam.contentInfo?.detailsStatus === "publish"
+                          ? "text-green-700 font-semibold"
+                          : "text-gray-900"
                         }`}
                     >
                       {exam.name}
@@ -374,7 +376,7 @@ const ExamTable = ({ exams, onEdit, onDelete, onView, onToggleStatus, onManageIn
                   <div>
                     <h3
                       onClick={() => handleExamClick(exam)}
-                      className={`text-sm font-semibold cursor-pointer hover:text-blue-600 transition-colors ${exam.status === "inactive" ? "text-gray-500 line-through" : "text-gray-900"
+                      className={`text-sm font-semibold cursor-pointer hover:text-blue-600 transition-colors ${exam.status === "inactive" ? "text-gray-500 line-through" : exam.contentInfo?.detailsStatus === "publish" ? "text-green-700" : "text-gray-900"
                         }`}
                     >
                       {exam.name}

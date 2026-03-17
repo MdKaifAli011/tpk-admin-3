@@ -41,6 +41,7 @@ const TopicManagement = () => {
   const [isFormLoading, setIsFormLoading] = useState(false);
   const [error, setError] = useState(null);
   const [topics, setTopics] = useState([]);
+  const [countsByChapter, setCountsByChapter] = useState({});
   const [pagination, setPagination] = useState({
     total: 0,
     totalPages: 0,
@@ -103,6 +104,7 @@ const TopicManagement = () => {
       if (response.data.success) {
         const fetchedTopics = response.data.data || [];
         setTopics(fetchedTopics);
+        setCountsByChapter(response.data.countsByChapter || {});
         setTopicListCache(fetchedTopics, metaFilter);
         const pag = response.data?.pagination;
         if (pag) {
@@ -1841,6 +1843,7 @@ const TopicManagement = () => {
               <>
                 <TopicsTable
                   topics={filteredTopics}
+                  countsByChapter={countsByChapter}
                   onEdit={handleEditTopic}
                   onDelete={handleDeleteTopic}
                   onToggleStatus={handleToggleStatus}

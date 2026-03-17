@@ -42,67 +42,15 @@ function getThreadDetailPath(thread) {
 const SearchModal = ({ isOpen, onClose }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
-  const { tree, treeLoading, activeExamSlug, activeExamId, exams } = useSearchContext();
-  const [currentExamSlug, setCurrentExamSlug] = useState("");
+  const { tree, treeLoading, activeExamSlug, searchScopeExamSlug, searchScopeExamId, exams } = useSearchContext();
 
-  /** Scope: when on an exam/nested page (URL has exam slug), search only that exam's data. */
-  const scopeExamSlug = currentExamSlug || activeExamSlug || "";
-  const scopeExamId = useMemo(() => {
-    if (!scopeExamSlug || !exams?.length) return null;
-    const exam = exams.find((e) => (e.slug || createSlug(e.name)) === scopeExamSlug);
-    return exam?._id || null;
-  }, [scopeExamSlug, exams]);
+  /** Scope is from URL only: when on /neet or nested, search only that exam's data (not sidebar selection). */
+  const scopeExamSlug = searchScopeExamSlug || "";
+  const scopeExamId = searchScopeExamId;
   const [discussionResults, setDiscussionResults] = useState([]);
   const [discussionLoading, setDiscussionLoading] = useState(false);
   const [blogResults, setBlogResults] = useState([]);
   const [blogLoading, setBlogLoading] = useState(false);
-
-  // Update exam slug when URL changes or context changes
-  useEffect(() => {
-    const updateExamSlug = () => {
-      if (typeof window !== "undefined") {
-        const pathname = window.location.pathname;
-        const pathSegments = pathname.split('/').filter(Boolean);
-        
-        // Remove basePath if present
-        const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
-        const basePathSegments = basePath.split('/').filter(Boolean);
-        
-        // Filter out basePath segments
-        const filteredSegments = pathSegments.filter(segment => 
-          !basePathSegments.includes(segment)
-        );
-        
-        if (filteredSegments.length > 0) {
-          // First segment should be the exam slug
-          const newExamSlug = filteredSegments[0];
-          setCurrentExamSlug(newExamSlug);
-        }
-      }
-    };
-
-    // Initial update
-    updateExamSlug();
-
-    // Listen for URL changes
-    const handleURLChange = () => {
-      setTimeout(updateExamSlug, 100);
-    };
-
-    window.addEventListener("popstate", handleURLChange);
-    
-    // Also listen for custom navigation events
-    const handleNavigation = () => {
-      setTimeout(updateExamSlug, 100);
-    };
-    
-    window.addEventListener("navigation", handleNavigation);
-
-    return () => {
-      window.removeEventListener("popstate", handleURLChange);
-      window.removeEventListener("navigation", handleNavigation);
-    };
-  }, [activeExamSlug]); // Re-run when activeExamSlug from context changes
 
   /* ------------------------------- Debounce ------------------------------- */
   useEffect(() => {
@@ -203,7 +151,7 @@ const SearchModal = ({ isOpen, onClose }) => {
   const normalizedQuery = debouncedQuery.trim().toLowerCase();
   const tokens = useMemo(() => tokenizeQuery(normalizedQuery), [normalizedQuery]);
 
-  /** Use tree only when it belongs to the scope exam (same as URL exam). Otherwise we'd show another exam's syllabus. */
+  /** Use tree only when it belongs to the scope exam (URL exam). Stops showing wrong exam's syllabus after switching dropdown. */
   const treeForScope = useMemo(() => {
     if (!scopeExamSlug || activeExamSlug !== scopeExamSlug) return [];
     return tree || [];
@@ -276,7 +224,7 @@ const SearchModal = ({ isOpen, onClose }) => {
     const nodeMatches = (searchableText) =>
       textMatchesTokens(searchableText, tokens);
 
-    const pathPrefix = scopeExamSlug || currentExamSlug || "";
+    const pathPrefix = scopeExamSlug || "";
     filteredTree.forEach((subject) => {
       const subjectText = getSearchableText(subject);
       if (nodeMatches(subjectText)) {
@@ -334,7 +282,7 @@ const SearchModal = ({ isOpen, onClose }) => {
     });
 
     return results;
-  }, [filteredTree, tokens, scopeExamSlug, currentExamSlug]);
+  }, [filteredTree, tokens, scopeExamSlug]);
 
   const icons = {
     subject: <FaBook className="text-blue-600" />,
@@ -356,7 +304,7 @@ const SearchModal = ({ isOpen, onClose }) => {
       {/* Modal */}
       <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[9999] w-full max-w-2xl">
         <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden animate-in fade-in zoom-in duration-200">
-          
+
           {/* Header */}
           <div className="sticky top-0 z-10 flex items-center gap-3 px-5 py-4 border-b bg-gradient-to-r from-blue-50 to-indigo-50">
             <FaSearch className="text-blue-600 text-lg" />
@@ -364,7 +312,9 @@ const SearchModal = ({ isOpen, onClose }) => {
               autoFocus
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search subjects, units, chapters, topics, discussions, blogs..."
+              placeholder={scopeExamSlug
+                ? `Search ${scopeExamSlug} subjects, units, chapters, topics, discussions, blogs...`
+                : "Search subjects, units, chapters, topics, discussions, blogs..."}
               className="flex-1 bg-transparent outline-none text-gray-800 placeholder-gray-500 text-lg"
             />
             <button
@@ -492,7 +442,7 @@ const SearchModal = ({ isOpen, onClose }) => {
                         ) : (
                           <div className="space-y-1">
                             {blogResults.map((blog) => {
-                              const examSlug = blog.examId?.slug || currentExamSlug || "";
+                              const examSlug = blog.examId?.slug || scopeExamSlug || "";
                               const blogSlug = blog.slug || blog.name?.toLowerCase().replace(/\s+/g, "-") || "";
                               const href = examSlug && blogSlug ? `/${examSlug}/blog/${blogSlug}` : "#";
                               const categoryName = blog.categoryId?.name || blog.category || "Blog";

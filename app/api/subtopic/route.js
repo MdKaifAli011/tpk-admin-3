@@ -123,7 +123,7 @@ export async function GET(request) {
     const subTopicDetails = await SubTopicDetails.find({
       subTopicId: { $in: subTopicIds },
     })
-      .select("subTopicId content title metaDescription keywords createdAt updatedAt")
+      .select("subTopicId content title metaDescription keywords status createdAt updatedAt")
       .lean();
 
     // Create a map of subTopicId to content info
@@ -135,6 +135,7 @@ export async function GET(request) {
         hasContent,
         hasMeta,
         contentDate: hasContent ? (detail.updatedAt || detail.createdAt) : null,
+        detailsStatus: detail.status || "draft",
       });
     });
 
@@ -144,6 +145,7 @@ export async function GET(request) {
         hasContent: false,
         hasMeta: false,
         contentDate: null,
+        detailsStatus: "draft",
       };
       return {
         ...subTopic,
@@ -151,9 +153,20 @@ export async function GET(request) {
       };
     });
 
-    return NextResponse.json(
-      createPaginationResponse(subTopicsWithContent, total, page, limit)
-    );
+    const response = createPaginationResponse(subTopicsWithContent, total, page, limit);
+    if (statusFilter === "all") {
+      const countsByTopic = await SubTopic.aggregate([
+        { $match: filter },
+        { $group: { _id: "$topicId", count: { $sum: 1 } } },
+      ]).exec();
+      const map = {};
+      countsByTopic.forEach(({ _id, count }) => {
+        if (_id) map[_id.toString()] = count;
+      });
+      response.countsByTopic = map;
+    }
+
+    return NextResponse.json(response);
   } catch (error) {
     return handleApiError(error, ERROR_MESSAGES.FETCH_FAILED);
   }

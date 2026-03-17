@@ -96,7 +96,7 @@ export async function GET(request) {
     const subjectDetails = await SubjectDetails.find({
       subjectId: { $in: subjectIds },
     })
-      .select("subjectId content title metaDescription keywords createdAt updatedAt")
+      .select("subjectId content title metaDescription keywords status createdAt updatedAt")
       .lean();
 
     // Create a map of subjectId to content info
@@ -108,6 +108,7 @@ export async function GET(request) {
         hasContent,
         hasMeta,
         contentDate: hasContent ? (detail.updatedAt || detail.createdAt) : null,
+        detailsStatus: detail.status || "draft",
       });
     });
 
@@ -117,6 +118,7 @@ export async function GET(request) {
         hasContent: false,
         hasMeta: false,
         contentDate: null,
+        detailsStatus: "draft",
       };
       return {
         ...subject,
@@ -125,6 +127,19 @@ export async function GET(request) {
     });
 
     const response = createPaginationResponse(subjectsWithContent, total, page, limit);
+
+    if (statusFilter === "all") {
+      const countsByExam = await Subject.aggregate([
+        { $match: query },
+        { $group: { _id: "$examId", count: { $sum: 1 } } },
+      ]).exec();
+      const map = {};
+      countsByExam.forEach(({ _id, count }) => {
+        const key = _id ? _id.toString() : "unassigned";
+        map[key] = count;
+      });
+      response.countsByExam = map;
+    }
 
     // Cache the response (only for active status)
     if (statusFilter === STATUS.ACTIVE) {

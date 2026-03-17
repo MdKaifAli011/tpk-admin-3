@@ -26,6 +26,7 @@ import UtilitiesMegaMenu from "./components/UtilitiesMegaMenu";
 import DownloadsMegaMenu from "./components/DownloadsMegaMenu";
 import ContactMegaMenu from "./components/ContactMegaMenu";
 import SearchModal from "./components/SearchModal";
+import { useSearchContext } from "./context/SearchContext";
 import NotificationDropdown from "../components/NotificationDropdown";
 import {
   ExaminationsMobileContent,
@@ -53,14 +54,15 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen, showSidebar }) => {
   const router = useRouter();
   const pathname = usePathname();
   const { student, isLoading, isAuthenticated, logout } = useStudent();
-  
+  const { searchScopeExamSlug } = useSearchContext();
+
   // Refs for hover delay management
   const hoverTimeoutRef = React.useRef(null);
   const leaveTimeoutRef = React.useRef(null);
   const isHoveringMegaMenuRef = React.useRef(false);
 
   // Handle default props
-  const handleMenuToggle = onMenuToggle || (() => {});
+  const handleMenuToggle = onMenuToggle || (() => { });
 
   // Calculate navbar height and set CSS variable for sidebar positioning
   React.useEffect(() => {
@@ -184,17 +186,17 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen, showSidebar }) => {
       clearTimeout(leaveTimeoutRef.current);
       leaveTimeoutRef.current = null;
     }
-    
+
     // If already showing this menu, do nothing
     if (activeMegaMenu === key) {
       return;
     }
-    
+
     // Clear any existing hover timeout
     if (hoverTimeoutRef.current) {
       clearTimeout(hoverTimeoutRef.current);
     }
-    
+
     // Set delay before opening (300ms delay)
     hoverTimeoutRef.current = setTimeout(() => {
       setActiveMegaMenu(key);
@@ -209,7 +211,7 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen, showSidebar }) => {
       clearTimeout(hoverTimeoutRef.current);
       hoverTimeoutRef.current = null;
     }
-    
+
     // Only close if not hovering over the megamenu itself
     if (!isHoveringMegaMenuRef.current) {
       // Small delay before closing to allow moving to megamenu
@@ -480,8 +482,8 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen, showSidebar }) => {
                 <button
                   onClick={() => setIsSearchModalOpen(true)}
                   className="p-2 sm:p-2.5 md:p-2 text-gray-600 hover:text-blue-600 active:text-blue-700 transition-colors touch-manipulation flex items-center justify-center group relative"
-                  aria-label="Search (Ctrl+K)"
-                  title="Search (Ctrl+K)"
+                  aria-label={searchScopeExamSlug ? `Search ${searchScopeExamSlug} (Ctrl+K)` : "Search (Ctrl+K)"}
+                  title={searchScopeExamSlug ? `Search ${searchScopeExamSlug} (Ctrl+K)` : "Search (Ctrl+K)"}
                 >
                   <FaSearch className="text-base sm:text-lg md:text-xl" aria-hidden />
                   {/* Ctrl+K hint */}
@@ -509,9 +511,8 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen, showSidebar }) => {
                       {getUserDisplayName()}
                     </span>
                     <FaChevronDown
-                      className={`text-xs transition-transform shrink-0 ${
-                        isUserMenuOpen ? "rotate-180" : ""
-                      }`}
+                      className={`text-xs transition-transform shrink-0 ${isUserMenuOpen ? "rotate-180" : ""
+                        }`}
                       aria-hidden
                     />
                   </button>
@@ -565,11 +566,10 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen, showSidebar }) => {
                 {/* Sidebar Menu Button - Controls Exam/Subject/Unit Navigation */}
                 <button
                   onClick={handleMenuToggle}
-                  className={`p-2 sm:p-2.5 transition-colors relative touch-manipulation flex items-center justify-center ${
-                    isMenuOpen
+                  className={`p-2 sm:p-2.5 transition-colors relative touch-manipulation flex items-center justify-center ${isMenuOpen
                       ? "text-blue-600 bg-blue-50"
                       : "text-gray-600 hover:text-blue-600 active:text-blue-700"
-                  }`}
+                    }`}
                   aria-label={
                     isMenuOpen
                       ? "Close navigation menu"
@@ -719,9 +719,8 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen, showSidebar }) => {
                       >
                         <span className="flex-1 text-left">{link.name}</span>
                         <FaChevronDown
-                          className={`text-xs sm:text-sm text-gray-400 transition-transform shrink-0 ${
-                            mobileExpandedMenu === link.key ? "rotate-180" : ""
-                          }`}
+                          className={`text-xs sm:text-sm text-gray-400 transition-transform shrink-0 ${mobileExpandedMenu === link.key ? "rotate-180" : ""
+                            }`}
                           aria-hidden
                         />
                       </button>

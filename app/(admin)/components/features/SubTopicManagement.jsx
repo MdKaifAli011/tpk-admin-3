@@ -42,6 +42,7 @@ const SubTopicsManagement = () => {
   const [isFormLoading, setIsFormLoading] = useState(false);
   const [error, setError] = useState(null);
   const [subTopics, setSubTopics] = useState([]);
+  const [countsByTopic, setCountsByTopic] = useState({});
   const [pagination, setPagination] = useState({
     total: 0,
     totalPages: 0,
@@ -109,6 +110,7 @@ const SubTopicsManagement = () => {
       if (response.data.success) {
         const fetchedSubTopics = response.data.data || [];
         setSubTopics(fetchedSubTopics);
+        setCountsByTopic(response.data.countsByTopic || {});
         setSubTopicListCache(fetchedSubTopics, metaFilter);
         const pag = response.data?.pagination;
         if (pag) {
@@ -2091,6 +2093,7 @@ const SubTopicsManagement = () => {
             <div className="p-2">
               <SubTopicsTable
                 subTopics={filteredSubTopics}
+                countsByTopic={countsByTopic}
                 onEdit={handleEditSubTopic}
                 onDelete={handleDeleteSubTopic}
                 onToggleStatus={handleToggleStatus}

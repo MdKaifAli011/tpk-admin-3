@@ -147,7 +147,7 @@ export async function GET(request) {
     const definitionDetails = await DefinitionDetails.find({
       definitionId: { $in: definitionIds },
     })
-      .select("definitionId content title metaDescription keywords createdAt updatedAt")
+      .select("definitionId content title metaDescription keywords status createdAt updatedAt")
       .lean();
 
     // Create a map of definitionId to content info
@@ -159,6 +159,7 @@ export async function GET(request) {
         hasContent,
         hasMeta,
         contentDate: hasContent ? (detail.updatedAt || detail.createdAt) : null,
+        detailsStatus: detail.status || "draft",
       });
     });
 
@@ -168,6 +169,7 @@ export async function GET(request) {
         hasContent: false,
         hasMeta: false,
         contentDate: null,
+        detailsStatus: "draft",
       };
       return {
         ...def,
@@ -175,9 +177,20 @@ export async function GET(request) {
       };
     });
 
-    return NextResponse.json(
-      createPaginationResponse(definitionsWithContent, total, page, limit)
-    );
+    const response = createPaginationResponse(definitionsWithContent, total, page, limit);
+    if (statusFilter === "all") {
+      const countsBySubTopic = await Definition.aggregate([
+        { $match: filter },
+        { $group: { _id: "$subTopicId", count: { $sum: 1 } } },
+      ]).exec();
+      const map = {};
+      countsBySubTopic.forEach(({ _id, count }) => {
+        if (_id) map[_id.toString()] = count;
+      });
+      response.countsBySubTopic = map;
+    }
+
+    return NextResponse.json(response);
   } catch (error) {
     return handleApiError(error, ERROR_MESSAGES.FETCH_FAILED);
   }

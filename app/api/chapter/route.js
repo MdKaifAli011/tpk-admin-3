@@ -96,7 +96,7 @@ export async function GET(request) {
     const chapterDetails = await ChapterDetails.find({
       chapterId: { $in: chapterIds },
     })
-      .select("chapterId content title metaDescription keywords createdAt updatedAt")
+      .select("chapterId content title metaDescription keywords status createdAt updatedAt")
       .lean();
 
     // Create a map of chapterId to content info
@@ -108,6 +108,7 @@ export async function GET(request) {
         hasContent,
         hasMeta,
         contentDate: hasContent ? (detail.updatedAt || detail.createdAt) : null,
+        detailsStatus: detail.status || "draft",
       });
     });
 
@@ -117,6 +118,7 @@ export async function GET(request) {
         hasContent: false,
         hasMeta: false,
         contentDate: null,
+        detailsStatus: "draft",
       };
       return {
         ...chapter,
@@ -124,9 +126,20 @@ export async function GET(request) {
       };
     });
 
-    return NextResponse.json(
-      createPaginationResponse(chaptersWithContent, total, page, limit)
-    );
+    const response = createPaginationResponse(chaptersWithContent, total, page, limit);
+    if (statusFilter === "all") {
+      const countsByUnit = await Chapter.aggregate([
+        { $match: query },
+        { $group: { _id: "$unitId", count: { $sum: 1 } } },
+      ]).exec();
+      const map = {};
+      countsByUnit.forEach(({ _id, count }) => {
+        if (_id) map[_id.toString()] = count;
+      });
+      response.countsByUnit = map;
+    }
+
+    return NextResponse.json(response);
   } catch (error) {
     return handleApiError(error, ERROR_MESSAGES.FETCH_FAILED);
   }

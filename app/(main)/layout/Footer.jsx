@@ -49,7 +49,7 @@ const Footer = () => {
             <Link href="https://www.testprepkart.com" aria-label="Testprepkart home">
               <Image
                 src={`${basePath}/logo.png`}
-                  alt="Testprepkart Logo"
+                alt="Testprepkart Logo"
                 width={150}
                 height={150}
                 className="w-24 sm:w-28 md:w-32 lg:w-36 h-auto"

@@ -10,6 +10,7 @@ import {
 
 const TopicsTable = ({
   topics,
+  countsByChapter = {},
   onEdit,
   onDelete,
   onToggleStatus,
@@ -246,13 +247,19 @@ const TopicsTable = ({
                     {group.chapterName}
                   </span>
                   <span className="text-gray-400">›</span>
-                  <span
-                    className="px-2 py-0.5 rounded-full"
-                    style={{ backgroundColor: "#374151" }}
-                  >
-                    {sortedTopics.length}{" "}
-                    {sortedTopics.length === 1 ? "Topic" : "Topics"}
-                  </span>
+                  {(() => {
+                    const chapterIdKey = group.chapterId?.toString?.() ?? String(group.chapterId);
+                    const total = countsByChapter[chapterIdKey] ?? sortedTopics.length;
+                    return (
+                      <span
+                        className="px-2 py-0.5 rounded-full"
+                        style={{ backgroundColor: "#374151" }}
+                        title={total !== sortedTopics.length ? `Showing ${sortedTopics.length} of ${total}` : undefined}
+                      >
+                        {total} {total === 1 ? "Topic" : "Topics"}
+                      </span>
+                    );
+                  })()}
                 </div>
                 {canBulkToggle && (() => {
                   const selectedIds = getSelectedForChapter(group.chapterId);
@@ -323,7 +330,7 @@ const TopicsTable = ({
             {/* Desktop Table */}
             <div className="hidden lg:block overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200 table-fixed">
-                <thead className="bg-gray-50">
+                <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
                     {canBulkToggle && (
                       <th className="px-1 py-1 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-10">
@@ -416,7 +423,9 @@ const TopicsTable = ({
                             onClick={() => handleTopicClick(topic._id)}
                             className={`cursor-pointer text-sm font-medium hover:text-blue-600 transition-colors ${topic.status === "inactive"
                               ? "text-gray-500 line-through"
-                              : "text-gray-900"
+                              : topic.contentInfo?.detailsStatus === "publish"
+                                ? "text-green-700 font-semibold"
+                                : "text-gray-900"
                               }`}
                             title={topic.name}
                           >
@@ -594,7 +603,9 @@ const TopicsTable = ({
                           onClick={() => handleTopicClick(topic._id)}
                           className={`text-sm font-semibold mb-1 cursor-pointer hover:text-blue-600 transition-colors ${topic.status === "inactive"
                             ? "text-gray-500 line-through"
-                            : "text-gray-900"
+                            : topic.contentInfo?.detailsStatus === "publish"
+                              ? "text-green-700"
+                              : "text-gray-900"
                             }`}
                           title={topic.name}
                         >

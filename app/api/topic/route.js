@@ -114,7 +114,7 @@ export async function GET(request) {
     const topicDetails = await TopicDetails.find({
       topicId: { $in: topicIds },
     })
-      .select("topicId content title metaDescription keywords createdAt updatedAt")
+      .select("topicId content title metaDescription keywords status createdAt updatedAt")
       .lean();
 
     // Create a map of topicId to content info
@@ -126,6 +126,7 @@ export async function GET(request) {
         hasContent,
         hasMeta,
         contentDate: hasContent ? (detail.updatedAt || detail.createdAt) : null,
+        detailsStatus: detail.status || "draft",
       });
     });
 
@@ -135,6 +136,7 @@ export async function GET(request) {
         hasContent: false,
         hasMeta: false,
         contentDate: null,
+        detailsStatus: "draft",
       };
       return {
         ...topic,
@@ -142,9 +144,20 @@ export async function GET(request) {
       };
     });
 
-    return NextResponse.json(
-      createPaginationResponse(topicsWithContent, total, page, limit)
-    );
+    const response = createPaginationResponse(topicsWithContent, total, page, limit);
+    if (statusFilter === "all") {
+      const countsByChapter = await Topic.aggregate([
+        { $match: filter },
+        { $group: { _id: "$chapterId", count: { $sum: 1 } } },
+      ]).exec();
+      const map = {};
+      countsByChapter.forEach(({ _id, count }) => {
+        if (_id) map[_id.toString()] = count;
+      });
+      response.countsByChapter = map;
+    }
+
+    return NextResponse.json(response);
   } catch (error) {
     return handleApiError(error, ERROR_MESSAGES.FETCH_FAILED);
   }
