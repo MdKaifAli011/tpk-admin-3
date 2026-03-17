@@ -55,6 +55,9 @@ const ContactForm = () => {
     handleVerificationChange,
     validateVerification,
     resetVerification,
+    getVerificationBlockStatus,
+    recordVerificationFailure,
+    resetVerificationFailures,
   } = useVerification();
 
   useEffect(() => {
@@ -105,7 +108,16 @@ const ContactForm = () => {
   };
 
   const validateForm = () => {
+    const blockStatus = getVerificationBlockStatus();
+    if (blockStatus.blocked && blockStatus.retryAfterMs != null) {
+      const minutes = Math.ceil(blockStatus.retryAfterMs / 60000);
+      setErrors({
+        verification: `Too many failed verification attempts. Please try again in ${minutes} minute${minutes !== 1 ? "s" : ""}.`,
+      });
+      return false;
+    }
     const newErrors = validateFormUtil(formData, validateVerification);
+    if (newErrors.verification) recordVerificationFailure();
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -167,6 +179,7 @@ const ContactForm = () => {
           phoneNumber: "",
         });
         setErrors({});
+        resetVerificationFailures();
         resetVerification();
         generateVerification();
       } else {

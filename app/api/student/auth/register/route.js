@@ -11,6 +11,7 @@ import {
 import { getJwtSecret } from "@/lib/auth";
 import { sendMail } from "@/lib/mailer";
 import { getEmailTemplateContent } from "@/lib/getEmailTemplateContent";
+import { isSpamOrFakePhone } from "@/lib/phoneSpamCheck";
 
 export async function POST(request) {
   try {
@@ -48,6 +49,10 @@ export async function POST(request) {
 
     if (!phoneNumber?.trim()) {
       return errorResponse("Phone number is required", 400);
+    }
+
+    if (isSpamOrFakePhone(phoneNumber.trim())) {
+      return errorResponse("Please enter a valid phone number", 400);
     }
 
     if (!className?.trim()) {

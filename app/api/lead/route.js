@@ -10,6 +10,7 @@ import {
 import { requireAuth } from "@/middleware/authMiddleware";
 import { sendMail } from "@/lib/mailer";
 import { getEmailTemplateContent } from "@/lib/getEmailTemplateContent";
+import { isSpamOrFakePhone } from "@/lib/phoneSpamCheck";
 
 export async function GET(request) {
   try {
@@ -116,6 +117,10 @@ export async function POST(request) {
 
     if (!body.phoneNumber?.trim()) {
       return errorResponse("Phone number is required", 400);
+    }
+
+    if (isSpamOrFakePhone(body.phoneNumber.trim())) {
+      return errorResponse("Please enter a valid phone number", 400);
     }
 
     const email = body.email.toLowerCase().trim();

@@ -83,6 +83,9 @@ const TestSubmissionRegistrationModal = ({
     handleVerificationChange,
     validateVerification: validateCaptcha,
     resetVerification,
+    getVerificationBlockStatus,
+    recordVerificationFailure,
+    resetVerificationFailures,
   } = useVerification();
 
   // Load exams
@@ -247,6 +250,13 @@ const TestSubmissionRegistrationModal = ({
 
   const validateForm = () => {
     const newErrors = {};
+    const blockStatus = getVerificationBlockStatus();
+    if (blockStatus.blocked && blockStatus.retryAfterMs != null) {
+      const minutes = Math.ceil(blockStatus.retryAfterMs / 60000);
+      newErrors.verification = `Too many failed verification attempts. Please try again in ${minutes} minute${minutes !== 1 ? "s" : ""}.`;
+      setErrors(newErrors);
+      return false;
+    }
     const firstNameError = validateName(formData.firstName);
     if (firstNameError) newErrors.firstName = firstNameError;
     const lastNameError = validateName(formData.lastName);
@@ -270,6 +280,7 @@ const TestSubmissionRegistrationModal = ({
     if (confirmPasswordError) newErrors.confirmPassword = confirmPasswordError;
     if (!validateCaptcha()) {
       newErrors.verification = "Please complete the verification";
+      recordVerificationFailure();
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -326,6 +337,7 @@ const TestSubmissionRegistrationModal = ({
         setSubmitMessage(
           "Account created successfully! Your test results are being saved..."
         );
+        resetVerificationFailures();
 
         // Prevent calling callback multiple times
         if (registrationSuccessCalledRef.current) {

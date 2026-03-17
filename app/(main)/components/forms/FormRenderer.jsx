@@ -86,6 +86,9 @@ const FormRenderer = ({
     handleVerificationChange,
     validateVerification,
     resetVerification,
+    getVerificationBlockStatus,
+    recordVerificationFailure,
+    resetVerificationFailures,
   } = useVerification();
 
   // Fetch form configuration (when modal open or when inline with formId)
@@ -182,6 +185,14 @@ const FormRenderer = ({
 
     if (!formConfig) return false;
 
+    const blockStatus = getVerificationBlockStatus();
+    if (blockStatus.blocked && blockStatus.retryAfterMs != null && formConfig.settings.showVerification) {
+      const minutes = Math.ceil(blockStatus.retryAfterMs / 60000);
+      newErrors.verification = `Too many failed verification attempts. Please try again in ${minutes} minute${minutes !== 1 ? "s" : ""}.`;
+      setErrors(newErrors);
+      return false;
+    }
+
     formConfig.fields.forEach((field) => {
       const value = formData[field.name];
       const error = validateFieldUtil(field, value);
@@ -193,6 +204,7 @@ const FormRenderer = ({
     // Validate verification if enabled
     if (formConfig.settings.showVerification && !validateVerification()) {
       newErrors.verification = "Please complete the verification";
+      recordVerificationFailure();
     }
 
     setErrors(newErrors);
@@ -287,6 +299,7 @@ const FormRenderer = ({
         });
         setFormData(resetData);
         setErrors({});
+        resetVerificationFailures();
         resetVerification();
         generateVerification();
 
