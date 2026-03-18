@@ -248,7 +248,11 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen, showSidebar }) => {
   };
 
   return (
-    <nav data-navbar className="fixed top-0 left-0 right-0 w-full z-50" aria-label="Main navigation">
+    <nav
+      data-navbar
+      className={`fixed top-0 left-0 right-0 w-full ${activeMegaMenu ? "z-[130]" : "z-50"}`}
+      aria-label="Main navigation"
+    >
       {/* Top Bar - Dark Gray (Condensed on mobile) */}
       <div className="bg-gray-800 text-white text-[10px] sm:text-xs py-1.5 sm:py-2">
         <div className="container mx-auto px-2 sm:px-4">

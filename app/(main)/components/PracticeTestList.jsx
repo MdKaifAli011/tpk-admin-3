@@ -28,7 +28,6 @@ import {
   fetchStudentTestResults,
 } from "../lib/api";
 import loadMathJax from "../lib/utils/mathJaxLoader";
-import LoadingState from "./LoadingState";
 import TestSubmissionRegistrationModal from "./TestSubmissionRegistrationModal";
 import Card from "./Card";
 import Button from "./Button";

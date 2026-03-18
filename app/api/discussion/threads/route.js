@@ -272,6 +272,52 @@ export async function GET(request) {
       definitionId
     );
 
+    /** Header search modal: only examId + text — strict to this exam (no global leak). Title + content match. */
+    const examOnlySearch =
+      !isAdmin &&
+      examId &&
+      search &&
+      String(search).trim() &&
+      !subjectId &&
+      !unitId &&
+      !chapterId &&
+      !topicId &&
+      !subTopicId &&
+      !definitionId;
+
+    if (examOnlySearch) {
+      const safe = String(search).trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const regex = new RegExp(safe, "i");
+      const sortOption = getSortOption(sort);
+      const limit = Math.min(Math.max(parseInt(searchParams.get("limit") || "10", 10), 1), 50);
+      const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
+      const skip = (page - 1) * limit;
+      const q = {
+        isApproved: true,
+        examId,
+        $or: [{ title: regex }, { content: regex }],
+      };
+      const populateOptions = [
+        { path: "author", select: "firstName lastName avatar email role" },
+        { path: "examId", select: "name slug" },
+        { path: "subjectId", select: "name slug" },
+        { path: "unitId", select: "name slug" },
+        { path: "chapterId", select: "name slug" },
+        { path: "topicId", select: "name slug" },
+        { path: "subTopicId", select: "name slug" },
+      ];
+      const [threads, total] = await Promise.all([
+        Thread.find(q).sort(sortOption).skip(skip).limit(limit).populate(populateOptions).lean(),
+        Thread.countDocuments(q),
+      ]);
+      return NextResponse.json({
+        success: true,
+        data: threads,
+        listSource: "exam_search",
+        pagination: { total, page, limit, pages: Math.ceil(total / limit) || 0 },
+      });
+    }
+
     if (!isAdmin && hasHierarchy) {
       const result = await runListCascade(searchParams, {
         examId,

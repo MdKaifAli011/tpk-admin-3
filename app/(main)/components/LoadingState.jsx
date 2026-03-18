@@ -1,24 +1,20 @@
 "use client";
 import React from "react";
-import MainLayout from "../layout/MainLayout";
 import { FaSpinner } from "react-icons/fa";
 import { PLACEHOLDERS } from "@/constants";
-import Card from "./Card";
 
-const LoadingState = () => {
+/**
+ * Inline loading UI only — do not wrap in MainLayout (pages already use MainLayoutClient).
+ * Nesting MainLayout here caused duplicate navbar/sidebar/footer mid-page and below the real footer.
+ */
+const LoadingState = ({ message }) => {
   return (
-    <MainLayout>
-      <div className="px-4 sm:px-6 py-8 sm:py-12">
-        <Card variant="standard" className="p-6 sm:p-8 text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 mb-4 sm:mb-6">
-            <FaSpinner className="text-indigo-600 text-4xl sm:text-5xl animate-spin" />
-          </div>
-          <p className="text-sm sm:text-base font-medium text-gray-600">
-            {PLACEHOLDERS.LOADING || "Loading..."}
-          </p>
-        </Card>
-      </div>
-    </MainLayout>
+    <div className="flex flex-col items-center justify-center py-8 px-4" role="status" aria-live="polite">
+      <FaSpinner className="text-indigo-600 text-3xl sm:text-4xl animate-spin mb-4" aria-hidden />
+      <p className="text-sm sm:text-base font-medium text-gray-600 text-center">
+        {message || PLACEHOLDERS?.LOADING || "Loading..."}
+      </p>
+    </div>
   );
 };
 

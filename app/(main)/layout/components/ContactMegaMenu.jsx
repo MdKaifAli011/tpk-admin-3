@@ -3,7 +3,7 @@ import Link from "next/link";
 
 const ContactMegaMenu = ({ onClose }) => {
   return (
-    <div className="absolute left-1/2 transform -translate-x-1/2 top-full mt-2 w-[90vw] max-w-5xl bg-white rounded-lg shadow-2xl border border-gray-200 py-6 z-50">
+    <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-[90vw] max-w-5xl bg-white rounded-lg shadow-2xl border border-gray-200 py-6 z-[140]">
       <div className="px-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Get in Touch */}

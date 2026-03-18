@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
+import { createPortal } from "react-dom";
 import {
   FaSearch,
   FaTimes,
@@ -42,11 +43,11 @@ function getThreadDetailPath(thread) {
 const SearchModal = ({ isOpen, onClose }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
-  const { tree, treeLoading, activeExamSlug, searchScopeExamSlug, searchScopeExamId, exams } = useSearchContext();
+  const { tree, treeLoading, activeExamId, activeExamSlug, searchScopeExamSlug, searchScopeExamId, exams } = useSearchContext();
 
-  /** Scope is from URL only: when on /neet or nested, search only that exam's data (not sidebar selection). */
   const scopeExamSlug = searchScopeExamSlug || "";
-  const scopeExamId = searchScopeExamId;
+  /** Always send sidebar exam id when slug lookup fails (e.g. SAT) — without examId API returns global NEET/JEE threads. */
+  const scopeExamId = searchScopeExamId || activeExamId || null;
   const [discussionResults, setDiscussionResults] = useState([]);
   const [discussionLoading, setDiscussionLoading] = useState(false);
   const [blogResults, setBlogResults] = useState([]);
@@ -72,7 +73,7 @@ const SearchModal = ({ isOpen, onClose }) => {
       search: q,
       limit: "10",
     });
-    if (scopeExamId) params.set("examId", scopeExamId);
+    if (scopeExamId) params.set("examId", String(scopeExamId));
     api
       .get(`/discussion/threads?${params.toString()}`)
       .then((res) => {
@@ -104,7 +105,7 @@ const SearchModal = ({ isOpen, onClose }) => {
       search: q,
       limit: "10",
     });
-    if (scopeExamId) params.set("examId", scopeExamId);
+    if (scopeExamId) params.set("examId", String(scopeExamId));
     api
       .get(`/blog?${params.toString()}`)
       .then((res) => {
@@ -120,6 +121,39 @@ const SearchModal = ({ isOpen, onClose }) => {
       });
     return () => { cancelled = true; };
   }, [debouncedQuery, scopeExamId]);
+
+  /** Extra safety: only show threads/blogs for current exam (API can leak if examId missing). */
+  const discussionFiltered = useMemo(() => {
+    if (!scopeExamId || !discussionResults.length) return discussionResults;
+    const id = String(scopeExamId);
+    return discussionResults.filter((t) => {
+      const eid = t.examId?._id ?? t.examId;
+      return eid != null && String(eid) === id;
+    });
+  }, [discussionResults, scopeExamId]);
+
+  const blogFiltered = useMemo(() => {
+    if (!scopeExamId || !blogResults.length) return blogResults;
+    const id = String(scopeExamId);
+    return blogResults.filter((b) => {
+      const eid = b.examId?._id ?? b.examId;
+      return eid != null && String(eid) === id;
+    });
+  }, [blogResults, scopeExamId]);
+
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [isOpen]);
 
   /* ----------------------------- Escape Close ----------------------------- */
   useEffect(() => {
@@ -291,18 +325,24 @@ const SearchModal = ({ isOpen, onClose }) => {
     topic: <FaFileAlt className="text-purple-600" />,
   };
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
-  return (
+  const modal = (
     <>
-      {/* Backdrop */}
+      {/* Above sidebar (z-50) + navbar — portal to body so stacking is not trapped inside navbar */}
       <div
+        role="presentation"
         onClick={onClose}
-        className="fixed inset-0 bg-black/40  z-[9998]"
+        className="fixed inset-0 z-[10050] bg-black/50 backdrop-blur-[1px]"
+        aria-hidden="true"
       />
 
-      {/* Modal */}
-      <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[9999] w-full max-w-2xl">
+      <div
+        className="fixed top-[max(4rem,env(safe-area-inset-top))] left-1/2 -translate-x-1/2 z-[10051] w-[calc(100%-1.5rem)] max-w-2xl px-2 sm:px-0"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Search"
+      >
         <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden animate-in fade-in zoom-in duration-200">
 
           {/* Header */}
@@ -337,7 +377,7 @@ const SearchModal = ({ isOpen, onClose }) => {
               <EmptyState />
             ) : (
               <>
-                {searchResults.length === 0 && !discussionLoading && discussionResults.length === 0 && !blogLoading && blogResults.length === 0 ? (
+                {searchResults.length === 0 && !discussionLoading && discussionFiltered.length === 0 && !blogLoading && blogFiltered.length === 0 ? (
                   <NoResults query={searchQuery} />
                 ) : (
                   <div className="p-3 space-y-4">
@@ -374,20 +414,20 @@ const SearchModal = ({ isOpen, onClose }) => {
                       </section>
                     )}
 
-                    {(discussionLoading || discussionResults.length > 0) && (
+                    {(discussionLoading || discussionFiltered.length > 0) && (
                       <section>
                         <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2 px-2 flex items-center gap-1.5">
                           <FaComments className="text-indigo-500" />
-                          Discussion — {discussionLoading ? "Searching..." : `${discussionResults.length} result(s)`}
+                          Discussion — {discussionLoading ? "Searching..." : `${discussionFiltered.length} result(s)`}
                         </p>
-                        {discussionLoading && discussionResults.length === 0 ? (
+                        {discussionLoading && discussionFiltered.length === 0 ? (
                           <div className="flex items-center gap-2 px-3 py-4 text-gray-500">
                             <div className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
                             <span className="text-sm">Loading discussion threads...</span>
                           </div>
                         ) : (
                           <div className="space-y-1">
-                            {discussionResults.map((thread) => {
+                            {discussionFiltered.map((thread) => {
                               const path = getThreadDetailPath(thread);
                               const href = path
                                 ? `${path}?tab=discussion&thread=${encodeURIComponent(thread.slug)}`
@@ -428,20 +468,20 @@ const SearchModal = ({ isOpen, onClose }) => {
                       </section>
                     )}
 
-                    {(blogLoading || blogResults.length > 0) && (
+                    {(blogLoading || blogFiltered.length > 0) && (
                       <section>
                         <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2 px-2 flex items-center gap-1.5">
                           <FaNewspaper className="text-amber-500" />
-                          Blog — {blogLoading ? "Searching..." : `${blogResults.length} result(s)`}
+                          Blog — {blogLoading ? "Searching..." : `${blogFiltered.length} result(s)`}
                         </p>
-                        {blogLoading && blogResults.length === 0 ? (
+                        {blogLoading && blogFiltered.length === 0 ? (
                           <div className="flex items-center gap-2 px-3 py-4 text-gray-500">
                             <div className="w-4 h-4 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
                             <span className="text-sm">Loading blogs...</span>
                           </div>
                         ) : (
                           <div className="space-y-1">
-                            {blogResults.map((blog) => {
+                            {blogFiltered.map((blog) => {
                               const examSlug = blog.examId?.slug || scopeExamSlug || "";
                               const blogSlug = blog.slug || blog.name?.toLowerCase().replace(/\s+/g, "-") || "";
                               const href = examSlug && blogSlug ? `/${examSlug}/blog/${blogSlug}` : "#";
@@ -484,6 +524,8 @@ const SearchModal = ({ isOpen, onClose }) => {
       </div>
     </>
   );
+
+  return createPortal(modal, document.body);
 };
 
 /* ------------------------------ Sub States ------------------------------ */

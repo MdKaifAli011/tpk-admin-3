@@ -308,7 +308,7 @@ const TabsClient = ({
     <Card variant="standard" hover={false} className="overflow-visible">
       {/* Tab Navigation — sticky so Overview/Discussion/Practice/Performance stay on top while scrolling */}
       <nav
-        className="sticky z-[45] flex overflow-x-auto sm:overflow-visible border-b border-gray-200 bg-gradient-to-br from-indigo-50 via-white to-purple-50 scrollbar-hide shadow-[0_1px_3px_0_rgba(0,0,0,0.04)] rounded-t-xl"
+        className="sticky z-[35] flex overflow-x-auto sm:overflow-visible border-b border-gray-200 bg-gradient-to-br from-indigo-50 via-white to-purple-50 scrollbar-hide shadow-[0_1px_3px_0_rgba(0,0,0,0.04)] rounded-t-xl"
         style={{ top: "var(--navbar-height, 7.5rem)" }}
         aria-label="Content tabs"
       >

@@ -708,7 +708,7 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 z-[35] bg-black/40 backdrop-blur-[2px] lg:hidden transition-opacity"
+          className="fixed inset-0 z-[45] bg-black/40 backdrop-blur-[2px] lg:hidden transition-opacity"
           onClick={closeSidebarMobile}
           aria-hidden="true"
         />
@@ -716,7 +716,7 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
 
       {/* Sidebar - Premium Compact 300px (280px on mobile) */}
       <aside
-        className={`fixed left-0 z-[40] w-[280px] sm:w-[300px] min-w-[280px] sm:min-w-[300px] max-w-[280px] sm:max-w-[300px] bg-white/98 backdrop-blur-md border-r border-gray-200/80 transform transition-transform duration-300 ease-out ${sidebarOpen && isOpen
+        className={`fixed left-0 z-[50] w-[280px] sm:w-[300px] min-w-[280px] sm:min-w-[300px] max-w-[280px] sm:max-w-[300px] bg-white/98 backdrop-blur-md border-r border-gray-200/80 transform transition-transform duration-300 ease-out ${sidebarOpen && isOpen
           ? "translate-x-0"
           : "-translate-x-full lg:translate-x-0"
           } ${!isOpen ? "lg:hidden" : ""} lg:flex lg:flex-col`}
