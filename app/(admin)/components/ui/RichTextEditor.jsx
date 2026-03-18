@@ -11,6 +11,8 @@ const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
 const CKEDITOR_SCRIPT = `${basePath}/vendor/ckeditor/ckeditor.js`;
 const MATHJAX_SCRIPT = `${basePath}/vendor/mathjax/MathJax.js?config=TeX-AMS_HTML`;
 const CKEDITOR_CONTENTS_CSS = `${basePath}/vendor/ckeditor/contents.css`;
+/** Matches RichContent: app/(main)/commanStyle.css (served for CKEditor iframe) */
+const RICHTEXT_COMMON_CSS = `${basePath}/api/richtext-common-css`;
 
 // Shared toolbar style: only remove from document when last RichTextEditor unmounts (avoids toolbar glitch when multiple editors or re-mounts).
 let globalToolbarStyleRefCount = 0;
@@ -496,8 +498,8 @@ const RichTextEditor = ({
         removePlugins: "resize",
         extraPlugins: extraPluginsList.join(","),
         mathJaxLib: MATHJAX_SCRIPT,
-        contentsCss: [CKEDITOR_CONTENTS_CSS],
-        bodyClass: "rich-text-content",
+        contentsCss: [CKEDITOR_CONTENTS_CSS, RICHTEXT_COMMON_CSS],
+        bodyClass: "rich-text-content rich-html-common",
         autoParagraph: true,
         ignoreEmptyParagraph: true,
         allowedContent: true,

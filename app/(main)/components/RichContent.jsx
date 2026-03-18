@@ -1,5 +1,8 @@
 "use client";
 
+/* Rich HTML blocks (tk-*, chapter modules, etc.) — shared with admin RichTextEditor via /api/richtext-common-css */
+import "../commanStyle.css";
+
 import React, {
   useEffect,
   useRef,
@@ -940,7 +943,12 @@ const RichContent = forwardRef(({ html = "" }, ref) => {
         </div>
       )}
       {!isEmpty && (
-      <div ref={mergedRef} className="rich-text-content wrap-anywhere min-w-0" suppressHydrationWarning>
+      <div
+        ref={mergedRef}
+        className="rich-text-content rich-html-common wrap-anywhere min-w-0"
+        data-rich-common-css="commanStyle"
+        suppressHydrationWarning
+      >
         <style jsx global>{`
         .video-grid-container {
           width: 100%;
