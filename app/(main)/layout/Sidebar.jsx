@@ -156,6 +156,7 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
   const isDownloadPath = pathSegments[1] === "download";
   const isBlogPath = pathSegments[1] === "blog";
   const isCoursePath = pathSegments[1] === "course";
+  const isToolPath = pathSegments[1] === "tool";
   const isResultPath = pathSegments[1] === "result";
   const resultYearFromPath = isResultPath && pathSegments[2] ? parseInt(pathSegments[2], 10) : null;
   const isVideoLibraryPath = pathSegments[1] === "video-library";
@@ -1007,6 +1008,23 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
                     Course
                   </li>
                 )}
+
+                {/* NEET only: Seat Allotment Tool — /neet/tool (filter by year inside tool) */}
+                {activeExamSlug && (activeExamSlug === "neet" || activeExam?.name?.toLowerCase?.() === "neet") ? (
+                  <li>
+                    <Link
+                      href="/neet/tool"
+                      className={`w-full flex items-center justify-between px-3 py-2 font-semibold rounded-lg transition-all duration-200 ${isToolPath
+                        ? "bg-indigo-100/60 shadow-sm text-indigo-900"
+                        : "text-black hover:text-indigo-600 hover:bg-gray-50"
+                        }`}
+                      onClick={closeOnMobile}
+                      aria-label="NEET seat allotment tool — filter by year and round"
+                    >
+                      <span>Seat Allotment Tool</span>
+                    </Link>
+                  </li>
+                ) : null}
 
                 {/* Result — expandable with years as submenu */}
                 {activeExamSlug ? (

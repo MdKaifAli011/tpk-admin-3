@@ -12,6 +12,14 @@ body {
   font-family: var(--font-geist-sans);
 }
 
+/* Custom code from site-settings: injected footer HTML must never be visible (Footer is the last visible UI) */
+[data-custom-footer-hidden],
+[data-custom-footer-hidden] * {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
 /* LCP: skip painting below-fold sections until near viewport */
 .lcp-below-fold {
   content-visibility: auto;

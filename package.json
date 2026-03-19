@@ -11,6 +11,9 @@
     "clean": "node -e \"try{require('fs').rmSync('.next',{recursive:true,force:true});console.log('Cleaned .next');}catch(e){if(e.code!=='ENOENT')throw e;console.log('No .next folder');}\"",
     "lint": "eslint",
     "import:neet-biology": "node scripts/import-neet-biology-data.mjs",
+    "import:neet-counseling": "node scripts/import-neet-counseling-pdf.mjs",
+    "import:neet-counseling:r2": "node scripts/import-neet-counseling-pdf.mjs --round=2",
+    "import:neet-counseling:r3": "node scripts/import-neet-counseling-pdf.mjs --round=3",
     "normalize:media-folders": "node scripts/normalize-media-folders.mjs"
   },
   "dependencies": {
@@ -38,6 +41,7 @@
     "mongoose": "^8.19.2",
     "next": "16.0.1",
     "nodemailer": "^7.0.13",
+    "pdf-parse": "^2.4.5",
     "qs": "^6.14.0",
     "react": "19.2.0",
     "react-dom": "19.2.0",

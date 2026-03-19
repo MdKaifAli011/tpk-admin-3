@@ -27,11 +27,13 @@ export default function MainLayoutClient({ children }) {
 
   // Memoize showSidebar to prevent unnecessary recalculations
   const showSidebar = useMemo(() => {
-    // No sidebar on: home, contact, calculator, store, explore, auth, site-level pages, or exam-level pages
+    // No sidebar on: home, contact, calculator, store, explore, auth, tool pages, or exam-level pages
     const isExamPagesRoute = pathname?.match(/^\/[^/]+\/pages(\/|$)/);
+    const isToolPage = pathname?.includes("/tool");
     return (
       pathname !== "/" &&
       pathname !== "/contact" &&
+      !isToolPage &&
       !pathname?.startsWith("/calculator") &&
       !pathname?.startsWith("/store") &&
       !pathname?.startsWith("/explore") &&
@@ -275,7 +277,11 @@ export default function MainLayoutClient({ children }) {
     <ErrorBoundary>
       <SearchProvider>
         <CustomCodeInjector />
-        <div className="flex flex-col min-h-screen min-w-0 w-full bg-gray-50">
+        <div
+          id="main-app-root"
+          className="flex flex-col min-h-screen min-w-0 w-full bg-gray-50"
+          data-app-root
+        >
           <Navbar
             onMenuToggle={toggleSidebar}
             isMenuOpen={isSidebarOpen}
@@ -313,6 +319,7 @@ export default function MainLayoutClient({ children }) {
             </main>
           </div>
 
+          {/* Footer is the last visible UI. CustomCodeInjector appends its footer nodes inside #main-app-root after this so nothing appears below the footer. */}
           <Suspense
             fallback={
               <div className="min-h-[200px] bg-gray-50" aria-hidden="true" />

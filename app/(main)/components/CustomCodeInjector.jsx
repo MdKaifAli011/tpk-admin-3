@@ -1,13 +1,12 @@
 "use client";
 
 import React, { useEffect, useRef } from "react";
-import api from "@/lib/api";
 
 /**
  * Injects script/link/meta from an HTML string into the DOM so scripts execute.
  * Scripts added via innerHTML do not run; we create new script elements and append.
  * @param {HTMLElement} target - Where to append (e.g. document.head or document.body)
- * @param {HTMLElement} [hiddenTarget] - If set, non-script nodes go here (hidden) to avoid duplicate visible UI after footer
+ * @param {HTMLElement} [hiddenTarget] - If set, non-script nodes go here (hidden) so no extra UI shows after footer
  */
 function injectCode(htmlString, target, hiddenTarget = null) {
   if (!htmlString || typeof htmlString !== "string" || !target) return;
@@ -55,12 +54,16 @@ function injectCode(htmlString, target, hiddenTarget = null) {
   });
 }
 
+/** Get the app root so footer injection stays inside layout; nothing visible after Footer. */
+function getFooterInjectParent() {
+  return document.getElementById("main-app-root") || document.body;
+}
+
 export default function CustomCodeInjector() {
   const injected = useRef({ header: false, footer: false });
 
   useEffect(() => {
     if (injected.current.header && injected.current.footer) return;
-    // Skip if server already injected (so view-source shows code and we don't duplicate)
     if (document.querySelector("[data-custom-code-injected='server']")) return;
 
     const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
@@ -77,18 +80,19 @@ export default function CustomCodeInjector() {
           injected.current.header = true;
         }
         if (footerCode && typeof footerCode === "string" && !injected.current.footer) {
-          // Scripts go to body so they run; any other HTML (nav, blog, comment, copyright) goes into a hidden container
-          // so we don't show duplicate footer/nav/blog/comment content after the app Footer.
+          const parent = getFooterInjectParent();
           const footerHidden = document.createElement("div");
           footerHidden.setAttribute("data-custom-footer-hidden", "true");
           footerHidden.setAttribute("aria-hidden", "true");
-          footerHidden.style.cssText = "position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);";
-          document.body.appendChild(footerHidden);
-          injectCode(footerCode, document.body, footerHidden);
+          footerHidden.setAttribute("hidden", "");
+          footerHidden.style.cssText =
+            "display:none!important;visibility:hidden!important;position:absolute!important;left:-99999px!important;width:0!important;height:0!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;pointer-events:none!important;";
+          parent.appendChild(footerHidden);
+          injectCode(footerCode, parent, footerHidden);
           injected.current.footer = true;
         }
       })
-      .catch(() => { });
+      .catch(() => {});
   }, []);
 
   return null;
