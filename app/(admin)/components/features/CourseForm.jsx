@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { FaSave, FaTimes, FaArrowLeft, FaFolderOpen } from "react-icons/fa";
+import { FaSave, FaTimes, FaArrowLeft, FaFolderOpen, FaUserPlus } from "react-icons/fa";
 import { LoadingSpinner } from "../ui/SkeletonLoader";
 import { ToastContainer, useToast } from "../ui/Toast";
 import MediaPickerModal from "../ui/MediaPickerModal";
@@ -35,9 +35,36 @@ export default function CourseForm({ courseId, isNew }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
-  const [mediaPickerFor, setMediaPickerFor] = useState(null); // 'instructorImage' | 'image' | 'videoThumbnail' | null
+  const [mediaPickerFor, setMediaPickerFor] = useState(null); // 'instructorImage' | 'image' | 'videoThumbnail' | 'newFacultyImage' | null
+  const [facultiesFromApi, setFacultiesFromApi] = useState([]);
+  const [newFacultyName, setNewFacultyName] = useState("");
+  const [newFacultyImage, setNewFacultyImage] = useState("");
+  const [addingFaculty, setAddingFaculty] = useState(false);
+  const [showAddFaculty, setShowAddFaculty] = useState(false);
   const { toasts, removeToast, success, error: showError } = useToast();
   const mounted = useRef(true);
+
+  const fetchFaculties = useCallback(async (examId) => {
+    if (!examId) {
+      setFacultiesFromApi([]);
+      return;
+    }
+    try {
+      const res = await api.get(`/admin/faculty?examId=${encodeURIComponent(examId)}`);
+      if (res.data?.success && Array.isArray(res.data.data)) {
+        setFacultiesFromApi(res.data.data);
+      } else {
+        setFacultiesFromApi([]);
+      }
+    } catch {
+      setFacultiesFromApi([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (form.examId) fetchFaculties(form.examId);
+    else setFacultiesFromApi([]);
+  }, [form.examId, fetchFaculties]);
 
   useEffect(() => {
     mounted.current = true;
@@ -235,41 +262,154 @@ export default function CourseForm({ courseId, isNew }) {
                 </select>
               </div>
 
-              {/* Faculty quick-select: show list by exam, auto-fill createdBy + instructorImage */}
+              {/* Faculty: select from list (API + static) or add new */}
               {form.examId && (() => {
                 const selectedExam = exams.find((e) => e._id === form.examId);
-                const faculties = selectedExam ? getFacultiesForExam(selectedExam.name) : [];
-                if (faculties.length === 0) return null;
-                const selectedIndex = faculties.findIndex(
+                const staticFaculties = selectedExam ? getFacultiesForExam(selectedExam.name) : [];
+                const apiFaculties = (facultiesFromApi || []).map((f) => ({
+                  name: f.name,
+                  imageUrl: f.imageUrl || "",
+                }));
+                const seenNames = new Set();
+                const merged = [];
+                apiFaculties.forEach((f) => {
+                  const n = (f.name || "").trim();
+                  if (n && !seenNames.has(n.toLowerCase())) {
+                    seenNames.add(n.toLowerCase());
+                    merged.push({ ...f, source: "api" });
+                  }
+                });
+                staticFaculties.forEach((f) => {
+                  const n = (f.name || "").trim();
+                  if (n && !seenNames.has(n.toLowerCase())) {
+                    seenNames.add(n.toLowerCase());
+                    merged.push({ name: n, imageUrl: f.imageUrl || "", source: "static" });
+                  }
+                });
+                const selectedIndex = merged.findIndex(
                   (f) => (f.name || "").trim() === (form.createdBy || "").trim()
                 );
                 const selectValue = selectedIndex >= 0 ? String(selectedIndex) : "";
                 return (
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Quick select faculty</label>
-                    <select
-                      value={selectValue}
-                      onChange={(e) => {
-                        const idx = e.target.value;
-                        if (idx === "") return;
-                        const f = faculties[Number(idx)];
-                        if (f) {
-                          setForm((prev) => ({
-                            ...prev,
-                            createdBy: f.name,
-                            instructorImage: f.imageUrl || prev.instructorImage,
-                          }));
-                        }
-                      }}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 bg-white"
-                      disabled={saving}
-                    >
-                      <option value="">-- Choose a faculty to fill name and image --</option>
-                      {faculties.map((f, i) => (
-                        <option key={i} value={i}>{f.name}</option>
-                      ))}
-                    </select>
-                    <p className="mt-1 text-xs text-gray-500">Fills &quot;Created by&quot; and &quot;Instructor image URL&quot; below; you can still edit them manually.</p>
+                  <div className="md:col-span-2 space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Select faculty (instructor)</label>
+                      <select
+                        value={selectValue}
+                        onChange={(e) => {
+                          const idx = e.target.value;
+                          if (idx === "") return;
+                          const f = merged[Number(idx)];
+                          if (f) {
+                            setForm((prev) => ({
+                              ...prev,
+                              createdBy: f.name,
+                              instructorImage: f.imageUrl || prev.instructorImage,
+                            }));
+                          }
+                        }}
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 bg-white"
+                        disabled={saving}
+                      >
+                        <option value="">-- Choose a faculty to fill name and image --</option>
+                        {merged.map((f, i) => (
+                          <option key={i} value={i}>{f.name}</option>
+                        ))}
+                      </select>
+                      <p className="mt-1 text-xs text-gray-500">Fills &quot;Created by&quot; and &quot;Instructor image URL&quot; below. You can also add a new faculty for this exam.</p>
+                    </div>
+                    <div>
+                      <button
+                        type="button"
+                        onClick={() => setShowAddFaculty((v) => !v)}
+                        className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors"
+                      >
+                        <FaUserPlus className="w-4 h-4" />
+                        {showAddFaculty ? "Hide add faculty" : "Add new faculty for this exam"}
+                      </button>
+                      {showAddFaculty && (
+                        <div className="mt-3 p-4 border border-gray-200 rounded-lg bg-gray-50 space-y-3">
+                          <p className="text-sm font-medium text-gray-700">New faculty (saved for this exam and available in the list above)</p>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div>
+                              <label className="block text-xs font-medium text-gray-500 mb-1">Name</label>
+                              <input
+                                type="text"
+                                value={newFacultyName}
+                                onChange={(e) => setNewFacultyName(e.target.value)}
+                                placeholder="e.g. Dr. Jane Smith"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm"
+                                disabled={saving || addingFaculty}
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium text-gray-500 mb-1">Image URL</label>
+                              <div className="flex gap-2">
+                                <input
+                                  type="url"
+                                  value={newFacultyImage}
+                                  onChange={(e) => setNewFacultyImage(e.target.value)}
+                                  placeholder="https://..."
+                                  className="flex-1 min-w-0 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm"
+                                  disabled={saving || addingFaculty}
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => setMediaPickerFor("newFacultyImage")}
+                                  disabled={saving || addingFaculty}
+                                  className="flex items-center gap-1 px-2 py-2 border border-indigo-300 rounded-lg text-sm font-medium text-indigo-700 bg-white hover:bg-indigo-50 shrink-0"
+                                  title="Select from Media"
+                                >
+                                  <FaFolderOpen className="w-4 h-4" />
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              const name = newFacultyName.trim();
+                              if (!name) {
+                                showError("Enter faculty name.");
+                                return;
+                              }
+                              setAddingFaculty(true);
+                              try {
+                                const res = await api.post("/admin/faculty", {
+                                  examId: form.examId,
+                                  name,
+                                  imageUrl: newFacultyImage.trim(),
+                                });
+                                if (res.data?.success && res.data.data) {
+                                  const f = res.data.data;
+                                  setForm((prev) => ({
+                                    ...prev,
+                                    createdBy: f.name,
+                                    instructorImage: f.imageUrl || prev.instructorImage,
+                                  }));
+                                  setNewFacultyName("");
+                                  setNewFacultyImage("");
+                                  setShowAddFaculty(false);
+                                  fetchFaculties(form.examId);
+                                  success("Faculty added. You can select them from the list or edit below.");
+                                } else {
+                                  showError(res.data?.message || "Failed to add faculty");
+                                }
+                              } catch (err) {
+                                showError(err.response?.data?.message || err.message || "Failed to add faculty");
+                              } finally {
+                                setAddingFaculty(false);
+                              }
+                            }}
+                            disabled={saving || addingFaculty || !newFacultyName.trim()}
+                            className="inline-flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50"
+                          >
+                            {addingFaculty ? <LoadingSpinner size="small" /> : <FaUserPlus className="w-4 h-4" />}
+                            Add faculty
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 );
               })()}
@@ -525,11 +665,15 @@ export default function CourseForm({ courseId, isNew }) {
         isOpen={!!mediaPickerFor}
         onClose={() => setMediaPickerFor(null)}
         onSelect={(url) => {
-          if (mediaPickerFor) setForm((prev) => ({ ...prev, [mediaPickerFor]: url }));
+          if (mediaPickerFor === "newFacultyImage") {
+            setNewFacultyImage(url || "");
+          } else if (mediaPickerFor) {
+            setForm((prev) => ({ ...prev, [mediaPickerFor]: url }));
+          }
           setMediaPickerFor(null);
         }}
         title={
-          mediaPickerFor === "instructorImage"
+          mediaPickerFor === "instructorImage" || mediaPickerFor === "newFacultyImage"
             ? "Select instructor / faculty image"
             : mediaPickerFor === "image"
               ? "Select course image"

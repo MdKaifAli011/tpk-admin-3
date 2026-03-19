@@ -9,6 +9,7 @@ import { parsePagination, createPaginationResponse } from "@/utils/pagination";
 import { successResponse, errorResponse, handleApiError } from "@/utils/apiResponse";
 import { STATUS, ERROR_MESSAGES } from "@/constants";
 import { requireAuth, requireAction } from "@/middleware/authMiddleware";
+import { buildTokenSearchCondition } from "@/utils/searchTokenHelper";
 
 // ---------- GET ALL CHAPTERS ----------
 export async function GET(request) {
@@ -53,8 +54,8 @@ export async function GET(request) {
       query.status = { $regex: new RegExp(`^${statusFilter}$`, "i") };
     }
     if (search) {
-      const escapeRegex = (s) => String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      query.name = { $regex: new RegExp(escapeRegex(search), "i") };
+      const searchCondition = buildTokenSearchCondition(search, "name");
+      if (searchCondition) Object.assign(query, searchCondition);
     }
 
     // Handle Metadata filtering

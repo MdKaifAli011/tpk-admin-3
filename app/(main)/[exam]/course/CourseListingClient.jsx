@@ -31,6 +31,23 @@ export default function CourseListingClient({ examSlug, examName: examNameProp, 
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [trialSessionModalOpen, setTrialSessionModalOpen] = useState(false);
+  const [apiFaculties, setApiFaculties] = useState([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (examIdProp) {
+      api.get(`/faculty?examId=${encodeURIComponent(examIdProp)}`).then((res) => {
+        if (!cancelled && res.data?.success && Array.isArray(res.data.data)) {
+          setApiFaculties(res.data.data);
+        } else if (!cancelled) {
+          setApiFaculties([]);
+        }
+      }).catch(() => { if (!cancelled) setApiFaculties([]); });
+    } else {
+      setApiFaculties([]);
+    }
+    return () => { cancelled = true; };
+  }, [examIdProp]);
 
   useEffect(() => {
     let cancelled = false;
@@ -221,8 +238,16 @@ export default function CourseListingClient({ examSlug, examName: examNameProp, 
                     seen.add(key);
                     fromCourses.push({ img, name: (c.createdBy || "") ? toTitleCase(String(c.createdBy)) : "" });
                   }
-                  const examFaculties = getFacultiesForExam(examName);
                   const filled = [...fromCourses];
+                  for (const f of apiFaculties) {
+                    if (filled.length >= toShow) break;
+                    const img = f.imageUrl && String(f.imageUrl).trim();
+                    const key = img || (f.name || "").trim();
+                    if (!key || seen.has(key)) continue;
+                    seen.add(key);
+                    filled.push({ img, name: f.name ? toTitleCase(String(f.name)) : "" });
+                  }
+                  const examFaculties = getFacultiesForExam(examName);
                   for (const f of examFaculties) {
                     if (filled.length >= toShow) break;
                     const key = (f.imageUrl && String(f.imageUrl).trim()) || f.name;

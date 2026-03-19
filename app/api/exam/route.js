@@ -15,6 +15,7 @@ import {
 import { STATUS, ERROR_MESSAGES } from "@/constants";
 import { requireAction, requireAuth } from "@/middleware/authMiddleware";
 import cacheManager from "@/utils/cacheManager";
+import { buildTokenSearchCondition } from "@/utils/searchTokenHelper";
 
 // ✅ GET: Fetch all exams with pagination (optimized)
 export async function GET(request) {
@@ -76,10 +77,10 @@ export async function GET(request) {
       }
     }
 
-    // Server-side search by name (case-insensitive)
+    // Token-based search: match ANY keyword (stop words removed, OR logic)
     if (search) {
-      const escapeRegex = (s) => String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      query.name = { $regex: new RegExp(escapeRegex(search), "i") };
+      const searchCondition = buildTokenSearchCondition(search, "name");
+      if (searchCondition) Object.assign(query, searchCondition);
     }
 
     // Create cache key (skip cache when search is active)

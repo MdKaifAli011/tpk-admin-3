@@ -11,6 +11,7 @@ import { parsePagination, createPaginationResponse } from "@/utils/pagination";
 import { successResponse, errorResponse, handleApiError } from "@/utils/apiResponse";
 import { STATUS, ERROR_MESSAGES } from "@/constants";
 import { requireAuth, requireAction } from "@/middleware/authMiddleware";
+import { buildTokenSearchCondition } from "@/utils/searchTokenHelper";
 
 // ---------- GET ALL SUBTOPICS ----------
 export async function GET(request) {
@@ -78,8 +79,8 @@ export async function GET(request) {
       filter.status = { $regex: new RegExp(`^${statusFilter}$`, "i") };
     }
     if (search) {
-      const escapeRegex = (s) => String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      filter.name = { $regex: new RegExp(escapeRegex(search), "i") };
+      const searchCondition = buildTokenSearchCondition(search, "name");
+      if (searchCondition) Object.assign(filter, searchCondition);
     }
 
     // Handle Metadata filtering
