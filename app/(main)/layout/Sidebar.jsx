@@ -1021,7 +1021,7 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
                       onClick={closeOnMobile}
                       aria-label="NEET seat allotment tool — filter by year and round"
                     >
-                      <span>Seat Allotment Tool</span>
+                      <span>Tools</span>
                     </Link>
                   </li>
                 ) : null}

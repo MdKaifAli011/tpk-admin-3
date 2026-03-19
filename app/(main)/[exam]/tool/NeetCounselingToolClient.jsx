@@ -57,6 +57,17 @@ export default function NeetCounselingToolClient({ examSlug }) {
   const [page, setPage] = useState(1);
   const [filterNonce, setFilterNonce] = useState(0);
 
+  // Form state: only these are shown in the filter panel; applied only on "Apply Filters"
+  const [yearForm, setYearForm] = useState("2025");
+  const [roundForm, setRoundForm] = useState("all");
+  const [rankMinForm, setRankMinForm] = useState("");
+  const [rankMaxForm, setRankMaxForm] = useState("");
+  const [quotaForm, setQuotaForm] = useState("all");
+  const [courseForm, setCourseForm] = useState("all");
+  const [stateForm, setStateForm] = useState("all");
+  const [categoryForm, setCategoryForm] = useState("all");
+  const [instituteTypeForm, setInstituteTypeForm] = useState("all");
+
   const filtersRef = useRef(null);
   const resultsRef = useRef(null);
 
@@ -70,7 +81,9 @@ export default function NeetCounselingToolClient({ examSlug }) {
       if (json.success) {
         setMeta(json.data);
         if (json.data.years?.length && !json.data.years.includes(year)) {
-          setYear(json.data.years[0] || "2025");
+          const fallback = json.data.years[0] || "2025";
+          setYear(fallback);
+          setYearForm(fallback);
         }
       }
     } catch {
@@ -138,19 +151,39 @@ export default function NeetCounselingToolClient({ examSlug }) {
   ]);
 
   const applyFilters = () => {
+    setYear(yearForm);
+    setRound(roundForm);
+    setRankMin(rankMinForm);
+    setRankMax(rankMaxForm);
+    setQuota(quotaForm);
+    setCourse(courseForm);
+    setState(stateForm);
+    setCategory(categoryForm);
+    setInstituteType(instituteTypeForm);
     setQuickQ(q.trim());
     setPage(1);
     setFilterNonce((n) => n + 1);
   };
 
   const reset = () => {
-    setYear("2025");
+    const defaultYear = "2025";
+    setYearForm(defaultYear);
+    setYear(defaultYear);
+    setRoundForm("all");
+    setRound("all");
+    setRankMinForm("");
     setRankMin("");
+    setRankMaxForm("");
     setRankMax("");
+    setQuotaForm("all");
     setQuota("all");
+    setCourseForm("all");
     setCourse("all");
+    setStateForm("all");
     setState("all");
+    setCategoryForm("all");
     setCategory("all");
+    setInstituteTypeForm("all");
     setInstituteType("all");
     setQ("");
     setQuickQ("");
@@ -253,8 +286,8 @@ export default function NeetCounselingToolClient({ examSlug }) {
                 <select
                   id="neet-year"
                   className="select"
-                  value={year}
-                  onChange={(e) => setYear(e.target.value)}
+                  value={yearForm}
+                  onChange={(e) => setYearForm(e.target.value)}
                 >
                   {(meta?.years?.length ? meta.years : ["2025", "2024", "2023"]).map((y) => (
                     <option key={y} value={y}>{y}</option>
@@ -266,8 +299,8 @@ export default function NeetCounselingToolClient({ examSlug }) {
                 <select
                   id="neet-round"
                   className="select"
-                  value={round}
-                  onChange={(e) => setRound(e.target.value)}
+                  value={roundForm}
+                  onChange={(e) => setRoundForm(e.target.value)}
                 >
                   <option value="all">All Rounds Combined</option>
                   <option value="1">Round 1</option>
@@ -294,22 +327,22 @@ export default function NeetCounselingToolClient({ examSlug }) {
                     type="text"
                     inputMode="numeric"
                     placeholder="From rank"
-                    value={rankMin}
-                    onChange={(e) => setRankMin(e.target.value)}
+                    value={rankMinForm}
+                    onChange={(e) => setRankMinForm(e.target.value)}
                   />
                   <input
                     className="input"
                     type="text"
                     inputMode="numeric"
                     placeholder="To rank"
-                    value={rankMax}
-                    onChange={(e) => setRankMax(e.target.value)}
+                    value={rankMaxForm}
+                    onChange={(e) => setRankMaxForm(e.target.value)}
                   />
                 </div>
               </div>
               <div className="field">
                 <label htmlFor="neet-quota">Quota</label>
-                <select id="neet-quota" className="select" value={quota} onChange={(e) => setQuota(e.target.value)}>
+                <select id="neet-quota" className="select" value={quotaForm} onChange={(e) => setQuotaForm(e.target.value)}>
                   <option value="all">All Quotas</option>
                   <option value="ai">All India Quota</option>
                   <option value="open">Open Seat Quota</option>
@@ -322,7 +355,7 @@ export default function NeetCounselingToolClient({ examSlug }) {
               </div>
               <div className="field">
                 <label htmlFor="neet-cat">Candidate / Seat Category</label>
-                <select id="neet-cat" className="select" value={category} onChange={(e) => setCategory(e.target.value)}>
+                <select id="neet-cat" className="select" value={categoryForm} onChange={(e) => setCategoryForm(e.target.value)}>
                   <option value="all">All Categories</option>
                   <option value="General">General</option>
                   <option value="EWS">EWS</option>
@@ -348,8 +381,8 @@ export default function NeetCounselingToolClient({ examSlug }) {
                 <select
                   id="neet-inst"
                   className="select"
-                  value={instituteType}
-                  onChange={(e) => setInstituteType(e.target.value)}
+                  value={instituteTypeForm}
+                  onChange={(e) => setInstituteTypeForm(e.target.value)}
                 >
                   <option value="all">All Institute Types</option>
                   <option value="government">Government Medical College</option>
@@ -360,7 +393,7 @@ export default function NeetCounselingToolClient({ examSlug }) {
               </div>
               <div className="field">
                 <label htmlFor="neet-state">State</label>
-                <select id="neet-state" className="select" value={state} onChange={(e) => setState(e.target.value)}>
+                <select id="neet-state" className="select" value={stateForm} onChange={(e) => setStateForm(e.target.value)}>
                   <option value="all">All States</option>
                   {(meta?.states || []).map((s) => (
                     <option key={s.state} value={s.state}>
