@@ -124,6 +124,7 @@ const ALL_MENU_ITEMS = [
       {
         name: "Import & Export",
         children: [
+          { name: "NEET Counseling", href: "/admin/neet-counseling" },
           { name: "Import Self Study Data", href: "/admin/bulk-import" },
           { name: "Book JSON Import", href: "/admin/book-import" },
           { name: "Meta Import", href: "/admin/seo-import" },

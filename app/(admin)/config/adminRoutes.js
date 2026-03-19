@@ -22,6 +22,7 @@ const ROUTE_PERMISSIONS = [
   { path: "/admin/notification", minRole: "moderator" },
   { path: "/admin/store", minRole: "moderator" },
   { path: "/admin/seo-import", minRole: "super_moderator" },
+  { path: "/admin/neet-counseling", minRole: "super_moderator" },
   { path: "/admin/bulk-import", minRole: "super_moderator" },
   { path: "/admin/book-import", minRole: "super_moderator" },
   { path: "/admin/url-export", minRole: "moderator" },
