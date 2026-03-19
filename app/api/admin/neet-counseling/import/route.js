@@ -155,6 +155,9 @@ export async function POST(request) {
     await connectDB();
 
     let deleted = 0;
+    let insertedCount = 0;
+    let modifiedCount = 0;
+
     if (replace) {
       const result = await NeetCounselingAllotment.deleteMany({
         examSlug: "neet",
@@ -165,19 +168,42 @@ export async function POST(request) {
     }
 
     const BATCH = 1000;
-    let inserted = 0;
-    for (let i = 0; i < docs.length; i += BATCH) {
-      const batch = docs.slice(i, i + BATCH);
-      await NeetCounselingAllotment.insertMany(batch, { ordered: false });
-      inserted += batch.length;
+
+    if (replace) {
+      for (let i = 0; i < docs.length; i += BATCH) {
+        const batch = docs.slice(i, i + BATCH);
+        await NeetCounselingAllotment.insertMany(batch, { ordered: false });
+        insertedCount += batch.length;
+      }
+    } else {
+      for (let i = 0; i < docs.length; i += BATCH) {
+        const batch = docs.slice(i, i + BATCH);
+        const ops = batch.map((doc) => ({
+          updateOne: {
+            filter: {
+              examSlug: "neet",
+              round,
+              sourceYear: year,
+              serialNo: doc.serialNo,
+            },
+            update: { $set: doc },
+            upsert: true,
+          },
+        }));
+        const result = await NeetCounselingAllotment.bulkWrite(ops, { ordered: false });
+        insertedCount += result.insertedCount ?? 0;
+        modifiedCount += result.modifiedCount ?? 0;
+      }
     }
 
     return NextResponse.json({
       success: true,
       data: {
-        imported: inserted,
+        imported: insertedCount + modifiedCount,
+        inserted: insertedCount,
+        updated: modifiedCount,
         replaced: deleted,
-        total: inserted,
+        total: insertedCount + modifiedCount,
       },
     });
   } catch (error) {

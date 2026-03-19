@@ -303,7 +303,7 @@ export default function MainLayoutClient({ children }) {
     transition-transform duration-300 ease-out
   `}
             >
-              <div className="w-full max-w-7xl mx-auto min-w-0 min-h-[400px]">
+              <div className="w-full mx-auto min-w-0 min-h-[400px]">
                 <Suspense
                   fallback={
                     <div className="min-h-[400px] py-8 animate-pulse">

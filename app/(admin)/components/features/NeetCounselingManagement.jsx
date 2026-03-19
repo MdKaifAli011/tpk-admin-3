@@ -278,7 +278,7 @@ export default function NeetCounselingManagement() {
               className="rounded border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-0"
             />
             <span className="text-sm text-gray-700 font-medium">
-              Replace existing data for this round and year (delete then insert)
+              Replace all data for this round and year (delete then insert). If unchecked, same serialNo is updated instead of duplicated.
             </span>
           </label>
 
@@ -346,6 +346,12 @@ export default function NeetCounselingManagement() {
                 <span>Imported: {lastResult.imported}</span>
                 {lastResult.replaced > 0 && (
                   <span className="ml-1">· Replaced: {lastResult.replaced}</span>
+                )}
+                {lastResult.updated > 0 && (
+                  <span className="ml-1">· Updated: {lastResult.updated}</span>
+                )}
+                {lastResult.inserted != null && lastResult.inserted !== lastResult.imported && lastResult.replaced === 0 && (
+                  <span className="ml-1">· New: {lastResult.inserted}</span>
                 )}
               </div>
             </div>

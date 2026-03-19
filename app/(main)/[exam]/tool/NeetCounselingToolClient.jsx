@@ -185,7 +185,7 @@ export default function NeetCounselingToolClient({ examSlug }) {
 
   return (
     <div className="neet-tool">
-      <div className="wrap">
+      <div className="">
         <section className="hero">
           <div className="hero-grid">
             <div>
