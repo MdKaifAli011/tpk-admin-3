@@ -77,7 +77,6 @@ export async function GET(request) {
 
     const { searchParams } = new URL(request.url);
     const type = searchParams.get("type") || "";
-    const folder = searchParams.get("folder") || "";
     const search = searchParams.get("search") || "";
     const trash = searchParams.get("trash") === "true";
     const page = Math.max(1, parseInt(searchParams.get("page"), 10) || 1);
@@ -93,12 +92,20 @@ export async function GET(request) {
       });
     }
 
+    const folderParam = searchParams.get("folder");
+    const folder = folderParam === null || folderParam === undefined ? undefined : (folderParam || "");
+
     if (type && ["image", "video", "document", "file"].includes(type)) {
       andParts.push({ type });
     }
 
-    if (folder && folder.trim()) {
-      andParts.push({ folder: folder.trim() });
+    if (folder !== undefined) {
+      const folderValue = (typeof folder === "string" ? folder.trim() : "") || "";
+      if (folderValue === "") {
+        andParts.push({ $or: [{ folder: "" }, { folder: { $exists: false } }, { folder: null }] });
+      } else {
+        andParts.push({ folder: folderValue });
+      }
     }
 
     if (search && search.trim()) {
@@ -154,6 +161,8 @@ export async function POST(request) {
     const name = formData.get("name") || "";
     const altText = formData.get("altText") || "";
     const folder = formData.get("folder") || "";
+    const sourceUrl = formData.get("sourceUrl") ? String(formData.get("sourceUrl")).trim() : "";
+    const sourcePath = formData.get("sourcePath") ? String(formData.get("sourcePath")).trim() : "";
 
     if (!file || !(file instanceof File)) {
       return errorResponse("File is required", 400);
@@ -171,39 +180,46 @@ export async function POST(request) {
       ? originalName.split(".").pop().toLowerCase()
       : "bin";
 
-    const folderNorm = normalizeFolderPath(folder);
-    let targetDir;
-
-    if (folderNorm) {
-      // Save under public/assets/media/[folderPath]/ e.g. media/Events/2024
-      targetDir = path.join(mediaBaseDir, folderNorm.split("/").join(path.sep));
-      if (!existsSync(targetDir)) {
-        await mkdir(targetDir, { recursive: true });
-      }
-    } else {
-      // No folder: save under public/assets/media/[type]/ (backward compatible)
-      targetDir = path.join(mediaBaseDir, type);
-      if (!existsSync(targetDir)) {
-        await mkdir(targetDir, { recursive: true });
-      }
-    }
-
-    const baseName = safeFilename(originalName.replace(/\.[^.]+$/, ""));
-    const filename = `${baseName}_${Date.now()}.${ext}`;
-    const filePath = path.join(targetDir, filename);
-    const buffer = Buffer.from(await file.arrayBuffer());
-    await writeFile(filePath, buffer);
-
-    const relativePath = path
-      .relative(assetsBaseDir, filePath)
-      .replace(/\\/g, "/");
-    const fileUrl = `${basePath}/api/uploads/${relativePath}`;
-
+    let fileUrl;
+    let relativePath;
     const displayName = (name && name.trim()) || originalName;
 
+    if (sourceUrl && type === "image") {
+      // Editor sent upload URL: store same url/path in Media (no duplicate file)
+      fileUrl = sourceUrl;
+      relativePath = sourcePath || sourceUrl.replace(/^https?:\/\/[^/]+/, "").replace(/^\//, "") || "upload";
+    } else {
+      const folderNorm = normalizeFolderPath(folder);
+      let targetDir;
+
+      if (folderNorm) {
+        targetDir = path.join(mediaBaseDir, folderNorm.split("/").join(path.sep));
+        if (!existsSync(targetDir)) {
+          await mkdir(targetDir, { recursive: true });
+        }
+      } else {
+        targetDir = path.join(mediaBaseDir, type);
+        if (!existsSync(targetDir)) {
+          await mkdir(targetDir, { recursive: true });
+        }
+      }
+
+      const baseName = safeFilename(originalName.replace(/\.[^.]+$/, ""));
+      const filename = `${baseName}_${Date.now()}.${ext}`;
+      const filePath = path.join(targetDir, filename);
+      const buffer = Buffer.from(await file.arrayBuffer());
+      await writeFile(filePath, buffer);
+
+      relativePath = path
+        .relative(assetsBaseDir, filePath)
+        .replace(/\\/g, "/");
+      fileUrl = `${basePath}/api/uploads/${relativePath}`;
+    }
+
+    const folderNorm = normalizeFolderPath(folder);
     const doc = await Media.create({
       name: displayName,
-      fileName: originalName,
+      fileName: (name && name.trim()) || originalName,
       altText: (altText && altText.trim()) || "",
       url: fileUrl,
       path: relativePath,

@@ -1,24 +1,12 @@
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { SEO_DEFAULTS } from "@/constants";
 import { getSiteSettingsCustomCode } from "@/lib/getSiteSettingsCustomCode";
 import { headers } from "next/headers";
+import DeferredCustomCode from "./components/DeferredCustomCode";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-  display: "swap", // Improve FCP - prevents invisible text during font load
-  preload: false, // Avoid "preloaded but not used" console warning when font is used in client-rendered content
-});
+const TEST_DOMAIN = "app.testprepkart.in";
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-  display: "swap", // Improve FCP
-  preload: false, // Not critical, can load later
-});
-
-export const metadata = {
+const baseMetadata = {
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
   ),
@@ -71,6 +59,21 @@ export const metadata = {
   },
 };
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+};
+
+export async function generateMetadata() {
+  const headersList = await headers();
+  const host = headersList.get("host") || "";
+  return {
+    ...baseMetadata,
+    ...(host === TEST_DOMAIN && { robots: { index: false, follow: false } }),
+  };
+}
+
 export default async function RootLayout({ children }) {
   const headersList = await headers();
   const pathname = headersList.get("x-pathname") || "";
@@ -80,31 +83,20 @@ export default async function RootLayout({ children }) {
     ? { headerCode: "", footerCode: "" }
     : await getSiteSettingsCustomCode();
 
+  const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
+
   return (
     <html lang="en">
+      <head>
+        <meta name="description" content={SEO_DEFAULTS.DESCRIPTION} />
+        <link rel="preload" href={`${basePath}/logo.png`} as="image" />
+      </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className="antialiased"
         suppressHydrationWarning
       >
-        {headerCode?.trim() ? (
-          <div
-            data-custom-code-injected="server"
-            dangerouslySetInnerHTML={{ __html: headerCode }}
-            style={{ display: "none" }}
-            suppressHydrationWarning
-            aria-hidden
-          />
-        ) : null}
+        <DeferredCustomCode headerCode={headerCode} footerCode={footerCode} />
         {children}
-        {footerCode?.trim() ? (
-          <div
-            data-custom-code-injected="server"
-            dangerouslySetInnerHTML={{ __html: footerCode }}
-            style={{ display: "none" }}
-            suppressHydrationWarning
-            aria-hidden
-          />
-        ) : null}
       </body>
     </html>
   );

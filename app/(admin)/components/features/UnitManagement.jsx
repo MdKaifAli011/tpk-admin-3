@@ -24,24 +24,54 @@ import {
   FaSearch,
   FaCheck,
   FaGripVertical,
+  FaChevronLeft,
+  FaChevronRight,
 } from "react-icons/fa";
 import { ToastContainer, useToast } from "../ui/Toast";
+import StatusCascadeModal from "../ui/StatusCascadeModal";
 import api from "@/lib/api";
 import { getUnitListCache, setUnitListCache } from "@/lib/unitListCache";
+import { invalidateListCachesFrom } from "@/lib/listCacheInvalidation";
 import { usePermissions, getPermissionMessage } from "../../hooks/usePermissions";
 import { IoFilterOutline } from "react-icons/io5";
+import { useFilterPersistence } from "../../hooks/useFilterPersistence";
+import { useDebouncedSearchQuery } from "../../hooks/useDebouncedSearchQuery";
+import { ADMIN_PAGINATION } from "@/constants";
 
 // Lazy load heavy components
 const UnitsTable = lazy(() => import("../table/UnitsTable"));
 
 const UnitsManagement = () => {
   const { canCreate, canEdit, canDelete, canReorder, role } = usePermissions();
+  const [filterState, setFilterState] = useFilterPersistence("unit", {
+    filterExam: "",
+    filterSubject: "",
+    searchQuery: "",
+    metaFilter: "all",
+  });
+  const {
+    page,
+    limit,
+    filterExam,
+    filterSubject,
+    searchQuery,
+    metaFilter,
+  } = filterState;
+  const [searchInput, setSearchInput] = useDebouncedSearchQuery(searchQuery, setFilterState);
+
   const [showAddForm, setShowAddForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [editingUnit, setEditingUnit] = useState(null);
   const [isDataLoading, setIsDataLoading] = useState(false);
   const [isFormLoading, setIsFormLoading] = useState(false);
   const [units, setUnits] = useState([]);
+  const [countsBySubject, setCountsBySubject] = useState({});
+  const [pagination, setPagination] = useState({
+    total: 0,
+    totalPages: 0,
+    hasNextPage: false,
+    hasPrevPage: false,
+  });
   const [exams, setExams] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [error, setError] = useState(null);
@@ -61,14 +91,12 @@ const UnitsManagement = () => {
   const [nextOrderNumber, setNextOrderNumber] = useState(1);
   const [formError, setFormError] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
-  const [filterExam, setFilterExam] = useState("");
-  const [filterSubject, setFilterSubject] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
   const [isReorderMode, setIsReorderMode] = useState(false);
   const [reorderDraft, setReorderDraft] = useState({});
+  const [cascadeModalOpen, setCascadeModalOpen] = useState(false);
+  const [cascadeItem, setCascadeItem] = useState(null);
   const { toasts, removeToast, success, error: showError } = useToast();
   const isFetchingRef = useRef(false);
-  const [metaFilter, setMetaFilter] = useState("all"); // all, filled, notFilled
 
   // Get next available order number for a subject
   const getNextOrderNumber = useCallback(async (subjectId) => {
@@ -116,18 +144,36 @@ const UnitsManagement = () => {
     getNextOrderNumber,
   ]);
 
-  // Fetch units from API using Axios (and update cache)
+  // Fetch units from API with server-side filters + pagination
   const fetchUnits = useCallback(async () => {
     if (isFetchingRef.current) return;
     isFetchingRef.current = true;
     try {
       setIsDataLoading(true);
       setError(null);
-      const response = await api.get(`/unit?status=all&limit=10000&metaStatus=${metaFilter}`);
+      const params = new URLSearchParams();
+      params.set("status", "all");
+      params.set("metaStatus", metaFilter);
+      params.set("page", String(page));
+      params.set("limit", String(limit));
+      if (filterExam) params.set("examId", filterExam);
+      if (filterSubject) params.set("subjectId", filterSubject);
+      if (searchQuery.trim()) params.set("search", searchQuery.trim());
+      const response = await api.get(`/unit?${params.toString()}`);
 
       if (response.data.success) {
         const fetchedUnits = response.data.data || [];
         setUnits(fetchedUnits);
+        setCountsBySubject(response.data.countsBySubject || {});
+        const pag = response.data?.pagination;
+        if (pag) {
+          setPagination({
+            total: pag.total ?? 0,
+            totalPages: pag.totalPages ?? 0,
+            hasNextPage: !!pag.hasNextPage,
+            hasPrevPage: !!pag.hasPrevPage,
+          });
+        }
         setUnitListCache(fetchedUnits, metaFilter);
       } else {
         setError(response.data.message || "Failed to fetch units");
@@ -142,19 +188,11 @@ const UnitsManagement = () => {
       setIsDataLoading(false);
       isFetchingRef.current = false;
     }
-  }, [metaFilter]);
+  }, [metaFilter, page, limit, filterExam, filterSubject, searchQuery]);
 
-  // Load units: use cache when returning from detail (no API call), otherwise fetch once
   useEffect(() => {
-    const cached = getUnitListCache(metaFilter);
-    if (cached != null && Array.isArray(cached)) {
-      setUnits(cached);
-      setIsDataLoading(false);
-      setError(null);
-      return;
-    }
     fetchUnits();
-  }, [metaFilter, fetchUnits]);
+  }, [fetchUnits]);
 
   // Fetch exams from API using Axios
   const fetchExams = async () => {
@@ -189,8 +227,7 @@ const UnitsManagement = () => {
   };
 
   useEffect(() => {
-    fetchExams();
-    fetchSubjects();
+    Promise.all([fetchExams(), fetchSubjects()]);
   }, []);
 
   // Auto-clear error after 5 seconds with cleanup
@@ -212,39 +249,20 @@ const UnitsManagement = () => {
     );
   }, [subjects, filterExam]);
 
-  // Filter units based on filters
-  const filteredUnits = useMemo(() => {
-    let result = units;
-    if (filterExam) {
-      result = result.filter(
-        (unit) => unit.examId?._id === filterExam || unit.examId === filterExam
-      );
-    }
-    if (filterSubject) {
-      result = result.filter(
-        (unit) =>
-          unit.subjectId?._id === filterSubject ||
-          unit.subjectId === filterSubject
-      );
-    }
-    // Search filter
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase().trim();
-      result = result.filter((unit) =>
-        unit.name?.toLowerCase().includes(query)
-      );
-    }
-    return result;
-  }, [units, filterExam, filterSubject, searchQuery]);
+  // Search is done server-side
+  const filteredUnits = units;
 
   // Get active filter count
   const activeFilterCount = (filterExam ? 1 : 0) + (filterSubject ? 1 : 0) + (searchQuery ? 1 : 0);
 
   // Clear all filters
   const clearFilters = () => {
-    setFilterExam("");
-    setFilterSubject("");
-    setSearchQuery("");
+    setFilterState({
+      filterExam: "",
+      filterSubject: "",
+      searchQuery: "",
+      page: 1,
+    });
   };
 
   const handleAddUnits = async (e) => {
@@ -288,9 +306,8 @@ const UnitsManagement = () => {
       }
 
       if (createdUnits.length > 0) {
-        const newList = [...units, ...createdUnits];
-        setUnits(newList);
-        setUnitListCache(newList, metaFilter);
+        invalidateListCachesFrom("unit");
+        await fetchUnits();
         success(`${createdUnits.length} unit(s) added successfully!`);
 
         // Reset form
@@ -440,11 +457,8 @@ const UnitsManagement = () => {
       });
 
       if (response.data.success) {
-        const newList = units.map((u) =>
-          u._id === editingUnit._id ? response.data.data : u
-        );
-        setUnits(newList);
-        setUnitListCache(newList, metaFilter);
+        invalidateListCachesFrom("unit");
+        await fetchUnits();
         success("Unit updated successfully!");
 
         // Reset form
@@ -489,9 +503,8 @@ const UnitsManagement = () => {
         const response = await api.delete(`/unit/${unitToDelete._id}`);
 
         if (response.data.success) {
-          const newList = units.filter((u) => u._id !== unitToDelete._id);
-          setUnits(newList);
-          setUnitListCache(newList, metaFilter);
+          invalidateListCachesFrom("unit");
+          await fetchUnits();
           success(`Unit "${unitToDelete.name}" deleted successfully!`);
         } else {
           setError(response.data.message || "Failed to delete unit");
@@ -510,47 +523,94 @@ const UnitsManagement = () => {
     }
   };
 
-  const handleToggleStatus = async (unit) => {
-    const currentStatus = unit.status || "active";
-    const newStatus = currentStatus === "active" ? "inactive" : "active";
-    const action = newStatus === "inactive" ? "deactivate" : "activate";
+  const handleToggleStatus = (unit) => {
+    setCascadeItem(unit);
+    setCascadeModalOpen(true);
+  };
 
+  const handleCascadeConfirm = async (newStatus, cascadeMode) => {
+    if (!cascadeItem) return;
+    const action = newStatus === "inactive" ? "deactivate" : "activate";
+    try {
+      setIsFormLoading(true);
+      setError(null);
+      const response = await api.patch(`/unit/${cascadeItem._id}/status`, {
+        status: newStatus,
+        cascadeMode: cascadeMode || "respect_manual",
+      });
+      if (response.data.success) {
+        invalidateListCachesFrom("unit");
+        await fetchUnits();
+        success(
+          `Unit "${cascadeItem.name}" and children ${action}d successfully!`
+        );
+        setCascadeModalOpen(false);
+        setCascadeItem(null);
+      } else {
+        setError(response.data.message || `Failed to ${action} unit`);
+        showError(response.data.message || `Failed to ${action} unit`);
+      }
+    } catch (error) {
+      console.error(`Error ${action}ing unit:`, error);
+      const errorMessage =
+        error.response?.data?.message ||
+        `Failed to ${action} unit. Please try again.`;
+      setError(errorMessage);
+      showError(errorMessage);
+    } finally {
+      setIsFormLoading(false);
+    }
+  };
+
+  const handleBulkToggleStatus = async (selectedUnits, newStatus) => {
+    if (!selectedUnits || selectedUnits.length === 0) return Promise.resolve();
+    const action = newStatus === "inactive" ? "deactivate" : "activate";
+    const n = selectedUnits.length;
     if (
-      window.confirm(
-        `Are you sure you want to ${action} "${unit.name}"? All its children will also be ${action}d.`
+      !window.confirm(
+        `Are you sure you want to ${action} ${n} unit${n === 1 ? "" : "s"}? Their chapters and related content will also be ${action}d.`
       )
     ) {
-      try {
-        setIsFormLoading(true);
-        setError(null);
-
-        const response = await api.patch(`/unit/${unit._id}/status`, {
-          status: newStatus,
-        });
-
-        if (response.data.success) {
-          const newList = units.map((u) =>
-            u._id === unit._id ? { ...u, status: newStatus } : u
-          );
-          setUnits(newList);
-          setUnitListCache(newList, metaFilter);
-          success(
-            `Unit "${unit.name}" and all children ${action}d successfully!`
-          );
-        } else {
-          setError(response.data.message || `Failed to ${action} unit`);
-          showError(response.data.message || `Failed to ${action} unit`);
-        }
-      } catch (error) {
-        console.error(`Error ${action}ing unit:`, error);
-        const errorMessage =
-          error.response?.data?.message ||
-          `Failed to ${action} unit. Please try again.`;
-        setError(errorMessage);
-        showError(errorMessage);
-      } finally {
-        setIsFormLoading(false);
+      return Promise.resolve();
+    }
+    try {
+      setIsFormLoading(true);
+      setError(null);
+      const results = await Promise.all(
+        selectedUnits.map((u) =>
+          api.patch(`/unit/${u._id}/status`, { status: newStatus })
+        )
+      );
+      const allOk = results.every((r) => r?.data?.success);
+      if (allOk) {
+        invalidateListCachesFrom("unit");
+        await fetchUnits();
+        success(
+          n === 1
+            ? `Unit ${action}d successfully`
+            : `${n} units ${action}d successfully`
+        );
+      } else {
+        throw new Error(
+          results.find((r) => !r?.data?.success)?.data?.message ||
+            `Failed to ${action} some units`
+        );
       }
+    } catch (error) {
+      console.error(`Error bulk ${action}ing units:`, error);
+      setError(
+        error.response?.data?.message ||
+          error.message ||
+          `Failed to ${action} units`
+      );
+      showError(
+        error.response?.data?.message ||
+          error.message ||
+          `Failed to ${action} units`
+      );
+      throw error;
+    } finally {
+      setIsFormLoading(false);
     }
   };
 
@@ -587,6 +647,7 @@ const UnitsManagement = () => {
       await Promise.all(
         subjectIds.map((subjectId) => saveReorderForSubject(subjectId, reorderDraft[subjectId]))
       );
+      invalidateListCachesFrom("unit");
       await fetchUnits();
       setReorderDraft({});
       setIsReorderMode(false);
@@ -602,6 +663,15 @@ const UnitsManagement = () => {
   return (
     <>
       <ToastContainer toasts={toasts} removeToast={removeToast} />
+      <StatusCascadeModal
+        open={cascadeModalOpen}
+        onClose={() => { setCascadeModalOpen(false); setCascadeItem(null); }}
+        levelLabel="Unit"
+        itemName={cascadeItem?.name}
+        currentStatus={cascadeItem?.status || "active"}
+        onConfirm={handleCascadeConfirm}
+        loading={isFormLoading}
+      />
       <div className="space-y-6">
         {/* Page Header */}
         <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 rounded-lg border border-gray-200 p-4 shadow-sm">
@@ -1054,15 +1124,17 @@ const UnitsManagement = () => {
                 <div className="relative min-w-[200px] sm:min-w-[240px]">
                   <input
                     type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
                     placeholder="Search units..."
                     className="w-full pl-9 pr-8 py-1.5 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                   />
                   <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-3.5 h-3.5" />
                   {searchQuery && (
                     <button
-                      onClick={() => setSearchQuery("")}
+                      onClick={() =>
+                        setFilterState({ searchQuery: "", page: 1 })
+                      }
                       className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                     >
                       <FaTimes className="w-3 h-3" />
@@ -1074,7 +1146,9 @@ const UnitsManagement = () => {
                   <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap">Meta Status:</label>
                   <select
                     value={metaFilter}
-                    onChange={(e) => setMetaFilter(e.target.value)}
+                    onChange={(e) =>
+                      setFilterState({ metaFilter: e.target.value, page: 1 })
+                    }
                     className="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-medium focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                   >
                     <option value="all">All Items</option>
@@ -1089,7 +1163,7 @@ const UnitsManagement = () => {
                     : "bg-white text-gray-600 border border-gray-200 hover:border-blue-400"
                     }`}
                 >
-                    <IoFilterOutline className="w-4 h-4" />
+                  <IoFilterOutline className="w-4 h-4" />
                   Filters
                   {activeFilterCount > 0 && (
                     <span className="bg-white text-blue-600 px-1.5 py-0.5 rounded-full text-[10px] font-medium">
@@ -1113,8 +1187,11 @@ const UnitsManagement = () => {
                   <select
                     value={filterExam}
                     onChange={(e) => {
-                      setFilterExam(e.target.value);
-                      setFilterSubject(""); // Reset subject when exam changes
+                      setFilterState({
+                        filterExam: e.target.value,
+                        filterSubject: "",
+                        page: 1,
+                      });
                     }}
                     className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm bg-white"
                   >
@@ -1134,7 +1211,9 @@ const UnitsManagement = () => {
                   </label>
                   <select
                     value={filterSubject}
-                    onChange={(e) => setFilterSubject(e.target.value)}
+                    onChange={(e) =>
+                      setFilterState({ filterSubject: e.target.value, page: 1 })
+                    }
                     disabled={!filterExam}
                     className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm bg-white disabled:bg-gray-100 disabled:text-gray-400"
                   >
@@ -1164,8 +1243,11 @@ const UnitsManagement = () => {
                   {exams.find((e) => e._id === filterExam)?.name || "N/A"}
                   <button
                     onClick={() => {
-                      setFilterExam("");
-                      setFilterSubject("");
+                      setFilterState({
+                        filterExam: "",
+                        filterSubject: "",
+                        page: 1,
+                      });
                     }}
                     className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"
                   >
@@ -1179,7 +1261,9 @@ const UnitsManagement = () => {
                   {subjects.find((s) => s._id === filterSubject)?.name ||
                     "N/A"}
                   <button
-                    onClick={() => setFilterSubject("")}
+                    onClick={() =>
+                      setFilterState({ filterSubject: "", page: 1 })
+                    }
                     className="hover:bg-purple-200 rounded-full p-0.5 transition-colors"
                   >
                     <FaTimes className="w-3 h-3" />
@@ -1190,7 +1274,9 @@ const UnitsManagement = () => {
                 <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-medium">
                   Search: {searchQuery}
                   <button
-                    onClick={() => setSearchQuery("")}
+                    onClick={() =>
+                      setFilterState({ searchQuery: "", page: 1 })
+                    }
                     className="hover:bg-indigo-200 rounded-full p-0.5 transition-colors"
                   >
                     <FaTimes className="w-3 h-3" />
@@ -1251,23 +1337,79 @@ const UnitsManagement = () => {
                 )}
               </div>
             ) : (
-              <Suspense
-                fallback={
-                  <div className="flex items-center justify-center py-12">
-                    <LoadingSpinner size="medium" />
+              <>
+                <Suspense
+                  fallback={
+                    <div className="flex items-center justify-center py-12">
+                      <LoadingSpinner size="medium" />
+                    </div>
+                  }
+                >
+                  <UnitsTable
+                    units={filteredUnits}
+                    countsBySubject={countsBySubject}
+                    onEdit={handleEditUnit}
+                    onDelete={handleDeleteUnit}
+                    onToggleStatus={handleToggleStatus}
+                    onBulkToggleStatus={handleBulkToggleStatus}
+                    onReorderDraft={handleReorderDraft}
+                    reorderDraft={reorderDraft}
+                    isReorderAllowed={isReorderMode && !searchQuery.trim()}
+                  />
+                </Suspense>
+                {/* Pagination */}
+                {(pagination.totalPages > 0 || pagination.total > 0) && (
+                  <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 border-t border-gray-200 bg-gray-50">
+                    <div className="flex items-center gap-4">
+                      <span className="text-sm text-gray-600">
+                        Showing {(page - 1) * limit + 1}–{Math.min(page * limit, pagination.total)} of {pagination.total}
+                      </span>
+                      <label className="flex items-center gap-2 text-sm text-gray-600">
+                        Per page
+                        <select
+                          value={limit}
+                          onChange={(e) =>
+                            setFilterState({
+                              limit: Number(e.target.value),
+                              page: 1,
+                            })
+                          }
+                          className="px-2 py-1 border border-gray-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none"
+                        >
+                          {ADMIN_PAGINATION.PAGE_SIZE_OPTIONS.map((n) => (
+                            <option key={n} value={n}>
+                              {n}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setFilterState({ page: page - 1 })}
+                        disabled={!pagination.hasPrevPage}
+                        className="p-2 rounded-lg border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        aria-label="Previous page"
+                      >
+                        <FaChevronLeft className="w-4 h-4" />
+                      </button>
+                      <span className="text-sm text-gray-600 whitespace-nowrap">
+                        Page {page} of {pagination.totalPages || 1}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setFilterState({ page: page + 1 })}
+                        disabled={!pagination.hasNextPage}
+                        className="p-2 rounded-lg border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        aria-label="Next page"
+                      >
+                        <FaChevronRight className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
-                }
-              >
-                <UnitsTable
-                  units={filteredUnits}
-                  onEdit={handleEditUnit}
-                  onDelete={handleDeleteUnit}
-                  onToggleStatus={handleToggleStatus}
-                  onReorderDraft={handleReorderDraft}
-                  reorderDraft={reorderDraft}
-                  isReorderAllowed={isReorderMode && !searchQuery.trim()}
-                />
-              </Suspense>
+                )}
+              </>
             )}
           </div>
         </div>

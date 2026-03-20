@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import mongoose from "mongoose";
 import connectDB from "@/lib/mongodb";
 import Notification from "@/models/Notification";
 import Exam from "@/models/Exam";
@@ -136,28 +137,50 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const context = await resolveContextFromSlugs(searchParams);
 
+    // Normalize context IDs to ObjectIds so query always matches by exact exam/entity (never another exam)
+    const toOid = (id) => (id == null ? null : mongoose.Types.ObjectId.isValid(id) ? new mongoose.Types.ObjectId(id) : null);
+    const examOid = toOid(context.examId);
+    const subjectOid = toOid(context.subjectId);
+    const unitOid = toOid(context.unitId);
+    const chapterOid = toOid(context.chapterId);
+    const topicOid = toOid(context.topicId);
+    const subTopicOid = toOid(context.subTopicId);
+    const definitionOid = toOid(context.definitionId);
+
     const conditions = [];
-    // General: show on every page (all exams and all their children)
-    conditions.push({ entityType: "general" });
+    // General: show only when no exam in URL (landing/home). When user is on an exam or exam-child page, do NOT show general — only that exam's (and level's) notifications, so NEET and JEE don't mix.
+    if (!examOid) {
+      conditions.push({ entityType: "general" });
+    }
     // Exam (page only): show only on that exam's own page, not on subject/unit/... under it
-    const isExamPageOnly = context.examId && !context.subjectId && !context.unitId && !context.chapterId && !context.topicId && !context.subTopicId && !context.definitionId;
-    if (isExamPageOnly) conditions.push({ entityType: "exam", entityId: context.examId });
+    const isExamPageOnly = examOid && !subjectOid && !unitOid && !chapterOid && !topicOid && !subTopicOid && !definitionOid;
+    if (isExamPageOnly) conditions.push({ entityType: "exam", entityId: examOid });
     // Exam with children: show on that exam page AND on all its children (subject, unit, chapter, topic, subtopic, definition under that exam)
-    if (context.examId) conditions.push({ entityType: "exam_with_children", entityId: context.examId });
-    if (context.subjectId) conditions.push({ entityType: "subject", entityId: context.subjectId });
-    if (context.unitId) conditions.push({ entityType: "unit", entityId: context.unitId });
-    if (context.chapterId) conditions.push({ entityType: "chapter", entityId: context.chapterId });
-    if (context.topicId) conditions.push({ entityType: "topic", entityId: context.topicId });
-    if (context.subTopicId) conditions.push({ entityType: "subtopic", entityId: context.subTopicId });
-    if (context.definitionId) conditions.push({ entityType: "definition", entityId: context.definitionId });
+    if (examOid) conditions.push({ entityType: "exam_with_children", entityId: examOid });
+    if (subjectOid) conditions.push({ entityType: "subject", entityId: subjectOid });
+    if (unitOid) conditions.push({ entityType: "unit", entityId: unitOid });
+    if (chapterOid) conditions.push({ entityType: "chapter", entityId: chapterOid });
+    if (topicOid) conditions.push({ entityType: "topic", entityId: topicOid });
+    if (subTopicOid) conditions.push({ entityType: "subtopic", entityId: subTopicOid });
+    if (definitionOid) conditions.push({ entityType: "definition", entityId: definitionOid });
 
     const limit = Math.min(parseInt(searchParams.get("limit") || "50", 10), 100);
 
+    // Exclude notifications that have passed their endDate (header should not show them)
+    const endDateFilter = {
+      $or: [
+        { endDate: null },
+        { endDate: { $exists: false } },
+        { endDate: { $gte: new Date() } },
+      ],
+    };
+
     // No context (e.g. main/landing page): return general only (no exam selected yet)
-    if (context.examId == null && context.subjectId == null && context.unitId == null && context.chapterId == null && context.topicId == null && context.subTopicId == null && context.definitionId == null) {
+    if (!examOid && !subjectOid && !unitOid && !chapterOid && !topicOid && !subTopicOid && !definitionOid) {
       const list = await Notification.find({
         status: "active",
         entityType: "general",
+        ...endDateFilter,
       })
         .sort({ orderNumber: 1, createdAt: -1 })
         .limit(limit)
@@ -184,13 +207,25 @@ export async function GET(request) {
     }
     const forStrip = searchParams.get("strip") === "1";
 
-    const list = await Notification.find({
+    let list = await Notification.find({
       status: "active",
       $or: conditions,
+      ...endDateFilter,
     })
       .sort({ orderNumber: 1, createdAt: -1 })
       .limit(limit)
       .lean();
+
+    // Safety: when we have an exam context, never return notifications for a different exam (e.g. JEE on NEET page).
+    if (examOid && list.length > 0) {
+      const examIdStr = examOid.toString();
+      list = list.filter((n) => {
+        if (n.entityType === "exam" || n.entityType === "exam_with_children") {
+          return n.entityId && n.entityId.toString() === examIdStr;
+        }
+        return true;
+      });
+    }
 
     let readSet = new Set();
     try {

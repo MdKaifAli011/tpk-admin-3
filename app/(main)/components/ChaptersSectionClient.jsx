@@ -24,7 +24,7 @@ const ChaptersSectionClient = ({
               <h2 className="text-base sm:text-lg font-semibold text-gray-900">
                 {examName} &gt; {subjectName} &gt; {unitName} Chapters
               </h2>
-              <p className="mt-1 text-xs sm:text-sm text-gray-500">
+              <p className="mt-1 text-xs sm:text-sm text-gray-600">
                 Review your status and progress for each chapter in this unit.
                 Use the slider to set progress or click "Mark as Done" to
                 complete.

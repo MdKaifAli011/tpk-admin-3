@@ -57,7 +57,7 @@ const DownloadPageClient = ({ exam, examSlug, examName }) => {
   return (
     <div className="space-y-6 bg-gray-50/80 min-h-screen pb-8">
       {/* Header - matches app Card gradient + HeaderCard style */}
-      <Card variant="gradient" hover={false} className="p-4 sm:p-5">
+      <Card variant="gradient" hover={false} className="p-4 sm:p-5 min-h-[140px] hero-section">
         <Link
           href={`/${examSlug}`}
           className="inline-flex items-center gap-2 text-sm font-medium text-indigo-700 hover:text-indigo-900 w-fit mb-3"

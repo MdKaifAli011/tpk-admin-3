@@ -1,16 +1,16 @@
 "use client";
 
-import React, { useState, lazy, Suspense, useEffect, useMemo, useCallback, startTransition } from "react";
+import React, { useState, lazy, Suspense, useEffect, useMemo, useCallback, useRef } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { FaChartLine } from "react-icons/fa";
 import { ExamCardSkeleton } from "./SkeletonLoader";
 import Card from "./Card";
+import ExamAreaLoading from "./ExamAreaLoading";
 
-// Lazy load tabs for code splitting - only load when clicked (true lazy loading)
-// Using dynamic imports with no preloading to ensure components load only when needed
-const OverviewTab = lazy(() =>
-  import("./OverviewTab").catch(() => ({ default: () => <div>Failed to load Overview</div> }))
-);
+// Overview tab: static import for LCP — default/first visible content must render on first paint
+import OverviewTab from "./OverviewTab";
+
+// Lazy load non-default tabs for code splitting (load only when clicked)
 const DiscussionForumTab = lazy(() =>
   import("./DiscussionForumTab").catch(() => ({ default: () => <div>Failed to load Discussion Forum</div> }))
 );
@@ -93,18 +93,48 @@ const TabsClient = ({
   // Initialize activeTab from URL, default to existing logic (Overview)
   const currentTabParam = searchParams.get("tab");
   const [activeTab, setActiveTab] = useState(() => fromUrlParam(currentTabParam));
-  const [loadedTabs, setLoadedTabs] = useState(new Set([fromUrlParam(currentTabParam)])); // Track loaded tabs
+  const [loadedTabs, setLoadedTabs] = useState(new Set([fromUrlParam(currentTabParam)]));
+  const [isTabTransitioning, setIsTabTransitioning] = useState(false);
+  const transitionTimerRef = useRef(null);
+  const pendingTabRef = useRef(null); // tab we just clicked; ignore URL sync until URL catches up
+  const MIN_LOADING_MS = 220;
 
-  // Sync state with URL changes (handling back/forward button)
+  const clearTransitionTimer = useCallback(() => {
+    if (transitionTimerRef.current) {
+      clearTimeout(transitionTimerRef.current);
+      transitionTimerRef.current = null;
+    }
+  }, []);
+
+  // Sync state with URL only for back/forward. When user clicks a tab we set pendingTabRef
+  // so we don't overwrite activeTab with stale URL before router.replace completes.
   useEffect(() => {
     const tabFromUrl = fromUrlParam(searchParams.get("tab"));
-    if (tabFromUrl !== activeTab) {
-      startTransition(() => {
-        setActiveTab(tabFromUrl);
-        setLoadedTabs(prev => new Set([...prev, tabFromUrl])); // Mark as loaded
-      });
+    const pending = pendingTabRef.current;
+
+    if (pending !== null && pending !== undefined) {
+      // We just clicked a tab; URL might not have updated yet
+      if (tabFromUrl === pending) {
+        pendingTabRef.current = null; // URL caught up
+      }
+      // Don't overwrite activeTab with stale URL
+      return;
     }
-  }, [searchParams, activeTab]);
+
+    // No pending click - URL change is from back/forward or initial load
+    if (tabFromUrl !== activeTab) {
+      clearTransitionTimer();
+      setIsTabTransitioning(true);
+      setActiveTab(tabFromUrl);
+      setLoadedTabs(prev => new Set([...prev, tabFromUrl]));
+      transitionTimerRef.current = setTimeout(() => {
+        setIsTabTransitioning(false);
+        transitionTimerRef.current = null;
+      }, MIN_LOADING_MS);
+    }
+  }, [searchParams, activeTab, clearTransitionTimer]);
+
+  useEffect(() => () => clearTransitionTimer(), [clearTransitionTimer]);
 
   // Prefetch tab on hover for better UX (optional optimization)
   const handleTabHover = useCallback((tab) => {
@@ -128,13 +158,23 @@ const TabsClient = ({
   }, [loadedTabs]);
 
   const handleTabChange = useCallback((tab) => {
-    if (tab === activeTab) return; // Prevent unnecessary re-renders
+    if (tab === activeTab) return;
 
-    // Use startTransition for smooth tab switching (non-blocking update)
-    startTransition(() => {
-      setActiveTab(tab);
-      setLoadedTabs(prev => new Set([...prev, tab])); // Mark as loaded
-    });
+    clearTransitionTimer();
+    pendingTabRef.current = tab; // so URL-sync effect doesn't overwrite with stale tab
+    setIsTabTransitioning(true);
+    setActiveTab(tab);
+    setLoadedTabs(prev => new Set([...prev, tab]));
+
+    // Scroll to top when switching tabs so the new tab content is in view
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    transitionTimerRef.current = setTimeout(() => {
+      setIsTabTransitioning(false);
+      transitionTimerRef.current = null;
+    }, MIN_LOADING_MS);
 
     // Create new params to preserve existing query params if any
     const params = new URLSearchParams(searchParams.toString());
@@ -142,8 +182,6 @@ const TabsClient = ({
     params.set("tab", newTabParam);
 
     // Clear tab-specific parameters when switching tabs to avoid URL clutter
-    // This ensures that 'test=slug', 'view=results', 'thread=slug' don't persist when moving to other tabs
-    // Always clear these parameters when switching to any tab (including Performance)
     params.delete("test");
     params.delete("view");
     params.delete("thread");
@@ -152,9 +190,8 @@ const TabsClient = ({
     params.delete("sort");
     params.delete("action");
 
-    // Replace URL without page reload/scroll reset
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-  }, [activeTab, searchParams, pathname, router]);
+  }, [activeTab, searchParams, pathname, router, clearTransitionTimer]);
 
   // Render only the active tab to prevent double loading animations
   // Use key prop based on activeTab to force complete remount when switching tabs
@@ -268,36 +305,49 @@ const TabsClient = ({
 
 
   return (
-    <Card variant="standard" hover={false} className="overflow-hidden">
-      {/* Tab Navigation */}
-      <nav className="flex overflow-x-auto sm:overflow-visible border-b border-gray-200  bg-gradient-to-br from-indigo-50 via-white to-purple-50 scrollbar-hide">
-        <div className="flex min-w-max sm:min-w-0 w-full gap-4 sm:gap-6 md:gap-8 lg:gap-10 xl:gap-12 justify-around px-3 sm:px-4 md:px-6">
+    <Card variant="standard" hover={false} className="overflow-visible">
+      {/* Tab Navigation — sticky so Overview/Discussion/Practice/Performance stay on top while scrolling */}
+      <nav
+        className="sticky z-[45] flex overflow-x-auto sm:overflow-visible border-b border-gray-200 bg-gradient-to-br from-indigo-50 via-white to-purple-50 scrollbar-hide shadow-[0_1px_3px_0_rgba(0,0,0,0.04)] rounded-t-xl"
+        style={{ top: "var(--navbar-height, 7.5rem)" }}
+        aria-label="Content tabs"
+      >
+        <div className="flex min-w-max sm:min-w-0 w-full gap-4 sm:gap-6 md:gap-8 lg:gap-10 xl:gap-12 justify-around px-3 sm:px-4 md:px-6" role="tablist">
           {TABS.map((tab) => {
             const isActive = activeTab === tab;
             const isPerformanceTab = tab === "Performance";
 
             return (
               <button
+                type="button"
                 key={tab}
                 onClick={() => handleTabChange(tab)}
                 onMouseEnter={() => handleTabHover(tab)}
-                className={`relative px-2.5 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-2.5 text-[10px] sm:text-xs md:text-sm font-semibold whitespace-nowrap transition-all duration-300 border-b-2 group overflow-hidden shrink-0 ${isActive
+                aria-label={`Switch to ${tab} tab`}
+                aria-selected={isActive}
+                role="tab"
+                className={`relative px-2.5 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-2.5 min-h-[44px] text-[10px] sm:text-xs md:text-sm font-semibold whitespace-nowrap transition-all duration-300 border-b-2 group overflow-hidden shrink-0 rounded-t-lg cursor-pointer ${isActive
                   ? isPerformanceTab
                     ? "text-emerald-700 border-emerald-600 bg-gradient-to-b from-emerald-50 via-white to-white shadow-sm"
                     : "text-indigo-600 border-indigo-600 bg-white"
                   : isPerformanceTab
-                    ? "text-emerald-600 hover:text-emerald-700 border-transparent bg-emerald-50/30 hover:bg-emerald-50/50"
-                    : "text-gray-500 hover:text-gray-700 border-transparent"
+                    ? "text-emerald-600 hover:text-emerald-700 border-transparent bg-emerald-50/30 hover:bg-emerald-50/70"
+                    : "text-gray-500 hover:text-indigo-600 border-transparent bg-transparent hover:bg-indigo-50/70"
                   }`}
               >
                 {/* Background glow effect for Performance tab when active */}
                 {isPerformanceTab && isActive && (
-                  <span className="absolute inset-0 bg-emerald-100/30 rounded-t-lg z-0"></span>
+                  <span className="absolute inset-0 bg-emerald-100/30 rounded-t-lg z-0" aria-hidden />
                 )}
 
                 {/* Hover background effect for Performance tab when not active */}
                 {isPerformanceTab && !isActive && (
-                  <span className="absolute inset-0 bg-emerald-100/0 group-hover:bg-emerald-100/40 rounded-t-lg transition-all duration-300 z-0"></span>
+                  <span className="absolute inset-0 bg-emerald-100/0 group-hover:bg-emerald-100/40 rounded-t-lg transition-all duration-300 z-0" aria-hidden />
+                )}
+
+                {/* Hover background effect for Overview / Discussion / Practice when not active */}
+                {!isPerformanceTab && !isActive && (
+                  <span className="absolute inset-0 bg-indigo-100/0 group-hover:bg-indigo-100/50 rounded-t-lg transition-all duration-300 z-0" aria-hidden />
                 )}
 
                 {/* Content wrapper with proper z-index */}
@@ -308,13 +358,18 @@ const TabsClient = ({
                         ? "text-emerald-600 animate-pulse"
                         : "text-emerald-500 group-hover:scale-110 group-hover:rotate-[-5deg]"
                         }`}
+                      aria-hidden
                     />
                   )}
                   <span className="relative inline-block">
                     {tab}
-                    {/* Premium underline animation for Performance tab when inactive */}
+                    {/* Underline animation on hover for Performance tab when inactive */}
                     {isPerformanceTab && !isActive && (
-                      <span className="absolute -bottom-0.5 left-0 w-0 h-[2px] bg-emerald-600 group-hover:w-full transition-all duration-300 rounded-full"></span>
+                      <span className="absolute -bottom-0.5 left-0 w-0 h-[2px] bg-emerald-600 group-hover:w-full transition-all duration-300 rounded-full" aria-hidden />
+                    )}
+                    {/* Underline animation on hover for other tabs when inactive */}
+                    {!isPerformanceTab && !isActive && (
+                      <span className="absolute -bottom-0.5 left-0 w-0 h-[2px] bg-indigo-600 group-hover:w-full transition-all duration-300 rounded-full" aria-hidden />
                     )}
                   </span>
                 </span>
@@ -324,20 +379,20 @@ const TabsClient = ({
         </div>
       </nav>
 
-      {/* Tab Content with Lazy Loading */}
-      {/* Render only active tab to prevent double loading animations */}
-      {/* Key prop ensures complete remount when switching tabs, preventing double rendering */}
-      {/* Only wrap in Suspense if tab hasn't been loaded before to prevent flickering */}
+      {/* Tab Content: min-height reduces CLS and reserves space for LCP */}
       <div
-        className="text-gray-700 text-sm sm:text-base"
+        className="tab-content-reserve text-gray-700 text-sm sm:text-base"
         key={`tab-wrapper-${activeTab}`}
+        role="tabpanel"
+        aria-label={`${activeTab} content`}
       >
-        {loadedTabs.has(activeTab) ? (
-          // Tab already loaded - render directly without Suspense to prevent flickering
+        {isTabTransitioning ? (
+          <ExamAreaLoading variant="compact" message="Loading tab..." />
+        ) : activeTab === "Overview" ? (
+          // Overview: no Suspense so LCP (main content) paints immediately
           tabContent
         ) : (
-          // Tab not loaded yet - use Suspense for lazy loading
-          <Suspense fallback={null}>
+          <Suspense fallback={<ExamAreaLoading variant="compact" message="Loading tab..." />}>
             {tabContent}
           </Suspense>
         )}

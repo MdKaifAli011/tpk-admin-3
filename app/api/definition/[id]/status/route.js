@@ -8,7 +8,6 @@ import { logger } from "@/utils/logger";
 // ---------- PATCH DEFINITION STATUS ----------
 export async function PATCH(request, { params }) {
   try {
-    // Check authentication and permissions (users need to be able to update)
     const authCheck = await requireAction(request, "PATCH");
     if (authCheck.error) {
       return NextResponse.json(authCheck, { status: authCheck.status || 401 });
@@ -22,7 +21,7 @@ export async function PATCH(request, { params }) {
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json(
         { success: false, message: "Invalid definition ID" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -32,21 +31,23 @@ export async function PATCH(request, { params }) {
           success: false,
           message: "Valid status is required (active or inactive)",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    // Update definition status
     const updated = await Definition.findByIdAndUpdate(
       id,
-      { status },
-      { new: true }
+      {
+        status,
+        manualInactive: status === "inactive",
+      },
+      { new: true },
     );
 
     if (!updated) {
       return NextResponse.json(
         { success: false, message: "Definition not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -63,8 +64,7 @@ export async function PATCH(request, { params }) {
     logger.error("Error updating definition status:", error);
     return NextResponse.json(
       { success: false, message: "Failed to update definition status" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
-

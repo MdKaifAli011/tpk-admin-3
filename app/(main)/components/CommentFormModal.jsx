@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import {
   FaUser,
   FaEnvelope,
@@ -31,8 +32,14 @@ import {
   validateCountry,
   validateClassName,
 } from "./utils/formValidation";
+import { getFormPlaceholderImageSrc } from "./utils/formPlaceholderImage";
 
 const CommentFormModal = ({ isOpen, onClose, onSubmit, initialComment = "", blogId, initialData = {} }) => {
+  const pathname = usePathname();
+  const { src: formPlaceholderSrc, fallbackSrc: formPlaceholderFallback } = getFormPlaceholderImageSrc(pathname, basePath);
+  const [formPlaceholderImgSrc, setFormPlaceholderImgSrc] = useState(formPlaceholderSrc);
+  useEffect(() => setFormPlaceholderImgSrc(formPlaceholderSrc), [formPlaceholderSrc]);
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -275,14 +282,14 @@ const CommentFormModal = ({ isOpen, onClose, onSubmit, initialComment = "", blog
         aria-hidden="true"
       />
 
-      <div className="relative bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden">
+      <div className="relative bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
         <button
           onClick={handleClose}
           disabled={isSubmitting}
-          className="absolute top-3 right-3 z-10 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-white/80 backdrop-blur-sm"
+          className="absolute top-3 right-3 z-10 min-h-[44px] min-w-[44px] p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-white/80 backdrop-blur-sm flex items-center justify-center"
           aria-label="Close modal"
         >
-          <FaTimes className="text-lg" />
+          <FaTimes className="text-lg" aria-hidden />
         </button>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 flex-1 overflow-hidden">
@@ -292,9 +299,10 @@ const CommentFormModal = ({ isOpen, onClose, onSubmit, initialComment = "", blog
 
             {/* Image */}
             <img
-              src={`${basePath}/images/form-placeholder.png`}
+              src={formPlaceholderImgSrc}
               alt="Form illustration"
               className="absolute inset-0 w-full h-full object-cover"
+              onError={() => setFormPlaceholderImgSrc(formPlaceholderFallback)}
             />
 
             {/* Optional overlay */}
@@ -308,7 +316,7 @@ const CommentFormModal = ({ isOpen, onClose, onSubmit, initialComment = "", blog
                 We Will Connect With You Soon
               </div>
 
-              <h2 className="text-xl font-bold text-gray-900 mb-3">
+              <h2 id="modal-title" className="text-xl font-bold text-gray-900 mb-3">
                 Let&apos;s Connect With You Soon
               </h2>
 
@@ -321,9 +329,9 @@ const CommentFormModal = ({ isOpen, onClose, onSubmit, initialComment = "", blog
                       }`}
                   >
                     {submitStatus === "success" ? (
-                      <FaCheckCircle className="text-green-600 text-sm shrink-0 mt-0.5" />
+                      <FaCheckCircle className="text-green-600 text-sm shrink-0 mt-0.5" aria-hidden />
                     ) : (
-                      <FaExclamationCircle className="text-red-600 text-sm shrink-0 mt-0.5" />
+                      <FaExclamationCircle className="text-red-600 text-sm shrink-0 mt-0.5" aria-hidden />
                     )}
                     <p className="text-sm font-medium">{submitMessage}</p>
                   </div>
@@ -332,8 +340,9 @@ const CommentFormModal = ({ isOpen, onClose, onSubmit, initialComment = "", blog
                 <div>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
-                      <FaUser className="text-gray-400 text-xs" />
+                      <FaUser className="text-gray-400 text-xs" aria-hidden />
                     </div>
+                    <label htmlFor="modal-name" className="sr-only">Name</label>
                     <input
                       type="text"
                       id="modal-name"
@@ -356,8 +365,9 @@ const CommentFormModal = ({ isOpen, onClose, onSubmit, initialComment = "", blog
                 <div>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
-                      <FaEnvelope className="text-gray-400 text-xs" />
+                      <FaEnvelope className="text-gray-400 text-xs" aria-hidden />
                     </div>
+                    <label htmlFor="modal-email" className="sr-only">Email</label>
                     <input
                       type="email"
                       id="modal-email"
@@ -382,8 +392,9 @@ const CommentFormModal = ({ isOpen, onClose, onSubmit, initialComment = "", blog
                 <div>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none z-10">
-                      <FaGlobe className="text-gray-400 text-xs" />
+                      <FaGlobe className="text-gray-400 text-xs" aria-hidden />
                     </div>
+                    <label htmlFor="modal-country" className="sr-only">Country</label>
                     <select
                       id="modal-country"
                       name="country"
@@ -413,8 +424,9 @@ const CommentFormModal = ({ isOpen, onClose, onSubmit, initialComment = "", blog
                 <div>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none z-10">
-                      <FaGraduationCap className="text-gray-400 text-xs" />
+                      <FaGraduationCap className="text-gray-400 text-xs" aria-hidden />
                     </div>
+                    <label htmlFor="modal-className" className="sr-only">Class</label>
                     <select
                       id="modal-className"
                       name="className"
@@ -444,6 +456,7 @@ const CommentFormModal = ({ isOpen, onClose, onSubmit, initialComment = "", blog
                 <div>
                   <div className="flex gap-2">
                     <div className="w-18">
+                      <label htmlFor="modal-countryCode" className="sr-only">Country code</label>
                       <input
                         type="text"
                         id="modal-countryCode"
@@ -458,8 +471,9 @@ const CommentFormModal = ({ isOpen, onClose, onSubmit, initialComment = "", blog
                     </div>
                     <div className="flex-1 relative">
                       <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
-                        <FaPhone className="text-gray-400 text-xs" />
+                        <FaPhone className="text-gray-400 text-xs" aria-hidden />
                       </div>
+                      <label htmlFor="modal-phoneNumber" className="sr-only">Phone number</label>
                       <input
                         type="tel"
                         id="modal-phoneNumber"
@@ -485,8 +499,9 @@ const CommentFormModal = ({ isOpen, onClose, onSubmit, initialComment = "", blog
                 <div>
                   <div className="relative">
                     <div className="absolute top-2.5 left-3 flex items-start pointer-events-none">
-                      <FaCommentDots className="text-gray-400 text-xs mt-0.5" />
+                      <FaCommentDots className="text-gray-400 text-xs mt-0.5" aria-hidden />
                     </div>
+                    <label htmlFor="modal-comment" className="sr-only">Comment</label>
                     <textarea
                       id="modal-comment"
                       name="comment"
@@ -563,8 +578,10 @@ const CommentFormModal = ({ isOpen, onClose, onSubmit, initialComment = "", blog
                         </span>
                       </div>
                       <div className="w-20">
+                        <label htmlFor="modal-verification" className="sr-only">Verification answer</label>
                         <input
                           type="text"
+                          id="modal-verification"
                           value={userVerificationAnswer}
                           onChange={(e) =>
                             handleVerificationChange(e.target.value, setErrors)
@@ -586,8 +603,9 @@ const CommentFormModal = ({ isOpen, onClose, onSubmit, initialComment = "", blog
                         type="button"
                         onClick={generateVerification}
                         disabled={isSubmitting}
-                        className="shrink-0 p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="shrink-0 min-h-[44px] min-w-[44px] p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                         title="Refresh verification"
+                        aria-label="Refresh verification code"
                       >
                         <svg
                           className="w-3.5 h-3.5"
@@ -617,18 +635,19 @@ const CommentFormModal = ({ isOpen, onClose, onSubmit, initialComment = "", blog
                     type="button"
                     onClick={handleClose}
                     disabled={isSubmitting}
-                    className="flex-1 px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="min-h-[44px] flex-1 px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="flex-1 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="min-h-[44px] flex-1 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    aria-label={isSubmitting ? "Submitting form" : "Submit comment"}
                   >
                     {isSubmitting ? (
                       <>
-                        <FaSpinner className="animate-spin text-sm" />
+                        <FaSpinner className="animate-spin text-sm" aria-hidden />
                         <span>Submitting...</span>
                       </>
                     ) : (

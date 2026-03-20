@@ -1,12 +1,17 @@
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import StudentTestResult from "@/models/StudentTestResult";
+import Student from "@/models/Student";
+import PracticeSubCategory from "@/models/PracticeSubCategory";
 import {
   successResponse,
   errorResponse,
   handleApiError,
 } from "@/utils/apiResponse";
 import { verifyStudentToken } from "@/lib/studentAuth";
+import { sendMail } from "@/lib/mailer";
+import { getEmailTemplateContent } from "@/lib/getEmailTemplateContent";
+import { config } from "@/config/config";
 
 // POST: Save test result
 export async function POST(request) {
@@ -205,6 +210,27 @@ export async function POST(request) {
       const testResult = await StudentTestResult.create(testResultData);
 
       console.log("Test result saved successfully:", testResult._id);
+
+      // Result summary email to student (fire-and-forget)
+      (async () => {
+        try {
+          const student = await Student.findById(authCheck.studentId).select("email").lean();
+          if (!student?.email) return;
+          const testDoc = await PracticeSubCategory.findById(testIdObjectId).select("name").lean();
+          const testName = testDoc?.name || "Test";
+          const viewUrl = config.siteUrl ? `${config.siteUrl}` : "";
+          const { subject, text, html } = await getEmailTemplateContent("test_result_summary", {
+            test_name: testName,
+            percentage: validatedPercentage,
+            correct_count: correctCount,
+            total_questions: totalQuestions,
+            view_url: viewUrl,
+          });
+          await sendMail({ to: student.email, subject, text, html });
+        } catch (err) {
+          console.error("Test result email error:", err);
+        }
+      })();
 
       return successResponse(
         testResult.toObject(),

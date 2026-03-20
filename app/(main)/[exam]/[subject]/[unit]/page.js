@@ -27,6 +27,7 @@ import {
 import { generateTabAwareMetadata, extractSearchParams } from "@/utils/tabSeo";
 import { logger } from "@/utils/logger";
 import OverviewCommentSection from "@/app/(main)/components/OverviewCommentSection";
+import AssignedBlogsSection from "@/app/(main)/components/AssignedBlogsSection";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
@@ -47,22 +48,35 @@ export async function generateMetadata({ params, searchParams }) {
   }
 
   try {
-    const { fetchExamById, fetchSubjectById, fetchUnitById, fetchUnitDetailsById, fetchUnitsBySubject, fetchSubjectsByExam, findByIdOrSlug, createSlug } = await import("../../../lib/api");
+    const {
+      fetchExamById,
+      fetchSubjectById,
+      fetchUnitById,
+      fetchUnitDetailsById,
+      fetchUnitsBySubject,
+      fetchSubjectsByExam,
+      findByIdOrSlug,
+      createSlug,
+    } = await import("../../../lib/api");
 
     const exam = await fetchExamById(examSlug).catch(() => null);
-    if (!exam) return { title: `${unitSlug || "Unit"} | TestPrepKart` };
+    if (!exam) return { title: `${unitSlug || "Unit"} | Testprepkart` };
 
     const subjects = await fetchSubjectsByExam(exam._id).catch(() => []);
     const subject = findByIdOrSlug(subjects, subjectSlug);
-    if (!subject) return { title: `${unitSlug || "Unit"} | TestPrepKart` };
+    if (!subject) return { title: `${unitSlug || "Unit"} | Testprepkart` };
 
-    const units = await fetchUnitsBySubject(subject._id, exam._id).catch(() => []);
+    const units = await fetchUnitsBySubject(subject._id, exam._id).catch(
+      () => [],
+    );
     const unit = findByIdOrSlug(units, unitSlug);
-    if (!unit) return { title: `${unitSlug || "Unit"} | TestPrepKart` };
+    if (!unit) return { title: `${unitSlug || "Unit"} | Testprepkart` };
 
     const fullUnitData = await fetchUnitById(unit._id).catch(() => null);
     const finalUnit = fullUnitData || unit;
-    const unitDetails = await fetchUnitDetailsById(finalUnit._id).catch(() => null);
+    const unitDetails = await fetchUnitDetailsById(finalUnit._id).catch(
+      () => null,
+    );
     const path = `/${createSlug(exam.name)}/${createSlug(subject.name)}/${createSlug(finalUnit.name)}`;
 
     return await generateTabAwareMetadata(
@@ -76,11 +90,11 @@ export async function generateMetadata({ params, searchParams }) {
           subject: subject.name,
           unit: finalUnit.name,
         },
-      }
+      },
     );
   } catch (error) {
     logger.warn("Error generating unit page metadata:", error);
-    return { title: `${unitSlug || "Unit"} | TestPrepKart` };
+    return { title: `${unitSlug || "Unit"} | Testprepkart` };
   }
 }
 
@@ -136,7 +150,7 @@ const UnitPage = async ({ params }) => {
     (u) =>
       u._id === foundUnit._id ||
       createSlug(u.name) === unitSlug ||
-      u.name?.toLowerCase() === unitSlug.toLowerCase()
+      u.name?.toLowerCase() === unitSlug.toLowerCase(),
   );
 
   const examSlug = createSlug(fetchedExam.name);
@@ -169,62 +183,39 @@ const UnitPage = async ({ params }) => {
 
   return (
     <div className="space-y-4">
-      <VisitTracker 
-        level="unit" 
-        itemId={unit._id} 
-        itemSlug={unitSlugValue} 
-        itemName={unit.name} 
+      <VisitTracker
+        level="unit"
+        itemId={unit._id}
+        itemSlug={unitSlugValue}
+        itemName={unit.name}
       />
       {/* Premium Educational Header */}
       <section
-        className="
-    rounded-xl
-    p-3 sm:p-4
-    bg-gradient-to-br from-indigo-50 via-white to-purple-50
-    border border-indigo-100/60
-    shadow-[0_2px_12px_rgba(120,90,200,0.08)]
-  "
+        className="hero-section rounded-xl p-3 sm:p-4 bg-gradient-to-br from-indigo-50 via-white to-purple-50 border border-indigo-100/60 shadow-[0_2px_12px_rgba(120,90,200,0.08)]"
+        aria-labelledby="unit-page-title"
       >
         <div className="flex items-start sm:items-center justify-between w-full gap-3 sm:gap-4 min-w-0">
-
-          {/* LEFT — Title + Breadcrumb */}
           <div className="flex flex-col min-w-0 flex-1 leading-tight">
-
             <h1
-              className="
-          text-base sm:text-lg md:text-xl font-bold text-indigo-900
-          truncate
-          w-full
-        "
+              id="unit-page-title"
+              className="text-base sm:text-lg md:text-xl font-bold text-indigo-900 truncate w-full"
               title={unit.name}
             >
               {unit.name}
             </h1>
-
-            <p
-              className="
-          text-[10px] sm:text-xs text-gray-600 mt-0.5
-          truncate
-          w-full
-        "
-              title={`${fetchedExam.name} > ${subject.name} > ${unit.name}`}
-            >
+            <p className="text-[10px] sm:text-xs text-gray-600 mt-0.5 truncate w-full" title={`${fetchedExam.name} > ${subject.name} > ${unit.name}`}>
               {fetchedExam.name} &gt; {subject.name} &gt; {unit.name}
             </p>
           </div>
-
-          {/* RIGHT — Unit Progress */}
-          <div className="shrink-0 ml-auto">
+          <div className="hero-right-slot shrink-0 ml-auto flex flex-col justify-center min-h-[44px]">
             <UnitProgressClient
               unitId={unit._id}
               unitName={unit.name}
               initialProgress={0}
             />
           </div>
-
         </div>
       </section>
-
 
       {/* Tabs */}
       <TabsClient
@@ -241,14 +232,16 @@ const UnitPage = async ({ params }) => {
         unitName={unit.name}
         practiceDisabled={subject.practiceDisabled || false}
       />
-      
+
       {/* Navigation */}
-      <NavigationClient
-        backUrl={`/${examSlug}/${subjectSlugValue}`}
-        backLabel={`Back to ${subject.name}`}
-        prevNav={prevNav}
-        nextNav={nextNav}
-      />
+      <nav aria-label="Previous and next unit navigation">
+        <NavigationClient
+          backUrl={`/${examSlug}/${subjectSlugValue}`}
+          backLabel={`Back to ${subject.name}`}
+          prevNav={prevNav}
+          nextNav={nextNav}
+        />
+      </nav>
 
       {/* Test List Table */}
       <ConditionalTestListTable
@@ -271,9 +264,18 @@ const UnitPage = async ({ params }) => {
         practiceDisabled={subject.practiceDisabled || false}
       />
 
-
       {/* Unit Completion Tracker */}
       <UnitCompletionTracker unitId={unit._id} unitName={unit.name} />
+
+      {/* Blog Section - assigned to this unit */}
+      <AssignedBlogsSection
+        examSlug={examSlug}
+        examId={fetchedExam._id}
+        assignmentLevel="unit"
+        assignmentUnitId={unit._id}
+      />
+
+      {/* Overview Comment Section */}
       <OverviewCommentSection entityType="unit" entityId={unit._id} />
     </div>
   );

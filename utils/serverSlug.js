@@ -47,3 +47,21 @@ export async function generateUniqueSlug(
 
   return slug;
 }
+
+/**
+ * Allocate a unique slug using only an in-memory Set (no DB). Use for bulk import to avoid per-row DB calls.
+ * @param {String} baseSlug - Base slug from createSlug(name)
+ * @param {Set<string>} usedSlugs - Set of already-used slugs (mutated by this function)
+ * @returns {String} Unique slug
+ */
+export function allocateUniqueSlugSync(baseSlug, usedSlugs) {
+  if (!baseSlug) baseSlug = "item";
+  let slug = baseSlug;
+  let counter = 1;
+  while (usedSlugs.has(slug)) {
+    slug = `${baseSlug}-${counter}`;
+    counter++;
+  }
+  usedSlugs.add(slug);
+  return slug;
+}

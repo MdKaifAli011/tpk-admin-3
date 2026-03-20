@@ -9,6 +9,9 @@ import {
   handleApiError,
 } from "@/utils/apiResponse";
 import { getJwtSecret } from "@/lib/auth";
+import { sendMail } from "@/lib/mailer";
+import { getEmailTemplateContent } from "@/lib/getEmailTemplateContent";
+import { isSpamOrFakePhone } from "@/lib/phoneSpamCheck";
 
 export async function POST(request) {
   try {
@@ -46,6 +49,10 @@ export async function POST(request) {
 
     if (!phoneNumber?.trim()) {
       return errorResponse("Phone number is required", 400);
+    }
+
+    if (isSpamOrFakePhone(phoneNumber.trim())) {
+      return errorResponse("Please enter a valid phone number", 400);
     }
 
     if (!className?.trim()) {
@@ -123,6 +130,15 @@ export async function POST(request) {
     // Link lead to student
     student.leadId = lead._id;
     await student.save();
+
+    // Welcome email (fire-and-forget)
+    const studentName = `${student.firstName || ""} ${student.lastName || ""}`.trim() || "Student";
+    getEmailTemplateContent("student_welcome", { name: studentName }).then(
+      ({ subject, text, html }) =>
+        sendMail({ to: student.email, subject, text, html }).catch((err) =>
+          console.error("Student welcome email error:", err)
+        )
+    );
 
     // Generate JWT token
     const jwtSecret = getJwtSecret();

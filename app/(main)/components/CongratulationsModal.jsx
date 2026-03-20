@@ -44,10 +44,10 @@ const CongratulationsModal = ({ isOpen, onClose, chapterName, unitName, subjectN
       >
         <button
           onClick={onClose}
-          className="absolute top-2 right-2 p-1.5 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 z-10"
-          aria-label="Close"
+          className="absolute top-2 right-2 p-1.5 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 z-10 min-h-[44px] min-w-[44px] flex items-center justify-center"
+          aria-label="Close congratulations"
         >
-          <FaTimes className="w-4 h-4" />
+          <FaTimes className="w-4 h-4" aria-hidden />
         </button>
 
         <div className="px-5 pt-5 pb-4">
@@ -80,7 +80,8 @@ const CongratulationsModal = ({ isOpen, onClose, chapterName, unitName, subjectN
 
           <button
             onClick={onClose}
-            className="w-full py-2.5 px-4 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition-colors"
+            className="w-full py-2.5 px-4 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition-colors min-h-[44px]"
+            aria-label="Continue"
           >
             Continue
           </button>

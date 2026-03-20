@@ -10,15 +10,10 @@ import Card from "./Card";
 import { createSlug } from "../lib/api";
 import { hasMoreContent } from "../lib/utils/contentUtils";
 
-
-// Lazy load DefinitionPreviewClient - only needed for subtopic pages
 const DefinitionPreviewClient = lazy(() => import("./DefinitionPreviewClient"));
 import UnitsSectionClient from "./UnitsSectionClient";
 import ChaptersSectionClient from "./ChaptersSectionClient";
-import DeepUnitChapterTracker from "./DeepUnitChapterTracker";
 import ClientOnly from "./ClientOnly";
-import ExamPrepDashboard from "./ExamPrepDashboard";
-import PreparationProgressDashboard from "./PreparationProgressDashboard";
 import {
   getStoredHoursPerDay,
   setStoredHoursPerDay,
@@ -29,8 +24,13 @@ import {
   broadcastExamPrepSync,
 } from "../lib/examPrepStorage";
 import { useClientToday, getPrepDaysRemaining } from "../hooks/useClientToday";
-import SyllabusTrackerSection from "./SyllabusTrackerSection";
 import api from "@/lib/api";
+
+// Lazy load below-the-fold sections to reduce TBT and main bundle
+const ExamPrepDashboard = lazy(() => import("./ExamPrepDashboard"));
+const PreparationProgressDashboard = lazy(() => import("./PreparationProgressDashboard"));
+const SyllabusTrackerSection = lazy(() => import("./SyllabusTrackerSection"));
+const DeepUnitChapterTracker = lazy(() => import("./DeepUnitChapterTracker"));
 
 // SubTopic Preview Component with Fixed 400px Height
 const SubTopicPreview = ({
@@ -67,7 +67,7 @@ const SubTopicPreview = ({
   return (
     <div className="space-y-3">
       {subTopicUrl ? (
-        <Link href={subTopicUrl} className="group/link">
+        <Link href={subTopicUrl} className="group/link" aria-label={`Subtopic: ${subTopic.name}`}>
           <h3 className="text-lg sm:text-xl font-bold text-indigo-700 group-hover/link:text-indigo-500 group-hover/link:underline transition-all duration-200 cursor-pointer mb-3 inline-block">
             {subTopic.name}
           </h3>
@@ -103,10 +103,11 @@ const SubTopicPreview = ({
                   <Link
                     href={subTopicUrl}
                     onClick={handleReadMore}
-                    className="group inline-flex items-center gap-2.5 px-5 py-2 bg-gradient-to-r from-indigo-600 via-indigo-600 to-indigo-700 hover:from-indigo-700 hover:via-indigo-700 hover:to-indigo-800 text-white text-sm font-semibold rounded-xl transition-all duration-300 hover:shadow-[0_8px_20px_rgba(99,102,241,0.35)] transform hover:scale-[1.02] active:scale-[0.98] shadow-[0_4px_12px_rgba(99,102,241,0.25)] disabled:opacity-70 disabled:cursor-not-allowed"
+                    className="group inline-flex items-center gap-2.5 px-5 py-2 bg-gradient-to-r from-indigo-600 via-indigo-600 to-indigo-700 hover:from-indigo-700 hover:via-indigo-700 hover:to-indigo-800 text-white text-sm font-semibold rounded-xl transition-all duration-300 hover:shadow-[0_8px_20px_rgba(99,102,241,0.35)] transform hover:scale-[1.02] active:scale-[0.98] shadow-[0_4px_12px_rgba(99,102,241,0.25)] disabled:opacity-70 disabled:cursor-not-allowed min-h-[44px]"
+                    aria-label={`Read more about ${subTopic.name}`}
                   >
                     <span className="tracking-wide">Read More</span>
-                    <FaChevronDown className="w-3 h-3 transition-transform duration-300 group-hover:translate-y-1" />
+                    <FaChevronDown className="w-3 h-3 transition-transform duration-300 group-hover:translate-y-1" aria-hidden />
                   </Link>
                 </div>
               )}
@@ -224,8 +225,10 @@ const OverviewTab = ({
 
   const hoursCbRef = useRef(handleHoursPerDayChange);
   const accuracyCbRef = useRef(handleAccuracyChange);
-  hoursCbRef.current = handleHoursPerDayChange;
-  accuracyCbRef.current = handleAccuracyChange;
+  useEffect(() => {
+    hoursCbRef.current = handleHoursPerDayChange;
+    accuracyCbRef.current = handleAccuracyChange;
+  }, [handleHoursPerDayChange, handleAccuracyChange]);
 
   const onHoursPerDayChangeStable = useCallback((n) => {
     hoursCbRef.current(n);
@@ -246,10 +249,31 @@ const OverviewTab = ({
 
   return (
     <div className="space-y-2 px-3 sm:px-4 py-3 sm:py-4">
-      {/* Exam dashboards: client-only to avoid hydration mismatch (React #418) from date/count */}
+      {/* Heading order: h2 for Overview so document has h1 -> h2 -> h3 */}
+      <h2 className="sr-only">Overview content</h2>
+      {/* LCP: Main prose content first so text/image paints immediately */}
+      <div
+        className="prose prose-sm sm:prose max-w-none prose-headings:text-gray-900 prose-headings:font-bold prose-p:text-gray-700 prose-p:leading-normal prose-a:text-indigo-600 prose-a:no-underline hover:prose-a:underline prose-strong:text-gray-900 prose-code:text-indigo-700 prose-pre:bg-gray-50"
+        suppressHydrationWarning
+      >
+        {content ? (
+          <RichContent html={content} />
+        ) : (
+          <Card variant="standard" className="p-4 sm:p-6 text-center">
+            <p className="text-gray-600 font-medium mb-2">
+              No content available for this {entityType}.
+            </p>
+            <p className="text-sm text-gray-500">
+              Content can be added from the admin panel.
+            </p>
+          </Card>
+        )}
+      </div>
+
+      {/* Exam dashboards: client-only, lazy-loaded to reduce TBT */}
       {entityType === "exam" && examId && (
-        <ClientOnly fallback={<div className="mb-6 min-h-[200px]" aria-hidden="true" />}>
-          <>
+        <ClientOnly fallback={<div className="mb-6 min-h-[200px] animate-pulse rounded-xl bg-gray-100/50" aria-hidden="true" />}>
+          <Suspense fallback={<div className="mb-6 min-h-[200px] rounded-xl bg-gray-100/50" aria-hidden="true" />}>
             <div className="mb-6">
               <ExamPrepDashboard
                 examId={examId}
@@ -271,45 +295,29 @@ const OverviewTab = ({
                 timeRequiredFallback={timeRequiredFallback}
               />
             </div>
-          </>
+          </Suspense>
         </ClientOnly>
       )}
 
-      {/* Syllabus Tracker (Subject → Unit → Chapter) - sliders + checklists, instant updates */}
+      {/* Syllabus Tracker - lazy loaded */}
       {entityType === "exam" && examId && examSlug && subjectsWithUnits && subjectsWithUnits.length > 0 && (
         <div className="mb-8">
-          <SyllabusTrackerSection
-            examId={examId}
-            subjectsWithUnits={subjectsWithUnits}
-            examSlug={examSlug}
-            examName={entityName || "Exam"}
-          />
+          <Suspense fallback={<div className="min-h-[120px] rounded-xl bg-gray-100/50" aria-hidden="true" />}>
+            <SyllabusTrackerSection
+              examId={examId}
+              subjectsWithUnits={subjectsWithUnits}
+              examSlug={examSlug}
+              examName={entityName || "Exam"}
+            />
+          </Suspense>
         </div>
       )}
-
-      <div
-        className="prose prose-sm sm:prose max-w-none prose-headings:text-gray-900 prose-headings:font-bold prose-p:text-gray-700 prose-p:leading-normal prose-a:text-indigo-600 prose-a:no-underline hover:prose-a:underline prose-strong:text-gray-900 prose-code:text-indigo-700 prose-pre:bg-gray-50"
-        suppressHydrationWarning
-      >
-        {content ? (
-          <RichContent html={content} />
-        ) : (
-          <Card variant="standard" className="p-4 sm:p-6 text-center">
-            <p className="text-gray-600 font-medium mb-2">
-              No content available for this {entityType}.
-            </p>
-            <p className="text-sm text-gray-500">
-              Content can be added from the admin panel.
-            </p>
-          </Card>
-        )}
-      </div>
 
       {/* Subjects and Units Grid - only for exam type */}
       {entityType === "exam" &&
         subjectsWithUnits &&
         subjectsWithUnits.length > 0 && (
-          <div className="mt-4">
+          <div className="mt-4 lcp-below-fold">
             <div className="flex items-center gap-2 mb-3">
               <div className="h-0.5 w-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full"></div>
               <h3 className="text-xl sm:text-2xl font-bold text-gray-900">
@@ -410,7 +418,7 @@ const OverviewTab = ({
         )}
 
 
-      {/* Deep Unit & Chapter Syllabus Tracker - expandable units with chapters, one per subject */}
+      {/* Deep Unit & Chapter Syllabus Tracker - lazy loaded */}
       {entityType === "exam" &&
         examSlug &&
         subjectsWithUnits &&
@@ -425,14 +433,15 @@ const OverviewTab = ({
             {subjectsWithUnits
               .filter((subject) => subject.units && subject.units.length > 0)
               .map((subject) => (
-                <DeepUnitChapterTracker
-                  key={subject._id}
-                  units={subject.units}
-                  examSlug={examSlug}
-                  subjectSlug={subject.slug || createSlug(subject.name)}
-                  examName={entityName || "Exam"}
-                  subjectName={subject.name}
-                />
+                <Suspense key={subject._id} fallback={<div className="min-h-[80px] rounded-lg bg-gray-100/50" />}>
+                  <DeepUnitChapterTracker
+                    units={subject.units}
+                    examSlug={examSlug}
+                    subjectSlug={subject.slug || createSlug(subject.name)}
+                    examName={entityName || "Exam"}
+                    subjectName={subject.name}
+                  />
+                </Suspense>
               ))}
           </div>
         )}
@@ -572,10 +581,10 @@ const OverviewTab = ({
           </div>
 
           {/* SubTopics Grid - for topic type */}
-          <div className="mt-4">
+          <div className="mt-4" role="region" aria-labelledby="subtopics-heading">
             <div className="flex items-center gap-2 mb-3">
-              <div className="h-0.5 w-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full"></div>
-              <h3 className="text-base sm:text-lg font-bold text-gray-900">
+              <div className="h-0.5 w-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full" aria-hidden />
+              <h3 id="subtopics-heading" className="text-base sm:text-lg font-bold text-gray-900">
                 Subtopics
               </h3>
             </div>
@@ -611,6 +620,7 @@ const OverviewTab = ({
                               fill="none"
                               stroke="currentColor"
                               viewBox="0 0 24 24"
+                              aria-hidden
                             >
                               <path
                                 strokeLinecap="round"
@@ -631,6 +641,7 @@ const OverviewTab = ({
                     key={subTopic._id || index}
                     href={subTopicUrl}
                     className="block"
+                    aria-label={`Subtopic: ${subTopic.name}`}
                   >
                     {SubTopicCard}
                   </Link>
@@ -695,7 +706,7 @@ const OverviewTab = ({
               );
 
               return chapterUrl ? (
-                <Link key={chapter._id || index} href={chapterUrl}>
+                <Link key={chapter._id || index} href={chapterUrl} aria-label={`Chapter: ${chapter.name}`}>
                   {ChapterCard}
                 </Link>
               ) : (
@@ -853,6 +864,7 @@ const OverviewTab = ({
                               fill="none"
                               stroke="currentColor"
                               viewBox="0 0 24 24"
+                              aria-hidden
                             >
                               <path
                                 strokeLinecap="round"

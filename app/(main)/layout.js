@@ -13,7 +13,7 @@ export const metadata = generateSEO(
   },
   {
     type: "homepage",
-    name: "TestPrepKart",
+    name: "Testprepkart",
     path: "/",
   }
 );

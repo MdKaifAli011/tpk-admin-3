@@ -1,6 +1,5 @@
 import React from "react";
 import { notFound } from "next/navigation";
-import { FaFileAlt } from "react-icons/fa";
 import TabsClient from "../../../../../components/TabsClient";
 import NavigationClient from "../../../../../components/NavigationClient";
 import ChaptersSectionClient from "../../../../../components/ChaptersSectionClient";
@@ -8,7 +7,6 @@ import UnitProgressClient from "../../../../../components/UnitProgressClient";
 import ProgressTracker from "../../../../../components/ProgressTracker";
 import ConditionalTestListTable from "../../../../../components/ConditionalTestListTable";
 import VisitTracker from "../../../../../components/VisitTracker";
-import { ERROR_MESSAGES } from "@/constants";
 import {
   fetchExamById,
   fetchSubjectsByExam,
@@ -32,6 +30,7 @@ import {
 import { generateTabAwareMetadata, extractSearchParams } from "@/utils/tabSeo";
 import { logger } from "@/utils/logger";
 import OverviewCommentSection from "@/app/(main)/components/OverviewCommentSection";
+import AssignedBlogsSection from "@/app/(main)/components/AssignedBlogsSection";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
@@ -41,7 +40,13 @@ export const revalidate = 0;
  * This metadata will override layout metadata when searchParams are present
  */
 export async function generateMetadata({ params, searchParams }) {
-  const { exam: examSlug, subject: subjectSlug, unit: unitSlug, chapter: chapterSlug, topic: topicSlug } = await params;
+  const {
+    exam: examSlug,
+    subject: subjectSlug,
+    unit: unitSlug,
+    chapter: chapterSlug,
+    topic: topicSlug,
+  } = await params;
 
   // Pages receive searchParams (Promise in Next.js 15) – resolve before use
   const resolvedSearchParams = await extractSearchParams(searchParams);
@@ -51,30 +56,47 @@ export async function generateMetadata({ params, searchParams }) {
   }
 
   try {
-    const { fetchExamById, fetchSubjectById, fetchUnitById, fetchChapterById, fetchTopicById, fetchTopicDetailsById, fetchSubjectsByExam, fetchUnitsBySubject, fetchChaptersByUnit, fetchTopicsByChapter, findByIdOrSlug, createSlug } = await import("../../../../../lib/api");
+    const {
+      fetchExamById,
+      fetchSubjectById,
+      fetchUnitById,
+      fetchChapterById,
+      fetchTopicById,
+      fetchTopicDetailsById,
+      fetchSubjectsByExam,
+      fetchUnitsBySubject,
+      fetchChaptersByUnit,
+      fetchTopicsByChapter,
+      findByIdOrSlug,
+      createSlug,
+    } = await import("../../../../../lib/api");
 
     const exam = await fetchExamById(examSlug).catch(() => null);
-    if (!exam) return { title: `${topicSlug || "Topic"} | TestPrepKart` };
+    if (!exam) return { title: `${topicSlug || "Topic"} | Testprepkart` };
 
     const subjects = await fetchSubjectsByExam(exam._id).catch(() => []);
     const subject = findByIdOrSlug(subjects, subjectSlug);
-    if (!subject) return { title: `${topicSlug || "Topic"} | TestPrepKart` };
+    if (!subject) return { title: `${topicSlug || "Topic"} | Testprepkart` };
 
-    const units = await fetchUnitsBySubject(subject._id, exam._id).catch(() => []);
+    const units = await fetchUnitsBySubject(subject._id, exam._id).catch(
+      () => [],
+    );
     const unit = findByIdOrSlug(units, unitSlug);
-    if (!unit) return { title: `${topicSlug || "Topic"} | TestPrepKart` };
+    if (!unit) return { title: `${topicSlug || "Topic"} | Testprepkart` };
 
     const chapters = await fetchChaptersByUnit(unit._id).catch(() => []);
     const chapter = findByIdOrSlug(chapters, chapterSlug);
-    if (!chapter) return { title: `${topicSlug || "Topic"} | TestPrepKart` };
+    if (!chapter) return { title: `${topicSlug || "Topic"} | Testprepkart` };
 
     const topics = await fetchTopicsByChapter(chapter._id).catch(() => []);
     const topic = findByIdOrSlug(topics, topicSlug);
-    if (!topic) return { title: `${topicSlug || "Topic"} | TestPrepKart` };
+    if (!topic) return { title: `${topicSlug || "Topic"} | Testprepkart` };
 
     const fullTopicData = await fetchTopicById(topic._id).catch(() => null);
     const finalTopic = fullTopicData || topic;
-    const topicDetails = await fetchTopicDetailsById(finalTopic._id).catch(() => null);
+    const topicDetails = await fetchTopicDetailsById(finalTopic._id).catch(
+      () => null,
+    );
     const path = `/${createSlug(exam.name)}/${createSlug(subject.name)}/${createSlug(unit.name)}/${createSlug(chapter.name)}/${createSlug(finalTopic.name)}`;
 
     return await generateTabAwareMetadata(
@@ -90,11 +112,11 @@ export async function generateMetadata({ params, searchParams }) {
           chapter: chapter.name,
           topic: finalTopic.name,
         },
-      }
+      },
     );
   } catch (error) {
     logger.warn("Error generating topic page metadata:", error);
-    return { title: `${topicSlug || "Topic"} | TestPrepKart` };
+    return { title: `${topicSlug || "Topic"} | Testprepkart` };
   }
 }
 
@@ -182,8 +204,8 @@ const TopicPage = async ({ params }) => {
     fetchedSubTopics.map((subTopic) =>
       fetchSubTopicDetailsById(subTopic._id)
         .then((details) => ({ content: details?.content || "" }))
-        .catch(() => ({ content: "" }))
-    )
+        .catch(() => ({ content: "" })),
+    ),
   );
 
   // Find current topic index for navigation
@@ -191,7 +213,7 @@ const TopicPage = async ({ params }) => {
     (t) =>
       t._id === foundTopic._id ||
       createSlug(t.name) === topicSlug ||
-      t.name?.toLowerCase() === topicSlug.toLowerCase()
+      t.name?.toLowerCase() === topicSlug.toLowerCase(),
   );
 
   const examSlug = createSlug(fetchedExam.name);
@@ -234,11 +256,11 @@ const TopicPage = async ({ params }) => {
 
   return (
     <div className="space-y-4">
-      <VisitTracker 
-        level="topic" 
-        itemId={topic._id} 
-        itemSlug={topicSlugValue} 
-        itemName={topic.name} 
+      <VisitTracker
+        level="topic"
+        itemId={topic._id}
+        itemSlug={topicSlugValue}
+        itemName={topic.name}
       />
       <ProgressTracker
         unitId={unit._id}
@@ -249,57 +271,31 @@ const TopicPage = async ({ params }) => {
       <div className="space-y-4">
         {/* Premium Educational Header */}
         <section
-          className="
-    rounded-xl
-    p-3 sm:p-4
-    bg-gradient-to-br from-indigo-50 via-white to-purple-50
-    border border-indigo-100/60
-    shadow-[0_2px_12px_rgba(120,90,200,0.08)]
-  "
+          className="hero-section rounded-xl p-3 sm:p-4 bg-gradient-to-br from-indigo-50 via-white to-purple-50 border border-indigo-100/60 shadow-[0_2px_12px_rgba(120,90,200,0.08)]"
+          aria-labelledby="topic-page-title"
         >
           <div className="flex items-start sm:items-center justify-between w-full gap-3 sm:gap-4 min-w-0">
-
-            {/* LEFT — Topic Title + Breadcrumb */}
             <div className="flex flex-col min-w-0 flex-1 leading-tight">
-
-              {/* Topic Name */}
               <h1
-                className="
-          text-base sm:text-lg md:text-xl font-bold text-indigo-900
-          truncate
-          w-full
-        "
+                id="topic-page-title"
+                className="text-base sm:text-lg md:text-xl font-bold text-indigo-900 truncate w-full"
                 title={topic.name}
               >
                 {topic.name}
               </h1>
-
-              {/* Breadcrumb */}
-              <p
-                className="
-          text-[10px] sm:text-xs text-gray-600 mt-0.5
-          truncate
-          w-full
-        "
-                title={`${fetchedExam.name} > ${subject.name} > ${unit.name} > ${chapter.name} > ${topic.name}`}
-              >
+              <p className="text-[10px] sm:text-xs text-gray-600 mt-0.5 truncate w-full" title={`${fetchedExam.name} > ${subject.name} > ${unit.name} > ${chapter.name} > ${topic.name}`}>
                 {fetchedExam.name} &gt; {subject.name} &gt; {unit.name} &gt; {chapter.name} &gt; {topic.name}
               </p>
             </div>
-
-            {/* RIGHT — Unit Progress */}
-            <div className="shrink-0 ml-auto">
+          <div className="hero-right-slot shrink-0 ml-auto flex flex-col justify-center min-h-[44px]">
               <UnitProgressClient
                 unitId={unit._id}
                 unitName={unit.name}
                 initialProgress={0}
               />
             </div>
-
           </div>
         </section>
-
-
 
         {/* Tabs */}
         <TabsClient
@@ -323,12 +319,14 @@ const TopicPage = async ({ params }) => {
           topicSlug={topicSlugValue}
         />
         {/* Navigation */}
-        <NavigationClient
-          backUrl={`/${examSlug}/${subjectSlugValue}/${unitSlugValue}/${chapterSlugValue}`}
-          backLabel={`Back to ${chapter.name}`}
-          prevNav={prevNav}
-          nextNav={nextNav}
-        />
+        <nav aria-label="Previous and next topic navigation">
+          <NavigationClient
+            backUrl={`/${examSlug}/${subjectSlugValue}/${unitSlugValue}/${chapterSlugValue}`}
+            backLabel={`Back to ${chapter.name}`}
+            prevNav={prevNav}
+            nextNav={nextNav}
+          />
+        </nav>
 
         {/* Test List Table */}
         <ConditionalTestListTable
@@ -353,6 +351,15 @@ const TopicPage = async ({ params }) => {
           practiceDisabled={subject.practiceDisabled || false}
         />
 
+        {/* Blog Section - assigned to this topic */}
+        <AssignedBlogsSection
+          examSlug={examSlug}
+          examId={fetchedExam._id}
+          assignmentLevel="topic"
+          assignmentTopicId={topic._id}
+        />
+
+        {/* Overview Comment Section */}
         <OverviewCommentSection entityType="topic" entityId={topic._id} />
       </div>
     </div>

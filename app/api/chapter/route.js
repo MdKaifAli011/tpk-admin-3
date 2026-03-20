@@ -13,14 +13,19 @@ import { requireAuth, requireAction } from "@/middleware/authMiddleware";
 // ---------- GET ALL CHAPTERS ----------
 export async function GET(request) {
   try {
-    // Check authentication (all authenticated users can view)
-    const authCheck = await requireAuth(request);
-    if (authCheck.error) {
-      return NextResponse.json(authCheck, { status: authCheck.status || 401 });
+    const { searchParams } = new URL(request.url);
+    const statusFilterParam = searchParams.get("status") || STATUS.ACTIVE;
+    const statusFilter = statusFilterParam.toLowerCase();
+
+    // Allow public access for active chapters only (for frontend self-study pages)
+    if (statusFilter !== STATUS.ACTIVE) {
+      const authCheck = await requireAuth(request);
+      if (authCheck.error) {
+        return NextResponse.json(authCheck, { status: authCheck.status || 401 });
+      }
     }
 
     await connectDB();
-    const { searchParams } = new URL(request.url);
 
     // Parse pagination
     const { page, limit, skip } = parsePagination(searchParams);
@@ -29,10 +34,9 @@ export async function GET(request) {
     const unitId = searchParams.get("unitId");
     const subjectId = searchParams.get("subjectId");
     const examId = searchParams.get("examId");
-    const statusFilterParam = searchParams.get("status") || STATUS.ACTIVE;
-    const statusFilter = statusFilterParam.toLowerCase();
 
     const metaStatus = searchParams.get("metaStatus"); // filled, notFilled
+    const search = searchParams.get("search")?.trim();
 
     // Build query with case-insensitive status matching
     const query = {};
@@ -47,6 +51,10 @@ export async function GET(request) {
     }
     if (statusFilter !== "all") {
       query.status = { $regex: new RegExp(`^${statusFilter}$`, "i") };
+    }
+    if (search) {
+      const escapeRegex = (s) => String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      query.name = { $regex: new RegExp(escapeRegex(search), "i") };
     }
 
     // Handle Metadata filtering
@@ -88,7 +96,7 @@ export async function GET(request) {
     const chapterDetails = await ChapterDetails.find({
       chapterId: { $in: chapterIds },
     })
-      .select("chapterId content title metaDescription keywords createdAt updatedAt")
+      .select("chapterId content title metaDescription keywords status createdAt updatedAt")
       .lean();
 
     // Create a map of chapterId to content info
@@ -100,6 +108,7 @@ export async function GET(request) {
         hasContent,
         hasMeta,
         contentDate: hasContent ? (detail.updatedAt || detail.createdAt) : null,
+        detailsStatus: detail.status || "draft",
       });
     });
 
@@ -109,6 +118,7 @@ export async function GET(request) {
         hasContent: false,
         hasMeta: false,
         contentDate: null,
+        detailsStatus: "draft",
       };
       return {
         ...chapter,
@@ -116,9 +126,20 @@ export async function GET(request) {
       };
     });
 
-    return NextResponse.json(
-      createPaginationResponse(chaptersWithContent, total, page, limit)
-    );
+    const response = createPaginationResponse(chaptersWithContent, total, page, limit);
+    if (statusFilter === "all") {
+      const countsByUnit = await Chapter.aggregate([
+        { $match: query },
+        { $group: { _id: "$unitId", count: { $sum: 1 } } },
+      ]).exec();
+      const map = {};
+      countsByUnit.forEach(({ _id, count }) => {
+        if (_id) map[_id.toString()] = count;
+      });
+      response.countsByUnit = map;
+    }
+
+    return NextResponse.json(response);
   } catch (error) {
     return handleApiError(error, ERROR_MESSAGES.FETCH_FAILED);
   }
@@ -133,9 +154,8 @@ export async function POST(request) {
       return NextResponse.json(authCheck, { status: authCheck.status || 403 });
     }
 
-    await connectDB();
     const body = await request.json();
-    const { name, examId, subjectId, unitId, orderNumber, weightage, time, questions, status } = body;
+    const { name, examId, subjectId, unitId, orderNumber, weightage, time, questions, status, upsert } = body;
 
     // Validation
     if (!name || !examId || !subjectId || !unitId) {
@@ -171,6 +191,30 @@ export async function POST(request) {
     });
 
     if (existingChapter) {
+      if (upsert === true) {
+        const updateData = { name: chapterName };
+        if (orderNumber !== undefined) updateData.orderNumber = orderNumber;
+        if (weightage !== undefined) updateData.weightage = weightage;
+        if (time !== undefined) updateData.time = time;
+        if (questions !== undefined) updateData.questions = questions;
+        if (status) updateData.status = status;
+        const updated = await Chapter.findByIdAndUpdate(
+          existingChapter._id,
+          { $set: updateData },
+          { new: true, runValidators: true }
+        )
+          .populate("examId", "name status")
+          .populate("subjectId", "name")
+          .populate("unitId", "name orderNumber")
+          .lean();
+        return NextResponse.json({
+          success: true,
+          message: "Chapter updated successfully",
+          data: updated,
+          updated: true,
+          timestamp: new Date().toISOString(),
+        }, { status: 200 });
+      }
       return errorResponse("Chapter name already exists in this unit", 409);
     }
 

@@ -52,6 +52,7 @@ const ChaptersListClient = ({
             stroke="currentColor"
             viewBox="0 0 24 24"
             xmlns="http://www.w3.org/2000/svg"
+            aria-hidden
           >
             <path
               strokeLinecap="round"
@@ -64,7 +65,7 @@ const ChaptersListClient = ({
         <p className="text-sm font-semibold text-gray-900 sm:text-base mb-1">
           No chapters available
         </p>
-        <p className="text-xs text-gray-500 sm:text-sm">
+        <p className="text-xs text-gray-600 sm:text-sm">
           Chapters will appear here once they are added to this unit.
         </p>
       </div>

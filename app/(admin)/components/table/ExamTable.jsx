@@ -32,7 +32,7 @@ const ExamTable = ({ exams, onEdit, onDelete, onView, onToggleStatus, onManageIn
     e.dataTransfer.effectAllowed = "move";
     e.dataTransfer.setData("text/plain", String(index));
     e.dataTransfer.setData("application/json", JSON.stringify({ index }));
-    try { e.target.classList.add("opacity-50", "ring-2", "ring-blue-400"); } catch (_) {}
+    try { e.target.classList.add("opacity-50", "ring-2", "ring-blue-400"); } catch (_) { }
   };
 
   const handleDragOver = (e, index) => {
@@ -57,7 +57,7 @@ const ExamTable = ({ exams, onEdit, onDelete, onView, onToggleStatus, onManageIn
     }
     setDragOverIndex(null);
     setDraggedIndex(null);
-    try { e.target.closest("tr")?.classList.remove("opacity-50", "ring-2", "ring-blue-400"); } catch (_) {}
+    try { e.target.closest("tr")?.classList.remove("opacity-50", "ring-2", "ring-blue-400"); } catch (_) { }
     const newOrder = [...displayExams];
     const [removed] = newOrder.splice(fromIndex, 1);
     newOrder.splice(toIndex, 0, removed);
@@ -67,7 +67,7 @@ const ExamTable = ({ exams, onEdit, onDelete, onView, onToggleStatus, onManageIn
   const handleDragEnd = (e) => {
     setDraggedIndex(null);
     setDragOverIndex(null);
-    try { e.target.classList.remove("opacity-50", "ring-2", "ring-blue-400"); } catch (_) {}
+    try { e.target.classList.remove("opacity-50", "ring-2", "ring-blue-400"); } catch (_) { }
   };
 
   // Use embedded visitStats (cron 3–4am); if missing show "—"
@@ -115,7 +115,7 @@ const ExamTable = ({ exams, onEdit, onDelete, onView, onToggleStatus, onManageIn
       {/* Desktop Table View */}
       <div className="hidden md:block overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200 table-fixed">
-          <thead className="bg-gray-50">
+          <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
               {canDrag && (
                 <th className="px-1 py-1 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-10">
@@ -158,9 +158,8 @@ const ExamTable = ({ exams, onEdit, onDelete, onView, onToggleStatus, onManageIn
                 onDragLeave={handleDragLeave}
                 onDrop={(e) => handleDrop(e, index)}
                 onDragEnd={handleDragEnd}
-                className={`hover:bg-gray-50 transition-colors ${exam.status === "inactive" ? "opacity-60" : ""} ${
-                  draggedIndex === index ? "opacity-50 ring-2 ring-blue-400" : ""
-                } ${dragOverIndex === index && draggedIndex !== index ? "bg-blue-50 border-y-2 border-blue-200" : ""}`}
+                className={`hover:bg-gray-50 transition-colors ${exam.status === "inactive" ? "opacity-60" : ""} ${draggedIndex === index ? "opacity-50 ring-2 ring-blue-400" : ""
+                  } ${dragOverIndex === index && draggedIndex !== index ? "bg-blue-50 border-y-2 border-blue-200" : ""}`}
               >
                 {canDrag && (
                   <td
@@ -180,7 +179,9 @@ const ExamTable = ({ exams, onEdit, onDelete, onView, onToggleStatus, onManageIn
                       onClick={() => handleExamClick(exam)}
                       className={`text-sm font-medium truncate cursor-pointer hover:text-blue-600 transition-colors ${exam.status === "inactive"
                         ? "text-gray-500 line-through"
-                        : "text-gray-900"
+                        : exam.contentInfo?.detailsStatus === "publish"
+                          ? "text-green-700 font-semibold"
+                          : "text-gray-900"
                         }`}
                     >
                       {exam.name}
@@ -356,9 +357,8 @@ const ExamTable = ({ exams, onEdit, onDelete, onView, onToggleStatus, onManageIn
             onDragLeave={handleDragLeave}
             onDrop={(e) => handleDrop(e, index)}
             onDragEnd={handleDragEnd}
-            className={`p-1.5 hover:bg-gray-50 transition-colors ${exam.status === "inactive" ? "opacity-60" : ""} ${
-              draggedIndex === index ? "opacity-50 ring-2 ring-blue-400 rounded-lg" : ""
-            } ${dragOverIndex === index && draggedIndex !== index ? "bg-blue-50 border-2 border-blue-200 rounded-lg" : ""}`}
+            className={`p-1.5 hover:bg-gray-50 transition-colors ${exam.status === "inactive" ? "opacity-60" : ""} ${draggedIndex === index ? "opacity-50 ring-2 ring-blue-400 rounded-lg" : ""
+              } ${dragOverIndex === index && draggedIndex !== index ? "bg-blue-50 border-2 border-blue-200 rounded-lg" : ""}`}
           >
             <div className="flex items-start justify-between">
               {canDrag && (
@@ -376,7 +376,7 @@ const ExamTable = ({ exams, onEdit, onDelete, onView, onToggleStatus, onManageIn
                   <div>
                     <h3
                       onClick={() => handleExamClick(exam)}
-                      className={`text-sm font-semibold cursor-pointer hover:text-blue-600 transition-colors ${exam.status === "inactive" ? "text-gray-500 line-through" : "text-gray-900"
+                      className={`text-sm font-semibold cursor-pointer hover:text-blue-600 transition-colors ${exam.status === "inactive" ? "text-gray-500 line-through" : exam.contentInfo?.detailsStatus === "publish" ? "text-green-700" : "text-gray-900"
                         }`}
                     >
                       {exam.name}

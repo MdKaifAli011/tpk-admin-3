@@ -14,24 +14,31 @@ import { requireAuth, requireAction } from "@/middleware/authMiddleware";
 // ---------- GET ALL TOPICS ----------
 export async function GET(request) {
   try {
-    // Check authentication (all authenticated users can view)
-    const authCheck = await requireAuth(request);
-    if (authCheck.error) {
-      return NextResponse.json(authCheck, { status: authCheck.status || 401 });
+    const { searchParams } = new URL(request.url);
+    const statusFilterParam = searchParams.get("status") || STATUS.ACTIVE;
+    const statusFilter = statusFilterParam.toLowerCase();
+
+    // Allow public access for active topics only (for frontend self-study pages)
+    if (statusFilter !== STATUS.ACTIVE) {
+      const authCheck = await requireAuth(request);
+      if (authCheck.error) {
+        return NextResponse.json(authCheck, { status: authCheck.status || 401 });
+      }
     }
 
     await connectDB();
-    const { searchParams } = new URL(request.url);
 
     // Parse pagination
     const { page, limit, skip } = parsePagination(searchParams);
 
     // Get filters (normalize status to lowercase for case-insensitive matching)
     const chapterId = searchParams.get("chapterId");
-    const statusFilterParam = searchParams.get("status") || STATUS.ACTIVE;
-    const statusFilter = statusFilterParam.toLowerCase();
+    const examId = searchParams.get("examId");
+    const subjectId = searchParams.get("subjectId");
+    const unitId = searchParams.get("unitId");
 
     const metaStatus = searchParams.get("metaStatus"); // filled, notFilled
+    const search = searchParams.get("search")?.trim();
 
     // Build query with case-insensitive status matching
     const filter = {};
@@ -41,8 +48,30 @@ export async function GET(request) {
       }
       filter.chapterId = chapterId;
     }
+    if (examId) {
+      if (!mongoose.Types.ObjectId.isValid(examId)) {
+        return errorResponse("Invalid examId", 400);
+      }
+      filter.examId = examId;
+    }
+    if (subjectId) {
+      if (!mongoose.Types.ObjectId.isValid(subjectId)) {
+        return errorResponse("Invalid subjectId", 400);
+      }
+      filter.subjectId = subjectId;
+    }
+    if (unitId) {
+      if (!mongoose.Types.ObjectId.isValid(unitId)) {
+        return errorResponse("Invalid unitId", 400);
+      }
+      filter.unitId = unitId;
+    }
     if (statusFilter !== "all") {
       filter.status = { $regex: new RegExp(`^${statusFilter}$`, "i") };
+    }
+    if (search) {
+      const escapeRegex = (s) => String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      filter.name = { $regex: new RegExp(escapeRegex(search), "i") };
     }
 
     // Handle Metadata filtering
@@ -85,7 +114,7 @@ export async function GET(request) {
     const topicDetails = await TopicDetails.find({
       topicId: { $in: topicIds },
     })
-      .select("topicId content title metaDescription keywords createdAt updatedAt")
+      .select("topicId content title metaDescription keywords status createdAt updatedAt")
       .lean();
 
     // Create a map of topicId to content info
@@ -97,6 +126,7 @@ export async function GET(request) {
         hasContent,
         hasMeta,
         contentDate: hasContent ? (detail.updatedAt || detail.createdAt) : null,
+        detailsStatus: detail.status || "draft",
       });
     });
 
@@ -106,6 +136,7 @@ export async function GET(request) {
         hasContent: false,
         hasMeta: false,
         contentDate: null,
+        detailsStatus: "draft",
       };
       return {
         ...topic,
@@ -113,9 +144,20 @@ export async function GET(request) {
       };
     });
 
-    return NextResponse.json(
-      createPaginationResponse(topicsWithContent, total, page, limit)
-    );
+    const response = createPaginationResponse(topicsWithContent, total, page, limit);
+    if (statusFilter === "all") {
+      const countsByChapter = await Topic.aggregate([
+        { $match: filter },
+        { $group: { _id: "$chapterId", count: { $sum: 1 } } },
+      ]).exec();
+      const map = {};
+      countsByChapter.forEach(({ _id, count }) => {
+        if (_id) map[_id.toString()] = count;
+      });
+      response.countsByChapter = map;
+    }
+
+    return NextResponse.json(response);
   } catch (error) {
     return handleApiError(error, ERROR_MESSAGES.FETCH_FAILED);
   }
@@ -135,6 +177,7 @@ export async function POST(request) {
 
     // Normalize to array to support both single and multiple creations
     const items = Array.isArray(body) ? body : [body];
+    const upsertFlag = items[0]?.upsert === true;
 
     // Basic shape validation
     for (const item of items) {
@@ -208,6 +251,28 @@ export async function POST(request) {
         chapterId,
       });
       if (existingTopic) {
+        if (upsertFlag) {
+          const updateData = { name: topicName };
+          if (item.orderNumber !== undefined) updateData.orderNumber = item.orderNumber;
+          if (item.status) updateData.status = item.status;
+          const updated = await Topic.findByIdAndUpdate(
+            existingTopic._id,
+            { $set: updateData },
+            { new: true, runValidators: true }
+          )
+            .populate("examId", "name status")
+            .populate("subjectId", "name")
+            .populate("unitId", "name orderNumber")
+            .populate("chapterId", "name orderNumber")
+            .lean();
+          return NextResponse.json({
+            success: true,
+            message: "Topic updated successfully",
+            data: updated,
+            updated: true,
+            timestamp: new Date().toISOString(),
+          }, { status: 200 });
+        }
         return NextResponse.json(
           {
             success: false,

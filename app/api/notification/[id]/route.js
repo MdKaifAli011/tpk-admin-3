@@ -116,11 +116,13 @@ export async function PUT(request, { params }) {
       return notFoundResponse("Notification not found");
     }
 
-    const allowed = ["title", "message", "stripMessage", "link", "linkLabel", "slug", "status", "iconType", "orderNumber", "entityType", "entityId"];
+    const allowed = ["title", "message", "stripMessage", "link", "linkLabel", "slug", "status", "iconType", "orderNumber", "entityType", "entityId", "endDate"];
     for (const key of allowed) {
       if (body[key] !== undefined) {
         if (key === "entityId") {
           notification.entityId = body[key] == null || body[key] === "" ? null : new mongoose.Types.ObjectId(body[key]);
+        } else if (key === "endDate") {
+          notification.endDate = body[key] != null && body[key] !== "" ? new Date(body[key]) : null;
         } else {
           notification[key] = body[key];
         }

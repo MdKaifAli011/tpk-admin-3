@@ -18,19 +18,37 @@ import {
   FaCheck,
 } from "react-icons/fa";
 import { ToastContainer, useToast } from "../ui/Toast";
+import StatusCascadeModal from "../ui/StatusCascadeModal";
 import api from "@/lib/api";
 import { getExamListCache, setExamListCache } from "@/lib/examListCache";
+import { invalidateListCachesFrom } from "@/lib/listCacheInvalidation";
 import { usePermissions, getPermissionMessage } from "../../hooks/usePermissions";
 import { useRouter } from "next/navigation";
 import { IoFilterOutline } from "react-icons/io5";
+import { useFilterPersistence } from "../../hooks/useFilterPersistence";
+import { useDebouncedSearchQuery } from "../../hooks/useDebouncedSearchQuery";
+import PaginationBar from "../ui/PaginationBar";
 
 const ExamManagement = () => {
   const { canCreate, canEdit, canDelete, canReorder, role } = usePermissions();
   const router = useRouter();
+  const [filterState, setFilterState] = useFilterPersistence("exam", {
+    metaFilter: "all",
+    searchQuery: "",
+  });
+  const { page, limit, metaFilter, searchQuery } = filterState;
+  const [searchInput, setSearchInput] = useDebouncedSearchQuery(searchQuery, setFilterState);
+
   const [showAddForm, setShowAddForm] = useState(false);
   const [isDataLoading, setIsDataLoading] = useState(false);
   const [isFormLoading, setIsFormLoading] = useState(false);
   const [exams, setExams] = useState([]);
+  const [pagination, setPagination] = useState({
+    total: 0,
+    totalPages: 0,
+    hasNextPage: false,
+    hasPrevPage: false,
+  });
   const [error, setError] = useState(null);
   const [editingExam, setEditingExam] = useState(null);
   const [formData, setFormData] = useState({
@@ -43,23 +61,39 @@ const ExamManagement = () => {
   const [formError, setFormError] = useState(null);
   const { toasts, removeToast, success, error: showError } = useToast();
   const isFetchingRef = useRef(false);
-  const [metaFilter, setMetaFilter] = useState("all"); // all, filled, notFilled
-  const [searchQuery, setSearchQuery] = useState("");
   const [isReorderMode, setIsReorderMode] = useState(false);
   const [reorderDraft, setReorderDraft] = useState(null);
+  const [cascadeModalOpen, setCascadeModalOpen] = useState(false);
+  const [cascadeItem, setCascadeItem] = useState(null);
 
-  // Fetch exams from API (and update cache)
+  // Fetch exams from API (with pagination; no list cache when paginated)
   const fetchExams = React.useCallback(async () => {
     if (isFetchingRef.current) return;
     isFetchingRef.current = true;
     try {
       setIsDataLoading(true);
       setError(null);
-      const response = await api.get(`/exam?status=all&metaStatus=${metaFilter}`);
+      const params = new URLSearchParams({
+        status: "all",
+        metaStatus: metaFilter,
+        page: String(page),
+        limit: String(limit),
+      });
+      if (searchQuery.trim()) params.set("search", searchQuery.trim());
+      const response = await api.get(`/exam?${params.toString()}`);
 
       if (response.data?.success) {
         const data = response.data.data || [];
         setExams(data);
+        const pag = response.data?.pagination;
+        if (pag) {
+          setPagination({
+            total: pag.total ?? 0,
+            totalPages: pag.totalPages ?? 0,
+            hasNextPage: !!pag.hasNextPage,
+            hasPrevPage: !!pag.hasPrevPage,
+          });
+        }
         setExamListCache(data, metaFilter);
       } else {
         setError(response.data?.message || "Failed to fetch exams");
@@ -74,29 +108,15 @@ const ExamManagement = () => {
       setIsDataLoading(false);
       isFetchingRef.current = false;
     }
-  }, [metaFilter]);
+  }, [metaFilter, page, limit, searchQuery]);
 
-  // Load exams: use cache when returning from detail (no API call), otherwise fetch once
+  // Load exams when filter or pagination changes
   useEffect(() => {
-    const cached = getExamListCache(metaFilter);
-    if (cached != null && Array.isArray(cached) && cached.length >= 0) {
-      setExams(cached);
-      setIsDataLoading(false);
-      setError(null);
-      return;
-    }
     fetchExams();
-  }, [metaFilter, fetchExams]);
+  }, [fetchExams]);
 
-  // Client-side filtering for search
-  const filteredExams = useMemo(() => {
-    return exams.filter((exam) => {
-      const matchesSearch = exam.name
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase());
-      return matchesSearch;
-    });
-  }, [exams, searchQuery]);
+  // Search is done server-side; no client-side filter needed
+  const filteredExams = exams;
 
   // Set orderNumber when editing (not needed for adding since it's auto-generated)
   useEffect(() => {
@@ -138,9 +158,8 @@ const ExamManagement = () => {
       const response = await api.post("/exam", payload);
 
       if (response.data.success) {
-        const newList = [...exams, response.data.data];
-        setExams(newList);
-        setExamListCache(newList, metaFilter);
+        invalidateListCachesFrom("exam");
+        await fetchExams();
         success(`Exam "${formData.name}" added successfully!`);
         // Reset form
         setFormData({
@@ -252,9 +271,8 @@ const ExamManagement = () => {
       const response = await api.put(`/exam/${editingExam._id}`, payload);
 
       if (response.data.success) {
-        const newList = exams.map((e) => (e._id === editingExam._id ? response.data.data : e));
-        setExams(newList);
-        setExamListCache(newList, metaFilter);
+        invalidateListCachesFrom("exam");
+        await fetchExams();
         success("Exam updated successfully!");
         handleCancelForm();
       } else {
@@ -288,9 +306,8 @@ const ExamManagement = () => {
         const response = await api.delete(`/exam/${exam._id}`);
 
         if (response.data.success) {
-          const newList = exams.filter((e) => e._id !== exam._id);
-          setExams(newList);
-          setExamListCache(newList, metaFilter);
+          invalidateListCachesFrom("exam");
+          await fetchExams();
           success(`Exam "${exam.name}" deleted successfully!`);
         } else {
           setError(response.data.message || "Failed to delete exam");
@@ -343,6 +360,7 @@ const ExamManagement = () => {
       setIsFormLoading(true);
       setError(null);
       await saveReorderForExams(reorderDraft);
+      invalidateListCachesFrom("exam");
       await fetchExams();
       setReorderDraft(null);
       setIsReorderMode(false);
@@ -355,50 +373,57 @@ const ExamManagement = () => {
     }
   };
 
-  const handleToggleStatus = async (exam) => {
-    const currentStatus = exam.status || "active";
-    const newStatus = currentStatus === "active" ? "inactive" : "active";
+  const handleToggleStatus = (exam) => {
+    setCascadeItem(exam);
+    setCascadeModalOpen(true);
+  };
+
+  const handleCascadeConfirm = async (newStatus, cascadeMode) => {
+    if (!cascadeItem) return;
     const action = newStatus === "inactive" ? "deactivate" : "activate";
-
-    if (
-      window.confirm(
-        `Are you sure you want to ${action} "${exam.name}"? All its children will also be ${action}d.`
-      )
-    ) {
-      try {
-        setIsFormLoading(true);
-        setError(null);
-
-        const response = await api.patch(`/exam/${exam._id}`, {
-          status: newStatus,
-        });
-
-        if (response.data.success) {
-          // Refetch exams to get updated status from database
-          await fetchExams();
-          success(
-            `Exam "${exam.name}" and all children ${action}d successfully!`
-          );
-        } else {
-          setError(response.data.message || `Failed to ${action} exam`);
-          showError(response.data.message || `Failed to ${action} exam`);
-        }
-      } catch (error) {
-        console.error(`Error ${action}ing exam:`, error);
-        const errorMessage =
-          error.response?.data?.message ||
-          `Failed to ${action} exam. Please try again.`;
-        setError(errorMessage);
-        showError(errorMessage);
-      } finally {
-        setIsFormLoading(false);
+    try {
+      setIsFormLoading(true);
+      setError(null);
+      const response = await api.patch(`/exam/${cascadeItem._id}`, {
+        status: newStatus,
+        cascadeMode: cascadeMode || "respect_manual",
+      });
+      if (response.data.success) {
+        invalidateListCachesFrom("exam");
+        await fetchExams();
+        success(
+          `Exam "${cascadeItem.name}" and children ${action}d successfully!`
+        );
+        setCascadeModalOpen(false);
+        setCascadeItem(null);
+      } else {
+        setError(response.data.message || `Failed to ${action} exam`);
+        showError(response.data.message || `Failed to ${action} exam`);
       }
+    } catch (error) {
+      console.error(`Error ${action}ing exam:`, error);
+      const errorMessage =
+        error.response?.data?.message ||
+        `Failed to ${action} exam. Please try again.`;
+      setError(errorMessage);
+      showError(errorMessage);
+    } finally {
+      setIsFormLoading(false);
     }
   };
 
   return (
     <>
       <ToastContainer toasts={toasts} removeToast={removeToast} />
+      <StatusCascadeModal
+        open={cascadeModalOpen}
+        onClose={() => { setCascadeModalOpen(false); setCascadeItem(null); }}
+        levelLabel="Exam"
+        itemName={cascadeItem?.name}
+        currentStatus={cascadeItem?.status || "active"}
+        onConfirm={handleCascadeConfirm}
+        loading={isFormLoading}
+      />
       <div className="space-y-6">
         {/* Page Header */}
         <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 rounded-lg border border-gray-200 p-4 shadow-sm">
@@ -654,15 +679,17 @@ const ExamManagement = () => {
                 <div className="relative min-w-[200px] sm:min-w-[240px]">
                   <input
                     type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
                     placeholder="Search exams..."
                     className="w-full pl-9 pr-8 py-1.5 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                   />
                   <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-3.5 h-3.5" />
                   {searchQuery && (
                     <button
-                      onClick={() => setSearchQuery("")}
+                      onClick={() =>
+                        setFilterState({ searchQuery: "", page: 1 })
+                      }
                       className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                     >
                       <FaTimes className="w-3 h-3" />
@@ -674,7 +701,9 @@ const ExamManagement = () => {
                   <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap">Meta Status:</label>
                   <select
                     value={metaFilter}
-                    onChange={(e) => setMetaFilter(e.target.value)}
+                    onChange={(e) =>
+                      setFilterState({ metaFilter: e.target.value, page: 1 })
+                    }
                     className="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-medium focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                   >
                     <option value="all">All Items</option>
@@ -709,7 +738,7 @@ const ExamManagement = () => {
                 </p>
                 {searchQuery ? (
                   <button
-                    onClick={() => setSearchQuery("")}
+                    onClick={() => setFilterState({ searchQuery: "", page: 1 })}
                     className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
                   >
                     Clear Search
@@ -730,16 +759,31 @@ const ExamManagement = () => {
                 )}
               </div>
             ) : (
-              <ExamTable
-                exams={filteredExams}
-                onEdit={handleEditExam}
-                onDelete={handleDeleteExam}
-                onToggleStatus={handleToggleStatus}
-                onManageInfo={handleManageInfo}
-                onReorderDraft={handleReorderDraft}
-                reorderDraft={reorderDraft}
-                isReorderAllowed={isReorderMode && !searchQuery.trim()}
-              />
+              <>
+                <ExamTable
+                  exams={filteredExams}
+                  onEdit={handleEditExam}
+                  onDelete={handleDeleteExam}
+                  onToggleStatus={handleToggleStatus}
+                  onManageInfo={handleManageInfo}
+                  onReorderDraft={handleReorderDraft}
+                  reorderDraft={reorderDraft}
+                  isReorderAllowed={isReorderMode && !searchQuery.trim()}
+                />
+                {/* Pagination */}
+                {(pagination.totalPages > 0 || pagination.total > 0) && (
+                  <PaginationBar
+                    page={page}
+                    limit={limit}
+                    total={pagination.total}
+                    totalPages={pagination.totalPages}
+                    hasNextPage={pagination.hasNextPage}
+                    hasPrevPage={pagination.hasPrevPage}
+                    onPageChange={(p) => setFilterState({ page: p })}
+                    onLimitChange={(l) => setFilterState({ limit: l, page: 1 })}
+                  />
+                )}
+              </>
             )}
           </div>
         </div>

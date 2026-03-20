@@ -250,7 +250,7 @@ export const UtilitiesMobileContent = ({ onClose }) => {
         <h4 className="text-xs font-semibold text-gray-900 mb-2">Media</h4>
         <div className="space-y-1">
           <a
-            href="https://www.youtube.com/@TestprepKart"
+            href="https://www.youtube.com/@Testprepkart"
             target="_blank"
             rel="noopener noreferrer"
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
@@ -598,7 +598,7 @@ export const ContactMobileContent = ({ onClose }) => {
             onClick={onClose}
             className="block px-4 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
-            Contact TestprepKart
+            Contact Testprepkart
           </Link>
           <Link
             href="https://www.testprepkart.com/class-operations"

@@ -501,11 +501,11 @@ export default function CalculatorPage() {
   return (
     <div className="min-h-screen bg-white">
       {/* Compact Hero Section */}
-      <section className="bg-white border-b border-gray-200">
+      <section className="hero-section bg-white border-b border-gray-200" aria-labelledby="calculator-title">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-6">
           <div className="max-w-5xl mx-auto">
             {/* Title */}
-            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3 text-center">
+            <h1 id="calculator-title" className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3 text-center">
               Every tool you need to calculate exam scores in one place
             </h1>
 

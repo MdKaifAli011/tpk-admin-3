@@ -25,7 +25,7 @@ const Footer = () => {
     "Prime Videos",
     "Enrollment Form",
     "Online Fee Payment",
-    "TestprepKart Operations",
+    "Testprepkart Operations",
     "Faculty Registration",
     "Downloads",
   ];
@@ -46,10 +46,10 @@ const Footer = () => {
           {/* Column 1: Brand and CTA */}
           <div className="space-y-4">
             {/* Logo */}
-            <Link href="https://www.testprepkart.com">
+            <Link href="https://www.testprepkart.com" aria-label="Testprepkart home">
               <Image
                 src={`${basePath}/logo.png`}
-                alt="TestPrepKart Logo"
+                alt="Testprepkart Logo"
                 width={150}
                 height={150}
                 className="w-24 sm:w-28 md:w-32 lg:w-36 h-auto"
@@ -59,7 +59,7 @@ const Footer = () => {
               />
             </Link>
             {/* Description */}
-            <p className="text-gray-500 text-sm leading-relaxed">
+            <p className="text-gray-600 text-sm leading-relaxed">
               Enabling students prepare and crack toughest examinations
               worldwide for over a decade with problem solving aptitude!
             </p>
@@ -67,10 +67,11 @@ const Footer = () => {
             {/* CTA Button */}
             <Link
               href="https://www.testprepkart.com/contact"
-              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 text-white rounded-lg hover:from-indigo-700 hover:via-purple-700 hover:to-pink-600 transition-all shadow-md hover:shadow-lg"
+              className="inline-flex items-center justify-center gap-2 min-h-[44px] min-w-[44px] px-4 py-2 text-sm font-semibold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 text-white rounded-lg hover:from-indigo-700 hover:via-purple-700 hover:to-pink-600 transition-all shadow-md hover:shadow-lg"
+              aria-label="Contact us"
             >
               <span>Contact Us</span>
-              <FaArrowRight className="text-sm" />
+              <FaArrowRight className="text-sm" aria-hidden />
             </Link>
           </div>
 
@@ -83,7 +84,7 @@ const Footer = () => {
               <li>
                 <Link
                   href="https://www.testprepkart.com/jee/parent_counseling"
-                  className="text-gray-500 text-sm hover:text-blue-600 transition-colors"
+                  className="text-gray-600 text-sm hover:text-blue-600 transition-colors"
                 >
                   Connect With Counselor
                 </Link>
@@ -91,7 +92,7 @@ const Footer = () => {
               <li>
                 <Link
                   href="https://www.testprepkart.com/explore/"
-                  className="text-gray-500 text-sm hover:text-blue-600 transition-colors"
+                  className="text-gray-600 text-sm hover:text-blue-600 transition-colors"
                 >
                   University Admissions
                 </Link>
@@ -99,7 +100,7 @@ const Footer = () => {
               <li>
                 <Link
                   href="https://www.testprepkart.com/prime-videos"
-                  className="text-gray-500 text-sm hover:text-blue-600 transition-colors"
+                  className="text-gray-600 text-sm hover:text-blue-600 transition-colors"
                 >
                   Prime Videos
                 </Link>
@@ -107,7 +108,7 @@ const Footer = () => {
               <li>
                 <Link
                   href="https://testprepkart-operations.com/enrollment-form.php"
-                  className="text-gray-500 text-sm hover:text-blue-600 transition-colors"
+                  className="text-gray-600 text-sm hover:text-blue-600 transition-colors"
                 >
                   Enrollment Form
                 </Link>
@@ -115,7 +116,7 @@ const Footer = () => {
               <li>
                 <Link
                   href="https://www.testprepkart.com/fee-payment"
-                  className="text-gray-500 text-sm hover:text-blue-600 transition-colors"
+                  className="text-gray-600 text-sm hover:text-blue-600 transition-colors"
                 >
                   Online Fee Payment
                 </Link>
@@ -123,15 +124,15 @@ const Footer = () => {
               <li>
                 <Link
                   href="https://testprepkart-operations.com/"
-                  className="text-gray-500 text-sm hover:text-blue-600 transition-colors"
+                  className="text-gray-600 text-sm hover:text-blue-600 transition-colors"
                 >
-                  TestprepKart Operations
+                  Testprepkart Operations
                 </Link>
               </li>
               <li>
                 <Link
                   href="https://testprepkart-operations.com/faculty_registration.php"
-                  className="text-gray-500 text-sm hover:text-blue-600 transition-colors"
+                  className="text-gray-600 text-sm hover:text-blue-600 transition-colors"
                 >
                   Faculty Registration
                 </Link>
@@ -149,7 +150,7 @@ const Footer = () => {
                 <li key={index}>
                   <Link
                     href={`https://www.testprepkart.com/${link.toLowerCase().replace(/ /g, '-')}`}
-                    className="text-gray-500 text-sm hover:text-blue-600 transition-colors"
+                    className="text-gray-600 text-sm hover:text-blue-600 transition-colors"
                   >
                     {link}
                   </Link>
@@ -164,23 +165,23 @@ const Footer = () => {
               Contact Details
             </h3>
             <ul className="space-y-3">
-              <li className="flex items-start gap-2 text-gray-500 text-sm">
+              <li className="flex items-start gap-2 text-gray-600 text-sm">
                 <FaPhone className="text-gray-400 mt-0.5 shrink-0 text-sm" />
                 <span>Phone: +91 0120 4525484</span>
               </li>
-              <li className="flex items-start gap-2 text-gray-500 text-sm">
+              <li className="flex items-start gap-2 text-gray-600 text-sm">
                 <FaWhatsapp className="text-gray-400 mt-0.5 shrink-0 text-sm" />
                 <span>Whatsapp: +1 (510) 706-9331</span>
               </li>
-              <li className="flex items-start gap-2 text-gray-500 text-sm">
+              <li className="flex items-start gap-2 text-gray-600 text-sm">
                 <FaPhone className="text-gray-400 mt-0.5 shrink-0 text-sm" />
                 <span>Admission: +91 8800123492</span>
               </li>
-              <li className="flex items-start gap-2 text-gray-500 text-sm">
+              <li className="flex items-start gap-2 text-gray-600 text-sm">
                 <FaEnvelope className="text-gray-400 mt-0.5 shrink-0 text-sm" />
-                <span>E-mail: info@testprepkart.com</span>
+                <span>E-mail: contact@rayofhopebihar.org</span>
               </li>
-              <li className="flex items-start gap-2 text-gray-500 text-sm">
+              <li className="flex items-start gap-2 text-gray-600 text-sm">
                 <FaBuilding className="text-gray-400 mt-0.5 shrink-0 text-sm" />
                 <span>
                   Head Office: F 377, Sector 63, Noida, Uttar Pradesh, India
@@ -203,7 +204,7 @@ const Footer = () => {
       {/* Bottom Section - Copyright and Legal Links */}
       <div className="border-t border-gray-200 bg-white">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-gray-500">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-gray-600">
             {/* Copyright */}
             <p className="text-center md:text-left">
               Copyright © 2024 CounselKart Educational Services Pvt. Ltd.. All
@@ -212,19 +213,19 @@ const Footer = () => {
 
             {/* Legal Links */}
             <div className="flex flex-wrap items-center justify-center md:justify-end gap-3">
-              <Link href="https://www.testprepkart.com/policies/terms-and-conditions" className="hover:text-blue-600 transition-colors">
+              <Link href="https://www.testprepkart.com/policies/terms-and-conditions" className="inline-flex items-center min-h-[44px] hover:text-blue-600 transition-colors" aria-label="Terms of service">
                 Terms of service
               </Link>
-              <span className="text-gray-300">|</span>
-              <Link href="https://www.testprepkart.com/policies/privacy-policy" className="hover:text-blue-600 transition-colors">
+              <span className="text-gray-300" aria-hidden="true">|</span>
+              <Link href="https://www.testprepkart.com/policies/privacy-policy" className="inline-flex items-center min-h-[44px] hover:text-blue-600 transition-colors" aria-label="Privacy policy">
                 Privacy policy
               </Link>
-              <span className="text-gray-300">|</span>
-              <Link href="https://www.testprepkart.com/policies/refund-policy" className="hover:text-blue-600 transition-colors">
+              <span className="text-gray-300" aria-hidden="true">|</span>
+              <Link href="https://www.testprepkart.com/policies/refund-policy" className="inline-flex items-center min-h-[44px] hover:text-blue-600 transition-colors" aria-label="Refund policy">
                 Refund Policy
               </Link>
-              <span className="text-gray-300">|</span>
-              <Link href="https://www.testprepkart.com/register" className="hover:text-blue-600 transition-colors">
+              <span className="text-gray-300" aria-hidden="true">|</span>
+              <Link href="https://www.testprepkart.com/register" className="inline-flex items-center min-h-[44px] hover:text-blue-600 transition-colors" aria-label="Login and register">
                 Login & Register
               </Link>
             </div>

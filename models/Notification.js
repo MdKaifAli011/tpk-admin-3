@@ -71,6 +71,13 @@ const notificationSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    // Optional: after this date the notification stops showing in the header dropdown
+    // but remains visible on the Notification landing page (/notification)
+    endDate: {
+      type: Date,
+      default: null,
+      index: true,
+    },
   },
   { timestamps: true }
 );

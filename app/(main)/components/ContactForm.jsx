@@ -55,6 +55,9 @@ const ContactForm = () => {
     handleVerificationChange,
     validateVerification,
     resetVerification,
+    getVerificationBlockStatus,
+    recordVerificationFailure,
+    resetVerificationFailures,
   } = useVerification();
 
   useEffect(() => {
@@ -105,7 +108,16 @@ const ContactForm = () => {
   };
 
   const validateForm = () => {
+    const blockStatus = getVerificationBlockStatus();
+    if (blockStatus.blocked && blockStatus.retryAfterMs != null) {
+      const minutes = Math.ceil(blockStatus.retryAfterMs / 60000);
+      setErrors({
+        verification: `Too many failed verification attempts. Please try again in ${minutes} minute${minutes !== 1 ? "s" : ""}.`,
+      });
+      return false;
+    }
     const newErrors = validateFormUtil(formData, validateVerification);
+    if (newErrors.verification) recordVerificationFailure();
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -167,6 +179,7 @@ const ContactForm = () => {
           phoneNumber: "",
         });
         setErrors({});
+        resetVerificationFailures();
         resetVerification();
         generateVerification();
       } else {
@@ -216,7 +229,7 @@ const ContactForm = () => {
               </div>
 
               <h1 className="text-2xl font-bold text-gray-900 mb-4">
-                Connect With TestprepKart
+                Connect With Testprepkart
               </h1>
 
               <form onSubmit={handleSubmit} className="space-y-3">
@@ -237,6 +250,7 @@ const ContactForm = () => {
                 )}
 
                 <div>
+                  <label htmlFor="name" className="sr-only">Name</label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
                       <FaUser className="text-gray-400 text-xs" />
@@ -260,6 +274,7 @@ const ContactForm = () => {
                 </div>
 
                 <div>
+                  <label htmlFor="email" className="sr-only">Email Address</label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
                       <FaEnvelope className="text-gray-400 text-xs" />
@@ -285,6 +300,7 @@ const ContactForm = () => {
                 </div>
 
                 <div>
+                  <label htmlFor="country" className="sr-only">Country</label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none z-10">
                       <FaGlobe className="text-gray-400 text-xs" />
@@ -315,6 +331,7 @@ const ContactForm = () => {
                 </div>
 
                 <div>
+                  <label htmlFor="className" className="sr-only">Class</label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none z-10">
                       <FaGraduationCap className="text-gray-400 text-xs" />

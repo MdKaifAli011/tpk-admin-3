@@ -11,14 +11,19 @@ import cacheManager from "@/utils/cacheManager";
 // ---------- GET ALL UNITS ----------
 export async function GET(request) {
   try {
-    // Check authentication (all authenticated users can view)
-    const authCheck = await requireAuth(request);
-    if (authCheck.error) {
-      return NextResponse.json(authCheck, { status: authCheck.status || 401 });
+    const { searchParams } = new URL(request.url);
+    const statusFilterParam = searchParams.get("status") || STATUS.ACTIVE;
+    const statusFilter = statusFilterParam.toLowerCase();
+
+    // Allow public access for active units only (for frontend self-study pages)
+    if (statusFilter !== STATUS.ACTIVE) {
+      const authCheck = await requireAuth(request);
+      if (authCheck.error) {
+        return NextResponse.json(authCheck, { status: authCheck.status || 401 });
+      }
     }
 
     await connectDB();
-    const { searchParams } = new URL(request.url);
 
     // Parse pagination
     const { page, limit, skip } = parsePagination(searchParams);
@@ -26,10 +31,9 @@ export async function GET(request) {
     // Get filters (normalize status to lowercase for case-insensitive matching)
     const subjectId = searchParams.get("subjectId");
     const examId = searchParams.get("examId");
-    const statusFilterParam = searchParams.get("status") || STATUS.ACTIVE;
-    const statusFilter = statusFilterParam.toLowerCase();
 
     const metaStatus = searchParams.get("metaStatus"); // filled, notFilled
+    const search = searchParams.get("search")?.trim();
 
     // Build query with case-insensitive status matching
     const query = {};
@@ -41,6 +45,10 @@ export async function GET(request) {
     }
     if (statusFilter !== "all") {
       query.status = { $regex: new RegExp(`^${statusFilter}$`, "i") };
+    }
+    if (search) {
+      const escapeRegex = (s) => String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      query.name = { $regex: new RegExp(escapeRegex(search), "i") };
     }
 
     // Handle Metadata filtering
@@ -63,11 +71,10 @@ export async function GET(request) {
       }
     }
 
-    // Create cache key
+    // Create cache key (skip cache when search is active)
     const cacheKey = `units-${JSON.stringify(query)}-${page}-${limit}`;
 
-    // Check cache (only for active status queries to avoid stale data)
-    if (statusFilter === STATUS.ACTIVE) {
+    if (statusFilter === STATUS.ACTIVE && !search) {
       const cached = cacheManager.get(cacheKey);
       if (cached) {
         return NextResponse.json(cached);
@@ -96,7 +103,7 @@ export async function GET(request) {
     const unitDetails = await UnitDetails.find({
       unitId: { $in: unitIds },
     })
-      .select("unitId content title metaDescription keywords createdAt updatedAt")
+      .select("unitId content title metaDescription keywords status createdAt updatedAt")
       .lean();
 
     // Create a map of unitId to content info
@@ -108,6 +115,7 @@ export async function GET(request) {
         hasContent,
         hasMeta,
         contentDate: hasContent ? (detail.updatedAt || detail.createdAt) : null,
+        detailsStatus: detail.status || "draft",
       });
     });
 
@@ -117,6 +125,7 @@ export async function GET(request) {
         hasContent: false,
         hasMeta: false,
         contentDate: null,
+        detailsStatus: "draft",
       };
       return {
         ...unit,
@@ -125,6 +134,19 @@ export async function GET(request) {
     });
 
     const response = createPaginationResponse(unitsWithContent, total, page, limit);
+
+    // Admin list: include actual counts per subject for breadcrumb pills
+    if (statusFilter === "all") {
+      const countsBySubject = await Unit.aggregate([
+        { $match: query },
+        { $group: { _id: "$subjectId", count: { $sum: 1 } } },
+      ]).exec();
+      const map = {};
+      countsBySubject.forEach(({ _id, count }) => {
+        if (_id) map[_id.toString()] = count;
+      });
+      response.countsBySubject = map;
+    }
 
     // Cache the response (only for active status)
     if (statusFilter === STATUS.ACTIVE) {
@@ -146,9 +168,8 @@ export async function POST(request) {
       return NextResponse.json(authCheck, { status: authCheck.status || 403 });
     }
 
-    await connectDB();
     const body = await request.json();
-    const { name, orderNumber, subjectId, examId, status } = body;
+    const { name, orderNumber, subjectId, examId, status, upsert } = body;
 
     // Validate required fields
     if (!name || !subjectId || !examId) {
@@ -190,6 +211,28 @@ export async function POST(request) {
       subjectId,
     });
     if (existingUnit) {
+      if (upsert === true) {
+        // Update existing unit (override) and return
+        const updateData = { name: unitName };
+        if (orderNumber !== undefined) updateData.orderNumber = orderNumber;
+        if (status) updateData.status = status;
+        const updated = await Unit.findByIdAndUpdate(
+          existingUnit._id,
+          { $set: updateData },
+          { new: true, runValidators: true }
+        )
+          .populate("subjectId", "name")
+          .populate("examId", "name status")
+          .lean();
+        cacheManager.clear("units-");
+        return NextResponse.json({
+          success: true,
+          message: "Unit updated successfully",
+          data: updated,
+          updated: true,
+          timestamp: new Date().toISOString(),
+        }, { status: 200 });
+      }
       return errorResponse("Unit with this name already exists in this subject", 409);
     }
 

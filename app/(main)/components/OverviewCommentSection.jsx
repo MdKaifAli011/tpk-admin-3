@@ -178,11 +178,11 @@ const OverviewCommentSection = ({ entityType, entityId }) => {
   if (!entityId || !entityType) return null;
 
   return (
-    <div className="mt-8 pt-6 border-t border-gray-200">
+    <div className="mt-8 pt-6 border-t border-gray-200" aria-labelledby="comments-heading">
       <div className="flex items-center gap-2 mb-4">
-        <div className="h-0.5 w-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full" />
-        <h3 className="text-lg sm:text-xl font-bold text-gray-900 flex items-center gap-2">
-          <FaCommentDots className="text-indigo-600" />
+        <div className="h-0.5 w-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full" aria-hidden />
+        <h3 className="text-lg sm:text-xl font-bold text-gray-900 flex items-center gap-2" id="comments-heading">
+          <FaCommentDots className="text-indigo-600" aria-hidden />
           Comments
         </h3>
       </div>
@@ -191,23 +191,24 @@ const OverviewCommentSection = ({ entityType, entityId }) => {
         <h4 className="text-base font-semibold text-gray-900 mb-3">Leave a comment</h4>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-2 mb-3">
-            <FaExclamationCircle className="text-red-500 mt-0.5 flex-shrink-0" />
+          <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-2 mb-3" role="alert">
+            <FaExclamationCircle className="text-red-500 mt-0.5 flex-shrink-0" aria-hidden />
             <p className="text-sm text-red-800">{error}</p>
           </div>
         )}
         {success && (
-          <div className="bg-green-50 border border-green-200 rounded-lg p-3 flex items-start gap-2 mb-3">
-            <FaCheckCircle className="text-green-500 mt-0.5 flex-shrink-0" />
+          <div className="bg-green-50 border border-green-200 rounded-lg p-3 flex items-start gap-2 mb-3" role="status">
+            <FaCheckCircle className="text-green-500 mt-0.5 flex-shrink-0" aria-hidden />
             <p className="text-sm text-green-800">{success}</p>
           </div>
         )}
 
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="overview-comment-textarea" className="block text-sm font-medium text-gray-700 mb-2">
             {isAuthenticated ? `Comment as ${studentName}` : "Your comment"}
           </label>
           <textarea
+            id="overview-comment-textarea"
             value={newComment}
             onChange={(e) => {
               setNewComment(e.target.value);
@@ -219,10 +220,11 @@ const OverviewCommentSection = ({ entityType, entityId }) => {
             maxLength={2000}
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm placeholder-gray-400 resize-none"
             disabled={isSubmitting}
+            aria-describedby="comment-char-count comment-moderation"
           />
-          <div className="flex items-center justify-between mt-1">
-            <span className="text-xs text-gray-500">{newComment.length}/2000</span>
-            <span className="text-xs text-gray-500">Comments are moderated</span>
+          <div className="flex items-center justify-between mt-1" id="comment-char-count">
+            <span className="text-xs text-gray-600">{newComment.length}/2000</span>
+            <span className="text-xs text-gray-600" id="comment-moderation">Comments are moderated</span>
           </div>
         </div>
 
@@ -230,7 +232,8 @@ const OverviewCommentSection = ({ entityType, entityId }) => {
           type="button"
           onClick={handlePostCommentClick}
           disabled={isSubmitting || !newComment.trim()}
-          className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          className="min-h-[44px] px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          aria-label={isSubmitting ? "Submitting comment" : "Post comment"}
         >
           {isSubmitting ? (
             <>
@@ -243,7 +246,7 @@ const OverviewCommentSection = ({ entityType, entityId }) => {
         </button>
 
         {!isAuthenticated && (
-          <p className="text-xs text-gray-500 mt-2">
+          <p className="text-xs text-gray-600 mt-2">
             You can comment without logging in. We&apos;ll ask for your name and email before submitting.
           </p>
         )}
@@ -270,7 +273,7 @@ const OverviewCommentSection = ({ entityType, entityId }) => {
             <div className="w-6 h-6 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
           </div>
         ) : comments.length === 0 ? (
-          <p className="text-sm text-gray-500 text-center py-6">No comments yet. Be the first to comment!</p>
+          <p className="text-sm text-gray-600 text-center py-6">No comments yet. Be the first to comment!</p>
         ) : (
           <>
             <div className="space-y-4">
@@ -281,7 +284,7 @@ const OverviewCommentSection = ({ entityType, entityId }) => {
                 >
                   <div className="flex items-start gap-3">
                     <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0">
-                      <FaUser className="text-indigo-600 text-sm" />
+                      <FaUser className="text-indigo-600 text-sm" aria-hidden />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
@@ -290,8 +293,8 @@ const OverviewCommentSection = ({ entityType, entityId }) => {
                             ? `${comment.studentId.firstName} ${comment.studentId.lastName}`
                             : comment.studentId?.email || comment.anonymousName || "Anonymous"}
                         </span>
-                        <span className="text-xs text-gray-500 flex items-center gap-1">
-                          <FaClock className="text-[10px]" />
+                        <span className="text-xs text-gray-600 flex items-center gap-1">
+                          <FaClock className="text-[10px]" aria-hidden />
                           {formatDate(comment.createdAt)}
                         </span>
                       </div>
@@ -309,7 +312,8 @@ const OverviewCommentSection = ({ entityType, entityId }) => {
                   type="button"
                   onClick={loadMoreComments}
                   disabled={isLoadingMore}
-                  className="px-4 py-2 text-sm font-medium text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  className="min-h-[44px] px-4 py-2 text-sm font-medium text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  aria-label={isLoadingMore ? "Loading more comments" : `Load more comments (${totalCount - comments.length} more)`}
                 >
                   {isLoadingMore ? (
                     <>

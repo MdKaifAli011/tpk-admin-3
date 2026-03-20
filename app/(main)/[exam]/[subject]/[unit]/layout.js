@@ -77,17 +77,17 @@ export async function generateMetadata({ params, searchParams }) {
                 }
               }
             } else {
-              logger.warn(`No units found for subject ${subject._id}`);
+              logger.debug(`No units found for subject ${subject._id}`);
             }
           } catch (err) {
             logger.warn("Could not fetch units by subject:", err.message);
           }
         } else {
-          logger.warn("Cannot fetch units - missing subject or exam ID");
+          logger.debug("Cannot fetch units - missing subject or exam ID (exam or subject lookup may have failed)");
         }
         
         if (!unit) {
-          logger.warn(`Unit not found for slug: ${unitSlug}`);
+          logger.debug(`Unit not found for slug: ${unitSlug}`);
         }
         
         // Fetch unit details separately - only if unit was found and has an _id

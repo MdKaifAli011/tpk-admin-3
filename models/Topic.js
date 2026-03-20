@@ -52,6 +52,11 @@ const topicSchema = new mongoose.Schema(
       enum: ["active", "inactive"],
       default: "active",
     },
+    /** True when admin manually set this item to inactive; cascade activate will skip it and its subtree */
+    manualInactive: {
+      type: Boolean,
+      default: false,
+    },
     visitStats: {
       totalVisits: { type: Number, default: 0 },
       todayVisits: { type: Number, default: 0 },
@@ -68,9 +73,9 @@ topicSchema.index({ chapterId: 1, orderNumber: 1 }, { unique: true });
 // Compound index for unique slug per chapter
 topicSchema.index({ chapterId: 1, slug: 1 }, { unique: true, sparse: true });
 
-// Pre-save hook to auto-generate slug
+// Pre-save hook to auto-generate slug (skip if slug already set, e.g. by bulk import)
 topicSchema.pre("save", async function (next) {
-  if (this.isModified("name") || this.isNew) {
+  if ((this.isModified("name") || this.isNew) && (!this.slug || this.slug === "")) {
     const baseSlug = createSlug(this.name);
     
     // Check if slug exists within the same chapter (excluding current document for updates)

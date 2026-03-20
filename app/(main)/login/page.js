@@ -167,7 +167,7 @@ const LoginPage = () => {
               {/* Logo */}
               <div className="text-center mb-6">
 
-                <h1 className="text-3xl font-bold mt-3 bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                <h1 id="login-title" className="text-3xl font-bold mt-3 bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
                   Welcome Back
                 </h1>
                 <p className="text-gray-600 text-sm font-medium">
@@ -185,7 +185,7 @@ const LoginPage = () => {
               <form onSubmit={handleSubmit} className="space-y-4">
                 {/* Email */}
                 <div>
-                  <label className="text-xs font-semibold text-gray-700">
+                  <label htmlFor="login-email" className="text-xs font-semibold text-gray-700">
                     Email Address
                   </label>
 
@@ -196,9 +196,11 @@ const LoginPage = () => {
                           ? "text-indigo-600"
                           : "text-gray-400"
                         }`}
+                      aria-hidden
                     />
 
                     <input
+                      id="login-email"
                       type="email"
                       name="email"
                       placeholder="your.email@example.com"
@@ -207,6 +209,7 @@ const LoginPage = () => {
                       onFocus={() => setFocusedField("email")}
                       onBlur={() => setFocusedField(null)}
                       required
+                      autoComplete="email"
                       className="w-full pl-9 pr-3 py-2.5 bg-white border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
                     />
                   </div>
@@ -214,7 +217,7 @@ const LoginPage = () => {
 
                 {/* Password */}
                 <div>
-                  <label className="text-xs font-semibold text-gray-700">
+                  <label htmlFor="login-password" className="text-xs font-semibold text-gray-700">
                     Password
                   </label>
 
@@ -225,9 +228,11 @@ const LoginPage = () => {
                           ? "text-indigo-600"
                           : "text-gray-400"
                         }`}
+                      aria-hidden
                     />
 
                     <input
+                      id="login-password"
                       type={showPassword ? "text" : "password"}
                       name="password"
                       placeholder="Enter your password"
@@ -236,13 +241,15 @@ const LoginPage = () => {
                       onFocus={() => setFocusedField("password")}
                       onBlur={() => setFocusedField(null)}
                       required
+                      autoComplete="current-password"
                       className="w-full pl-9 pr-10 py-2.5 bg-white border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
                     />
 
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-indigo-600"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-500 hover:text-indigo-600"
+                      aria-label={showPassword ? "Hide password" : "Show password"}
                     >
                       {showPassword ? (
                         <FaEyeSlash className="text-xs" />
@@ -256,7 +263,11 @@ const LoginPage = () => {
                 {/* Forgot */}
                 <div className="flex justify-end -mt-2">
                   <Link
-                    href="#"
+                    href={
+                      searchParams.get("redirect")
+                        ? `/forgot-password?redirect=${encodeURIComponent(searchParams.get("redirect"))}`
+                        : "/forgot-password"
+                    }
                     className="text-xs font-semibold text-indigo-600 hover:underline"
                   >
                     Forgot Password?

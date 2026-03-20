@@ -27,7 +27,7 @@ export default async function VideoLibraryPathPage({ params }) {
   let currentSlug = examSlugFromUrl;
 
   try {
-    const result = await fetchPrimeVideo();
+    const result = await fetchPrimeVideo(examSlugFromUrl);
     const data = result?.data;
     exams = data?.exams || [];
 

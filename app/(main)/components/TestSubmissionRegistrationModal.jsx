@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import {
   FaUser,
   FaEnvelope,
@@ -36,6 +37,7 @@ import {
   validateConfirmPassword,
 } from "./utils/formValidation";
 import Button from "./Button";
+import { getFormPlaceholderImageSrc } from "./utils/formPlaceholderImage";
 
 const TestSubmissionRegistrationModal = ({
   isOpen,
@@ -44,6 +46,11 @@ const TestSubmissionRegistrationModal = ({
   testName,
   formId = "registration-practice", // Default form ID for practice test registration
 }) => {
+  const pathname = usePathname();
+  const { src: formPlaceholderSrc, fallbackSrc: formPlaceholderFallback } = getFormPlaceholderImageSrc(pathname, basePath);
+  const [formPlaceholderImgSrc, setFormPlaceholderImgSrc] = useState(formPlaceholderSrc);
+  useEffect(() => setFormPlaceholderImgSrc(formPlaceholderSrc), [formPlaceholderSrc]);
+
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -76,6 +83,9 @@ const TestSubmissionRegistrationModal = ({
     handleVerificationChange,
     validateVerification: validateCaptcha,
     resetVerification,
+    getVerificationBlockStatus,
+    recordVerificationFailure,
+    resetVerificationFailures,
   } = useVerification();
 
   // Load exams
@@ -240,6 +250,13 @@ const TestSubmissionRegistrationModal = ({
 
   const validateForm = () => {
     const newErrors = {};
+    const blockStatus = getVerificationBlockStatus();
+    if (blockStatus.blocked && blockStatus.retryAfterMs != null) {
+      const minutes = Math.ceil(blockStatus.retryAfterMs / 60000);
+      newErrors.verification = `Too many failed verification attempts. Please try again in ${minutes} minute${minutes !== 1 ? "s" : ""}.`;
+      setErrors(newErrors);
+      return false;
+    }
     const firstNameError = validateName(formData.firstName);
     if (firstNameError) newErrors.firstName = firstNameError;
     const lastNameError = validateName(formData.lastName);
@@ -263,6 +280,7 @@ const TestSubmissionRegistrationModal = ({
     if (confirmPasswordError) newErrors.confirmPassword = confirmPasswordError;
     if (!validateCaptcha()) {
       newErrors.verification = "Please complete the verification";
+      recordVerificationFailure();
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -319,6 +337,7 @@ const TestSubmissionRegistrationModal = ({
         setSubmitMessage(
           "Account created successfully! Your test results are being saved..."
         );
+        resetVerificationFailures();
 
         // Prevent calling callback multiple times
         if (registrationSuccessCalledRef.current) {
@@ -395,9 +414,10 @@ const TestSubmissionRegistrationModal = ({
 
             {/* Image */}
             <img
-              src={`${basePath}/images/form-placeholder.png`}
+              src={formPlaceholderImgSrc}
               alt="Registration illustration"
               className="absolute inset-0 w-full h-full object-cover"
+              onError={() => setFormPlaceholderImgSrc(formPlaceholderFallback)}
             />
 
             {/* Optional overlay */}

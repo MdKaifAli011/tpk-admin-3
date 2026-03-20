@@ -89,6 +89,16 @@ export async function GET(request) {
 
     const query = { status: "active" };
     if (conditions.length > 0) query.$or = conditions;
+    // Exclude notifications past endDate (header unread count should match header list)
+    query.$and = [
+      {
+        $or: [
+          { endDate: null },
+          { endDate: { $exists: false } },
+          { endDate: { $gte: new Date() } },
+        ],
+      },
+    ];
 
     const notificationIds = await Notification.find(query).select("_id").lean().then((docs) => docs.map((d) => d._id));
     if (notificationIds.length === 0) {

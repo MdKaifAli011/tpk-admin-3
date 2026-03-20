@@ -26,6 +26,11 @@ const examSchema = new mongoose.Schema(
       enum: ["active", "inactive", "draft"],
       default: "active",
     },
+    /** True when admin manually set this item to inactive; cascade activate will skip it and its subtree */
+    manualInactive: {
+      type: Boolean,
+      default: false,
+    },
     image: {
       type: String, // URL to the image
       trim: true,
@@ -46,7 +51,7 @@ const examSchema = new mongoose.Schema(
       lastUpdated: { type: Date },
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // No explicit index for slug needed as unique: true already creates one
@@ -70,7 +75,7 @@ examSchema.pre("save", async function (next) {
     this.slug = await generateUniqueSlug(
       baseSlug,
       checkExists,
-      this._id || null
+      this._id || null,
     );
   }
   next();
@@ -82,21 +87,36 @@ examSchema.pre("findOneAndDelete", async function () {
     const exam = await this.model.findOne(this.getQuery());
     if (exam) {
       console.log(
-        `🗑️ Cascading delete: Deleting all entities for exam ${exam._id}`
+        `🗑️ Cascading delete: Deleting all entities for exam ${exam._id}`,
       );
 
       // Get models - dynamically import if not already registered
-      const Subject = mongoose.models.Subject || (await import("./Subject.js")).default;
+      const Subject =
+        mongoose.models.Subject || (await import("./Subject.js")).default;
       const Unit = mongoose.models.Unit || (await import("./Unit.js")).default;
-      const Chapter = mongoose.models.Chapter || (await import("./Chapter.js")).default;
-      const Topic = mongoose.models.Topic || (await import("./Topic.js")).default;
-      const SubTopic = mongoose.models.SubTopic || (await import("./SubTopic.js")).default;
-      const Definition = mongoose.models.Definition || (await import("./Definition.js")).default;
-      const DefinitionDetails = mongoose.models.DefinitionDetails || (await import("./DefinitionDetails.js")).default;
-      const ExamDetails = mongoose.models.ExamDetails || (await import("./ExamDetails.js")).default;
-      const PracticeCategory = mongoose.models.PracticeCategory || (await import("./PracticeCategory.js")).default;
-      const PracticeSubCategory = mongoose.models.PracticeSubCategory || (await import("./PracticeSubCategory.js")).default;
-      const PracticeQuestion = mongoose.models.PracticeQuestion || (await import("./PracticeQuestion.js")).default;
+      const Chapter =
+        mongoose.models.Chapter || (await import("./Chapter.js")).default;
+      const Topic =
+        mongoose.models.Topic || (await import("./Topic.js")).default;
+      const SubTopic =
+        mongoose.models.SubTopic || (await import("./SubTopic.js")).default;
+      const Definition =
+        mongoose.models.Definition || (await import("./Definition.js")).default;
+      const DefinitionDetails =
+        mongoose.models.DefinitionDetails ||
+        (await import("./DefinitionDetails.js")).default;
+      const ExamDetails =
+        mongoose.models.ExamDetails ||
+        (await import("./ExamDetails.js")).default;
+      const PracticeCategory =
+        mongoose.models.PracticeCategory ||
+        (await import("./PracticeCategory.js")).default;
+      const PracticeSubCategory =
+        mongoose.models.PracticeSubCategory ||
+        (await import("./PracticeSubCategory.js")).default;
+      const PracticeQuestion =
+        mongoose.models.PracticeQuestion ||
+        (await import("./PracticeQuestion.js")).default;
 
       // Step 1: Find all related entities that need IDs for dependent deletes (parallel)
       const [definitions, practiceCategories] = await Promise.all([
@@ -108,21 +128,22 @@ examSchema.pre("findOneAndDelete", async function () {
       const practiceCategoryIds = practiceCategories.map((c) => c._id);
 
       console.log(
-        `🗑️ Found ${definitions.length} definitions and ${practiceCategories.length} practice categories for exam ${exam._id}`
+        `🗑️ Found ${definitions.length} definitions and ${practiceCategories.length} practice categories for exam ${exam._id}`,
       );
 
       // Step 2: Find practice subcategories (depends on practiceCategoryIds)
-      const practiceSubCategories = practiceCategoryIds.length > 0
-        ? await PracticeSubCategory.find({
-          categoryId: { $in: practiceCategoryIds },
-        })
-          .select("_id")
-          .lean()
-        : [];
+      const practiceSubCategories =
+        practiceCategoryIds.length > 0
+          ? await PracticeSubCategory.find({
+              categoryId: { $in: practiceCategoryIds },
+            })
+              .select("_id")
+              .lean()
+          : [];
       const practiceSubCategoryIds = practiceSubCategories.map((sc) => sc._id);
 
       console.log(
-        `🗑️ Found ${practiceSubCategories.length} practice subcategories for exam ${exam._id}`
+        `🗑️ Found ${practiceSubCategories.length} practice subcategories for exam ${exam._id}`,
       );
 
       // Step 3: Delete all independent entities in parallel (all have examId directly)
@@ -147,24 +168,34 @@ examSchema.pre("findOneAndDelete", async function () {
       ]);
 
       console.log(
-        `🗑️ Cascading delete: Deleted ${examDetailsResult.deletedCount} ExamDetails, ${subTopicsResult.deletedCount} SubTopics, ${topicsResult.deletedCount} Topics, ${chaptersResult.deletedCount} Chapters, ${unitsResult.deletedCount} Units, ${subjectsResult.deletedCount} Subjects, ${definitionsResult.deletedCount} Definitions, ${practiceCategoriesResult.deletedCount} PracticeCategories for exam ${exam._id}`
+        `🗑️ Cascading delete: Deleted ${examDetailsResult.deletedCount} ExamDetails, ${subTopicsResult.deletedCount} SubTopics, ${topicsResult.deletedCount} Topics, ${chaptersResult.deletedCount} Chapters, ${unitsResult.deletedCount} Units, ${subjectsResult.deletedCount} Subjects, ${definitionsResult.deletedCount} Definitions, ${practiceCategoriesResult.deletedCount} PracticeCategories for exam ${exam._id}`,
       );
 
       // Step 4: Delete dependent entities in parallel (after parent deletes)
-      const [definitionDetailsResult, practiceQuestionsResult, practiceSubCategoriesResult] = await Promise.all([
+      const [
+        definitionDetailsResult,
+        practiceQuestionsResult,
+        practiceSubCategoriesResult,
+      ] = await Promise.all([
         definitionIds.length > 0
-          ? DefinitionDetails.deleteMany({ definitionId: { $in: definitionIds } })
+          ? DefinitionDetails.deleteMany({
+              definitionId: { $in: definitionIds },
+            })
           : Promise.resolve({ deletedCount: 0 }),
         practiceSubCategoryIds.length > 0
-          ? PracticeQuestion.deleteMany({ subCategoryId: { $in: practiceSubCategoryIds } })
+          ? PracticeQuestion.deleteMany({
+              subCategoryId: { $in: practiceSubCategoryIds },
+            })
           : Promise.resolve({ deletedCount: 0 }),
         practiceCategoryIds.length > 0
-          ? PracticeSubCategory.deleteMany({ categoryId: { $in: practiceCategoryIds } })
+          ? PracticeSubCategory.deleteMany({
+              categoryId: { $in: practiceCategoryIds },
+            })
           : Promise.resolve({ deletedCount: 0 }),
       ]);
 
       console.log(
-        `🗑️ Cascading delete: Deleted ${definitionDetailsResult.deletedCount} DefinitionDetails, ${practiceQuestionsResult.deletedCount} PracticeQuestions, ${practiceSubCategoriesResult.deletedCount} PracticeSubCategories for exam ${exam._id}`
+        `🗑️ Cascading delete: Deleted ${definitionDetailsResult.deletedCount} DefinitionDetails, ${practiceQuestionsResult.deletedCount} PracticeQuestions, ${practiceSubCategoriesResult.deletedCount} PracticeSubCategories for exam ${exam._id}`,
       );
     }
   } catch (error) {

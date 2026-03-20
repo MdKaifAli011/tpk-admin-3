@@ -6,7 +6,7 @@ import { LoadingSpinner } from "../ui/SkeletonLoader";
 import RichTextEditor from "../ui/RichTextEditor";
 import api from "@/lib/api";
 import { createSlug } from "@/utils/slug";
-import { FaArrowLeft, FaSave, FaImage, FaGlobe, FaEye } from "react-icons/fa";
+import { FaArrowLeft, FaSave, FaImage, FaGlobe, FaEye, FaLink } from "react-icons/fa";
 
 const BlogDetailPage = ({ blogId }) => {
   const router = useRouter();
@@ -35,7 +35,24 @@ const BlogDetailPage = ({ blogId }) => {
     shortDescription: "", // Short description for card display
     keywords: "", // SEO KW (for meta tags)
     tags: "", // Tags (for displaying on blog page)
+    // Assign to level (7-level hierarchy)
+    assignmentLevel: "",
+    assignmentSubjectId: "",
+    assignmentUnitId: "",
+    assignmentChapterId: "",
+    assignmentTopicId: "",
+    assignmentSubTopicId: "",
+    assignmentDefinitionId: "",
   });
+
+  // Hierarchy options for assignment dropdowns (loaded when exam + level selected)
+  const [assignmentSubjects, setAssignmentSubjects] = useState([]);
+  const [assignmentUnits, setAssignmentUnits] = useState([]);
+  const [assignmentChapters, setAssignmentChapters] = useState([]);
+  const [assignmentTopics, setAssignmentTopics] = useState([]);
+  const [assignmentSubTopics, setAssignmentSubTopics] = useState([]);
+  const [assignmentDefinitions, setAssignmentDefinitions] = useState([]);
+  const [assignmentLoading, setAssignmentLoading] = useState(false);
 
   const fetchBlogDetails = useCallback(async () => {
     if (isFetchingRef.current) return;
@@ -69,6 +86,13 @@ const BlogDetailPage = ({ blogId }) => {
           shortDescription: detailsData.shortDescription || "",
           keywords: detailsData.keywords || "",
           tags: detailsData.tags || "",
+          assignmentLevel: blogData.assignmentLevel || "",
+          assignmentSubjectId: blogData.assignmentSubjectId?._id || blogData.assignmentSubjectId || "",
+          assignmentUnitId: blogData.assignmentUnitId?._id || blogData.assignmentUnitId || "",
+          assignmentChapterId: blogData.assignmentChapterId?._id || blogData.assignmentChapterId || "",
+          assignmentTopicId: blogData.assignmentTopicId?._id || blogData.assignmentTopicId || "",
+          assignmentSubTopicId: blogData.assignmentSubTopicId?._id || blogData.assignmentSubTopicId || "",
+          assignmentDefinitionId: blogData.assignmentDefinitionId?._id || blogData.assignmentDefinitionId || "",
         };
         setFormData(initialFormData);
         setOriginalFormData(initialFormData);
@@ -95,13 +119,138 @@ const BlogDetailPage = ({ blogId }) => {
     if (blogId) fetchBlogDetails();
   }, [blogId, fetchBlogDetails]);
 
+  // Load hierarchy options for assignment when exam and level/ids change
+  useEffect(() => {
+    const examId = formData.examId;
+    const level = formData.assignmentLevel;
+    if (!examId || !level || level === "exam") {
+      setAssignmentSubjects([]);
+      setAssignmentUnits([]);
+      setAssignmentChapters([]);
+      setAssignmentTopics([]);
+      setAssignmentSubTopics([]);
+      setAssignmentDefinitions([]);
+      return;
+    }
+
+    let cancelled = false;
+    setAssignmentLoading(true);
+
+    const run = async () => {
+      try {
+        if (level >= "subject") {
+          const res = await api.get(`/subject?examId=${examId}&status=active&limit=500&page=1`);
+          if (!cancelled && res.data?.success && res.data?.data) {
+            setAssignmentSubjects(Array.isArray(res.data.data) ? res.data.data : []);
+          }
+        }
+        if (level >= "unit" && formData.assignmentSubjectId) {
+          const res = await api.get(`/unit?examId=${examId}&subjectId=${formData.assignmentSubjectId}&status=active&limit=500&page=1`);
+          if (!cancelled && res.data?.success && res.data?.data) {
+            setAssignmentUnits(Array.isArray(res.data.data) ? res.data.data : []);
+          }
+        }
+        if (level >= "chapter" && formData.assignmentUnitId) {
+          const res = await api.get(`/chapter?unitId=${formData.assignmentUnitId}&status=active&limit=500&page=1`);
+          if (!cancelled && res.data?.success && res.data?.data) {
+            setAssignmentChapters(Array.isArray(res.data.data) ? res.data.data : []);
+          }
+        }
+        if (level >= "topic" && formData.assignmentChapterId) {
+          const res = await api.get(`/topic?chapterId=${formData.assignmentChapterId}&status=active&limit=500&page=1`);
+          if (!cancelled && res.data?.success && res.data?.data) {
+            setAssignmentTopics(Array.isArray(res.data.data) ? res.data.data : []);
+          }
+        }
+        if (level >= "subtopic" && formData.assignmentTopicId) {
+          const res = await api.get(`/subtopic?topicId=${formData.assignmentTopicId}&status=active&limit=500&page=1`);
+          if (!cancelled && res.data?.success && res.data?.data) {
+            setAssignmentSubTopics(Array.isArray(res.data.data) ? res.data.data : []);
+          }
+        }
+        if (level === "definition" && formData.assignmentSubTopicId) {
+          const res = await api.get(`/definition?subTopicId=${formData.assignmentSubTopicId}&status=active&limit=500&page=1`);
+          if (!cancelled && res.data?.success && res.data?.data) {
+            setAssignmentDefinitions(Array.isArray(res.data.data) ? res.data.data : []);
+          }
+        }
+      } catch (err) {
+        if (!cancelled) console.error("Error loading assignment hierarchy:", err);
+      } finally {
+        if (!cancelled) setAssignmentLoading(false);
+      }
+    };
+
+    run();
+    return () => { cancelled = true; };
+  }, [
+    formData.examId,
+    formData.assignmentLevel,
+    formData.assignmentSubjectId,
+    formData.assignmentUnitId,
+    formData.assignmentChapterId,
+    formData.assignmentTopicId,
+    formData.assignmentSubTopicId,
+  ]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => {
       const newData = { ...prev, [name]: value };
-      // When exam changes, reset categoryId
+      // When exam changes, reset categoryId and assignment
       if (name === "examId") {
         newData.categoryId = "";
+        newData.assignmentLevel = "";
+        newData.assignmentSubjectId = "";
+        newData.assignmentUnitId = "";
+        newData.assignmentChapterId = "";
+        newData.assignmentTopicId = "";
+        newData.assignmentSubTopicId = "";
+        newData.assignmentDefinitionId = "";
+      }
+      // When assignment level changes, clear downstream
+      if (name === "assignmentLevel") {
+        const levels = ["exam", "subject", "unit", "chapter", "topic", "subtopic", "definition"];
+        const idx = levels.indexOf(value);
+        if (idx < 1) {
+          newData.assignmentSubjectId = "";
+          newData.assignmentUnitId = "";
+          newData.assignmentChapterId = "";
+          newData.assignmentTopicId = "";
+          newData.assignmentSubTopicId = "";
+          newData.assignmentDefinitionId = "";
+        } else {
+          if (idx < 2) newData.assignmentUnitId = "";
+          if (idx < 3) newData.assignmentChapterId = "";
+          if (idx < 4) newData.assignmentTopicId = "";
+          if (idx < 5) newData.assignmentSubTopicId = "";
+          if (idx < 6) newData.assignmentDefinitionId = "";
+        }
+      }
+      if (name === "assignmentSubjectId") {
+        newData.assignmentUnitId = "";
+        newData.assignmentChapterId = "";
+        newData.assignmentTopicId = "";
+        newData.assignmentSubTopicId = "";
+        newData.assignmentDefinitionId = "";
+      }
+      if (name === "assignmentUnitId") {
+        newData.assignmentChapterId = "";
+        newData.assignmentTopicId = "";
+        newData.assignmentSubTopicId = "";
+        newData.assignmentDefinitionId = "";
+      }
+      if (name === "assignmentChapterId") {
+        newData.assignmentTopicId = "";
+        newData.assignmentSubTopicId = "";
+        newData.assignmentDefinitionId = "";
+      }
+      if (name === "assignmentTopicId") {
+        newData.assignmentSubTopicId = "";
+        newData.assignmentDefinitionId = "";
+      }
+      if (name === "assignmentSubTopicId") {
+        newData.assignmentDefinitionId = "";
       }
       return newData;
     });
@@ -161,6 +310,13 @@ const BlogDetailPage = ({ blogId }) => {
         status: formData.status,
         examId: formData.examId || null,
         image: formData.image.trim(),
+        assignmentLevel: formData.assignmentLevel || "",
+        assignmentSubjectId: formData.assignmentSubjectId || null,
+        assignmentUnitId: formData.assignmentUnitId || null,
+        assignmentChapterId: formData.assignmentChapterId || null,
+        assignmentTopicId: formData.assignmentTopicId || null,
+        assignmentSubTopicId: formData.assignmentSubTopicId || null,
+        assignmentDefinitionId: formData.assignmentDefinitionId || null,
       });
 
       const detailsUpdate = api.put(`/blog/${blogId}/details`, {
@@ -209,6 +365,13 @@ const BlogDetailPage = ({ blogId }) => {
         status: formData.status,
         examId: formData.examId || null,
         image: formData.image.trim(),
+        assignmentLevel: formData.assignmentLevel || "",
+        assignmentSubjectId: formData.assignmentSubjectId || null,
+        assignmentUnitId: formData.assignmentUnitId || null,
+        assignmentChapterId: formData.assignmentChapterId || null,
+        assignmentTopicId: formData.assignmentTopicId || null,
+        assignmentSubTopicId: formData.assignmentSubTopicId || null,
+        assignmentDefinitionId: formData.assignmentDefinitionId || null,
       });
 
       const detailsUpdate = api.put(`/blog/${blogId}/details`, {
@@ -590,6 +753,147 @@ const BlogDetailPage = ({ blogId }) => {
                     Connect this post to a specific exam page.
                   </p>
                 </div>
+
+                {/* Assign to level (only when exam selected) */}
+                {formData.examId && (
+                  <>
+                    <div className="h-px bg-gray-200 w-full"></div>
+                    <div className="space-y-4">
+                      <h4 className="text-sm font-semibold text-gray-800 flex items-center gap-2">
+                        <FaLink className="text-indigo-600 w-4 h-4" /> Assign to level
+                      </h4>
+                      <p className="text-xs text-gray-500">
+                        Optionally link this blog to a specific level in the exam hierarchy (e.g. a chapter). Select level then pick Subject → Unit → Chapter, etc.
+                      </p>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Level
+                        </label>
+                        <select
+                          name="assignmentLevel"
+                          value={formData.assignmentLevel}
+                          onChange={handleChange}
+                          disabled={!isEditing}
+                          className="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-50 disabled:cursor-not-allowed"
+                        >
+                          <option value="">No assignment</option>
+                          <option value="exam">Exam only</option>
+                          <option value="subject">Subject</option>
+                          <option value="unit">Unit</option>
+                          <option value="chapter">Chapter</option>
+                          <option value="topic">Topic</option>
+                          <option value="subtopic">Subtopic</option>
+                          <option value="definition">Definition</option>
+                        </select>
+                      </div>
+
+                      {formData.assignmentLevel && formData.assignmentLevel !== "exam" && (
+                        <>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Subject</label>
+                            <select
+                              name="assignmentSubjectId"
+                              value={formData.assignmentSubjectId}
+                              onChange={handleChange}
+                              disabled={!isEditing || assignmentLoading}
+                              className="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:cursor-not-allowed"
+                            >
+                              <option value="">-- Select Subject --</option>
+                              {assignmentSubjects.map((s) => (
+                                <option key={s._id} value={s._id}>{s.name}</option>
+                              ))}
+                            </select>
+                          </div>
+                          {["unit", "chapter", "topic", "subtopic", "definition"].includes(formData.assignmentLevel) && (
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">Unit</label>
+                              <select
+                                name="assignmentUnitId"
+                                value={formData.assignmentUnitId}
+                                onChange={handleChange}
+                                disabled={!isEditing || !formData.assignmentSubjectId || assignmentLoading}
+                                className="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:cursor-not-allowed"
+                              >
+                                <option value="">-- Select Unit --</option>
+                                {assignmentUnits.map((u) => (
+                                  <option key={u._id} value={u._id}>{u.name}</option>
+                                ))}
+                              </select>
+                            </div>
+                          )}
+                          {["chapter", "topic", "subtopic", "definition"].includes(formData.assignmentLevel) && (
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">Chapter</label>
+                              <select
+                                name="assignmentChapterId"
+                                value={formData.assignmentChapterId}
+                                onChange={handleChange}
+                                disabled={!isEditing || !formData.assignmentUnitId || assignmentLoading}
+                                className="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:cursor-not-allowed"
+                              >
+                                <option value="">-- Select Chapter --</option>
+                                {assignmentChapters.map((c) => (
+                                  <option key={c._id} value={c._id}>{c.name}</option>
+                                ))}
+                              </select>
+                            </div>
+                          )}
+                          {["topic", "subtopic", "definition"].includes(formData.assignmentLevel) && (
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">Topic</label>
+                              <select
+                                name="assignmentTopicId"
+                                value={formData.assignmentTopicId}
+                                onChange={handleChange}
+                                disabled={!isEditing || !formData.assignmentChapterId || assignmentLoading}
+                                className="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:cursor-not-allowed"
+                              >
+                                <option value="">-- Select Topic --</option>
+                                {assignmentTopics.map((t) => (
+                                  <option key={t._id} value={t._id}>{t.name}</option>
+                                ))}
+                              </select>
+                            </div>
+                          )}
+                          {["subtopic", "definition"].includes(formData.assignmentLevel) && (
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">Subtopic</label>
+                              <select
+                                name="assignmentSubTopicId"
+                                value={formData.assignmentSubTopicId}
+                                onChange={handleChange}
+                                disabled={!isEditing || !formData.assignmentTopicId || assignmentLoading}
+                                className="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:cursor-not-allowed"
+                              >
+                                <option value="">-- Select Subtopic --</option>
+                                {assignmentSubTopics.map((st) => (
+                                  <option key={st._id} value={st._id}>{st.name}</option>
+                                ))}
+                              </select>
+                            </div>
+                          )}
+                          {formData.assignmentLevel === "definition" && (
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">Definition</label>
+                              <select
+                                name="assignmentDefinitionId"
+                                value={formData.assignmentDefinitionId}
+                                onChange={handleChange}
+                                disabled={!isEditing || !formData.assignmentSubTopicId || assignmentLoading}
+                                className="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:cursor-not-allowed"
+                              >
+                                <option value="">-- Select Definition --</option>
+                                {assignmentDefinitions.map((d) => (
+                                  <option key={d._id} value={d._id}>{d.name}</option>
+                                ))}
+                              </select>
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  </>
+                )}
 
                 <div className="h-px bg-gray-200 w-full"></div>
 

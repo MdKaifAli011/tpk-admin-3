@@ -11,8 +11,24 @@ import VerificationInput from "./VerificationInput";
 import SubmitStatusMessage from "./SubmitStatusMessage";
 import { logger } from "@/utils/logger";
 
-{/* Default form image */ }
+// Default form image
 const DEFAULT_FORM_IMAGE = "/images/form-placeholder.png";
+
+// Default inline contact form config when API/form not found — so inline form always shows and submits to /lead
+const DEFAULT_INLINE_FORM_CONFIG = {
+  formId: "contact-form",
+  fields: [
+    { name: "name", type: "text", label: "Name", required: true, order: 0, placeholder: "Your name" },
+    { name: "email", type: "email", label: "Email", required: true, order: 1, placeholder: "Your email" },
+    { name: "country", type: "select", label: "Country", required: true, order: 2, placeholder: "Select country" },
+    { name: "className", type: "select", label: "Class", required: false, order: 3, placeholder: "Select class" },
+    { name: "phoneNumber", type: "tel", label: "Phone", required: false, order: 4, placeholder: "Contact No" },
+  ],
+  settings: {
+    successMessage: "Thank you! Your request has been submitted successfully.",
+    title: "Contact",
+  },
+};
 
 
 // Helper function to capitalize button text
@@ -26,13 +42,15 @@ const capitalizeButtonText = (text) => {
 
 // Helper function to resolve image path with base path
 const resolveImagePath = (path) => {
-  if (!path) return "";
-  if (path.startsWith("http://") || path.startsWith("https://")) {
-    return path;
+  if (!path || typeof path !== "string") return "";
+  const trimmed = path.trim();
+  if (!trimmed) return "";
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+    return trimmed;
   }
   const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
   // Avoid double slashes or double base paths
-  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  const cleanPath = trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
   if (cleanPath.startsWith(basePath)) {
     return cleanPath;
   }
@@ -48,6 +66,7 @@ const FormRenderer = ({
   imageUrl = "",
   title = "",
   description = "",
+  inline = false,
 }) => {
   const [formConfig, setFormConfig] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -67,16 +86,19 @@ const FormRenderer = ({
     handleVerificationChange,
     validateVerification,
     resetVerification,
+    getVerificationBlockStatus,
+    recordVerificationFailure,
+    resetVerificationFailures,
   } = useVerification();
 
-  // Fetch form configuration
+  // Fetch form configuration (when modal open or when inline with formId)
   useEffect(() => {
-    if (formId && isOpen) {
+    if (formId && (isOpen || inline)) {
       fetchFormConfig();
       generateVerification();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formId, isOpen]);
+  }, [formId, isOpen, inline]);
 
   const fetchFormConfig = async () => {
     try {
@@ -103,9 +125,32 @@ const FormRenderer = ({
         setFormData(initialData);
       }
     } catch (error) {
-      logger.error("Error fetching form config:", error);
-      setSubmitStatus("error");
-      setSubmitMessage("Failed to load form. Please try again.");
+      // Inline form: use default contact form so we always show a form and store leads
+      if (inline) {
+        logger.warn("Form config not found, using default contact form for inline embed:", formId, error?.response?.status || error?.message);
+        const defaultConfig = {
+          ...DEFAULT_INLINE_FORM_CONFIG,
+          formId,
+          settings: {
+            ...DEFAULT_INLINE_FORM_CONFIG.settings,
+            title: title || DEFAULT_INLINE_FORM_CONFIG.settings.title,
+          },
+        };
+        setFormConfig(defaultConfig);
+        const initialData = {
+          name: "",
+          email: "",
+          country: "",
+          className: "",
+          phoneNumber: "",
+          countryCode: "+91",
+        };
+        setFormData(initialData);
+      } else {
+        logger.error("Error fetching form config:", error?.response?.data || error?.message || error);
+        setSubmitStatus("error");
+        setSubmitMessage("Failed to load form. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -140,6 +185,14 @@ const FormRenderer = ({
 
     if (!formConfig) return false;
 
+    const blockStatus = getVerificationBlockStatus();
+    if (blockStatus.blocked && blockStatus.retryAfterMs != null && formConfig.settings.showVerification) {
+      const minutes = Math.ceil(blockStatus.retryAfterMs / 60000);
+      newErrors.verification = `Too many failed verification attempts. Please try again in ${minutes} minute${minutes !== 1 ? "s" : ""}.`;
+      setErrors(newErrors);
+      return false;
+    }
+
     formConfig.fields.forEach((field) => {
       const value = formData[field.name];
       const error = validateFieldUtil(field, value);
@@ -151,6 +204,7 @@ const FormRenderer = ({
     // Validate verification if enabled
     if (formConfig.settings.showVerification && !validateVerification()) {
       newErrors.verification = "Please complete the verification";
+      recordVerificationFailure();
     }
 
     setErrors(newErrors);
@@ -245,6 +299,7 @@ const FormRenderer = ({
         });
         setFormData(resetData);
         setErrors({});
+        resetVerificationFailures();
         resetVerification();
         generateVerification();
 
@@ -328,8 +383,9 @@ const FormRenderer = ({
     }
   }, [isOpen, resetVerification]);
 
-  // Prevent body scroll when modal is open
+  // Prevent body scroll when modal is open (not when inline)
   useEffect(() => {
+    if (inline) return;
     if (isOpen) {
       document.body.style.overflow = "hidden";
     } else {
@@ -338,11 +394,11 @@ const FormRenderer = ({
     return () => {
       document.body.style.overflow = "";
     };
-  }, [isOpen]);
+  }, [isOpen, inline]);
 
-  // Handle ESC key to close modal
+  // Handle ESC key to close modal (not when inline)
   useEffect(() => {
-    if (!isOpen) return;
+    if (inline || !isOpen) return;
 
     const handleEscape = (e) => {
       if (e.key === "Escape" && !isSubmitting) {
@@ -362,9 +418,21 @@ const FormRenderer = ({
     };
   }, [isOpen, isSubmitting, onClose, resetVerification]);
 
-  if (!isOpen) return null;
+  const isModal = !inline;
+  const showContent = isModal ? isOpen : true;
+
+  if (!showContent && isModal) return null;
+  if (inline && !formId) return null;
 
   if (loading) {
+    if (inline) {
+      return (
+        <div className="rounded-xl border border-gray-200 bg-gray-50 p-6 flex items-center justify-center gap-3 min-h-[200px]">
+          <FaSpinner className="animate-spin text-blue-600" />
+          <span className="text-sm text-gray-700">Loading form...</span>
+        </div>
+      );
+    }
     return (
       <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
         <div className="bg-white rounded-xl p-6 flex items-center gap-3">
@@ -376,6 +444,14 @@ const FormRenderer = ({
   }
 
   if (!formConfig) {
+    if (inline) {
+      return (
+        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-center">
+          <FaExclamationCircle className="text-red-500 text-2xl mx-auto mb-2" />
+          <p className="text-sm text-red-700">Form not found. Check form ID.</p>
+        </div>
+      );
+    }
     return (
       <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
         <div className="bg-white rounded-xl p-6 max-w-md w-full">
@@ -404,40 +480,47 @@ const FormRenderer = ({
     (a, b) => (a.order || 0) - (b.order || 0)
   );
 
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center">
+  const formContent = (
+    <>
       <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-        onClick={handleClose}
-        aria-hidden="true"
-      />
-
-      <div
-        className="relative bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="form-title"
+        className={inline
+          ? "bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden w-full max-w-4xl mx-auto"
+          : "relative bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden"
+        }
+        role={inline ? undefined : "dialog"}
+        aria-modal={inline ? undefined : "true"}
+        aria-labelledby={inline ? undefined : "form-title"}
       >
-        <button
-          onClick={handleClose}
-          disabled={isSubmitting}
-          className="absolute top-3 right-3 z-10 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-white/80 backdrop-blur-sm"
-          aria-label="Close modal"
-          type="button"
-        >
-          <FaTimes className="text-lg" aria-hidden="true" />
-        </button>
+        {isModal && (
+          <button
+            onClick={handleClose}
+            disabled={isSubmitting}
+            className="absolute top-3 right-3 z-10 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-white/80 backdrop-blur-sm"
+            aria-label="Close modal"
+            type="button"
+          >
+            <FaTimes className="text-lg" aria-hidden="true" />
+          </button>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 flex-1 overflow-hidden">
-          <div className="hidden lg:block relative bg-gradient-to-br from-purple-500 via-purple-600 to-purple-700 overflow-hidden">
-            {/* Use standard img tag to manually handle base path resolution */}
+          <div
+            className={`relative overflow-hidden bg-gradient-to-br from-purple-500 via-purple-600 to-purple-700 ${
+              inline ? "block min-h-[200px] sm:min-h-[240px] lg:min-h-0" : "hidden lg:block"
+            }`}
+          >
             <img
               src={resolveImagePath(
-                (formConfig.settings.imageUrl || imageUrl) && !imageError
-                  ? formConfig.settings.imageUrl || imageUrl
-                  : DEFAULT_FORM_IMAGE
+                (() => {
+                  // Inline embed: prefer image from editor (imageUrl prop); else form config; else default
+                  const fromProp = imageUrl && String(imageUrl).trim();
+                  const fromConfig = formConfig.settings?.imageUrl && String(formConfig.settings.imageUrl).trim();
+                  const effective = fromProp || fromConfig || "";
+                  if (effective && !imageError) return effective;
+                  return DEFAULT_FORM_IMAGE;
+                })()
               )}
-              alt={title || formConfig.settings.title || formConfig?.formId || "Form"}
+              alt={title || formConfig.settings?.title || formConfig?.formId || "Form"}
               className="absolute inset-0 w-full h-full object-cover object-center"
               style={{
                 margin: "0",
@@ -547,6 +630,21 @@ const FormRenderer = ({
           </div>
         </div>
       </div>
+    </>
+  );
+
+  if (inline) {
+    return formContent;
+  }
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center">
+      <div
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        onClick={handleClose}
+        aria-hidden="true"
+      />
+      {formContent}
     </div>
   );
 };

@@ -1,4 +1,5 @@
 "use client";
+import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import {
   FaUser,
@@ -30,8 +31,14 @@ import {
   validateCountry,
   validateClassName,
 } from "./utils/formValidation";
+import { getFormPlaceholderImageSrc } from "./utils/formPlaceholderImage";
 
 const DownloadModal = ({ isOpen, onClose, onSuccess }) => {
+  const pathname = usePathname();
+  const { src: formPlaceholderSrc, fallbackSrc: formPlaceholderFallback } = getFormPlaceholderImageSrc(pathname, basePath);
+  const [formPlaceholderImgSrc, setFormPlaceholderImgSrc] = useState(formPlaceholderSrc);
+  useEffect(() => setFormPlaceholderImgSrc(formPlaceholderSrc), [formPlaceholderSrc]);
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -262,9 +269,10 @@ const DownloadModal = ({ isOpen, onClose, onSuccess }) => {
 
             {/* Image */}
             <img
-              src={`${basePath}/images/form-placeholder.png`}
+              src={formPlaceholderImgSrc}
               alt="Download illustration"
               className="absolute inset-0 w-full h-full object-cover"
+              onError={() => setFormPlaceholderImgSrc(formPlaceholderFallback)}
             />
 
             {/* Optional overlay */}

@@ -28,7 +28,7 @@ const UnitsSectionClient = ({
               <h2 className="text-base sm:text-lg font-semibold text-gray-900">
                 {examName} &gt; {subjectName} Units
               </h2>
-              <p className="mt-1 text-xs sm:text-sm text-gray-500">
+              <p className="mt-1 text-xs sm:text-sm text-gray-600">
                 Review each unit, its weightage, and completion progress.
                 Progress is calculated from chapters within each unit.
               </p>

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import {
   FaSearch, FaPlus, FaFilter, FaFire, FaClock, FaComment, FaEye, FaShare,
@@ -19,7 +20,9 @@ import Button from "./Button";
 import DiscussionMetadata from "./DiscussionMetadata";
 import VerticalBannerList from "./BannerCarousel";
 import DiscussionFormModal from "./DiscussionFormModal";
+import DiscussionForumSavePostModal from "./DiscussionForumSavePostModal";
 import { useStudent } from "../hooks/useStudent";
+import ExamAreaLoading from "./ExamAreaLoading";
 import Image from "next/image";
 import { SEO_DEFAULTS } from "@/constants";
 
@@ -80,18 +83,41 @@ const isHTML = (text = "") => {
   return htmlTagRegex.test(text);
 };
 
+// Rewrite img src: ensure basePath, and use serve-image API for discussion images so they load reliably
+function rewriteContentImageSrc(html) {
+  if (!html || !basePath) return html;
+  return html.replace(
+    /<img([^>]*)\ssrc=["']([^"']+)["']/gi,
+    (match, attrs, src) => {
+      const t = (src || "").trim();
+      if (!t || t.startsWith("data:") || t.startsWith("http://") || t.startsWith("https://")) return match;
+      let pathOnly = t.startsWith("/") ? t : `/${t}`;
+      if (!pathOnly.startsWith(basePath)) pathOnly = `${basePath}${pathOnly}`;
+      const discussionPrefix = `${basePath}/discussion/`;
+      if (pathOnly.startsWith(discussionPrefix)) {
+        const pathUnderDiscussion = pathOnly.slice(discussionPrefix.length);
+        const serveUrl = `${basePath}/api/discussion/serve-image?path=${encodeURIComponent(pathUnderDiscussion)}`;
+        return `<img${attrs} src="${serveUrl}"`;
+      }
+      return `<img${attrs} src="${pathOnly}"`;
+    }
+  );
+}
+
 // Render content - handles both HTML (from RichTextEditor) and markdown
 const renderContent = (text = "") => {
   if (!text) return "";
 
   // If content is already HTML (from RichTextEditor), sanitize and return
   if (isHTML(text)) {
-    return DOMPurify.sanitize(text);
+    const sanitized = DOMPurify.sanitize(text);
+    return rewriteContentImageSrc(sanitized);
   }
 
   // Otherwise, treat as markdown and parse
   const html = marked.parse(text);
-  return DOMPurify.sanitize(html);
+  const sanitized = DOMPurify.sanitize(html);
+  return rewriteContentImageSrc(sanitized);
 };
 
 const timeAgo = (date) => {
@@ -196,7 +222,7 @@ const ThreadCard = ({ thread, onClick }) => {
                 <div className="flex items-center gap-2">
                   <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center overflow-hidden border border-gray-200">
                     {(thread.contributorDisplayName || thread.authorType === "User") ? (
-                      <img src={BRAND_AVATAR_URL} alt="TestPrepKart" className="w-full h-full object-cover" />
+                      <img src={BRAND_AVATAR_URL} alt="Testprepkart" className="w-full h-full object-cover" />
                     ) : thread.author?.avatar ? (
                       <img src={thread.author.avatar} alt="av" className="w-full h-full object-cover" />
                     ) : (
@@ -204,7 +230,7 @@ const ThreadCard = ({ thread, onClick }) => {
                     )}
                   </div>
                   <span className="font-semibold text-gray-700">
-                    {(thread.contributorDisplayName || thread.authorType === "User") ? "TestPrepKart" : (thread.author?.firstName ? `${thread.author.firstName} ${thread.author.lastName}` : (thread.guestName || "Contributor"))}
+                    {(thread.contributorDisplayName || thread.authorType === "User") ? "Testprepkart" : (thread.author?.firstName ? `${thread.author.firstName} ${thread.author.lastName}` : (thread.guestName || "Contributor"))}
                   </span>
                 </div>
                 <span className="text-gray-300 hidden sm:block">•</span>
@@ -377,7 +403,7 @@ const SuccessModal = ({ isOpen, onClose, title, message }) => {
 
 /* ---------- Thread Detail View ---------- */
 // hierarchy: { examId, subjectId, unitId, chapterId, topicId, subTopicId, definitionId } — slug is unique per level
-const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal, examImage, hierarchy = {} }) => {
+const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal, onOpenSavePostRegistrationModal, onStartPost, onImageUpload, examImage, hierarchy = {}, onOpenThread }) => {
   const [thread, setThread] = useState(null);
   const [replies, setReplies] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -390,6 +416,8 @@ const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal, examImage,
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successContent, setSuccessContent] = useState({ title: "", message: "" });
   const [discussionBanner, setDiscussionBanner] = useState(null);
+  const [relatedThreads, setRelatedThreads] = useState([]);
+  const [relatedLoading, setRelatedLoading] = useState(false);
   const editorRef = useRef(null);
   const repliesRef = useRef(null);
   const searchTimeout = useRef(null);
@@ -485,6 +513,38 @@ const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal, examImage,
     fetchDetail();
   }, [fetchDetail]);
 
+  const fetchRelatedThreads = useCallback(async () => {
+    const hasHierarchy = hierarchy.examId || hierarchy.subjectId || hierarchy.chapterId || hierarchy.topicId || hierarchy.unitId || hierarchy.subTopicId || hierarchy.definitionId;
+    if (!hasHierarchy || !slug) return;
+    setRelatedLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (hierarchy.examId) params.set("examId", hierarchy.examId);
+      if (hierarchy.subjectId) params.set("subjectId", hierarchy.subjectId);
+      if (hierarchy.unitId) params.set("unitId", hierarchy.unitId);
+      if (hierarchy.chapterId) params.set("chapterId", hierarchy.chapterId);
+      if (hierarchy.topicId) params.set("topicId", hierarchy.topicId);
+      if (hierarchy.subTopicId) params.set("subTopicId", hierarchy.subTopicId);
+      if (hierarchy.definitionId) params.set("definitionId", hierarchy.definitionId);
+      params.set("limit", "6");
+      params.set("page", "1");
+      const res = await api.get(`/discussion/threads?${params.toString()}`);
+      const list = res?.data?.data ?? [];
+      const arr = Array.isArray(list) ? list : [];
+      const filtered = arr.filter((t) => t.slug && t.slug !== slug);
+      setRelatedThreads(filtered.slice(0, 5));
+    } catch (err) {
+      console.error("Failed to fetch related threads", err);
+      setRelatedThreads([]);
+    } finally {
+      setRelatedLoading(false);
+    }
+  }, [hierarchy.examId, hierarchy.subjectId, hierarchy.unitId, hierarchy.chapterId, hierarchy.topicId, hierarchy.subTopicId, hierarchy.definitionId, slug]);
+
+  useEffect(() => {
+    if (thread) fetchRelatedThreads();
+  }, [thread, fetchRelatedThreads]);
+
   const handleVote = async (targetType, id, voteType) => {
     try {
       const endpoint = targetType === 'thread' ? `/discussion/threads/${slug}/vote${hierarchyQuery ? `?${hierarchyQuery.slice(1)}` : ""}` : `/discussion/replies/${id}/vote`;
@@ -504,7 +564,7 @@ const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal, examImage,
     }
   };
 
-  const handleSave = async () => {
+  const performSubscribe = async () => {
     try {
       const headers = { "x-guest-id": guestIdentity.id, "x-guest-name": guestIdentity.name };
       const res = await api.post(`/discussion/threads/${slug}/subscribe${hierarchyQuery ? `?${hierarchyQuery.slice(1)}` : ""}`, {}, { headers });
@@ -514,6 +574,21 @@ const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal, examImage,
     } catch (err) {
       console.error("Save failed", err);
     }
+  };
+
+  const handleSave = () => {
+    if (typeof window !== "undefined") {
+      const token = localStorage.getItem("student_token");
+      if (!token && onOpenSavePostRegistrationModal) {
+        onOpenSavePostRegistrationModal(performSubscribe);
+        return;
+      }
+      if (!token) {
+        alert("Please log in to save this post.");
+        return;
+      }
+    }
+    performSubscribe();
   };
 
   const handleReport = async (targetType, id) => {
@@ -624,7 +699,7 @@ const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal, examImage,
     }, 500);
   };
 
-  if (loading) return <div className="flex justify-center p-20"><FaEye className="animate-pulse text-indigo-400" size={30} /></div>;
+  if (loading) return <ExamAreaLoading variant="compact" message="Loading discussion..." />;
   if (!thread) {
     return (
       <div className="text-center p-20">
@@ -656,6 +731,17 @@ const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal, examImage,
           <FaArrowLeft size={10} /> Back to Forum
         </button>
         <div className="flex items-center gap-3">
+          {onStartPost && (
+            <Button
+              onClick={onStartPost}
+              variant="primary"
+              size="sm"
+              className="flex items-center gap-2 font-bold text-[11px] px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white border border-blue-600"
+            >
+              <FaPlus size={10} />
+              Start Post
+            </Button>
+          )}
           <Button
             onClick={handleSave}
             variant="ghost"
@@ -745,7 +831,7 @@ const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal, examImage,
                   <div className="flex items-center gap-3 mb-5">
                     <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center overflow-hidden border border-white shadow-sm ring-2 ring-gray-50">
                       {(thread.contributorDisplayName || thread.authorType === "User") ? (
-                        <img src={BRAND_AVATAR_URL} alt="TestPrepKart" className="w-full h-full object-cover" />
+                        <img src={BRAND_AVATAR_URL} alt="Testprepkart" className="w-full h-full object-cover" />
                       ) : thread.author?.avatar ? (
                         <img src={thread.author.avatar} alt="av" className="w-full h-full object-cover" />
                       ) : (
@@ -755,10 +841,10 @@ const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal, examImage,
                     <div>
                       <div className="flex items-center gap-2">
                         <h4 className="font-bold text-sm text-gray-900 leading-none">
-                          {(thread.contributorDisplayName || thread.authorType === "User") ? "TestPrepKart" : (thread.author?.firstName ? `${thread.author.firstName} ${thread.author.lastName}` : (thread.guestName || "Contributor"))}
+                          {(thread.contributorDisplayName || thread.authorType === "User") ? "Testprepkart" : (thread.author?.firstName ? `${thread.author.firstName} ${thread.author.lastName}` : (thread.guestName || "Contributor"))}
                         </h4>
                         <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider ${(thread.contributorDisplayName || thread.authorType === "User") ? "bg-indigo-100 text-indigo-700" : "bg-gray-100 text-gray-400"}`}>
-                          {(thread.contributorDisplayName || thread.authorType === "User") ? "TestPrepKart" : (thread.author?.role || "Student")}
+                          {(thread.contributorDisplayName || thread.authorType === "User") ? "Testprepkart" : (thread.author?.role || "Student")}
                         </span>
                       </div>
                       <p className="text-[10px] text-gray-400 font-medium mt-1">Posted {timeAgo(thread.createdAt)} • <FaEye size={8} className="inline mr-1" /> {thread.views || 0}</p>
@@ -897,11 +983,12 @@ const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal, examImage,
                     onChange={setReplyContent}
                     placeholder="Type your answer here... Be helpful and polite!"
                     hideAdminTools={true}
+                    onImageUpload={onImageUpload}
                   />
                 </div>
                 <div className="flex flex-col sm:flex-row justify-between items-center mt-6 gap-4 border-t border-gray-100 pt-6">
                   <p className="text-[11px] text-gray-400 font-medium tracking-wide">
-                    By posting, you agree to the <a href="#" className="text-blue-600 underline">Community Guidelines</a>.
+                    By posting, you agree to the <Link href="/community-guidelines" className="text-blue-600 underline hover:text-blue-700">Community Guidelines</Link>.
                   </p>
                   <Button
                     onClick={() => handlePostReply()}
@@ -910,7 +997,7 @@ const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal, examImage,
                     size="md"
                     className="w-full sm:w-auto px-10 py-2.5 rounded-xl font-bold text-sm bg-blue-600 hover:bg-blue-700 shadow-md"
                   >
-                    {isSubmitting ? "Posting..." : "Post Answer"}
+                    {isSubmitting ? "Posting..." : "Post Reply"}
                   </Button>
                 </div>
               </div>
@@ -934,23 +1021,44 @@ const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal, examImage,
         {/* Sidebar */}
         <div className="lg:col-span-1 flex flex-col gap-6">
           <Card variant="standard" className="p-5 border-gray-200/60 shadow-sm">
-            <h3 className="text-[11px] font-extrabold text-gray-900 uppercase tracking-widest mb-4 border-b border-gray-50 pb-3">Related Topics</h3>
-            <div className="space-y-5">
-              {[
-                { title: "Difference between Taxon and Category?", meta: "8 replies • Biology • Chapter 1", active: true },
-                { title: "How to memorize the hierarchy of classification?", meta: "24 replies • Biology • Chapter 1" },
-                { title: "Best reference books for Botany?", meta: "45 replies • General" }
-              ].map((item, i) => (
-                <a key={i} href="#" className="block group">
-                  <p className={`text-[13px] font-bold leading-snug mb-1 transition-colors ${item.active ? 'text-blue-600' : 'text-gray-700 group-hover:text-blue-600'}`}>
-                    {item.title}
-                  </p>
-                  <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">{item.meta}</p>
-                </a>
-              ))}
-            </div>
-            <button className="w-full mt-6 py-2 px-4 rounded-xl border border-gray-200 text-[10px] font-extrabold text-gray-500 uppercase tracking-widest hover:bg-gray-50 transition-all border-dashed">
-              View all related discussions
+            <h3 className="text-[11px] font-extrabold text-gray-900 uppercase tracking-widest mb-4 border-b border-gray-50 pb-3">Related threads</h3>
+            {relatedLoading ? (
+              <div className="space-y-3">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="h-12 bg-gray-100 rounded-lg animate-pulse" aria-hidden />
+                ))}
+              </div>
+            ) : relatedThreads.length === 0 ? (
+              <p className="text-[11px] text-gray-500 font-medium">No other threads in this section yet.</p>
+            ) : (
+              <div className="space-y-5">
+                {relatedThreads.map((t) => {
+                  const replyCount = t.replyCount ?? 0;
+                  const chapterName = t.chapterId?.name || t.subjectId?.name || "General";
+                  const meta = `${replyCount} ${replyCount === 1 ? "reply" : "replies"} • ${chapterName}`;
+                  const isCurrent = t.slug === slug;
+                  return (
+                    <button
+                      key={t._id}
+                      type="button"
+                      onClick={() => onOpenThread && onOpenThread(t)}
+                      className="w-full text-left block group"
+                    >
+                      <p className={`text-[13px] font-bold leading-snug mb-1 transition-colors line-clamp-2 ${isCurrent ? "text-blue-600" : "text-gray-700 group-hover:text-blue-600"}`}>
+                        {t.title}
+                      </p>
+                      <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">{meta}</p>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={onBack}
+              className="w-full mt-6 py-2 px-4 rounded-xl border border-gray-200 text-[10px] font-extrabold text-gray-500 uppercase tracking-widest hover:bg-gray-50 transition-all border-dashed"
+            >
+              View all discussions
             </button>
           </Card>
           {/*Academic Integrity*/}
@@ -1050,9 +1158,9 @@ const ThreadDetail = ({ slug, onBack, guestIdentity, onShowAuthModal, examImage,
   );
 };
 
-/* Helpers: admin/moderation replies show as TestPrepKart */
+/* Helpers: admin/moderation replies show as Testprepkart */
 const getReplyDisplayName = (reply) => {
-  if (reply.authorType === "User") return "TestPrepKart";
+  if (reply.authorType === "User") return "Testprepkart";
   return reply.author?.firstName ? `${reply.author.firstName} ${reply.author.lastName}` : (reply.guestName || "Contributor");
 };
 const getReplyDisplayInitial = (reply) => {
@@ -1094,7 +1202,7 @@ const CommentItem = ({ reply, onVote, onReply, onReport, onShare, depth = 0, onS
         <div className="flex items-center gap-2 mb-2">
           <div className={`w-6 h-6 rounded-full flex items-center justify-center overflow-hidden border shadow-xs ${reply.authorType === "User" ? "bg-blue-100 border-blue-200" : "bg-gray-50 border-gray-100"}`}>
             {reply.authorType === "User" ? (
-              <img src={BRAND_AVATAR_URL} alt="TestPrepKart" className="w-full h-full object-cover" />
+              <img src={BRAND_AVATAR_URL} alt="Testprepkart" className="w-full h-full object-cover" />
             ) : reply.author?.avatar ? (
               <img src={reply.author.avatar} alt="av" className="w-full h-full object-cover" />
             ) : (
@@ -1106,7 +1214,7 @@ const CommentItem = ({ reply, onVote, onReply, onReport, onShare, depth = 0, onS
           </span>
           {(reply.authorType === "User" || reply.author?.role) && (
             <span className={`text-[7px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider ${reply.authorType === "User" || reply.author?.role === "admin" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-400"}`}>
-              {reply.authorType === "User" ? "TestPrepKart" : (reply.author?.role === "admin" ? "TestPrepKart" : "Student")}
+              {reply.authorType === "User" ? "Testprepkart" : (reply.author?.role === "admin" ? "Testprepkart" : "Student")}
             </span>
           )}
           <span className="text-gray-300">•</span>
@@ -1202,7 +1310,7 @@ const CommentItem = ({ reply, onVote, onReply, onReport, onShare, depth = 0, onS
           <div className="flex items-center gap-3 mb-4">
             <div className={`w-10 h-10 rounded-full flex items-center justify-center overflow-hidden border shadow-sm ring-2 ring-white ${reply.authorType === "User" ? "bg-blue-100 border-blue-200" : "bg-gray-50 border-gray-100"}`}>
               {reply.authorType === "User" ? (
-                <img src={BRAND_AVATAR_URL} alt="TestPrepKart" className="w-full h-full object-cover" />
+                <img src={BRAND_AVATAR_URL} alt="Testprepkart" className="w-full h-full object-cover" />
               ) : reply.author?.avatar ? (
                 <img src={reply.author.avatar} alt="av" className="w-full h-full object-cover" />
               ) : (
@@ -1215,7 +1323,7 @@ const CommentItem = ({ reply, onVote, onReply, onReport, onShare, depth = 0, onS
                   {getReplyDisplayName(reply)}
                 </span>
                 <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider ${reply.authorType === "User" || reply.author?.role === "admin" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-400"}`}>
-                  {reply.authorType === "User" ? "TestPrepKart" : (reply.author?.role === "admin" ? "TestPrepKart" : (reply.author?.role || "Student"))}
+                  {reply.authorType === "User" ? "Testprepkart" : (reply.author?.role === "admin" ? "Testprepkart" : (reply.author?.role || "Student"))}
                 </span>
               </div>
               <p className="text-[10px] text-gray-400 font-medium mt-1">Answered {timeAgo(reply.createdAt)}</p>
@@ -1357,6 +1465,7 @@ const DiscussionForumTab = ({ entityName, entityType, examId, examSlug, subjectI
 
   const [threads, setThreads] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [listSource, setListSource] = useState(null); // "current" | "parent" | "child" | "same_branch" | "none"
   const [search, setSearch] = useState("");
   const [listPage, setListPage] = useState(1);
   const [listPagination, setListPagination] = useState({ pages: 1, total: 0 });
@@ -1374,6 +1483,28 @@ const DiscussionForumTab = ({ entityName, entityType, examId, examSlug, subjectI
   const [successContent, setSuccessContent] = useState({ title: "", message: "" });
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [pendingAction, setPendingAction] = useState(null);
+  const [showSavePostRegistrationModal, setShowSavePostRegistrationModal] = useState(false);
+  const savePostAfterRegistrationRef = useRef(null);
+
+  const discussionImageUpload = useCallback(async (file) => {
+    const formData = new FormData();
+    formData.append("image", file);
+    if (examId) formData.append("examId", String(examId));
+    const headers = {
+      "x-guest-id": guestIdentity.id || "",
+      "x-guest-name": guestIdentity.name || "",
+    };
+    // Use fetch so browser sets Content-Type to multipart/form-data; boundary=... (axios can send application/json)
+    const token = typeof window !== "undefined" ? localStorage.getItem("student_token") : null;
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    const res = await fetch(`${basePath}/api/discussion/upload/image`, { method: "POST", body: formData, headers });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || err.error || res.statusText || "Upload failed");
+    }
+    const json = await res.json();
+    return json.data || json;
+  }, [guestIdentity.id, guestIdentity.name, examId]);
 
   const fetchThreads = useCallback(async () => {
     setLoading(true);
@@ -1388,7 +1519,7 @@ const DiscussionForumTab = ({ entityName, entityType, examId, examSlug, subjectI
       if (definitionId) params.append("definitionId", definitionId);
 
       if (search) params.append("search", search);
-      if (filter === "New") params.append("sort", "new");
+      if (filter === "New" || filter === "All") params.append("sort", "new"); // recent first at top
       if (filter === "Hot") params.append("sort", "hot");
       if (selectedTag !== "All Categories") params.append("tag", selectedTag);
       params.append("page", listPage);
@@ -1398,6 +1529,7 @@ const DiscussionForumTab = ({ entityName, entityType, examId, examSlug, subjectI
       if (res.data.success) {
         setThreads(res.data.data);
         if (res.data.pagination) setListPagination(res.data.pagination);
+        setListSource(res.data.listSource ?? null);
       }
     } catch (error) {
       console.error("Error fetching threads", error);
@@ -1599,6 +1731,7 @@ const DiscussionForumTab = ({ entityName, entityType, examId, examSlug, subjectI
                         onChange={setNewContent}
                         placeholder="Write your discussion details here... Use the toolbar to format your text."
                         hideAdminTools={true}
+                        onImageUpload={discussionImageUpload}
                       />
                     </div>
                   </div>
@@ -1643,11 +1776,18 @@ const DiscussionForumTab = ({ entityName, entityType, examId, examSlug, subjectI
             <ThreadDetail
               slug={currentThreadSlug}
               onBack={handleBack}
+              onOpenThread={handleThreadClick}
               guestIdentity={guestIdentity}
+              onImageUpload={discussionImageUpload}
               onShowAuthModal={(formId, onSuccess) => {
                 setPendingAction({ formId, onSuccess });
                 setShowAuthModal(true);
               }}
+              onOpenSavePostRegistrationModal={(afterRegistration) => {
+                savePostAfterRegistrationRef.current = afterRegistration;
+                setShowSavePostRegistrationModal(true);
+              }}
+              onStartPost={handleStartCreate}
               examImage={getExamImage}
               hierarchy={{ examId, subjectId, unitId, chapterId, topicId, subTopicId, definitionId }}
             />
@@ -1785,10 +1925,18 @@ const DiscussionForumTab = ({ entityName, entityType, examId, examSlug, subjectI
                 </div>
               </Card>
 
+              {/* Same-branch fallback notice: no threads at this level — showing other threads from this exam */}
+              {listSource === "same_branch" && threads.length > 0 && (
+                <div className="flex items-center gap-2 text-[11px] text-amber-800 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+                  <FaComment className="text-amber-600 shrink-0" size={12} />
+                  <span><strong>No discussions at this level yet.</strong> Showing other threads from this exam so you can browse and participate.</span>
+                </div>
+              )}
+
               {/* Thread List */}
               <div className="space-y-3">
                 {loading ? (
-                  [1, 2, 3].map(i => <div key={i} className="h-32 rounded-lg bg-gray-50 border border-gray-100 animate-pulse" />)
+                  <div className="min-h-[180px]" aria-busy="true" aria-label="Loading threads" />
                 ) : threads.length > 0 ? (
                   <>
                     {threads.map(thread => <ThreadCard key={thread._id} thread={thread} onClick={handleThreadClick} />)}
@@ -1860,6 +2008,22 @@ const DiscussionForumTab = ({ entityName, entityType, examId, examSlug, subjectI
             setPendingAction(null);
           }}
           formId={pendingAction?.formId || "Discussion-forum-post"}
+        />
+
+        <DiscussionForumSavePostModal
+          isOpen={showSavePostRegistrationModal}
+          onClose={() => {
+            setShowSavePostRegistrationModal(false);
+            savePostAfterRegistrationRef.current = null;
+          }}
+          onRegistrationSuccess={() => {
+            const callback = savePostAfterRegistrationRef.current;
+            if (callback) {
+              callback();
+            }
+            setShowSavePostRegistrationModal(false);
+            savePostAfterRegistrationRef.current = null;
+          }}
         />
       </div>
     </div>

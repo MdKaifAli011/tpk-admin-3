@@ -29,14 +29,18 @@ export default function ProductCard({ product }) {
         : "Paper";
 
   return (
-    <article className="group flex flex-col h-full bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm hover:shadow-xl hover:shadow-indigo-500/10 transition-all duration-300">
+    <article className="group flex flex-col h-full bg-white rounded-xl border border-slate-100 shadow-sm hover:shadow-lg hover:border-indigo-100 transition-all duration-200 overflow-hidden focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
       {/* Image */}
       <div className="relative aspect-video overflow-hidden bg-slate-100">
-        <img
-          src={product.image}
-          alt={product.name}
-          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-        />
+        {product.image ? (
+          <img
+            src={product.image}
+            alt={product.name}
+            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+          />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center text-slate-300 text-4xl">📚</div>
+        )}
         <div className="absolute top-4 left-4 flex gap-2">
           {product.badge && (
             <span className="bg-indigo-600 text-white text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider">
@@ -76,7 +80,7 @@ export default function ProductCard({ product }) {
         <div className="flex gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">
           <span className="text-indigo-600">{categoryLabel.toUpperCase()}</span>
           <span>•</span>
-          <span>{product.subject.toUpperCase()}</span>
+          <span>{(product.subject || "").toUpperCase() || "—"}</span>
         </div>
         <Link href={`/store/${product.id}`} className="block mb-3">
           <h3 className="text-xl font-bold text-slate-900 line-clamp-2 leading-snug group-hover:text-indigo-600 transition-colors">
@@ -84,19 +88,19 @@ export default function ProductCard({ product }) {
           </h3>
         </Link>
         <p className="text-slate-500 text-sm line-clamp-2 leading-relaxed mb-4 flex-1 min-h-[2.5rem]">
-          {product.description}
+          {product.description || ""}
         </p>
         <div className="flex items-center gap-1.5 mb-6">
           <div className="flex text-amber-400 text-sm">
             {[1, 2, 3, 4, 5].map((i) => (
               <FaStar
                 key={i}
-                className={i <= Math.floor(product.rating) ? "fill-current" : "text-slate-300 fill-slate-300"}
+                className={i <= Math.floor(Number(product.rating) || 0) ? "fill-current" : "text-slate-300 fill-slate-300"}
               />
             ))}
           </div>
-          <span className="text-sm font-bold text-slate-900 ml-1">{product.rating}</span>
-          <span className="text-xs text-slate-400">({product.reviews.toLocaleString()})</span>
+          <span className="text-sm font-bold text-slate-900 ml-1">{product.rating ?? "—"}</span>
+          <span className="text-xs text-slate-400">({(product.reviews ?? 0).toLocaleString()})</span>
         </div>
         <div className="flex items-center justify-between mt-auto">
           <div className="flex items-baseline gap-2">

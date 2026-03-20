@@ -18,18 +18,38 @@ import {
   FaGripVertical,
 } from "react-icons/fa";
 import { ToastContainer, useToast } from "../ui/Toast";
+import StatusCascadeModal from "../ui/StatusCascadeModal";
 import api from "@/lib/api";
-import { getSubjectListCache, setSubjectListCache } from "@/lib/subjectListCache";
+import { setSubjectListCache } from "@/lib/subjectListCache";
+import { invalidateListCachesFrom } from "@/lib/listCacheInvalidation";
 import { usePermissions, getPermissionMessage } from "../../hooks/usePermissions";
 import { IoFilterOutline } from "react-icons/io5";
+import { useFilterPersistence } from "../../hooks/useFilterPersistence";
+import { useDebouncedSearchQuery } from "../../hooks/useDebouncedSearchQuery";
+import PaginationBar from "../ui/PaginationBar";
 
 const SubjectManagement = () => {
   const { canCreate, canEdit, canDelete, canReorder, role } = usePermissions();
+  const [filterState, setFilterState] = useFilterPersistence("subject", {
+    filterExam: "",
+    searchQuery: "",
+    metaFilter: "all",
+  });
+  const { page, limit, filterExam, searchQuery, metaFilter } = filterState;
+  const [searchInput, setSearchInput] = useDebouncedSearchQuery(searchQuery, setFilterState);
+
   const [showAddForm, setShowAddForm] = useState(false);
   const [isDataLoading, setIsDataLoading] = useState(false);
   const [isFormLoading, setIsFormLoading] = useState(false);
   const [error, setError] = useState(null);
   const [subjects, setSubjects] = useState([]);
+  const [countsByExam, setCountsByExam] = useState({});
+  const [pagination, setPagination] = useState({
+    total: 0,
+    totalPages: 0,
+    hasNextPage: false,
+    hasPrevPage: false,
+  });
   const [exams, setExams] = useState([]);
   const [formData, setFormData] = useState({
     name: "",
@@ -39,13 +59,12 @@ const SubjectManagement = () => {
   const [formError, setFormError] = useState(null);
   const [editingSubject, setEditingSubject] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
-  const [filterExam, setFilterExam] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
   const [isReorderMode, setIsReorderMode] = useState(false);
   const [reorderDraft, setReorderDraft] = useState({});
+  const [cascadeModalOpen, setCascadeModalOpen] = useState(false);
+  const [cascadeItem, setCascadeItem] = useState(null);
   const { toasts, removeToast, success, error: showError } = useToast();
   const isFetchingRef = useRef(false);
-  const [metaFilter, setMetaFilter] = useState("all"); // all, filled, notFilled
 
   // ✅ Fetch Subjects using Axios (and update cache)
   const fetchSubjects = useCallback(async () => {
@@ -54,17 +73,30 @@ const SubjectManagement = () => {
     try {
       setIsDataLoading(true);
       setError(null);
-      const response = await api.get(`/subject?status=all&limit=1000&metaStatus=${metaFilter}`);
+      const params = new URLSearchParams();
+      params.set("status", "all");
+      params.set("metaStatus", metaFilter);
+      params.set("page", String(page));
+      params.set("limit", String(limit));
+      if (filterExam) params.set("examId", filterExam);
+      if (searchQuery.trim()) params.set("search", searchQuery.trim());
+      const response = await api.get(`/subject?${params.toString()}`);
 
       if (response.data?.success) {
         const fetchedSubjects = response.data.data || [];
         if (Array.isArray(fetchedSubjects)) {
           setSubjects(fetchedSubjects);
+          setCountsByExam(response.data.countsByExam || {});
           setSubjectListCache(fetchedSubjects, metaFilter);
-        } else {
-          console.error("❌ Invalid subjects data format:", fetchedSubjects);
-          setError("Invalid data format received from server");
-          setSubjects([]);
+        }
+        const pag = response.data?.pagination;
+        if (pag) {
+          setPagination({
+            total: pag.total ?? 0,
+            totalPages: pag.totalPages ?? 0,
+            hasNextPage: !!pag.hasNextPage,
+            hasPrevPage: !!pag.hasPrevPage,
+          });
         }
       } else {
         setError(response.data?.message || "Failed to fetch subjects");
@@ -72,48 +104,30 @@ const SubjectManagement = () => {
       }
     } catch (err) {
       console.error("❌ Error fetching subjects:", err);
-      const errorMessage =
-        err?.response?.data?.message ||
-        err?.message ||
-        "Failed to fetch subjects";
-      setError(errorMessage);
+      setError(err?.response?.data?.message || err?.message || "Failed to fetch subjects");
+      setSubjects([]);
     } finally {
       setIsDataLoading(false);
       isFetchingRef.current = false;
     }
-  }, [metaFilter]);
+  }, [metaFilter, page, limit, filterExam, searchQuery]);
 
-  // Load subjects: use cache when returning from detail (no API call), otherwise fetch once
   useEffect(() => {
-    const cached = getSubjectListCache(metaFilter);
-    if (cached != null && Array.isArray(cached)) {
-      setSubjects(cached);
-      setIsDataLoading(false);
-      setError(null);
-      return;
-    }
     fetchSubjects();
-  }, [metaFilter, fetchSubjects]);
+  }, [fetchSubjects]);
 
-  // ✅ Fetch Exams (for dropdown) using Axios
-  const fetchExams = async () => {
+  const fetchExams = useCallback(async () => {
     try {
-      // Fetch all exams (active and inactive) for dropdown
       const response = await api.get("/exam?status=all&limit=1000");
-
-      if (response.data?.success) {
-        setExams(response.data.data || []);
-      } else {
-        console.error("Failed to fetch exams:", response.data?.message);
-      }
+      if (response.data?.success) setExams(response.data.data || []);
     } catch (err) {
-      console.error("❌ Error fetching exams:", err);
+      console.error("Error fetching exams:", err);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchExams();
-  }, []);
+  }, [fetchExams]);
 
   // Calculate next order number when exam is selected
   useEffect(() => {
@@ -131,32 +145,15 @@ const SubjectManagement = () => {
     }
   }, [formData.examId, showAddForm, editingSubject, subjects]);
 
-  // Filter subjects based on selected exam
-  const filteredSubjects = useMemo(() => {
-    let result = subjects;
-    if (filterExam) {
-      result = result.filter(
-        (subject) =>
-          subject.examId?._id === filterExam || subject.examId === filterExam
-      );
-    }
-    // Search filter
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase().trim();
-      result = result.filter((subject) =>
-        subject.name?.toLowerCase().includes(query)
-      );
-    }
-    return result;
-  }, [subjects, filterExam, searchQuery]);
+  // Search is done server-side
+  const filteredSubjects = subjects;
 
   // Get active filter count
   const activeFilterCount = (filterExam ? 1 : 0) + (searchQuery ? 1 : 0);
 
   // Clear all filters
   const clearFilters = () => {
-    setFilterExam("");
-    setSearchQuery("");
+    setFilterState({ filterExam: "", searchQuery: "", page: 1 });
   };
 
   // ✅ Handle Input Change
@@ -200,9 +197,8 @@ const SubjectManagement = () => {
       const response = await api.post("/subject", payload);
 
       if (response.data?.success) {
-        const newList = [...subjects, response.data.data];
-        setSubjects(newList);
-        setSubjectListCache(newList, metaFilter);
+        invalidateListCachesFrom("subject");
+        await fetchSubjects();
         success(`Subject "${formData.name}" added successfully!`);
         // Reset form
         setFormData({ name: "", examId: "", orderNumber: "" });
@@ -279,11 +275,8 @@ const SubjectManagement = () => {
       const response = await api.put(`/subject/${editingSubject._id}`, payload);
 
       if (response.data?.success) {
-        const newList = subjects.map((s) =>
-          s._id === editingSubject._id ? response.data.data : s
-        );
-        setSubjects(newList);
-        setSubjectListCache(newList, metaFilter);
+        invalidateListCachesFrom("subject");
+        await fetchSubjects();
         success("Subject updated successfully!");
         handleCancelForm();
       } else {
@@ -323,9 +316,8 @@ const SubjectManagement = () => {
       const response = await api.delete(`/subject/${subjectToDelete._id}`);
 
       if (response.data?.success) {
-        const newList = subjects.filter((s) => s._id !== subjectToDelete._id);
-        setSubjects(newList);
-        setSubjectListCache(newList, metaFilter);
+        invalidateListCachesFrom("subject");
+        await fetchSubjects();
         success(`Subject "${subjectToDelete.name}" deleted successfully!`);
       } else {
         setError(response.data?.message || "Failed to delete subject");
@@ -364,7 +356,7 @@ const SubjectManagement = () => {
         });
 
         if (response.data.success) {
-          // Refetch subjects to get updated practiceDisabled from database
+          invalidateListCachesFrom("subject");
           await fetchSubjects();
           success(
             `Practice tests ${action}d successfully for "${subject.name}" and all children!`
@@ -386,45 +378,43 @@ const SubjectManagement = () => {
     }
   };
 
-  // ✅ Handle Toggle Status
-  const handleToggleStatus = async (subject) => {
-    const currentStatus = subject.status || "active";
-    const newStatus = currentStatus === "active" ? "inactive" : "active";
+  // ✅ Handle Toggle Status (opens modal for cascade options)
+  const handleToggleStatus = (subject) => {
+    setCascadeItem(subject);
+    setCascadeModalOpen(true);
+  };
+
+  const handleCascadeConfirm = async (newStatus, cascadeMode) => {
+    if (!cascadeItem) return;
     const action = newStatus === "inactive" ? "deactivate" : "activate";
-
-    if (
-      window.confirm(
-        `Are you sure you want to ${action} "${subject.name}"? All its children will also be ${action}d.`
-      )
-    ) {
-      try {
-        setIsFormLoading(true);
-        setError(null);
-
-        const response = await api.patch(`/subject/${subject._id}/status`, {
-          status: newStatus,
-        });
-
-        if (response.data.success) {
-          // Refetch subjects to get updated status from database
-          await fetchSubjects();
-          success(
-            `Subject "${subject.name}" and all children ${action}d successfully!`
-          );
-        } else {
-          setError(response.data.message || `Failed to ${action} subject`);
-          showError(response.data.message || `Failed to ${action} subject`);
-        }
-      } catch (error) {
-        console.error(`Error ${action}ing subject:`, error);
-        const errorMessage =
-          error.response?.data?.message ||
-          `Failed to ${action} subject. Please try again.`;
-        setError(errorMessage);
-        showError(errorMessage);
-      } finally {
-        setIsFormLoading(false);
+    try {
+      setIsFormLoading(true);
+      setError(null);
+      const response = await api.patch(`/subject/${cascadeItem._id}/status`, {
+        status: newStatus,
+        cascadeMode: cascadeMode || "respect_manual",
+      });
+      if (response.data.success) {
+        invalidateListCachesFrom("subject");
+        await fetchSubjects();
+        success(
+          `Subject "${cascadeItem.name}" and children ${action}d successfully!`
+        );
+        setCascadeModalOpen(false);
+        setCascadeItem(null);
+      } else {
+        setError(response.data.message || `Failed to ${action} subject`);
+        showError(response.data.message || `Failed to ${action} subject`);
       }
+    } catch (err) {
+      console.error(`Error ${action}ing subject:`, err);
+      const errorMessage =
+        err.response?.data?.message ||
+        `Failed to ${action} subject. Please try again.`;
+      setError(errorMessage);
+      showError(errorMessage);
+    } finally {
+      setIsFormLoading(false);
     }
   };
 
@@ -462,6 +452,7 @@ const SubjectManagement = () => {
       await Promise.all(
         examIds.map((examId) => saveReorderForExam(examId, reorderDraft[examId]))
       );
+      invalidateListCachesFrom("subject");
       await fetchSubjects();
       setReorderDraft({});
       setIsReorderMode(false);
@@ -477,6 +468,15 @@ const SubjectManagement = () => {
   return (
     <>
       <ToastContainer toasts={toasts} removeToast={removeToast} />
+      <StatusCascadeModal
+        open={cascadeModalOpen}
+        onClose={() => { setCascadeModalOpen(false); setCascadeItem(null); }}
+        levelLabel="Subject"
+        itemName={cascadeItem?.name}
+        currentStatus={cascadeItem?.status || "active"}
+        onConfirm={handleCascadeConfirm}
+        loading={isFormLoading}
+      />
       <div className="space-y-6">
         {/* Header Section */}
         <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 rounded-lg border border-gray-200 p-4 shadow-sm">
@@ -692,15 +692,17 @@ const SubjectManagement = () => {
                 <div className="relative min-w-[200px] sm:min-w-[240px]">
                   <input
                     type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
                     placeholder="Search subjects..."
                     className="w-full pl-9 pr-8 py-1.5 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                   />
                   <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-3.5 h-3.5" />
                   {searchQuery && (
                     <button
-                      onClick={() => setSearchQuery("")}
+                      onClick={() =>
+                        setFilterState({ searchQuery: "", page: 1 })
+                    }
                       className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                     >
                       <FaTimes className="w-3 h-3" />
@@ -712,7 +714,9 @@ const SubjectManagement = () => {
                   <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap">Meta Status:</label>
                   <select
                     value={metaFilter}
-                    onChange={(e) => setMetaFilter(e.target.value)}
+                    onChange={(e) =>
+                      setFilterState({ metaFilter: e.target.value, page: 1 })
+                    }
                     className="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-medium focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                   >
                     <option value="all">All Items</option>
@@ -750,7 +754,9 @@ const SubjectManagement = () => {
                   </label>
                   <select
                     value={filterExam}
-                    onChange={(e) => setFilterExam(e.target.value)}
+                    onChange={(e) =>
+                      setFilterState({ filterExam: e.target.value, page: 1 })
+                    }
                     className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-all"
                   >
                     <option value="">All Exams</option>
@@ -776,7 +782,9 @@ const SubjectManagement = () => {
                   Exam:{" "}
                   {exams.find((e) => e._id === filterExam)?.name || "N/A"}
                   <button
-                    onClick={() => setFilterExam("")}
+                    onClick={() =>
+                      setFilterState({ filterExam: "", page: 1 })
+                    }
                     className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"
                   >
                     <FaTimes className="w-3 h-3" />
@@ -787,7 +795,9 @@ const SubjectManagement = () => {
                 <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-medium">
                   Search: {searchQuery}
                   <button
-                    onClick={() => setSearchQuery("")}
+                    onClick={() =>
+                      setFilterState({ searchQuery: "", page: 1 })
+                    }
                     className="hover:bg-indigo-200 rounded-full p-0.5 transition-colors"
                   >
                     <FaTimes className="w-3 h-3" />
@@ -848,16 +858,29 @@ const SubjectManagement = () => {
                 )}
               </div>
             ) : (
-              <SubjectTable
-                subjects={filteredSubjects}
-                onEdit={handleEditSubject}
-                onDelete={handleDeleteSubject}
-                onToggleStatus={handleToggleStatus}
-                onTogglePractice={handleTogglePractice}
-                onReorderDraft={handleReorderDraft}
-                reorderDraft={reorderDraft}
-                isReorderAllowed={isReorderMode && !searchQuery.trim()}
-              />
+              <>
+                <SubjectTable
+                  subjects={filteredSubjects}
+                  countsByExam={countsByExam}
+                  onEdit={handleEditSubject}
+                  onDelete={handleDeleteSubject}
+                  onToggleStatus={handleToggleStatus}
+                  onTogglePractice={handleTogglePractice}
+                  onReorderDraft={handleReorderDraft}
+                  reorderDraft={reorderDraft}
+                  isReorderAllowed={isReorderMode && !searchQuery.trim()}
+                />
+                <PaginationBar
+                  page={page}
+                  limit={limit}
+                  total={pagination.total}
+                  totalPages={pagination.totalPages}
+                  hasNextPage={pagination.hasNextPage}
+                  hasPrevPage={pagination.hasPrevPage}
+                  onPageChange={(p) => setFilterState({ page: p })}
+                  onLimitChange={(l) => setFilterState({ limit: l, page: 1 })}
+                />
+              </>
             )}
           </div>
         </div>

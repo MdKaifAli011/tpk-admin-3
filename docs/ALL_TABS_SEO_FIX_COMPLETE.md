@@ -29,7 +29,7 @@ Fixed SEO metadata to appear correctly in **View Page Source** for **ALL tabs** 
 ### 3. Fixed Duplicate Entity Names
 
 **Before**: `NEET - NEET`, `Biology - NEET - Biology`
-**After**: `Biology - NEET | TestPrepKart` ✅
+**After**: `Biology - NEET | Testprepkart` ✅
 
 **Fix**: Updated hierarchy context to exclude current entity name.
 
@@ -61,43 +61,43 @@ Fixed SEO metadata to appear correctly in **View Page Source** for **ALL tabs** 
 #### 1. Exam Level
 ```
 URL: /neet?tab=discussion
-View-Source Should Show: <title>NEET - Discussion Forum | TestPrepKart</title>
+View-Source Should Show: <title>NEET - Discussion Forum | Testprepkart</title>
 ```
 
 #### 2. Subject Level
 ```
 URL: /neet/biology?tab=discussion
-View-Source Should Show: <title>Biology - Discussion Forum | TestPrepKart</title>
+View-Source Should Show: <title>Biology - Discussion Forum | Testprepkart</title>
 ```
 
 #### 3. Unit Level
 ```
 URL: /neet/biology/diversity-in-living-world?tab=discussion
-View-Source Should Show: <title>Diversity in Living World - Discussion Forum | TestPrepKart</title>
+View-Source Should Show: <title>Diversity in Living World - Discussion Forum | Testprepkart</title>
 ```
 
 #### 4. Chapter Level
 ```
 URL: /neet/biology/diversity-in-living-world/the-living-world?tab=discussion
-View-Source Should Show: <title>The Living World - Discussion Forum | TestPrepKart</title>
+View-Source Should Show: <title>The Living World - Discussion Forum | Testprepkart</title>
 ```
 
 #### 5. Topic Level
 ```
 URL: /neet/biology/.../topic-name?tab=discussion
-View-Source Should Show: <title>Topic Name - Discussion Forum | TestPrepKart</title>
+View-Source Should Show: <title>Topic Name - Discussion Forum | Testprepkart</title>
 ```
 
 #### 6. Subtopic Level
 ```
 URL: /neet/biology/.../subtopic-name?tab=discussion
-View-Source Should Show: <title>Subtopic Name - Discussion Forum | TestPrepKart</title>
+View-Source Should Show: <title>Subtopic Name - Discussion Forum | Testprepkart</title>
 ```
 
 #### 7. Definition Level
 ```
 URL: /neet/biology/.../definition-name?tab=discussion
-View-Source Should Show: <title>Definition Name - Discussion Forum | TestPrepKart</title>
+View-Source Should Show: <title>Definition Name - Discussion Forum | Testprepkart</title>
 ```
 
 ### Test All Tabs
@@ -105,26 +105,26 @@ View-Source Should Show: <title>Definition Name - Discussion Forum | TestPrepKar
 #### Overview Tab (Default)
 ```
 URL: /neet/biology?tab=overview (or no tab)
-View-Source Should Show: <title>Biology - NEET | TestPrepKart</title>
+View-Source Should Show: <title>Biology - NEET | Testprepkart</title>
 ```
 
 #### Discussion Forum Tab
 ```
 URL: /neet/biology?tab=discussion
-View-Source Should Show: <title>Biology - Discussion Forum | TestPrepKart</title>
+View-Source Should Show: <title>Biology - Discussion Forum | Testprepkart</title>
 ```
 
 #### Practice Test Tab
 ```
 URL: /neet/biology?tab=practice
-View-Source Should Show: <title>Biology - Practice Tests | TestPrepKart</title>
+View-Source Should Show: <title>Biology - Practice Tests | Testprepkart</title>
 ```
 
 #### Performance Tab
 ```
 URL: /neet/biology?tab=performance
 View-Source Should Show: 
-<title>Biology - Performance Analytics | TestPrepKart</title>
+<title>Biology - Performance Analytics | Testprepkart</title>
 <meta name="robots" content="noindex, nofollow">
 ```
 
@@ -173,7 +173,7 @@ Instead of:
 
 4. **Expected Result**:
    ```html
-   <title>Biology - Discussion Forum | TestPrepKart</title>
+   <title>Biology - Discussion Forum | Testprepkart</title>
    ```
 
 ## 🎉 Result

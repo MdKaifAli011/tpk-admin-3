@@ -113,7 +113,7 @@ const UtilitiesMegaMenu = ({ onClose }) => {
             <ul className="space-y-2">
               <li>
                 <a
-                  href="https://www.youtube.com/@TestprepKart"
+                  href="https://www.youtube.com/@Testprepkart"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-sm text-gray-700 hover:text-indigo-600 transition-colors block py-1"
@@ -272,7 +272,7 @@ const UtilitiesMegaMenu = ({ onClose }) => {
               <div className="relative bg-gray-100 rounded-lg overflow-hidden hover:bg-gray-200 transition-colors group cursor-pointer">
                 <div className="flex items-center justify-between p-4">
                   <a
-                    href="https://www.youtube.com/@TestprepKart"
+                    href="https://www.youtube.com/@Testprepkart"
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={onClose}

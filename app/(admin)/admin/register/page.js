@@ -296,7 +296,7 @@ const RegisterPage = () => {
 
         {/* Footer */}
         <div className="mt-6 text-center text-sm text-gray-600">
-          <p>© 2024 TestPrepKart Admin Panel</p>
+          <p>© 2024 Testprepkart Admin Panel</p>
         </div>
       </div>
     </div>

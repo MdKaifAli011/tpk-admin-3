@@ -80,10 +80,11 @@ function getConfig(iconType) {
 
 /** Get hierarchy slugs from pathname for notification for-context API. Strips basePath so exam/subject/... match route. */
 function getPathSegments(pathname) {
-  let p = (pathname || "").trim();
-  const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
-  if (basePath && p.startsWith(basePath)) p = p.slice(basePath.length).trim() || "/";
-  p = p.replace(/^\/+/, "");
+  let p = (pathname || "").trim().replace(/^\/+/, "");
+  const base = (process.env.NEXT_PUBLIC_BASE_PATH || "/self-study").replace(/^\/+/, "");
+  if (base && (p === base || p.startsWith(base + "/"))) {
+    p = p.slice(base.length).replace(/^\/+/, "");
+  }
   const parts = p ? p.split("/").filter(Boolean) : [];
   return {
     exam: parts[0] || "",
@@ -96,9 +97,20 @@ function getPathSegments(pathname) {
   };
 }
 
+const EXAM_ROUTE_EXCLUDED = ["notification", "login", "register", "contact", "pages", "blog", "download", "calculator", "store"];
+/** True when we are on an exam or exam-child page. Strip and dropdown must use for-context so only that exam/level notifications show. */
+function isExamOrChildPage(segments) {
+  return Boolean(segments.exam && !EXAM_ROUTE_EXCLUDED.includes(segments.exam));
+}
+
 // --- MAIN COMPONENT ---
+function segmentsKey(segments) {
+  return [segments.exam, segments.subject, segments.unit, segments.chapter, segments.topic, segments.subtopic, segments.definition].join("|");
+}
+
 export default function NotificationStrip() {
   const pathname = usePathname();
+  const currentKeyRef = useRef("");
   const [items, setItems] = useState([]);
   const [dismissedIds, setDismissedIds] = useState(() => {
     if (typeof window === "undefined") return new Set();
@@ -111,26 +123,22 @@ export default function NotificationStrip() {
   });
 
   const segments = getPathSegments(pathname);
-  const excludedFirstSegments = [
-    "notification",
-    "login",
-    "register",
-    "contact",
-    "pages",
-    "blog",
-    "download",
-    "calculator",
-    "store",
-  ];
-  const isExamRoute =
-    segments.exam && !excludedFirstSegments.includes(segments.exam);
-  const isRootPage = !pathname || pathname === "/" || pathname === "";
+  const isExamRoute = isExamOrChildPage(segments);
+  const isRootPage = !pathname || pathname === "/" || pathname === "" || pathname.replace(/^\/+/, "").replace(/\/+$/, "") === "";
   const shouldShowStrip = isExamRoute || isRootPage;
 
+  currentKeyRef.current = segmentsKey(segments);
+
   useEffect(() => {
-    if (!shouldShowStrip) return;
+    if (!shouldShowStrip) {
+      setItems([]);
+      return;
+    }
+    // Clear immediately when route/exam changes so we never show another exam's notifications (e.g. JEE on NEET).
+    setItems([]);
     let cancelled = false;
-    // Pass hierarchy slugs so API returns: general (everywhere) + exam (page only) + exam_with_children (exam + children) + exact match for subject/unit/...
+    const fetchKey = segmentsKey(segments);
+    // Pass hierarchy slugs so API returns only: general + that exam + that level's notifications (not other exams).
     const params = new URLSearchParams();
     if (segments.exam) params.set("exam", segments.exam);
     if (segments.subject) params.set("subject", segments.subject);
@@ -144,7 +152,10 @@ export default function NotificationStrip() {
     fetch(`${basePath}/api/notification/for-context?${params.toString()}`)
       .then((res) => res.json())
       .then((data) => {
-        if (!cancelled && data?.success) {
+        if (cancelled) return;
+        // Only apply if still on same route (avoid showing wrong exam's notifications after nav).
+        if (currentKeyRef.current !== fetchKey) return;
+        if (data?.success) {
           const list = Array.isArray(data?.data?.data)
             ? data.data.data
             : Array.isArray(data?.data)

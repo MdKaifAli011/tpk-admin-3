@@ -1,16 +1,14 @@
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import Topic from "@/models/Topic";
-// Import child model to ensure it's registered before middleware runs
-import SubTopic from "@/models/SubTopic";
 import mongoose from "mongoose";
 import { requireAction } from "@/middleware/authMiddleware";
 import { logger } from "@/utils/logger";
+import { cascadeTopicStatus } from "@/lib/cascadeStatus";
 
 // ---------- PATCH TOPIC STATUS (with Cascading) ----------
 export async function PATCH(request, { params }) {
   try {
-    // Check authentication and permissions (users need to be able to update)
     const authCheck = await requireAction(request, "PATCH");
     if (authCheck.error) {
       return NextResponse.json(authCheck, { status: authCheck.status || 401 });
@@ -19,12 +17,15 @@ export async function PATCH(request, { params }) {
     await connectDB();
     const { id } = await params;
     const body = await request.json();
-    const { status } = body;
+    const { status, cascadeMode } = body;
+    const mode = ["respect_manual", "force_all", "direct_only"].includes(cascadeMode)
+      ? cascadeMode
+      : "respect_manual";
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json(
         { success: false, message: "Invalid topic ID" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -34,32 +35,27 @@ export async function PATCH(request, { params }) {
           success: false,
           message: "Valid status is required (active or inactive)",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    // Update topic status
     const updated = await Topic.findByIdAndUpdate(
       id,
-      { status },
-      { new: true }
+      {
+        status,
+        manualInactive: status === "inactive",
+      },
+      { new: true },
     );
 
     if (!updated) {
       return NextResponse.json(
         { success: false, message: "Topic not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
-    // Cascading: Update all children status
-    logger.info(`Cascading status update to ${status} for topic ${id}`);
-
-    const result = await SubTopic.updateMany(
-      { topicId: id },
-      { $set: { status } }
-    );
-    logger.info(`Updated ${result.modifiedCount} SubTopics`);
+    await cascadeTopicStatus(id, status, mode);
 
     return NextResponse.json({
       success: true,
@@ -72,8 +68,7 @@ export async function PATCH(request, { params }) {
     logger.error("Error updating topic status:", error);
     return NextResponse.json(
       { success: false, message: "Failed to update topic status" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
-

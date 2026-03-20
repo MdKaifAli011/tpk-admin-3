@@ -295,7 +295,7 @@ const DownloadFolderPageClient = ({
     <>
       <div className="space-y-6 bg-gray-50/80 min-h-screen pb-8">
         {/* Header - Folder name (breadcrumb style) + dropdown */}
-        <section className="rounded-xl p-4 sm:p-5 bg-white border border-gray-200 shadow-sm">
+        <section className="hero-section rounded-xl p-4 sm:p-5 bg-white border border-gray-200 shadow-sm" aria-labelledby="download-folder-title">
           <div className="flex flex-col gap-3">
             <Link
               href={`/${examSlug}/download`}
@@ -306,7 +306,7 @@ const DownloadFolderPageClient = ({
             </Link>
             <div className="flex items-start sm:items-center justify-between w-full gap-3 sm:gap-4">
               <div className="flex flex-col min-w-0 flex-1">
-                <h1 className="text-base sm:text-lg font-bold text-gray-800 uppercase tracking-wide truncate max-w-[200px] sm:max-w-[360px]" title={currentFolder.name}>
+                <h1 id="download-folder-title" className="text-base sm:text-lg font-bold text-gray-800 uppercase tracking-wide truncate max-w-[200px] sm:max-w-[360px]" title={currentFolder.name}>
                   {examName} / {currentFolder.name}
                 </h1>
                 <p className="text-xs text-gray-500 mt-1 truncate max-w-[200px] sm:max-w-[280px]">

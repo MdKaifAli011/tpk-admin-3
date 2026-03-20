@@ -5,6 +5,10 @@ import { NextResponse } from "next/server";
 const assetsBaseDir = path.join(process.cwd(), "public", "assets");
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
 
+// Served paths: (1) api/upload/image → assets/{exam}/{subject}/.../file.png
+// (2) api/media with folder "editor" → assets/media/editor/name_timestamp.png
+// If a file is missing (ENOENT), it may have been deleted or content was copied from elsewhere.
+
 function fileNotFoundHtml() {
   const homeUrl = basePath.startsWith("http") ? basePath : `${basePath}/`;
   return `<!DOCTYPE html>
@@ -124,7 +128,12 @@ export async function GET(request, { params }) {
       },
     });
   } catch (err) {
-    console.error("Error serving uploaded file:", err);
+    const isNotFound = err?.code === "ENOENT" || err?.errno === -4058;
+    if (isNotFound) {
+      console.warn("Uploaded file not found (may have been deleted or moved):", filePath);
+    } else {
+      console.error("Error serving uploaded file:", err);
+    }
     const accept = request.headers.get("accept") || "";
     const wantsJson = accept.includes("application/json");
     if (wantsJson) {

@@ -10,6 +10,7 @@ import {
 
 const TopicsTable = ({
   topics,
+  countsByChapter = {},
   onEdit,
   onDelete,
   onToggleStatus,
@@ -85,7 +86,7 @@ const TopicsTable = ({
     e.dataTransfer.effectAllowed = "move";
     e.dataTransfer.setData("text/plain", String(index));
     e.dataTransfer.setData("application/json", JSON.stringify({ chapterId, index }));
-    try { e.target.closest("tr")?.classList.add("opacity-50", "ring-2", "ring-blue-400"); } catch (_) {}
+    try { e.target.closest("tr")?.classList.add("opacity-50", "ring-2", "ring-blue-400"); } catch (_) { }
   };
 
   const handleDragOver = (e, chapterId, index) => {
@@ -108,7 +109,7 @@ const TopicsTable = ({
     try {
       const parsed = JSON.parse(payload || "{}");
       if (parsed.chapterId) payloadChapterId = parsed.chapterId;
-    } catch (_) {}
+    } catch (_) { }
     if (payloadChapterId !== chapterId || Number.isNaN(fromIndex) || fromIndex === toIndex) {
       setDragOver({ chapterId: null, index: null });
       setDragged({ chapterId: null, index: null });
@@ -116,7 +117,7 @@ const TopicsTable = ({
     }
     setDragOver({ chapterId: null, index: null });
     setDragged({ chapterId: null, index: null });
-    try { e.target.closest("tr")?.classList.remove("opacity-50", "ring-2", "ring-blue-400"); } catch (_) {}
+    try { e.target.closest("tr")?.classList.remove("opacity-50", "ring-2", "ring-blue-400"); } catch (_) { }
     const group = groupedTopics.find((g) => g.chapterId === chapterId);
     if (!group) return;
     const currentList = reorderDraft[chapterId] ?? [...group.topics].sort((a, b) => (a.orderNumber || 0) - (b.orderNumber || 0));
@@ -129,7 +130,7 @@ const TopicsTable = ({
   const handleDragEnd = (e) => {
     setDragged({ chapterId: null, index: null });
     setDragOver({ chapterId: null, index: null });
-    try { e.target.closest("tr")?.classList.remove("opacity-50", "ring-2", "ring-blue-400"); } catch (_) {}
+    try { e.target.closest("tr")?.classList.remove("opacity-50", "ring-2", "ring-blue-400"); } catch (_) { }
   };
 
   // Group topics by Exam → Subject → Unit → Chapter
@@ -246,13 +247,19 @@ const TopicsTable = ({
                     {group.chapterName}
                   </span>
                   <span className="text-gray-400">›</span>
-                  <span
-                    className="px-2 py-0.5 rounded-full"
-                    style={{ backgroundColor: "#374151" }}
-                  >
-                    {sortedTopics.length}{" "}
-                    {sortedTopics.length === 1 ? "Topic" : "Topics"}
-                  </span>
+                  {(() => {
+                    const chapterIdKey = group.chapterId?.toString?.() ?? String(group.chapterId);
+                    const total = countsByChapter[chapterIdKey] ?? sortedTopics.length;
+                    return (
+                      <span
+                        className="px-2 py-0.5 rounded-full"
+                        style={{ backgroundColor: "#374151" }}
+                        title={total !== sortedTopics.length ? `Showing ${sortedTopics.length} of ${total}` : undefined}
+                      >
+                        {total} {total === 1 ? "Topic" : "Topics"}
+                      </span>
+                    );
+                  })()}
                 </div>
                 {canBulkToggle && (() => {
                   const selectedIds = getSelectedForChapter(group.chapterId);
@@ -280,7 +287,7 @@ const TopicsTable = ({
                           e.stopPropagation();
                           const p = onBulkToggleStatus(selectedTopics, "active");
                           if (p && typeof p.then === "function") {
-                            p.then(() => clearChapterSelection(group.chapterId)).catch(() => {});
+                            p.then(() => clearChapterSelection(group.chapterId)).catch(() => { });
                           } else {
                             clearChapterSelection(group.chapterId);
                           }
@@ -295,7 +302,7 @@ const TopicsTable = ({
                           e.stopPropagation();
                           const p = onBulkToggleStatus(selectedTopics, "inactive");
                           if (p && typeof p.then === "function") {
-                            p.then(() => clearChapterSelection(group.chapterId)).catch(() => {});
+                            p.then(() => clearChapterSelection(group.chapterId)).catch(() => { });
                           } else {
                             clearChapterSelection(group.chapterId);
                           }
@@ -323,7 +330,7 @@ const TopicsTable = ({
             {/* Desktop Table */}
             <div className="hidden lg:block overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200 table-fixed">
-                <thead className="bg-gray-50">
+                <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
                     {canBulkToggle && (
                       <th className="px-1 py-1 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-10">
@@ -380,9 +387,8 @@ const TopicsTable = ({
                         onDragOver={(e) => handleDragOver(e, group.chapterId, topicIndex)}
                         onDrop={(e) => handleDrop(e, group.chapterId, topicIndex)}
                         onDragEnd={handleDragEnd}
-                        className={`hover:bg-gray-50 transition-colors ${topic.status === "inactive" ? "opacity-60" : ""} ${
-                          isDraggedRow ? "opacity-50 ring-2 ring-blue-400" : ""
-                        } ${isDragOverRow ? "bg-blue-50 border-y-2 border-blue-200" : ""}`}
+                        className={`hover:bg-gray-50 transition-colors ${topic.status === "inactive" ? "opacity-60" : ""} ${isDraggedRow ? "opacity-50 ring-2 ring-blue-400" : ""
+                          } ${isDragOverRow ? "bg-blue-50 border-y-2 border-blue-200" : ""}`}
                       >
                         {canBulkToggle && (
                           <td className="px-1 py-2 text-center w-10" onClick={(e) => e.stopPropagation()}>
@@ -417,7 +423,9 @@ const TopicsTable = ({
                             onClick={() => handleTopicClick(topic._id)}
                             className={`cursor-pointer text-sm font-medium hover:text-blue-600 transition-colors ${topic.status === "inactive"
                               ? "text-gray-500 line-through"
-                              : "text-gray-900"
+                              : topic.contentInfo?.detailsStatus === "publish"
+                                ? "text-green-700 font-semibold"
+                                : "text-gray-900"
                               }`}
                             title={topic.name}
                           >
@@ -566,9 +574,8 @@ const TopicsTable = ({
                     onDragOver={(e) => handleDragOver(e, group.chapterId, topicIndex)}
                     onDrop={(e) => handleDrop(e, group.chapterId, topicIndex)}
                     onDragEnd={handleDragEnd}
-                    className={`p-1.5 hover:bg-gray-50 transition-colors ${topic.status === "inactive" ? "opacity-60" : ""} ${
-                      isDraggedRow ? "opacity-50 ring-2 ring-blue-400 rounded" : ""
-                    } ${isDragOverRow ? "bg-blue-50 border-2 border-blue-200 rounded" : ""}`}
+                    className={`p-1.5 hover:bg-gray-50 transition-colors ${topic.status === "inactive" ? "opacity-60" : ""} ${isDraggedRow ? "opacity-50 ring-2 ring-blue-400 rounded" : ""
+                      } ${isDragOverRow ? "bg-blue-50 border-2 border-blue-200 rounded" : ""}`}
                   >
                     <div className="flex justify-between items-start gap-2">
                       {canBulkToggle && (
@@ -596,7 +603,9 @@ const TopicsTable = ({
                           onClick={() => handleTopicClick(topic._id)}
                           className={`text-sm font-semibold mb-1 cursor-pointer hover:text-blue-600 transition-colors ${topic.status === "inactive"
                             ? "text-gray-500 line-through"
-                            : "text-gray-900"
+                            : topic.contentInfo?.detailsStatus === "publish"
+                              ? "text-green-700"
+                              : "text-gray-900"
                             }`}
                           title={topic.name}
                         >

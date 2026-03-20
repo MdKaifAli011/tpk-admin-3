@@ -26,6 +26,7 @@ import UtilitiesMegaMenu from "./components/UtilitiesMegaMenu";
 import DownloadsMegaMenu from "./components/DownloadsMegaMenu";
 import ContactMegaMenu from "./components/ContactMegaMenu";
 import SearchModal from "./components/SearchModal";
+import { useSearchContext } from "./context/SearchContext";
 import NotificationDropdown from "../components/NotificationDropdown";
 import {
   ExaminationsMobileContent,
@@ -53,14 +54,15 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen, showSidebar }) => {
   const router = useRouter();
   const pathname = usePathname();
   const { student, isLoading, isAuthenticated, logout } = useStudent();
-  
+  const { searchScopeExamSlug } = useSearchContext();
+
   // Refs for hover delay management
   const hoverTimeoutRef = React.useRef(null);
   const leaveTimeoutRef = React.useRef(null);
   const isHoveringMegaMenuRef = React.useRef(false);
 
   // Handle default props
-  const handleMenuToggle = onMenuToggle || (() => {});
+  const handleMenuToggle = onMenuToggle || (() => { });
 
   // Calculate navbar height and set CSS variable for sidebar positioning
   React.useEffect(() => {
@@ -80,19 +82,15 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen, showSidebar }) => {
     // Set initial height immediately
     updateNavbarHeight();
 
-    const resizeObserver = new ResizeObserver(updateNavbarHeight);
+    const resizeObserver = new ResizeObserver(() => {
+      requestAnimationFrame(updateNavbarHeight);
+    });
     resizeObserver.observe(navbar);
 
-    const timeouts = [
-      setTimeout(updateNavbarHeight, 0),
-      setTimeout(updateNavbarHeight, 100),
-      setTimeout(updateNavbarHeight, 300),
-    ];
-
+    const t = requestAnimationFrame(updateNavbarHeight);
     return () => {
       resizeObserver.disconnect();
-      window.removeEventListener("resize", updateNavbarHeight);
-      timeouts.forEach(clearTimeout);
+      cancelAnimationFrame(t);
     };
   }, []);
 
@@ -188,17 +186,17 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen, showSidebar }) => {
       clearTimeout(leaveTimeoutRef.current);
       leaveTimeoutRef.current = null;
     }
-    
+
     // If already showing this menu, do nothing
     if (activeMegaMenu === key) {
       return;
     }
-    
+
     // Clear any existing hover timeout
     if (hoverTimeoutRef.current) {
       clearTimeout(hoverTimeoutRef.current);
     }
-    
+
     // Set delay before opening (300ms delay)
     hoverTimeoutRef.current = setTimeout(() => {
       setActiveMegaMenu(key);
@@ -213,7 +211,7 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen, showSidebar }) => {
       clearTimeout(hoverTimeoutRef.current);
       hoverTimeoutRef.current = null;
     }
-    
+
     // Only close if not hovering over the megamenu itself
     if (!isHoveringMegaMenuRef.current) {
       // Small delay before closing to allow moving to megamenu
@@ -250,21 +248,21 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen, showSidebar }) => {
   };
 
   return (
-    <nav data-navbar className="fixed top-0 left-0 right-0 w-full z-50">
+    <nav data-navbar className="fixed top-0 left-0 right-0 w-full z-50" aria-label="Main navigation">
       {/* Top Bar - Dark Gray (Condensed on mobile) */}
       <div className="bg-gray-800 text-white text-[10px] sm:text-xs py-1.5 sm:py-2">
         <div className="container mx-auto px-2 sm:px-4">
           <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3 md:gap-4">
             {/* Left: Social Media Engagement */}
-            <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 xl:gap-4 flex-wrap min-w-0 flex-1">
-              <div className="flex items-center gap-1 whitespace-nowrap">
+            <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 flex-wrap min-w-0 flex-1">
+              <div className="flex items-center gap-1 whitespace-nowrap" aria-hidden>
                 <FaInstagram className="text-[10px] sm:text-xs md:text-sm shrink-0" />
                 <span className="hidden sm:inline text-[10px] sm:text-xs">
                   100k Followers
                 </span>
                 <span className="sm:hidden text-[10px]">100k</span>
               </div>
-              <div className="flex items-center gap-1 whitespace-nowrap">
+              <div className="flex items-center gap-1 whitespace-nowrap" aria-hidden>
                 <FaFacebook className="text-[10px] sm:text-xs md:text-sm shrink-0" />
                 <span className="hidden sm:inline text-[10px] sm:text-xs">
                   500k Followers
@@ -275,20 +273,22 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen, showSidebar }) => {
                 href="https://api.whatsapp.com/send?phone=15107069331"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1 hover:text-blue-300 transition-colors whitespace-nowrap"
+                className="flex items-center gap-1 hover:text-blue-300 transition-colors whitespace-nowrap items-center"
+                aria-label="Contact us on WhatsApp: +1 (510) 706-9331"
               >
-                <FaWhatsapp className="text-[10px] sm:text-xs md:text-sm shrink-0" />
+                <FaWhatsapp className="text-[10px] sm:text-xs md:text-sm shrink-0" aria-hidden />
                 <span className="hidden sm:inline text-[10px] sm:text-xs">
                   +1 (510) 706-9331
                 </span>
+                <span className="sm:hidden text-[10px]">+1 (510) 706-9331</span>
               </a>
             </div>
 
             {/* Center: Hot Button with Message */}
             <div className="flex items-center justify-center gap-1 sm:gap-2 shrink-0 order-3 xl:order-2">
-              <button className="bg-blue-600 px-1.5 sm:px-2 md:px-3 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-medium flex items-center gap-0.5 sm:gap-1 whitespace-nowrap touch-manipulation active:bg-blue-700 transition-colors">
+              <button type="button" className="bg-blue-600 px-1.5 sm:px-2 md:px-3 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-medium flex items-center gap-0.5 sm:gap-1 whitespace-nowrap touch-manipulation active:bg-blue-700 transition-colors items-center" aria-label="Schedule your free exam readiness analysis session">
                 <span>Hot</span>
-                <span className="text-[10px] sm:text-xs">👏</span>
+                <span className="text-[10px] sm:text-xs" aria-hidden>👏</span>
               </button>
               <span className="text-[10px] sm:text-xs hidden xl:inline whitespace-nowrap">
                 Schedule Your Free Exam Readiness Analysis Session!
@@ -298,44 +298,49 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen, showSidebar }) => {
             {/* Right: Social Media Icons */}
             <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2 xl:gap-3 shrink-0 order-2 xl:order-3">
               <a
-                href="https://www.youtube.com/@TestprepKart"
+                href="https://www.youtube.com/@Testprepkart"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-[10px] sm:text-xs md:text-sm cursor-pointer hover:text-blue-400 transition-colors touch-manipulation"
+                className="text-[10px] sm:text-xs md:text-sm cursor-pointer hover:text-blue-400 transition-colors touch-manipulation flex items-center justify-center"
+                aria-label="Testprepkart on YouTube"
               >
-                <FaYoutube />
+                <FaYoutube aria-hidden />
               </a>
               <a
                 href="https://www.facebook.com/testprepkart"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-[10px] sm:text-xs md:text-sm cursor-pointer hover:text-blue-400 transition-colors touch-manipulation"
+                className="text-[10px] sm:text-xs md:text-sm cursor-pointer hover:text-blue-400 transition-colors touch-manipulation flex items-center justify-center"
+                aria-label="Testprepkart on Facebook"
               >
-                <FaFacebook />
+                <FaFacebook aria-hidden />
               </a>
               <a
                 href="https://twitter.com/testprepkart"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-[10px] sm:text-xs md:text-sm cursor-pointer hover:text-blue-400 transition-colors touch-manipulation"
+                className="text-[10px] sm:text-xs md:text-sm cursor-pointer hover:text-blue-400 transition-colors touch-manipulation flex items-center justify-center"
+                aria-label="Testprepkart on Twitter"
               >
-                <FaTwitter />
+                <FaTwitter aria-hidden />
               </a>
               <a
                 href="https://www.linkedin.com/company/testprepkart"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-[10px] sm:text-xs md:text-sm cursor-pointer hover:text-blue-400 transition-colors hidden lg:inline touch-manipulation"
+                className="text-[10px] sm:text-xs md:text-sm cursor-pointer hover:text-blue-400 transition-colors hidden lg:flex items-center justify-center touch-manipulation"
+                aria-label="Testprepkart on LinkedIn"
               >
-                <FaLinkedin />
+                <FaLinkedin aria-hidden />
               </a>
               <a
                 href="https://www.instagram.com/testprepkartonline"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-[10px] sm:text-xs md:text-sm cursor-pointer hover:text-blue-400 transition-colors hidden lg:inline touch-manipulation"
+                className="text-[10px] sm:text-xs md:text-sm cursor-pointer hover:text-blue-400 transition-colors hidden lg:flex items-center justify-center touch-manipulation"
+                aria-label="Testprepkart on Instagram"
               >
-                <FaInstagram />
+                <FaInstagram aria-hidden />
               </a>
             </div>
           </div>
@@ -351,7 +356,7 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen, showSidebar }) => {
               <Link href="/" className="touch-manipulation flex items-center">
                 <Image
                   src={`${basePath}/logo.png`}
-                  alt="TestPrepKart Logo"
+                  alt="Testprepkart Logo"
                   width={150}
                   height={150}
                   className="w-20 sm:w-24 md:w-28 lg:w-32 xl:w-36 h-auto object-contain"
@@ -365,8 +370,12 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen, showSidebar }) => {
 
             {/* Center: Category Button & Navigation Links */}
             <div className="hidden lg:flex items-center gap-3 xl:gap-4 flex-1 justify-center font-semibold min-w-0 px-2">
-              {/* Category Button */}
-              <button className="flex items-center justify-center gap-2 px-3 xl:px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors text-sm font-medium text-gray-700 whitespace-nowrap shrink-0">
+              {/* Category Button - accessible name and min touch target 44px */}
+              <button
+                type="button"
+                aria-label="Open category menu"
+                className="flex items-center justify-center gap-2 px-3 xl:px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors text-sm font-medium text-gray-700 whitespace-nowrap shrink-0"
+              >
                 <FaTh className="text-sm shrink-0" />
                 <span>Category</span>
               </button>
@@ -382,6 +391,8 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen, showSidebar }) => {
                   >
                     <button
                       type="button"
+                      aria-label={`Open ${link.name} menu`}
+                      aria-expanded={activeMegaMenu === link.key}
                       onClick={() => {
                         // Clear any pending timeouts
                         if (hoverTimeoutRef.current) {
@@ -399,7 +410,7 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen, showSidebar }) => {
                       className="flex items-center justify-center gap-1 px-2 xl:px-3 py-2 rounded-lg text-xs xl:text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors group whitespace-nowrap"
                     >
                       <span className="truncate">{link.name}</span>
-                      <FaChevronDown className="text-xs text-gray-400 group-hover:text-blue-600 transition-colors shrink-0" />
+                      <FaChevronDown className="text-xs text-gray-400 group-hover:text-blue-600 transition-colors shrink-0" aria-hidden />
                     </button>
                     {activeMegaMenu === link.key && (
                       <>
@@ -470,11 +481,11 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen, showSidebar }) => {
               {showSidebar && (
                 <button
                   onClick={() => setIsSearchModalOpen(true)}
-                  className="p-2 sm:p-2.5 md:p-2 text-gray-600 hover:text-blue-600 active:text-blue-700 transition-colors touch-manipulation flex items-center justify-center min-w-[44px] min-h-[44px] group relative"
-                  aria-label="Search (Ctrl+K)"
-                  title="Search (Ctrl+K)"
+                  className="p-2 sm:p-2.5 md:p-2 text-gray-600 hover:text-blue-600 active:text-blue-700 transition-colors touch-manipulation flex items-center justify-center group relative"
+                  aria-label={searchScopeExamSlug ? `Search ${searchScopeExamSlug} (Ctrl+K)` : "Search (Ctrl+K)"}
+                  title={searchScopeExamSlug ? `Search ${searchScopeExamSlug} (Ctrl+K)` : "Search (Ctrl+K)"}
                 >
-                  <FaSearch className="text-base sm:text-lg md:text-xl" />
+                  <FaSearch className="text-base sm:text-lg md:text-xl" aria-hidden />
                   {/* Ctrl+K hint */}
                   <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
                     <kbd className="font-mono text-xs">Ctrl</kbd>+<kbd className="font-mono text-xs">K</kbd>
@@ -489,17 +500,20 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen, showSidebar }) => {
               {isAuthenticated && !isLoading ? (
                 <div className="hidden md:block user-menu-container relative">
                   <button
+                    type="button"
                     onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                    className="flex items-center justify-center gap-1.5 xl:gap-2 px-2 xl:px-3 py-1.5 xl:py-2 text-xs xl:text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors whitespace-nowrap touch-manipulation min-h-[44px]"
+                    aria-label={isUserMenuOpen ? "Close user menu" : "Open user menu"}
+                    aria-expanded={isUserMenuOpen}
+                    className="flex items-center justify-center gap-1.5 xl:gap-2 px-2 xl:px-3 py-1.5 xl:py-2 text-xs xl:text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors whitespace-nowrap touch-manipulation"
                   >
-                    <FaUser className="text-xs sm:text-sm shrink-0" />
+                    <FaUser className="text-xs sm:text-sm shrink-0" aria-hidden />
                     <span className="max-w-[100px] xl:max-w-[120px] truncate">
                       {getUserDisplayName()}
                     </span>
                     <FaChevronDown
-                      className={`text-xs transition-transform shrink-0 ${
-                        isUserMenuOpen ? "rotate-180" : ""
-                      }`}
+                      className={`text-xs transition-transform shrink-0 ${isUserMenuOpen ? "rotate-180" : ""
+                        }`}
+                      aria-hidden
                     />
                   </button>
 
@@ -516,10 +530,12 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen, showSidebar }) => {
                         )}
                       </div>
                       <button
+                        type="button"
                         onClick={handleLogout}
-                        className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                        className="w-full flex items-center gap-2 px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                        aria-label="Log out"
                       >
-                        <FaSignOutAlt className="text-xs" />
+                        <FaSignOutAlt className="text-xs" aria-hidden />
                         <span>Logout</span>
                       </button>
                     </div>
@@ -528,9 +544,9 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen, showSidebar }) => {
               ) : (
                 <Link
                   href={loginHref(pathname)}
-                  className="hidden md:flex items-center justify-center gap-1.5 xl:gap-2 px-2 xl:px-3 py-1.5 xl:py-2 text-xs xl:text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors whitespace-nowrap touch-manipulation min-h-[44px]"
+                  className="hidden md:flex items-center justify-center gap-1.5 xl:gap-2 px-2 xl:px-3 py-1.5 xl:py-2 text-xs xl:text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors whitespace-nowrap touch-manipulation"
                 >
-                  <FaUser className="text-xs sm:text-sm shrink-0" />
+                  <FaUser className="text-xs sm:text-sm shrink-0" aria-hidden />
                   <span>Sign In</span>
                 </Link>
               )}
@@ -538,7 +554,8 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen, showSidebar }) => {
               {/* Enroll Now Button */}
               <Link
                 href="/contact"
-                className="px-2 sm:px-2 py-2 sm:py-2 text-xs sm:text-sm font-semibold text-white bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 rounded-lg hover:from-indigo-700 hover:via-purple-700 hover:to-pink-600 active:from-indigo-800 active:via-purple-800 active:to-pink-700 transition-all shadow-md hover:shadow-lg whitespace-nowrap touch-manipulation flex items-center justify-center "
+                className="px-2 sm:px-2 py-2 sm:py-2 text-xs sm:text-sm font-semibold text-white bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 rounded-lg hover:from-indigo-700 hover:via-purple-700 hover:to-pink-600 active:from-indigo-800 active:via-purple-800 active:to-pink-700 transition-all shadow-md hover:shadow-lg whitespace-nowrap touch-manipulation flex items-center justify-center"
+                aria-label="Enroll now - go to contact"
               >
                 <span className="hidden sm:inline">Enroll Now</span>
                 <span className="sm:hidden">Enroll</span>
@@ -549,11 +566,10 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen, showSidebar }) => {
                 {/* Sidebar Menu Button - Controls Exam/Subject/Unit Navigation */}
                 <button
                   onClick={handleMenuToggle}
-                  className={`p-2 sm:p-2.5 transition-colors relative touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center ${
-                    isMenuOpen
+                  className={`p-2 sm:p-2.5 transition-colors relative touch-manipulation flex items-center justify-center ${isMenuOpen
                       ? "text-blue-600 bg-blue-50"
                       : "text-gray-600 hover:text-blue-600 active:text-blue-700"
-                  }`}
+                    }`}
                   aria-label={
                     isMenuOpen
                       ? "Close navigation menu"
@@ -562,7 +578,7 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen, showSidebar }) => {
                   aria-expanded={isMenuOpen}
                   title="Navigation Menu"
                 >
-                  <FaBars className="text-base sm:text-lg" />
+                  <FaBars className="text-base sm:text-lg" aria-hidden />
                   {isMenuOpen && (
                     <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-blue-600 rounded-full"></span>
                   )}
@@ -571,12 +587,12 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen, showSidebar }) => {
                 {/* Nav Menu Button - Controls Category/Examinations/Courses */}
                 <button
                   onClick={() => setIsNavMenuOpen(!isNavMenuOpen)}
-                  className="p-2 sm:p-2.5 text-gray-600 hover:text-blue-600 active:text-blue-700 transition-colors relative touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center"
+                  className="p-2 sm:p-2.5 text-gray-600 hover:text-blue-600 active:text-blue-700 transition-colors relative touch-manipulation flex items-center justify-center"
                   aria-label="Toggle main menu"
                   title="Main Menu"
                   aria-expanded={isNavMenuOpen}
                 >
-                  <FaTh className="text-base sm:text-lg" />
+                  <FaTh className="text-base sm:text-lg" aria-hidden />
                   {isNavMenuOpen && (
                     <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-blue-600 rounded-full"></span>
                   )}
@@ -607,7 +623,7 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen, showSidebar }) => {
                     <Link href="/" onClick={() => setIsNavMenuOpen(false)} className="shrink-0">
                       <Image
                         src={`${basePath}/logo.png`}
-                        alt="TestPrepKart Logo"
+                        alt="Testprepkart Logo"
                         width={120}
                         height={120}
                         className="h-12 w-auto object-contain"
@@ -615,7 +631,7 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen, showSidebar }) => {
                     </Link>
                     <button
                       onClick={() => setIsNavMenuOpen(false)}
-                      className="p-2 text-gray-600 hover:text-gray-900 hover:bg-white rounded-lg transition-colors shrink-0 flex items-center justify-center min-w-[44px] min-h-[44px]"
+                      className="p-2 text-gray-600 hover:text-gray-900 hover:bg-white rounded-lg transition-colors shrink-0 flex items-center justify-center"
                       aria-label="Close menu"
                     >
                       <svg
@@ -623,6 +639,7 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen, showSidebar }) => {
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
+                        aria-hidden
                       >
                         <path
                           strokeLinecap="round"
@@ -634,26 +651,28 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen, showSidebar }) => {
                     </button>
                   </div>
                   <p className="text-sm text-gray-700 mb-4 leading-relaxed">
-                    Hi, I&apos;m TestprepKart.
+                    Hi, I&apos;m Testprepkart.
                     <br />
                     Your Partner In Exam Preparation
                   </p>
                   <ul className="space-y-2.5 text-sm">
                     <li>
                       <a
-                        href="mailto:info@testprepkart.com"
+                        href="mailto:contact@rayofhopebihar.org"
                         className="flex items-center gap-2.5 text-gray-700 hover:text-indigo-600 transition-colors"
+                        aria-label="Email contact@rayofhopebihar.org"
                       >
-                        <FaEnvelope className="text-xs shrink-0" />
-                        <span className="break-all">info@testprepkart.com</span>
+                        <FaEnvelope className="text-xs shrink-0" aria-hidden />
+                        <span className="break-all">contact@rayofhopebihar.org</span>
                       </a>
                     </li>
                     <li>
                       <a
                         href="tel:+918800123492"
                         className="flex items-center gap-2.5 text-gray-700 hover:text-indigo-600 transition-colors"
+                        aria-label="Call +91 8800123492"
                       >
-                        <FaPhone className="text-xs shrink-0" />
+                        <FaPhone className="text-xs shrink-0" aria-hidden />
                         <span>+91 8800123492</span>
                       </a>
                     </li>
@@ -663,8 +682,9 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen, showSidebar }) => {
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center gap-2.5 text-gray-700 hover:text-indigo-600 transition-colors"
+                        aria-label="WhatsApp +1 (510) 706-9331"
                       >
-                        <FaWhatsapp className="text-xs shrink-0" />
+                        <FaWhatsapp className="text-xs shrink-0" aria-hidden />
                         <span>+1 (510) 706-9331</span>
                       </a>
                     </li>
@@ -676,14 +696,15 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen, showSidebar }) => {
                   <Link
                     href="/"
                     onClick={() => setIsNavMenuOpen(false)}
-                    className="w-full flex items-center justify-start gap-2 px-4 py-3 sm:py-3.5 text-sm sm:text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 active:bg-gray-100 transition-colors rounded-lg touch-manipulation min-h-[44px]"
+                    className="w-full flex items-center justify-start gap-2 px-4 py-3 sm:py-3.5 text-sm sm:text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 active:bg-gray-100 transition-colors rounded-lg touch-manipulation"
+                    aria-label="Home"
                   >
                     <span>Home</span>
                   </Link>
 
                   {/* Category Button */}
-                  <button className="w-full flex items-center justify-start gap-2 px-4 py-3 sm:py-3.5 bg-gray-100 rounded-lg text-sm sm:text-base font-medium text-gray-700 hover:bg-gray-200 active:bg-gray-300 transition-colors touch-manipulation min-h-[44px]">
-                    <FaTh className="text-sm sm:text-base shrink-0" />
+                  <button className="w-full flex items-center justify-start gap-2 px-4 py-3 sm:py-3.5 bg-gray-100 rounded-lg text-sm sm:text-base font-medium text-gray-700 hover:bg-gray-200 active:bg-gray-300 transition-colors touch-manipulation" aria-label="Category menu">
+                    <FaTh className="text-sm sm:text-base shrink-0" aria-hidden />
                     <span>Category</span>
                   </button>
 
@@ -692,13 +713,15 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen, showSidebar }) => {
                     <div key={link.key} className="space-y-1.5">
                       <button
                         onClick={() => toggleMobileMenu(link.key)}
-                        className="w-full flex items-center justify-between px-4 py-3 sm:py-3.5 text-sm sm:text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 active:bg-gray-100 transition-colors rounded-lg touch-manipulation min-h-[44px]"
+                        className="w-full flex items-center justify-between px-4 py-3 sm:py-3.5 text-sm sm:text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 active:bg-gray-100 transition-colors rounded-lg touch-manipulation"
+                        aria-label={`${link.name} menu`}
+                        aria-expanded={mobileExpandedMenu === link.key}
                       >
                         <span className="flex-1 text-left">{link.name}</span>
                         <FaChevronDown
-                          className={`text-xs sm:text-sm text-gray-400 transition-transform shrink-0 ${
-                            mobileExpandedMenu === link.key ? "rotate-180" : ""
-                          }`}
+                          className={`text-xs sm:text-sm text-gray-400 transition-transform shrink-0 ${mobileExpandedMenu === link.key ? "rotate-180" : ""
+                            }`}
+                          aria-hidden
                         />
                       </button>
                       {mobileExpandedMenu === link.key && (
@@ -767,9 +790,10 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen, showSidebar }) => {
                             handleLogout();
                             setIsNavMenuOpen(false);
                           }}
-                          className="w-full flex items-center justify-start gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 active:bg-gray-100 transition-colors rounded-lg touch-manipulation min-h-[44px]"
+                          className="w-full flex items-center justify-start gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 active:bg-gray-100 transition-colors rounded-lg touch-manipulation"
+                          aria-label="Log out"
                         >
-                          <FaSignOutAlt className="text-sm shrink-0" />
+                          <FaSignOutAlt className="text-sm shrink-0" aria-hidden />
                           <span>Logout</span>
                         </button>
                       </div>
@@ -777,10 +801,11 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen, showSidebar }) => {
                   ) : (
                     <Link
                       href={loginHref(pathname)}
-                      className="flex items-center justify-start gap-2 px-4 py-3 sm:py-3.5 text-sm sm:text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 active:bg-gray-100 transition-colors rounded-lg touch-manipulation min-h-[44px]"
+                      className="flex items-center justify-start gap-2 px-4 py-3 sm:py-3.5 text-sm sm:text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 active:bg-gray-100 transition-colors rounded-lg touch-manipulation"
                       onClick={() => setIsNavMenuOpen(false)}
+                      aria-label="Sign in"
                     >
-                      <FaUser className="text-sm sm:text-base shrink-0" />
+                      <FaUser className="text-sm sm:text-base shrink-0" aria-hidden />
                       <span>Sign In</span>
                     </Link>
                   )}
@@ -789,7 +814,8 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen, showSidebar }) => {
                   <Link
                     href="/coaching-inquiry"
                     onClick={() => setIsNavMenuOpen(false)}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-3 sm:py-3.5 text-sm sm:text-base font-semibold text-white bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 rounded-lg hover:from-indigo-700 hover:via-purple-700 hover:to-pink-600 transition-all shadow-md hover:shadow-lg touch-manipulation min-h-[44px] mt-2"
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3 sm:py-3.5 text-sm sm:text-base font-semibold text-white bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 rounded-lg hover:from-indigo-700 hover:via-purple-700 hover:to-pink-600 transition-all shadow-md hover:shadow-lg touch-manipulation mt-2"
+                    aria-label="Enroll now"
                   >
                     <span>Enroll Now</span>
                   </Link>
@@ -804,37 +830,37 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen, showSidebar }) => {
                         href="https://www.facebook.com/testprepkart"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="p-2.5 text-gray-600 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors flex items-center justify-center min-w-[44px] min-h-[44px]"
+                        className="p-2.5 text-gray-600 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors flex items-center justify-center"
                         aria-label="Facebook"
                       >
-                        <FaFacebook className="text-base" />
+                        <FaFacebook className="text-base" aria-hidden />
                       </a>
                       <a
                         href="https://twitter.com/testprepkart"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="p-2.5 text-gray-600 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors flex items-center justify-center min-w-[44px] min-h-[44px]"
+                        className="p-2.5 text-gray-600 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors flex items-center justify-center"
                         aria-label="Twitter"
                       >
-                        <FaTwitter className="text-base" />
+                        <FaTwitter className="text-base" aria-hidden />
                       </a>
                       <a
                         href="https://www.instagram.com/testprepkartonline"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="p-2.5 text-gray-600 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors flex items-center justify-center min-w-[44px] min-h-[44px]"
+                        className="p-2.5 text-gray-600 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors flex items-center justify-center"
                         aria-label="Instagram"
                       >
-                        <FaInstagram className="text-base" />
+                        <FaInstagram className="text-base" aria-hidden />
                       </a>
                       <a
                         href="https://www.linkedin.com/company/testprepkart"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="p-2.5 text-gray-600 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors flex items-center justify-center min-w-[44px] min-h-[44px]"
+                        className="p-2.5 text-gray-600 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors flex items-center justify-center"
                         aria-label="LinkedIn"
                       >
-                        <FaLinkedin className="text-base" />
+                        <FaLinkedin className="text-base" aria-hidden />
                       </a>
                     </div>
                   </div>

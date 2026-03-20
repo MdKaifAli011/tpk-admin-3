@@ -17,10 +17,11 @@ const ICON_MAP = {
 
 /** Get hierarchy slugs from pathname for notification for-context API. Strips basePath so exam/subject/... match route. */
 function getPathSegments(pathname) {
-  let p = (pathname || "").trim();
-  const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
-  if (basePath && p.startsWith(basePath)) p = p.slice(basePath.length).trim() || "/";
-  p = p.replace(/^\/+/, "");
+  let p = (pathname || "").trim().replace(/^\/+/, "");
+  const base = (process.env.NEXT_PUBLIC_BASE_PATH || "/self-study").replace(/^\/+/, "");
+  if (base && (p === base || p.startsWith(base + "/"))) {
+    p = p.slice(base.length).replace(/^\/+/, "");
+  }
   const parts = p ? p.split("/").filter(Boolean) : [];
   return {
     exam: parts[0] || "",
@@ -31,6 +32,12 @@ function getPathSegments(pathname) {
     subtopic: parts[5] || "",
     definition: parts[6] || "",
   };
+}
+
+const EXAM_ROUTE_EXCLUDED = ["notification", "login", "register", "contact", "pages", "blog", "download", "calculator", "store"];
+/** True when we are on an exam or exam-child page (e.g. /neet, /neet/physics/...). On these we must use for-context so only that exam/level notifications show. */
+function isExamOrChildPage(segments) {
+  return Boolean(segments.exam && !EXAM_ROUTE_EXCLUDED.includes(segments.exam));
 }
 
 function relativeTime(dateStr) {
@@ -57,6 +64,7 @@ export default function NotificationDropdown() {
   const containerRef = useRef(null);
 
   const segments = getPathSegments(pathname);
+  const useForContext = isExamOrChildPage(segments);
 
   // Fetch unread count for red dot (when student is logged in)
   useEffect(() => {
@@ -66,9 +74,8 @@ export default function NotificationDropdown() {
       return;
     }
     let cancelled = false;
-    const isContentPage = segments.exam && !["notification", "login", "register", "contact", "pages"].includes(segments.exam);
     const params = new URLSearchParams();
-    if (isContentPage) {
+    if (useForContext) {
       if (segments.exam) params.set("exam", segments.exam);
       if (segments.subject) params.set("subject", segments.subject);
       if (segments.unit) params.set("unit", segments.unit);
@@ -86,18 +93,17 @@ export default function NotificationDropdown() {
       })
       .catch(() => { if (!cancelled) setUnreadCount(0); });
     return () => { cancelled = true; };
-  }, [pathname, segments.exam, segments.subject, segments.unit, segments.chapter, segments.topic, segments.subtopic, segments.definition]);
+  }, [pathname, useForContext, segments.exam, segments.subject, segments.unit, segments.chapter, segments.topic, segments.subtopic, segments.definition]);
 
   useEffect(() => {
     if (!open) return;
     let cancelled = false;
     setLoading(true);
     const token = typeof window !== "undefined" ? localStorage.getItem("student_token") : null;
-    const isContentPage = segments.exam && !["notification", "login", "register", "contact", "pages"].includes(segments.exam);
-    // On content pages: for-context returns general + exam (page only) + exam_with_children + exact match for level
-    const url = isContentPage
+    // On exam or exam-child pages: always use for-context so header shows only that exam + that level's notifications (not all exams).
+    const url = useForContext
       ? `${basePath}/api/notification/for-context?${new URLSearchParams({
-        ...(segments.exam && { exam: segments.exam }),
+        exam: segments.exam,
         ...(segments.subject && { subject: segments.subject }),
         ...(segments.unit && { unit: segments.unit }),
         ...(segments.chapter && { chapter: segments.chapter }),
@@ -106,7 +112,7 @@ export default function NotificationDropdown() {
         ...(segments.definition && { definition: segments.definition }),
         limit: "10",
       }).toString()}`
-      : `${basePath}/api/notification/list?limit=10&skip=0`;
+      : `${basePath}/api/notification/list?limit=10&skip=0&forHeader=1`;
 
     fetch(url, { headers: token ? { Authorization: `Bearer ${token}` } : {} })
       .then((res) => res.json())
@@ -120,7 +126,7 @@ export default function NotificationDropdown() {
       .finally(() => { if (!cancelled) setLoading(false); });
 
     return () => { cancelled = true; };
-  }, [open, segments.exam, segments.subject, segments.unit, segments.chapter, segments.topic, segments.subtopic, segments.definition]);
+  }, [open, useForContext, segments.exam, segments.subject, segments.unit, segments.chapter, segments.topic, segments.subtopic, segments.definition]);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -150,9 +156,10 @@ export default function NotificationDropdown() {
         onClick={() => setOpen(!open)}
         className="p-2 sm:p-2.5 md:p-2 text-gray-600 hover:text-blue-600 active:text-blue-700 transition-colors touch-manipulation flex items-center justify-center min-w-[44px] min-h-[44px] relative"
         aria-label={unreadCount > 0 ? `Notifications (${unreadCount} unread)` : "Notifications"}
+        aria-expanded={open}
         title={unreadCount > 0 ? `${unreadCount} unread notification${unreadCount !== 1 ? "s" : ""}` : "Notifications"}
       >
-        <FaBell className="text-base sm:text-lg md:text-xl" />
+        <FaBell className="text-base sm:text-lg md:text-xl" aria-hidden />
         {unreadCount > 0 && (
           <span
             className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white"
@@ -168,7 +175,8 @@ export default function NotificationDropdown() {
             <button
               type="button"
               onClick={markAllRead}
-              className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+              className="text-sm text-blue-600 hover:text-blue-800 font-medium min-h-[44px] flex items-center"
+              aria-label="Mark all notifications as read"
             >
               Mark all read
             </button>
@@ -192,7 +200,7 @@ export default function NotificationDropdown() {
                         className="flex gap-3 px-4 py-3 hover:bg-gray-50 transition-colors"
                       >
                         <span className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center bg-blue-100 text-blue-600">
-                          <Icon className="w-4 h-4" />
+                          <Icon className="w-4 h-4" aria-hidden />
                         </span>
                         <div className="min-w-0 flex-1">
                           <p className="text-sm font-medium text-gray-900 line-clamp-2">{n.title}</p>
@@ -207,9 +215,10 @@ export default function NotificationDropdown() {
           </div>
           <div className="border-t border-gray-200 px-4 py-2.5">
             <Link
-              href="/notification"
+              href={segments.exam && !["notification", "login", "register", "contact", "pages"].includes(segments.exam) ? `/${segments.exam}/notification` : "/notification"}
               onClick={() => setOpen(false)}
-              className="block text-center text-sm font-medium text-blue-600 hover:text-blue-800"
+              className="flex text-center text-sm font-medium text-blue-600 hover:text-blue-800 min-h-[44px] items-center justify-center"
+              aria-label="View all notifications"
             >
               View all notifications
             </Link>

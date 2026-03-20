@@ -9,16 +9,17 @@ import { logger } from "@/utils/logger";
 // Create slug utility function for use in this file (local variable)
 const createSlugLocal = createSlugUtil;
 
-// Base path - should match next.config.mjs basePath
-const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
+// Base path - should match next.config.mjs basePath (trim to tolerate spaces in .env)
+const basePath = (process.env.NEXT_PUBLIC_BASE_PATH || "/self-study").replace(/^\s+|\s+$/g, "") || "/self-study";
 
-// Helper to get base URL for server-side requests
-const getBaseUrl = () => {
+// Helper to get base URL for server-side requests (optionally from current request)
+const getBaseUrl = (overrides = {}) => {
   if (typeof window !== "undefined") {
     // Client-side: use basePath for relative URLs
     return basePath;
   }
-  // Server-side (e.g. SSR, server components): use deployment URL in production so fetch() reaches the same app
+  // Server-side: allow explicit baseUrl (from request host) so SSR works when accessed by IP/domain
+  if (overrides.baseUrl) return overrides.baseUrl;
   const vercelUrl = process.env.VERCEL_URL;
   if (vercelUrl) {
     return `https://${vercelUrl}${basePath}`;
@@ -28,10 +29,28 @@ const getBaseUrl = () => {
     const base = appUrl.replace(/\/$/, "");
     return `${base}${basePath}`;
   }
-  // Development or same-host production: localhost
   const port = process.env.PORT || 3000;
   return `http://localhost:${port}${basePath}`;
 };
+
+/**
+ * Returns the request host as API base (e.g. https://testprepkart.com/self-study).
+ * Do NOT use for server-side self-requests (fetch to same app) — causes "fetch failed".
+ * Server-side fetches in this file use localhost via getBaseUrl() instead.
+ */
+export async function getServerRequestBaseUrl() {
+  if (typeof window !== "undefined") return null;
+  try {
+    const { headers } = await import("next/headers");
+    const headersList = await headers();
+    const host = headersList.get("host") || headersList.get("x-forwarded-host");
+    const proto = headersList.get("x-forwarded-proto") || "http";
+    if (!host) return null;
+    return `${proto}://${host}${basePath}`;
+  } catch {
+    return null;
+  }
+}
 
 // Request cache for deduplication (prevents duplicate requests)
 const requestCache = new Map();
@@ -45,11 +64,13 @@ const getCacheKey = (url, params = {}) => {
 // Fetch all active exams (with pagination support and request deduplication)
 export const fetchExams = async (options = {}) => {
   try {
-    const { page = 1, limit = 100, status = STATUS.ACTIVE } = options;
+    const { page = 1, limit = 100, status = STATUS.ACTIVE, baseUrl: baseUrlOverride } = options;
 
     // Check if we're on server side
     const isServer = typeof window === "undefined";
-    const baseUrl = getBaseUrl();
+    // Server-side: always use localhost so we hit the same process (no outgoing request to public host).
+    // Using getServerRequestBaseUrl() caused "fetch failed" when server fetched https://testprepkart.com.
+    const baseUrl = getBaseUrl({ baseUrl: baseUrlOverride });
     const url = `${baseUrl}/api/exam?page=${page}&limit=${limit}&status=${status}`;
     const cacheKey = getCacheKey(url, { page, limit, status });
 
@@ -67,6 +88,9 @@ export const fetchExams = async (options = {}) => {
     if (isServer) {
       const response = await fetch(url, {
         cache: "no-store", // Always fetch fresh data for exams
+        headers: {
+          "Cache-Control": "no-cache", // Bypass API in-memory cache so new exams show immediately
+        },
       });
 
       if (!response.ok) {
@@ -121,17 +145,22 @@ export const fetchExams = async (options = {}) => {
 
     return result;
   } catch (error) {
-    logger.error("Error fetching exams:", error);
+    const errDetail = {
+      errorMessage: error?.message,
+      errorCode: error?.code,
+      ...(error?.response && { status: error.response?.status, responseData: error.response?.data }),
+    };
+    logger.error("Error fetching exams:", errDetail);
     return [];
   }
 };
 
 // Fetch exam by ID or name/slug
-export const fetchExamById = async (examId) => {
+export const fetchExamById = async (examId, options = {}) => {
   if (!examId) return null;
 
   const isServer = typeof window === "undefined";
-  const baseUrl = getBaseUrl();
+  const baseUrl = getBaseUrl({ baseUrl: options.baseUrl });
 
   try {
     // Try by ID first (only if it looks like an ObjectId)
@@ -171,20 +200,21 @@ export const fetchExamById = async (examId) => {
 
   // Fallback: fetch all exams and find by slug
   try {
-    const exams = await fetchExams({ limit: 100 });
+    const exams = await fetchExams({ limit: 100, baseUrl: options.baseUrl });
     const examIdLower = examId?.toLowerCase();
     const found = exams.find(
       (exam) =>
-        exam._id === examId ||
+        String(exam._id) === String(examId) ||
         exam.name?.toLowerCase() === examIdLower ||
         createSlugLocal(exam.name) === examIdLower
     );
 
     // If found by slug, fetch the full exam data by its actual ID
     if (found && found._id) {
+      const idForFetch = String(found._id);
       try {
         if (isServer) {
-          const response = await fetch(`${baseUrl}/api/exam/${found._id}`, {
+          const response = await fetch(`${baseUrl}/api/exam/${idForFetch}`, {
             next: { revalidate: 60 },
           });
           if (response.ok) {
@@ -195,7 +225,7 @@ export const fetchExamById = async (examId) => {
           }
           return found;
         } else {
-          const fullResponse = await api.get(`/exam/${found._id}`);
+          const fullResponse = await api.get(`/exam/${idForFetch}`);
           if (fullResponse.data.success && fullResponse.data.data) {
             return fullResponse.data.data;
           }
@@ -213,11 +243,13 @@ export const fetchExamById = async (examId) => {
   }
 };
 
-// Fetch prime video tree (YouTube videos from editor content, one call)
-export const fetchPrimeVideo = async () => {
+// Fetch prime video tree (YouTube videos from editor content, one call).
+// When examSlug is provided, only that exam's videos are returned (for /[exam]/video-library).
+export const fetchPrimeVideo = async (examSlug = null) => {
   const isServer = typeof window === "undefined";
   const baseUrl = getBaseUrl();
-  const url = `${baseUrl}/api/video-library`;
+  const params = examSlug ? `?exam=${encodeURIComponent(examSlug)}` : "";
+  const url = `${baseUrl}/api/video-library${params}`;
   try {
     if (isServer) {
       const response = await fetch(url, { cache: "no-store" });
@@ -225,7 +257,7 @@ export const fetchPrimeVideo = async () => {
       const json = await response.json();
       return json.success ? json : { success: false, data: { exams: [], nodes: [] } };
     }
-    const response = await api.get("/video-library");
+    const response = await api.get(examSlug ? `/video-library?exam=${encodeURIComponent(examSlug)}` : "/video-library");
     return response.data?.success ? response.data : { success: false, data: { exams: [], nodes: [] } };
   } catch (err) {
     logger.warn("fetchPrimeVideo error:", err?.message);
@@ -1419,19 +1451,21 @@ export const fetchPracticeCategories = async (filters = {}) => {
       if (data.success && data.data) {
         let categories = data.data || [];
 
-        // Client-side filtering
+        // Client-side filtering (compare as string so ObjectId vs string both match)
         if (examId) {
+          const eid = String(examId);
           categories = categories.filter(
             (cat) =>
-              (cat.examId?._id || cat.examId) === examId ||
-              cat.examId === examId
+              String(cat.examId?._id || cat.examId) === eid ||
+              String(cat.examId) === eid
           );
         }
         if (subjectId) {
+          const sid = String(subjectId);
           categories = categories.filter(
             (cat) =>
-              (cat.subjectId?._id || cat.subjectId) === subjectId ||
-              cat.subjectId === subjectId
+              String(cat.subjectId?._id || cat.subjectId) === sid ||
+              String(cat.subjectId) === sid
           );
         }
 
@@ -1444,19 +1478,21 @@ export const fetchPracticeCategories = async (filters = {}) => {
       if (response.data.success && response.data.data) {
         let categories = response.data.data || [];
 
-        // Client-side filtering
+        // Client-side filtering (compare as string so ObjectId vs string both match)
         if (examId) {
+          const eid = String(examId);
           categories = categories.filter(
             (cat) =>
-              (cat.examId?._id || cat.examId) === examId ||
-              cat.examId === examId
+              String(cat.examId?._id || cat.examId) === eid ||
+              String(cat.examId) === eid
           );
         }
         if (subjectId) {
+          const sid = String(subjectId);
           categories = categories.filter(
             (cat) =>
-              (cat.subjectId?._id || cat.subjectId) === subjectId ||
-              cat.subjectId === subjectId
+              String(cat.subjectId?._id || cat.subjectId) === sid ||
+              String(cat.subjectId) === sid
           );
         }
 
@@ -1909,7 +1945,18 @@ export async function fetchAllStudentTestResults(filters = {}) {
 // Fetch blogs (public access for active blogs)
 export const fetchBlogs = async (options = {}) => {
   try {
-    const { examId = null, status = STATUS.ACTIVE, limit = 100 } = options;
+    const {
+      examId = null,
+      status = STATUS.ACTIVE,
+      limit = 100,
+      assignmentLevel = null,
+      assignmentSubjectId = null,
+      assignmentUnitId = null,
+      assignmentChapterId = null,
+      assignmentTopicId = null,
+      assignmentSubTopicId = null,
+      assignmentDefinitionId = null,
+    } = options;
 
     const isServer = typeof window === "undefined";
     const baseUrl = getBaseUrl();
@@ -1918,6 +1965,15 @@ export const fetchBlogs = async (options = {}) => {
     let queryString = `status=${status}&limit=${limit}`;
     if (examId) {
       queryString += `&examId=${examId}`;
+    }
+    if (assignmentLevel) {
+      queryString += `&assignmentLevel=${encodeURIComponent(assignmentLevel)}`;
+      if (assignmentSubjectId) queryString += `&assignmentSubjectId=${assignmentSubjectId}`;
+      if (assignmentUnitId) queryString += `&assignmentUnitId=${assignmentUnitId}`;
+      if (assignmentChapterId) queryString += `&assignmentChapterId=${assignmentChapterId}`;
+      if (assignmentTopicId) queryString += `&assignmentTopicId=${assignmentTopicId}`;
+      if (assignmentSubTopicId) queryString += `&assignmentSubTopicId=${assignmentSubTopicId}`;
+      if (assignmentDefinitionId) queryString += `&assignmentDefinitionId=${assignmentDefinitionId}`;
     }
 
     const url = `${baseUrl}/api/blog?${queryString}`;
@@ -1965,6 +2021,15 @@ export const fetchBlogs = async (options = {}) => {
     logger.error("Error fetching blogs:", error);
     return [];
   }
+};
+
+/**
+ * Fetch blogs assigned to a specific hierarchy level (for AssignedBlogsSection).
+ * Returns up to 3 active blogs. Use on exam/subject/unit/chapter/topic/subtopic/definition pages.
+ */
+export const fetchBlogsByAssignment = async (options = {}) => {
+  const { limit = 3, ...rest } = options;
+  return fetchBlogs({ ...rest, status: STATUS.ACTIVE, limit });
 };
 
 // Fetch blog by slug (public access for active blogs)

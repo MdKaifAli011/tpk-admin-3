@@ -36,7 +36,7 @@ const ContactPage = () => {
     {
       icon: FaEnvelope,
       title: "Our Email Address",
-      details: [{ label: "", value: "info@testprepkart.com" }],
+      details: [{ label: "", value: "contact@rayofhopebihar.org" }],
       color: "bg-purple-50 text-purple-600",
     },
     {
@@ -130,9 +130,9 @@ const ContactPage = () => {
   return (
     <div className="space-y-8 py-6">
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 rounded-xl p-6 md:p-8 lg:p-10 border border-purple-100">
+      <section className="hero-section bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 rounded-xl p-6 md:p-8 lg:p-10 border border-purple-100" aria-labelledby="contact-title">
         <div className="text-center max-w-3xl mx-auto">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+          <h1 id="contact-title" className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
             Get In Touch With Us
           </h1>
           <p className="text-base sm:text-lg md:text-xl text-gray-600 mb-6 leading-relaxed">
@@ -313,7 +313,7 @@ const ContactPage = () => {
 
             {/* YouTube */}
             <a
-              href="https://www.youtube.com/@TestprepKart"
+              href="https://www.youtube.com/@Testprepkart"
               target="_blank"
               rel="noopener noreferrer"
               className="w-12 h-12 bg-red-600 text-white rounded-full flex items-center justify-center hover:bg-red-700 transition-colors shadow-md hover:shadow-lg"

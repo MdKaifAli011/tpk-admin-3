@@ -174,7 +174,7 @@ export default function MediaManagement() {
       if (viewMode === "trash") params.set("trash", "true");
       else if (viewMode === "library") {
         if (activeFilter !== "all") params.set("type", activeFilter);
-        if (currentFolderPath.trim()) params.set("folder", currentFolderPath.trim());
+        params.set("folder", currentFolderPath);
       }
       params.set("page", String(page));
       params.set("limit", String(pageSize));
@@ -271,13 +271,14 @@ export default function MediaManagement() {
     }
   };
 
-  const handleDeleteFolder = async () => {
+  const handleDeleteFolder = async (force = false) => {
     if (!deleteFolder?.path) return;
     setDeletingFolder(true);
     try {
-      const res = await api.delete("/media/folders", { data: { path: deleteFolder.path } });
+      const url = force ? `/media/folders?force=true` : "/media/folders";
+      const res = await api.delete(url, { data: { path: deleteFolder.path } });
       if (res.data?.success) {
-        success("Folder deleted");
+        success(force ? "Folder and all contents deleted" : "Folder deleted");
         setSelectedFolderPaths((prev) => { const n = new Set(prev); n.delete(deleteFolder.path); return n; });
         setDeleteFolder(null);
         setFolderDeleteCounts(null);
@@ -289,7 +290,7 @@ export default function MediaManagement() {
         fetchMedia(1);
       } else showError(res.data?.message || "Failed to delete folder");
     } catch (err) {
-      showError(err.response?.data?.message || err.response?.data?.error || "Only administrators can delete folders.");
+      showError(err.response?.data?.message || err.response?.data?.error || "Failed to delete folder.");
     } finally {
       setDeletingFolder(false);
     }
@@ -453,8 +454,7 @@ export default function MediaManagement() {
 
   const subfolders = viewMode === "library" ? foldersFlat.filter((f) => (f.parentPath || "") === currentFolderPath) : [];
   const breadcrumbSegments = currentFolderPath ? currentFolderPath.split("/").filter(Boolean) : [];
-  const atRoot = viewMode === "library" && currentFolderPath === "";
-  const displayItems = atRoot ? [] : items;
+  const displayItems = items;
 
   const selectedItem = displayItems.find((i) => i._id === Array.from(selectedIds)[0]);
 
@@ -469,48 +469,48 @@ export default function MediaManagement() {
               <div className="px-3 py-4">
                 <p className="mb-2 px-2 text-[10px] font-medium uppercase tracking-widest text-slate-400">Library</p>
                 <nav className="space-y-0.5">
-                  {TYPES.map(({ id, label, icon: Icon }) => (
-                    <button
-                      key={id}
-                      type="button"
-                      onClick={() => {
-                        setViewMode("library");
-                        setActiveFilter(id);
+              {TYPES.map(({ id, label, icon: Icon }) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => {
+                    setViewMode("library");
+                    setActiveFilter(id);
                         setCurrentFolderPath("");
-                      }}
+                  }}
                       className={`flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm transition-colors ${
-                        viewMode === "library" && activeFilter === id
+                    viewMode === "library" && activeFilter === id
                           ? "bg-[#0052CC] text-white shadow-sm"
                           : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                      }`}
-                    >
+                  }`}
+                >
                       <Icon className={`h-4 w-4 shrink-0 ${viewMode === "library" && activeFilter === id ? "text-white" : "text-slate-400"}`} />
                       <span className="font-medium">{label}</span>
-                    </button>
-                  ))}
+                </button>
+              ))}
                   <div className="my-2 border-t border-slate-200" />
-                  <button
-                    type="button"
-                    onClick={() => setViewMode("recent")}
+              <button
+                type="button"
+                onClick={() => setViewMode("recent")}
                     className={`flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm transition-colors ${
                       viewMode === "recent" ? "bg-[#0052CC] text-white shadow-sm" : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                    }`}
-                  >
+                }`}
+              >
                     <FaClock className={`h-4 w-4 shrink-0 ${viewMode === "recent" ? "text-white" : "text-slate-400"}`} />
                     <span className="font-medium">Recent</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setViewMode("trash")}
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode("trash")}
                     className={`flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm transition-colors ${
                       viewMode === "trash" ? "bg-[#0052CC] text-white shadow-sm" : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                    }`}
-                  >
+                }`}
+              >
                     <FaTrash className={`h-4 w-4 shrink-0 ${viewMode === "trash" ? "text-white" : "text-slate-400"}`} />
                     <span className="font-medium">Trash</span>
-                  </button>
+              </button>
                 </nav>
-              </div>
+            </div>
             </aside>
 
             {/* Main content */}
@@ -560,6 +560,7 @@ export default function MediaManagement() {
                       breadcrumbSegments.map((seg, i) => {
                         const pathUp = breadcrumbSegments.slice(0, i + 1).join("/");
                         const isLast = i === breadcrumbSegments.length - 1;
+                        const displayName = foldersFlat.find((f) => f.path === pathUp)?.name || seg.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
                         return (
                           <span key={pathUp} className="flex items-center gap-2">
                             <span className="text-slate-400">/</span>
@@ -568,7 +569,7 @@ export default function MediaManagement() {
                               onClick={() => setCurrentFolderPath(pathUp)}
                               className={`transition-colors ${isLast ? "text-slate-900 font-medium" : "hover:text-[#0052CC]"}`}
                             >
-                              {seg}
+                              {displayName}
                             </button>
                           </span>
                         );
@@ -578,14 +579,14 @@ export default function MediaManagement() {
                   <div className="flex items-center justify-between gap-4 flex-wrap">
                     <div className="relative flex-1 min-w-[200px] max-w-md">
                       <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                      <input
-                        type="text"
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
+                  <input
+                    type="text"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
                         placeholder="Search files and folders..."
                         className="w-full pl-10 pr-4 py-2 bg-slate-50 border-0 focus:ring-1 focus:ring-[#0052CC] rounded-lg text-sm"
-                      />
-                    </div>
+                  />
+                </div>
                     <div className="flex items-center gap-2">
                       {viewMode === "trash" ? (
                         <>
@@ -690,7 +691,7 @@ export default function MediaManagement() {
                           </button>
                           <label className="flex items-center gap-2 px-4 py-2 text-white font-medium text-sm bg-[#0052CC] rounded-lg hover:bg-[#0044AA] transition-colors cursor-pointer">
                             <FaUpload className={`h-4 w-4 ${uploading ? "animate-pulse" : ""}`} />
-                            {uploading ? "Uploading…" : "Upload"}
+                  {uploading ? "Uploading…" : "Upload"}
                             <input ref={fileInputRef} type="file" multiple className="hidden" onChange={handleUpload} disabled={uploading} />
                           </label>
                         </>
@@ -709,7 +710,7 @@ export default function MediaManagement() {
                         <thead className="sticky top-0 bg-slate-50 z-10 border-b border-slate-200">
                           <tr>
                             <th className="w-12 px-4 py-3">
-                              <input
+                  <input
                                 type="checkbox"
                                 checked={(subfolders.length > 0 || displayItems.length > 0) && selectedIds.size === displayItems.length && selectedFolderPaths.size === subfolders.length}
                                 onChange={selectAll}
@@ -749,8 +750,8 @@ export default function MediaManagement() {
                               <td className="px-4 py-3 text-sm text-slate-500">—</td>
                               <td className="px-4 py-3 text-right">
                                 <div className="relative">
-                                  <button
-                                    type="button"
+                  <button
+                    type="button"
                                     onClick={(e) => { e.stopPropagation(); setFolderMenuOpen(folderMenuOpen === f.path ? null : f.path); }}
                                     className="p-1 text-slate-400 hover:text-slate-600 opacity-0 group-hover:opacity-100 transition-opacity"
                                     aria-label="Folder options"
@@ -768,9 +769,9 @@ export default function MediaManagement() {
                                       {isAdmin && (
                                         <button type="button" onClick={() => { setDeleteFolder({ path: f.path, name: f.name || f.path }); setFolderMenuOpen(null); }} className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50">
                                           <FaTrash className="h-3.5 w-3.5" /> Delete
-                                        </button>
-                                      )}
-                                    </div>
+                  </button>
+                )}
+              </div>
                                   )}
                                 </div>
                               </td>
@@ -880,7 +881,7 @@ export default function MediaManagement() {
                             <FaUpload className="h-4 w-4" /> Upload files
                           </button>
                         )}
-                      </div>
+                  </div>
                     )
                   ) : (
                   <>
@@ -928,9 +929,9 @@ export default function MediaManagement() {
                         >
                           {item.type === "image" ? (
                             <>
-                              <img
-                                src={item.url}
-                                alt={item.altText || item.name}
+                            <img
+                              src={item.url}
+                              alt={item.altText || item.name}
                                 className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                               />
                               <div className="absolute inset-0 bg-black/0 transition-colors group-hover:bg-black/10 flex items-center justify-center opacity-0 group-hover:opacity-100">
@@ -970,24 +971,24 @@ export default function MediaManagement() {
                           <p className="truncate pr-9 text-sm font-medium text-slate-900" title={item.name}>
                             {item.name || item.fileName}
                           </p>
-                          <button
-                            type="button"
+                            <button
+                              type="button"
                             onClick={(e) => { e.stopPropagation(); setFileMenuOpen(fileMenuOpen === item._id ? null : item._id); }}
                             className="absolute bottom-3 right-2 rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
                             aria-label="File options"
                           >
                             <FaEllipsisV className="h-4 w-4" />
-                          </button>
+                            </button>
                           {fileMenuOpen === item._id && (
                             <div className="absolute bottom-full right-0 z-20 mb-1 min-w-[140px] rounded-xl border border-slate-200 bg-white py-1 shadow-xl" onClick={(e) => e.stopPropagation()}>
                               {(item.type === "image" || item.type === "video") && (
-                                <button
-                                  type="button"
+                            <button
+                              type="button"
                                   onClick={(e) => { e.stopPropagation(); openPreview(item); setFileMenuOpen(null); }}
                                   className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-50"
-                                >
+                            >
                                   <FaExpand className="h-3.5 w-3.5 text-slate-400" /> View full
-                                </button>
+                            </button>
                               )}
                               {viewMode === "trash" ? (
                                 <>
@@ -1020,7 +1021,7 @@ export default function MediaManagement() {
                                   </button>
                                 </>
                               )}
-                            </div>
+                          </div>
                           )}
                         </div>
                       </div>
@@ -1081,33 +1082,33 @@ export default function MediaManagement() {
                     </div>
                     <span className="w-px h-4 bg-slate-200" />
                     <div className="flex items-center gap-1">
-                      <button
-                        type="button"
-                        onClick={() => fetchMedia(pagination.page - 1)}
-                        disabled={pagination.page <= 1}
+                    <button
+                      type="button"
+                      onClick={() => fetchMedia(pagination.page - 1)}
+                      disabled={pagination.page <= 1}
                         className="flex h-8 w-8 items-center justify-center rounded border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:pointer-events-none"
-                      >
+                    >
                         <FaChevronLeft className="h-4 w-4" />
-                      </button>
+                    </button>
                       <span className="min-w-[4rem] text-center text-sm text-slate-600">
                         Page {pagination.page} of {pagination.totalPages || 1}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => fetchMedia(pagination.page + 1)}
-                        disabled={pagination.page >= pagination.totalPages}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => fetchMedia(pagination.page + 1)}
+                      disabled={pagination.page >= pagination.totalPages}
                         className="flex h-8 w-8 items-center justify-center rounded border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:pointer-events-none"
-                      >
+                    >
                         <FaChevronRight className="h-4 w-4" />
-                      </button>
-                    </div>
+                    </button>
+                  </div>
                   </div>
                 </div>
               </div>
             </main>
           </div>
         </div>
-      </div>
+              </div>
 
         {/* Full preview modal — image lightbox / video player */}
         {previewItem && (previewItem.type === "image" || previewItem.type === "video") && (
@@ -1138,14 +1139,14 @@ export default function MediaManagement() {
                   <div className="mt-4 flex flex-wrap items-center justify-center gap-3 rounded-xl bg-slate-800/80 px-4 py-3 text-sm text-white backdrop-blur-sm">
                     <span className="font-medium truncate max-w-[280px]" title={previewItem.name}>
                       {previewItem.name || previewItem.fileName}
-                    </span>
-                    <button
-                      type="button"
+                      </span>
+                      <button
+                        type="button"
                       onClick={(e) => { e.stopPropagation(); copyUrl(previewItem.url); }}
                       className="inline-flex items-center gap-1.5 rounded-lg bg-white/20 px-3 py-1.5 font-medium hover:bg-white/30"
-                    >
+                      >
                       <FaCopy className="h-3.5 w-3.5" /> Copy URL
-                    </button>
+                      </button>
                   </div>
                 </div>
               ) : (
@@ -1320,7 +1321,7 @@ export default function MediaManagement() {
                 </div>
                 {currentFolderPath ? (
                   <p className="rounded-lg bg-slate-50 px-3 py-1.5 text-sm text-slate-500">
-                    Location: <span className="font-medium text-slate-700">{currentFolderPath}</span>
+                    Location: <span className="font-medium text-slate-700">{foldersFlat.find((f) => f.path === currentFolderPath)?.name || currentFolderPath.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}</span>
                   </p>
                 ) : null}
                 <div className="flex gap-3 pt-2">
@@ -1520,19 +1521,28 @@ export default function MediaManagement() {
                           <li>{folderDeleteCounts.subfolders} subfolder{folderDeleteCounts.subfolders !== 1 ? "s" : ""}</li>
                         )}
                       </ul>
-                      <p className="mt-2 text-amber-700">The folder must be empty before it can be deleted. Move or delete the contents first.</p>
+                      <p className="mt-2 font-medium text-amber-800">Deleting will remove everything inside this folder permanently. This cannot be undone.</p>
                     </div>
-                    <div className="flex gap-3 pt-2">
+                    <div className="flex flex-wrap gap-3 pt-2">
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteFolder(true)}
+                        disabled={deletingFolder}
+                        className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
+                      >
+                        {deletingFolder ? "Deleting…" : "Delete permanently"}
+                      </button>
                       <button
                         type="button"
                         onClick={() => { setCurrentFolderPath(deleteFolder.path); setDeleteFolder(null); setFolderDeleteCounts(null); fetchMedia(1); }}
-                        className="flex-1 rounded-lg bg-[#0052CC] px-4 py-2 text-sm font-medium text-white hover:bg-[#0044AA]"
+                        className="rounded-lg bg-[#0052CC] px-4 py-2 text-sm font-medium text-white hover:bg-[#0044AA]"
                       >
                         Go to folder
                       </button>
                       <button
                         type="button"
                         onClick={() => { setDeleteFolder(null); setFolderDeleteCounts(null); }}
+                        disabled={deletingFolder}
                         className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
                       >
                         Cancel
@@ -1547,7 +1557,7 @@ export default function MediaManagement() {
                     <div className="flex gap-3 pt-2">
                       <button
                         type="button"
-                        onClick={handleDeleteFolder}
+                        onClick={() => handleDeleteFolder(false)}
                         disabled={deletingFolder}
                         className="flex-1 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
                       >

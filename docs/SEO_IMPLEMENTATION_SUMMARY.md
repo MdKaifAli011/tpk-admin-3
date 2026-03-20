@@ -63,7 +63,7 @@
    - Search params: { tab: "discussion" }
 4. Returns metadata:
    {
-     title: "Kinematics - Discussion Forum | TestPrepKart",
+     title: "Kinematics - Discussion Forum | Testprepkart",
      description: "Join the Kinematics discussion forum...",
      robots: { index: true, follow: true },
      canonical: "https://testprepkart.com/self-study/jee/physics/mechanics/kinematics?tab=discussion"
@@ -222,13 +222,13 @@ const canonicalUrl = `${APP_CONFIG.url}${basePath}${path}${queryString}`;
 ### ✅ SSR Metadata (View-Source)
 
 1. Open: `/jee/physics?tab=overview`
-   - View-source should show: "Physics - TestPrepKart" or admin title
+   - View-source should show: "Physics - Testprepkart" or admin title
 
 2. Open: `/jee/physics?tab=discussion`
-   - View-source should show: "Physics - Discussion Forum | TestPrepKart"
+   - View-source should show: "Physics - Discussion Forum | Testprepkart"
 
 3. Open: `/jee/physics?tab=practice`
-   - View-source should show: "Physics - Practice Tests | TestPrepKart"
+   - View-source should show: "Physics - Practice Tests | Testprepkart"
 
 4. Open: `/jee/physics?tab=performance`
    - View-source should show: `<meta name="robots" content="noindex, nofollow">`

@@ -11,24 +11,28 @@ import cacheManager from "@/utils/cacheManager";
 // ---------- GET ALL SUBJECTS (optimized) ----------
 export async function GET(request) {
   try {
-    // Check authentication (all authenticated users can view)
-    const authCheck = await requireAuth(request);
-    if (authCheck.error) {
-      return NextResponse.json(authCheck, { status: authCheck.status || 401 });
+    const { searchParams } = new URL(request.url);
+    const statusFilterParam = searchParams.get("status") || STATUS.ACTIVE;
+    const statusFilter = statusFilterParam.toLowerCase();
+
+    // Allow public access for active subjects only (for frontend self-study pages)
+    if (statusFilter !== STATUS.ACTIVE) {
+      const authCheck = await requireAuth(request);
+      if (authCheck.error) {
+        return NextResponse.json(authCheck, { status: authCheck.status || 401 });
+      }
     }
 
     await connectDB();
-    const { searchParams } = new URL(request.url);
 
     // Parse pagination
     const { page, limit, skip } = parsePagination(searchParams);
 
     // Get filters (normalize status to lowercase for case-insensitive matching)
     const examId = searchParams.get("examId");
-    const statusFilterParam = searchParams.get("status") || STATUS.ACTIVE;
-    const statusFilter = statusFilterParam.toLowerCase();
 
     const metaStatus = searchParams.get("metaStatus"); // filled, notFilled
+    const search = searchParams.get("search")?.trim();
 
     // Build query with case-insensitive status matching
     const query = {};
@@ -37,6 +41,10 @@ export async function GET(request) {
     }
     if (statusFilter !== "all") {
       query.status = { $regex: new RegExp(`^${statusFilter}$`, "i") };
+    }
+    if (search) {
+      const escapeRegex = (s) => String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      query.name = { $regex: new RegExp(escapeRegex(search), "i") };
     }
 
     // Handle Metadata filtering
@@ -59,11 +67,10 @@ export async function GET(request) {
       }
     }
 
-    // Create cache key
+    // Create cache key (skip cache when search is active)
     const cacheKey = `subjects-${JSON.stringify(query)}-${page}-${limit}`;
 
-    // Check cache (only for active status)
-    if (statusFilter === STATUS.ACTIVE) {
+    if (statusFilter === STATUS.ACTIVE && !search) {
       const cached = cacheManager.get(cacheKey);
       if (cached) {
         return NextResponse.json(cached);
@@ -89,7 +96,7 @@ export async function GET(request) {
     const subjectDetails = await SubjectDetails.find({
       subjectId: { $in: subjectIds },
     })
-      .select("subjectId content title metaDescription keywords createdAt updatedAt")
+      .select("subjectId content title metaDescription keywords status createdAt updatedAt")
       .lean();
 
     // Create a map of subjectId to content info
@@ -101,6 +108,7 @@ export async function GET(request) {
         hasContent,
         hasMeta,
         contentDate: hasContent ? (detail.updatedAt || detail.createdAt) : null,
+        detailsStatus: detail.status || "draft",
       });
     });
 
@@ -110,6 +118,7 @@ export async function GET(request) {
         hasContent: false,
         hasMeta: false,
         contentDate: null,
+        detailsStatus: "draft",
       };
       return {
         ...subject,
@@ -118,6 +127,19 @@ export async function GET(request) {
     });
 
     const response = createPaginationResponse(subjectsWithContent, total, page, limit);
+
+    if (statusFilter === "all") {
+      const countsByExam = await Subject.aggregate([
+        { $match: query },
+        { $group: { _id: "$examId", count: { $sum: 1 } } },
+      ]).exec();
+      const map = {};
+      countsByExam.forEach(({ _id, count }) => {
+        const key = _id ? _id.toString() : "unassigned";
+        map[key] = count;
+      });
+      response.countsByExam = map;
+    }
 
     // Cache the response (only for active status)
     if (statusFilter === STATUS.ACTIVE) {

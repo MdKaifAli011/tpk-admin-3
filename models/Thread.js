@@ -32,7 +32,7 @@ const threadSchema = new mongoose.Schema(
             type: String,
             trim: true,
         },
-        /** When set (e.g. "TestPrepKart" for admin-created threads), show this instead of author/guest on frontend with brand logo */
+        /** When set (e.g. "Testprepkart" for admin-created threads), show this instead of author/guest on frontend with brand logo */
         contributorDisplayName: {
             type: String,
             trim: true,
@@ -113,10 +113,10 @@ threadSchema.index(
     { unique: true }
 );
 
-// Pre-save hook: generate slug from title, unique within same hierarchy
+// Pre-save hook: generate slug from title only when creating (no slug yet). Never change slug on title edit.
 threadSchema.pre("save", async function (next) {
-    if (!this.slug && !this.title) return next();
-    if (this.slug && !this.isModified("title")) return next(); // already have slug and title unchanged
+    if (this.slug) return next(); // Keep existing slug when editing title or anything else
+    if (!this.title) return next();
 
     let slug = slugify(this.title || "thread", { lower: true, strict: true });
     if (!slug) slug = "thread";
@@ -133,7 +133,7 @@ threadSchema.pre("save", async function (next) {
 
     const slugRegEx = new RegExp(`^${slug.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&")}(-[0-9]*)?$`, "i");
     const query = { ...hierarchyFilter, slug: slugRegEx };
-    if (this._id) query._id = { $ne: this._id }; // exclude self when updating title
+    if (this._id) query._id = { $ne: this._id };
     const existing = await this.constructor.find(query);
 
     if (existing.length > 0) {

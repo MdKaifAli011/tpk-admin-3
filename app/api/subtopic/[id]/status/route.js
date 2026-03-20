@@ -2,20 +2,30 @@ import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import SubTopic from "@/models/SubTopic";
 import mongoose from "mongoose";
+import { requireAction } from "@/middleware/authMiddleware";
 import { logger } from "@/utils/logger";
+import { cascadeSubTopicStatus } from "@/lib/cascadeStatus";
 
 // ---------- PATCH SUBTOPIC STATUS ----------
 export async function PATCH(request, { params }) {
   try {
+    const authCheck = await requireAction(request, "PATCH");
+    if (authCheck.error) {
+      return NextResponse.json(authCheck, { status: authCheck.status || 403 });
+    }
+
     await connectDB();
     const { id } = await params;
     const body = await request.json();
-    const { status } = body;
+    const { status, cascadeMode } = body;
+    const mode = ["respect_manual", "force_all", "direct_only"].includes(cascadeMode)
+      ? cascadeMode
+      : "respect_manual";
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json(
         { success: false, message: "Invalid subtopic ID" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -25,23 +35,27 @@ export async function PATCH(request, { params }) {
           success: false,
           message: "Valid status is required (active or inactive)",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    // Update subtopic status
     const updated = await SubTopic.findByIdAndUpdate(
       id,
-      { $set: { status } },
-      { new: true }
+      {
+        status,
+        manualInactive: status === "inactive",
+      },
+      { new: true },
     );
 
     if (!updated) {
       return NextResponse.json(
         { success: false, message: "SubTopic not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
+
+    await cascadeSubTopicStatus(id, status, mode);
 
     return NextResponse.json({
       success: true,
@@ -54,8 +68,7 @@ export async function PATCH(request, { params }) {
     logger.error("Error updating subtopic status:", error);
     return NextResponse.json(
       { success: false, message: "Failed to update subtopic status" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
-

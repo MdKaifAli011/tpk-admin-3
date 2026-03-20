@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import Link from "next/link";
 import * as FaIcons from "react-icons/fa";
 import { ToastContainer, useToast } from "../ui/Toast";
 import api from "@/lib/api";
@@ -13,6 +14,19 @@ import RichTextEditor from "../ui/RichTextEditor";
 import { usePermissions, getDiscussionPermissions, getDiscussionPermissionMessage } from "../../hooks/usePermissions";
 import { getThreadHierarchyQueryString } from "@/lib/discussionThreadQuery";
 
+const timeAgo = (date) => {
+    const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+    if (seconds < 60) return `${seconds}s ago`;
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes}m ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    if (days < 30) return `${days}d ago`;
+    const months = Math.floor(days / 30);
+    return `${months}mo ago`;
+};
+
 const DiscussionManagement = () => {
     const [threads, setThreads] = useState([]);
     const [isDataLoading, setIsDataLoading] = useState(true);
@@ -21,7 +35,7 @@ const DiscussionManagement = () => {
     const [totalPages, setTotalPages] = useState(1);
     const [statusFilter, setStatusFilter] = useState("all");
     const [sortByViews, setSortByViews] = useState(false); // Top Views filter state
-    const [dateSort, setDateSort] = useState(null); // null | 'newest' | 'oldest'
+    const [dateSort, setDateSort] = useState("newest"); // 'newest' | 'oldest' — default recent first
     const [dateFrom, setDateFrom] = useState("");
     const [dateTo, setDateTo] = useState("");
     const [showDateRange, setShowDateRange] = useState(false);
@@ -54,6 +68,7 @@ const DiscussionManagement = () => {
     const { toasts, removeToast, success, error: showError } = useToast();
     const isFetchingRef = useRef(false);
     const dateRangePanelRef = useRef(null);
+    const recentSectionRef = useRef(null);
 
     // Permissions
     const { role, canCreate } = usePermissions();
@@ -79,6 +94,12 @@ const DiscussionManagement = () => {
     const [createDefinitions, setCreateDefinitions] = useState([]);
     const [createSubmitting, setCreateSubmitting] = useState(false);
 
+    // Recently Created (admin: show latest threads so you see what you just created)
+    const [recentThreads, setRecentThreads] = useState([]);
+    const [recentThreadsLoading, setRecentThreadsLoading] = useState(false);
+    const [lastCreatedThreadId, setLastCreatedThreadId] = useState(null);
+    const [showRecentSection, setShowRecentSection] = useState(true);
+
     // Fetch Functions for Hierarchy
     const fetchExams = useCallback(async () => {
         try {
@@ -96,7 +117,7 @@ const DiscussionManagement = () => {
             }
             const res = await api.get(url);
             if (res.data.success) setSubjects(res.data.data || []);
-        } catch (err) { 
+        } catch (err) {
             console.error("Error fetching subjects:", err);
             setSubjects([]);
         }
@@ -189,12 +210,12 @@ const DiscussionManagement = () => {
 
     // Reset dependents when parent changes
     const handleExamChange = (val) => {
-        setFilterExam(val); 
-        setFilterSubject(""); 
-        setFilterUnit(""); 
-        setFilterChapter(""); 
-        setFilterTopic(""); 
-        setFilterSubTopic(""); 
+        setFilterExam(val);
+        setFilterSubject("");
+        setFilterUnit("");
+        setFilterChapter("");
+        setFilterTopic("");
+        setFilterSubTopic("");
         setFilterDefinition("");
         // Clear subjects when exam is cleared, or let useEffect handle fetching
         if (!val) {
@@ -233,15 +254,18 @@ const DiscussionManagement = () => {
 
     const clearFilters = () => {
         setFilterExam(""); setFilterSubject(""); setFilterUnit(""); setFilterChapter(""); setFilterTopic(""); setFilterSubTopic(""); setFilterDefinition("");
+        setDateSort("newest");
+        setDateFrom(""); setDateTo("");
+        setPage(1);
     };
 
     const fetchThreads = async () => {
         isFetchingRef.current = true;
         try {
             setIsDataLoading(true);
-            let sortValue = sortByViews ? "views" : "new";
+            let sortValue = sortByViews ? "views" : "new"; // default: strict newest first (same as Recently Created)
             if (dateSort === "oldest") sortValue = "date_asc";
-            else if (dateSort === "newest") sortValue = "date_desc";
+            else if (dateSort === "newest") sortValue = "new";
             const queryParams = new URLSearchParams({
                 page,
                 limit: "10",
@@ -291,6 +315,24 @@ const DiscussionManagement = () => {
     useEffect(() => {
         fetchThreads();
     }, [page, search, statusFilter, sortByViews, dateSort, dateFrom, dateTo, filterExam, filterSubject, filterUnit, filterChapter, filterTopic, filterSubTopic, filterDefinition]);
+
+    const fetchRecentThreads = useCallback(async () => {
+        setRecentThreadsLoading(true);
+        try {
+            const res = await api.get("/discussion/threads?limit=5&sort=new&status=all");
+            if (res?.data?.success && Array.isArray(res.data.data)) {
+                setRecentThreads(res.data.data);
+            }
+        } catch (err) {
+            console.error("Error fetching recent threads:", err);
+        } finally {
+            setRecentThreadsLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchRecentThreads();
+    }, [fetchRecentThreads]);
 
     // Close date range panel when clicking outside
     useEffect(() => {
@@ -440,15 +482,23 @@ const DiscussionManagement = () => {
                 subTopicId: createSubTopicId || undefined,
                 definitionId: createDefinitionId || undefined,
             };
-            // Ensure admin token is sent so backend sets authorType "User" and contributorDisplayName "TestPrepKart"
+            // Ensure admin token is sent so backend sets authorType "User" and contributorDisplayName "Testprepkart"
             const adminToken = typeof window !== "undefined" ? window.localStorage.getItem("token") : null;
             const headers = adminToken ? { Authorization: `Bearer ${adminToken}` } : {};
             const res = await api.post("/discussion/threads", payload, { headers });
             if (res?.data?.success) {
+                const newThread = res.data.data;
                 success("Thread created successfully");
                 setShowCreateForm(false);
                 resetCreateForm();
                 fetchThreads();
+                fetchRecentThreads();
+                if (newThread?._id) {
+                    setShowRecentSection(true);
+                    setLastCreatedThreadId(newThread._id);
+                    setTimeout(() => setLastCreatedThreadId(null), 6000);
+                    setTimeout(() => recentSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
+                }
                 setStats(prev => ({ ...prev, total: (prev.total || 0) + 1, approved: (prev.approved || 0) + 1 }));
             } else {
                 showError(res?.data?.message || "Failed to create thread");
@@ -561,17 +611,17 @@ const DiscussionManagement = () => {
                                     {showCreateForm ? "Hide create form" : "Create thread"}
                                 </button>
                             )}
-                        {/* Quick Metrics */}
-                        <div className="flex items-center gap-3 bg-white/50 backdrop-blur-sm p-1.5 rounded-lg border border-white">
-                            <div className="px-3 py-1 text-center border-r border-gray-100">
-                                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Posts</p>
-                                <p className="text-base font-bold text-gray-900 leading-none mt-1">{stats.total || threads.length}</p>
-                            </div>
-                            <div className="px-3 py-1 text-center">
-                                <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider flex items-center gap-1 justify-center">
-                                    <FaIcons.FaCheck size={8} /> Verified
-                                </p>
-                                <p className="text-base font-bold text-emerald-600 leading-none mt-1">{stats.approved || 0}</p>
+                            {/* Quick Metrics */}
+                            <div className="flex items-center gap-3 bg-white/50 backdrop-blur-sm p-1.5 rounded-lg border border-white">
+                                <div className="px-3 py-1 text-center border-r border-gray-100">
+                                    <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Posts</p>
+                                    <p className="text-base font-bold text-gray-900 leading-none mt-1">{stats.total || threads.length}</p>
+                                </div>
+                                <div className="px-3 py-1 text-center">
+                                    <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider flex items-center gap-1 justify-center">
+                                        <FaIcons.FaCheck size={8} /> Verified
+                                    </p>
+                                    <p className="text-base font-bold text-emerald-600 leading-none mt-1">{stats.approved || 0}</p>
                                 </div>
                             </div>
                         </div>
@@ -772,9 +822,14 @@ const DiscussionManagement = () => {
                             )}
                         </button>
 
-                        {/* Top Views Filter Button */}
+                        {/* Top Views — when on, only views sort; date sort is off */}
                         <button
-                            onClick={() => { setSortByViews(!sortByViews); setPage(1); }}
+                            onClick={() => {
+                                const next = !sortByViews;
+                                setSortByViews(next);
+                                if (next) setDateSort(null);
+                                setPage(1);
+                            }}
                             className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-bold transition-all ${sortByViews ? "bg-orange-50 border-orange-200 text-orange-600" : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"}`}
                         >
                             <FaIcons.FaEye size={10} />
@@ -809,7 +864,11 @@ const DiscussionManagement = () => {
                                         ].map((opt) => (
                                             <button
                                                 key={opt.id ?? "default"}
-                                                onClick={() => { setDateSort(opt.id); setPage(1); }}
+                                                onClick={() => {
+                                                    setDateSort(opt.id);
+                                                    setSortByViews(false);
+                                                    setPage(1);
+                                                }}
                                                 className={`px-2 py-1 rounded text-xs font-medium ${dateSort === opt.id ? "bg-teal-100 text-teal-800 border border-teal-200" : "bg-gray-100 text-gray-600 border border-transparent hover:bg-gray-200"}`}
                                             >
                                                 {opt.label}
@@ -1034,7 +1093,7 @@ const DiscussionManagement = () => {
                         <FaIcons.FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors" size={12} />
                         <input
                             type="text"
-                            placeholder="Search discussions or authors..."
+                            placeholder="Search by title..."
                             value={search}
                             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
                             className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all text-sm text-gray-800 placeholder-gray-400"
@@ -1042,15 +1101,89 @@ const DiscussionManagement = () => {
                     </div>
                 </div>
 
+                {/* Recently Created - hidden when global search is active so only search results show */}
+                {showRecentSection && !search.trim() && (
+                <div ref={recentSectionRef} className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+                    <div className="px-4 py-3 border-b border-gray-200 bg-emerald-50/80 flex items-start justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                                <FaIcons.FaClock className="text-emerald-600" size={14} />
+                                <h2 className="text-base font-semibold text-gray-900">
+                                    Recently Created
+                                </h2>
+                                <span className="text-xs text-gray-500">(latest 5)</span>
+                            </div>
+                            <p className="text-xs text-gray-600 mt-0.5">New threads appear here first. The one you just created is highlighted.</p>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => setShowRecentSection(false)}
+                            className="shrink-0 p-1.5 rounded-lg text-gray-500 hover:bg-emerald-100 hover:text-gray-700 transition-colors"
+                            title="Close this section"
+                        >
+                            <FaIcons.FaTimes size={14} />
+                        </button>
+                    </div>
+                    <div className="p-3 min-h-[80px]">
+                        {recentThreadsLoading ? (
+                            <div className="flex items-center gap-2 text-gray-500 py-4">
+                                <LoadingSpinner className="w-4 h-4" />
+                                <span className="text-sm">Loading recent…</span>
+                            </div>
+                        ) : recentThreads.length === 0 ? (
+                            <p className="text-sm text-gray-500 py-4">No threads yet.</p>
+                        ) : (
+                            <ul className="space-y-1">
+                                {[...recentThreads]
+                                    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+                                    .map((thread) => {
+                                        const isJustCreated = thread._id === lastCreatedThreadId;
+                                        const authorName = thread.author
+                                            ? [thread.author.firstName, thread.author.lastName].filter(Boolean).join(" ") || thread.author.email || "—"
+                                            : "Guest";
+                                        const threadDetailHref = `/admin/discussion/thread/${thread.slug}${getThreadHierarchyQueryString(thread) ? `?${getThreadHierarchyQueryString(thread)}` : ""}`;
+                                        return (
+                                            <li
+                                                key={thread._id}
+                                                className={`flex items-center justify-between gap-3 rounded-lg px-3 py-2 transition-all ${isJustCreated ? "bg-emerald-100 border-l-4 border-emerald-500 ring-1 ring-emerald-200" : "bg-gray-50 hover:bg-gray-100"}`}
+                                            >
+                                                <div className="flex-1 min-w-0">
+                                                    <Link href={threadDetailHref} className="block group">
+                                                        <p className="text-sm font-medium text-gray-900 truncate group-hover:text-blue-600">{thread.title}</p>
+                                                        <p className="text-[11px] text-gray-500">
+                                                            {authorName} · {timeAgo(thread.createdAt)}
+                                                            {thread.examId?.name && ` · ${thread.examId.name}`}
+                                                        </p>
+                                                    </Link>
+                                                </div>
+                                                <div className="flex items-center gap-2 shrink-0">
+                                                    {isJustCreated && (
+                                                        <span className="text-[10px] font-bold text-emerald-700 bg-emerald-200 px-2 py-0.5 rounded-full">Just created</span>
+                                                    )}
+                                                    <span className={`text-[10px] px-2 py-0.5 rounded-full ${thread.isApproved ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"}`}>
+                                                        {thread.isApproved ? "Approved" : "Pending"}
+                                                    </span>
+                                                </div>
+                                            </li>
+                                        );
+                                    })}
+                            </ul>
+                        )}
+                    </div>
+                </div>
+                )}
+
                 {/* Content Area - Consistent with ExamManagement */}
                 <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden min-h-[500px]">
                     <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
                         <div className="space-y-0.5">
                             <h2 className="text-xl font-semibold text-gray-900">
-                                Discussions List
+                                {search.trim() ? "Search results" : "Discussions List"}
                             </h2>
                             <p className="text-sm text-gray-600">
-                                Moderate community topics, verify guest posts, and track forum engagement.
+                                {search.trim()
+                                    ? `Showing threads matching "${search.trim()}". Only search results are listed.`
+                                    : "Moderate community topics, verify guest posts, and track forum engagement."}
                             </p>
                         </div>
                     </div>
@@ -1062,6 +1195,7 @@ const DiscussionManagement = () => {
                             onToggleApproval={handleToggleApproval}
                             onDelete={handleDelete}
                             onTogglePin={handleTogglePin}
+                            isSearchMode={!!search.trim()}
                         />
                     </LoadingWrapper>
 

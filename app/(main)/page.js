@@ -75,7 +75,7 @@ function HomepageContent() {
   const [exams, setExams] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  /* --- Fetch exams --- */
+  /* --- Fetch exams (defer until after first paint to improve LCP / TBT on mobile) --- */
   useEffect(() => {
     const loadExams = async () => {
       try {
@@ -88,7 +88,22 @@ function HomepageContent() {
         setLoading(false);
       }
     };
-    loadExams();
+
+    const runWhenIdle = () => {
+      if (typeof requestIdleCallback !== "undefined") {
+        requestIdleCallback(() => loadExams(), { timeout: 2000 });
+      } else {
+        setTimeout(loadExams, 400);
+      }
+    };
+
+    if (typeof window !== "undefined" && document.readyState === "complete") {
+      runWhenIdle();
+    } else if (typeof window !== "undefined") {
+      window.addEventListener("load", runWhenIdle, { once: true });
+    } else {
+      loadExams();
+    }
   }, []);
 
   /* --- Feature Data --- */
@@ -163,7 +178,7 @@ function HomepageContent() {
     {
       name: "Sarah Johnson",
       role: "SAT 2024, 1520 Score",
-      text: "As an NRI student, finding quality prep material was challenging. TestPrepKart made it easy with their comprehensive resources.",
+      text: "As an NRI student, finding quality prep material was challenging. Testprepkart made it easy with their comprehensive resources.",
       rating: 5,
     },
     {
@@ -202,7 +217,7 @@ function HomepageContent() {
       {/* =======================================================
           HERO SECTION (PREMIUM & CONVERSION-FOCUSED)
       ======================================================= */}
-      <section className="relative overflow-hidden">
+      <section className="hero-section relative overflow-hidden" aria-labelledby="home-hero-title">
 
 
 
@@ -224,7 +239,7 @@ function HomepageContent() {
             </div>
 
             {/* Main Headline - Value Proposition */}
-            <h1 className="text-xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold leading-[1.1] text-gray-900">
+            <h1 id="home-hero-title" className="text-xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold leading-[1.1] text-gray-900">
               Your{" "}
               <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 bg-clip-text text-transparent">
                 Exam
@@ -242,10 +257,11 @@ function HomepageContent() {
             <div className="flex flex-col sm:flex-row justify-center gap-4 pt-4">
               <Link
                 href="#exams"
-                className="group inline-flex items-center justify-center gap-3 px-2 sm:px-4 py-2 sm:py-3 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 text-white rounded-xl font-semibold text-sm sm:text-base shadow-md hover:shadow-lg hover:scale-105 transition-all"
+                aria-label="Scroll to exam list and start your free learning journey"
+                className="group inline-flex items-center justify-center gap-3 min-h-[44px] px-2 sm:px-4 py-2 sm:py-3 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 text-white rounded-xl font-semibold text-sm sm:text-base shadow-md hover:shadow-lg hover:scale-105 transition-all"
               >
                 Start Free Learning Journey
-                <FaArrowRight className="text-xs group-hover:translate-x-1 transition-transform" />
+                <FaArrowRight className="text-xs group-hover:translate-x-1 transition-transform" aria-hidden />
               </Link>
 
 
@@ -394,10 +410,11 @@ function HomepageContent() {
             <div className="text-center mt-12">
               <Link
                 href="#exams"
-                className="inline-flex items-center gap-2 text-sm sm:text-base text-indigo-600 font-semibold hover:text-indigo-700 transition-colors"
+                aria-label="Scroll to exam list to view all exams"
+                className="inline-flex items-center justify-center gap-2 min-h-[44px] px-4 text-sm sm:text-base text-indigo-600 font-semibold hover:text-indigo-700 transition-colors"
               >
                 View All Exams
-                <FaArrowRight className="text-sm" />
+                <FaArrowRight className="text-sm" aria-hidden />
               </Link>
             </div>
           )}
@@ -463,7 +480,7 @@ function HomepageContent() {
             </h2>
             <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
               See what our successful students have to say about their journey
-              with TestPrepKart.
+              with Testprepkart.
             </p>
           </div>
 
@@ -542,15 +559,17 @@ function HomepageContent() {
             <div className="flex flex-col sm:flex-row justify-center gap-4 pt-4">
               <Link
                 href="#exams"
-                className="group inline-flex items-center justify-center gap-3 px-6 sm:px-8 md:px-10 py-3 sm:py-4 md:py-5 bg-white text-indigo-700 rounded-xl font-semibold text-sm sm:text-base md:text-lg shadow-2xl hover:shadow-3xl hover:scale-105 transition-all"
+                aria-label="Scroll to exam list and start learning free"
+                className="group inline-flex items-center justify-center gap-3 min-h-[44px] px-6 sm:px-8 md:px-10 py-3 sm:py-4 md:py-5 bg-white text-indigo-700 rounded-xl font-semibold text-sm sm:text-base md:text-lg shadow-2xl hover:shadow-3xl hover:scale-105 transition-all"
               >
                 Start Learning Free
-                <FaArrowRight className="text-sm group-hover:translate-x-1 transition-transform" />
+                <FaArrowRight className="text-sm group-hover:translate-x-1 transition-transform" aria-hidden />
               </Link>
 
               <Link
                 href="/register"
-                className="inline-flex items-center justify-center gap-3 px-6 sm:px-8 md:px-10 py-3 sm:py-4 md:py-5 bg-transparent border-2 sm:border-3 border-white text-white rounded-xl font-semibold text-sm sm:text-base md:text-lg hover:bg-white/10 transition-all"
+                aria-label="Create free account"
+                className="inline-flex items-center justify-center gap-3 min-h-[44px] px-6 sm:px-8 md:px-10 py-3 sm:py-4 md:py-5 bg-transparent border-2 sm:border-3 border-white text-white rounded-xl font-semibold text-sm sm:text-base md:text-lg hover:bg-white/10 transition-all"
               >
                 Create Free Account
               </Link>

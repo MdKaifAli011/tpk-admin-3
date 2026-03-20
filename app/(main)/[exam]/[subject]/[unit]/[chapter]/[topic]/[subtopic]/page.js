@@ -34,6 +34,7 @@ import {
 import { generateTabAwareMetadata, extractSearchParams } from "@/utils/tabSeo";
 import { logger } from "@/utils/logger";
 import OverviewCommentSection from "@/app/(main)/components/OverviewCommentSection";
+import AssignedBlogsSection from "@/app/(main)/components/AssignedBlogsSection";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
@@ -43,45 +44,80 @@ export const revalidate = 0;
  * This metadata will override layout metadata when searchParams are present
  */
 export async function generateMetadata({ params, searchParams }) {
-  const { exam: examSlug, subject: subjectSlug, unit: unitSlug, chapter: chapterSlug, topic: topicSlug, subtopic: subtopicSlug } = await params;
+  const {
+    exam: examSlug,
+    subject: subjectSlug,
+    unit: unitSlug,
+    chapter: chapterSlug,
+    topic: topicSlug,
+    subtopic: subtopicSlug,
+  } = await params;
 
   // Pages receive searchParams correctly in Next.js App Router
   const resolvedSearchParams = await extractSearchParams(searchParams);
 
   if (process.env.NODE_ENV === "development") {
     logger.debug("Subtopic Page - searchParams:", searchParams);
-    logger.debug("Subtopic Page - Resolved searchParams:", resolvedSearchParams);
+    logger.debug(
+      "Subtopic Page - Resolved searchParams:",
+      resolvedSearchParams,
+    );
   }
 
   try {
-    const { fetchExamById, fetchSubjectById, fetchUnitById, fetchChapterById, fetchTopicById, fetchSubTopicById, fetchSubTopicDetailsById, fetchSubjectsByExam, fetchUnitsBySubject, fetchChaptersByUnit, fetchTopicsByChapter, fetchSubTopicsByTopic, findByIdOrSlug, createSlug } = await import("../../../../../../lib/api");
+    const {
+      fetchExamById,
+      fetchSubjectById,
+      fetchUnitById,
+      fetchChapterById,
+      fetchTopicById,
+      fetchSubTopicById,
+      fetchSubTopicDetailsById,
+      fetchSubjectsByExam,
+      fetchUnitsBySubject,
+      fetchChaptersByUnit,
+      fetchTopicsByChapter,
+      fetchSubTopicsByTopic,
+      findByIdOrSlug,
+      createSlug,
+    } = await import("../../../../../../lib/api");
 
     const exam = await fetchExamById(examSlug).catch(() => null);
-    if (!exam) return { title: `${subtopicSlug || "Subtopic"} | TestPrepKart` };
+    if (!exam) return { title: `${subtopicSlug || "Subtopic"} | Testprepkart` };
 
     const subjects = await fetchSubjectsByExam(exam._id).catch(() => []);
     const subject = findByIdOrSlug(subjects, subjectSlug);
-    if (!subject) return { title: `${subtopicSlug || "Subtopic"} | TestPrepKart` };
+    if (!subject)
+      return { title: `${subtopicSlug || "Subtopic"} | Testprepkart` };
 
-    const units = await fetchUnitsBySubject(subject._id, exam._id).catch(() => []);
+    const units = await fetchUnitsBySubject(subject._id, exam._id).catch(
+      () => [],
+    );
     const unit = findByIdOrSlug(units, unitSlug);
-    if (!unit) return { title: `${subtopicSlug || "Subtopic"} | TestPrepKart` };
+    if (!unit) return { title: `${subtopicSlug || "Subtopic"} | Testprepkart` };
 
     const chapters = await fetchChaptersByUnit(unit._id).catch(() => []);
     const chapter = findByIdOrSlug(chapters, chapterSlug);
-    if (!chapter) return { title: `${subtopicSlug || "Subtopic"} | TestPrepKart` };
+    if (!chapter)
+      return { title: `${subtopicSlug || "Subtopic"} | Testprepkart` };
 
     const topics = await fetchTopicsByChapter(chapter._id).catch(() => []);
     const topic = findByIdOrSlug(topics, topicSlug);
-    if (!topic) return { title: `${subtopicSlug || "Subtopic"} | TestPrepKart` };
+    if (!topic)
+      return { title: `${subtopicSlug || "Subtopic"} | Testprepkart` };
 
     const subtopics = await fetchSubTopicsByTopic(topic._id).catch(() => []);
     const subtopic = findByIdOrSlug(subtopics, subtopicSlug);
-    if (!subtopic) return { title: `${subtopicSlug || "Subtopic"} | TestPrepKart` };
+    if (!subtopic)
+      return { title: `${subtopicSlug || "Subtopic"} | Testprepkart` };
 
-    const fullSubTopicData = await fetchSubTopicById(subtopic._id).catch(() => null);
+    const fullSubTopicData = await fetchSubTopicById(subtopic._id).catch(
+      () => null,
+    );
     const finalSubtopic = fullSubTopicData || subtopic;
-    const subtopicDetails = await fetchSubTopicDetailsById(finalSubtopic._id).catch(() => null);
+    const subtopicDetails = await fetchSubTopicDetailsById(
+      finalSubtopic._id,
+    ).catch(() => null);
     const path = `/${createSlug(exam.name)}/${createSlug(subject.name)}/${createSlug(unit.name)}/${createSlug(chapter.name)}/${createSlug(topic.name)}/${createSlug(finalSubtopic.name)}`;
 
     return await generateTabAwareMetadata(
@@ -98,11 +134,11 @@ export async function generateMetadata({ params, searchParams }) {
           topic: topic.name,
           subtopic: finalSubtopic.name,
         },
-      }
+      },
     );
   } catch (error) {
     logger.warn("Error generating subtopic page metadata:", error);
-    return { title: `${subtopicSlug || "Subtopic"} | TestPrepKart` };
+    return { title: `${subtopicSlug || "Subtopic"} | Testprepkart` };
   }
 }
 
@@ -205,8 +241,8 @@ const SubTopicPage = async ({ params }) => {
     fetchedDefinitions.map((definition) =>
       fetchDefinitionDetailsById(definition._id)
         .then((details) => ({ content: details?.content || "" }))
-        .catch(() => ({ content: "" }))
-    )
+        .catch(() => ({ content: "" })),
+    ),
   );
 
   // Find current subtopic index for navigation
@@ -214,7 +250,7 @@ const SubTopicPage = async ({ params }) => {
     (st) =>
       st._id === foundSubTopic._id ||
       createSlug(st.name) === subtopicSlug ||
-      st.name?.toLowerCase() === subtopicSlug.toLowerCase()
+      st.name?.toLowerCase() === subtopicSlug.toLowerCase(),
   );
 
   const examSlug = createSlug(fetchedExam.name);
@@ -262,11 +298,11 @@ const SubTopicPage = async ({ params }) => {
 
   return (
     <div className="space-y-4">
-      <VisitTracker 
-        level="subtopic" 
-        itemId={subTopic._id} 
-        itemSlug={subTopicSlugValue} 
-        itemName={subTopic.name} 
+      <VisitTracker
+        level="subtopic"
+        itemId={subTopic._id}
+        itemSlug={subTopicSlugValue}
+        itemName={subTopic.name}
       />
       <ProgressTracker
         unitId={unit._id}
@@ -276,58 +312,32 @@ const SubTopicPage = async ({ params }) => {
       />
       <div className="space-y-4">
         {/* Premium Educational Header */}
-    <section
-  className="
-    rounded-xl
-    p-3 sm:p-4
-    bg-gradient-to-br from-indigo-50 via-white to-purple-50
-    border border-indigo-100/60
-    shadow-[0_2px_12px_rgba(120,90,200,0.08)]
-  "
->
-  <div className="flex items-start sm:items-center justify-between w-full gap-3 sm:gap-4 min-w-0">
-
-    {/* LEFT — Subtopic Title + Breadcrumb */}
-    <div className="flex flex-col min-w-0 flex-1 leading-tight">
-
-      {/* Subtopic Name */}
-      <h1
-        className="
-          text-base sm:text-lg md:text-xl font-bold text-indigo-900
-          truncate
-          w-full
-        "
-        title={subTopic.name}
-      >
-        {subTopic.name}
-      </h1>
-
-      {/* Breadcrumb */}
-      <p
-        className="
-          text-[10px] sm:text-xs text-gray-600 mt-0.5
-          truncate
-          w-full
-        "
-        title={`${fetchedExam.name} > ${subject.name} > ${unit.name} > ${chapter.name} > ${topic.name} > ${subTopic.name}`}
-      >
-        {fetchedExam.name} &gt; {subject.name} &gt; {unit.name} &gt; {chapter.name} &gt; {topic.name} &gt; {subTopic.name}
-      </p>
-    </div>
-
-    {/* RIGHT — Unit Progress */}
-    <div className="shrink-0 ml-auto">
-      <UnitProgressClient
-        unitId={unit._id}
-        unitName={unit.name}
-        initialProgress={0}
-      />
-    </div>
-
-  </div>
-</section>
-
-
+        <section
+          className="hero-section rounded-xl p-3 sm:p-4 bg-gradient-to-br from-indigo-50 via-white to-purple-50 border border-indigo-100/60 shadow-[0_2px_12px_rgba(120,90,200,0.08)]"
+          aria-labelledby="subtopic-page-title"
+        >
+          <div className="flex items-start sm:items-center justify-between w-full gap-3 sm:gap-4 min-w-0">
+            <div className="flex flex-col min-w-0 flex-1 leading-tight">
+              <h1
+                id="subtopic-page-title"
+                className="text-base sm:text-lg md:text-xl font-bold text-indigo-900 truncate w-full"
+                title={subTopic.name}
+              >
+                {subTopic.name}
+              </h1>
+              <p className="text-[10px] sm:text-xs text-gray-600 mt-0.5 truncate w-full" title={`${fetchedExam.name} > ${subject.name} > ${unit.name} > ${chapter.name} > ${topic.name} > ${subTopic.name}`}>
+                {fetchedExam.name} &gt; {subject.name} &gt; {unit.name} &gt; {chapter.name} &gt; {topic.name} &gt; {subTopic.name}
+              </p>
+            </div>
+            <div className="hero-right-slot shrink-0 ml-auto flex flex-col justify-center">
+              <UnitProgressClient
+                unitId={unit._id}
+                unitName={unit.name}
+                initialProgress={0}
+              />
+            </div>
+          </div>
+        </section>
 
         {/* Tabs */}
         <TabsClient
@@ -353,8 +363,8 @@ const SubTopicPage = async ({ params }) => {
           practiceDisabled={subject.practiceDisabled || false}
         />
 
-         {/* Navigation */}
-         <NavigationClient
+        {/* Navigation */}
+        <NavigationClient
           backUrl={`/${examSlug}/${subjectSlugValue}/${unitSlugValue}/${chapterSlugValue}/${topicSlugValue}`}
           backLabel={`Back to ${topic.name}`}
           prevNav={prevNav}
@@ -385,6 +395,15 @@ const SubTopicPage = async ({ params }) => {
           practiceDisabled={subject.practiceDisabled || false}
         />
 
+        {/* Blog Section - assigned to this subtopic */}
+        <AssignedBlogsSection
+          examSlug={examSlug}
+          examId={fetchedExam._id}
+          assignmentLevel="subtopic"
+          assignmentSubTopicId={subTopic._id}
+        />
+
+        {/* Overview Comment Section */}
         <OverviewCommentSection entityType="subtopic" entityId={subTopic._id} />
       </div>
     </div>

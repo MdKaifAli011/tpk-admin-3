@@ -32,7 +32,7 @@ const ExamProgressClient = ({ examId, initialProgress = 0 }) => {
     const authStatus = checkAuth();
     setIsAuthenticated(authStatus);
 
-    // Fetch progress from database if authenticated
+    // Fetch progress from database if authenticated — defer until after first paint to avoid competing with LCP
     const fetchProgressFromDB = async () => {
       if (!authStatus) {
         setProgress(0);
@@ -78,7 +78,17 @@ const ExamProgressClient = ({ examId, initialProgress = 0 }) => {
       }
     };
 
-    fetchProgressFromDB();
+    const runAfterPaint = () => {
+      if (typeof requestAnimationFrame !== "undefined") {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(fetchProgressFromDB);
+        });
+      } else {
+        setTimeout(fetchProgressFromDB, 100);
+      }
+    };
+
+    const timeoutId = setTimeout(runAfterPaint, 0);
 
     // Listen for progress updates from other components
     const handleProgressUpdate = () => {
@@ -92,6 +102,7 @@ const ExamProgressClient = ({ examId, initialProgress = 0 }) => {
     const pollInterval = setInterval(fetchProgressFromDB, 10000); // 10 seconds
 
     return () => {
+      clearTimeout(timeoutId);
       window.removeEventListener("progress-updated", handleProgressUpdate);
       window.removeEventListener("chapterProgressUpdate", handleProgressUpdate);
       clearInterval(pollInterval);
@@ -99,8 +110,8 @@ const ExamProgressClient = ({ examId, initialProgress = 0 }) => {
   }, [examId, isAuthenticated]);
 
   return (
-    <div className="text-right">
-      <p className="text-[10px] text-gray-500 mb-1">Progress</p>
+    <div className="text-right min-h-[44px] flex flex-col justify-center" aria-label="Exam progress">
+      <p className="text-[10px] text-gray-600 mb-1">Progress</p>
       <ProgressBar
         progress={progress}
         size="md"

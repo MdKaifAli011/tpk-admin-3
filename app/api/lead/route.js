@@ -8,6 +8,9 @@ import {
   handleApiError,
 } from "@/utils/apiResponse";
 import { requireAuth } from "@/middleware/authMiddleware";
+import { sendMail } from "@/lib/mailer";
+import { getEmailTemplateContent } from "@/lib/getEmailTemplateContent";
+import { isSpamOrFakePhone } from "@/lib/phoneSpamCheck";
 
 export async function GET(request) {
   try {
@@ -116,6 +119,10 @@ export async function POST(request) {
       return errorResponse("Phone number is required", 400);
     }
 
+    if (isSpamOrFakePhone(body.phoneNumber.trim())) {
+      return errorResponse("Please enter a valid phone number", 400);
+    }
+
     const email = body.email.toLowerCase().trim();
     const existingLead = await Lead.findOne({ email });
 
@@ -174,6 +181,15 @@ export async function POST(request) {
       isUpdated,
       previousStatus: previousStatus || null,
     };
+
+    // Auto-reply to lead (fire-and-forget)
+    const formLabel = body.form_name || body.form_id || "";
+    getEmailTemplateContent("lead_auto_reply", { form_name: formLabel }).then(
+      ({ subject, text, html }) =>
+        sendMail({ to: email, subject, text, html }).catch((err) =>
+          console.error("Lead auto-reply email error:", err)
+        )
+    );
 
     return successResponse(responseData, message, isUpdated ? 200 : 201);
   } catch (error) {

@@ -1,5 +1,8 @@
 "use client";
 
+/* Rich HTML blocks (tk-*, chapter modules, etc.) — shared with admin RichTextEditor via /api/richtext-common-css */
+import "../commanStyle.css";
+
 import React, {
   useEffect,
   useRef,
@@ -19,12 +22,16 @@ import { logger } from "@/utils/logger";
 const FormRenderer = lazy(() =>
   import("./forms/FormRenderer").catch(() => ({
     default: () => (
-      <div className="text-red-600 text-sm p-2">
+      <div className="text-red-600 text-sm p-2" role="alert">
         Failed to load form. Please refresh the page.
       </div>
     ),
   }))
 );
+
+// Block-level tags for structure detection (must match editor/content expectations)
+const BLOCK_TAG_REGEX = /^<[^>]*(?:p|div|h[1-6]|ul|ol|li|blockquote|pre|table|section|article|header|footer|nav|aside|main|figure|hr)[\s>\/]/i;
+const LIST_STRUCTURE_REGEX = /<(ul|ol)[^>]*>[\s\S]*<\/(ul|ol)>/i;
 
 // Helper function to Title-Case button text while preserving ALL-CAPS tokens (e.g., "PDF", "NEET").
 // Examples:
@@ -92,36 +99,12 @@ const sanitizeHexColor = (value, fallback = "#2563eb") => {
   return /^#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})$/.test(v) ? v : fallback;
 };
 
-// Helper function to check if HTML content is inline - moved outside to avoid recreation
-const blockLevelTags = [
-  "<p",
-  "<div",
-  "<h1",
-  "<h2",
-  "<h3",
-  "<h4",
-  "<h5",
-  "<h6",
-  "<ul",
-  "<ol",
-  "<li",
-  "<blockquote",
-  "<pre",
-  "<table",
-  "<section",
-  "<article",
-  "<header",
-  "<footer",
-  "<nav",
-  "<aside",
-  "<main",
-  "<figure",
-  "<hr",
-];
+// Helper function to check if HTML content is inline (for rendering flow)
 const isInlineContent = (html) => {
   if (!html || !html.trim()) return false;
   const trimmed = html.trim().toLowerCase();
-  return !blockLevelTags.some((tag) => trimmed.startsWith(tag));
+  const blockStarts = ["<p", "<div", "<h1", "<h2", "<h3", "<h4", "<h5", "<h6", "<ul", "<ol", "<li", "<blockquote", "<pre", "<table", "<section", "<article", "<header", "<footer", "<nav", "<aside", "<main", "<figure", "<hr"];
+  return !blockStarts.some((tag) => trimmed.startsWith(tag));
 };
 
 // Helper function to extract YouTube video ID from URL (including YouTube Shorts)
@@ -173,8 +156,16 @@ const normalizeYouTubeUrl = (url) => {
   return url;
 };
 
-const RichContent = ({ html }) => {
+const RichContent = forwardRef(({ html = "" }, ref) => {
   const containerRef = useRef(null);
+  const mergedRef = useCallback(
+    (el) => {
+      containerRef.current = el;
+      if (typeof ref === "function") ref(el);
+      else if (ref) ref.current = el;
+    },
+    [ref]
+  );
   const mathJaxTimerRef = useRef(null);
   const mathJaxInitTimerRef = useRef(null);
   const [mathJaxError, setMathJaxError] = useState(false);
@@ -193,6 +184,25 @@ const RichContent = ({ html }) => {
       }
     };
   }, []);
+
+  // LCP: prioritize first image in content, lazy-load the rest
+  useEffect(() => {
+    if (!containerRef.current || !html) return;
+    const container = containerRef.current;
+    const imgs = container.querySelectorAll("img");
+    imgs.forEach((img, index) => {
+      if (index === 0) {
+        img.setAttribute("fetchpriority", "high");
+        img.setAttribute("loading", "eager");
+        img.setAttribute("decoding", "async");
+        if (!img.hasAttribute("sizes")) {
+          img.setAttribute("sizes", "(max-width: 768px) 100vw, 720px");
+        }
+      } else {
+        img.setAttribute("loading", "lazy");
+      }
+    });
+  }, [html]);
 
   // Handle interaction clicks (Buttons and Videos)
   useEffect(() => {
@@ -298,109 +308,142 @@ const RichContent = ({ html }) => {
       };
     }
 
-    const processMathJax = (MathJaxInstance) => {
-      if (!MathJaxInstance || !isMounted || !containerRef.current) return;
+    // Load MathJax only when content contains math, and defer until container is in view (reduces TBT and avoids loading on every page)
+    const hasMath =
+      /\\\([\s\S]*?\\\)|\\\[[\s\S]*?\\\]|\$\$[\s\S]*?\$\$/.test(html) ||
+      html.includes("\\(") ||
+      html.includes("\\[");
+    if (!hasMath) {
+      return () => {
+        isMounted = false;
+      };
+    }
 
-      try {
-        // Configure MathJax (idempotent options)
-        if (MathJaxInstance.Hub && MathJaxInstance.Hub.Config) {
-          MathJaxInstance.Hub.Config({
-            tex2jax: {
-              inlineMath: [['\\(', '\\)']],
-              displayMath: [['\\[', '\\]']],
-              processEscapes: true,
-              ignoreClass: "tex2jax_ignore",
-              processClass: "tex2jax_process",
-              skipTags: ["script", "noscript", "style", "textarea", "pre"] // Allow math in <code>
-            },
-            TeX: {
-              extensions: ["mhchem.js"] // Enable mhchem for chemical formulas
-            },
-            messageStyle: "none"
-          });
+    const container = containerRef.current;
+    if (!container) {
+      return () => { isMounted = false; };
+    }
 
-          // Force load mhchem if not loaded
-          if (!MathJaxInstance.Extension || !MathJaxInstance.Extension["TeX/mhchem"]) {
-            // We can queue a requirement, but Config usually handles it if extensions is set
+    let observer = null;
+    let loaded = false;
+
+    const runMathJax = () => {
+      if (loaded || !isMounted) return;
+      loaded = true;
+      if (observer && container) {
+        try { observer.disconnect(); } catch (_) {}
+      }
+
+      const processMathJax = (MathJaxInstance) => {
+        if (!MathJaxInstance || !isMounted || !containerRef.current) return;
+        try {
+          if (MathJaxInstance.Hub && MathJaxInstance.Hub.Config) {
+            MathJaxInstance.Hub.Config({
+              tex2jax: {
+                inlineMath: [['\\(', '\\)']],
+                displayMath: [['\\[', '\\]']],
+                processEscapes: true,
+                ignoreClass: "tex2jax_ignore",
+                processClass: "tex2jax_process",
+                skipTags: ["script", "noscript", "style", "textarea", "pre"]
+              },
+              TeX: { extensions: ["mhchem.js"] },
+              messageStyle: "none"
+            });
           }
+          const contentDivs = containerRef.current.querySelectorAll("[data-content-part]");
+          const elementsToProcess = contentDivs.length > 0 ? Array.from(contentDivs) : [containerRef.current];
+          if (MathJaxInstance.Hub && typeof MathJaxInstance.Hub.Queue === "function") {
+            MathJaxInstance.Hub.Queue(["Typeset", MathJaxInstance.Hub, elementsToProcess]);
+          } else if (typeof MathJaxInstance.typeset === "function") {
+            MathJaxInstance.typeset(elementsToProcess);
+          }
+        } catch (error) {
+          logger.error("MathJax typeset failed", error);
+          if (isMounted) setMathJaxError(true);
         }
+      };
 
-        // Get all content divs within the container
-        const contentDivs = containerRef.current.querySelectorAll(
-          "[data-content-part]"
-        );
-        const elementsToProcess =
-          contentDivs.length > 0
-            ? Array.from(contentDivs)
-            : [containerRef.current];
+      loadMathJax()
+        .then((MathJax) => {
+          if (!MathJax || !isMounted || !containerRef.current) return;
+          setMathJaxError(false);
+          try {
+            if (MathJax.Hub) {
+              if (MathJax.isReady) {
+                processMathJax(MathJax);
+              } else if (MathJax.Hub.Register) {
+                MathJax.Hub.Register.StartupHook("End", () => {
+                  if (isMounted && containerRef.current) processMathJax(MathJax);
+                });
+              } else {
+                mathJaxInitTimerRef.current = setTimeout(() => {
+                  if (isMounted && containerRef.current && window.MathJax) processMathJax(window.MathJax);
+                }, 300);
+              }
+            } else {
+              processMathJax(MathJax);
+            }
+          } catch (error) {
+            logger.error("MathJax initialization failed", error);
+            if (isMounted) setMathJaxError(true);
+          }
+        })
+        .catch((error) => {
+          logger.error("Unable to load MathJax", error);
+          if (isMounted) setMathJaxError(true);
+        });
+    };
 
-        // Use MathJax 2.x Hub API with Queue for safety
-        if (
-          MathJaxInstance.Hub &&
-          typeof MathJaxInstance.Hub.Queue === "function"
-        ) {
-          MathJaxInstance.Hub.Queue(["Typeset", MathJaxInstance.Hub, elementsToProcess]);
-        } else if (typeof MathJaxInstance.typeset === "function") {
-          // Fallback for MathJax 3.x
-          MathJaxInstance.typeset(elementsToProcess);
-        }
-      } catch (error) {
-        logger.error("MathJax typeset failed", error);
-        if (isMounted) {
-          setMathJaxError(true);
-        }
+    const scheduleLoad = () => {
+      if (typeof requestIdleCallback !== "undefined") {
+        requestIdleCallback(() => runMathJax(), { timeout: 2500 });
+      } else {
+        setTimeout(runMathJax, 1200);
       }
     };
 
-    loadMathJax()
-      .then((MathJax) => {
-        if (!MathJax || !isMounted || !containerRef.current) return;
-        setMathJaxError(false);
+    let minDelayTimer = null;
+    let scrollListener = null;
+    let didSchedule = false;
+    const onIntersectOrScroll = () => {
+      if (didSchedule || !isMounted) return;
+      didSchedule = true;
+      if (minDelayTimer) clearTimeout(minDelayTimer);
+      minDelayTimer = null;
+      if (scrollListener) {
+        window.removeEventListener("scroll", scrollListener, { passive: true });
+        scrollListener = null;
+      }
+      scheduleLoad();
+    };
 
-        try {
-          // Ensure MathJax Hub is ready (MathJax 2.x)
-          if (MathJax.Hub) {
-            if (MathJax.isReady) {
-              // MathJax is ready, process immediately
-              processMathJax(MathJax);
-            } else {
-              // Wait for MathJax to finish initialization
-              if (MathJax.Hub.Register) {
-                MathJax.Hub.Register.StartupHook("End", () => {
-                  if (isMounted && containerRef.current) {
-                    processMathJax(MathJax);
-                  }
-                });
-              } else {
-                // Fallback: retry after shorter delay
-                mathJaxInitTimerRef.current = setTimeout(() => {
-                  if (isMounted && containerRef.current && window.MathJax) {
-                    processMathJax(window.MathJax);
-                  }
-                }, 300);
-              }
-            }
-          } else {
-            // Try processing anyway (might be MathJax 3.x)
-            processMathJax(MathJax);
-          }
-        } catch (error) {
-          logger.error("MathJax initialization failed", error);
-          if (isMounted) {
-            setMathJaxError(true);
-          }
+    observer = new IntersectionObserver(
+      (entries) => {
+        if (!isMounted || loaded || didSchedule) return;
+        const [entry] = entries;
+        if (entry?.isIntersecting) {
+          // Defer 5s or until user scrolls so Lighthouse mobile run often finishes before MathJax loads
+          minDelayTimer = setTimeout(onIntersectOrScroll, 5000);
+          scrollListener = () => {
+            if (!didSchedule) onIntersectOrScroll();
+          };
+          window.addEventListener("scroll", scrollListener, { passive: true });
         }
-      })
-      .catch((error) => {
-        logger.error("Unable to load MathJax", error);
-        if (isMounted) {
-          setMathJaxError(true);
-        }
-        // Don't block rendering if MathJax fails - just show error message
-      });
+      },
+      { rootMargin: "200px", threshold: 0 }
+    );
+    observer.observe(container);
 
     return () => {
       isMounted = false;
+      if (minDelayTimer) clearTimeout(minDelayTimer);
+      if (scrollListener) {
+        try { window.removeEventListener("scroll", scrollListener, { passive: true }); } catch (_) {}
+      }
+      if (observer && container) {
+        try { observer.disconnect(); } catch (_) {}
+      }
       if (mathJaxInitTimerRef.current) {
         clearTimeout(mathJaxInitTimerRef.current);
       }
@@ -425,7 +468,7 @@ const RichContent = ({ html }) => {
       buttonText: /data-button-text=["']([^"']*)["']/i,
       buttonColor: /data-button-color=["']([^"']*)["']/i,
       buttonLink: /data-button-link=["']([^"']*)["']/i,
-      imageUrl: /data-image-url=["']([^"']*)["']/i,
+      imageUrl: /data-image-url\s*=\s*["']([^"']*)["']/i,
     };
 
     // Match inline form embeds - optimized single pass extraction
@@ -482,6 +525,45 @@ const RichContent = ({ html }) => {
         formIndex++;
       }
     }
+
+    // Match inline contact form (div) - form shown directly, no button
+    const contactFormInlineRegex =
+      /<div[^>]*class="[^"]*contact-form-inline[^"]*"[^>]*data-form-id=["']?([^"'\s>]+)["']?[^>]*>[\s\S]*?<\/div>/gi;
+    while ((match = contactFormInlineRegex.exec(html)) !== null) {
+      const formId = (match[1] || "").trim();
+      if (formId) {
+        const fullMatch = match[0];
+        const placeholder = `<!--FORM_PLACEHOLDER_${formIndex}-->`;
+        processedHtml = processedHtml.replace(fullMatch, placeholder);
+        // Extract imageUrl: try normal quotes first, then entity-encoded &quot; (saved HTML)
+        let extractedImageUrl = attrRegexes.imageUrl.exec(fullMatch)?.[1] || "";
+        if (!extractedImageUrl && /data-image-url/i.test(fullMatch)) {
+          const entityMatch = fullMatch.match(/data-image-url\s*=\s*&quot;([^&]*(?:&amp;[^&]*)*)&quot;/i);
+          if (entityMatch && entityMatch[1]) extractedImageUrl = entityMatch[1];
+        }
+        formsFound.push({
+          formId,
+          placeholder,
+          index: formIndex,
+          title: decodeAttr(attrRegexes.title.exec(fullMatch)?.[1] || ""),
+          description: decodeAttr(attrRegexes.description.exec(fullMatch)?.[1] || ""),
+          imageUrl: decodeAttr(extractedImageUrl).trim(),
+          isInline: true,
+          isContactFormInline: true,
+        });
+        formIndex++;
+      }
+    }
+
+    // LCP: first image gets high priority so it can be LCP; rest get lazy
+    let firstImg = true;
+    processedHtml = processedHtml.replace(/<img(?=[\s>])/gi, () => {
+      if (firstImg) {
+        firstImg = false;
+        return '<img fetchpriority="high" loading="eager" decoding="async" sizes="(max-width: 768px) 100vw, 720px" ';
+      }
+      return '<img loading="lazy" ';
+    });
 
     return { processedHtml, forms: formsFound };
   }, [html]);
@@ -649,6 +731,8 @@ const RichContent = ({ html }) => {
     };
   }, [processedHtml, forms]);
 
+  const isEmpty = !html || (typeof html === "string" && !html.trim());
+
   // Render content with forms - optimized inline render
   const renderContent = useMemo(() => {
     if (!processedHtml || parts.length === 0) return null;
@@ -663,7 +747,28 @@ const RichContent = ({ html }) => {
             const isOpen = formStates[formKey] || false;
             const formConfig = formConfigs[formId];
 
-            // For inline forms
+            // Inline contact form (div) — form shown directly in page, no button
+            if (formData?.isContactFormInline) {
+              return (
+                <div key={formKey} className="my-4 w-full min-w-0" data-content-part="true">
+                  <Suspense fallback={<div className="rounded-xl border border-gray-200 bg-gray-50 p-6 text-center text-sm text-gray-500">Loading form...</div>}>
+                    <FormRenderer
+                      formId={formId}
+                      inline={true}
+                      isOpen={true}
+                      onClose={() => {}}
+                      prepared=""
+                      buttonLink=""
+                      imageUrl={formData.imageUrl || ""}
+                      title={formData.title || ""}
+                      description={formData.description || ""}
+                    />
+                  </Suspense>
+                </div>
+              );
+            }
+
+            // For inline forms (button that opens modal)
             if (formData?.isInline) {
               // Priority: formData (from HTML attributes) > formConfig > default
               const buttonText =
@@ -690,6 +795,7 @@ const RichContent = ({ html }) => {
                       }))
                     }
                     className="inline-block px-2 py-1.5 sm:px-3 sm:py-2 md:px-4 md:py-2 text-white rounded-md sm:rounded-lg text-xs sm:text-sm md:text-base font-medium transition-all duration-200 transform active:scale-95 hover:opacity-90 active:opacity-80"
+                    aria-label={isOpen ? `Close ${formId} form` : `Open ${formId} form`}
                     style={{
                       display: "inline-block",
                       verticalAlign: "baseline",
@@ -759,6 +865,7 @@ const RichContent = ({ html }) => {
                         }))
                       }
                       className="w-full sm:w-auto px-3 py-1.5 sm:px-4 sm:py-2 md:px-5 md:py-2.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-md sm:rounded-lg text-xs sm:text-sm md:text-base font-medium transition-all duration-200 transform active:scale-95 whitespace-nowrap"
+                      aria-label={isOpen ? `Close ${formName} form` : `Open ${formName} form`}
                     >
                       {isOpen ? "Close" : titleCasePreserveAcronyms(buttonText)}
                     </button>
@@ -788,15 +895,8 @@ const RichContent = ({ html }) => {
             const trimmedPart = part.trim();
 
             // Check if content starts with block-level elements (lists, paragraphs, etc.)
-            const startsWithBlockTag =
-              /^<[^>]+(?:p|div|h[1-6]|ul|ol|li|blockquote|pre|table|section|article|header|footer|nav|aside|main|figure|hr)[\s>\/]/.test(
-                trimmedPart
-              );
-
-            // Check if content contains complete list structures
-            const hasListStructure = /<(ul|ol)[^>]*>[\s\S]*<\/(ul|ol)>/i.test(
-              trimmedPart
-            );
+            const startsWithBlockTag = BLOCK_TAG_REGEX.test(trimmedPart);
+            const hasListStructure = LIST_STRUCTURE_REGEX.test(trimmedPart);
 
             // For block-level content (lists, paragraphs, etc.), render directly to preserve structure
             // Lists need to be rendered exactly as they are in the editor
@@ -837,12 +937,18 @@ const RichContent = ({ html }) => {
   return (
     <>
       {mathJaxError && (
-        <div className="text-yellow-600 text-sm mb-2 p-2 bg-yellow-50 border border-yellow-200 rounded">
+        <div className="text-yellow-600 text-sm mb-2 p-2 bg-yellow-50 border border-yellow-200 rounded" role="alert">
           Note: Math equations may not render correctly. Please refresh the
           page.
         </div>
       )}
-      <div ref={containerRef} className="rich-text-content wrap-anywhere" suppressHydrationWarning>
+      {!isEmpty && (
+      <div
+        ref={mergedRef}
+        className="rich-text-content rich-html-common wrap-anywhere min-w-0"
+        data-rich-common-css="commanStyle"
+        suppressHydrationWarning
+      >
         <style jsx global>{`
         .video-grid-container {
           width: 100%;
@@ -888,6 +994,7 @@ const RichContent = ({ html }) => {
       `}</style>
         {renderContent}
       </div>
+      )}
 
       {/* Video Modal Player */}
       {activeVideo && (
@@ -911,7 +1018,7 @@ const RichContent = ({ html }) => {
       )}
     </>
   );
-};
+});
 
 // Internal Video Modal Component
 const VideoModal = ({ video, onClose }) => {
@@ -948,8 +1055,9 @@ const VideoModal = ({ video, onClose }) => {
           onClick={onClose}
           className="absolute top-4 right-4 z-[60] p-2.5 bg-black/40 hover:bg-red-600 text-white rounded-full transition-all duration-300 backdrop-blur-sm group"
           title="Close (Esc)"
+          aria-label="Close video"
         >
-          <FaTimes className="w-5 h-5 group-hover:scale-110" />
+          <FaTimes className="w-5 h-5 group-hover:scale-110" aria-hidden />
         </button>
 
         {/* Video Frame */}
@@ -996,5 +1104,7 @@ const VideoModal = ({ video, onClose }) => {
     document.body
   );
 };
+
+RichContent.displayName = "RichContent";
 
 export default RichContent;

@@ -38,12 +38,22 @@ export async function GET(request) {
     const { page, limit, skip } = parsePagination(searchParams);
 
     const metaStatus = searchParams.get("metaStatus"); // filled, notFilled
+    const search = searchParams.get("search")?.trim();
 
     // Build query with case-insensitive status matching
     let query = {};
     if (statusFilter !== "all") {
-      // Use regex for case-insensitive matching
-      query.status = { $regex: new RegExp(`^${statusFilter}$`, "i") };
+      // Include active OR missing/null status so newly created or cloned docs without status still show
+      if (statusFilter === STATUS.ACTIVE) {
+        query.$or = [
+          { status: { $regex: new RegExp(`^${statusFilter}$`, "i") } },
+          { status: { $exists: false } },
+          { status: null },
+          { status: "" },
+        ];
+      } else {
+        query.status = { $regex: new RegExp(`^${statusFilter}$`, "i") };
+      }
     }
 
     // Handle Metadata filtering
@@ -66,13 +76,18 @@ export async function GET(request) {
       }
     }
 
-    // Create cache key
-    const cacheKey = `exams-${statusFilter}-${page}-${limit}`;
+    // Server-side search by name (case-insensitive)
+    if (search) {
+      const escapeRegex = (s) => String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      query.name = { $regex: new RegExp(escapeRegex(search), "i") };
+    }
 
-    // Check cache (only for active status, and skip cache for admin requests)
-    // Skip cache if request has no-cache header (for immediate updates)
+    // Create cache key (skip cache when search is active)
+    const cacheKey = `exams-${statusFilter}-${page}-${limit}${search ? `-${search}` : ""}`;
+
+    // Check cache (only for active status, skip when search or no-cache header)
     const noCache = request.headers.get("cache-control") === "no-cache";
-    if (!noCache && statusFilter === STATUS.ACTIVE) {
+    if (!noCache && statusFilter === STATUS.ACTIVE && !search) {
       const cached = cacheManager.get(cacheKey);
       if (cached) {
         return NextResponse.json(cached);
@@ -95,9 +110,10 @@ export async function GET(request) {
     // Ensure all returned exams are valid (have name and match status)
     const validExams = exams.filter((exam) => {
       if (!exam || !exam.name) return false;
-      // Double-check status match (case-insensitive)
+      // Double-check status match (case-insensitive); treat missing status as "active" for public list
       if (statusFilter !== "all") {
-        return exam.status && exam.status.toLowerCase() === statusFilter;
+        const s = (exam.status || "active").toLowerCase();
+        return s === statusFilter;
       }
       return true;
     });
@@ -108,7 +124,7 @@ export async function GET(request) {
     const examDetails = await ExamDetails.find({
       examId: { $in: examIds },
     })
-      .select("examId content title metaDescription keywords createdAt updatedAt")
+      .select("examId content title metaDescription keywords status createdAt updatedAt")
       .lean();
 
     // Create a map of examId to content info
@@ -120,6 +136,7 @@ export async function GET(request) {
         hasContent,
         hasMeta,
         contentDate: hasContent ? (detail.updatedAt || detail.createdAt) : null,
+        detailsStatus: detail.status || "draft",
       });
     });
 
@@ -129,6 +146,7 @@ export async function GET(request) {
         hasContent: false,
         hasMeta: false,
         contentDate: null,
+        detailsStatus: "draft",
       };
       return {
         ...exam,

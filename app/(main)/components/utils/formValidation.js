@@ -234,6 +234,40 @@ const defaultPattern = {
   message: "Phone number must be 6-15 digits",
 };
 
+/** Reject known spam/fake/virtual phone patterns */
+function isSpamOrFakePhone(cleanPhone) {
+  if (!cleanPhone || cleanPhone.length < 6) return false;
+  const len = cleanPhone.length;
+
+  // All same digit (e.g. 1111111111, 0000000000)
+  if (/^(\d)\1+$/.test(cleanPhone)) return true;
+
+  // Sequential ascending (e.g. 1234567890)
+  const ascending = cleanPhone.split("").every((d, i) => i === 0 || parseInt(d, 10) === (parseInt(cleanPhone[i - 1], 10) + 1) % 10);
+  if (ascending && len >= 6) return true;
+
+  // Sequential descending (e.g. 9876543210)
+  const descending = cleanPhone.split("").every((d, i) => i === 0 || parseInt(d, 10) === (parseInt(cleanPhone[i - 1], 10) - 1 + 10) % 10);
+  if (descending && len >= 6) return true;
+
+  // US/Canada fake 555 (without country code we check suffix; with +1, 555 is common fake)
+  if (len >= 10 && cleanPhone.slice(-10, -7) === "555") return true;
+  if (len >= 3 && cleanPhone.slice(0, 3) === "555") return true;
+
+  // Repeated 2-digit pattern (e.g. 1212121212, 12341234)
+  if (len >= 6) {
+    const two = cleanPhone.slice(0, 2);
+    if (two[0] !== two[1] && cleanPhone === two.repeat(Math.ceil(len / 2)).slice(0, len)) return true;
+    const four = cleanPhone.slice(0, 4);
+    if (len >= 8 && cleanPhone === four.repeat(Math.ceil(len / 4)).slice(0, len)) return true;
+  }
+
+  // Too many consecutive repeated digits (e.g. 111222333, 999988887777)
+  if (/(\d)\1{4,}/.test(cleanPhone)) return true;
+
+  return false;
+}
+
 export const validateName = (name) => {
   if (!name || !name.trim()) {
     return "Name is required";
@@ -278,6 +312,10 @@ export const validatePhoneNumber = (phoneNumber, countryCode, country) => {
 
   if (!countryPattern.pattern.test(cleanPhone)) {
     return countryPattern.message;
+  }
+
+  if (isSpamOrFakePhone(cleanPhone)) {
+    return "Please enter a valid phone number";
   }
 
   if (countryCode && !/^\+?[\d]+$/.test(countryCode.trim())) {

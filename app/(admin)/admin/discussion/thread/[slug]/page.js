@@ -31,7 +31,7 @@ const timeAgo = (date) => {
 };
 
 const getReplyAuthorDisplayName = (reply) => {
-    if (reply.authorType === "User") return "TestPrepKart";
+    if (reply.authorType === "User") return "Testprepkart";
     return reply.author?.firstName ? `${reply.author.firstName} ${reply.author.lastName}` : (reply.guestName || "Guest User");
 };
 
@@ -51,12 +51,15 @@ const ThreadDetailModeration = () => {
     const [isDataLoading, setIsDataLoading] = useState(true);
     const [replySearch, setReplySearch] = useState("");
     const [replyFilter, setReplyFilter] = useState("all"); // "all", "pending", "approved", "new"
+    const [replySortOrder, setReplySortOrder] = useState("newest"); // "newest" | "oldest" | "top" — recent top by default
     const [lastViewedAt, setLastViewedAt] = useState(null);
     const { toasts, removeToast, success, error: showError } = useToast();
     const searchTimeout = React.useRef(null);
 
     // Edit State Management
     const [editingThread, setEditingThread] = useState(false);
+    const [editingTitle, setEditingTitle] = useState(false);
+    const [editTitleValue, setEditTitleValue] = useState("");
     const [editingReplyId, setEditingReplyId] = useState(null);
     const [editContent, setEditContent] = useState("");
     const [originalContent, setOriginalContent] = useState("");
@@ -88,6 +91,7 @@ const ThreadDetailModeration = () => {
             const params = new URLSearchParams();
             params.set("replyLimit", "1000");
             if (search) params.set("replySearch", search);
+            params.set("sort", "new"); // fetch newest first; client applies replySortOrder
             const url = `/discussion/threads/${slug}?${params.toString()}${hierarchyQuery ? `&${hierarchyQuery}` : ""}`;
             const res = await api.get(url);
             if (res.data.success) {
@@ -114,7 +118,7 @@ const ThreadDetailModeration = () => {
 
     useEffect(() => {
         if (slug) fetchDetail(replySearch);
-    }, [slug, hierarchyQuery]); // hierarchyQuery from URL so correct thread is fetched
+    }, [slug, hierarchyQuery]); // reply sort is applied client-side
 
     const handleSearchChange = (e) => {
         const value = e.target.value;
@@ -223,6 +227,41 @@ const ThreadDetailModeration = () => {
         setEditingThread(false);
     };
 
+    const handleEditTitle = () => {
+        setEditTitleValue(thread.title || "");
+        setEditingTitle(true);
+    };
+
+    const handleCancelEditTitle = () => {
+        setEditTitleValue("");
+        setEditingTitle(false);
+    };
+
+    const handleSaveTitle = async () => {
+        const newTitle = (editTitleValue || "").trim();
+        if (!newTitle) {
+            showError("Title cannot be empty");
+            return;
+        }
+        try {
+            setIsSaving(true);
+            const q = getThreadHierarchyQueryString(thread);
+            const res = await api.patch(`/discussion/threads/${slug}${q ? `?${q}` : ""}`, {
+                title: newTitle
+            });
+            if (res.data.success) {
+                success("Title updated successfully. Slug is unchanged.");
+                setThread({ ...thread, title: newTitle });
+                setEditingTitle(false);
+                setEditTitleValue("");
+            }
+        } catch (err) {
+            showError("Failed to update title");
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
     const handleSaveThread = async () => {
         if (!editContent.trim()) {
             showError("Content cannot be empty");
@@ -273,7 +312,7 @@ const ThreadDetailModeration = () => {
             });
             if (res.data.success) {
                 success("Reply updated successfully");
-                setReplies(replies.map(r => r._id === replyId ? { ...r, content: editContent } : r));
+                setReplies(replies.map(r => r._id === replyId ? { ...r, content: editContent, isApproved: r.isApproved } : r));
                 setEditingReplyId(null);
                 setEditContent("");
                 setOriginalContent("");
@@ -382,15 +421,33 @@ const ThreadDetailModeration = () => {
         return count;
     };
 
-    // Organize replies into a tree structure first, then apply filter
+    // Sort reply nodes (roots or flat list) by replySortOrder
+    const sortReplyNodes = (nodes, order) => {
+        if (!nodes?.length) return;
+        if (order === "newest") {
+            nodes.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        } else if (order === "oldest") {
+            nodes.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+        } else if (order === "top") {
+            const score = (r) => (r.upvotes?.length ?? 0) - (r.downvotes?.length ?? 0);
+            nodes.sort((a, b) => score(b) - score(a) || new Date(b.createdAt) - new Date(a.createdAt));
+        }
+        nodes.forEach((n) => {
+            if (n.children?.length) sortReplyNodes(n.children, order);
+        });
+    };
+
+    // Organize replies into a tree structure first, then apply filter and sort
     const organizedReplies = useMemo(() => {
         if (replySearch) {
-            // For search, return flat filtered list
-            if (replyFilter === "all") return replies;
-            if (replyFilter === "pending") return replies.filter(r => !r.isApproved);
-            if (replyFilter === "approved") return replies.filter(r => r.isApproved);
-            if (replyFilter === "new") return replies.filter(r => isNewReply(r.createdAt));
-            return replies;
+            // For search, return flat filtered list, sorted
+            let list = replies;
+            if (replyFilter === "pending") list = replies.filter(r => !r.isApproved);
+            else if (replyFilter === "approved") list = replies.filter(r => r.isApproved);
+            else if (replyFilter === "new") list = replies.filter(r => isNewReply(r.createdAt));
+            const arr = [...list];
+            sortReplyNodes(arr, replySortOrder);
+            return arr;
         }
 
         // Build complete tree structure first
@@ -411,13 +468,16 @@ const ThreadDetailModeration = () => {
             }
         });
 
+        // Sort roots and each node's children by replySortOrder
+        sortReplyNodes(roots, replySortOrder);
+
         // Now apply filter while preserving tree structure
         if (replyFilter === "all") {
             return roots;
         }
 
         return filterTree(roots, replyFilter);
-    }, [replies, replyFilter, replySearch, lastViewedAt]);
+    }, [replies, replyFilter, replySearch, lastViewedAt, replySortOrder]);
 
     // Calculate filtered reply count
     const filteredReplyCount = useMemo(() => {
@@ -489,7 +549,45 @@ const ThreadDetailModeration = () => {
                             <div className="flex items-center gap-2 mb-1 text-[10px] font-bold text-blue-600 uppercase tracking-wider">
                                 Moderation Control <FaIcons.FaChevronRight size={8} className="text-gray-300" /> Topic Review
                             </div>
-                            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">{thread.title}</h1>
+                            {editingTitle ? (
+                                <div className="space-y-2 mt-1">
+                                    <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                                        <input
+                                            type="text"
+                                            value={editTitleValue}
+                                            onChange={(e) => setEditTitleValue(e.target.value)}
+                                            placeholder="Thread title"
+                                            maxLength={200}
+                                            className="flex-1 min-w-0 px-3 py-2 text-base font-bold text-gray-900 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                            autoFocus
+                                        />
+                                        <div className="flex items-center gap-2">
+                                            <button
+                                                onClick={handleSaveTitle}
+                                                disabled={isSaving || !editTitleValue.trim()}
+                                                className="px-3 py-2 bg-blue-600 text-white rounded-lg text-xs font-bold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5"
+                                            >
+                                                {isSaving ? <FaIcons.FaSpinner className="animate-spin" size={12} /> : <FaIcons.FaSave size={12} />}
+                                                Save
+                                            </button>
+                                            <button
+                                                onClick={handleCancelEditTitle}
+                                                disabled={isSaving}
+                                                className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-xs font-bold hover:bg-gray-200 disabled:opacity-50 transition-colors flex items-center gap-1.5"
+                                            >
+                                                <FaIcons.FaTimes size={12} />
+                                                Cancel
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <p className="text-[10px] text-gray-500">Slug will not change: <span className="font-mono font-semibold text-gray-700">{thread.slug}</span></p>
+                                </div>
+                            ) : (
+                                <>
+                                    <h1 className="text-2xl font-bold text-gray-900 tracking-tight">{thread.title}</h1>
+                                    <p className="text-[10px] text-gray-500 font-medium mt-0.5">URL slug: {thread.slug}</p>
+                                </>
+                            )}
                         </div>
                     </div>
 
@@ -501,6 +599,15 @@ const ThreadDetailModeration = () => {
                         >
                             <FaIcons.FaExternalLinkAlt size={12} /> Live View
                         </Link>
+                        {!editingTitle && (
+                            <button
+                                onClick={handleEditTitle}
+                                className="px-4 py-2.5 bg-gray-100 border border-gray-200 text-gray-700 rounded-lg text-sm font-bold hover:bg-gray-200 transition-colors flex items-center gap-2 shadow-sm"
+                            >
+                                <FaIcons.FaEdit size={12} />
+                                Edit Title
+                            </button>
+                        )}
                         <button
                             onClick={handleEditThread}
                             className="px-4 py-2.5 bg-indigo-600 text-white rounded-lg text-sm font-bold hover:bg-indigo-700 transition-colors flex items-center gap-2 shadow-sm"
@@ -540,7 +647,7 @@ const ThreadDetailModeration = () => {
                                 <div className="flex items-center gap-3">
                                     <div className="w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden border border-gray-100 shadow-sm bg-gray-50">
                                         {isThreadAdmin(thread) ? (
-                                            <img src={BRAND_LOGO_URL} alt="TestPrepKart" className="w-full h-full object-cover" />
+                                            <img src={BRAND_LOGO_URL} alt="Testprepkart" className="w-full h-full object-cover" />
                                         ) : thread.author?.avatar ? (
                                             <img src={thread.author.avatar} alt="avatar" className="w-full h-full object-cover" />
                                         ) : (
@@ -549,7 +656,7 @@ const ThreadDetailModeration = () => {
                                     </div>
                                     <div>
                                         <p className="text-sm font-bold text-gray-900 leading-none">
-                                            {isThreadAdmin(thread) ? "TestPrepKart" : (thread.author?.firstName ? `${thread.author.firstName} ${thread.author.lastName}` : (thread.guestName || "Guest User"))}
+                                            {isThreadAdmin(thread) ? "Testprepkart" : (thread.author?.firstName ? `${thread.author.firstName} ${thread.author.lastName}` : (thread.guestName || "Guest User"))}
                                         </p>
                                         <p className="text-[11px] text-gray-500 font-medium mt-1">
                                             Posted {timeAgo(thread.createdAt)}
@@ -714,7 +821,44 @@ const ThreadDetailModeration = () => {
                                     </div>
                                 )}
                             </div>
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-3 flex-wrap">
+                                {/* Reply sort: Recent top (default), Oldest first, Most liked */}
+                                <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1 border border-gray-200">
+                                    <span className="px-2 text-[10px] font-bold text-gray-500 uppercase tracking-wider self-center">Sort</span>
+                                    <button
+                                        onClick={() => setReplySortOrder("newest")}
+                                        className={`px-3 py-2 text-xs font-bold rounded-md transition-all ${
+                                            replySortOrder === "newest"
+                                                ? "bg-teal-100 text-teal-800 shadow-sm border border-teal-200"
+                                                : "text-gray-600 hover:text-gray-900"
+                                        }`}
+                                        title="Newest replies first"
+                                    >
+                                        Recent top
+                                    </button>
+                                    <button
+                                        onClick={() => setReplySortOrder("oldest")}
+                                        className={`px-3 py-2 text-xs font-bold rounded-md transition-all ${
+                                            replySortOrder === "oldest"
+                                                ? "bg-teal-100 text-teal-800 shadow-sm border border-teal-200"
+                                                : "text-gray-600 hover:text-gray-900"
+                                        }`}
+                                        title="Oldest replies first"
+                                    >
+                                        Oldest first
+                                    </button>
+                                    <button
+                                        onClick={() => setReplySortOrder("top")}
+                                        className={`px-3 py-2 text-xs font-bold rounded-md transition-all ${
+                                            replySortOrder === "top"
+                                                ? "bg-teal-100 text-teal-800 shadow-sm border border-teal-200"
+                                                : "text-gray-600 hover:text-gray-900"
+                                        }`}
+                                        title="Most upvoted first"
+                                    >
+                                        Most liked
+                                    </button>
+                                </div>
                                 {/* Approval Status Filter */}
                                 <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1 border border-gray-200">
                                     <button
@@ -944,7 +1088,7 @@ const ReplyItem = ({ reply, handleToggleReplyApproval, handleDeleteReply, handle
                         <div className="flex items-center gap-2.5 mb-3">
                             <div className={`w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden shadow-sm ${reply.authorType === "User" ? "bg-blue-100 border border-blue-200" : "bg-indigo-50 border border-indigo-100"}`}>
                                 {reply.authorType === "User" ? (
-                                    <img src={BRAND_LOGO_URL} alt="TestPrepKart" className="w-full h-full object-cover" />
+                                    <img src={BRAND_LOGO_URL} alt="Testprepkart" className="w-full h-full object-cover" />
                                 ) : (
                                     <span className="text-[10px] font-bold text-indigo-700">{getReplyAuthorInitial(reply)}</span>
                                 )}
@@ -953,7 +1097,7 @@ const ReplyItem = ({ reply, handleToggleReplyApproval, handleDeleteReply, handle
                                 <div className="flex items-center gap-2 flex-wrap">
                                     <p className="text-xs font-bold text-gray-900">{getReplyAuthorDisplayName(reply)}</p>
                                     {reply.authorType === "User" && (
-                                        <span className="px-1.5 py-0.5 bg-blue-600 text-white text-[8px] font-bold uppercase tracking-wider rounded">TestPrepKart</span>
+                                        <span className="px-1.5 py-0.5 bg-blue-600 text-white text-[8px] font-bold uppercase tracking-wider rounded">Testprepkart</span>
                                     )}
                                     {isNew && (
                                         <span className="px-2 py-0.5 bg-blue-600 text-white text-[8px] font-bold uppercase tracking-wider rounded-full flex items-center gap-1 animate-pulse">

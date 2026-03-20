@@ -6,31 +6,37 @@ import React, {
   useCallback,
   useMemo,
   useRef,
+  lazy,
 } from "react";
 import { usePathname } from "next/navigation";
 import ErrorBoundary from "../../../components/ErrorBoundary.jsx";
 import Navbar from "./Navbar";
 import Sidebar from "./Sidebar";
-import Footer from "./Footer";
-import ServiceWorkerRegistration from "../components/ServiceWorkerRegistration";
-import ScrollToTop from "../components/ScrollToTop";
-import WhatsAppFloatButton from "../components/WhatsAppFloatButton";
+import CustomCodeInjector from "../components/CustomCodeInjector";
 import { SearchProvider } from "./context/SearchContext";
 import api from "../../../lib/api.js";
+
+// Defer non-critical UI to reduce TBT and main-thread work
+const Footer = lazy(() => import("./Footer"));
+const ServiceWorkerRegistration = lazy(() => import("../components/ServiceWorkerRegistration"));
+const ScrollToTop = lazy(() => import("../components/ScrollToTop"));
+const WhatsAppFloatButton = lazy(() => import("../components/WhatsAppFloatButton"));
 
 export default function MainLayoutClient({ children }) {
   const pathname = usePathname();
 
   // Memoize showSidebar to prevent unnecessary recalculations
   const showSidebar = useMemo(() => {
-    // No sidebar on: home, contact, calculator, store, notification, site-level pages, or exam-level pages (e.g. /neet/pages/landing)
+    // No sidebar on: home, contact, calculator, store, explore, auth, site-level pages, or exam-level pages
     const isExamPagesRoute = pathname?.match(/^\/[^/]+\/pages(\/|$)/);
     return (
       pathname !== "/" &&
       pathname !== "/contact" &&
       !pathname?.startsWith("/calculator") &&
       !pathname?.startsWith("/store") &&
-      
+      !pathname?.startsWith("/explore") &&
+      !pathname?.startsWith("/forgot-password") &&
+      !pathname?.startsWith("/reset-password") &&
       !pathname?.startsWith("/pages") &&
       !isExamPagesRoute
     );
@@ -80,40 +86,36 @@ export default function MainLayoutClient({ children }) {
   }, [showSidebar]);
 
   /* -------------------------------------------------------
-     Student Authentication Check — Verify token on mount
+     Student Authentication Check — Defer until idle to reduce TBT
      -------------------------------------------------------- */
   useEffect(() => {
     const checkStudentAuth = async () => {
-      // Skip auth check on login/register pages
-      if (pathname?.includes("/login") || pathname?.includes("/register")) {
-        return;
-      }
-
+      if (pathname?.includes("/login") || pathname?.includes("/register") || pathname?.includes("/forgot-password") || pathname?.includes("/reset-password")) return;
       const studentToken = localStorage.getItem("student_token");
-      if (!studentToken) {
-        return;
-      }
-
+      if (!studentToken) return;
       try {
         const response = await api.get("/student/auth/verify", {
-          headers: {
-            Authorization: `Bearer ${studentToken}`,
-          },
+          headers: { Authorization: `Bearer ${studentToken}` },
         });
-
         if (!response.data.success || !response.data.data?.student) {
-          // Student not found or inactive, clear token
           localStorage.removeItem("student_token");
         }
       } catch (error) {
-        // Token invalid or expired, clear it
         if (error.response?.status === 401 || error.response?.status === 403) {
           localStorage.removeItem("student_token");
         }
       }
     };
 
-    checkStudentAuth();
+    const runWhenIdle = () => {
+      if (typeof requestIdleCallback !== "undefined") {
+        requestIdleCallback(() => checkStudentAuth(), { timeout: 3000 });
+      } else {
+        setTimeout(checkStudentAuth, 1500);
+      }
+    };
+    const t = setTimeout(runWhenIdle, 0);
+    return () => clearTimeout(t);
   }, [pathname]);
 
   /* -------------------------------------------------------
@@ -259,70 +261,49 @@ export default function MainLayoutClient({ children }) {
     };
   }, [showSidebar, isSidebarOpen]);
 
-  // If on login/register pages, render without layout
+  // If on login/register pages, render without layout (but still inject custom code e.g. GA)
   if (pathname === "/login" || pathname === "/register") {
-    return <>{children}</>;
+    return (
+      <>
+        <CustomCodeInjector />
+        {children}
+      </>
+    );
   }
 
   return (
     <ErrorBoundary>
       <SearchProvider>
-        <ServiceWorkerRegistration />
-        <ScrollToTop />
-        <WhatsAppFloatButton />
-        <div className="flex flex-col min-h-screen bg-gray-50">
-          {/* Persistent Navbar - won't re-render on navigation */}
+        <CustomCodeInjector />
+        <div className="flex flex-col min-h-screen min-w-0 w-full bg-gray-50">
           <Navbar
             onMenuToggle={toggleSidebar}
             isMenuOpen={isSidebarOpen}
             showSidebar={showSidebar}
           />
 
-          <div className="flex flex-1 relative">
-            {/* Persistent Sidebar - always rendered to prevent flickering */}
+          <div className="flex flex-1 relative min-h-0 min-w-0 w-full">
             <Sidebar
               isOpen={showSidebar && isSidebarOpen}
               onClose={closeSidebar}
             />
 
-            {/* Main content area - only this changes on navigation */}
             <main
               className={`
-                flex-1
-                pt-[110px] md:pt-[120px]
-                ${showSidebar && isSidebarOpen ? "lg:ml-[300px]" : ""}
-                bg-white
-                overflow-y-auto
-                min-h-screen
-                px-4 md:px-6 pb-6
-                transition-all duration-300 ease-out
-                [&::-webkit-scrollbar]:hidden
-                [-ms-overflow-style:none]
-                [scrollbar-width:none]
-              `}
+    flex-1 min-w-0 min-h-0 w-full max-w-full
+    pt-[calc(var(--navbar-height)+1rem)]
+    ${showSidebar && isSidebarOpen ? "lg:ml-[300px]" : ""}
+    bg-white px-4 sm:px-4 md:px-6 pb-6
+    transition-transform duration-300 ease-out
+  `}
             >
-              <div className="w-full max-w-7xl mx-auto min-h-[400px]">
+              <div className="w-full max-w-7xl mx-auto min-w-0 min-h-[400px]">
                 <Suspense
                   fallback={
-                    <div className="flex items-center justify-center min-h-[500px] sm:min-h-[600px] py-12 sm:py-16">
-                      <div className="text-center">
-                        {/* Spinner with gradient and glow effect */}
-                        <div className="relative inline-flex items-center justify-center mb-4 sm:mb-5">
-                          {/* Glow effect */}
-                          <div className="absolute inset-0 bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 rounded-full blur-2xl opacity-30 animate-pulse" />
-                          {/* Spinner */}
-                          <div className="relative">
-                            <div
-                              className="inline-block animate-spin rounded-full h-12 w-12 sm:h-14 sm:w-14 md:h-16 md:w-16 border-4 border-indigo-500 border-t-transparent"
-                              style={{ animationDuration: "1s" }}
-                            />
-                          </div>
-                        </div>
-                        {/* Loading text */}
-                        <p className="text-sm sm:text-base font-semibold text-gray-700">
-                          Loading...
-                        </p>
-                      </div>
+                    <div className="min-h-[400px] py-8 animate-pulse">
+                      <div className="h-8 bg-gray-200 rounded w-1/3 mb-6" />
+                      <div className="h-4 bg-gray-100 rounded w-full max-w-2xl mb-2" />
+                      <div className="h-4 bg-gray-100 rounded w-full max-w-xl" />
                     </div>
                   }
                 >
@@ -332,8 +313,16 @@ export default function MainLayoutClient({ children }) {
             </main>
           </div>
 
-          {/* Persistent Footer - won't re-render on navigation */}
-          <Footer />
+          <Suspense
+            fallback={
+              <div className="min-h-[200px] bg-gray-50" aria-hidden="true" />
+            }
+          >
+            <ServiceWorkerRegistration />
+            <ScrollToTop />
+            <WhatsAppFloatButton />
+            <Footer />
+          </Suspense>
         </div>
       </SearchProvider>
     </ErrorBoundary>

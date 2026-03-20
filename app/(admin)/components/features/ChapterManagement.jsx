@@ -26,23 +26,45 @@ import {
   FaFilter,
 } from "react-icons/fa";
 import { ToastContainer, useToast } from "../ui/Toast";
+import StatusCascadeModal from "../ui/StatusCascadeModal";
 import api from "@/lib/api";
-import { getChapterListCache, setChapterListCache } from "@/lib/chapterListCache";
+import { setChapterListCache } from "@/lib/chapterListCache";
+import { invalidateListCachesFrom } from "@/lib/listCacheInvalidation";
 import { usePermissions, getPermissionMessage } from "../../hooks/usePermissions";
 import { IoFilterCircle, IoFilterOutline } from "react-icons/io5";
+import { useFilterPersistence } from "../../hooks/useFilterPersistence";
+import { useDebouncedSearchQuery } from "../../hooks/useDebouncedSearchQuery";
+import PaginationBar from "../ui/PaginationBar";
 
 const ChaptersManagement = () => {
   const { canCreate, canEdit, canDelete, canReorder, role } = usePermissions();
+  const [filterState, setFilterState] = useFilterPersistence("chapter", {
+    filterExam: "",
+    filterSubject: "",
+    filterUnit: "",
+    searchQuery: "",
+    metaFilter: "all",
+  });
+  const { page, limit, filterExam, filterSubject, filterUnit, searchQuery, metaFilter } = filterState;
+  const [searchInput, setSearchInput] = useDebouncedSearchQuery(searchQuery, setFilterState);
+
   const [showAddForm, setShowAddForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [editingChapter, setEditingChapter] = useState(null);
   const [isDataLoading, setIsDataLoading] = useState(false);
   const [isFormLoading, setIsFormLoading] = useState(false);
   const [chapters, setChapters] = useState([]);
+  const [countsByUnit, setCountsByUnit] = useState({});
+  const [pagination, setPagination] = useState({
+    total: 0,
+    totalPages: 0,
+    hasNextPage: false,
+    hasPrevPage: false,
+  });
   const [exams, setExams] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [units, setUnits] = useState([]);
-  const [filterUnits, setFilterUnits] = useState([]); // Separate units for filter section
+  const [filterUnits, setFilterUnits] = useState([]);
   const [error, setError] = useState(null);
   const [formData, setFormData] = useState({
     examId: "",
@@ -74,55 +96,60 @@ const ChaptersManagement = () => {
   });
   const [formError, setFormError] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
-  const [filterExam, setFilterExam] = useState("");
-  const [filterSubject, setFilterSubject] = useState("");
-  const [filterUnit, setFilterUnit] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
   const [isReorderMode, setIsReorderMode] = useState(false);
   const [reorderDraft, setReorderDraft] = useState({});
+  const [cascadeModalOpen, setCascadeModalOpen] = useState(false);
+  const [cascadeItem, setCascadeItem] = useState(null);
   const { toasts, removeToast, success, error: showError } = useToast();
   const isFetchingRef = useRef(false);
-  const [metaFilter, setMetaFilter] = useState("all"); // all, filled, notFilled
 
-  // Fetch chapters from API using Axios (and update cache)
+  // Fetch chapters from API with server-side filters + pagination
   const fetchChapters = useCallback(async () => {
     if (isFetchingRef.current) return;
     isFetchingRef.current = true;
     try {
       setIsDataLoading(true);
       setError(null);
-      const response = await api.get(`/chapter?status=all&limit=10000&metaStatus=${metaFilter}`);
+      const params = new URLSearchParams();
+      params.set("status", "all");
+      params.set("metaStatus", metaFilter);
+      params.set("page", String(page));
+      params.set("limit", String(limit));
+      if (filterExam) params.set("examId", filterExam);
+      if (filterSubject) params.set("subjectId", filterSubject);
+      if (filterUnit) params.set("unitId", filterUnit);
+      if (searchQuery.trim()) params.set("search", searchQuery.trim());
+      const response = await api.get(`/chapter?${params.toString()}`);
 
       if (response.data.success) {
         const fetchedChapters = response.data.data || [];
         setChapters(fetchedChapters);
+        setCountsByUnit(response.data.countsByUnit || {});
         setChapterListCache(fetchedChapters, metaFilter);
+        const pag = response.data?.pagination;
+        if (pag) {
+          setPagination({
+            total: pag.total ?? 0,
+            totalPages: pag.totalPages ?? 0,
+            hasNextPage: !!pag.hasNextPage,
+            hasPrevPage: !!pag.hasPrevPage,
+          });
+        }
       } else {
         setError(response.data.message || "Failed to fetch chapters");
       }
     } catch (error) {
       console.error("Error fetching chapters:", error);
-      const errorMessage =
-        error.response?.data?.message ||
-        "Failed to fetch chapters. Please check your connection.";
-      setError(errorMessage);
+      setError(error.response?.data?.message || "Failed to fetch chapters. Please check your connection.");
     } finally {
       setIsDataLoading(false);
       isFetchingRef.current = false;
     }
-  }, [metaFilter]);
+  }, [metaFilter, page, limit, filterExam, filterSubject, filterUnit, searchQuery]);
 
-  // Load chapters: use cache when returning from detail (no API call), otherwise fetch once
   useEffect(() => {
-    const cached = getChapterListCache(metaFilter);
-    if (cached != null && Array.isArray(cached)) {
-      setChapters(cached);
-      setIsDataLoading(false);
-      setError(null);
-      return;
-    }
     fetchChapters();
-  }, [metaFilter, fetchChapters]);
+  }, [fetchChapters]);
 
   // Fetch exams from API using Axios
   const fetchExams = async () => {
@@ -181,9 +208,7 @@ const ChaptersManagement = () => {
   };
 
   useEffect(() => {
-    fetchExams();
-    fetchSubjects();
-    // Don't fetch units on mount - will fetch when subject is selected
+    Promise.all([fetchExams(), fetchSubjects()]);
   }, []);
 
   // Auto-clear error after 5 seconds with cleanup
@@ -292,37 +317,8 @@ const ChaptersManagement = () => {
     );
   }, [filterUnits, filterSubject]);
 
-  // Filter chapters based on filters
-  const filteredChapters = useMemo(() => {
-    let result = chapters;
-    if (filterExam) {
-      result = result.filter(
-        (chapter) =>
-          chapter.examId?._id === filterExam || chapter.examId === filterExam
-      );
-    }
-    if (filterSubject) {
-      result = result.filter(
-        (chapter) =>
-          chapter.subjectId?._id === filterSubject ||
-          chapter.subjectId === filterSubject
-      );
-    }
-    if (filterUnit) {
-      result = result.filter(
-        (chapter) =>
-          chapter.unitId?._id === filterUnit || chapter.unitId === filterUnit
-      );
-    }
-    // Search filter
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase().trim();
-      result = result.filter((chapter) =>
-        chapter.name?.toLowerCase().includes(query)
-      );
-    }
-    return result;
-  }, [chapters, filterExam, filterSubject, filterUnit, searchQuery]);
+  // Search is done server-side
+  const filteredChapters = chapters;
 
   // Get active filter count
   const activeFilterCount =
@@ -330,10 +326,13 @@ const ChaptersManagement = () => {
 
   // Clear all filters
   const clearFilters = () => {
-    setFilterExam("");
-    setFilterSubject("");
-    setFilterUnit("");
-    setSearchQuery("");
+    setFilterState({
+      filterExam: "",
+      filterSubject: "",
+      filterUnit: "",
+      searchQuery: "",
+      page: 1,
+    });
   };
 
   // Get next order number for chapters in a unit
@@ -558,7 +557,8 @@ const ChaptersManagement = () => {
       }
 
       // Add all created chapters to the list
-      setChapters((prev) => [...prev, ...createdChapters]);
+      invalidateListCachesFrom("chapter");
+      await fetchChapters();
 
       if (createdChapters.length === 1) {
         success(`Chapter "${createdChapters[0].name}" added successfully!`);
@@ -699,11 +699,8 @@ const ChaptersManagement = () => {
       });
 
       if (response.data.success) {
-        const newList = chapters.map((c) =>
-          c._id === editingChapter._id ? response.data.data : c
-        );
-        setChapters(newList);
-        setChapterListCache(newList, metaFilter);
+        invalidateListCachesFrom("chapter");
+        await fetchChapters();
         success("Chapter updated successfully!");
 
         // Reset form
@@ -756,10 +753,8 @@ const ChaptersManagement = () => {
       const response = await api.delete(`/chapter/${chapterToDelete._id}`);
 
       if (response.data.success) {
-        // Remove the chapter from the list
-        setChapters((prev) =>
-          prev.filter((c) => c._id !== chapterToDelete._id)
-        );
+        invalidateListCachesFrom("chapter");
+        await fetchChapters();
         success(`Chapter "${chapterToDelete.name}" deleted successfully!`);
       } else {
         setError(response.data.message || "Failed to delete chapter");
@@ -777,47 +772,94 @@ const ChaptersManagement = () => {
     }
   };
 
-  const handleToggleStatus = async (chapter) => {
-    const currentStatus = chapter.status || "active";
-    const newStatus = currentStatus === "active" ? "inactive" : "active";
-    const action = newStatus === "inactive" ? "deactivate" : "activate";
+  const handleToggleStatus = (chapter) => {
+    setCascadeItem(chapter);
+    setCascadeModalOpen(true);
+  };
 
+  const handleCascadeConfirm = async (newStatus, cascadeMode) => {
+    if (!cascadeItem) return;
+    const action = newStatus === "inactive" ? "deactivate" : "activate";
+    try {
+      setIsFormLoading(true);
+      setError(null);
+      const response = await api.patch(`/chapter/${cascadeItem._id}/status`, {
+        status: newStatus,
+        cascadeMode: cascadeMode || "respect_manual",
+      });
+      if (response.data.success) {
+        invalidateListCachesFrom("chapter");
+        await fetchChapters();
+        success(
+          `Chapter "${cascadeItem.name}" and children ${action}d successfully!`
+        );
+        setCascadeModalOpen(false);
+        setCascadeItem(null);
+      } else {
+        setError(response.data.message || `Failed to ${action} chapter`);
+        showError(response.data.message || `Failed to ${action} chapter`);
+      }
+    } catch (error) {
+      console.error(`Error ${action}ing chapter:`, error);
+      const errorMessage =
+        error.response?.data?.message ||
+        `Failed to ${action} chapter. Please try again.`;
+      setError(errorMessage);
+      showError(errorMessage);
+    } finally {
+      setIsFormLoading(false);
+    }
+  };
+
+  const handleBulkToggleStatus = async (selectedChapters, newStatus) => {
+    if (!selectedChapters || selectedChapters.length === 0) return Promise.resolve();
+    const action = newStatus === "inactive" ? "deactivate" : "activate";
+    const n = selectedChapters.length;
     if (
-      window.confirm(
-        `Are you sure you want to ${action} "${chapter.name}"? All its children will also be ${action}d.`
+      !window.confirm(
+        `Are you sure you want to ${action} ${n} chapter${n === 1 ? "" : "s"}? Their topics and related content will also be ${action}d.`
       )
     ) {
-      try {
-        setIsFormLoading(true);
-        setError(null);
-
-        const response = await api.patch(`/chapter/${chapter._id}/status`, {
-          status: newStatus,
-        });
-
-        if (response.data.success) {
-          const newList = chapters.map((c) =>
-            c._id === chapter._id ? { ...c, status: newStatus } : c
-          );
-          setChapters(newList);
-          setChapterListCache(newList, metaFilter);
-          success(
-            `Chapter "${chapter.name}" and all children ${action}d successfully!`
-          );
-        } else {
-          setError(response.data.message || `Failed to ${action} chapter`);
-          showError(response.data.message || `Failed to ${action} chapter`);
-        }
-      } catch (error) {
-        console.error(`Error ${action}ing chapter:`, error);
-        const errorMessage =
-          error.response?.data?.message ||
-          `Failed to ${action} chapter. Please try again.`;
-        setError(errorMessage);
-        showError(errorMessage);
-      } finally {
-        setIsFormLoading(false);
+      return Promise.resolve();
+    }
+    try {
+      setIsFormLoading(true);
+      setError(null);
+      const results = await Promise.all(
+        selectedChapters.map((chapter) =>
+          api.patch(`/chapter/${chapter._id}/status`, { status: newStatus })
+        )
+      );
+      const allOk = results.every((r) => r?.data?.success);
+      if (allOk) {
+        invalidateListCachesFrom("chapter");
+        await fetchChapters();
+        success(
+          n === 1
+            ? `Chapter ${action}d successfully`
+            : `${n} chapters ${action}d successfully`
+        );
+      } else {
+        throw new Error(
+          results.find((r) => !r?.data?.success)?.data?.message ||
+            `Failed to ${action} some chapters`
+        );
       }
+    } catch (error) {
+      console.error(`Error bulk ${action}ing chapters:`, error);
+      setError(
+        error.response?.data?.message ||
+          error.message ||
+          `Failed to ${action} chapters`
+      );
+      showError(
+        error.response?.data?.message ||
+          error.message ||
+          `Failed to ${action} chapters`
+      );
+      throw error;
+    } finally {
+      setIsFormLoading(false);
     }
   };
 
@@ -854,6 +896,7 @@ const ChaptersManagement = () => {
       await Promise.all(
         unitIds.map((unitId) => saveReorderForUnit(unitId, reorderDraft[unitId]))
       );
+      invalidateListCachesFrom("chapter");
       await fetchChapters();
       setReorderDraft({});
       setIsReorderMode(false);
@@ -869,6 +912,15 @@ const ChaptersManagement = () => {
   return (
     <>
       <ToastContainer toasts={toasts} removeToast={removeToast} />
+      <StatusCascadeModal
+        open={cascadeModalOpen}
+        onClose={() => { setCascadeModalOpen(false); setCascadeItem(null); }}
+        levelLabel="Chapter"
+        itemName={cascadeItem?.name}
+        currentStatus={cascadeItem?.status || "active"}
+        onConfirm={handleCascadeConfirm}
+        loading={isFormLoading}
+      />
       <div className="space-y-6">
         {/* Page Header */}
         <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 rounded-lg border border-gray-200 p-4 shadow-sm">
@@ -1529,15 +1581,17 @@ const ChaptersManagement = () => {
                 <div className="relative min-w-[200px] sm:min-w-[240px]">
                   <input
                     type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+value={searchInput}
+                      onChange={(e) => setSearchInput(e.target.value)}
                     placeholder="Search chapters..."
                     className="w-full pl-9 pr-8 py-1.5 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                   />
                   <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-3.5 h-3.5" />
                   {searchQuery && (
                     <button
-                      onClick={() => setSearchQuery("")}
+                      onClick={() =>
+                        setFilterState({ searchQuery: "", page: 1 })
+                      }
                       className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                     >
                       <FaTimes className="w-3 h-3" />
@@ -1549,7 +1603,9 @@ const ChaptersManagement = () => {
                   <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap">Meta Status:</label>
                   <select
                     value={metaFilter}
-                    onChange={(e) => setMetaFilter(e.target.value)}
+                    onChange={(e) =>
+                      setFilterState({ metaFilter: e.target.value, page: 1 })
+                    }
                     className="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-medium focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                   >
                     <option value="all">All Items</option>
@@ -1588,9 +1644,12 @@ const ChaptersManagement = () => {
                   <select
                     value={filterExam}
                     onChange={(e) => {
-                      setFilterExam(e.target.value);
-                      setFilterSubject("");
-                      setFilterUnit("");
+                      setFilterState({
+                        filterExam: e.target.value,
+                        filterSubject: "",
+                        filterUnit: "",
+                        page: 1,
+                      });
                     }}
                     className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm bg-white"
                   >
@@ -1611,8 +1670,11 @@ const ChaptersManagement = () => {
                   <select
                     value={filterSubject}
                     onChange={(e) => {
-                      setFilterSubject(e.target.value);
-                      setFilterUnit("");
+                      setFilterState({
+                        filterSubject: e.target.value,
+                        filterUnit: "",
+                        page: 1,
+                      });
                     }}
                     disabled={!filterExam}
                     className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm bg-white disabled:bg-gray-100 disabled:text-gray-400"
@@ -1635,7 +1697,9 @@ const ChaptersManagement = () => {
                   </label>
                   <select
                     value={filterUnit}
-                    onChange={(e) => setFilterUnit(e.target.value)}
+                    onChange={(e) =>
+                      setFilterState({ filterUnit: e.target.value, page: 1 })
+                    }
                     disabled={!filterSubject}
                     className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm bg-white disabled:bg-gray-100 disabled:text-gray-400"
                   >
@@ -1665,9 +1729,12 @@ const ChaptersManagement = () => {
                   {exams.find((e) => e._id === filterExam)?.name || "N/A"}
                   <button
                     onClick={() => {
-                      setFilterExam("");
-                      setFilterSubject("");
-                      setFilterUnit("");
+                      setFilterState({
+                        filterExam: "",
+                        filterSubject: "",
+                        filterUnit: "",
+                        page: 1,
+                      });
                     }}
                     className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"
                   >
@@ -1682,8 +1749,11 @@ const ChaptersManagement = () => {
                     "N/A"}
                   <button
                     onClick={() => {
-                      setFilterSubject("");
-                      setFilterUnit("");
+                      setFilterState({
+                        filterSubject: "",
+                        filterUnit: "",
+                        page: 1,
+                      });
                     }}
                     className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"
                   >
@@ -1697,7 +1767,9 @@ const ChaptersManagement = () => {
                   {filterUnits.find((u) => u._id === filterUnit)?.name ||
                     "N/A"}
                   <button
-                    onClick={() => setFilterUnit("")}
+                    onClick={() =>
+                      setFilterState({ filterUnit: "", page: 1 })
+                    }
                     className="hover:bg-green-200 rounded-full p-0.5 transition-colors"
                   >
                     <FaTimes className="w-3 h-3" />
@@ -1708,7 +1780,9 @@ const ChaptersManagement = () => {
                 <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-medium">
                   Search: {searchQuery}
                   <button
-                    onClick={() => setSearchQuery("")}
+                    onClick={() =>
+                      setFilterState({ searchQuery: "", page: 1 })
+                    }
                     className="hover:bg-indigo-200 rounded-full p-0.5 transition-colors"
                   >
                     <FaTimes className="w-3 h-3" />
@@ -1771,15 +1845,29 @@ const ChaptersManagement = () => {
                 )}
               </div>
             ) : (
-              <ChaptersTable
-                chapters={filteredChapters}
-                onEdit={handleEditChapter}
-                onDelete={handleDeleteChapter}
-                onToggleStatus={handleToggleStatus}
-                onReorderDraft={handleReorderDraft}
-                reorderDraft={reorderDraft}
-                isReorderAllowed={isReorderMode && !searchQuery.trim()}
-              />
+              <>
+                <ChaptersTable
+                  chapters={filteredChapters}
+                  countsByUnit={countsByUnit}
+                  onEdit={handleEditChapter}
+                  onDelete={handleDeleteChapter}
+                  onToggleStatus={handleToggleStatus}
+                  onBulkToggleStatus={handleBulkToggleStatus}
+                  onReorderDraft={handleReorderDraft}
+                  reorderDraft={reorderDraft}
+                  isReorderAllowed={isReorderMode && !searchQuery.trim()}
+                />
+                <PaginationBar
+                  page={page}
+                  limit={limit}
+                  total={pagination.total}
+                  totalPages={pagination.totalPages}
+                  hasNextPage={pagination.hasNextPage}
+                  hasPrevPage={pagination.hasPrevPage}
+                  onPageChange={(p) => setFilterState({ page: p })}
+                  onLimitChange={(l) => setFilterState({ limit: l, page: 1 })}
+                />
+              </>
             )}
           </div>
         </div>

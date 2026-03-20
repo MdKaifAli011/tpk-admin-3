@@ -124,14 +124,14 @@ const threadSlug = searchParams?.thread || (searchParams?.get && searchParams.ge
 ```
 URL: /jee/physics?tab=overview
 View-Source Should Show:
-<title>Physics - JEE Exam Preparation | TestPrepKart</title>
+<title>Physics - JEE Exam Preparation | Testprepkart</title>
 ```
 
 ### 2. Test Discussion Forum Tab
 ```
 URL: /jee/physics?tab=discussion
 View-Source Should Show:
-<title>Physics - Discussion Forum | TestPrepKart</title>
+<title>Physics - Discussion Forum | Testprepkart</title>
 <meta name="description" content="Join the Physics discussion forum...">
 ```
 
@@ -139,7 +139,7 @@ View-Source Should Show:
 ```
 URL: /jee/physics?tab=practice
 View-Source Should Show:
-<title>Physics - Practice Tests | TestPrepKart</title>
+<title>Physics - Practice Tests | Testprepkart</title>
 <meta name="description" content="Access practice tests for Physics...">
 ```
 
@@ -147,7 +147,7 @@ View-Source Should Show:
 ```
 URL: /jee/physics?tab=performance
 View-Source Should Show:
-<title>Physics - Performance Analytics | TestPrepKart</title>
+<title>Physics - Performance Analytics | Testprepkart</title>
 <meta name="robots" content="noindex, nofollow">
 ```
 

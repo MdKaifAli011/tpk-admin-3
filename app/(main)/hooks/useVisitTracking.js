@@ -186,8 +186,38 @@ export const useVisitTracking = (level, itemId, itemSlug) => {
   useEffect(() => {
     if (!level || !itemId || isTracked || didRunRef.current) return;
     didRunRef.current = true;
-    const timeoutId = setTimeout(trackVisit, 800);
-    return () => clearTimeout(timeoutId);
+
+    let idleId = null;
+    const runWhenIdle = () => {
+      if (typeof requestIdleCallback !== 'undefined') {
+        idleId = requestIdleCallback(() => trackVisit(), { timeout: 2000 });
+      } else {
+        idleId = setTimeout(trackVisit, 1200);
+      }
+    };
+
+    const onLoad = () => runWhenIdle();
+
+    if (typeof window !== 'undefined' && document.readyState === 'complete') {
+      runWhenIdle();
+    } else if (typeof window !== 'undefined') {
+      window.addEventListener('load', onLoad, { once: true });
+    } else {
+      runWhenIdle();
+    }
+
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('load', onLoad);
+      }
+      if (idleId != null) {
+        if (typeof cancelIdleCallback !== 'undefined') {
+          cancelIdleCallback(idleId);
+        } else {
+          clearTimeout(idleId);
+        }
+      }
+    };
   }, [level, itemId, isTracked, trackVisit]);
 
   return {

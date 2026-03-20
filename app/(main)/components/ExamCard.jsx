@@ -119,6 +119,7 @@ const ExamCard = memo(({ exam }) => {
       className={`group block rounded-xl overflow-hidden 
       bg-gradient-to-br ${style.gradient}
       shadow-md hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 cursor-pointer`}
+      aria-label={`Go to ${exam.name} exam preparation`}
     >
       {/* ---------------- HEADER ---------------- */}
       <div

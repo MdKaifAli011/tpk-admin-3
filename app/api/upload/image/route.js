@@ -53,7 +53,9 @@ const buildFolderPath = async (context) => {
   }
 
   if (context.subjectId) {
-    const subject = await Subject.findById(context.subjectId).select("name").lean();
+    const subject = await Subject.findById(context.subjectId)
+      .select("name")
+      .lean();
     if (subject) parts.push(createSlug(subject.name));
   }
 
@@ -63,7 +65,9 @@ const buildFolderPath = async (context) => {
   }
 
   if (context.chapterId) {
-    const chapter = await Chapter.findById(context.chapterId).select("name").lean();
+    const chapter = await Chapter.findById(context.chapterId)
+      .select("name")
+      .lean();
     if (chapter) parts.push(createSlug(chapter.name));
   }
 
@@ -73,12 +77,16 @@ const buildFolderPath = async (context) => {
   }
 
   if (context.subtopicId) {
-    const subtopic = await SubTopic.findById(context.subtopicId).select("name").lean();
+    const subtopic = await SubTopic.findById(context.subtopicId)
+      .select("name")
+      .lean();
     if (subtopic) parts.push(createSlug(subtopic.name));
   }
 
   if (context.definitionId) {
-    const definition = await Definition.findById(context.definitionId).select("name").lean();
+    const definition = await Definition.findById(context.definitionId)
+      .select("name")
+      .lean();
     if (definition) parts.push(createSlug(definition.name));
   }
 
@@ -98,7 +106,9 @@ const buildFilePrefix = async (context) => {
   }
 
   if (context.definitionId) {
-    const d = await Definition.findById(context.definitionId).select("name").lean();
+    const d = await Definition.findById(context.definitionId)
+      .select("name")
+      .lean();
     if (d) targetName = createSlug(d.name);
   } else if (context.subtopicId) {
     const s = await SubTopic.findById(context.subtopicId).select("name").lean();
@@ -185,7 +195,7 @@ export async function POST(request) {
     const counter = await UploadCounter.findOneAndUpdate(
       { path: relativeFolder },
       { $inc: { last: 1 } },
-      { new: true, upsert: true, setDefaultsOnInsert: true }
+      { new: true, upsert: true, setDefaultsOnInsert: true },
     );
 
     const seqNumber = counter.last || 1;
@@ -208,7 +218,7 @@ export async function POST(request) {
 
     return successResponse(
       { url: fileUrl, filename, path: relativeToAssets },
-      "File uploaded successfully"
+      "File uploaded successfully",
     );
   } catch (error) {
     console.error("Upload error:", error);

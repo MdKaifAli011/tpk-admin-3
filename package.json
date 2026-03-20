@@ -6,10 +6,12 @@
     "dev": "next dev",
     "dev:webpack": "next dev --webpack",
     "build": "next build",
+    "analyze": "next build",
     "start": "next start",
     "clean": "node -e \"try{require('fs').rmSync('.next',{recursive:true,force:true});console.log('Cleaned .next');}catch(e){if(e.code!=='ENOENT')throw e;console.log('No .next folder');}\"",
     "lint": "eslint",
-    "import:neet-biology": "node scripts/import-neet-biology-data.mjs"
+    "import:neet-biology": "node scripts/import-neet-biology-data.mjs",
+    "normalize:media-folders": "node scripts/normalize-media-folders.mjs"
   },
   "dependencies": {
     "@lexical/history": "^0.38.1",
@@ -43,6 +45,7 @@
     "slugify": "^1.6.6"
   },
   "devDependencies": {
+    "@next/bundle-analyzer": "^16.1.6",
     "@tailwindcss/postcss": "^4",
     "@types/react": "19.2.7",
     "eslint": "^9",

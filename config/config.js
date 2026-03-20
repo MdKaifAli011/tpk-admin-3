@@ -51,7 +51,7 @@ export const config = {
   mailPassword: process.env.MAIL_PASSWORD || process.env.EMAIL_PASS,
   mailEncryption: process.env.MAIL_ENCRYPTION || (process.env.EMAIL_SECURE === "true" ? "ssl" : null),
   mailFromAddress: process.env.MAIL_FROM_ADDRESS || process.env.MAIL_USERNAME || process.env.EMAIL_USER,
-  mailFromName: process.env.MAIL_FROM_NAME || "TestPrepKart",
+  mailFromName: process.env.MAIL_FROM_NAME || "Testprepkart",
   // Lead export: email to send CSV when leads are exported
   leadExportMailTo: process.env.LEAD_EXPORT_MAIL_TO || "hellomdkaifali@gmail.com",
 

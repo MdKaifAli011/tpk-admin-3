@@ -26,7 +26,8 @@ const DiscussionTable = ({
     sortByViews = false,
     onToggleApproval,
     onDelete,
-    onTogglePin
+    onTogglePin,
+    isSearchMode = false,
 }) => {
     // Permissions
     const { role } = usePermissions();
@@ -46,8 +47,11 @@ const DiscussionTable = ({
         return parts.join("-");
     };
 
-    // Group threads - Now getHierarchySignature is available
+    // In search mode: single flat list (only result data). Otherwise group by hierarchy.
     const groupedThreads = React.useMemo(() => {
+        if (isSearchMode) {
+            return [{ hierarchy: null, items: threads }];
+        }
         const groups = {};
         threads.forEach(thread => {
             const sig = getHierarchySignature(thread);
@@ -60,7 +64,7 @@ const DiscussionTable = ({
             groups[sig].items.push(thread);
         });
         return Object.values(groups);
-    }, [threads]);
+    }, [threads, isSearchMode]);
 
     if (!threads || threads.length === 0) {
         return (
@@ -68,9 +72,13 @@ const DiscussionTable = ({
                 <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center text-gray-300 mb-4">
                     <FaIcons.FaComment size={24} />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-1">No Discussions Found</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                    {isSearchMode ? "No threads match your search" : "No Discussions Found"}
+                </h3>
                 <p className="text-sm text-gray-500 max-w-sm px-6">
-                    When students or guests post discussions, they will appear here for moderation and engagement tracking.
+                    {isSearchMode
+                        ? "Try a different search term or clear the search to see all discussions."
+                        : "When students or guests post discussions, they will appear here for moderation and engagement tracking."}
                 </p>
             </div>
         );
@@ -114,10 +122,12 @@ const DiscussionTable = ({
         <div className="space-y-6">
             {groupedThreads.map((group, groupIndex) => (
                 <div key={groupIndex} className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
-                    {/* Group Header */}
-                    <div className="px-4 py-3 bg-gray-50/80 border-b border-gray-100 flex items-center justify-between">
-                        <HierarchyBreadcrumb thread={group.hierarchy} count={group.items.length} />
-                    </div>
+                    {/* Group Header - hide in search mode so only result rows show */}
+                    {!isSearchMode && (
+                        <div className="px-4 py-3 bg-gray-50/80 border-b border-gray-100 flex items-center justify-between">
+                            <HierarchyBreadcrumb thread={group.hierarchy} count={group.items.length} />
+                        </div>
+                    )}
 
                     {/* Group Table */}
                     <div className="overflow-x-auto">
@@ -177,7 +187,7 @@ const DiscussionTable = ({
                                                             {thread.author?.avatar ? <img src={thread.author.avatar} alt="avatar" className="w-full h-full object-cover" /> : <FaIcons.FaUserCircle size={10} />}
                                                         </div>
                                                         <span className="font-medium">
-                                                            {thread.contributorDisplayName || thread.authorType === "User" || (thread.author?.role && String(thread.author.role).toLowerCase().includes("admin")) ? "TestPrepKart" : (thread.author?.firstName ? `${thread.author.firstName} ${thread.author.lastName}` : (thread.author?.name || thread.guestName || "Guest"))}
+                                                            {thread.contributorDisplayName || thread.authorType === "User" || (thread.author?.role && String(thread.author.role).toLowerCase().includes("admin")) ? "Testprepkart" : (thread.author?.firstName ? `${thread.author.firstName} ${thread.author.lastName}` : (thread.author?.name || thread.guestName || "Guest"))}
                                                         </span>
                                                     </div>
                                                     <span className="w-1 h-1 rounded-full bg-gray-300"></span>
