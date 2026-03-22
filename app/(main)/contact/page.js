@@ -36,7 +36,7 @@ const ContactPage = () => {
     {
       icon: FaEnvelope,
       title: "Our Email Address",
-      details: [{ label: "", value: "contact@rayofhopebihar.org" }],
+      details: [{ label: "", value: "info@testprepkart.com" }],
       color: "bg-purple-50 text-purple-600",
     },
     {
