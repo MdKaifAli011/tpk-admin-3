@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { createSlug, generateUniqueSlug } from "../utils/serverSlug";
+import { createSlug, generateUniqueSlug } from "../utils/serverSlug.js";
 
 const courseSchema = new mongoose.Schema(
   {
