@@ -1,5 +1,6 @@
 "use client";
-import React from "react";
+import React, { useEffect, useState } from "react";
+import Link from "next/link";
 import ContactForm from "../components/ContactForm";
 import {
   FaPhone,
@@ -22,7 +23,40 @@ import {
 import CounselorModal from "../components/CounselorModal";
 import TrialModal from "../components/TrialModal";
 
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
+
 const ContactPage = () => {
+  const [exploreExams, setExploreExams] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`${basePath}/api/exam?status=active&limit=100`);
+        const json = await res.json();
+        if (cancelled) return;
+        if (json?.success && Array.isArray(json.data)) {
+          const list = json.data
+            .filter((e) => e && e.name && (e.slug || e.name))
+            .map((e) => ({
+              _id: e._id,
+              name: String(e.name).trim(),
+              slug: (e.slug && String(e.slug).trim()) || String(e.name).toLowerCase().replace(/\s+/g, "-"),
+              orderNumber: typeof e.orderNumber === "number" ? e.orderNumber : 9999,
+            }))
+            .sort((a, b) => a.orderNumber - b.orderNumber || a.name.localeCompare(b.name));
+          setExploreExams(list);
+        } else {
+          setExploreExams([]);
+        }
+      } catch {
+        if (!cancelled) setExploreExams([]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   const contactInfo = [
     {
       icon: FaPhone,
@@ -82,17 +116,9 @@ const ContactPage = () => {
     {
       icon: FaChalkboardTeacher,
       title: "Explore our courses",
-      description: "NEET, JEE, SAT, AP, IB, CBSE",
+      description: "Browse programs by exam — links load from your active exams.",
       color: "bg-purple-500",
       type: "explore",
-      items: [
-        { name: "NEET", url: "https://www.testprepkart.com/neet" },
-        { name: "JEE", url: "https://www.testprepkart.com/jee" },
-        { name: "SAT", url: "https://www.testprepkart.com/sat" },
-        { name: "AP", url: "https://www.testprepkart.com/ap" },
-        { name: "IB", url: "https://www.testprepkart.com/ib" },
-        { name: "CBSE", url: "https://www.testprepkart.com/cbse" },
-      ],
     },
   ];
 
@@ -233,19 +259,25 @@ const ContactPage = () => {
                   {item.title}
                 </h3>
                 {item.type === "explore" ? (
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {item.items.map((course, idx) => (
-                      <a
-                        key={idx}
-                        href={course.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="px-2 py-1 bg-purple-50 text-purple-700 text-xs font-bold rounded-md hover:bg-purple-100 transition-colors uppercase"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        {course.name}
-                      </a>
-                    ))}
+                  <div className="mt-2">
+                    {exploreExams === null ? (
+                      <p className="text-gray-500 text-sm">Loading exams…</p>
+                    ) : exploreExams.length === 0 ? (
+                      <p className="text-gray-500 text-sm">No active exams to show yet.</p>
+                    ) : (
+                      <div className="flex flex-wrap gap-2">
+                        {exploreExams.map((exam) => (
+                          <Link
+                            key={exam._id || exam.slug}
+                            href={`/${exam.slug}`}
+                            className="px-2 py-1 bg-purple-50 text-purple-700 text-xs font-semibold rounded-md hover:bg-purple-100 transition-colors"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {exam.name}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <p className="text-gray-600 text-sm">{item.description}</p>

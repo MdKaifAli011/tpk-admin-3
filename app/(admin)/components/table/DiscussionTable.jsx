@@ -20,6 +20,7 @@ const timeAgo = (date) => {
 
 import { usePermissions, getDiscussionPermissions, getDiscussionPermissionMessage } from "../../hooks/usePermissions";
 import { getThreadHierarchyQueryString } from "@/lib/discussionThreadQuery";
+import { DISCUSSION_BRAND_DISPLAY_NAME } from "@/constants";
 
 const DiscussionTable = ({
     threads,
@@ -187,7 +188,7 @@ const DiscussionTable = ({
                                                             {thread.author?.avatar ? <img src={thread.author.avatar} alt="avatar" className="w-full h-full object-cover" /> : <FaIcons.FaUserCircle size={10} />}
                                                         </div>
                                                         <span className="font-medium">
-                                                            {thread.contributorDisplayName || thread.authorType === "User" || (thread.author?.role && String(thread.author.role).toLowerCase().includes("admin")) ? "Testprepkart" : (thread.author?.firstName ? `${thread.author.firstName} ${thread.author.lastName}` : (thread.author?.name || thread.guestName || "Guest"))}
+                                                            {thread.contributorDisplayName || thread.authorType === "User" || (thread.author?.role && String(thread.author.role).toLowerCase().includes("admin")) ? DISCUSSION_BRAND_DISPLAY_NAME : (thread.author?.firstName ? `${thread.author.firstName} ${thread.author.lastName}` : (thread.author?.name || thread.guestName || "Guest"))}
                                                         </span>
                                                     </div>
                                                     <span className="w-1 h-1 rounded-full bg-gray-300"></span>

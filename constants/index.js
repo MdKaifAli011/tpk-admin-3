@@ -9,6 +9,19 @@ export const APP_CONFIG = {
   url: process.env.NEXT_PUBLIC_APP_URL || "https://testprepkart.com",
 };
 
+/** Canonical brand spelling for discussion forum (admin + student UI). */
+export const DISCUSSION_BRAND_DISPLAY_NAME = "TestprepKart";
+
+/**
+ * Map legacy/stored variants (Testprepkart, TestPrepKart, etc.) to DISCUSSION_BRAND_DISPLAY_NAME.
+ */
+export function normalizeDiscussionBrandDisplayName(name) {
+  if (name == null || typeof name !== "string") return name;
+  const compact = name.trim().toLowerCase().replace(/[^a-z]/g, "");
+  if (compact === "testprepkart") return DISCUSSION_BRAND_DISPLAY_NAME;
+  return name.trim();
+}
+
 // API Configuration
 export const API_CONFIG = {
   timeout: 30000, // 30 seconds

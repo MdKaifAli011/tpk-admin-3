@@ -10,10 +10,18 @@ import RichContent from "../../../../../(main)/components/RichContent";
 import RichTextEditor from "../../../../components/ui/RichTextEditor";
 import Link from "next/link";
 import { usePermissions, getDiscussionPermissions, getDiscussionPermissionMessage } from "../../../../hooks/usePermissions";
-import { SEO_DEFAULTS } from "@/constants";
+import { SEO_DEFAULTS, DISCUSSION_BRAND_DISPLAY_NAME, normalizeDiscussionBrandDisplayName } from "@/constants";
 
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
 const BRAND_LOGO_URL = SEO_DEFAULTS?.FAVICON || `${basePath}/logo.png`;
+
+const getThreadAuthorDisplayName = (thread) => {
+    if (!thread) return DISCUSSION_BRAND_DISPLAY_NAME;
+    if (thread.contributorDisplayName || thread.authorType === "User") {
+        return normalizeDiscussionBrandDisplayName(thread.contributorDisplayName) || DISCUSSION_BRAND_DISPLAY_NAME;
+    }
+    return thread.author?.firstName ? `${thread.author.firstName} ${thread.author.lastName}` : (thread.guestName || "Guest User");
+};
 
 const timeAgo = (date) => {
     const seconds = Math.floor((new Date() - new Date(date)) / 1000);
@@ -31,8 +39,10 @@ const timeAgo = (date) => {
 };
 
 const getReplyAuthorDisplayName = (reply) => {
-    if (reply.authorType === "User") return "Testprepkart";
-    return reply.author?.firstName ? `${reply.author.firstName} ${reply.author.lastName}` : (reply.guestName || "Guest User");
+    if (reply.authorType === "User") return DISCUSSION_BRAND_DISPLAY_NAME;
+    const raw = reply.author?.firstName ? `${reply.author.firstName} ${reply.author.lastName}` : (reply.guestName || "Guest User");
+    const normalized = normalizeDiscussionBrandDisplayName(raw);
+    return normalized === DISCUSSION_BRAND_DISPLAY_NAME ? normalized : raw;
 };
 
 const getReplyAuthorInitial = (reply) => {
@@ -647,7 +657,7 @@ const ThreadDetailModeration = () => {
                                 <div className="flex items-center gap-3">
                                     <div className="w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden border border-gray-100 shadow-sm bg-gray-50">
                                         {isThreadAdmin(thread) ? (
-                                            <img src={BRAND_LOGO_URL} alt="Testprepkart" className="w-full h-full object-cover" />
+                                            <img src={BRAND_LOGO_URL} alt={DISCUSSION_BRAND_DISPLAY_NAME} className="w-full h-full object-cover" />
                                         ) : thread.author?.avatar ? (
                                             <img src={thread.author.avatar} alt="avatar" className="w-full h-full object-cover" />
                                         ) : (
@@ -656,7 +666,7 @@ const ThreadDetailModeration = () => {
                                     </div>
                                     <div>
                                         <p className="text-sm font-bold text-gray-900 leading-none">
-                                            {isThreadAdmin(thread) ? "Testprepkart" : (thread.author?.firstName ? `${thread.author.firstName} ${thread.author.lastName}` : (thread.guestName || "Guest User"))}
+                                            {getThreadAuthorDisplayName(thread)}
                                         </p>
                                         <p className="text-[11px] text-gray-500 font-medium mt-1">
                                             Posted {timeAgo(thread.createdAt)}
@@ -1088,7 +1098,7 @@ const ReplyItem = ({ reply, handleToggleReplyApproval, handleDeleteReply, handle
                         <div className="flex items-center gap-2.5 mb-3">
                             <div className={`w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden shadow-sm ${reply.authorType === "User" ? "bg-blue-100 border border-blue-200" : "bg-indigo-50 border border-indigo-100"}`}>
                                 {reply.authorType === "User" ? (
-                                    <img src={BRAND_LOGO_URL} alt="Testprepkart" className="w-full h-full object-cover" />
+                                    <img src={BRAND_LOGO_URL} alt={DISCUSSION_BRAND_DISPLAY_NAME} className="w-full h-full object-cover" />
                                 ) : (
                                     <span className="text-[10px] font-bold text-indigo-700">{getReplyAuthorInitial(reply)}</span>
                                 )}
@@ -1096,9 +1106,6 @@ const ReplyItem = ({ reply, handleToggleReplyApproval, handleDeleteReply, handle
                             <div className="flex-1">
                                 <div className="flex items-center gap-2 flex-wrap">
                                     <p className="text-xs font-bold text-gray-900">{getReplyAuthorDisplayName(reply)}</p>
-                                    {reply.authorType === "User" && (
-                                        <span className="px-1.5 py-0.5 bg-blue-600 text-white text-[8px] font-bold uppercase tracking-wider rounded">Testprepkart</span>
-                                    )}
                                     {isNew && (
                                         <span className="px-2 py-0.5 bg-blue-600 text-white text-[8px] font-bold uppercase tracking-wider rounded-full flex items-center gap-1 animate-pulse">
                                             <FaIcons.FaCircle size={6} />

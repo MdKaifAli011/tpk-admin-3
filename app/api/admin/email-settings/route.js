@@ -34,7 +34,7 @@ export async function GET() {
       mailPassword: "",
       mailEncryption: "ssl",
       mailFromAddress: "",
-      mailFromName: "TestPrepKart",
+      mailFromName: "TestprepKart",
       leadExportMailTo: "",
     };
     if (!doc) {
@@ -129,9 +129,9 @@ export async function POST(request) {
     const body = await request.json().catch(() => ({}));
     const to = (body.to && String(body.to).trim()) || null;
 
-    const subject = "TestPrepKart – Test email";
-    const text = "This is a test email from your TestPrepKart admin email settings.";
-    const html = "<p>This is a test email from your <strong>TestPrepKart</strong> admin email settings.</p>";
+    const subject = "TestprepKart – Test email";
+    const text = "This is a test email from your TestprepKart admin email settings.";
+    const html = "<p>This is a test email from your <strong>TestprepKart</strong> admin email settings.</p>";
 
     const { getEmailSettings } = await import("@/lib/getEmailSettings");
     const settings = await getEmailSettings();
