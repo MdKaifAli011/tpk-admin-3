@@ -128,6 +128,16 @@ export async function generateMetadata({ params }) {
 
     // Add article-specific metadata
     metadata.openGraph.type = "article";
+    if (blog.status === "draft") {
+      metadata.robots = {
+        index: false,
+        follow: false,
+        googleBot: {
+          index: false,
+          follow: false,
+        },
+      };
+    }
     if (blog.author) {
       metadata.openGraph.authors = [blog.author];
     }

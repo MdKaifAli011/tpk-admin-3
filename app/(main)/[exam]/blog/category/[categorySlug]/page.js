@@ -10,6 +10,18 @@ import {
 import BlogListClient from "../../BlogListClient";
 import BlogSearchInput from "../../BlogSearchInput";
 
+const BLOG_BRAND_NAME = "TestprepKart";
+
+const normalizeBlogAuthorName = (author) => {
+  const raw = String(author || "").trim();
+  if (!raw) return BLOG_BRAND_NAME;
+  const compact = raw.toLowerCase().replace(/[^a-z]/g, "");
+  if (raw.toLowerCase().endsWith("@admin.com") || compact === "testprepkart") {
+    return BLOG_BRAND_NAME;
+  }
+  return raw;
+};
+
 const BlogCategoryPage = async ({ params }) => {
   const { exam: examIdOrSlug, categorySlug } = await params;
 
@@ -84,7 +96,7 @@ const BlogCategoryPage = async ({ params }) => {
       id: blog._id,
       title: blog.name || "Untitled Blog",
       excerpt: excerpt,
-      author: blog.author || "Admin",
+      author: normalizeBlogAuthorName(blog.author),
       date: new Date(blogDate).toLocaleDateString(undefined, {
         year: "numeric",
         month: "short",

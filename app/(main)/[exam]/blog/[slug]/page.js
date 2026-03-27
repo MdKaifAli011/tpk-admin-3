@@ -12,6 +12,18 @@ import {
 import RichContent from "../../../components/RichContent";
 import BlogComments from "./BlogComments";
 
+const BLOG_BRAND_NAME = "TestprepKart";
+
+const normalizeBlogAuthorName = (author) => {
+  const raw = String(author || "").trim();
+  if (!raw) return BLOG_BRAND_NAME;
+  const compact = raw.toLowerCase().replace(/[^a-z]/g, "");
+  if (raw.toLowerCase().endsWith("@admin.com") || compact === "testprepkart") {
+    return BLOG_BRAND_NAME;
+  }
+  return raw;
+};
+
 // Helper function to resolve image path with base path
 const resolveImagePath = (path) => {
   if (!path) return "";
@@ -88,7 +100,7 @@ const BlogDetailPage = async ({ params }) => {
               <span className="mx-1">•</span>
               <span className="flex items-center gap-1">
                 <FaUser className="text-indigo-400" />
-                {blog.author || "Admin"}
+                {normalizeBlogAuthorName(blog.author)}
               </span>
               {(blog.categoryId?.name || blog.category) && (
                 <>

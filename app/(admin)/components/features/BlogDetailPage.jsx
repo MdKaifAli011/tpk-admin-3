@@ -484,8 +484,8 @@ const BlogDetailPage = ({ blogId }) => {
 
       {/* Sticky Header */}
       <div className="bg-white border-b border-gray-200 px-4 sm:px-6 lg:px-8 py-4 sticky top-0 z-30 shadow-sm">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3 sm:gap-4">
+        <div className="max-w-7xl mx-auto flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
             <button
               onClick={() => router.back()}
               className="p-2 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-gray-900 transition-colors"
@@ -494,7 +494,10 @@ const BlogDetailPage = ({ blogId }) => {
               <FaArrowLeft className="w-5 h-5" />
             </button>
             <div className="flex flex-col min-w-0 flex-1">
-              <h1 className="text-lg sm:text-xl font-semibold text-gray-900 truncate">
+              <h1
+                className="text-lg sm:text-xl font-semibold text-gray-900 truncate max-w-full"
+                title={formData.name || "Untitled Blog"}
+              >
                 {formData.name || "Untitled Blog"}
               </h1>
               <div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
@@ -519,7 +522,7 @@ const BlogDetailPage = ({ blogId }) => {
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap lg:flex-nowrap lg:justify-end shrink-0">
             {/* Status Dropdown */}
             <select
               value={formData.status}

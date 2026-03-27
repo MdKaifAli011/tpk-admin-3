@@ -7,6 +7,27 @@ import { requireAuth } from "@/middleware/authMiddleware";
 
 const currentYear = new Date().getFullYear();
 
+const parseYearValue = (value) => {
+  const year = typeof value === "number" ? value : parseInt(String(value ?? ""), 10);
+  if (Number.isNaN(year) || year < 2000 || year > 2100) return null;
+  return year;
+};
+
+const removeLegacyUniqueExamIdIndex = async () => {
+  // Legacy deployments could have unique index { examId: 1 }, which blocks adding multiple years.
+  const indexes = await ExamResultPage.collection.indexes();
+  const legacy = indexes.find(
+    (idx) =>
+      idx?.unique === true &&
+      idx?.key &&
+      Object.keys(idx.key).length === 1 &&
+      Object.prototype.hasOwnProperty.call(idx.key, "examId")
+  );
+  if (legacy?.name) {
+    await ExamResultPage.collection.dropIndex(legacy.name);
+  }
+};
+
 /**
  * GET - Admin: list years for an exam with status. Returns { years: [{ year, status }, ...] }.
  */
@@ -56,30 +77,50 @@ export async function POST(request, { params }) {
     const exam = await Exam.findById(examId).select("_id").lean();
     if (!exam) return errorResponse("Exam not found", 404);
     const body = await request.json();
-    const year = typeof body.year === "number" ? body.year : parseInt(String(body.year || currentYear), 10);
-    if (Number.isNaN(year) || year < 2000 || year > 2100) {
+    const year = parseYearValue(body.year ?? currentYear);
+    if (year == null) {
       return errorResponse("Valid year (2000-2100) required", 400);
     }
     const existing = await ExamResultPage.findOne({ examId: exam._id, year }).lean();
     if (existing) {
-      return successResponse(
-        { examId: String(exam._id), year, message: "Year already exists" },
-        "Year already exists"
-      );
+      return errorResponse("Year already exists", 409);
     }
-    const doc = await ExamResultPage.create({
-      examId: exam._id,
-      year,
-      status: "active",
-      bannerImage: "",
-      bannerTitle: "",
-      bannerSubtitle: "",
-      toppers: [],
-      targetAchievers: [],
-      highlights: [],
-      studentTestimonials: [],
-      parentTestimonials: [],
-    });
+    let doc;
+    try {
+      doc = await ExamResultPage.create({
+        examId: exam._id,
+        year,
+        status: "active",
+        bannerImage: "",
+        bannerTitle: "",
+        bannerSubtitle: "",
+        toppers: [],
+        targetAchievers: [],
+        highlights: [],
+        studentTestimonials: [],
+        parentTestimonials: [],
+      });
+    } catch (createError) {
+      // Handle legacy unique index on examId (duplicate key "ExamId already exists")
+      if (createError?.code === 11000) {
+        await removeLegacyUniqueExamIdIndex();
+        doc = await ExamResultPage.create({
+          examId: exam._id,
+          year,
+          status: "active",
+          bannerImage: "",
+          bannerTitle: "",
+          bannerSubtitle: "",
+          toppers: [],
+          targetAchievers: [],
+          highlights: [],
+          studentTestimonials: [],
+          parentTestimonials: [],
+        });
+      } else {
+        throw createError;
+      }
+    }
     return successResponse(
       { examId: String(doc.examId), year: doc.year, id: String(doc._id) },
       "Year created"
@@ -101,8 +142,8 @@ export async function PATCH(request, { params }) {
     const { examId } = await params;
     if (!examId) return errorResponse("Exam ID required", 400);
     const body = await request.json();
-    const year = typeof body.year === "number" ? body.year : parseInt(String(body.year), 10);
-    if (Number.isNaN(year) || year < 2000 || year > 2100) {
+    const year = parseYearValue(body.year);
+    if (year == null) {
       return errorResponse("Valid year (2000-2100) required", 400);
     }
     const status = body.status === "inactive" ? "inactive" : "active";
@@ -142,9 +183,10 @@ export async function DELETE(request, { params }) {
     }
     const { examId } = await params;
     if (!examId) return errorResponse("Exam ID required", 400);
+    const { searchParams } = new URL(request.url);
     const body = await request.json().catch(() => ({}));
-    const year = typeof body.year === "number" ? body.year : parseInt(String(body.year), 10);
-    if (Number.isNaN(year) || year < 2000 || year > 2100) {
+    const year = parseYearValue(body.year ?? searchParams.get("year"));
+    if (year == null) {
       return errorResponse("Valid year (2000-2100) required", 400);
     }
     await connectDB();

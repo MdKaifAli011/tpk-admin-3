@@ -889,12 +889,12 @@ const RichTextEditor = ({
     editor.config.placeholder = placeholder;
   }, [placeholder]);
 
-  // Fetch forms when form modal or form-link modal opens (not for contact form — that uses plain form ID input)
+  // Fetch forms when any form-related modal opens, including contact form modal.
   useEffect(() => {
-    if (showFormModal || showFormLinkModal) {
+    if (showFormModal || showFormLinkModal || showContactFormModal) {
       fetchForms();
     }
-  }, [showFormModal, showFormLinkModal]);
+  }, [showFormModal, showFormLinkModal, showContactFormModal]);
 
   const fetchForms = async () => {
     try {
@@ -1942,6 +1942,38 @@ const RichTextEditor = ({
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Form ID <span className="text-red-500">*</span>
                 </label>
+                <select
+                  value={contactFormOptions.formId}
+                  onChange={(e) => {
+                    const selectedId = e.target.value;
+                    const selected = forms.find((f) => f.formId === selectedId);
+                    if (!selectedId || !selected) {
+                      setContactFormOptions((prev) => ({ ...prev, formId: selectedId }));
+                      return;
+                    }
+                    setContactFormOptions((prev) => ({
+                      ...prev,
+                      formId: selected.formId || selectedId,
+                      title: selected.settings?.title || prev.title || selected.formId || selectedId,
+                      description: selected.settings?.description || prev.description || "",
+                      imageUrl: selected.settings?.imageUrl || prev.imageUrl || "",
+                    }));
+                  }}
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm bg-white"
+                >
+                  <option value="">
+                    {loadingForms ? "Loading forms..." : "Select form ID from Form Management"}
+                  </option>
+                  {forms.map((form) => (
+                    <option key={form._id} value={form.formId}>
+                      {form.formId}
+                      {form.settings?.title ? ` - ${form.settings.title}` : ""}
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-1 text-xs text-gray-500">
+                  Pick an existing form ID, or type manually below.
+                </p>
                 <input
                   type="text"
                   value={contactFormOptions.formId}

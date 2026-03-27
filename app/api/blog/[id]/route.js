@@ -24,9 +24,10 @@ export async function GET(request, { params }) {
       blog = await Blog.findById(id);
     }
 
-    // If not found by ID, try to find by slug
+    // If not found by ID, try to find by slug.
+    // Public frontend should allow active + draft preview URLs.
     if (!blog) {
-      blog = await Blog.findOne({ slug: id, status: "active" });
+      blog = await Blog.findOne({ slug: id, status: { $in: ["active", "draft"] } });
     }
 
     if (!blog) {

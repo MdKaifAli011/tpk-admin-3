@@ -21,6 +21,14 @@ const resolveImagePath = (path) => {
 
 const BlogCard = ({ post, examSlug }) => {
   const [imageError, setImageError] = useState(false);
+  const rawAuthor = String(post?.author || "").trim();
+  const compactAuthor = rawAuthor.toLowerCase().replace(/[^a-z]/g, "");
+  const displayAuthor =
+    !rawAuthor ||
+    rawAuthor.toLowerCase().endsWith("@admin.com") ||
+    compactAuthor === "testprepkart"
+      ? "TestprepKart"
+      : rawAuthor;
 
   // Check if image is external URL
   const imageSrc = resolveImagePath(post.image);
@@ -74,7 +82,7 @@ const BlogCard = ({ post, examSlug }) => {
           <span className="mx-1">•</span>
           <span className="flex items-center gap-1">
             <FaUser className="text-indigo-400" />
-            {post.author}
+            {displayAuthor}
           </span>
         </div>
 

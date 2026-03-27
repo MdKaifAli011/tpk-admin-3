@@ -144,7 +144,7 @@ export default function ResultPageManagement() {
       const res = await api.post(`/admin/result-page/${selectedExamId}/years`, { year });
       if (res.data?.success) {
         success(`Year ${year} added.`);
-        setYears((prev) => [...prev, { year, status: "active" }].sort((a, b) => b.year - a.year));
+        await fetchYears(selectedExamId);
         setSelectedYear(year);
         setNewYearInput(currentYear);
       } else {
@@ -258,7 +258,7 @@ export default function ResultPageManagement() {
       if (!window.confirm(`Are you sure you want to delete result year ${year}? This cannot be undone.`)) return;
       setActionLoading(`delete-${year}`);
       try {
-        const res = await api.delete(`/admin/result-page/${selectedExamId}/years`, {
+        const res = await api.delete(`/admin/result-page/${selectedExamId}/years?year=${year}`, {
           data: { year },
         });
         if (res.data?.success) {
