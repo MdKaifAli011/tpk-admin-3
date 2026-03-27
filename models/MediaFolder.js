@@ -10,7 +10,6 @@ const mediaFolderSchema = new mongoose.Schema(
 );
 
 mediaFolderSchema.index({ parentPath: 1 });
-mediaFolderSchema.index({ path: 1 });
 
 /** Slugify a single path segment: lowercase, spaces → hyphens, remove unsafe chars */
 function slugifySegment(segment) {

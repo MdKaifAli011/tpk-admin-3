@@ -6,7 +6,7 @@ const examInfoSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Exam",
       required: true,
-      unique: true, // One ExamInfo per Exam; index created via schema.index() below
+      // Unique index is declared below via schema.index()
     },
     examDate: {
       type: Date,
@@ -89,7 +89,7 @@ const examInfoSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Compound index to ensure unique examId
+// Unique one-to-one relation: one ExamInfo per Exam
 examInfoSchema.index({ examId: 1 }, { unique: true });
 
 // Ensure subjects array has unique subjectIds

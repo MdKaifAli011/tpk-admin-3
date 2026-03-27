@@ -6,6 +6,21 @@ import { NextResponse } from "next/server";
 import { ERROR_MESSAGES, SUCCESS_MESSAGES } from "@/constants";
 import { logger } from "@/utils/logger";
 
+// Avoid log flooding for repeated transient DB connectivity failures.
+let lastDbErrorLogAt = 0;
+const DB_ERROR_LOG_THROTTLE_MS = 30000;
+
+function isDbConnectionError(error) {
+  const name = error?.name || "";
+  const message = error?.message || "";
+  return (
+    name === "MongooseServerSelectionError" ||
+    /ECONNREFUSED|MongooseServerSelectionError|Mongo(Network|ServerSelection)Error/i.test(
+      message
+    )
+  );
+}
+
 /**
  * Create standardized success response
  */
@@ -72,7 +87,24 @@ export function forbiddenResponse() {
  * Handle API errors consistently
  */
 export function handleApiError(error, customMessage = null) {
-  logger.error("API Error:", error);
+  if (isDbConnectionError(error)) {
+    const now = Date.now();
+    if (now - lastDbErrorLogAt > DB_ERROR_LOG_THROTTLE_MS) {
+      lastDbErrorLogAt = now;
+      logger.error("API Error: Database unavailable", {
+        message: error?.message || "MongoDB connection failed",
+      });
+    }
+    return errorResponse(
+      "Database is temporarily unavailable. Please try again shortly.",
+      503
+    );
+  }
+
+  logger.error("API Error:", {
+    name: error?.name,
+    message: error?.message || String(error),
+  });
   
   // Handle Mongoose validation errors
   if (error.name === "ValidationError") {

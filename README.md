@@ -1,3 +1,63 @@
+# tpk-admin-3 Local Run Guide
+
+## 1) Environment
+
+Create `.env` in project root. Example values:
+
+```
+PORT=3000
+NODE_ENV=development
+NEXT_PUBLIC_BASE_PATH=/self-study
+MONGODB_URI=<your-mongodb-uri>
+MONGO_DB_NAME=tpk-admin-db-1
+NEXT_PUBLIC_API_URL=<your-api-url>
+JWT_SECRET=<your-jwt-secret>
+SESSION_SECRET=<your-session-secret>
+```
+
+Do not commit real secrets.
+
+## 2) Start MongoDB first
+
+Your app will fail with `ECONNREFUSED 127.0.0.1:27017` if MongoDB is not running.
+
+Use one of the following:
+
+- Local service:
+  - `sudo systemctl start mongod` (Linux with service install), or
+  - `mongod --dbpath /path/to/mongo-data`
+
+- Docker:
+  - `docker run -d --name tpk-mongo -p 27017:27017 mongo:7`
+
+## 3) Run app
+
+Install once:
+
+```
+npm ci
+```
+
+Development:
+
+```
+npm run dev
+```
+
+Production build + start:
+
+```
+npm run build
+npm run start
+```
+
+## 4) Notes about NODE_ENV
+
+- Keep `NODE_ENV=development` in `.env` for local dev (`npm run dev`).
+- `npm run start` forces production mode, so Next.js runtime warnings are avoided.
+
+---
+
 # NEET Biology Data Import Script
 
 ## Overview
@@ -28,40 +88,20 @@ node scripts/import-neet-biology-data.js
 3. **Creates or gets Biology subject** - Creates subject "Biology" if it doesn't exist
 4. **Reads Neet.csv** and parses the data
 5. **Imports hierarchically**:
-   - **Units** - Creates units from CSV (e.g., "Diversity in Living World", "Structural Organisation in Animals and Plants")
-   - **Chapters** - Creates chapters within units (e.g., "The Living World", "Biological Classification")
-   - **Topics** - Creates topics within chapters (e.g., "What is Living?", "Biodiversity")
-   - **SubTopics** - Creates subtopics within topics (e.g., "Characteristics of living organisms", "Difference between living and non-living")
+   - **Units** - Creates units from CSV
+   - **Chapters** - Creates chapters within units
+   - **Topics** - Creates topics within chapters
+   - **SubTopics** - Creates subtopics within topics
 
 ## Features:
-- **Idempotent**: Can be run multiple times safely - will update existing records or create new ones
+- **Idempotent**: Can be run multiple times safely
 - **Duplicate prevention**: Skips duplicate subtopics within the same topic
-- **Order number management**: Automatically manages order numbers for Units, Chapters, Topics, and SubTopics
-- **Hierarchical tracking**: Maintains proper parent-child relationships (Unit → Chapter → Topic → SubTopic)
+- **Order number management**: Automatically manages order numbers
+- **Hierarchical tracking**: Maintains Unit → Chapter → Topic → SubTopic relationships
 - **Progress logging**: Shows detailed progress during import
-
-## CSV Format Expected:
-The CSV should have the following columns:
-- Column 1: Exam Number
-- Column 2: Subject Name (Biology, Physics, Chemistry)
-- Column 3: Unit Number
-- Column 4: Unit Name
-- Column 5: Chapter Number
-- Column 6: Chapter Name
-- Column 7: Topic Name
-- Column 8: SubTopic Name/Description
-
-## Notes:
-- Currently imports **only Biology** subject (can be modified in the script)
-- Empty rows are skipped
-- The script handles missing values gracefully
-- Order numbers are auto-incremented within their parent context
 
 ## Troubleshooting:
 If you encounter module import errors, try:
 1. Make sure `package.json` has `"type": "module"`
 2. Or rename the script to `import-neet-biology-data.mjs`
 3. Check that all required environment variables are set in `.env`
-
-
-
