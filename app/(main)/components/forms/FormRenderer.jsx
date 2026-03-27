@@ -30,16 +30,6 @@ const DEFAULT_INLINE_FORM_CONFIG = {
   },
 };
 
-
-// Helper function to capitalize button text
-const capitalizeButtonText = (text) => {
-  if (!text) return "";
-  return text
-    .split(" ")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join(" ");
-};
-
 // Helper function to resolve image path with base path
 const resolveImagePath = (path) => {
   if (!path || typeof path !== "string") return "";
@@ -619,11 +609,7 @@ const FormRenderer = ({
                       </>
                     ) : (
                       <span>
-                        {capitalizeButtonText(
-                          submitButtonText ||
-                            formConfig.settings.buttonText ||
-                            "Submit"
-                        )}
+                        {submitButtonText || formConfig.settings.buttonText || "Submit"}
                       </span>
                     )}
                   </button>

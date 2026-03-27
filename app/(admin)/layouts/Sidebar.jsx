@@ -135,6 +135,7 @@ const ALL_MENU_ITEMS = [
         name: "Settings",
         children: [
           { name: "Site Settings", href: "/admin/site-settings" },
+          { name: "Common CSS", href: "/admin/common-css" },
         ],
       },
     ],

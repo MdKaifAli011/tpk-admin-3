@@ -50,6 +50,7 @@ const ROUTE_PERMISSIONS = [
   { path: "/admin/result-page", minRole: "editor" },
   { path: "/admin/exam-info", minRole: "viewer" },
   { path: "/admin/exam", minRole: "viewer" },
+  { path: "/admin/common-css", minRole: "admin" },
   { path: "/admin/site-settings", minRole: "admin" },
   { path: "/admin/email-settings", minRole: "admin" },
   { path: "/admin/email-templates", minRole: "admin" },
