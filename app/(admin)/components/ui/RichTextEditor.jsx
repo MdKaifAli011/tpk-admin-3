@@ -75,6 +75,7 @@ const RichTextEditor = ({
     title: "",
     description: "",
     imageUrl: "",
+    buttonText: "",
   });
   const [showButtonModal, setShowButtonModal] = useState(false);
   const [showImageModal, setShowImageModal] = useState(false);
@@ -722,6 +723,7 @@ const RichTextEditor = ({
                   title: title.trim(),
                   description: description.trim(),
                   imageUrl: imageUrl.trim(),
+                  buttonText: (contactFormDiv.getAttribute("data-button-text") || "").trim(),
                 });
                 contactFormEditingElementRef.current = contactFormDiv;
                 setShowContactFormModal(true);
@@ -1077,6 +1079,9 @@ const RichTextEditor = ({
     const title = (contactFormOptions.title || "").trim() || formId;
     const description = (contactFormOptions.description || "").trim();
     const imageUrl = (contactFormOptions.imageUrl || "").trim();
+    const buttonText = titleCasePreserveAcronyms(
+      (contactFormOptions.buttonText || "").trim() || "Submit"
+    );
     if (!editor || !formId) return;
 
     const escapeHtml = (str) => {
@@ -1095,6 +1100,8 @@ const RichTextEditor = ({
       description
     )}" data-image-url="${escapeHtml(
       imageUrl
+    )}" data-button-text="${escapeHtml(
+      buttonText
     )}"><span class="contact-form-editor-placeholder" contenteditable="false" style="display: inline-block; padding: 6px 10px; background: #e0e7ff; color: #3730a3; border-radius: 6px; font-size: 13px; border: 1px dashed #818cf8;">📋 Contact Form: ${escapeHtml(title || formId)}</span></div>`;
 
     const editingEl = contactFormEditingElementRef.current;
@@ -1112,7 +1119,7 @@ const RichTextEditor = ({
       editor.insertHtml(divHtml);
     }
     setShowContactFormModal(false);
-    setContactFormOptions({ formId: "", title: "", description: "", imageUrl: "" });
+    setContactFormOptions({ formId: "", title: "", description: "", imageUrl: "", buttonText: "" });
   };
 
   const insertButtonCode = () => {
@@ -1929,7 +1936,7 @@ const RichTextEditor = ({
                 onClick={() => {
                   setShowContactFormModal(false);
                   contactFormEditingElementRef.current = null;
-                  setContactFormOptions({ formId: "", title: "", description: "", imageUrl: "" });
+                  setContactFormOptions({ formId: "", title: "", description: "", imageUrl: "", buttonText: "" });
                 }}
                 className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors shrink-0"
                 aria-label="Close"
@@ -1957,6 +1964,7 @@ const RichTextEditor = ({
                       title: selected.settings?.title || prev.title || selected.formId || selectedId,
                       description: selected.settings?.description || prev.description || "",
                       imageUrl: selected.settings?.imageUrl || prev.imageUrl || "",
+                      buttonText: selected.settings?.buttonText || prev.buttonText || "Submit",
                     }));
                   }}
                   className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm bg-white"
@@ -1984,6 +1992,20 @@ const RichTextEditor = ({
                   className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
                 />
                 <p className="mt-1 text-xs text-gray-500">ID used when submitting leads. Must match a form in Form Management.</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Button Name <span className="text-gray-500 text-xs font-normal">(optional)</span>
+                </label>
+                <input
+                  type="text"
+                  value={contactFormOptions.buttonText}
+                  onChange={(e) =>
+                    setContactFormOptions((prev) => ({ ...prev, buttonText: e.target.value }))
+                  }
+                  placeholder="e.g. Submit, Apply Now"
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
@@ -2034,7 +2056,7 @@ const RichTextEditor = ({
                 onClick={() => {
                   setShowContactFormModal(false);
                   contactFormEditingElementRef.current = null;
-                  setContactFormOptions({ formId: "", title: "", description: "", imageUrl: "" });
+                  setContactFormOptions({ formId: "", title: "", description: "", imageUrl: "", buttonText: "" });
                 }}
                 className="w-full sm:w-auto px-4 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-sm font-medium transition-colors"
               >

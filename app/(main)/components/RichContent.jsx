@@ -548,6 +548,7 @@ const RichContent = forwardRef(({ html = "" }, ref) => {
           title: decodeAttr(attrRegexes.title.exec(fullMatch)?.[1] || ""),
           description: decodeAttr(attrRegexes.description.exec(fullMatch)?.[1] || ""),
           imageUrl: decodeAttr(extractedImageUrl).trim(),
+          buttonText: decodeAttr(attrRegexes.buttonText.exec(fullMatch)?.[1] || ""),
           isInline: true,
           isContactFormInline: true,
         });
@@ -762,6 +763,7 @@ const RichContent = forwardRef(({ html = "" }, ref) => {
                       imageUrl={formData.imageUrl || ""}
                       title={formData.title || ""}
                       description={formData.description || ""}
+                      submitButtonText={formData.buttonText || ""}
                     />
                   </Suspense>
                 </div>

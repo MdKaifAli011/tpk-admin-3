@@ -66,6 +66,7 @@ const FormRenderer = ({
   imageUrl = "",
   title = "",
   description = "",
+  submitButtonText = "",
   inline = false,
 }) => {
   const [formConfig, setFormConfig] = useState(null);
@@ -619,7 +620,9 @@ const FormRenderer = ({
                     ) : (
                       <span>
                         {capitalizeButtonText(
-                          formConfig.settings.buttonText || "Submit"
+                          submitButtonText ||
+                            formConfig.settings.buttonText ||
+                            "Submit"
                         )}
                       </span>
                     )}
