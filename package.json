@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "dev:webpack": "next dev --webpack",
-    "build": "next build",
+    "build": "NODE_ENV=production next build",
     "analyze": "next build",
     "start": "next start",
     "clean": "node -e \"try{require('fs').rmSync('.next',{recursive:true,force:true});console.log('Cleaned .next');}catch(e){if(e.code!=='ENOENT')throw e;console.log('No .next folder');}\"",
