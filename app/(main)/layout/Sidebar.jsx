@@ -155,6 +155,7 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
   // Only treat as Download/Blog/Video when the segment is exact (e.g. /neet/download), not when "download" appears inside a segment (e.g. .../download-neet-scorecard)
   const isDownloadPath = pathSegments[1] === "download";
   const isBlogPath = pathSegments[1] === "blog";
+  const isPagesPath = pathSegments[1] === "pages";
   const isCoursePath = pathSegments[1] === "course";
   const isToolPath = pathSegments[1] === "tool";
   const isResultPath = pathSegments[1] === "result";
@@ -540,10 +541,12 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
       setActiveMenu('result');
     } else if (isVideoLibraryPath) {
       setActiveMenu('video-library');
+    } else if (isPagesPath) {
+      setActiveMenu('pages');
     } else {
       setActiveMenu('subjects');
     }
-  }, [pathname, isNotificationPath, isBlogPath, isDownloadPath, isResultPath, isVideoLibraryPath]);
+  }, [pathname, isNotificationPath, isBlogPath, isDownloadPath, isResultPath, isVideoLibraryPath, isPagesPath]);
 
   // debounced query filtered tree (token-based / bag-of-words: "laws of motion class 9" matches any combination)
   const normalizedQuery = debouncedQuery.trim().toLowerCase();
@@ -910,6 +913,31 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
                 ) : (
                   <li className="px-3 py-2 text-sm sm:text-md font-medium text-[14px] text-gray-400">
                     Blog
+                  </li>
+                )}
+
+                {/* Exam custom pages index */}
+                {activeExamSlug ? (
+                  <li>
+                    <Link
+                      href={`/${activeExamSlug}/pages`}
+                      onClick={() => {
+                        setActiveMenu("pages");
+                        closeOnMobile();
+                      }}
+                      className={`flex items-center px-3 py-2 font-semibold rounded-lg transition-all duration-200 ${isPagesPath && pathSegments.length === 2
+                        ? "bg-indigo-100/60 shadow-sm text-indigo-900"
+                        : "text-black hover:text-indigo-600 hover:bg-gray-50"
+                        }`}
+                      aria-current={isPagesPath && pathSegments.length === 2 ? "page" : undefined}
+                      aria-label="View all pages for this exam"
+                    >
+                      Pages
+                    </Link>
+                  </li>
+                ) : (
+                  <li className="px-3 py-2 text-sm sm:text-md font-medium text-[14px] text-gray-400">
+                    Pages
                   </li>
                 )}
 

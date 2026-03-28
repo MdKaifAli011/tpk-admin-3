@@ -27,8 +27,8 @@ export default function MainLayoutClient({ children }) {
 
   // Memoize showSidebar to prevent unnecessary recalculations
   const showSidebar = useMemo(() => {
-    // No sidebar on: home, contact, calculator, store, explore, auth, tool pages, or exam-level pages
-    const isExamPagesRoute = pathname?.match(/^\/[^/]+\/pages(\/|$)/);
+    // No sidebar on: home, contact, calculator, store, explore, auth, tool pages, site-level /pages, or exam custom page *detail* (/exam/pages/slug — not the index list at /exam/pages)
+    const isExamPageDetailRoute = pathname?.match(/^\/[^/]+\/pages\/.+/);
     const isToolPage = pathname?.includes("/tool");
     return (
       pathname !== "/" &&
@@ -40,7 +40,7 @@ export default function MainLayoutClient({ children }) {
       !pathname?.startsWith("/forgot-password") &&
       !pathname?.startsWith("/reset-password") &&
       !pathname?.startsWith("/pages") &&
-      !isExamPagesRoute
+      !isExamPageDetailRoute
     );
   }, [pathname]);
 

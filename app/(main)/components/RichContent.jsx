@@ -1,8 +1,5 @@
 "use client";
 
-/* Rich HTML blocks (tk-*, chapter modules, etc.) — shared with admin RichTextEditor via /api/richtext-common-css */
-import "../commanStyle.css";
-
 import React, {
   useEffect,
   useRef,
@@ -17,6 +14,9 @@ import { lazy, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import loadMathJax from "../lib/utils/mathJaxLoader";
 import { logger } from "@/utils/logger";
+
+const RICH_COMMON_CSS_LINK_ID = "rich-common-css-link";
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
 
 // Lazy load FormRenderer to reduce initial bundle size
 const FormRenderer = lazy(() =>
@@ -182,6 +182,44 @@ const RichContent = forwardRef(({ html = "" }, ref) => {
       if (mathJaxTimerRef.current) {
         clearTimeout(mathJaxTimerRef.current);
       }
+    };
+  }, []);
+
+  // Load shared rich-content CSS at runtime from API so admin edits apply without rebuild.
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    let cancelled = false;
+
+    const ensureCssLink = async () => {
+      let href = `${basePath}/api/richtext-common-css`;
+      try {
+        const versionRes = await fetch(
+          `${basePath}/api/richtext-common-css-version`,
+          { cache: "no-store" }
+        );
+        const payload = await versionRes.json();
+        const version = payload?.data?.version;
+        if (version) href = `${href}?v=${encodeURIComponent(version)}`;
+      } catch {
+        // Fallback to non-versioned URL; CSS route still has short SWR cache.
+      }
+
+      if (cancelled) return;
+      let linkEl = document.getElementById(RICH_COMMON_CSS_LINK_ID);
+      if (!linkEl) {
+        linkEl = document.createElement("link");
+        linkEl.id = RICH_COMMON_CSS_LINK_ID;
+        linkEl.rel = "stylesheet";
+        document.head.appendChild(linkEl);
+      }
+      if (linkEl.getAttribute("href") !== href) {
+        linkEl.setAttribute("href", href);
+      }
+    };
+
+    ensureCssLink();
+    return () => {
+      cancelled = true;
     };
   }, []);
 

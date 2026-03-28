@@ -13,6 +13,26 @@ const MATHJAX_SCRIPT = `${basePath}/vendor/mathjax/MathJax.js?config=TeX-AMS_HTM
 const CKEDITOR_CONTENTS_CSS = `${basePath}/vendor/ckeditor/contents.css`;
 /** Matches RichContent: app/(main)/commanStyle.css (served for CKEditor iframe) */
 const RICHTEXT_COMMON_CSS = `${basePath}/api/richtext-common-css`;
+let cachedRichtextCssHref = null;
+
+async function getRichtextCommonCssHref() {
+  if (cachedRichtextCssHref) return cachedRichtextCssHref;
+  try {
+    const res = await fetch(`${basePath}/api/richtext-common-css-version`, {
+      cache: "no-store",
+    });
+    const payload = await res.json();
+    const version = payload?.data?.version;
+    if (version) {
+      cachedRichtextCssHref = `${RICHTEXT_COMMON_CSS}?v=${encodeURIComponent(version)}`;
+      return cachedRichtextCssHref;
+    }
+  } catch {
+    // fallback below
+  }
+  cachedRichtextCssHref = RICHTEXT_COMMON_CSS;
+  return cachedRichtextCssHref;
+}
 
 // Shared toolbar style: only remove from document when last RichTextEditor unmounts (avoids toolbar glitch when multiple editors or re-mounts).
 let globalToolbarStyleRefCount = 0;
@@ -494,12 +514,15 @@ const RichTextEditor = ({
       ];
       if (!hideAdminTools) extraPluginsList.push("rteInsertTools");
 
+      // Use stable versioned CSS URL for high cache hit-rate with instant invalidation.
+      const runtimeRichtextCommonCss = await getRichtextCommonCssHref();
+
       const editorConfig = {
         height: 420,
         removePlugins: "resize",
         extraPlugins: extraPluginsList.join(","),
         mathJaxLib: MATHJAX_SCRIPT,
-        contentsCss: [CKEDITOR_CONTENTS_CSS, RICHTEXT_COMMON_CSS],
+        contentsCss: [CKEDITOR_CONTENTS_CSS, runtimeRichtextCommonCss],
         bodyClass: "rich-text-content rich-html-common",
         autoParagraph: true,
         ignoreEmptyParagraph: true,
