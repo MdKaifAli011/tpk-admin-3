@@ -11,6 +11,20 @@ import { requireAuth } from "@/middleware/authMiddleware";
 import { sendMail } from "@/lib/mailer";
 import { getEmailTemplateContent } from "@/lib/getEmailTemplateContent";
 import { isSpamOrFakePhone } from "@/lib/phoneSpamCheck";
+import {
+  parseUsTimezoneFromBody,
+  parseTimezoneTellUsFromBody,
+} from "@/constants/usTimezone";
+
+function parsePreferredDateFromBody(raw) {
+  if (raw === undefined) return { ok: true, skip: true };
+  if (raw === null || raw === "") return { ok: true, value: null };
+  const d = new Date(raw);
+  if (Number.isNaN(d.getTime())) {
+    return { ok: false, message: "preferredDate must be a valid date" };
+  }
+  return { ok: true, value: d };
+}
 
 export async function GET(request) {
   try {
@@ -29,8 +43,18 @@ export async function GET(request) {
     const searchQuery = searchParams.get("search");
     const dateFrom = searchParams.get("dateFrom");
     const dateTo = searchParams.get("dateTo");
+    const usTimezoneFilter = searchParams.get("usTimezone");
+    const preferredDateFrom = searchParams.get("preferredDateFrom");
+    const preferredDateTo = searchParams.get("preferredDateTo");
 
     const query = {};
+
+    if (usTimezoneFilter && usTimezoneFilter !== "all") {
+      const parsedTz = parseUsTimezoneFromBody(usTimezoneFilter);
+      if (parsedTz.ok && !parsedTz.skip && parsedTz.value) {
+        query.usTimezone = parsedTz.value;
+      }
+    }
 
     if (countryFilter) {
       query.country = { $regex: countryFilter, $options: "i" };
@@ -49,6 +73,8 @@ export async function GET(request) {
         { name: { $regex: searchQuery, $options: "i" } },
         { email: { $regex: searchQuery, $options: "i" } },
         { phoneNumber: { $regex: searchQuery, $options: "i" } },
+        { usTimezone: { $regex: searchQuery, $options: "i" } },
+        { timezoneTellUs: { $regex: searchQuery, $options: "i" } },
       ];
     }
 
@@ -61,6 +87,18 @@ export async function GET(request) {
         const endDate = new Date(dateTo);
         endDate.setHours(23, 59, 59, 999);
         query.createdAt.$lte = endDate;
+      }
+    }
+
+    if (preferredDateFrom || preferredDateTo) {
+      query.preferredDate = {};
+      if (preferredDateFrom) {
+        query.preferredDate.$gte = new Date(preferredDateFrom);
+      }
+      if (preferredDateTo) {
+        const endPd = new Date(preferredDateTo);
+        endPd.setHours(23, 59, 59, 999);
+        query.preferredDate.$lte = endPd;
       }
     }
 
@@ -123,6 +161,14 @@ export async function POST(request) {
       return errorResponse("Please enter a valid phone number", 400);
     }
 
+    const tzParsed = parseUsTimezoneFromBody(body.usTimezone);
+    if (!tzParsed.ok) return errorResponse(tzParsed.message, 400);
+    const tellParsed = parseTimezoneTellUsFromBody(body.timezoneTellUs);
+    if (!tellParsed.ok) return errorResponse(tellParsed.message, 400);
+
+    const preferredParsed = parsePreferredDateFromBody(body.preferredDate);
+    if (!preferredParsed.ok) return errorResponse(preferredParsed.message, 400);
+
     const email = body.email.toLowerCase().trim();
     const existingLead = await Lead.findOne({ email });
 
@@ -149,6 +195,15 @@ export async function POST(request) {
       if (body.form_id !== undefined) existingLead.form_id = body.form_id?.trim() || "";
       if (body.source !== undefined) existingLead.source = body.source?.trim() || ""; // Update source with latest URL
       if (body.prepared !== undefined) existingLead.prepared = body.prepared?.trim() || "";
+      if (!tzParsed.skip) {
+        existingLead.usTimezone = tzParsed.value;
+      }
+      if (!tellParsed.skip) {
+        existingLead.timezoneTellUs = tellParsed.value;
+      }
+      if (!preferredParsed.skip) {
+        existingLead.preferredDate = preferredParsed.value;
+      }
 
       // Save the document - Mongoose will automatically update updatedAt timestamp when timestamps: true
       lead = await existingLead.save();
@@ -171,6 +226,15 @@ export async function POST(request) {
       if (body.form_id !== undefined) createData.form_id = body.form_id?.trim() || "";
       if (body.source !== undefined) createData.source = body.source?.trim() || "";
       if (body.prepared !== undefined) createData.prepared = body.prepared?.trim() || "";
+      if (!tzParsed.skip) {
+        createData.usTimezone = tzParsed.value;
+      }
+      if (!tellParsed.skip) {
+        createData.timezoneTellUs = tellParsed.value;
+      }
+      if (!preferredParsed.skip) {
+        createData.preferredDate = preferredParsed.value;
+      }
 
       lead = await Lead.create(createData);
       message = "Lead submitted successfully";

@@ -6,6 +6,24 @@ import {
   getPermissionMessage,
 } from "../../hooks/usePermissions";
 import api from "@/lib/api";
+import { isLeadFormIdBlackBadge } from "@/constants/leadFormBadges";
+
+function formatPreferredDateOnly(dateString) {
+  if (!dateString) return null;
+  const date = new Date(dateString);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+}
+
+function formatLeadCountryDisplay(country) {
+  if (country == null || country === "") return null;
+  const s = String(country).trim();
+  return s.length ? s : null;
+}
 
 // Helper function to construct full URL from path or return original URL
 const getFullUrl = (source) => {
@@ -79,7 +97,8 @@ const LeadTable = forwardRef(({ leads, onView, onDelete, selectedLeads: selected
   const setSelectedLeads = onSelectionChange || setInternalSelected;
   const highlightedFormIds = highlightedFormIdsProp instanceof Set ? highlightedFormIdsProp : new Set(Array.isArray(highlightedFormIdsProp) ? highlightedFormIdsProp : []);
 
-  const isHighlightFormId = (formId) => formId && highlightedFormIds.has(String(formId).trim());
+  const isHighlightFormId = (formId) =>
+    isLeadFormIdBlackBadge(formId, highlightedFormIds);
 
   // Helper function to get the display date (updatedAt if updated, otherwise createdAt)
   const getDisplayDate = (lead) => {
@@ -138,13 +157,17 @@ const LeadTable = forwardRef(({ leads, onView, onDelete, selectedLeads: selected
       const displayDate = getDisplayDate(lead);
       const date = displayDate ? new Date(displayDate).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "N/A";
       const phoneNumber = lead.phoneNumber ? String(lead.phoneNumber).trim() : "";
+      const prefD = formatPreferredDateOnly(lead.preferredDate);
       return [
         formatCSVField(date),
-        formatCSVField(lead.country || ""),
+        formatCSVField(formatLeadCountryDisplay(lead.country) ?? ""),
         formatCSVField(lead.name || ""),
         formatCSVField(lead.email || ""),
         formatCSVField(lead.className || ""),
         formatCSVField(lead.prepared || ""),
+        formatCSVField(prefD || ""),
+        formatCSVField(lead.usTimezone || ""),
+        formatCSVField(lead.timezoneTellUs || ""),
         formatCSVField(lead.form_id || lead.form_name || ""),
         formatPhoneNumberForCSV(phoneNumber),
         formatCSVField(lead.source || ""),
@@ -334,6 +357,9 @@ const LeadTable = forwardRef(({ leads, onView, onDelete, selectedLeads: selected
               <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Email</th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Class</th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Prepare</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Pref. date</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">US TZ</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Tell us</th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Form ID</th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Phone</th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Source</th>
@@ -345,6 +371,7 @@ const LeadTable = forwardRef(({ leads, onView, onDelete, selectedLeads: selected
             {leads.map((lead, index) => {
               const leadId = lead._id || lead.id;
               const isSelected = selectedLeads.has(leadId);
+              const countryDisplay = formatLeadCountryDisplay(lead.country);
               const isHighlightRow = isHighlightCountry(lead.country);
 
               return (
@@ -388,14 +415,16 @@ const LeadTable = forwardRef(({ leads, onView, onDelete, selectedLeads: selected
                     </span>
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap">
-                    {isHighlightRow ? (
-                      <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-yellow-400/90 text-yellow-900 border border-yellow-500/60 shadow-sm">
-                        {lead.country}
-                      </span>
+                    {countryDisplay ? (
+                      isHighlightRow ? (
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-yellow-400/90 text-yellow-900 border border-yellow-500/60 shadow-sm">
+                          {countryDisplay}
+                        </span>
+                      ) : (
+                        <span className="text-sm text-gray-600">{countryDisplay}</span>
+                      )
                     ) : (
-                      <span className="text-sm text-gray-600">
-                        {lead.country}
-                      </span>
+                      <span className="text-sm text-gray-400 italic">—</span>
                     )}
                   </td>
 
@@ -421,6 +450,33 @@ const LeadTable = forwardRef(({ leads, onView, onDelete, selectedLeads: selected
                       </span>
                     ) : (
                       <span className="text-sm text-gray-400 italic">N/A</span>
+                    )}
+                  </td>
+                  <td className="px-2 py-2 whitespace-nowrap max-w-[120px]">
+                    {formatPreferredDateOnly(lead.preferredDate) ? (
+                      <span className="text-xs text-slate-700 font-medium" title={formatPreferredDateOnly(lead.preferredDate)}>
+                        {formatPreferredDateOnly(lead.preferredDate)}
+                      </span>
+                    ) : (
+                      <span className="text-sm text-gray-400 italic">—</span>
+                    )}
+                  </td>
+                  <td className="px-2 py-2 whitespace-nowrap">
+                    {lead.usTimezone ? (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold bg-indigo-100 text-indigo-800 border border-indigo-200/80">
+                        {lead.usTimezone}
+                      </span>
+                    ) : (
+                      <span className="text-sm text-gray-400 italic">—</span>
+                    )}
+                  </td>
+                  <td className="px-2 py-2 whitespace-nowrap max-w-[140px]">
+                    {lead.timezoneTellUs ? (
+                      <span className="text-xs text-slate-600 truncate block" title={lead.timezoneTellUs}>
+                        {lead.timezoneTellUs}
+                      </span>
+                    ) : (
+                      <span className="text-sm text-gray-400 italic">—</span>
                     )}
                   </td>
                   <td className="px-2 py-2 whitespace-nowrap">
@@ -521,6 +577,7 @@ const LeadTable = forwardRef(({ leads, onView, onDelete, selectedLeads: selected
         {leads.map((lead, index) => {
           const leadId = lead._id || lead.id;
           const isSelected = selectedLeads.has(leadId);
+          const countryDisplay = formatLeadCountryDisplay(lead.country);
           const isHighlightRow = isHighlightCountry(lead.country);
 
           return (
@@ -594,14 +651,16 @@ const LeadTable = forwardRef(({ leads, onView, onDelete, selectedLeads: selected
                 </div>
                 <div>
                   <div className="text-xs text-gray-500">Country</div>
-                  {isHighlightRow ? (
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-md text-sm font-semibold bg-yellow-400 text-yellow-900 border border-yellow-500 shadow-sm truncate max-w-full">
-                      {lead.country}
-                    </span>
+                  {countryDisplay ? (
+                    isHighlightRow ? (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-md text-sm font-semibold bg-yellow-400 text-yellow-900 border border-yellow-500 shadow-sm truncate max-w-full">
+                        {countryDisplay}
+                      </span>
+                    ) : (
+                      <div className="text-sm font-medium text-gray-900 truncate">{countryDisplay}</div>
+                    )
                   ) : (
-                    <div className="text-sm font-medium text-gray-900 truncate">
-                      {lead.country}
-                    </div>
+                    <span className="text-sm text-gray-400 italic">—</span>
                   )}
                 </div>
                 <div>
@@ -616,6 +675,31 @@ const LeadTable = forwardRef(({ leads, onView, onDelete, selectedLeads: selected
                     <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-purple-100 text-purple-700">
                       {lead.prepared}
                     </span>
+                  </div>
+                )}
+                {formatPreferredDateOnly(lead.preferredDate) && (
+                  <div>
+                    <div className="text-xs text-gray-500 mb-0.5">Pref. date</div>
+                    <span className="text-sm font-medium text-gray-900">
+                      {formatPreferredDateOnly(lead.preferredDate)}
+                    </span>
+                  </div>
+                )}
+                {(lead.usTimezone || lead.timezoneTellUs) && (
+                  <div className="col-span-2">
+                    <div className="text-xs text-gray-500 mb-0.5">US TZ / Tell us</div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {lead.usTimezone && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold bg-indigo-100 text-indigo-800 border border-indigo-200">
+                          {lead.usTimezone}
+                        </span>
+                      )}
+                      {lead.timezoneTellUs && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-slate-100 text-slate-800 border border-slate-200 break-words max-w-full">
+                          {lead.timezoneTellUs}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 )}
                 {(lead.form_id || lead.form_name) && (

@@ -14,12 +14,12 @@ export async function GET() {
         headers: {
           "Cache-Control": "no-store",
         },
-      }
+      },
     );
   } catch {
     return NextResponse.json(
       { success: false, message: "Failed to get CSS version" },
-      { status: 500, headers: { "Cache-Control": "no-store" } }
+      { status: 500, headers: { "Cache-Control": "no-store" } },
     );
   }
 }

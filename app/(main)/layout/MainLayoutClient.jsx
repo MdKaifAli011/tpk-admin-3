@@ -27,13 +27,11 @@ export default function MainLayoutClient({ children }) {
 
   // Memoize showSidebar to prevent unnecessary recalculations
   const showSidebar = useMemo(() => {
-    // No sidebar on: home, contact, calculator, store, explore, auth, tool pages, site-level /pages, or exam custom page *detail* (/exam/pages/slug — not the index list at /exam/pages)
+    // No sidebar on: home, contact, calculator, store, explore, auth, site-level /pages, or exam custom page *detail* (/exam/pages/slug — not the index list at /exam/pages). Tool routes (/exam/tool) show the sidebar like other exam hubs.
     const isExamPageDetailRoute = pathname?.match(/^\/[^/]+\/pages\/.+/);
-    const isToolPage = pathname?.includes("/tool");
     return (
       pathname !== "/" &&
       pathname !== "/contact" &&
-      !isToolPage &&
       !pathname?.startsWith("/calculator") &&
       !pathname?.startsWith("/store") &&
       !pathname?.startsWith("/explore") &&

@@ -15,6 +15,7 @@ import {
 } from "../../hooks/usePermissions";
 import { useRouter } from "next/navigation";
 import { config } from "@/config/config";
+import { isLeadFormIdBlackBadge } from "@/constants/leadFormBadges";
 
 const LEAD_ACCESS_STORAGE_KEY = "lead-management-access-verified";
 const LEAD_ACCESS_PASSWORD =
@@ -893,18 +894,57 @@ const LeadManagement = () => {
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider">Country</label>
-                  {isHighlightCountry(selectedLead.country) ? (
-                    <span className="mt-1 inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-yellow-400/90 text-yellow-900 border border-yellow-500/60 shadow-sm">
-                      {selectedLead.country}
-                    </span>
+                  {selectedLead.country != null && String(selectedLead.country).trim() ? (
+                    isHighlightCountry(selectedLead.country) ? (
+                      <span className="mt-1 inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-yellow-400/90 text-yellow-900 border border-yellow-500/60 shadow-sm">
+                        {String(selectedLead.country).trim()}
+                      </span>
+                    ) : (
+                      <p className="mt-1 text-sm font-semibold text-slate-900">{String(selectedLead.country).trim()}</p>
+                    )
                   ) : (
-                    <p className="mt-1 text-sm font-semibold text-slate-900">{selectedLead.country}</p>
+                    <p className="mt-1 text-sm text-slate-400">—</p>
                   )}
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider">Class Name</label>
                   <p className="mt-1 text-sm font-semibold text-slate-900">{selectedLead.className}</p>
                 </div>
+                {selectedLead.prepared && (
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider">Prepare / notes</label>
+                    <p className="mt-1 text-sm font-semibold text-slate-900 whitespace-pre-wrap break-words">{selectedLead.prepared}</p>
+                  </div>
+                )}
+                {selectedLead.preferredDate && (
+                  <div>
+                    <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider">Preferred date</label>
+                    <p className="mt-1 text-sm font-semibold text-slate-900">
+                      {new Date(selectedLead.preferredDate).toLocaleDateString("en-US", {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      })}
+                    </p>
+                  </div>
+                )}
+                {(selectedLead.usTimezone || selectedLead.timezoneTellUs) && (
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider">YOUR US timezone / Tell us</label>
+                    <div className="mt-1 flex flex-wrap gap-2 items-start">
+                      {selectedLead.usTimezone && (
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-indigo-100 text-indigo-800 border border-indigo-200">
+                          {selectedLead.usTimezone}
+                        </span>
+                      )}
+                      {selectedLead.timezoneTellUs && (
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-100 text-slate-800 border border-slate-200 max-w-full break-words">
+                          {selectedLead.timezoneTellUs}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
                 <div>
                   <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider">Phone</label>
                   <p className="mt-1 text-sm font-semibold text-slate-900">
@@ -949,7 +989,13 @@ const LeadManagement = () => {
                   <div>
                     <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider">Form ID</label>
                     <p className="mt-1">
-                      <code className={`text-xs px-2 py-1 rounded font-mono ${highlightedFormIds.includes(selectedLead.form_id) ? "bg-black text-white" : "bg-slate-100 text-slate-800"}`}>
+                      <code
+                        className={`text-xs px-2 py-1 rounded font-mono ${
+                          isLeadFormIdBlackBadge(selectedLead.form_id, highlightedFormIds)
+                            ? "bg-black text-white"
+                            : "bg-slate-100 text-slate-800"
+                        }`}
+                      >
                         {selectedLead.form_id}
                       </code>
                     </p>

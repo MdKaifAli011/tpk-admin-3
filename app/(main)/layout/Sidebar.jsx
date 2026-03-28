@@ -1019,7 +1019,7 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
                   <li>
                     <Link
                       href="/neet/tool"
-                      className={`w-full flex items-center justify-between px-3 py-2 font-semibold rounded-lg transition-all duration-200 ${isToolPath
+                      className={`w-full flex items-center justify-between px-3 py-2 font-semibold rounded-lg transition-all duration-200 ${isToolPath && activeExamSlug === "neet"
                         ? "bg-indigo-100/60 shadow-sm text-indigo-900"
                         : "text-black hover:text-indigo-600 hover:bg-gray-50"
                         }`}
@@ -1027,6 +1027,23 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
                       aria-label="NEET seat allotment tool — filter by year and round"
                     >
                       <span>Tools</span>
+                    </Link>
+                  </li>
+                ) : null}
+
+                {/* SAT: tools — /sat/tool */}
+                {activeExamSlug && (activeExamSlug === "sat" || activeExam?.name?.toLowerCase?.() === "sat") ? (
+                  <li>
+                    <Link
+                      href="/sat/tool"
+                      className={`w-full flex items-center justify-between px-3 py-2 font-semibold rounded-lg transition-all duration-200 ${isToolPath && activeExamSlug === "sat"
+                        ? "bg-indigo-100/60 shadow-sm text-indigo-900"
+                        : "text-black hover:text-indigo-600 hover:bg-gray-50"
+                        }`}
+                      onClick={closeOnMobile}
+                      aria-label="SAT tools — readiness analyzer and more"
+                    >
+                      <span>Sat Tool</span>
                     </Link>
                   </li>
                 ) : null}

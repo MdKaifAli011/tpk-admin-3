@@ -63,8 +63,8 @@ const Toast = ({ message, type, duration, onClose }) => {
       onMouseLeave={() => setHovered(false)}
       className={`transform transition-all duration-300 ${
         visible
-          ? "translate-x-0 opacity-100 scale-100"
-          : "translate-x-full opacity-0 scale-95"
+          ? "translate-y-0 opacity-100 scale-100"
+          : "translate-y-full opacity-0 scale-95"
       }`}
     >
       <div
@@ -112,7 +112,7 @@ export const ToastContainer = ({ toasts, removeToast }) => {
   if (typeof document === "undefined") return null;
 
   return createPortal(
-    <div className="fixed top-6 right-6 z-[999999] w-full max-w-sm space-y-3">
+    <div className="fixed bottom-6 left-6 z-[999999] w-full max-w-sm space-y-3">
       {toasts.map((toast) => (
         <Toast
           key={toast.id}
