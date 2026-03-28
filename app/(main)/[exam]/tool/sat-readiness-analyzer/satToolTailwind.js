@@ -73,6 +73,10 @@ export const stProgLblDone = "font-semibold text-emerald-600";
 export const stCard =
   "rounded-xl border border-slate-200/90 bg-white p-4 shadow-sm ring-1 ring-slate-900/[0.04] sm:p-5";
 
+/** Lead / unlock step — distinct indigo frame */
+export const stCardLead =
+  "rounded-xl border border-indigo-200/80 bg-gradient-to-b from-white to-indigo-50/[0.35] p-4 shadow-md ring-1 ring-indigo-100/50 sm:p-5";
+
 export const stCh = "mb-5 flex items-start gap-3 sm:items-center";
 
 export const stChIco =

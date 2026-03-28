@@ -16,7 +16,7 @@ import {
 } from "@/app/(main)/components/constants/formConstants";
 import { validatePhoneNumber } from "@/app/(main)/components/utils/formValidation";
 import { SAT_ENG_TOPICS, SAT_MATH_TOPICS } from "./satReadinessData";
-import { buildSatLeadPrepared } from "./satReadinessLead";
+import { SAT_LEAD_FORM_ID, SAT_LEAD_PREPARED } from "./satReadinessLead";
 import { downloadSatReadinessPdf } from "./satReadinessPdf";
 import * as sat from "./satToolTailwind";
 
@@ -218,11 +218,6 @@ export default function SatReadinessAnalyzerClient({ examSlug }) {
   const engTopics = useMemo(
     () => SAT_ENG_TOPICS.map((t, i) => ({ ...t, _i: i })),
     []
-  );
-
-  const curScoreLabel = useMemo(
-    () => CUR_SCORE_OPTS.find((o) => o.v === curScore)?.l ?? "",
-    [curScore]
   );
 
   const setMathVal = useCallback((id, v) => {
@@ -429,18 +424,6 @@ export default function SatReadinessAnalyzerClient({ examSlug }) {
         "Excellent work. Maintain your prep and aim even higher.";
     }
 
-    const prepared = buildSatLeadPrepared({
-      grade,
-      studyHrs,
-      curScoreLabel,
-      tgtScore: TGT_SCORE_OPTS.find((o) => o.v === tgtScore)?.l ?? tgtScore,
-      testDateMos: testDate || "",
-      interest,
-      mathScore: m.score,
-      engScore: e.score,
-      total: tot,
-    });
-
     const name = `${fn} ${lname.trim()}`.trim() || fn;
     const sourcePath =
       typeof window !== "undefined"
@@ -455,10 +438,10 @@ export default function SatReadinessAnalyzerClient({ examSlug }) {
         country: country.trim(),
         className: grade.trim(),
         phoneNumber: countryCode + phoneLocal.trim(),
-        form_id: "sat-readiness-analyzer",
+        form_id: SAT_LEAD_FORM_ID,
         form_name: "SAT Readiness Analyzer",
         source: sourcePath,
-        prepared,
+        prepared: SAT_LEAD_PREPARED,
       });
 
       if (!res.data?.success) {
@@ -1005,7 +988,7 @@ export default function SatReadinessAnalyzerClient({ examSlug }) {
             )}
 
             {step === 4 && (
-              <div className={sat.stCard} id="step4">
+              <div className={sat.stCardLead} id="step4">
                 <div className={sat.stTeaser}>
                   <div className={sat.stTeaserTop}>
                     <div className="text-[22px] leading-none">🎯</div>

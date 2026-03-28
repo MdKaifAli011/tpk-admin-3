@@ -1,26 +1,13 @@
 /**
- * Build `prepared` notes for Lead API from SAT analyzer answers + scores.
+ * Lead API fields for SAT Readiness Analyzer.
+ * Profile + scores live in Lead.className, source, form_id, etc.; `prepared` stays minimal for admin UI.
  */
-export function buildSatLeadPrepared({
-  grade,
-  studyHrs,
-  curScoreLabel,
-  tgtScore,
-  testDateMos,
-  interest,
-  mathScore,
-  engScore,
-  total,
-}) {
-  const lines = [
-    "SAT Readiness Analyzer",
-    `Grade: ${grade || "—"}`,
-    `Study hours/week: ${studyHrs || "—"}`,
-    `Current SAT (band): ${curScoreLabel || "—"}`,
-    `Target score: ${tgtScore || "—"}`,
-    `Test timeline (months): ${testDateMos ?? "—"}`,
-    `Coaching interest: ${interest || "—"}`,
-    `Estimated scores — Math: ${mathScore}, R&W: ${engScore}, Total: ${total}`,
-  ];
-  return lines.join("\n");
-}
+
+/** Lead.prepared — single placeholder so the admin “Prepared” column stays clean. */
+export const SAT_LEAD_PREPARED = "-";
+
+/**
+ * Lead.form_id — stable Pascal-Case id for filters, badges, and reporting.
+ * (Matches product convention: SAT-Readiness-Analyzer.)
+ */
+export const SAT_LEAD_FORM_ID = "SAT-Readiness-Analyzer";

@@ -3,6 +3,9 @@
  */
 export const LEAD_FORM_IDS_BLACK_BADGE = new Set([
   "neet-coaching-page",
+  /** SAT tool — current id */
+  "SAT-Readiness-Analyzer",
+  /** legacy submissions */
   "sat-readiness-analyzer",
 ]);
 
