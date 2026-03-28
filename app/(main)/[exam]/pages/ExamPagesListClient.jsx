@@ -161,10 +161,7 @@ const ExamPagesListClient = ({ pages, examSlug, children }) => {
   return (
     <ExamPagesSearchContext.Provider value={{ searchQuery, setSearchQuery }}>
       <div
-        className="
-          flex flex-col w-full min-w-0
-          min-h-[calc(100svh-var(--navbar-height,72px)-2.5rem)]
-        "
+        className="flex flex-col w-full min-w-0 exam-hub-min-h"
       >
         {children}
 

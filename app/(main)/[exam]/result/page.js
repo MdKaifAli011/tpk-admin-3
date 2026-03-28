@@ -60,7 +60,7 @@ export default async function ResultIndexPage({ params }) {
   ]);
 
   return (
-    <div className="space-y-6 py-4">
+    <div className="space-y-6 py-4 exam-hub-min-h">
       <nav aria-label="Breadcrumb" className="text-sm">
         <ol className="flex flex-wrap items-center gap-x-2 gap-y-1 text-gray-600">
           <li>

@@ -547,7 +547,7 @@ export default function PrimeVideoClient({ exams, currentExamSlug, filterLevel, 
 
   if (!hasContent) {
     return (
-      <section className="bg-transparent font-sans">
+      <section className="bg-transparent font-sans exam-hub-min-h">
         <div className="overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm">
           <div className="border-b border-gray-100 bg-gradient-to-r from-indigo-50/50 via-white to-purple-50/50 px-6 py-8 text-center">
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-gray-100">
@@ -564,7 +564,7 @@ export default function PrimeVideoClient({ exams, currentExamSlug, filterLevel, 
   }
 
   return (
-    <section className="space-y-6 bg-transparent font-sans antialiased">
+    <section className="space-y-6 bg-transparent font-sans antialiased exam-hub-min-h">
       <div className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
 
         {/* Header: title + stats, then exam/subject controls grouped */}

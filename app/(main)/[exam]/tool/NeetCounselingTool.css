@@ -26,7 +26,6 @@
   font-family: "Inter", Arial, sans-serif;
   /* background: linear-gradient(180deg, #eef5ff 0%, #f7fbff 30%, #f4f8ff 100%); */
   color: var(--neet-text);
-  min-height: 100vh;
   padding-bottom: 100px;
   
 }

@@ -217,7 +217,7 @@ export default function NeetCounselingToolClient({ examSlug }) {
   const colCount = tableCols.length;
 
   return (
-    <div className="neet-tool">
+    <div className="neet-tool exam-hub-min-h">
       <div className="">
         <section className="hero">
           <div className="hero-grid">

@@ -25,7 +25,7 @@ export default async function ExamNotificationPage({ params }) {
   const slug = exam.slug || createSlug(examName);
 
   return (
-    <div className="py-6 px-4 max-w-7xl mx-auto">
+    <div className="py-6 px-4 max-w-7xl mx-auto exam-hub-min-h">
       <section className="hero-section" aria-labelledby="notification-title">
         <h1 id="notification-title" className="text-2xl font-bold text-gray-900 mb-2">
           {examName} Notifications

@@ -44,7 +44,7 @@ export default async function VideoLibraryPathPage({ params }) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 exam-hub-min-h">
       <PrimeVideoClient
         exams={exams}
         currentExamSlug={currentSlug || undefined}

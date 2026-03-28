@@ -55,7 +55,7 @@ const DownloadPageClient = ({ exam, examSlug, examName }) => {
   const hasMore = folders.length < totalFolders;
 
   return (
-    <div className="space-y-6 bg-gray-50/80 min-h-screen pb-8">
+    <div className="space-y-6 bg-gray-50/80 exam-hub-min-h pb-8">
       {/* Header - matches app Card gradient + HeaderCard style */}
       <Card variant="gradient" hover={false} className="p-4 sm:p-5 min-h-[140px] hero-section">
         <Link

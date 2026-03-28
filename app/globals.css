@@ -8,6 +8,11 @@
   --navbar-height: 72px;
 }
 
+/* Sidebar hubs: Blog, Pages, Downloads, Courses, Tools, Result, Video Library, Notifications */
+.exam-hub-min-h {
+  min-height: calc(100svh - var(--navbar-height, 72px) - 2.5rem);
+}
+
 body {
   font-family: var(--font-geist-sans);
 }

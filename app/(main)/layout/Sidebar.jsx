@@ -916,30 +916,7 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
                   </li>
                 )}
 
-                {/* Exam custom pages index */}
-                {activeExamSlug ? (
-                  <li>
-                    <Link
-                      href={`/${activeExamSlug}/pages`}
-                      onClick={() => {
-                        setActiveMenu("pages");
-                        closeOnMobile();
-                      }}
-                      className={`flex items-center px-3 py-2 font-semibold rounded-lg transition-all duration-200 ${isPagesPath && pathSegments.length === 2
-                        ? "bg-indigo-100/60 shadow-sm text-indigo-900"
-                        : "text-black hover:text-indigo-600 hover:bg-gray-50"
-                        }`}
-                      aria-current={isPagesPath && pathSegments.length === 2 ? "page" : undefined}
-                      aria-label="View all pages for this exam"
-                    >
-                      Pages
-                    </Link>
-                  </li>
-                ) : (
-                  <li className="px-3 py-2 text-sm sm:text-md font-medium text-[14px] text-gray-400">
-                    Pages
-                  </li>
-                )}
+                
 
                 {/* Download with expandable folders */}
                 {activeExamSlug ? (
@@ -1148,6 +1125,31 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
                     </span>
                   )}
                 </li>
+
+                {/* Exam custom pages index */}
+                {activeExamSlug ? (
+                  <li>
+                    <Link
+                      href={`/${activeExamSlug}/pages`}
+                      onClick={() => {
+                        setActiveMenu("pages");
+                        closeOnMobile();
+                      }}
+                      className={`flex items-center px-3 py-2 font-semibold rounded-lg transition-all duration-200 ${isPagesPath && pathSegments.length === 2
+                        ? "bg-indigo-100/60 shadow-sm text-indigo-900"
+                        : "text-black hover:text-indigo-600 hover:bg-gray-50"
+                        }`}
+                      aria-current={isPagesPath && pathSegments.length === 2 ? "page" : undefined}
+                      aria-label="View all pages for this exam"
+                    >
+                      Pages
+                    </Link>
+                  </li>
+                ) : (
+                  <li className="px-3 py-2 text-sm sm:text-md font-medium text-[14px] text-gray-400">
+                    Pages
+                  </li>
+                )}
 
                 {/* Notifications — /[exam]/notification when in exam context, else /notification */}
                 <li>

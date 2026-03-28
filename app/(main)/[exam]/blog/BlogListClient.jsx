@@ -42,6 +42,7 @@ const BlogListClient = ({ posts, examSlug, children }) => {
   }, [searchQuery]);
 
   return (
+    <div className="flex flex-col min-w-0 exam-hub-min-h">
     <BlogSearchContext.Provider value={{ searchQuery, setSearchQuery }}>
       {children}
       {/* Blog Grid */}
@@ -91,6 +92,7 @@ const BlogListClient = ({ posts, examSlug, children }) => {
         </>
       )}
     </BlogSearchContext.Provider>
+    </div>
   );
 };
 

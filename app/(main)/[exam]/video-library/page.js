@@ -37,7 +37,7 @@ export default async function ExamVideoLibraryPage({ params }) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 exam-hub-min-h">
       <PrimeVideoClient exams={exams} currentExamSlug={currentSlug || undefined} />
     </div>
   );
