@@ -6,6 +6,57 @@ import { ADMIN_PAGINATION } from "@/constants";
 
 const STORAGE_PREFIX = "admin-filter:";
 
+/** Matches `basePath` in next.config.mjs — usePathname() is WITHOUT this prefix; location.pathname includes it. */
+const APP_BASE_PATH =
+  (typeof process !== "undefined" &&
+    process.env.NEXT_PUBLIC_BASE_PATH &&
+    String(process.env.NEXT_PUBLIC_BASE_PATH).trim().replace(/\/$/, "")) ||
+  "/self-study";
+
+/**
+ * Path as Next router sees it (no basePath), e.g. /admin/chapter
+ * @param {string} browserPathname — window.location.pathname
+ */
+function toRouterPathname(browserPathname) {
+  if (!browserPathname) return "/";
+  if (
+    APP_BASE_PATH &&
+    (browserPathname === APP_BASE_PATH ||
+      browserPathname.startsWith(`${APP_BASE_PATH}/`))
+  ) {
+    const rest = browserPathname.slice(APP_BASE_PATH.length) || "/";
+    return rest.startsWith("/") ? rest : `/${rest}`;
+  }
+  return browserPathname;
+}
+
+/** Full URL path for history API, e.g. /self-study/admin/chapter */
+function toFullPathname(routerPathname) {
+  const p = routerPathname.startsWith("/") ? routerPathname : `/${routerPathname}`;
+  if (!APP_BASE_PATH) return p;
+  if (typeof window !== "undefined") {
+    const current = window.location.pathname || "";
+    const hasBaseNow =
+      current === APP_BASE_PATH || current.startsWith(`${APP_BASE_PATH}/`);
+    if (!hasBaseNow) return p;
+  }
+  return `${APP_BASE_PATH}${p}`;
+}
+
+/**
+ * usePathname() is without basePath; location may be /self-study/admin/... .
+ * Some environments still mis-match string equality — also allow pathname suffix match.
+ */
+function routerPathMatchesLocation(pathnameFromHook, browserPathname) {
+  if (!pathnameFromHook || !browserPathname) return false;
+  const routerFromBrowser = toRouterPathname(browserPathname);
+  const hook = pathnameFromHook.replace(/\/$/, "") || "/";
+  const routed = routerFromBrowser.replace(/\/$/, "") || "/";
+  if (routed === hook) return true;
+  const raw = browserPathname.replace(/\/$/, "") || "/";
+  return raw.endsWith(hook) || routed.endsWith(hook);
+}
+
 /**
  * Serialize filter state to URL search params (only non-default values).
  * @param {Object} state - { page, limit, ...filterFields }
@@ -54,9 +105,8 @@ function getLiveUrlSearchParams(pathname, nextParams) {
     return new URLSearchParams(nextParams.toString());
   }
   try {
-    if (pathname && window.location.pathname === pathname) {
-      return new URLSearchParams(window.location.search || "");
-    }
+    void pathname;
+    return new URLSearchParams(window.location.search || "");
   } catch (_) {}
   return new URLSearchParams(nextParams.toString());
 }
@@ -120,11 +170,18 @@ export function useFilterPersistence(storageKey, defaultState = {}) {
   useEffect(() => {
     const def = defaultsRef.current;
     const live = getLiveUrlSearchParams(pathname, searchParams);
-    const fromUrl = paramsToState(live, def);
     const hasUrlParams = [...live.keys()].some((k) =>
       Object.prototype.hasOwnProperty.call(def, k)
     );
-    if (hasUrlParams) setStateInternal(fromUrl);
+    if (!hasUrlParams) return;
+    const fromUrl = paramsToState(live, def);
+    setStateInternal((prev) => {
+      // Next's searchParams can omit searchQuery briefly after replaceState; don't wipe the box.
+      if (!live.has("searchQuery") && (prev.searchQuery ?? "").trim() !== "") {
+        return { ...fromUrl, searchQuery: prev.searchQuery };
+      }
+      return fromUrl;
+    });
   }, [searchParams, pathname]);
 
   // Browser back/forward: `useSearchParams` may not update the same frame as `popstate`.
@@ -146,7 +203,10 @@ export function useFilterPersistence(storageKey, defaultState = {}) {
   // Persist state to storage + URL after commit (never during render).
   // Only call router.replace when the URL would actually change to avoid loops,
   // and only when we're still on the list path (so we don't overwrite a detail URL).
-  const searchParamsString = searchParams.toString();
+  const searchParamsString =
+    typeof window !== "undefined"
+      ? new URLSearchParams(window.location.search || "").toString()
+      : searchParams.toString();
   useEffect(() => {
     if (isFirstPersist.current) {
       isFirstPersist.current = false;
@@ -163,13 +223,15 @@ export function useFilterPersistence(storageKey, defaultState = {}) {
       }
     } catch (_) {}
     // Only sync URL when query would change (avoids sync loop) and pathname has no extra segment (list page)
+    // List: /admin/unit (2 segments). Detail: /admin/unit/[id] (3+).
     const pathSegments = pathname.split("/").filter(Boolean);
-    const isListPath = pathSegments.length <= 2; // e.g. ["admin", "unit"] = list; ["admin", "unit", "id"] = detail
+    const isListPath = pathSegments.length <= 2;
     if (newQuery !== currentQuery && isListPath) {
-      const url = newQuery ? `${pathname}?${newQuery}` : pathname;
+      const base = toFullPathname(pathname);
+      const url = newQuery ? `${base}?${newQuery}` : base;
       // Use history.replaceState to avoid triggering an App Router navigation request (_rsc)
       // on every debounced filter change. This removes noisy "Fetch failed loading ...?_rsc=..."
-      // logs while keeping URL in sync.
+      // logs while keeping URL in sync. Path must include next.config basePath (e.g. /self-study).
       if (typeof window !== "undefined") {
         window.history.replaceState(null, "", url);
       } else {
