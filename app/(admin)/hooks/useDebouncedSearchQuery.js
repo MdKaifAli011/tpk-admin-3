@@ -19,6 +19,7 @@ export function useDebouncedSearchQuery(committedSearchQuery, setFilterState) {
   const [searchInput, setSearchInput] = useState(() => committedSearchQuery ?? "");
   const timeoutRef = useRef(null);
   const isMountedRef = useRef(true);
+  const lastCommittedRef = useRef(committedSearchQuery ?? "");
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -31,11 +32,12 @@ export function useDebouncedSearchQuery(committedSearchQuery, setFilterState) {
     };
   }, []);
 
-  // Sync input when filters are cleared externally (e.g. user clicked Clear)
+  // Keep the input aligned with URL/filter state (clear, back/forward, restore) without fighting the debouncer.
   useEffect(() => {
-    if ((committedSearchQuery ?? "") === "") {
-      setSearchInput("");
-    }
+    const c = committedSearchQuery ?? "";
+    if (lastCommittedRef.current === c) return;
+    lastCommittedRef.current = c;
+    setSearchInput(c);
   }, [committedSearchQuery]);
 
   // Debounce: commit to filter state only after user stops typing for DEBOUNCE_MS

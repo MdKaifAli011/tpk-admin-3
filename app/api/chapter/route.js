@@ -9,7 +9,11 @@ import { parsePagination, createPaginationResponse } from "@/utils/pagination";
 import { successResponse, errorResponse, handleApiError } from "@/utils/apiResponse";
 import { STATUS, ERROR_MESSAGES } from "@/constants";
 import { requireAuth, requireAction } from "@/middleware/authMiddleware";
-import { buildTokenSearchCondition } from "@/utils/searchTokenHelper";
+import {
+  buildTokenSearchCondition,
+  combineQueryWithSearchFilter,
+  findWithSearchRelevance,
+} from "@/utils/searchTokenHelper";
 
 // ---------- GET ALL CHAPTERS ----------
 export async function GET(request) {
@@ -40,7 +44,7 @@ export async function GET(request) {
     const search = searchParams.get("search")?.trim();
 
     // Build query with case-insensitive status matching
-    const query = {};
+    let query = {};
     if (unitId && mongoose.Types.ObjectId.isValid(unitId)) {
       query.unitId = unitId;
     }
@@ -55,7 +59,7 @@ export async function GET(request) {
     }
     if (search) {
       const searchCondition = buildTokenSearchCondition(search, "name");
-      if (searchCondition) Object.assign(query, searchCondition);
+      if (searchCondition) query = combineQueryWithSearchFilter(query, searchCondition);
     }
 
     // Handle Metadata filtering
@@ -82,14 +86,16 @@ export async function GET(request) {
     const total = await Chapter.countDocuments(query);
 
     // Fetch chapters with pagination
-    const chapters = await Chapter.find(query)
-      .populate("examId", "name status")
-      .populate("subjectId", "name")
-      .populate("unitId", "name orderNumber")
-      .sort({ orderNumber: 1, createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .lean();
+    const chapters = await findWithSearchRelevance(Chapter, query, search, "name", {
+      skip,
+      limit,
+      sortKeys: { orderNumber: 1, createdAt: -1 },
+      configureQuery: (q) =>
+        q
+          .populate("examId", "name status")
+          .populate("subjectId", "name")
+          .populate("unitId", "name orderNumber"),
+    });
 
     // Fetch content information from ChapterDetails
     const chapterIds = chapters.map((chapter) => chapter._id);

@@ -12,7 +12,11 @@ import { parsePagination, createPaginationResponse } from "@/utils/pagination";
 import { successResponse, errorResponse, handleApiError } from "@/utils/apiResponse";
 import { STATUS, ERROR_MESSAGES } from "@/constants";
 import { requireAuth, requireAction } from "@/middleware/authMiddleware";
-import { buildTokenSearchCondition } from "@/utils/searchTokenHelper";
+import {
+  buildTokenSearchCondition,
+  combineQueryWithSearchFilter,
+  findWithSearchRelevance,
+} from "@/utils/searchTokenHelper";
 
 // ---------- GET ALL DEFINITIONS ----------
 export async function GET(request) {
@@ -46,7 +50,7 @@ export async function GET(request) {
     const search = searchParams.get("search")?.trim();
 
     // Build query with case-insensitive status matching
-    const filter = {};
+    let filter = {};
     if (topicId) {
       if (!mongoose.Types.ObjectId.isValid(topicId)) {
         return errorResponse("Invalid topicId", 400);
@@ -88,7 +92,7 @@ export async function GET(request) {
     }
     if (search) {
       const searchCondition = buildTokenSearchCondition(search, "name");
-      if (searchCondition) Object.assign(filter, searchCondition);
+      if (searchCondition) filter = combineQueryWithSearchFilter(filter, searchCondition);
     }
 
     // Handle Metadata filtering
@@ -115,24 +119,26 @@ export async function GET(request) {
     const total = await Definition.countDocuments(filter);
 
     // Fetch definitions with pagination
-    let definitions = await Definition.find(filter)
-      .populate("examId", "name status")
-      .populate("subjectId", "name")
-      .populate("unitId", "name orderNumber")
-      .populate("chapterId", "name orderNumber")
-      .populate({
-        path: "topicId",
-        select: "name orderNumber chapterId",
-        populate: {
-          path: "chapterId",
-          select: "name orderNumber"
-        }
-      })
-      .populate("subTopicId", "name orderNumber")
-      .sort({ orderNumber: 1, createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .lean();
+    let definitions = await findWithSearchRelevance(Definition, filter, search, "name", {
+      skip,
+      limit,
+      sortKeys: { orderNumber: 1, createdAt: -1 },
+      configureQuery: (q) =>
+        q
+          .populate("examId", "name status")
+          .populate("subjectId", "name")
+          .populate("unitId", "name orderNumber")
+          .populate("chapterId", "name orderNumber")
+          .populate({
+            path: "topicId",
+            select: "name orderNumber chapterId",
+            populate: {
+              path: "chapterId",
+              select: "name orderNumber",
+            },
+          })
+          .populate("subTopicId", "name orderNumber"),
+    });
 
     // If chapterId is missing but topicId has chapterId, use it (for backward compatibility)
     definitions = definitions.map(def => {

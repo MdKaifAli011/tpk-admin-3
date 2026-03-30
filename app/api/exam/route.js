@@ -15,7 +15,11 @@ import {
 import { STATUS, ERROR_MESSAGES } from "@/constants";
 import { requireAction, requireAuth } from "@/middleware/authMiddleware";
 import cacheManager from "@/utils/cacheManager";
-import { buildTokenSearchCondition } from "@/utils/searchTokenHelper";
+import {
+  buildTokenSearchCondition,
+  combineQueryWithSearchFilter,
+  findWithSearchRelevance,
+} from "@/utils/searchTokenHelper";
 
 // ✅ GET: Fetch all exams with pagination (optimized)
 export async function GET(request) {
@@ -77,10 +81,10 @@ export async function GET(request) {
       }
     }
 
-    // Token-based search: match ANY keyword (stop words removed, OR logic)
+    // Token search (multi-word = all tokens must match); merge without clobbering status `$or`
     if (search) {
       const searchCondition = buildTokenSearchCondition(search, "name");
-      if (searchCondition) Object.assign(query, searchCondition);
+      if (searchCondition) query = combineQueryWithSearchFilter(query, searchCondition);
     }
 
     // Create cache key (skip cache when search is active)
@@ -99,13 +103,12 @@ export async function GET(request) {
     const shouldCount = page === 1 || limit < 100;
     const [total, exams] = await Promise.all([
       shouldCount ? Exam.countDocuments(query) : Promise.resolve(0),
-      Exam.find(query)
-        .sort({ orderNumber: 1, createdAt: -1 })
-        .skip(skip)
-        .limit(limit)
-        .select("name slug status orderNumber image description createdAt visitStats")
-        .lean()
-        .exec(),
+      findWithSearchRelevance(Exam, query, search, "name", {
+        skip,
+        limit,
+        select: "name slug status orderNumber image description createdAt visitStats",
+        sortKeys: { orderNumber: 1, createdAt: -1 },
+      }),
     ]);
 
     // Ensure all returned exams are valid (have name and match status)

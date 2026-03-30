@@ -7,7 +7,11 @@ import { successResponse, errorResponse, handleApiError } from "@/utils/apiRespo
 import { STATUS, ERROR_MESSAGES } from "@/constants";
 import { requireAuth, requireAction } from "@/middleware/authMiddleware";
 import cacheManager from "@/utils/cacheManager";
-import { buildTokenSearchCondition } from "@/utils/searchTokenHelper";
+import {
+  buildTokenSearchCondition,
+  combineQueryWithSearchFilter,
+  findWithSearchRelevance,
+} from "@/utils/searchTokenHelper";
 
 // ---------- GET ALL SUBJECTS (optimized) ----------
 export async function GET(request) {
@@ -36,7 +40,7 @@ export async function GET(request) {
     const search = searchParams.get("search")?.trim();
 
     // Build query with case-insensitive status matching
-    const query = {};
+    let query = {};
     if (examId && mongoose.Types.ObjectId.isValid(examId)) {
       query.examId = examId;
     }
@@ -45,7 +49,7 @@ export async function GET(request) {
     }
     if (search) {
       const searchCondition = buildTokenSearchCondition(search, "name");
-      if (searchCondition) Object.assign(query, searchCondition);
+      if (searchCondition) query = combineQueryWithSearchFilter(query, searchCondition);
     }
 
     // Handle Metadata filtering
@@ -82,13 +86,12 @@ export async function GET(request) {
     const shouldCount = page === 1 || limit < 100;
     const [total, subjects] = await Promise.all([
       shouldCount ? Subject.countDocuments(query) : Promise.resolve(0),
-      Subject.find(query)
-        .populate("examId", "name status")
-        .sort({ orderNumber: 1, createdAt: -1 })
-        .skip(skip)
-        .limit(limit)
-        .lean()
-        .exec(),
+      findWithSearchRelevance(Subject, query, search, "name", {
+        skip,
+        limit,
+        sortKeys: { orderNumber: 1, createdAt: -1 },
+        configureQuery: (q) => q.populate("examId", "name status"),
+      }),
     ]);
 
     // Fetch content information from SubjectDetails

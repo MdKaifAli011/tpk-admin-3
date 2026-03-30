@@ -1,11 +1,12 @@
 /**
- * Token-based (bag-of-words) search for Admin Self Study.
- * Converts a user query like "laws of motion class 9" into tokens (stop words removed),
- * then builds a MongoDB condition: match if the field contains ANY of the tokens (OR logic).
+ * Token-based search for Admin Self Study.
+ * Converts a query like "laws of motion class 9" or "sat preparation" into tokens (stop words removed).
  *
- * So "laws of motion class 9" matches documents where name contains:
- *   "laws" OR "motion" OR "class" OR "9"
- * Reordered or partial queries like "motion class 9", "class 9", "laws" all match the same.
+ * - **Multiple tokens:** each token must appear in the field (`$and`). So "sat preparation" only
+ *   matches rows that contain both "sat" and "preparation", not every row that contains either.
+ * - **Single token:** plain case-insensitive substring match on that token.
+ * - **Relevance:** when `search` is non-empty, use `findWithSearchRelevance` so stronger matches
+ *   (full phrase, prefix phrase, two-word proximity) sort above unrelated `orderNumber` noise.
  */
 
 const DEFAULT_STOP_WORDS = new Set([
@@ -158,7 +159,7 @@ function buildTokenSearchCondition(search, fieldName = "name", options = {}) {
   const trimmed = search?.trim();
   if (!trimmed) return null;
 
-  const { tokens, combinations } = tokenizeSearchQuery(trimmed, options);
+  const { tokens } = tokenizeSearchQuery(trimmed, options);
 
   if (tokens.length === 0) {
     // Only stop words: match the original phrase
@@ -175,24 +176,165 @@ function buildTokenSearchCondition(search, fieldName = "name", options = {}) {
     };
   }
 
-  // Match ANY token (OR logic) — bag-of-words
-  const orConditions = tokens.map((t) => ({
+  // All tokens must appear (order-independent). Avoids "sat preparation" matching only "SAT" rows.
+  const andConditions = tokens.map((t) => ({
     [fieldName]: { $regex: new RegExp(escapeRegex(t), "i") },
   }));
 
-  // Add phrase-level matching for adjacent keywords (still OR logic).
-  combinations.forEach((phrase) => {
-    orConditions.push({
-      [fieldName]: { $regex: new RegExp(escapeRegex(phrase), "i") },
-    });
-  });
+  return { $and: andConditions };
+}
 
-  return { $or: orConditions };
+/**
+ * Merge a token/phrase search condition with an existing Mongo filter without clobbering `$or` / `$and`.
+ * @param {Record<string, unknown>} baseQuery
+ * @param {Record<string, unknown>} searchCondition - from buildTokenSearchCondition
+ * @returns {Record<string, unknown>}
+ */
+function combineQueryWithSearchFilter(baseQuery, searchCondition) {
+  if (!searchCondition) return baseQuery;
+  const parts = [];
+  for (const [key, val] of Object.entries(baseQuery)) {
+    if (key === "$and" && Array.isArray(val)) {
+      parts.push(...val);
+    } else if (key === "$or" && Array.isArray(val)) {
+      parts.push({ $or: val });
+    } else {
+      parts.push({ [key]: val });
+    }
+  }
+  parts.push(searchCondition);
+  if (parts.length === 1) return parts[0];
+  return { $and: parts };
+}
+
+/**
+ * Normalized phrase for ranking (lowercase, punctuation → spaces).
+ * @param {string} trimmed
+ * @returns {string}
+ */
+function normalizedSearchPhrase(trimmed) {
+  return extractPrimarySearchText(trimmed)
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}\s]+/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/**
+ * $addFields stage(s) to score name/title matches (higher = better). Used in aggregation only.
+ * @param {string} fieldName
+ * @param {string} trimmed
+ * @returns {object[]}
+ */
+function buildSearchRankStages(fieldName, trimmed) {
+  const phrase = normalizedSearchPhrase(trimmed);
+  const { tokens } = tokenizeSearchQuery(trimmed);
+  const fieldRef = `$${fieldName}`;
+  const inputLower = { $toLower: fieldRef };
+  /** @type {object[]} */
+  const addends = [];
+
+  if (phrase) {
+    const esc = escapeRegex(phrase);
+    addends.push(
+      { $cond: [{ $regexMatch: { input: fieldRef, regex: `^${esc}`, options: "i" } }, 10000, 0] },
+      { $cond: [{ $regexMatch: { input: fieldRef, regex: esc, options: "i" } }, 5000, 0] },
+    );
+  }
+
+  if (tokens.length === 2) {
+    const a = escapeRegex(tokens[0]);
+    const b = escapeRegex(tokens[1]);
+    const flex = `${a}[\\s\\S]*${b}|${b}[\\s\\S]*${a}`;
+    addends.push({
+      $cond: [{ $regexMatch: { input: fieldRef, regex: flex, options: "i" } }, 3000, 0],
+    });
+  }
+
+  if (tokens.length > 0 && tokens[0]) {
+    const first = tokens[0];
+    addends.push({
+      $let: {
+        vars: {
+          ix: { $indexOfCP: [inputLower, first] },
+        },
+        in: {
+          $cond: [
+            { $gte: ["$$ix", 0] },
+            { $max: [0, { $subtract: [150, { $min: [150, "$$ix"] }] }] },
+            0,
+          ],
+        },
+      },
+    });
+  }
+
+  if (addends.length === 0) return [];
+
+  return [
+    {
+      $addFields: {
+        __searchRank: { $add: addends },
+      },
+    },
+  ];
+}
+
+/**
+ * When `search` is set, runs a relevance-sorted aggregation (then re-fetches with populate/ select).
+ * When empty, behaves like a normal Model.find with sortKeys.
+ *
+ * @template T
+ * @param {import("mongoose").Model} Model
+ * @param {Record<string, unknown>} matchQuery
+ * @param {string | undefined} search
+ * @param {string} fieldName
+ * @param {{ skip: number, limit: number, select?: string, sortKeys?: Record<string, 1 | -1>, configureQuery?: (q: import("mongoose").Query) => import("mongoose").Query }} opts
+ * @returns {Promise<T[]>}
+ */
+async function findWithSearchRelevance(Model, matchQuery, search, fieldName, opts) {
+  const {
+    skip,
+    limit,
+    select,
+    sortKeys = { orderNumber: 1, createdAt: -1 },
+    configureQuery,
+  } = opts;
+  const trimmed = search?.trim();
+
+  if (!trimmed) {
+    let q = Model.find(matchQuery).sort(sortKeys).skip(skip).limit(limit);
+    if (select) q = q.select(select);
+    if (configureQuery) q = configureQuery(q);
+    return q.lean().exec();
+  }
+
+  const rankStages = buildSearchRankStages(fieldName, trimmed);
+  const sortSpec = rankStages.length
+    ? { __searchRank: -1, ...sortKeys }
+    : sortKeys;
+
+  /** @type {object[]} */
+  const pipeline = [{ $match: matchQuery }, ...rankStages, { $sort: sortSpec }, { $skip: skip }, { $limit: limit }];
+
+  const raw = await Model.aggregate(pipeline);
+  const idOrder = raw.map((d) => d._id);
+  if (idOrder.length === 0) return [];
+
+  let q2 = Model.find({ _id: { $in: idOrder } });
+  if (select) q2 = q2.select(select);
+  if (configureQuery) q2 = configureQuery(q2);
+  const hydrated = await q2.lean().exec();
+  const idx = new Map(idOrder.map((id, i) => [String(id), i]));
+  hydrated.sort((a, b) => idx.get(String(a._id)) - idx.get(String(b._id)));
+  return hydrated;
 }
 
 export {
   tokenizeSearchQuery,
   buildTokenSearchCondition,
+  combineQueryWithSearchFilter,
+  findWithSearchRelevance,
   escapeRegex,
   DEFAULT_STOP_WORDS,
 };

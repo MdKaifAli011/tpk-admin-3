@@ -7,7 +7,11 @@ import { successResponse, errorResponse, handleApiError } from "@/utils/apiRespo
 import { STATUS, ERROR_MESSAGES } from "@/constants";
 import { requireAuth, requireAction } from "@/middleware/authMiddleware";
 import cacheManager from "@/utils/cacheManager";
-import { buildTokenSearchCondition } from "@/utils/searchTokenHelper";
+import {
+  buildTokenSearchCondition,
+  combineQueryWithSearchFilter,
+  findWithSearchRelevance,
+} from "@/utils/searchTokenHelper";
 
 // ---------- GET ALL UNITS ----------
 export async function GET(request) {
@@ -37,7 +41,7 @@ export async function GET(request) {
     const search = searchParams.get("search")?.trim();
 
     // Build query with case-insensitive status matching
-    const query = {};
+    let query = {};
     if (subjectId && mongoose.Types.ObjectId.isValid(subjectId)) {
       query.subjectId = subjectId;
     }
@@ -49,7 +53,7 @@ export async function GET(request) {
     }
     if (search) {
       const searchCondition = buildTokenSearchCondition(search, "name");
-      if (searchCondition) Object.assign(query, searchCondition);
+      if (searchCondition) query = combineQueryWithSearchFilter(query, searchCondition);
     }
 
     // Handle Metadata filtering
@@ -88,14 +92,13 @@ export async function GET(request) {
     // Parallel execution for better performance
     const [total, units] = await Promise.all([
       shouldCount ? Unit.countDocuments(query) : Promise.resolve(0),
-      Unit.find(query)
-        .populate("subjectId", "name")
-        .populate("examId", "name status")
-        .sort({ orderNumber: 1 })
-        .skip(skip)
-        .limit(limit)
-        .lean()
-        .exec()
+      findWithSearchRelevance(Unit, query, search, "name", {
+        skip,
+        limit,
+        sortKeys: { orderNumber: 1 },
+        configureQuery: (q) =>
+          q.populate("subjectId", "name").populate("examId", "name status"),
+      }),
     ]);
 
     // Fetch content information from UnitDetails

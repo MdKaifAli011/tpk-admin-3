@@ -43,6 +43,25 @@ function paramsToState(searchParams, defaults = {}) {
 }
 
 /**
+ * After `history.replaceState`, Next.js `useSearchParams()` can lag behind the real URL.
+ * Reading `window.location.search` keeps filters (especially `searchQuery`) in sync and
+ * avoids wiping state from stale RSC params.
+ * @param {string} pathname — current route from `usePathname()`
+ * @param {import("next/navigation").ReadonlyURLSearchParams | URLSearchParams} nextParams
+ */
+function getLiveUrlSearchParams(pathname, nextParams) {
+  if (typeof window === "undefined") {
+    return new URLSearchParams(nextParams.toString());
+  }
+  try {
+    if (pathname && window.location.pathname === pathname) {
+      return new URLSearchParams(window.location.search || "");
+    }
+  } catch (_) {}
+  return new URLSearchParams(nextParams.toString());
+}
+
+/**
  * Persist filter + pagination state so it survives navigation.
  * - Restores from URL first, then sessionStorage, then defaults.
  * - On change: saves to sessionStorage and syncs URL (replace).
@@ -55,6 +74,8 @@ export function useFilterPersistence(storageKey, defaultState = {}) {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const pathnameRef = useRef(pathname);
+  pathnameRef.current = pathname;
 
   const defaults = useMemo(
     () => ({
@@ -81,8 +102,9 @@ export function useFilterPersistence(storageKey, defaultState = {}) {
   }, [storageKey, defaults]);
 
   const getInitialState = useCallback(() => {
-    const fromUrl = paramsToState(searchParams, defaults);
-    const hasUrlParams = Array.from(searchParams.keys()).some((k) =>
+    const live = getLiveUrlSearchParams(pathnameRef.current, searchParams);
+    const fromUrl = paramsToState(live, defaults);
+    const hasUrlParams = [...live.keys()].some((k) =>
       Object.prototype.hasOwnProperty.call(defaults, k)
     );
     if (hasUrlParams) return fromUrl;
@@ -94,16 +116,32 @@ export function useFilterPersistence(storageKey, defaultState = {}) {
 
   const isFirstPersist = useRef(true);
 
-  // Sync from URL when searchParams change (e.g. browser back). Use ref for defaults
-  // so we don't re-run when caller passes a new object literal each render.
+  // Sync from real URL when Next searchParams change or path matches (replaceState-safe).
   useEffect(() => {
     const def = defaultsRef.current;
-    const fromUrl = paramsToState(searchParams, def);
-    const hasUrlParams = Array.from(searchParams.keys()).some((k) =>
+    const live = getLiveUrlSearchParams(pathname, searchParams);
+    const fromUrl = paramsToState(live, def);
+    const hasUrlParams = [...live.keys()].some((k) =>
       Object.prototype.hasOwnProperty.call(def, k)
     );
     if (hasUrlParams) setStateInternal(fromUrl);
-  }, [searchParams]);
+  }, [searchParams, pathname]);
+
+  // Browser back/forward: `useSearchParams` may not update the same frame as `popstate`.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const onPop = () => {
+      const def = defaultsRef.current;
+      const live = new URLSearchParams(window.location.search || "");
+      const fromUrl = paramsToState(live, def);
+      const hasUrlParams = [...live.keys()].some((k) =>
+        Object.prototype.hasOwnProperty.call(def, k)
+      );
+      if (hasUrlParams) setStateInternal(fromUrl);
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
 
   // Persist state to storage + URL after commit (never during render).
   // Only call router.replace when the URL would actually change to avoid loops,

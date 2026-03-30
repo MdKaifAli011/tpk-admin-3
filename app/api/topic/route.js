@@ -10,7 +10,11 @@ import { parsePagination, createPaginationResponse } from "@/utils/pagination";
 import { successResponse, errorResponse, handleApiError } from "@/utils/apiResponse";
 import { STATUS, ERROR_MESSAGES } from "@/constants";
 import { requireAuth, requireAction } from "@/middleware/authMiddleware";
-import { buildTokenSearchCondition } from "@/utils/searchTokenHelper";
+import {
+  buildTokenSearchCondition,
+  combineQueryWithSearchFilter,
+  findWithSearchRelevance,
+} from "@/utils/searchTokenHelper";
 
 // ---------- GET ALL TOPICS ----------
 export async function GET(request) {
@@ -42,7 +46,7 @@ export async function GET(request) {
     const search = searchParams.get("search")?.trim();
 
     // Build query with case-insensitive status matching
-    const filter = {};
+    let filter = {};
     if (chapterId) {
       if (!mongoose.Types.ObjectId.isValid(chapterId)) {
         return errorResponse("Invalid chapterId", 400);
@@ -99,15 +103,17 @@ export async function GET(request) {
     const total = await Topic.countDocuments(filter);
 
     // Fetch topics with pagination
-    const topics = await Topic.find(filter)
-      .populate("examId", "name status")
-      .populate("subjectId", "name")
-      .populate("unitId", "name orderNumber")
-      .populate("chapterId", "name orderNumber")
-      .sort({ orderNumber: 1, createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .lean();
+    const topics = await findWithSearchRelevance(Topic, filter, search, "name", {
+      skip,
+      limit,
+      sortKeys: { orderNumber: 1, createdAt: -1 },
+      configureQuery: (q) =>
+        q
+          .populate("examId", "name status")
+          .populate("subjectId", "name")
+          .populate("unitId", "name orderNumber")
+          .populate("chapterId", "name orderNumber"),
+    });
 
     // Fetch content information from TopicDetails
     const topicIds = topics.map((topic) => topic._id);
