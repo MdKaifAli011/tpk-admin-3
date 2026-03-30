@@ -1043,7 +1043,7 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
                       onClick={closeOnMobile}
                       aria-label="SAT tools — readiness analyzer and more"
                     >
-                      <span>Sat Tool</span>
+                      <span>SAT Tool</span>
                     </Link>
                   </li>
                 ) : null}
