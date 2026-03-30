@@ -8,6 +8,7 @@ import React, {
   useState,
 } from "react";
 import Script from "next/script";
+import { FaCheck } from "react-icons/fa";
 import { ToolBreadcrumb } from "../ToolPageChrome";
 import api from "@/lib/api";
 import {
@@ -93,6 +94,14 @@ const INTEREST_OPTS = [
   "Yes — I'd love to learn about coaching",
   "Maybe — let me see my results first",
   "No — just exploring the tool",
+];
+
+const SAT_STEP_LABELS = [
+  "Profile",
+  "Math",
+  "English",
+  "Your Info",
+  "Results",
 ];
 
 const RECAPTCHA_KEY =
@@ -616,9 +625,9 @@ export default function SatReadinessAnalyzerClient({ examSlug }) {
         strategy="afterInteractive"
       />
 
-      <div className="exam-hub-min-h w-full min-w-0 bg-white text-slate-900 space-y-4 mt-4 pb-6 md:space-y-5 md:mt-5 md:pb-8">
+      <div className="exam-hub-min-h w-full min-w-0 bg-white text-slate-900 space-y-3 mt-3 pb-6 md:space-y-4 md:mt-4 md:pb-8">
         <section
-          className="hero-section relative w-full overflow-hidden rounded-xl border border-indigo-100/70 bg-gradient-to-br from-indigo-50/90 via-white to-violet-50/80 p-3 shadow-[0_2px_16px_rgba(79,70,229,0.07)] sm:p-4"
+          className="hero-section relative w-full overflow-hidden rounded-xl border border-indigo-100/70 bg-gradient-to-br from-indigo-50/90 via-white to-violet-50/80 p-4 shadow-[0_2px_16px_rgba(79,70,229,0.07)] sm:p-5"
           aria-labelledby="sat-readiness-analyzer-title"
         >
           <div
@@ -641,9 +650,9 @@ export default function SatReadinessAnalyzerClient({ examSlug }) {
             />
 
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-              <div className="min-w-0 max-w-3xl">
+              <div className="min-w-0 w-full max-w-none flex-1">
                 <div className="mb-2 flex flex-wrap items-center gap-2">
-                  <span className="inline-flex items-center rounded-full bg-indigo-600/10 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-indigo-700">
+                  <span className="inline-flex items-center rounded-full bg-indigo-600/10 px-2.5 py-0.5 text-xs font-semibold uppercase tracking-[0.08em] text-indigo-700 sm:text-[0.8125rem]">
                     {examLabel} · Tool
                   </span>
                   <span className="hidden h-1 w-1 rounded-full bg-slate-300 sm:inline" aria-hidden />
@@ -654,14 +663,14 @@ export default function SatReadinessAnalyzerClient({ examSlug }) {
 
                 <h1
                   id="sat-readiness-analyzer-title"
-                  className="text-2xl font-semibold leading-tight tracking-tight text-slate-900 sm:text-3xl sm:leading-tight lg:text-[2rem] lg:leading-[1.15]"
+                  className="text-[1.65rem] font-semibold leading-tight tracking-tight text-slate-900 sm:text-3xl sm:leading-tight lg:text-[2.25rem] lg:leading-[1.12]"
                 >
                   SAT{" "}
                   <span className="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text font-semibold text-transparent">
                     Readiness Analyzer
                   </span>
                 </h1>
-                <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-600 sm:text-[15px] sm:leading-relaxed">
+                <p className="mt-3 w-full max-w-none text-base leading-relaxed text-slate-600 sm:text-lg sm:leading-relaxed">
                   Rate topic confidence, preview estimated scores, then unlock your full gap
                   analysis and downloadable PDF — same layout as the rest of the {examLabel}{" "}
                   tools hub.
@@ -671,8 +680,7 @@ export default function SatReadinessAnalyzerClient({ examSlug }) {
           </div>
         </section>
 
-        <div className="w-full min-w-0 px-0">
-          <div className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm">
+        <div className="w-full min-w-0">
             <div className={sat.stRoot}>
               <div className={sat.stWrap}>
             <div className={sat.stTopbar}>
@@ -694,44 +702,58 @@ export default function SatReadinessAnalyzerClient({ examSlug }) {
             </div>
 
             <div className={sat.stProgWrap}>
-              <div className={sat.stProgTrack}>
-                {[1, 2, 3, 4, 5].map((n) => (
-                  <React.Fragment key={n}>
-                    <div
-                      className={[
-                        sat.stProgDot,
-                        n < step
-                          ? sat.stProgDotDone
-                          : n === step
-                            ? sat.stProgDotActive
-                            : "",
-                      ]
-                        .filter(Boolean)
-                        .join(" ")}
-                    >
-                      {n < step ? "✓" : n}
-                    </div>
-                    {n < 5 && (
+              <nav
+                className={sat.stProgTrackOuter}
+                aria-label="SAT Readiness Analyzer steps"
+              >
+                <div className={sat.stProgTrack}>
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <React.Fragment key={n}>
                       <div
                         className={[
-                          sat.stProgConn,
-                          n < step ? sat.stProgConnDone : "",
+                          sat.stProgDot,
+                          n < step
+                            ? sat.stProgDotDone
+                            : n === step
+                              ? sat.stProgDotActive
+                              : "",
                         ]
                           .filter(Boolean)
                           .join(" ")}
-                      />
-                    )}
-                  </React.Fragment>
-                ))}
-              </div>
+                        aria-current={n === step ? "step" : undefined}
+                        aria-label={
+                          n < step
+                            ? `${SAT_STEP_LABELS[n - 1]} — completed`
+                            : n === step
+                              ? `${SAT_STEP_LABELS[n - 1]} — current step`
+                              : `${SAT_STEP_LABELS[n - 1]} — not started`
+                        }
+                      >
+                        {n < step ? (
+                          <FaCheck className="h-[1.15rem] w-[1.15rem] text-white" aria-hidden />
+                        ) : (
+                          <span className="tabular-nums" aria-hidden>
+                            {n}
+                          </span>
+                        )}
+                      </div>
+                      {n < 5 && (
+                        <div
+                          className={[
+                            sat.stProgConn,
+                            n < step ? sat.stProgConnDone : "",
+                          ]
+                            .filter(Boolean)
+                            .join(" ")}
+                          aria-hidden
+                        />
+                      )}
+                    </React.Fragment>
+                  ))}
+                </div>
+              </nav>
               <div className={sat.stProgLabels}>
-                {[
-                  "Profile",
-                  "Math",
-                  "English",
-                  "Your Info",
-                  "Results",
-                ].map((lbl, i) => {
+                {SAT_STEP_LABELS.map((lbl, i) => {
                   const n = i + 1;
                   return (
                     <span
@@ -1280,16 +1302,18 @@ export default function SatReadinessAnalyzerClient({ examSlug }) {
                           return (
                             <div key={t.id} className={sat.stTbrowBk}>
                               <div className={sat.stTbn}>{t.name}</div>
-                              <div className={sat.stTbtrack}>
-                                <div
-                                  className={sat.stTbfill}
-                                  style={{
-                                    width: barsAnimate ? `${p}%` : "0%",
-                                    background: col,
-                                  }}
-                                />
+                              <div className={sat.stTbBarWrap}>
+                                <div className={sat.stTbtrack}>
+                                  <div
+                                    className={sat.stTbfill}
+                                    style={{
+                                      width: barsAnimate ? `${p}%` : "0%",
+                                      background: col,
+                                    }}
+                                  />
+                                </div>
+                                <div className={sat.stTbpct}>{p}%</div>
                               </div>
-                              <div className={sat.stTbpct}>{p}%</div>
                             </div>
                           );
                         })}
@@ -1309,16 +1333,18 @@ export default function SatReadinessAnalyzerClient({ examSlug }) {
                           return (
                             <div key={t.id} className={sat.stTbrowBk}>
                               <div className={sat.stTbn}>{t.name}</div>
-                              <div className={sat.stTbtrack}>
-                                <div
-                                  className={sat.stTbfill}
-                                  style={{
-                                    width: barsAnimate ? `${p}%` : "0%",
-                                    background: col,
-                                  }}
-                                />
+                              <div className={sat.stTbBarWrap}>
+                                <div className={sat.stTbtrack}>
+                                  <div
+                                    className={sat.stTbfill}
+                                    style={{
+                                      width: barsAnimate ? `${p}%` : "0%",
+                                      background: col,
+                                    }}
+                                  />
+                                </div>
+                                <div className={sat.stTbpct}>{p}%</div>
                               </div>
-                              <div className={sat.stTbpct}>{p}%</div>
                             </div>
                           );
                         })}
@@ -1424,7 +1450,6 @@ export default function SatReadinessAnalyzerClient({ examSlug }) {
             )}
               </div>
             </div>
-          </div>
         </div>
       </div>
     </>

@@ -19,15 +19,15 @@ const selChevron =
 export const stOverline =
   "text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500 sm:text-[11px] sm:tracking-[0.06em]";
 
-/** Root: flat surface — readable body size */
+/** Root: flush with page — no gray panel */
 export const stRoot =
-  "isolate box-border w-full bg-slate-50/40 text-sm font-sans leading-normal text-slate-800 antialiased [font-feature-settings:'kern'_1,'liga'_1]";
+  "isolate box-border w-full bg-transparent text-base font-sans leading-normal text-slate-800 antialiased [font-feature-settings:'kern'_1,'liga'_1]";
 
-export const stWrap =
-  "mx-auto w-full max-w-5xl px-3 pb-5 pt-3 sm:px-5 sm:pb-6 sm:pt-4";
+/** Full width of main column — no max-width cap */
+export const stWrap = "w-full max-w-none px-0 py-2 sm:py-4";
 
 export const stTopbar =
-  "mb-3 flex flex-col gap-3 rounded-lg border border-slate-200/90 bg-white px-3 py-2.5 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-4 sm:py-3";
+  "mb-4 flex flex-col gap-3 rounded-xl border border-slate-200/80 bg-white px-3 py-3 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-5 sm:py-3.5";
 
 export const stTbBrand = "flex min-w-0 items-center gap-2.5";
 
@@ -35,43 +35,50 @@ export const stTopbarActions =
   "flex w-full shrink-0 items-center justify-end gap-2 sm:w-auto";
 
 export const stTbIco =
-  "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-600 text-base leading-none text-white shadow-sm";
+  "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-lg leading-none text-white shadow-sm";
 
 export const stTbName =
-  "text-[15px] font-semibold leading-snug tracking-tight text-slate-900 sm:text-base";
+  "text-lg font-semibold leading-snug tracking-tight text-slate-900 sm:text-xl";
 
 export const stTbTag =
-  "rounded-full border border-slate-200/90 bg-slate-50 px-2.5 py-0.5 text-[11px] font-medium tabular-nums text-slate-600";
+  "rounded-full border border-slate-200/90 bg-slate-50 px-3 py-1 text-xs font-medium tabular-nums text-slate-600";
 
-export const stProgWrap = "mb-3";
+export const stProgWrap = "mb-4 w-full min-w-0";
 
-export const stProgTrack = "flex items-center";
+/** Horizontal scroll on narrow screens so all five steps stay usable */
+export const stProgTrackOuter =
+  "w-full min-w-0 overflow-x-auto overflow-y-visible pb-1 [-webkit-overflow-scrolling:touch] sm:overflow-visible sm:pb-0";
+
+export const stProgTrack =
+  "flex min-w-[min(100%,22rem)] items-center gap-0 sm:min-w-0";
 
 export const stProgDot =
-  "relative z-[1] flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-slate-200 bg-white text-xs font-bold text-slate-400 transition-all duration-300";
+  "relative z-[1] flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-[3px] border-slate-300 bg-white text-base font-bold tabular-nums text-slate-500 transition-all duration-300";
 
+/** `!` ensures these win over stProgDot (fixes “empty” completed circles) */
 export const stProgDotActive =
-  "border-indigo-600 bg-indigo-600 text-white shadow-[0_0_0_3px_rgba(79,70,229,0.15)]";
+  "!border-indigo-600 !bg-indigo-600 !text-white shadow-[0_0_0_4px_rgba(79,70,229,0.22)]";
 
-export const stProgDotDone = "border-emerald-500 bg-emerald-500 text-white";
+export const stProgDotDone =
+  "!border-emerald-600 !bg-emerald-600 !text-white shadow-md";
 
 export const stProgConn =
-  "h-0.5 flex-1 bg-slate-200 transition-colors duration-300";
+  "h-1 min-w-[0.5rem] flex-1 rounded-full bg-slate-200 transition-colors duration-300";
 
-export const stProgConnDone = "bg-emerald-500";
+export const stProgConnDone = "!bg-emerald-500";
 
 export const stProgLabels =
-  "mt-2.5 grid grid-cols-5 gap-1 px-0.5";
+  "mt-3 grid grid-cols-5 gap-1 px-0.5 sm:mt-3.5";
 
 export const stProgLbl =
-  "text-center text-[10px] font-medium leading-[1.25] text-slate-500 transition-colors duration-300 sm:text-[11px] md:text-xs";
+  "text-center text-xs font-medium leading-tight text-slate-600 transition-colors duration-300 sm:text-sm sm:leading-snug";
 
 export const stProgLblActive = "font-semibold text-indigo-600";
 
 export const stProgLblDone = "font-semibold text-emerald-600";
 
 export const stCard =
-  "rounded-xl border border-slate-200/90 bg-white p-4 shadow-sm ring-1 ring-slate-900/[0.04] sm:p-5";
+  "rounded-xl border border-slate-200/90 bg-white p-4 shadow-sm ring-1 ring-slate-900/[0.04] sm:p-6";
 
 /** Lead / unlock step — distinct indigo frame */
 export const stCardLead =
@@ -89,14 +96,14 @@ export const stChIcoG = "bg-amber-50 ring-1 ring-amber-100/80";
 export const stChIcoGr = "bg-emerald-50 ring-1 ring-emerald-100/80";
 
 export const stChTtl =
-  "text-lg font-semibold leading-snug tracking-tight text-slate-900";
+  "text-xl font-semibold leading-snug tracking-tight text-slate-900 sm:text-[1.35rem]";
 
 export const stChTtlHi = "font-semibold text-indigo-600";
 
 export const stChTtlHg = "font-semibold text-amber-600";
 
 export const stChSub =
-  "mt-1 text-sm leading-relaxed text-slate-600";
+  "mt-1.5 text-base leading-relaxed text-slate-600";
 
 export const stG2 =
   "grid grid-cols-1 gap-3 min-[481px]:grid-cols-2 min-[481px]:gap-4";
@@ -108,7 +115,7 @@ export const stFg = "flex flex-col gap-1.5";
 export const stLabel = stOverline;
 
 export const stInput =
-  "block w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm font-normal leading-snug text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20";
+  "block w-full rounded-lg border border-slate-200 bg-white px-3 py-3 text-base font-normal leading-snug text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20";
 
 export const stSelect =
   `${stInput} cursor-pointer bg-[length:11px_7px] bg-[position:right_12px_center] bg-no-repeat pr-9 ${selChevron}`;
@@ -146,14 +153,14 @@ export const stThint =
   "mt-0.5 truncate text-xs leading-snug text-slate-500";
 
 export const stTsel =
-  "!w-full min-[481px]:!w-[172px] shrink-0 rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-xs font-medium leading-snug text-slate-900 shadow-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 appearance-none bg-[length:11px_7px] bg-[position:right_10px_center] bg-no-repeat pr-8 " +
+  "!w-full min-[481px]:!w-[180px] shrink-0 rounded-lg border border-slate-200 bg-white px-2.5 py-2.5 text-sm font-medium leading-snug text-slate-900 shadow-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 appearance-none bg-[length:11px_7px] bg-[position:right_10px_center] bg-no-repeat pr-9 " +
   selChevron;
 
 export const stBtnRow =
   "mt-6 flex flex-wrap justify-end gap-3 max-[480px]:justify-stretch";
 
 export const stBtn =
-  "inline-flex cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-5 py-2.5 text-sm font-semibold leading-snug tracking-tight no-underline transition-all duration-200";
+  "inline-flex cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-5 py-3 text-base font-semibold leading-snug tracking-tight no-underline transition-all duration-200 sm:py-2.5 sm:text-sm";
 
 export const stBtnGhost =
   "border border-slate-200 bg-white text-slate-600 shadow-sm hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900";
@@ -175,7 +182,8 @@ export const stTeaserH3 =
 export const stTeaserP =
   "m-0 text-sm leading-relaxed text-slate-600";
 
-export const stPscores = "grid grid-cols-1 gap-2 min-[380px]:grid-cols-3 min-[380px]:gap-2";
+export const stPscores =
+  "grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-3";
 
 export const stPscore =
   "min-w-0 rounded-lg border border-slate-200/90 bg-white px-3 py-2 text-center shadow-sm";
@@ -195,19 +203,19 @@ export const stRhTitleRow =
   "flex flex-wrap items-center gap-2 gap-y-1.5";
 
 export const stRhH2 =
-  "m-0 text-lg font-semibold leading-snug tracking-tight text-slate-900 sm:text-xl";
+  "m-0 text-xl font-semibold leading-snug tracking-tight text-slate-900 sm:text-2xl";
 
 export const stRhP =
-  "m-0 mt-1.5 text-sm leading-relaxed text-slate-600";
+  "m-0 mt-2 text-base leading-relaxed text-slate-600";
 
 export const stRdyTag =
   "inline-flex shrink-0 items-center rounded-full border border-emerald-200/90 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold leading-none text-emerald-800";
 
 export const stSstrip =
-  "mb-3 grid grid-cols-1 gap-2 min-[520px]:grid-cols-3 min-[520px]:gap-3";
+  "mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4";
 
 export const stSc =
-  "min-w-0 rounded-lg border border-slate-200/90 bg-white px-3 py-2.5 shadow-sm";
+  "min-w-0 rounded-xl border border-slate-200/90 bg-white px-4 py-4 shadow-sm sm:px-5 sm:py-5";
 
 export const stScTot =
   "border-indigo-200/80 bg-gradient-to-br from-indigo-50/80 to-violet-50/50";
@@ -215,7 +223,7 @@ export const stScTot =
 export const stSlbl = `${stOverline} mb-1 block`;
 
 export const stSval =
-  "mb-1 block text-[1.75rem] font-bold tabular-nums leading-none tracking-tight sm:text-3xl";
+  "mb-1 block text-[2rem] font-bold tabular-nums leading-none tracking-tight sm:text-4xl";
 
 export const stSvalM = "text-indigo-600";
 
@@ -224,16 +232,16 @@ export const stSvalE = "text-amber-600";
 export const stSvalTot = "text-indigo-700";
 
 export const stSsub =
-  "block text-xs font-medium leading-none text-slate-500";
+  "block text-sm font-medium leading-none text-slate-500";
 
 export const stIc =
   "mb-3 rounded-xl border border-slate-200/90 bg-white p-4 shadow-sm ring-1 ring-slate-900/[0.03] last:mb-0 sm:p-5";
 
 export const stIcTtl =
-  "mb-3 flex items-center gap-2 border-b border-slate-100 pb-2.5 text-sm font-semibold leading-snug tracking-tight text-slate-900";
+  "mb-3 flex items-center gap-2 border-b border-slate-100 pb-3 text-base font-semibold leading-snug tracking-tight text-slate-900 sm:text-lg";
 
 export const stIcTtlEm =
-  "not-italic text-[1.05rem] leading-none opacity-95";
+  "not-italic text-xl leading-none opacity-95";
 
 export const stGapPanel =
   "rounded-lg border border-indigo-100/80 bg-gradient-to-br from-slate-50/90 to-white p-3 sm:p-3.5";
@@ -282,25 +290,30 @@ export const stWtxtP =
   "m-0 mt-1.5 text-sm leading-relaxed text-slate-600";
 
 export const stBkGrid =
-  "grid grid-cols-1 gap-3 min-[521px]:grid-cols-2 min-[521px]:gap-4";
+  "grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-8 xl:gap-10";
 
 export const stBkTtl =
-  "mb-2.5 border-b border-slate-200 pb-2 text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-700";
+  "mb-3 border-b border-slate-200 pb-2.5 text-sm font-semibold uppercase tracking-[0.05em] text-slate-800";
 
+/** Grid: label | bar | % so bars align and whitespace is even; mobile stacks label then bar+row */
 export const stTbrowBk =
-  "mb-2 flex items-center gap-2 last:mb-0";
+  "mb-3 flex flex-col gap-2 last:mb-0 sm:grid sm:grid-cols-[minmax(0,1fr)_minmax(6rem,1.25fr)_2.75rem] sm:items-center sm:gap-x-4";
+
+/** Unwraps into the grid on sm+ so track + % stay one row on narrow viewports */
+export const stTbBarWrap =
+  "flex min-w-0 items-center gap-3 sm:contents";
 
 export const stTbn =
-  "w-[118px] shrink-0 text-[11px] font-medium leading-tight text-slate-700";
+  "min-w-0 text-sm font-medium leading-snug text-slate-800 sm:text-[0.9375rem]";
 
 export const stTbtrack =
-  "h-1.5 flex-1 overflow-hidden rounded-full border border-slate-200 bg-slate-100";
+  "h-2 w-full min-w-[4.5rem] overflow-hidden rounded-full border border-slate-200 bg-slate-100 sm:min-w-0";
 
 export const stTbfill =
   "h-full rounded-full transition-[width] duration-[1100ms] ease-[cubic-bezier(0.22,1,0.36,1)]";
 
 export const stTbpct =
-  "w-8 shrink-0 text-right text-[11px] font-semibold tabular-nums text-slate-500";
+  "w-full shrink-0 text-left text-sm font-semibold tabular-nums text-slate-600 sm:w-auto sm:text-right";
 
 export const stPlist = "flex flex-col gap-2";
 
