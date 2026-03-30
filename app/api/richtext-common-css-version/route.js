@@ -4,7 +4,7 @@ import { join } from "path";
 
 export async function GET() {
   try {
-    const filePath = join(process.cwd(), "app", "(main)", "commanStyle.css");
+    const filePath = join(process.cwd(), "public", "commanStyle.css");
     const fileStats = await stat(filePath);
     const version = String(Math.floor(fileStats.mtimeMs));
     return NextResponse.json(

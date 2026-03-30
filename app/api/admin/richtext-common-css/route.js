@@ -4,7 +4,7 @@ import { join } from "path";
 import { requireRole } from "@/middleware/authMiddleware";
 import { successResponse, errorResponse, handleApiError } from "@/utils/apiResponse";
 
-const cssFilePath = join(process.cwd(), "app", "(main)", "commanStyle.css");
+const cssFilePath = join(process.cwd(), "public", "commanStyle.css");
 
 export async function GET(request) {
   try {

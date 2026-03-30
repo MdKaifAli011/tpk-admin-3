@@ -3,12 +3,12 @@ import { readFile, stat } from "fs/promises";
 import { join } from "path";
 
 /**
- * Serves app/(main)/commanStyle.css for CKEditor contentsCss (iframe needs a URL).
- * Same file is imported in RichContent.jsx for the public content area.
+ * Serves public/commanStyle.css for CKEditor contentsCss (iframe needs a URL).
+ * Same file backs rich content styling on the frontend (via this route + cache headers).
  */
 export async function GET(request) {
   try {
-    const filePath = join(process.cwd(), "app", "(main)", "commanStyle.css");
+    const filePath = join(process.cwd(), "public", "commanStyle.css");
     const fileStats = await stat(filePath);
     const css = await readFile(filePath, "utf8");
     const version = String(Math.floor(fileStats.mtimeMs));

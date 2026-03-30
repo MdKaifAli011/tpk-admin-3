@@ -11,7 +11,7 @@ const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
 const CKEDITOR_SCRIPT = `${basePath}/vendor/ckeditor/ckeditor.js`;
 const MATHJAX_SCRIPT = `${basePath}/vendor/mathjax/MathJax.js?config=TeX-AMS_HTML`;
 const CKEDITOR_CONTENTS_CSS = `${basePath}/vendor/ckeditor/contents.css`;
-/** Matches RichContent: app/(main)/commanStyle.css (served for CKEditor iframe) */
+/** Matches RichContent: public/commanStyle.css (served via /api/richtext-common-css for CKEditor iframe) */
 const RICHTEXT_COMMON_CSS = `${basePath}/api/richtext-common-css`;
 let cachedRichtextCssHref = null;
 

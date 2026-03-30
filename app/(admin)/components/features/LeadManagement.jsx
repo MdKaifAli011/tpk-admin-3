@@ -62,6 +62,7 @@ const LeadManagement = () => {
   const [selectedLead, setSelectedLead] = useState(null);
   const { toasts, removeToast, success, error: showError } = useToast();
   const isFetchingRef = useRef(false);
+  const queuedFetchRef = useRef(null);
 
   // Filter states
   const [filterCountry, setFilterCountry] = useState("");
@@ -155,7 +156,11 @@ const LeadManagement = () => {
 
   // Fetch leads: replace (page 1) or append (next page on scroll)
   const fetchLeads = async (page = 1, limit = DEFAULT_LIMIT, append = false) => {
-    if (isFetchingRef.current) return;
+    if (isFetchingRef.current) {
+      // Keep only the latest requested fetch (e.g. per-page change while load-more is in-flight).
+      queuedFetchRef.current = { page, limit, append };
+      return;
+    }
     isFetchingRef.current = true;
     try {
       if (append) {
@@ -211,6 +216,11 @@ const LeadManagement = () => {
         setIsDataLoading(false);
       }
       isFetchingRef.current = false;
+      if (queuedFetchRef.current) {
+        const next = queuedFetchRef.current;
+        queuedFetchRef.current = null;
+        fetchLeads(next.page, next.limit, next.append);
+      }
     }
   };
 
@@ -608,9 +618,15 @@ const LeadManagement = () => {
                     id="lead-per-page"
                     value={pagination.limit}
                     onChange={(e) => {
+                      const nextLimit = parseInt(e.target.value, 10);
+                      // Immediate UX reset so old page-size rows aren't shown while refetching.
+                      setSelectedLeads(new Set());
+                      setLeads([]);
+                      setIsLoadingMore(false);
+                      queuedFetchRef.current = { page: 1, limit: nextLimit, append: false };
                       setPagination((prev) => ({
                         ...prev,
-                        limit: parseInt(e.target.value, 10),
+                        limit: nextLimit,
                         page: 1,
                       }));
                     }}

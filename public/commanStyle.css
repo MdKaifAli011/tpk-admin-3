@@ -1,8 +1,8 @@
 /*
- * Rich HTML (tk-*, modules, etc.) — used by:
- * - RichContent.jsx (import)
- * - RichTextEditor / CKEditor (GET /api/richtext-common-css)
- * Combined / deduplicated by collect_css.js
+ * Rich HTML (tk-*, modules, etc.) — single source of truth at public/commanStyle.css
+ * - Frontend rich content + CKEditor preview: GET /api/richtext-common-css (ETag / ?v= cache)
+ * - Admin edit/save: GET/PUT /api/admin/richtext-common-css
+ * Static URL (no versioning): /commanStyle.css
  */
 
 .tk-topic-heroBar {
@@ -4073,3 +4073,154 @@
   margin-left: auto;
   margin-right: 0;
 }
+
+
+
+.tk-snapshot-bar{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#0f172a}
+    .tk-snapshot-bar *{box-sizing:border-box}
+
+    /* Full-width + premium background */
+    .tk-snapshot-bar .tk-wrap{
+      width:100%;
+      margin:0;
+      padding:16px 14px;
+      border-radius:18px;
+      border:1px solid #e2e8f0;
+      background:
+        radial-gradient(900px 520px at 10% 10%, rgba(14,165,233,.16), transparent 55%),
+        radial-gradient(850px 520px at 92% 18%, rgba(99,102,241,.14), transparent 58%),
+        radial-gradient(900px 520px at 48% 110%, rgba(16,185,129,.10), transparent 60%),
+        linear-gradient(135deg,#ffffff 0%, #f8fafc 45%, #ffffff 100%);
+      box-shadow:0 18px 40px rgba(15,23,42,.06);
+      overflow:hidden;
+    }
+
+    /* Top row: Title + micro note */
+    .tk-snapshot-bar .tk-top{
+      display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;
+      margin-bottom:12px;
+    }
+    .tk-snapshot-bar .tk-title{
+      margin:0;
+      font-size:18px;
+      font-weight:980;
+      letter-spacing:-.2px;
+      line-height:1.25;
+    }
+    .tk-snapshot-bar .tk-sub{
+      margin:6px 0 0;
+      font-size:13px;
+      color:#475569;
+      line-height:1.6;
+      max-width:85ch;
+    }
+    .tk-snapshot-bar .tk-note{
+      font-size:12px;
+      font-weight:900;
+      color:#0f172a;
+      border:1px solid rgba(148,163,184,.55);
+      background:rgba(255,255,255,.72);
+      backdrop-filter:blur(8px);
+      border-radius:999px;
+      padding:7px 10px;
+      white-space:nowrap;
+      display:inline-flex;align-items:center;gap:8px;
+      height:fit-content;
+    }
+    .tk-snapshot-bar .tk-note i{
+      font-style:normal;
+      width:18px;height:18px;border-radius:8px;
+      display:inline-flex;align-items:center;justify-content:center;
+      background:linear-gradient(135deg,#0ea5e9,#6366f1);
+      color:#fff;
+      font-weight:950;
+      font-size:12px;
+      box-shadow:0 10px 22px rgba(2,132,199,.18);
+    }
+
+    /* KPI grid */
+    .tk-snapshot-bar .tk-grid{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:10px;
+    }
+    @media(min-width:900px){
+      .tk-snapshot-bar .tk-grid{grid-template-columns:repeat(3,1fr)}
+    }
+
+    .tk-snapshot-bar .tk-card{
+      border:1px solid rgba(226,232,240,1);
+      background:rgba(255,255,255,.78);
+      backdrop-filter:blur(10px);
+      border-radius:18px;
+      padding:14px;
+      box-shadow:0 14px 34px rgba(15,23,42,.06);
+      position:relative;
+      overflow:hidden;
+      min-height:102px;
+    }
+    .tk-snapshot-bar .tk-card:before{
+      content:"";
+      position:absolute;inset:-70px;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(14,165,233,.10), transparent 45%),
+        radial-gradient(circle at 80% 60%, rgba(99,102,241,.08), transparent 50%);
+      transform:rotate(8deg);
+      pointer-events:none;
+    }
+
+    .tk-snapshot-bar .tk-cardTop{
+      position:relative;
+      display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+    }
+    .tk-snapshot-bar .tk-label{
+      font-size:12px;
+      font-weight:900;
+      color:#64748b;
+      letter-spacing:.2px;
+    }
+    .tk-snapshot-bar .tk-ico{
+      position:relative;
+      width:34px;height:34px;border-radius:14px;
+      display:inline-flex;align-items:center;justify-content:center;
+      background:linear-gradient(135deg, rgba(14,165,233,.22), rgba(99,102,241,.20));
+      border:1px solid rgba(148,163,184,.35);
+      color:#0f172a;
+      font-weight:950;
+      font-size:14px;
+      flex:0 0 auto;
+    }
+
+    .tk-snapshot-bar .tk-value{
+      position:relative;
+      margin-top:10px;
+      font-size:22px;
+      font-weight:980;
+      letter-spacing:-.35px;
+      color:#0f172a;
+      line-height:1.15;
+    }
+    .tk-snapshot-bar .tk-desc{
+      position:relative;
+      margin-top:8px;
+      font-size:13px;
+      color:#334155;
+      line-height:1.6;
+    }
+
+    /* Secondary info row */
+    .tk-snapshot-bar .tk-badges{
+      margin-top:12px;
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+    .tk-snapshot-bar .tk-badge{
+      font-size:12px;
+      font-weight:900;
+      color:#0f172a;
+      padding:7px 10px;
+      border-radius:999px;
+      border:1px dashed rgba(148,163,184,.65);
+      background:rgba(255,255,255,.70);
+    }

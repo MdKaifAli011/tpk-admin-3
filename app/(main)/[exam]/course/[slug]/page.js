@@ -339,7 +339,7 @@ export default function CourseDetailPage() {
   // WhatsApp: show button only when a number exists (course, then env, then site default)
   const whatsappNumber = (callPhone || process.env.NEXT_PUBLIC_WHATSAPP_PHONE || "15107069331").trim().replace(/\D/g, "");
   const showWhatsAppButton = whatsappNumber.length > 0;
-  const whatsappUrl = showWhatsAppButton ? `https://api.whatsapp.com/send?phone=${whatsappNumber}` : null;
+  const whatsappUrl = showWhatsAppButton ? `https://api.whatsapp.com/send?phone=15107069331` : null;
   const batchClosingDays =
     course.batchClosingDays != null && Number(course.batchClosingDays) >= 0
       ? Number(course.batchClosingDays)

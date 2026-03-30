@@ -124,12 +124,19 @@ export function useFilterPersistence(storageKey, defaultState = {}) {
         sessionStorage.setItem(key, JSON.stringify(state));
       }
     } catch (_) {}
-    // Only replace URL when query would change (avoids sync loop) and pathname has no extra segment (list page)
+    // Only sync URL when query would change (avoids sync loop) and pathname has no extra segment (list page)
     const pathSegments = pathname.split("/").filter(Boolean);
     const isListPath = pathSegments.length <= 2; // e.g. ["admin", "unit"] = list; ["admin", "unit", "id"] = detail
     if (newQuery !== currentQuery && isListPath) {
       const url = newQuery ? `${pathname}?${newQuery}` : pathname;
-      router.replace(url, { scroll: false });
+      // Use history.replaceState to avoid triggering an App Router navigation request (_rsc)
+      // on every debounced filter change. This removes noisy "Fetch failed loading ...?_rsc=..."
+      // logs while keeping URL in sync.
+      if (typeof window !== "undefined") {
+        window.history.replaceState(null, "", url);
+      } else {
+        router.replace(url, { scroll: false });
+      }
     }
   }, [state, pathname, router, storageKey, searchParamsString]);
 
