@@ -31,8 +31,10 @@ import {
 } from "./utils/formValidation";
 import Button from "./Button";
 import Card from "./Card";
+import { useExamPreparedDefault } from "./context/ExamLeadContext";
 
 const ContactForm = () => {
+  const examPreparedDefault = useExamPreparedDefault();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -146,7 +148,7 @@ const ContactForm = () => {
         form_name: "contact-form", // Form identifier
         form_id: "contact-form", // Form ID to track registration source
         source: sourcePath, // Full URL with query parameters
-        prepared: "",
+        prepared: examPreparedDefault,
       });
 
       if (response.data?.success) {

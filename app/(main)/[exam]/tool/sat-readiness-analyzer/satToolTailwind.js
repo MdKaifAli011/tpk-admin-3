@@ -26,52 +26,40 @@ export const stRoot =
 /** Full width of main column — no max-width cap */
 export const stWrap = "w-full max-w-none px-0 py-2 sm:py-4";
 
-export const stTopbar =
-  "mb-4 flex flex-col gap-3 rounded-xl border border-slate-200/80 bg-white px-3 py-3 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-5 sm:py-3.5";
+export const stProgWrap = "mb-3 w-full min-w-0";
 
-export const stTbBrand = "flex min-w-0 items-center gap-2.5";
-
-export const stTopbarActions =
-  "flex w-full shrink-0 items-center justify-end gap-2 sm:w-auto";
-
-export const stTbIco =
-  "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-lg leading-none text-white shadow-sm";
-
-export const stTbName =
-  "text-lg font-semibold leading-snug tracking-tight text-slate-900 sm:text-xl";
-
-export const stTbTag =
-  "rounded-full border border-slate-200/90 bg-slate-50 px-3 py-1 text-xs font-medium tabular-nums text-slate-600";
-
-export const stProgWrap = "mb-4 w-full min-w-0";
-
-/** Horizontal scroll on narrow screens so all five steps stay usable */
+/** Stepper: dots + labels share one flex row so labels stay centered under numbers */
 export const stProgTrackOuter =
-  "w-full min-w-0 overflow-x-auto overflow-y-visible pb-1 [-webkit-overflow-scrolling:touch] sm:overflow-visible sm:pb-0";
+  "w-full min-w-0 overflow-x-auto overflow-y-visible pb-0.5 [-webkit-overflow-scrolling:touch] sm:overflow-visible sm:pb-0";
 
-export const stProgTrack =
-  "flex min-w-[min(100%,22rem)] items-center gap-0 sm:min-w-0";
+export const stProgInner = "relative w-full min-w-[17.5rem] px-0.5 py-1 sm:min-w-0";
+
+/** Full-width track behind dots (6%–94%) */
+export const stProgLineBg =
+  "pointer-events-none absolute left-[6%] right-[6%] top-[15px] z-0 h-[3px] rounded-full bg-slate-200 sm:top-[17px]";
+
+/** Completed portion of the track — width set inline as % of container; above gray */
+export const stProgLineFill =
+  "pointer-events-none absolute left-[6%] top-[15px] z-[1] h-[3px] rounded-full bg-emerald-500 transition-[width] duration-500 ease-out sm:top-[17px]";
+
+export const stProgStepsRow =
+  "relative z-[1] flex w-full items-start justify-between gap-0.5 sm:gap-1";
+
+export const stProgCol =
+  "flex min-w-0 max-w-[20%] flex-1 flex-col items-center gap-1.5";
 
 export const stProgDot =
-  "relative z-[1] flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-[3px] border-slate-300 bg-white text-base font-bold tabular-nums text-slate-500 transition-all duration-300";
+  "relative z-[2] flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-slate-300 bg-white text-xs font-bold tabular-nums text-slate-500 transition-all duration-300 sm:h-9 sm:w-9 sm:text-sm";
 
 /** `!` ensures these win over stProgDot (fixes “empty” completed circles) */
 export const stProgDotActive =
-  "!border-indigo-600 !bg-indigo-600 !text-white shadow-[0_0_0_4px_rgba(79,70,229,0.22)]";
+  "!border-indigo-600 !bg-indigo-600 !text-white shadow-[0_0_0_3px_rgba(79,70,229,0.2)]";
 
 export const stProgDotDone =
-  "!border-emerald-600 !bg-emerald-600 !text-white shadow-md";
-
-export const stProgConn =
-  "h-1 min-w-[0.5rem] flex-1 rounded-full bg-slate-200 transition-colors duration-300";
-
-export const stProgConnDone = "!bg-emerald-500";
-
-export const stProgLabels =
-  "mt-3 grid grid-cols-5 gap-1 px-0.5 sm:mt-3.5";
+  "!border-emerald-600 !bg-emerald-600 !text-white shadow-sm";
 
 export const stProgLbl =
-  "text-center text-xs font-medium leading-tight text-slate-600 transition-colors duration-300 sm:text-sm sm:leading-snug";
+  "w-full px-0.5 text-center text-[10px] font-medium leading-tight text-slate-600 transition-colors duration-300 sm:text-xs sm:leading-snug";
 
 export const stProgLblActive = "font-semibold text-indigo-600";
 
@@ -209,7 +197,7 @@ export const stRhP =
   "m-0 mt-2 text-base leading-relaxed text-slate-600";
 
 export const stRdyTag =
-  "inline-flex shrink-0 items-center rounded-full border border-emerald-200/90 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold leading-none text-emerald-800";
+  "inline-flex shrink-0 items-center gap-1 rounded-full border border-emerald-200/90 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold leading-none text-emerald-800";
 
 export const stSstrip =
   "mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4";
@@ -238,10 +226,11 @@ export const stIc =
   "mb-3 rounded-xl border border-slate-200/90 bg-white p-4 shadow-sm ring-1 ring-slate-900/[0.03] last:mb-0 sm:p-5";
 
 export const stIcTtl =
-  "mb-3 flex items-center gap-2 border-b border-slate-100 pb-3 text-base font-semibold leading-snug tracking-tight text-slate-900 sm:text-lg";
+  "mb-3 flex items-center gap-2.5 border-b border-slate-100 pb-3 text-base font-semibold leading-snug tracking-tight text-slate-900 sm:text-lg";
 
-export const stIcTtlEm =
-  "not-italic text-xl leading-none opacity-95";
+/** Icon tile for report section headings (replaces emoji) */
+export const stIcTtlIco =
+  "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 ring-1 ring-indigo-100/80";
 
 export const stGapPanel =
   "rounded-lg border border-indigo-100/80 bg-gradient-to-br from-slate-50/90 to-white p-3 sm:p-3.5";
@@ -279,7 +268,8 @@ export const stGapSub =
 export const stWrow =
   "mt-3 flex items-start gap-2.5 rounded-lg border border-emerald-200/90 bg-emerald-50/80 px-3 py-2.5";
 
-export const stWico = "shrink-0 text-xl leading-none";
+export const stWico =
+  "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-100/90 text-emerald-700 ring-1 ring-emerald-200/80";
 
 export const stWtxt = "min-w-0 flex-1";
 
@@ -353,7 +343,7 @@ export const stDlRowActions =
 export const stCaptchaWrap = "mt-4";
 
 export const stCaptchaErr =
-  "mt-2 hidden items-center gap-1.5 text-xs font-semibold text-rose-600";
+  "mt-2 hidden items-start gap-2 text-xs font-semibold leading-snug text-rose-600";
 
 export const stCaptchaErrShow = "!flex";
 
@@ -362,7 +352,8 @@ export const stPdfNote =
 
 export const stPdfNoteShow = "!flex";
 
-export const stPnIco = "shrink-0 text-xl leading-none";
+export const stPnIco =
+  "flex shrink-0 items-center justify-center text-xl leading-none";
 
 export const stPnTtl =
   "mb-1 text-sm font-semibold leading-snug text-amber-950";

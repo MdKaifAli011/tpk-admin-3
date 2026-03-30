@@ -25,8 +25,8 @@ const BlogCard = ({ post, examSlug }) => {
   const compactAuthor = rawAuthor.toLowerCase().replace(/[^a-z]/g, "");
   const displayAuthor =
     !rawAuthor ||
-    rawAuthor.toLowerCase().endsWith("@admin.com") ||
-    compactAuthor === "testprepkart"
+      rawAuthor.toLowerCase().endsWith("@admin.com") ||
+      compactAuthor === "testprepkart"
       ? "TestprepKart"
       : rawAuthor;
 

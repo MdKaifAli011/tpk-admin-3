@@ -36,7 +36,8 @@ import {
   validateConfirmPassword,
 } from "./utils/formValidation";
 import Button from "./Button";
-import { getFormPlaceholderImageSrc } from "./utils/formPlaceholderImage";
+import { useFormPlaceholderImage } from "./hooks/useFormPlaceholderImage";
+import { useExamPreparedDefault } from "./context/ExamLeadContext";
 
 const DiscussionForumSavePostModal = ({
   isOpen,
@@ -44,10 +45,10 @@ const DiscussionForumSavePostModal = ({
   onRegistrationSuccess,
   formId = "Discussion-forum-save-post",
 }) => {
+  const examPreparedDefault = useExamPreparedDefault();
   const pathname = usePathname();
-  const { src: formPlaceholderSrc, fallbackSrc: formPlaceholderFallback } = getFormPlaceholderImageSrc(pathname, basePath, { variant: "discussion" });
-  const [formPlaceholderImgSrc, setFormPlaceholderImgSrc] = useState(formPlaceholderSrc);
-  useEffect(() => setFormPlaceholderImgSrc(formPlaceholderSrc), [formPlaceholderSrc]);
+  const { src: formPlaceholderImgSrc, onError: onFormPlaceholderError } =
+    useFormPlaceholderImage(pathname, basePath, { variant: "discussion" });
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -303,7 +304,7 @@ const DiscussionForumSavePostModal = ({
         password: formData.password,
         phoneNumber: fullPhoneNumber,
         className: formData.className.trim(),
-        prepared: formData.prepared || null,
+        prepared: formData.prepared?.trim() || examPreparedDefault || null,
         country: formData.country || null,
         source: sourceUrl,
         formId,
@@ -397,7 +398,7 @@ const DiscussionForumSavePostModal = ({
               src={formPlaceholderImgSrc}
               alt="Registration illustration"
               className="absolute inset-0 w-full h-full object-cover"
-              onError={() => setFormPlaceholderImgSrc(formPlaceholderFallback)}
+              onError={onFormPlaceholderError}
             />
             <div className="absolute inset-0 bg-black/10" />
           </div>

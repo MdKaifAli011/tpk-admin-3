@@ -3,6 +3,7 @@ import { createSlug } from "@/utils/slug";
 import { logger } from "@/utils/logger";
 import { generateTabAwareMetadata, extractSearchParams } from "@/utils/tabSeo";
 import NotificationStrip from "../components/NotificationStrip";
+import { ExamLeadProvider } from "../components/context/ExamLeadContext";
 
 // Force dynamic rendering to ensure fresh metadata
 export const dynamic = 'force-dynamic';
@@ -76,7 +77,7 @@ export default function ExamLayout({ children }) {
     <>
       {/* Notification strip at top of header for all 7 levels: exam, subject, unit, chapter, topic, subtopic, definition */}
       <NotificationStrip />
-      {children}
+      <ExamLeadProvider>{children}</ExamLeadProvider>
     </>
   );
 }

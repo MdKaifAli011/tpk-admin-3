@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import Image from "next/image";
 import { FaSpinner, FaTimes, FaUser, FaExclamationCircle } from "react-icons/fa";
 import api from "@/lib/api";
@@ -10,9 +11,10 @@ import FormFieldInput from "./FormFieldInput";
 import VerificationInput from "./VerificationInput";
 import SubmitStatusMessage from "./SubmitStatusMessage";
 import { logger } from "@/utils/logger";
+import { useExamPreparedDefault } from "../context/ExamLeadContext";
+import { useFormPlaceholderImage } from "../hooks/useFormPlaceholderImage";
 
-// Default form image
-const DEFAULT_FORM_IMAGE = "/images/form-placeholder.png";
+const basePathForm = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
 
 // Default inline contact form config when API/form not found — so inline form always shows and submits to /lead
 const DEFAULT_INLINE_FORM_CONFIG = {
@@ -68,6 +70,15 @@ const FormRenderer = ({
   const [submitMessage, setSubmitMessage] = useState("");
   const [imageError, setImageError] = useState(false);
 
+  const pathname = usePathname();
+  const { src: examPlaceholderSrc, onError: onExamPlaceholderError } =
+    useFormPlaceholderImage(pathname, basePathForm, { variant: "default" });
+
+  const examPreparedDefault = useExamPreparedDefault();
+
+  useEffect(() => {
+    setImageError(false);
+  }, [formId, imageUrl, formConfig?.settings?.imageUrl]);
 
   const {
     verificationQuestion,
@@ -258,7 +269,11 @@ const FormRenderer = ({
         form_name: formId, // Use formId as form_name
         form_id: formId,
         source: pathnameWithQuery, // Store full pathname with query parameters (e.g., /neet/biology?tab=practice&test=...)
-        prepared: extractedExamName || prepared || "",
+        prepared:
+          examPreparedDefault ||
+          extractedExamName ||
+          prepared ||
+          "",
       };
 
       // Combine country code and phone number if both exist
@@ -471,6 +486,15 @@ const FormRenderer = ({
     (a, b) => (a.order || 0) - (b.order || 0)
   );
 
+  const fromProp = imageUrl && String(imageUrl).trim();
+  const fromConfig =
+    formConfig.settings?.imageUrl && String(formConfig.settings.imageUrl).trim();
+  const effectiveCustom = (fromProp || fromConfig || "").trim();
+  const useCustom = Boolean(effectiveCustom) && !imageError;
+  const sidebarImgSrc = useCustom
+    ? resolveImagePath(effectiveCustom)
+    : examPlaceholderSrc;
+
   const formContent = (
     <>
       <div
@@ -501,23 +525,17 @@ const FormRenderer = ({
             }`}
           >
             <img
-              src={resolveImagePath(
-                (() => {
-                  // Inline embed: prefer image from editor (imageUrl prop); else form config; else default
-                  const fromProp = imageUrl && String(imageUrl).trim();
-                  const fromConfig = formConfig.settings?.imageUrl && String(formConfig.settings.imageUrl).trim();
-                  const effective = fromProp || fromConfig || "";
-                  if (effective && !imageError) return effective;
-                  return DEFAULT_FORM_IMAGE;
-                })()
-              )}
+              src={sidebarImgSrc}
               alt={title || formConfig.settings?.title || formConfig?.formId || "Form"}
               className="absolute inset-0 w-full h-full object-cover object-center"
               style={{
                 margin: "0",
                 borderRadius: "0px",
               }}
-              onError={() => setImageError(true)}
+              onError={() => {
+                if (useCustom) setImageError(true);
+                else onExamPlaceholderError();
+              }}
             />
           </div>
 

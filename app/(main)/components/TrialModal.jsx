@@ -33,13 +33,14 @@ import {
     validateCountry,
     validateClassName,
 } from "./utils/formValidation";
-import { getFormPlaceholderImageSrc } from "./utils/formPlaceholderImage";
+import { useFormPlaceholderImage } from "./hooks/useFormPlaceholderImage";
+import { useExamPreparedDefault } from "./context/ExamLeadContext";
 
 const TrialModal = ({ isOpen, onClose }) => {
+    const examPreparedDefault = useExamPreparedDefault();
     const pathname = usePathname();
-    const { src: formPlaceholderSrc, fallbackSrc: formPlaceholderFallback } = getFormPlaceholderImageSrc(pathname, basePath);
-    const [formPlaceholderImgSrc, setFormPlaceholderImgSrc] = useState(formPlaceholderSrc);
-    useEffect(() => setFormPlaceholderImgSrc(formPlaceholderSrc), [formPlaceholderSrc]);
+    const { src: formPlaceholderImgSrc, onError: onFormPlaceholderError } =
+        useFormPlaceholderImage(pathname, basePath, { variant: "default" });
 
     const [formData, setFormData] = useState({
         name: "",
@@ -167,7 +168,10 @@ const TrialModal = ({ isOpen, onClose }) => {
                 country: formData.country.trim(),
                 className: formData.className.trim(),
                 phoneNumber: formData.countryCode + formData.phoneNumber.trim(),
-                prepared: formData.subject,
+                prepared: [examPreparedDefault, formData.subject]
+                    .map((s) => String(s || "").trim())
+                    .filter(Boolean)
+                    .join(" — "),
                 form_name: "Book Trial Session",
                 form_id: "book-trial-session",
                 source: sourcePath,
@@ -255,7 +259,7 @@ const TrialModal = ({ isOpen, onClose }) => {
                             src={formPlaceholderImgSrc}
                             alt="Trial illustration"
                             className="absolute inset-0 w-full h-full object-cover"
-                            onError={() => setFormPlaceholderImgSrc(formPlaceholderFallback)}
+                            onError={onFormPlaceholderError}
                         />
                         <div className="absolute inset-0 bg-black/10" />
                     </div>

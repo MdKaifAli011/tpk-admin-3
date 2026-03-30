@@ -9,6 +9,12 @@ export const LEAD_FORM_IDS_BLACK_BADGE = new Set([
   "sat-readiness-analyzer",
 ]);
 
+/** POST /api/lead verifies reCAPTCHA when RECAPTCHA_SECRET_KEY is set */
+export const LEAD_FORM_IDS_RECAPTCHA = new Set([
+  "SAT-Readiness-Analyzer",
+  "sat-readiness-analyzer",
+]);
+
 export function isLeadFormIdBlackBadge(formId, highlightedFromApi) {
   const id = String(formId ?? "").trim();
   if (!id) return false;

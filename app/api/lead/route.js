@@ -15,6 +15,11 @@ import {
   parseUsTimezoneFromBody,
   parseTimezoneTellUsFromBody,
 } from "@/constants/usTimezone";
+import { LEAD_FORM_IDS_RECAPTCHA } from "@/constants/leadFormBadges";
+import {
+  shouldBypassRecaptchaForRequest,
+  verifyRecaptchaV2,
+} from "@/lib/recaptcha";
 
 function parsePreferredDateFromBody(raw) {
   if (raw === undefined) return { ok: true, skip: true };
@@ -159,6 +164,23 @@ export async function POST(request) {
 
     if (isSpamOrFakePhone(body.phoneNumber.trim())) {
       return errorResponse("Please enter a valid phone number", 400);
+    }
+
+    const formIdForCaptcha = body.form_id?.trim() || "";
+    if (
+      process.env.RECAPTCHA_SECRET_KEY &&
+      LEAD_FORM_IDS_RECAPTCHA.has(formIdForCaptcha) &&
+      !shouldBypassRecaptchaForRequest(request)
+    ) {
+      const fwd = request.headers.get("x-forwarded-for");
+      const ip =
+        fwd?.split(",")[0]?.trim() ||
+        request.headers.get("x-real-ip") ||
+        "";
+      const captchaCheck = await verifyRecaptchaV2(body.recaptchaToken, ip);
+      if (!captchaCheck.ok) {
+        return errorResponse(captchaCheck.message, 400);
+      }
     }
 
     const tzParsed = parseUsTimezoneFromBody(body.usTimezone);

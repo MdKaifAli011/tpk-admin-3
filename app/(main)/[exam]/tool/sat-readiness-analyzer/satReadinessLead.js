@@ -4,7 +4,7 @@
  */
 
 /** Lead.prepared — single placeholder so the admin “Prepared” column stays clean. */
-export const SAT_LEAD_PREPARED = "-";
+export const SAT_LEAD_PREPARED = "sat";
 
 /**
  * Lead.form_id — stable Pascal-Case id for filters, badges, and reporting.

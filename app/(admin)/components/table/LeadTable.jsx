@@ -266,6 +266,14 @@ const LeadTable = forwardRef(({ leads, onView, onDelete, selectedLeads: selected
     setSelectedLeads(newSelected);
   };
 
+  /** Row click toggles selection unless the user is selecting/copying text. */
+  const handleRowClickToggleSelect = (leadId) => {
+    if (typeof window === "undefined") return;
+    const sel = window.getSelection();
+    if (sel && sel.toString().trim().length > 0) return;
+    handleSelectLead(leadId);
+  };
+
   // Check if all leads are selected
   const allSelected = useMemo(() => {
     if (leads.length === 0) return false;
@@ -377,8 +385,8 @@ const LeadTable = forwardRef(({ leads, onView, onDelete, selectedLeads: selected
               return (
                 <tr
                   key={leadId || index}
-                  onClick={() => handleSelectLead(leadId)}
-                  className={`transition-all duration-150 cursor-pointer select-none ${
+                  onClick={() => handleRowClickToggleSelect(leadId)}
+                  className={`transition-all duration-150 cursor-pointer ${
                     isSelected
                       ? isHighlightRow
                         ? "bg-green-400 hover:bg-green-200"
@@ -396,7 +404,7 @@ const LeadTable = forwardRef(({ leads, onView, onDelete, selectedLeads: selected
                       className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
                     />
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap">
+                  <td className="px-4 py-3 whitespace-nowrap select-text">
                     <time
                       className="text-sm text-slate-600"
                       dateTime={getDisplayDate(lead)}
@@ -409,12 +417,12 @@ const LeadTable = forwardRef(({ leads, onView, onDelete, selectedLeads: selected
                       {formatDate(getDisplayDate(lead))}
                     </time>
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap">
+                  <td className="px-4 py-3 whitespace-nowrap select-text">
                     <span className="text-sm font-medium text-gray-900">
                       {lead.name}
                     </span>
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap">
+                  <td className="px-4 py-3 whitespace-nowrap select-text">
                     {countryDisplay ? (
                       isHighlightRow ? (
                         <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-yellow-400/90 text-yellow-900 border border-yellow-500/60 shadow-sm">
@@ -428,7 +436,7 @@ const LeadTable = forwardRef(({ leads, onView, onDelete, selectedLeads: selected
                     )}
                   </td>
 
-                  <td className="px-4 py-3 whitespace-nowrap">
+                  <td className="px-4 py-3 whitespace-nowrap select-text">
                     <a
                       href={`mailto:${lead.email}`}
                       onClick={(e) => e.stopPropagation()}
@@ -438,12 +446,12 @@ const LeadTable = forwardRef(({ leads, onView, onDelete, selectedLeads: selected
                       {lead.email}
                     </a>
                   </td>
-                  <td className="px-2 py-2 whitespace-nowrap">
+                  <td className="px-2 py-2 whitespace-nowrap select-text">
                     <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-gray-100 text-gray-700">
                       {lead.className}
                     </span>
                   </td>
-                  <td className="px-2 py-2 whitespace-nowrap">
+                  <td className="px-2 py-2 whitespace-nowrap select-text">
                     {lead.prepared ? (
                       <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-purple-100 text-purple-700">
                         {lead.prepared}
@@ -452,7 +460,7 @@ const LeadTable = forwardRef(({ leads, onView, onDelete, selectedLeads: selected
                       <span className="text-sm text-gray-400 italic">N/A</span>
                     )}
                   </td>
-                  <td className="px-2 py-2 whitespace-nowrap max-w-[120px]">
+                  <td className="px-2 py-2 whitespace-nowrap max-w-[120px] select-text">
                     {formatPreferredDateOnly(lead.preferredDate) ? (
                       <span className="text-xs text-slate-700 font-medium" title={formatPreferredDateOnly(lead.preferredDate)}>
                         {formatPreferredDateOnly(lead.preferredDate)}
@@ -461,7 +469,7 @@ const LeadTable = forwardRef(({ leads, onView, onDelete, selectedLeads: selected
                       <span className="text-sm text-gray-400 italic">—</span>
                     )}
                   </td>
-                  <td className="px-2 py-2 whitespace-nowrap">
+                  <td className="px-2 py-2 whitespace-nowrap select-text">
                     {lead.usTimezone ? (
                       <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold bg-indigo-100 text-indigo-800 border border-indigo-200/80">
                         {lead.usTimezone}
@@ -470,7 +478,7 @@ const LeadTable = forwardRef(({ leads, onView, onDelete, selectedLeads: selected
                       <span className="text-sm text-gray-400 italic">—</span>
                     )}
                   </td>
-                  <td className="px-2 py-2 whitespace-nowrap max-w-[140px]">
+                  <td className="px-2 py-2 whitespace-nowrap max-w-[140px] select-text">
                     {lead.timezoneTellUs ? (
                       <span className="text-xs text-slate-600 truncate block" title={lead.timezoneTellUs}>
                         {lead.timezoneTellUs}
@@ -479,7 +487,7 @@ const LeadTable = forwardRef(({ leads, onView, onDelete, selectedLeads: selected
                       <span className="text-sm text-gray-400 italic">—</span>
                     )}
                   </td>
-                  <td className="px-2 py-2 whitespace-nowrap">
+                  <td className="px-2 py-2 whitespace-nowrap select-text">
                     {lead.form_id || lead.form_name ? (
                       <code
                         className={`text-xs px-2 py-1 rounded font-mono ${
@@ -494,7 +502,7 @@ const LeadTable = forwardRef(({ leads, onView, onDelete, selectedLeads: selected
                       <span className="text-sm text-gray-400 italic">N/A</span>
                     )}
                   </td>
-                  <td className="px-2 py-2 whitespace-nowrap">
+                  <td className="px-2 py-2 whitespace-nowrap select-text">
                     {lead.phoneNumber ? (
                       <a
                         href={`tel:${String(lead.phoneNumber).trim()}`}
@@ -507,7 +515,7 @@ const LeadTable = forwardRef(({ leads, onView, onDelete, selectedLeads: selected
                       <span className="text-sm text-gray-400 italic">N/A</span>
                     )}
                   </td>
-                  <td className="px-2 py-2 whitespace-nowrap">
+                  <td className="px-2 py-2 whitespace-nowrap select-text">
                     {lead.source ? (
                       <a
                         href={getFullUrl(lead.source) || lead.source}
@@ -525,7 +533,7 @@ const LeadTable = forwardRef(({ leads, onView, onDelete, selectedLeads: selected
                       <span className="text-sm text-gray-400 italic">N/A</span>
                     )}
                   </td>
-                  <td className="px-2 py-2 whitespace-nowrap">
+                  <td className="px-2 py-2 whitespace-nowrap select-text">
                     {getStatusBadge(
                       lead.status || "new",
                       lead.updateCount || 0
@@ -583,16 +591,16 @@ const LeadTable = forwardRef(({ leads, onView, onDelete, selectedLeads: selected
           return (
             <div
               key={leadId || index}
-              onClick={() => handleSelectLead(leadId)}
+              onClick={() => handleRowClickToggleSelect(leadId)}
               role="button"
               tabIndex={0}
               onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") {
                   e.preventDefault();
-                  handleSelectLead(leadId);
+                  handleRowClickToggleSelect(leadId);
                 }
               }}
-              className={`rounded-lg p-3 shadow-sm border-l-4 cursor-pointer select-none ${
+              className={`rounded-lg p-3 shadow-sm border-l-4 cursor-pointer ${
                 isSelected
                   ? isHighlightRow
                     ? "border-l-yellow-500 border border-yellow-400 bg-yellow-400"
@@ -604,7 +612,7 @@ const LeadTable = forwardRef(({ leads, onView, onDelete, selectedLeads: selected
             >
               {/* Header Section */}
               <div className="flex items-start justify-between gap-2 mb-3">
-                <div className="flex items-center gap-2 flex-1 min-w-0" onClick={(e) => e.stopPropagation()}>
+                <div className="flex items-center gap-2 flex-1 min-w-0 select-text" onClick={(e) => e.stopPropagation()}>
                   <input
                     type="checkbox"
                     checked={isSelected}
@@ -630,7 +638,7 @@ const LeadTable = forwardRef(({ leads, onView, onDelete, selectedLeads: selected
               </div>
 
               {/* Details Grid */}
-              <div className="grid grid-cols-2 gap-2 mb-3">
+              <div className="grid grid-cols-2 gap-2 mb-3 select-text">
                 <div>
                   <div className="text-xs text-gray-500">
                     {lead.updatedAt && (lead.status === "updated" || lead.updateCount > 0)

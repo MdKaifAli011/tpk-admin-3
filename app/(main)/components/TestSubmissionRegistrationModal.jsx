@@ -37,7 +37,8 @@ import {
   validateConfirmPassword,
 } from "./utils/formValidation";
 import Button from "./Button";
-import { getFormPlaceholderImageSrc } from "./utils/formPlaceholderImage";
+import { useFormPlaceholderImage } from "./hooks/useFormPlaceholderImage";
+import { useExamPreparedDefault } from "./context/ExamLeadContext";
 
 const TestSubmissionRegistrationModal = ({
   isOpen,
@@ -46,10 +47,10 @@ const TestSubmissionRegistrationModal = ({
   testName,
   formId = "registration-practice", // Default form ID for practice test registration
 }) => {
+  const examPreparedDefault = useExamPreparedDefault();
   const pathname = usePathname();
-  const { src: formPlaceholderSrc, fallbackSrc: formPlaceholderFallback } = getFormPlaceholderImageSrc(pathname, basePath);
-  const [formPlaceholderImgSrc, setFormPlaceholderImgSrc] = useState(formPlaceholderSrc);
-  useEffect(() => setFormPlaceholderImgSrc(formPlaceholderSrc), [formPlaceholderSrc]);
+  const { src: formPlaceholderImgSrc, onError: onFormPlaceholderError } =
+    useFormPlaceholderImage(pathname, basePath, { variant: "default" });
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -312,7 +313,7 @@ const TestSubmissionRegistrationModal = ({
         password: formData.password,
         phoneNumber: fullPhoneNumber,
         className: formData.className.trim(),
-        prepared: formData.prepared || null,
+        prepared: formData.prepared?.trim() || examPreparedDefault || null,
         country: formData.country || null,
         source: sourceUrl, // Send the full URL (pathname + query params) where student registered from
         formId: formId, // Send form ID to track registration source
@@ -417,7 +418,7 @@ const TestSubmissionRegistrationModal = ({
               src={formPlaceholderImgSrc}
               alt="Registration illustration"
               className="absolute inset-0 w-full h-full object-cover"
-              onError={() => setFormPlaceholderImgSrc(formPlaceholderFallback)}
+              onError={onFormPlaceholderError}
             />
 
             {/* Optional overlay */}

@@ -89,7 +89,10 @@ const BlogDetailPage = async ({ params }) => {
       >
         <div className="flex flex-col gap-3 sm:gap-4">
           <div>
-            <h1 id="blog-title" className="text-xl sm:text-2xl font-bold text-indigo-900 mb-2">
+            <h1
+              id="blog-title"
+              className="text-xl sm:text-2xl font-bold text-indigo-900 mb-2"
+            >
               {displayTitle}
             </h1>
             <div className="flex flex-wrap items-center gap-3 text-xs text-gray-600">
@@ -116,15 +119,17 @@ const BlogDetailPage = async ({ params }) => {
         </div>
       </section>
 
-      {/* Blog Image - reserve aspect ratio to prevent CLS */}
+      {/* Blog cover — short banner, responsive height, stable CLS via explicit box */}
       {blog.image && (
-        <div className="relative w-full aspect-video min-h-[200px] sm:min-h-[280px] md:min-h-[320px] rounded-xl overflow-hidden bg-gray-100">
+        <div
+          className="relative w-full h-[clamp(140px,26vw,280px)] sm:h-[clamp(168px,24vw,340px)] rounded-xl overflow-hidden bg-gray-100 border border-indigo-100/60 shadow-[0_2px_12px_rgba(120,90,200,0.08)]"
+        >
           <Image
             src={imageSrc}
-            alt=""
+            alt={displayTitle ? `${displayTitle} — cover image` : "Blog cover image"}
             fill
-            className="object-cover"
-            sizes="(max-width: 768px) 100vw, 720px"
+            className="object-cover object-center"
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 92vw, min(960px, 72vw)"
             unoptimized={isExternalImage}
             priority
           />

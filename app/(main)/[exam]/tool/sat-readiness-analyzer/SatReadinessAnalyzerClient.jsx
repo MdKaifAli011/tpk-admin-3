@@ -8,7 +8,24 @@ import React, {
   useState,
 } from "react";
 import Script from "next/script";
-import { FaCheck } from "react-icons/fa";
+import {
+  FaArrowLeft,
+  FaArrowRight,
+  FaBookOpen,
+  FaBullseye,
+  FaCalculator,
+  FaCalendarAlt,
+  FaChartBar,
+  FaChartLine,
+  FaCheck,
+  FaDownload,
+  FaExclamationTriangle,
+  FaLockOpen,
+  FaRedo,
+  FaSearch,
+  FaStar,
+  FaUser,
+} from "react-icons/fa";
 import { ToolBreadcrumb } from "../ToolPageChrome";
 import api from "@/lib/api";
 import {
@@ -104,10 +121,6 @@ const SAT_STEP_LABELS = [
   "Results",
 ];
 
-const RECAPTCHA_KEY =
-  process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY ||
-  "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI";
-
 /** Readiness bar colors (rose / amber / emerald) — matches tool UI + PDF semantics */
 const READINESS = {
   low: "#f43f5e",
@@ -153,7 +166,10 @@ function TimelineWDetail({ satReport }) {
       <strong>{hn} total hours</strong> needed.{" "}
       {av != null &&
         (wn <= av ? (
-          <strong className="font-bold text-emerald-600">On track ✓</strong>
+          <strong className="inline-flex items-center gap-1 font-bold text-emerald-600">
+            On track
+            <FaCheck className="h-3.5 w-3.5 shrink-0" aria-hidden />
+          </strong>
         ) : (
           <strong className="font-bold text-rose-600">Increase hours</strong>
         ))}
@@ -186,7 +202,11 @@ function TopicRow({ topic, value, onChange }) {
   );
 }
 
-export default function SatReadinessAnalyzerClient({ examSlug }) {
+export default function SatReadinessAnalyzerClient({
+  examSlug,
+  recaptchaSiteKey = "",
+  bypassRecaptcha = false,
+}) {
   const exam = String(examSlug || "sat").toLowerCase();
   const examLabel = exam.toUpperCase();
 
@@ -267,7 +287,7 @@ export default function SatReadinessAnalyzerClient({ examSlug }) {
   }, [step, satReport]);
 
   useEffect(() => {
-    if (step !== 4) return;
+    if (step !== 4 || bypassRecaptcha || !recaptchaSiteKey.trim()) return;
     const w = typeof window !== "undefined" ? window : null;
     if (!w?.grecaptcha?.render) return;
 
@@ -276,7 +296,7 @@ export default function SatReadinessAnalyzerClient({ examSlug }) {
       if (!el) return;
       el.innerHTML = "";
       try {
-        w.grecaptcha.render(el, { sitekey: RECAPTCHA_KEY });
+        w.grecaptcha.render(el, { sitekey: recaptchaSiteKey.trim() });
       } catch {
         /* widget may already exist */
       }
@@ -287,7 +307,7 @@ export default function SatReadinessAnalyzerClient({ examSlug }) {
     } else {
       mount();
     }
-  }, [step]);
+  }, [step, recaptchaSiteKey, bypassRecaptcha]);
 
   useEffect(() => {
     if (step !== 5 || !chartReady || !satReport || !chartRef.current) return;
@@ -395,13 +415,23 @@ export default function SatReadinessAnalyzerClient({ examSlug }) {
       return;
     }
 
-    const captchaResp =
-      typeof window !== "undefined" && typeof window.grecaptcha !== "undefined"
-        ? window.grecaptcha.getResponse()
-        : "";
-    if (!captchaResp) {
-      setCaptchaError(true);
+    if (!bypassRecaptcha && !recaptchaSiteKey.trim()) {
+      setLeadError(
+        "This form is missing reCAPTCHA configuration. Add RECAPTCHA_SITE_KEY to the server environment."
+      );
       return;
+    }
+
+    let captchaResp = "";
+    if (!bypassRecaptcha) {
+      captchaResp =
+        typeof window !== "undefined" && typeof window.grecaptcha !== "undefined"
+          ? window.grecaptcha.getResponse()
+          : "";
+      if (!captchaResp) {
+        setCaptchaError(true);
+        return;
+      }
     }
     setCaptchaError(false);
 
@@ -441,7 +471,7 @@ export default function SatReadinessAnalyzerClient({ examSlug }) {
 
     setSubmitting(true);
     try {
-      const res = await api.post("/lead", {
+      const payload = {
         name,
         email: em,
         country: country.trim(),
@@ -451,7 +481,11 @@ export default function SatReadinessAnalyzerClient({ examSlug }) {
         form_name: "SAT Readiness Analyzer",
         source: sourcePath,
         prepared: SAT_LEAD_PREPARED,
-      });
+      };
+      if (!bypassRecaptcha) {
+        payload.recaptchaToken = captchaResp;
+      }
+      const res = await api.post("/lead", payload);
 
       if (!res.data?.success) {
         setLeadError(
@@ -500,7 +534,11 @@ export default function SatReadinessAnalyzerClient({ examSlug }) {
       /* ignore */
     }
     try {
-      if (typeof window !== "undefined" && window.grecaptcha) {
+      if (
+        !bypassRecaptcha &&
+        typeof window !== "undefined" &&
+        window.grecaptcha
+      ) {
         window.grecaptcha.reset();
       }
     } catch {
@@ -527,7 +565,7 @@ export default function SatReadinessAnalyzerClient({ examSlug }) {
         alert("PDF generation failed.");
       }
       if (btn) {
-        btn.textContent = "⬇ Download PDF Report";
+        btn.textContent = "Download PDF report";
         btn.disabled = false;
       }
     }, 100);
@@ -557,19 +595,29 @@ export default function SatReadinessAnalyzerClient({ examSlug }) {
       chartInstRef.current = null;
     }
     try {
-      if (typeof window !== "undefined" && window.grecaptcha) {
+      if (
+        !bypassRecaptcha &&
+        typeof window !== "undefined" &&
+        window.grecaptcha
+      ) {
         window.grecaptcha.reset();
       }
     } catch {
       /* ignore */
     }
     setStep(1);
-    try {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    } catch {
-      /* ignore */
-    }
-  }, []);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        try {
+          document
+            .getElementById("sat-tool-selection")
+            ?.scrollIntoView({ behavior: "smooth", block: "start" });
+        } catch {
+          /* ignore */
+        }
+      });
+    });
+  }, [bypassRecaptcha]);
 
   const priorityItems = useMemo(() => {
     if (!satReport) return [];
@@ -620,10 +668,12 @@ export default function SatReadinessAnalyzerClient({ examSlug }) {
           window._jspdfReady = false;
         }}
       />
-      <Script
-        src="https://www.google.com/recaptcha/api.js"
-        strategy="afterInteractive"
-      />
+      {!bypassRecaptcha && recaptchaSiteKey.trim() ? (
+        <Script
+          src="https://www.google.com/recaptcha/api.js"
+          strategy="afterInteractive"
+        />
+      ) : null}
 
       <div className="exam-hub-min-h w-full min-w-0 bg-white text-slate-900 space-y-3 mt-3 pb-6 md:space-y-4 md:mt-4 md:pb-8">
         <section
@@ -649,15 +699,11 @@ export default function SatReadinessAnalyzerClient({ examSlug }) {
               ]}
             />
 
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
               <div className="min-w-0 w-full max-w-none flex-1">
-                <div className="mb-2 flex flex-wrap items-center gap-2">
+                <div className="mb-2">
                   <span className="inline-flex items-center rounded-full bg-indigo-600/10 px-2.5 py-0.5 text-xs font-semibold uppercase tracking-[0.08em] text-indigo-700 sm:text-[0.8125rem]">
                     {examLabel} · Tool
-                  </span>
-                  <span className="hidden h-1 w-1 rounded-full bg-slate-300 sm:inline" aria-hidden />
-                  <span className="text-xs font-medium tabular-nums leading-none text-slate-500">
-                    Free · ~5 min
                   </span>
                 </div>
 
@@ -676,110 +722,102 @@ export default function SatReadinessAnalyzerClient({ examSlug }) {
                   tools hub.
                 </p>
               </div>
+              {step > 1 ? (
+                <button
+                  type="button"
+                  id="sat-reset-btn"
+                  className={`${sat.stBtn} ${sat.stBtnGhost} shrink-0 self-start text-sm font-semibold px-4 py-2`}
+                  onClick={resetAll}
+                >
+                  <FaRedo className="h-3.5 w-3.5 shrink-0 opacity-80" aria-hidden />
+                  Start over
+                </button>
+              ) : null}
             </div>
           </div>
         </section>
 
         <div className="w-full min-w-0">
             <div className={sat.stRoot}>
-              <div className={sat.stWrap}>
-            <div className={sat.stTopbar}>
-              <div className={sat.stTbBrand}>
-                <div className={sat.stTbIco}>📝</div>
-                <span className={sat.stTbName}>SAT Readiness Analyzer</span>
-              </div>
-              <div className={sat.stTopbarActions}>
-                <button
-                  type="button"
-                  className={`${sat.stBtn} ${sat.stBtnGhost} text-[11.5px] px-[13px] py-1.5 ${step > 1 ? "inline-flex" : "hidden"}`}
-                  id="sat-reset-btn"
-                  onClick={resetAll}
-                >
-                  ↩ Start Over
-                </button>
-                <span className={sat.stTbTag}>Free · 5 min</span>
-              </div>
-            </div>
-
+              <div
+                id="sat-tool-selection"
+                className={`${sat.stWrap} scroll-mt-20 md:scroll-mt-24`}
+              >
             <div className={sat.stProgWrap}>
               <nav
                 className={sat.stProgTrackOuter}
                 aria-label="SAT Readiness Analyzer steps"
               >
-                <div className={sat.stProgTrack}>
-                  {[1, 2, 3, 4, 5].map((n) => (
-                    <React.Fragment key={n}>
-                      <div
-                        className={[
-                          sat.stProgDot,
-                          n < step
-                            ? sat.stProgDotDone
-                            : n === step
-                              ? sat.stProgDotActive
-                              : "",
-                        ]
-                          .filter(Boolean)
-                          .join(" ")}
-                        aria-current={n === step ? "step" : undefined}
-                        aria-label={
-                          n < step
-                            ? `${SAT_STEP_LABELS[n - 1]} — completed`
-                            : n === step
-                              ? `${SAT_STEP_LABELS[n - 1]} — current step`
-                              : `${SAT_STEP_LABELS[n - 1]} — not started`
-                        }
-                      >
-                        {n < step ? (
-                          <FaCheck className="h-[1.15rem] w-[1.15rem] text-white" aria-hidden />
-                        ) : (
-                          <span className="tabular-nums" aria-hidden>
-                            {n}
-                          </span>
-                        )}
-                      </div>
-                      {n < 5 && (
+                <div className={sat.stProgInner}>
+                  <div className={sat.stProgLineBg} aria-hidden />
+                  <div
+                    className={sat.stProgLineFill}
+                    style={{
+                      width:
+                        step > 1
+                          ? `${((step - 1) / 4) * 88}%`
+                          : "0%",
+                    }}
+                    aria-hidden
+                  />
+                  <div className={sat.stProgStepsRow}>
+                    {[1, 2, 3, 4, 5].map((n) => (
+                      <div key={n} className={sat.stProgCol}>
                         <div
                           className={[
-                            sat.stProgConn,
-                            n < step ? sat.stProgConnDone : "",
+                            sat.stProgDot,
+                            n < step
+                              ? sat.stProgDotDone
+                              : n === step
+                                ? sat.stProgDotActive
+                                : "",
                           ]
                             .filter(Boolean)
                             .join(" ")}
-                          aria-hidden
-                        />
-                      )}
-                    </React.Fragment>
-                  ))}
+                          aria-current={n === step ? "step" : undefined}
+                          aria-label={
+                            n < step
+                              ? `${SAT_STEP_LABELS[n - 1]} — completed`
+                              : n === step
+                                ? `${SAT_STEP_LABELS[n - 1]} — current step`
+                                : `${SAT_STEP_LABELS[n - 1]} — not started`
+                          }
+                        >
+                          {n < step ? (
+                            <FaCheck className="h-3.5 w-3.5 text-white" aria-hidden />
+                          ) : (
+                            <span className="tabular-nums" aria-hidden>
+                              {n}
+                            </span>
+                          )}
+                        </div>
+                        <span
+                          className={[
+                            sat.stProgLbl,
+                            n < step
+                              ? sat.stProgLblDone
+                              : n === step
+                                ? sat.stProgLblActive
+                                : "",
+                          ]
+                            .filter(Boolean)
+                            .join(" ")}
+                        >
+                          {SAT_STEP_LABELS[n - 1]}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </nav>
-              <div className={sat.stProgLabels}>
-                {SAT_STEP_LABELS.map((lbl, i) => {
-                  const n = i + 1;
-                  return (
-                    <span
-                      key={lbl}
-                      className={[
-                        sat.stProgLbl,
-                        n < step
-                          ? sat.stProgLblDone
-                          : n === step
-                            ? sat.stProgLblActive
-                            : "",
-                      ]
-                        .filter(Boolean)
-                        .join(" ")}
-                    >
-                      {lbl}
-                    </span>
-                  );
-                })}
-              </div>
             </div>
 
             {step === 1 && (
               <div className={sat.stCard} id="step1">
                 <div className={sat.stCh}>
-                  <div className={`${sat.stChIco} ${sat.stChIcoB}`}>👤</div>
+                  <div className={`${sat.stChIco} ${sat.stChIcoB}`}>
+                    <FaUser className="h-6 w-6 text-indigo-600" aria-hidden />
+                  </div>
                   <div>
                     <div className={sat.stChTtl}>
                       Student <span className={sat.stChTtlHi}>Profile</span>
@@ -875,7 +913,8 @@ export default function SatReadinessAnalyzerClient({ examSlug }) {
                     className={`${sat.stBtn} ${sat.stBtnBlue}`}
                     onClick={() => goStep(2)}
                   >
-                    Continue to Math →
+                    Continue to Math
+                    <FaArrowRight className="h-4 w-4 shrink-0" aria-hidden />
                   </button>
                 </div>
               </div>
@@ -884,7 +923,9 @@ export default function SatReadinessAnalyzerClient({ examSlug }) {
             {step === 2 && (
               <div className={sat.stCard} id="step2">
                 <div className={sat.stCh}>
-                  <div className={`${sat.stChIco} ${sat.stChIcoB}`}>🔢</div>
+                  <div className={`${sat.stChIco} ${sat.stChIcoB}`}>
+                    <FaCalculator className="h-6 w-6 text-indigo-600" aria-hidden />
+                  </div>
                   <div>
                     <div className={sat.stChTtl}>
                       SAT <span className={sat.stChTtlHi}>Math</span> Self-Assessment
@@ -932,14 +973,16 @@ export default function SatReadinessAnalyzerClient({ examSlug }) {
                     className={`${sat.stBtn} ${sat.stBtnGhost}`}
                     onClick={() => goStep(1)}
                   >
-                    ← Back
+                    <FaArrowLeft className="h-4 w-4 shrink-0" aria-hidden />
+                    Back
                   </button>
                   <button
                     type="button"
                     className={`${sat.stBtn} ${sat.stBtnBlue}`}
                     onClick={() => goStep(3)}
                   >
-                    Continue to English →
+                    Continue to English
+                    <FaArrowRight className="h-4 w-4 shrink-0" aria-hidden />
                   </button>
                 </div>
               </div>
@@ -948,7 +991,9 @@ export default function SatReadinessAnalyzerClient({ examSlug }) {
             {step === 3 && (
               <div className={sat.stCard} id="step3">
                 <div className={sat.stCh}>
-                  <div className={`${sat.stChIco} ${sat.stChIcoG}`}>📖</div>
+                  <div className={`${sat.stChIco} ${sat.stChIcoG}`}>
+                    <FaBookOpen className="h-6 w-6 text-amber-600" aria-hidden />
+                  </div>
                   <div>
                     <div className={sat.stChTtl}>
                       SAT <span className={sat.stChTtlHg}>Reading &amp; Writing</span>
@@ -996,14 +1041,16 @@ export default function SatReadinessAnalyzerClient({ examSlug }) {
                     className={`${sat.stBtn} ${sat.stBtnGhost}`}
                     onClick={() => goStep(2)}
                   >
-                    ← Back
+                    <FaArrowLeft className="h-4 w-4 shrink-0" aria-hidden />
+                    Back
                   </button>
                   <button
                     type="button"
                     className={`${sat.stBtn} ${sat.stBtnGold}`}
                     onClick={() => goStep(4)}
                   >
-                    Almost Done →
+                    Almost done
+                    <FaArrowRight className="h-4 w-4 shrink-0" aria-hidden />
                   </button>
                 </div>
               </div>
@@ -1013,7 +1060,9 @@ export default function SatReadinessAnalyzerClient({ examSlug }) {
               <div className={sat.stCardLead} id="step4">
                 <div className={sat.stTeaser}>
                   <div className={sat.stTeaserTop}>
-                    <div className="text-[22px] leading-none">🎯</div>
+                    <div className={`${sat.stChIco} ${sat.stChIcoB}`}>
+                      <FaBullseye className="h-6 w-6 text-indigo-600" aria-hidden />
+                    </div>
                     <div>
                       <h3 className={sat.stTeaserH3}>Your SAT Report is Ready!</h3>
                       <p className={sat.stTeaserP}>
@@ -1141,12 +1190,37 @@ export default function SatReadinessAnalyzerClient({ examSlug }) {
                 </div>
 
                 <div className={sat.stCaptchaWrap}>
-                  <div id="sat-recaptcha-mount" className="g-recaptcha" />
+                  {bypassRecaptcha ? (
+                    <p className="m-0 text-xs leading-relaxed text-slate-500">
+                      Local / dev: reCAPTCHA is skipped. Production uses your
+                      configured keys.
+                    </p>
+                  ) : recaptchaSiteKey.trim() ? (
+                    <div id="sat-recaptcha-mount" className="g-recaptcha" />
+                  ) : (
+                    <p className="text-sm font-medium text-rose-600">
+                      reCAPTCHA is not configured. Set{" "}
+                      <code className="rounded bg-rose-50 px-1 py-0.5 text-xs">
+                        RECAPTCHA_SITE_KEY
+                      </code>{" "}
+                      (and{" "}
+                      <code className="rounded bg-rose-50 px-1 py-0.5 text-xs">
+                        RECAPTCHA_SECRET_KEY
+                      </code>
+                      ) in your environment, then restart the app.
+                    </p>
+                  )}
                   <div
                     className={`${sat.stCaptchaErr} ${captchaError ? sat.stCaptchaErrShow : ""}`}
                     id="captcha-error"
                   >
-                    ⚠ Please confirm you are not a robot to continue.
+                    <span className="inline-flex items-center gap-1.5">
+                      <FaExclamationTriangle
+                        className="h-4 w-4 shrink-0 text-amber-600"
+                        aria-hidden
+                      />
+                      Please confirm you are not a robot to continue.
+                    </span>
                   </div>
                 </div>
 
@@ -1158,7 +1232,8 @@ export default function SatReadinessAnalyzerClient({ examSlug }) {
                     className={`${sat.stBtn} ${sat.stBtnGhost}`}
                     onClick={() => goStep(3)}
                   >
-                    ← Back
+                    <FaArrowLeft className="h-4 w-4 shrink-0" aria-hidden />
+                    Back
                   </button>
                   <button
                     type="button"
@@ -1166,7 +1241,14 @@ export default function SatReadinessAnalyzerClient({ examSlug }) {
                     onClick={handleUnlock}
                     disabled={submitting}
                   >
-                    {submitting ? "Saving…" : "🔓 Unlock My Full Report"}
+                    {submitting ? (
+                      "Saving…"
+                    ) : (
+                      <>
+                        <FaLockOpen className="h-4 w-4 shrink-0" aria-hidden />
+                        Unlock my full report
+                      </>
+                    )}
                   </button>
                 </div>
               </div>
@@ -1180,7 +1262,10 @@ export default function SatReadinessAnalyzerClient({ examSlug }) {
                       <h2 className={sat.stRhH2} id="rName">
                         Hi {satReport.fname}! Here&apos;s Your SAT Report
                       </h2>
-                      <span className={sat.stRdyTag}>✓ Report Ready</span>
+                      <span className={sat.stRdyTag}>
+                        <FaCheck className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                        Report ready
+                      </span>
                     </div>
                     <p className={sat.stRhP} id="rDate">
                       Generated: {satReport.date}
@@ -1212,7 +1297,10 @@ export default function SatReadinessAnalyzerClient({ examSlug }) {
                 </div>
                 <div className={sat.stIc}>
                   <div className={sat.stIcTtl}>
-                    <em className={sat.stIcTtlEm}>📊</em> Gap Analysis
+                    <span className={sat.stIcTtlIco}>
+                      <FaChartBar className="h-[1.125rem] w-[1.125rem]" aria-hidden />
+                    </span>
+                    Gap analysis
                   </div>
                   <div className={sat.stGapPanel}>
                     <div className={sat.stGapRow}>
@@ -1266,7 +1354,9 @@ export default function SatReadinessAnalyzerClient({ examSlug }) {
                     </div>
                   </div>
                   <div className={sat.stWrow}>
-                    <div className={sat.stWico}>📅</div>
+                    <div className={sat.stWico}>
+                      <FaCalendarAlt className="h-4 w-4" aria-hidden />
+                    </div>
                     <div className={sat.stWtxt}>
                       <h4 className={sat.stWtxtH4} id="wHead">{satReport.wHead}</h4>
                       <TimelineWDetail satReport={satReport} />
@@ -1275,7 +1365,10 @@ export default function SatReadinessAnalyzerClient({ examSlug }) {
                 </div>
                 <div className={sat.stIc}>
                   <div className={sat.stIcTtl}>
-                    <em className={sat.stIcTtlEm}>📈</em> Topic-wise Readiness
+                    <span className={sat.stIcTtlIco}>
+                      <FaChartLine className="h-[1.125rem] w-[1.125rem]" aria-hidden />
+                    </span>
+                    Topic-wise readiness
                   </div>
                   <canvas
                     id="sat_chart"
@@ -1285,11 +1378,14 @@ export default function SatReadinessAnalyzerClient({ examSlug }) {
                 </div>
                 <div className={sat.stIc}>
                   <div className={sat.stIcTtl}>
-                    <em className={sat.stIcTtlEm}>🔍</em> Section Breakdown
+                    <span className={sat.stIcTtlIco}>
+                      <FaSearch className="h-[1.125rem] w-[1.125rem]" aria-hidden />
+                    </span>
+                    Section breakdown
                   </div>
                   <div className={sat.stBkGrid}>
                     <div>
-                      <div className={sat.stBkTtl}>🔢 Math</div>
+                      <div className={sat.stBkTtl}>Math</div>
                       <div id="sat_mathBk">
                         {satReport.mathDetails.map((t) => {
                           const p = Math.round(((t.conf - 1) / 4) * 100);
@@ -1320,7 +1416,7 @@ export default function SatReadinessAnalyzerClient({ examSlug }) {
                       </div>
                     </div>
                     <div>
-                      <div className={sat.stBkTtl}>📖 Reading &amp; Writing</div>
+                      <div className={sat.stBkTtl}>Reading &amp; Writing</div>
                       <div id="sat_engBk">
                         {satReport.engDetails.map((t) => {
                           const p = Math.round(((t.conf - 1) / 4) * 100);
@@ -1354,7 +1450,10 @@ export default function SatReadinessAnalyzerClient({ examSlug }) {
                 </div>
                 <div className={sat.stIc}>
                   <div className={sat.stIcTtl}>
-                    <em className={sat.stIcTtlEm}>🎯</em> Priority Topics to Focus On
+                    <span className={sat.stIcTtlIco}>
+                      <FaBullseye className="h-[1.125rem] w-[1.125rem]" aria-hidden />
+                    </span>
+                    Priority topics to focus on
                   </div>
                   <div className={sat.stPlist} id="sat_priList">
                     {!priorityItems.length ? (
@@ -1385,7 +1484,10 @@ export default function SatReadinessAnalyzerClient({ examSlug }) {
                 </div>
                 <div className={sat.stIc}>
                   <div className={sat.stIcTtl}>
-                    <em className={sat.stIcTtlEm}>💪</em> Your Strong Areas
+                    <span className={sat.stIcTtlIco}>
+                      <FaStar className="h-[1.125rem] w-[1.125rem]" aria-hidden />
+                    </span>
+                    Your strong areas
                   </div>
                   <div className={sat.stPlist} id="sat_strList">
                     {!strongItems.length ? (
@@ -1418,7 +1520,8 @@ export default function SatReadinessAnalyzerClient({ examSlug }) {
                         id="dlBtn"
                         onClick={handleDownloadPdf}
                       >
-                        ⬇ Download PDF Report
+                        <FaDownload className="h-4 w-4 shrink-0" aria-hidden />
+                        Download PDF report
                       </button>
                       <a
                         className={`${sat.stBtn} ${sat.stBtnGold}`}
@@ -1426,7 +1529,8 @@ export default function SatReadinessAnalyzerClient({ examSlug }) {
                         target="_blank"
                         rel="noopener noreferrer"
                       >
-                        📅 Schedule SAT Trial Session
+                        <FaCalendarAlt className="h-4 w-4 shrink-0" aria-hidden />
+                        Schedule SAT trial session
                       </a>
                     </div>
                   </div>
@@ -1434,7 +1538,12 @@ export default function SatReadinessAnalyzerClient({ examSlug }) {
                     className={`${sat.stPdfNote} ${pdfNote ? sat.stPdfNoteShow : ""}`}
                     id="pdf-note"
                   >
-                    <span className={sat.stPnIco}>⚠️</span>
+                    <span className={sat.stPnIco}>
+                      <FaExclamationTriangle
+                        className="h-5 w-5 text-amber-600"
+                        aria-hidden
+                      />
+                    </span>
                     <div>
                       <div className={sat.stPnTtl}>PDF download is blocked in this preview</div>
                       <div className={sat.stPnTxt}>

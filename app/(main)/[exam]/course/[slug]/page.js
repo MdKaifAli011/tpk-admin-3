@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 import Image from "next/image";
 import {
   FaStar,
@@ -43,6 +43,8 @@ import {
   validateClassName,
 } from "@/app/(main)/components/utils/formValidation";
 import { toTitleCase } from "@/utils/titleCase";
+import { useExamPreparedDefault } from "@/app/(main)/components/context/ExamLeadContext";
+import { useFormPlaceholderImage } from "@/app/(main)/components/hooks/useFormPlaceholderImage";
 
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
 
@@ -73,6 +75,10 @@ function getYouTubeVideoId(url) {
 }
 
 export default function CourseDetailPage() {
+  const examPreparedDefault = useExamPreparedDefault();
+  const pathname = usePathname();
+  const { src: courseFormPlaceholderSrc, onError: onCourseFormPlaceholderError } =
+    useFormPlaceholderImage(pathname, basePath, { variant: "course" });
   const { exam: examSlug, slug } = useParams();
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -243,7 +249,7 @@ export default function CourseDetailPage() {
         form_name: "course-contact",
         form_id: "course-contact",
         source: sourcePath,
-        prepared: "",
+        prepared: examPreparedDefault,
       });
       if (response.data?.success) {
         setContactSubmitStatus("success");
@@ -741,9 +747,10 @@ export default function CourseDetailPage() {
               <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-indigo-700 to-purple-700" />
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={`${basePath}/images/form-placeholder.png`}
+                src={courseFormPlaceholderSrc}
                 alt="Counselor illustration"
                 className="absolute inset-0 h-full w-full object-cover opacity-90"
+                onError={onCourseFormPlaceholderError}
               />
               <div className="absolute inset-0 bg-black/10" />
             </div>
