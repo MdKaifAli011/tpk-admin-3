@@ -178,6 +178,7 @@ export async function POST(request) {
       image: (body.image && String(body.image).trim()) || "",
       videoUrl: (body.videoUrl && String(body.videoUrl).trim()) || "",
       videoThumbnail: (body.videoThumbnail && String(body.videoThumbnail).trim()) || "",
+      brochureButtonUrl: (body.brochureButtonUrl && String(body.brochureButtonUrl).trim()) || "",
       status: body.status || "active",
       orderNumber: body.orderNumber != null ? Number(body.orderNumber) : 0,
     });

@@ -25,6 +25,7 @@ const defaultForm = {
   image: "",
   videoUrl: "",
   videoThumbnail: "",
+  brochureButtonUrl: "",
   status: "active",
 };
 
@@ -94,6 +95,7 @@ export default function CourseForm({ courseId, isNew }) {
               image: c.image || "",
               videoUrl: c.videoUrl || "",
               videoThumbnail: c.videoThumbnail || "",
+              brochureButtonUrl: c.brochureButtonUrl || "",
               status: c.status || "active",
             });
           } else {
@@ -145,6 +147,7 @@ export default function CourseForm({ courseId, isNew }) {
         image: form.image.trim(),
         videoUrl: form.videoUrl.trim(),
         videoThumbnail: form.videoThumbnail.trim(),
+        brochureButtonUrl: form.brochureButtonUrl.trim(),
         status: form.status,
       };
       if (isNew) {
@@ -627,6 +630,19 @@ export default function CourseForm({ courseId, isNew }) {
                     <FaFolderOpen className="w-4 h-4" /> Browse
                   </button>
                 </div>
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Download Course Brochure button URL</label>
+                <input
+                  type="url"
+                  name="brochureButtonUrl"
+                  value={form.brochureButtonUrl}
+                  onChange={handleChange}
+                  placeholder="https://example.com/brochure.pdf or /some-page"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                  disabled={saving}
+                />
+                <p className="mt-1 text-xs text-gray-500">Public course page button opens this URL. Leave empty to use /contact fallback.</p>
               </div>
             </div>
 
