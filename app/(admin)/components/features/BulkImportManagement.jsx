@@ -14,58 +14,43 @@ import api from "@/lib/api";
 import { useToast, ToastContainer } from "../ui/Toast";
 import { usePermissions, getBulkImportPermissions, getBulkImportPermissionMessage } from "../../hooks/usePermissions";
 import { invalidateAllListCaches } from "@/lib/listCacheInvalidation";
+import { parseCSV as parseCSVUtility } from "@/utils/csvParser";
 
-// Helper to parse CSV (handling quotes)
+// Helper to parse CSV using shared parser and normalize header shape.
 const parseCSV = (text) => {
-    const result = [];
-    let row = [];
-    let inQuotes = false;
-    let currentValue = "";
-
-    for (let i = 0; i < text.length; i++) {
-        const char = text[i];
-        const nextChar = text[i + 1];
-
-        if (char === '"') {
-            if (inQuotes && nextChar === '"') {
-                currentValue += '"';
-                i++; // skip next quote
-            } else {
-                inQuotes = !inQuotes;
-            }
-        } else if (char === "," && !inQuotes) {
-            row.push(currentValue.trim());
-            currentValue = "";
-        } else if ((char === "\r" || char === "\n") && !inQuotes) {
-            if (currentValue || row.length > 0) {
-                row.push(currentValue.trim());
-                result.push(row);
-            }
-            row = [];
-            currentValue = "";
-            // Handle \r\n
-            if (char === "\r" && nextChar === "\n") i++;
-        } else {
-            currentValue += char;
-        }
-    }
-    // Add last row
-    if (currentValue || row.length > 0) {
-        row.push(currentValue.trim());
-        result.push(row);
+    const parsedRows = parseCSVUtility(text, { trimHeaders: true, trimValues: true });
+    if (!parsedRows.length) {
+        return { headers: [], data: [] };
     }
 
-    // Convert to array of objects
-    const headers = result[0].map((h) => h.toLowerCase().replace(/\s+/g, ""));
-    const data = result.slice(1).map((r) => {
+    const sourceHeaders = Object.keys(parsedRows[0]);
+    const headers = sourceHeaders.map((h) => h.toLowerCase().replace(/\s+/g, ""));
+    const data = parsedRows.map((row) => {
         const obj = {};
-        headers.forEach((h, idx) => {
-            obj[h] = r[idx] || "";
+        sourceHeaders.forEach((header, idx) => {
+            obj[headers[idx]] = row[header] ?? "";
         });
         return obj;
     });
 
     return { headers, data };
+};
+
+const decodeCsvFile = async (selectedFile) => {
+    const buffer = await selectedFile.arrayBuffer();
+    let text = "";
+
+    try {
+        text = new TextDecoder("utf-8", { fatal: true }).decode(buffer);
+    } catch {
+        text = new TextDecoder("windows-1252").decode(buffer);
+    }
+
+    if (text && text.charCodeAt(0) === 0xfeff) {
+        text = text.slice(1);
+    }
+
+    return text.normalize("NFC");
 };
 
 // Normalize object keys to match CSV header style (lowercase, no spaces)
@@ -302,15 +287,15 @@ const BulkImportManagement = () => {
         setImportStatus("idle");
         setResults({ success: 0, failed: 0, errors: [] });
 
-        const reader = new FileReader();
-        reader.onload = (evt) => {
-            const text = evt.target.result;
+        (async () => {
             try {
                 if (isJSON) {
+                    const text = await selectedFile.text();
                     const { headers, data } = parseJSON(text);
                     setHeaders(headers);
                     setParsedData(data);
                 } else {
+                    const text = await decodeCsvFile(selectedFile);
                     const { headers, data } = parseCSV(text);
                     setHeaders(headers);
                     setParsedData(data);
@@ -320,8 +305,7 @@ const BulkImportManagement = () => {
                 setHeaders([]);
                 setParsedData([]);
             }
-        };
-        reader.readAsText(selectedFile);
+        })();
     };
 
     const downloadTemplate = () => {
@@ -388,7 +372,8 @@ const BulkImportManagement = () => {
         const csvContent = headers.join(",") + "\n" + sampleRows.join("\n");
 
         // Download
-        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+        const BOM = "\uFEFF";
+        const blob = new Blob([BOM + csvContent], { type: "text/csv;charset=utf-8;" });
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.setAttribute("href", url);

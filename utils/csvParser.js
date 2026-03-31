@@ -21,6 +21,12 @@ export function parseCSV(csvText, options = {}) {
     throw new Error("CSV text is empty");
   }
 
+  // Strip UTF-8 BOM and normalize unicode so symbols are preserved consistently.
+  if (csvText.charCodeAt(0) === 0xfeff) {
+    csvText = csvText.slice(1);
+  }
+  csvText = csvText.normalize("NFC");
+
   // Parse CSV handling multi-line quoted fields
   // We need to process character by character to handle newlines inside quoted fields
   const rows = [];
@@ -36,7 +42,9 @@ export function parseCSV(csvText, options = {}) {
     const isLastChar = i === csvText.length - 1;
 
     // Handle quote start
-    if ((char === '"' || char === "'") && !inQuotes) {
+    // NOTE: only treat quotes as wrappers when they start a field.
+    // This avoids breaking content like "Newton's law" or formula text with apostrophes.
+    if ((char === '"' || char === "'") && !inQuotes && currentField.length === 0) {
       inQuotes = true;
       quoteChar = char;
       i++;
@@ -201,8 +209,8 @@ function parseCSVLine(line, delimiter) {
     const nextChar = line[i + 1];
     const isLastChar = i === line.length - 1;
 
-    // Handle quote start
-    if ((char === '"' || char === "'") && !inQuotes) {
+    // Handle quote start only at field start, not apostrophes in content.
+    if ((char === '"' || char === "'") && !inQuotes && current.length === 0) {
       inQuotes = true;
       quoteChar = char;
       // Don't add quote to current value
@@ -338,7 +346,9 @@ export function arrayToCSV(data, headers = null) {
  * @param {string} filename - Filename for download
  */
 export function downloadCSV(csvContent, filename = "data.csv") {
-  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  // Add BOM so Excel reliably opens UTF-8 (special symbols/emojis/languages).
+  const BOM = "\uFEFF";
+  const blob = new Blob([BOM + csvContent], { type: "text/csv;charset=utf-8;" });
   const link = document.createElement("a");
   const url = URL.createObjectURL(blob);
 
