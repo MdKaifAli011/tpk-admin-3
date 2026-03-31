@@ -77,9 +77,12 @@ function getYouTubeVideoId(url) {
 export default function CourseDetailPage() {
   const examPreparedDefault = useExamPreparedDefault();
   const pathname = usePathname();
-  const { src: courseFormPlaceholderSrc, onError: onCourseFormPlaceholderError } =
-    useFormPlaceholderImage(pathname, basePath, { variant: "course" });
   const { exam: examSlug, slug } = useParams();
+  const { src: courseFormPlaceholderSrc, onError: onCourseFormPlaceholderError } =
+    useFormPlaceholderImage(pathname, basePath, {
+      variant: "course",
+      examSlug,
+    });
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
   const [videoModalOpen, setVideoModalOpen] = useState(false);
@@ -1068,7 +1071,7 @@ export default function CourseDetailPage() {
                           <span>Submitting...</span>
                         </>
                       ) : (
-                        <span>Request Connection</span>
+                        <span>Connect With Expert Counselor</span>
                       )}
                     </button>
                   </div>

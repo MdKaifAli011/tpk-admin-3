@@ -8,23 +8,39 @@
  *
  * @param {string} pathname - e.g. from usePathname()
  * @param {string} basePath - NEXT_PUBLIC_BASE_PATH
- * @param {{ variant?: 'default' | 'course' | 'discussion' }} options
+ * @param {{ variant?: 'default' | 'course' | 'discussion', examSlug?: string }} options
+ *   Pass `examSlug` from `useParams().exam` when available (e.g. course page) so filenames like
+ *   `sat-course-form-placeholder.png` resolve even if pathname parsing is ambiguous.
  * @returns {string[]} URLs to try in order (last is always the global fallback)
  */
+function normalizeExamSlug(raw) {
+  if (raw == null) return "";
+  const s = Array.isArray(raw) ? raw[0] : raw;
+  return String(s || "").trim().toLowerCase();
+}
+
 export function getFormPlaceholderCandidates(pathname, basePath, options = {}) {
-  const base = (basePath || "/self-study").replace(/\/$/, "") || "";
+  const base = String(basePath || "/self-study")
+    .trim()
+    .replace(/\/$/, "") || "/self-study";
   const ultimate = `${base}/images/form-placeholder.png`;
 
-  if (!pathname || typeof pathname !== "string") {
-    return [ultimate];
-  }
+  const fromOption = normalizeExamSlug(options.examSlug);
+  let examSlug = fromOption;
 
-  let rest = pathname;
-  if (base && pathname.startsWith(base)) {
-    rest = pathname.slice(base.length).replace(/^\//, "") || "";
+  if (!examSlug && pathname && typeof pathname === "string") {
+    let rest = pathname;
+    if (base && pathname.startsWith(base)) {
+      rest = pathname.slice(base.length).replace(/^\//, "") || "";
+    }
+    const segments = rest.split("/").filter(Boolean);
+    const courseIdx = segments.indexOf("course");
+    if (courseIdx > 0) {
+      examSlug = (segments[courseIdx - 1] || "").trim().toLowerCase();
+    } else if (segments.length > 0 && segments[0] !== "course") {
+      examSlug = (segments[0] || "").trim().toLowerCase();
+    }
   }
-  const segments = rest.split("/").filter(Boolean);
-  const examSlug = (segments[0] || "").trim().toLowerCase();
 
   if (!examSlug) {
     return [ultimate];

@@ -7,14 +7,15 @@ import { getFormPlaceholderCandidates } from "../utils/formPlaceholderImage";
  * Progressive img onError: tries each candidate URL in order (exam-specific → defaults).
  * @param {string} pathname - from usePathname()
  * @param {string} basePath
- * @param {{ variant?: 'default' | 'course' | 'discussion' }} options
+ * @param {{ variant?: 'default' | 'course' | 'discussion', examSlug?: string }} options
  */
 export function useFormPlaceholderImage(pathname, basePath, options = {}) {
   const variant = options.variant ?? "default";
+  const examSlug = options.examSlug;
 
   const candidates = useMemo(
-    () => getFormPlaceholderCandidates(pathname, basePath, { variant }),
-    [pathname, basePath, variant]
+    () => getFormPlaceholderCandidates(pathname, basePath, { variant, examSlug }),
+    [pathname, basePath, variant, examSlug]
   );
 
   const chainKey = candidates.join("|");

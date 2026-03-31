@@ -32,13 +32,26 @@ export function useDebouncedSearchQuery(committedSearchQuery, setFilterState) {
     };
   }, []);
 
-  // Keep the input aligned with URL/filter state (clear, back/forward, restore) without fighting the debouncer.
+  // Mirror committed → input for real navigation / clear. Do not wipe the field when parent briefly
+  // gets searchQuery "" (stale URL sync) while the user still has text — push local text back to state.
   useEffect(() => {
     const c = committedSearchQuery ?? "";
     if (lastCommittedRef.current === c) return;
+
+    const local = searchInput ?? "";
+    const localTrim = local.trim();
+    if (c === "" && localTrim !== "") {
+      setFilterState((prev) => {
+        if ((prev.searchQuery ?? "").trim() === localTrim) return prev;
+        return { ...prev, searchQuery: localTrim, page: 1 };
+      });
+      lastCommittedRef.current = localTrim;
+      return;
+    }
+
     lastCommittedRef.current = c;
     setSearchInput(c);
-  }, [committedSearchQuery]);
+  }, [committedSearchQuery, searchInput, setFilterState]);
 
   // Debounce: commit to filter state only after user stops typing for DEBOUNCE_MS
   useEffect(() => {

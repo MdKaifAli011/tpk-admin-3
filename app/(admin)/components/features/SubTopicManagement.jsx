@@ -499,6 +499,7 @@ const SubTopicsManagement = () => {
 
   // Clear all filters
   const clearFilters = () => {
+    setSearchInput("");
     setFilterState({
       filterExam: "",
       filterSubject: "",
@@ -2070,9 +2071,11 @@ const SubTopicsManagement = () => {
                       <span className="inline-flex items-center gap-1 px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-semibold">
                         Search: {searchQuery}
                         <button
-                          onClick={() =>
-                            setFilterState({ searchQuery: "", page: 1 })
-                          }
+                          type="button"
+                          onClick={() => {
+                            setSearchInput("");
+                            setFilterState({ searchQuery: "", page: 1 });
+                          }}
                           className="hover:bg-gray-200 rounded-full p-0.5 transition-colors"
                         >
                           <FaTimes className="w-3 h-3" />

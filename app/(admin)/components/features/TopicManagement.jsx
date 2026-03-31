@@ -398,6 +398,7 @@ const TopicManagement = () => {
 
   // Clear all filters
   const clearFilters = () => {
+    setSearchInput("");
     setFilterState({
       filterExam: "",
       filterSubject: "",
@@ -1819,9 +1820,11 @@ const TopicManagement = () => {
                       <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-medium">
                         Search: {searchQuery}
                         <button
-                          onClick={() =>
-                            setFilterState({ searchQuery: "", page: 1 })
-                          }
+                          type="button"
+                          onClick={() => {
+                            setSearchInput("");
+                            setFilterState({ searchQuery: "", page: 1 });
+                          }}
                           className="hover:bg-indigo-200 rounded-full p-0.5 transition-colors"
                         >
                           <FaTimes className="w-3 h-3" />

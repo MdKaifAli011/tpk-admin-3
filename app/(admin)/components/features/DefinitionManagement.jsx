@@ -616,6 +616,7 @@ const DefinitionManagement = () => {
 
   // Clear all filters
   const clearFilters = () => {
+    setSearchInput("");
     setFilterState({
       filterExam: "",
       filterSubject: "",
@@ -2441,7 +2442,11 @@ const DefinitionManagement = () => {
                       <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">
                         Search: &quot;{searchQuery}&quot;
                         <button
-                          onClick={() => setFilterState((prev) => ({ ...prev, searchQuery: "", page: 1 }))}
+                          type="button"
+                          onClick={() => {
+                            setSearchInput("");
+                            setFilterState((prev) => ({ ...prev, searchQuery: "", page: 1 }));
+                          }}
                           className="hover:bg-gray-200 rounded-full p-0.5 transition-colors"
                         >
                           <FaTimes className="w-3 h-3" />
