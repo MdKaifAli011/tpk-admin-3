@@ -33,6 +33,8 @@ import {
   countryCodeMap,
 } from "@/app/(main)/components/constants/formConstants";
 import { validatePhoneNumber } from "@/app/(main)/components/utils/formValidation";
+import { useVerification } from "@/app/(main)/components/hooks/useVerification";
+import VerificationInput from "@/app/(main)/components/forms/VerificationInput";
 import { SAT_ENG_TOPICS, SAT_MATH_TOPICS } from "./satReadinessData";
 import { SAT_LEAD_FORM_ID, SAT_LEAD_PREPARED } from "./satReadinessLead";
 import { downloadSatReadinessPdf } from "./satReadinessPdf";
@@ -204,8 +206,6 @@ function TopicRow({ topic, value, onChange }) {
 
 export default function SatReadinessAnalyzerClient({
   examSlug,
-  recaptchaSiteKey = "",
-  bypassRecaptcha = false,
 }) {
   const exam = String(examSlug || "sat").toLowerCase();
   const examLabel = exam.toUpperCase();
@@ -231,7 +231,7 @@ export default function SatReadinessAnalyzerClient({
 
   const [teaser, setTeaser] = useState({ m: 800, e: 800, t: 1600 });
   const [satReport, setSatReport] = useState(null);
-  const [captchaError, setCaptchaError] = useState(false);
+  const [captchaError, setCaptchaError] = useState("");
   const [leadError, setLeadError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [pdfNote, setPdfNote] = useState(false);
@@ -239,6 +239,17 @@ export default function SatReadinessAnalyzerClient({
 
   const chartRef = useRef(null);
   const chartInstRef = useRef(null);
+  const {
+    verificationQuestion,
+    userVerificationAnswer,
+    isVerified,
+    generateVerification,
+    handleVerificationChange,
+    validateVerification,
+    getVerificationBlockStatus,
+    recordVerificationFailure,
+    resetVerificationFailures,
+  } = useVerification();
 
   const mathTopics = useMemo(
     () => SAT_MATH_TOPICS.map((t, i) => ({ ...t, _i: i })),
@@ -287,27 +298,11 @@ export default function SatReadinessAnalyzerClient({
   }, [step, satReport]);
 
   useEffect(() => {
-    if (step !== 4 || bypassRecaptcha || !recaptchaSiteKey.trim()) return;
-    const w = typeof window !== "undefined" ? window : null;
-    if (!w?.grecaptcha?.render) return;
-
-    const mount = () => {
-      const el = document.getElementById("sat-recaptcha-mount");
-      if (!el) return;
-      el.innerHTML = "";
-      try {
-        w.grecaptcha.render(el, { sitekey: recaptchaSiteKey.trim() });
-      } catch {
-        /* widget may already exist */
-      }
-    };
-
-    if (w.grecaptcha.ready) {
-      w.grecaptcha.ready(mount);
-    } else {
-      mount();
+    if (step === 4) {
+      generateVerification();
+      setCaptchaError("");
     }
-  }, [step, recaptchaSiteKey, bypassRecaptcha]);
+  }, [step, generateVerification]);
 
   useEffect(() => {
     if (step !== 5 || !chartReady || !satReport || !chartRef.current) return;
@@ -415,25 +410,23 @@ export default function SatReadinessAnalyzerClient({
       return;
     }
 
-    if (!bypassRecaptcha && !recaptchaSiteKey.trim()) {
+    const block = getVerificationBlockStatus();
+    if (block.blocked && block.retryAfterMs != null) {
+      const minutes = Math.ceil(block.retryAfterMs / 60000);
       setLeadError(
-        "This form is missing reCAPTCHA configuration. Add RECAPTCHA_SITE_KEY to the server environment."
+        `Too many failed captcha attempts. Please try again in ${minutes} minute${
+          minutes !== 1 ? "s" : ""
+        }.`
       );
       return;
     }
-
-    let captchaResp = "";
-    if (!bypassRecaptcha) {
-      captchaResp =
-        typeof window !== "undefined" && typeof window.grecaptcha !== "undefined"
-          ? window.grecaptcha.getResponse()
-          : "";
-      if (!captchaResp) {
-        setCaptchaError(true);
-        return;
-      }
+    if (!validateVerification()) {
+      setCaptchaError("Please complete the captcha correctly.");
+      recordVerificationFailure();
+      return;
     }
-    setCaptchaError(false);
+    resetVerificationFailures();
+    setCaptchaError("");
 
     const m = satCalc(SAT_MATH_TOPICS, mathConf);
     const e = satCalc(SAT_ENG_TOPICS, engConf);
@@ -482,9 +475,6 @@ export default function SatReadinessAnalyzerClient({
         source: sourcePath,
         prepared: SAT_LEAD_PREPARED,
       };
-      if (!bypassRecaptcha) {
-        payload.recaptchaToken = captchaResp;
-      }
       const res = await api.post("/lead", payload);
 
       if (!res.data?.success) {
@@ -533,17 +523,7 @@ export default function SatReadinessAnalyzerClient({
     } catch {
       /* ignore */
     }
-    try {
-      if (
-        !bypassRecaptcha &&
-        typeof window !== "undefined" &&
-        window.grecaptcha
-      ) {
-        window.grecaptcha.reset();
-      }
-    } catch {
-      /* ignore */
-    }
+    generateVerification();
   };
 
   const handleDownloadPdf = () => {
@@ -588,23 +568,13 @@ export default function SatReadinessAnalyzerClient({
     setInterest("");
     setSatReport(null);
     setLeadError("");
-    setCaptchaError(false);
+    setCaptchaError("");
     setPdfNote(false);
     if (chartInstRef.current) {
       chartInstRef.current.destroy();
       chartInstRef.current = null;
     }
-    try {
-      if (
-        !bypassRecaptcha &&
-        typeof window !== "undefined" &&
-        window.grecaptcha
-      ) {
-        window.grecaptcha.reset();
-      }
-    } catch {
-      /* ignore */
-    }
+    generateVerification();
     setStep(1);
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
@@ -617,7 +587,7 @@ export default function SatReadinessAnalyzerClient({
         }
       });
     });
-  }, [bypassRecaptcha]);
+  }, [generateVerification]);
 
   const priorityItems = useMemo(() => {
     if (!satReport) return [];
@@ -668,13 +638,6 @@ export default function SatReadinessAnalyzerClient({
           window._jspdfReady = false;
         }}
       />
-      {!bypassRecaptcha && recaptchaSiteKey.trim() ? (
-        <Script
-          src="https://www.google.com/recaptcha/api.js"
-          strategy="afterInteractive"
-        />
-      ) : null}
-
       <div className="exam-hub-min-h w-full min-w-0 bg-white text-slate-900 space-y-3 mt-3 pb-6 md:space-y-4 md:mt-4 md:pb-8">
         <section
           className="hero-section relative w-full overflow-hidden rounded-xl border border-indigo-100/70 bg-gradient-to-br from-indigo-50/90 via-white to-violet-50/80 p-4 shadow-[0_2px_16px_rgba(79,70,229,0.07)] sm:p-5"
@@ -1190,28 +1153,21 @@ export default function SatReadinessAnalyzerClient({
                 </div>
 
                 <div className={sat.stCaptchaWrap}>
-                  {bypassRecaptcha ? (
-                    <p className="m-0 text-xs leading-relaxed text-slate-500">
-                      Local / dev: reCAPTCHA is skipped. Production uses your
-                      configured keys.
-                    </p>
-                  ) : recaptchaSiteKey.trim() ? (
-                    <div id="sat-recaptcha-mount" className="g-recaptcha" />
-                  ) : (
-                    <p className="text-sm font-medium text-rose-600">
-                      reCAPTCHA is not configured. Set{" "}
-                      <code className="rounded bg-rose-50 px-1 py-0.5 text-xs">
-                        RECAPTCHA_SITE_KEY
-                      </code>{" "}
-                      (and{" "}
-                      <code className="rounded bg-rose-50 px-1 py-0.5 text-xs">
-                        RECAPTCHA_SECRET_KEY
-                      </code>
-                      ) in your environment, then restart the app.
-                    </p>
-                  )}
+                  <VerificationInput
+                    verificationQuestion={verificationQuestion}
+                    userVerificationAnswer={userVerificationAnswer}
+                    isVerified={isVerified}
+                    error={captchaError}
+                    isSubmitting={submitting}
+                    onChange={(e) =>
+                      handleVerificationChange(e.target.value, null)
+                    }
+                    onRefresh={generateVerification}
+                  />
                   <div
-                    className={`${sat.stCaptchaErr} ${captchaError ? sat.stCaptchaErrShow : ""}`}
+                    className={`${sat.stCaptchaErr} ${
+                      captchaError ? sat.stCaptchaErrShow : ""
+                    }`}
                     id="captcha-error"
                   >
                     <span className="inline-flex items-center gap-1.5">

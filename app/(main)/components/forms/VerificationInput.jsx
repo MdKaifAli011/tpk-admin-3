@@ -12,13 +12,12 @@ const VerificationInput = ({
   return (
     <div>
       <div
-        className={`flex items-center gap-2 p-2 border-2 rounded-lg transition-all ${
-          error
+        className={`flex items-center gap-2 p-2 border-2 rounded-lg transition-all ${error
             ? "border-red-300 bg-red-50"
             : isVerified
-            ? "border-green-500 bg-green-50"
-            : "border-gray-300 bg-white"
-        }`}
+              ? "border-green-500 bg-green-50"
+              : "border-gray-300 bg-white"
+          }`}
       >
         <div className="shrink-0">
           {isVerified ? (
@@ -67,13 +66,12 @@ const VerificationInput = ({
               value={userVerificationAnswer}
               onChange={onChange}
               placeholder={verificationQuestion.includes("=") ? "Ans" : "Code"}
-              className={`w-full px-2 py-1.5 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-center font-semibold text-sm ${
-                error
+              className={`w-full px-2 py-1.5 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-center font-semibold text-sm ${error
                   ? "border-red-300 bg-red-50"
                   : isVerified
-                  ? "border-green-500 bg-green-50"
-                  : "border-gray-300 bg-white"
-              }`}
+                    ? "border-green-500 bg-green-50"
+                    : "border-gray-300 bg-white"
+                }`}
               autoComplete="off"
               disabled={isSubmitting}
             />
