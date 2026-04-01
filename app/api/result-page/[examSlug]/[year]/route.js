@@ -61,6 +61,8 @@ export async function GET(request, { params }) {
       year,
       years,
       bannerImage: doc?.bannerImage ?? "",
+      bannerImageLeft: doc?.bannerImageLeft ?? "",
+      bannerImageRight: doc?.bannerImageRight ?? "",
       bannerTitle: doc?.bannerTitle ?? "",
       bannerSubtitle:
         doc?.bannerSubtitle ?? "Celebrate our toppers and connect with target achievers. Your success story could be next.",

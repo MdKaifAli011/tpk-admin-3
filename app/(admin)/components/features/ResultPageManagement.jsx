@@ -199,7 +199,8 @@ export default function ResultPageManagement() {
     setSaving(true);
     try {
       const res = await api.patch(`/admin/result-page/${selectedExamId}?year=${selectedYear}`, {
-        bannerImage: data.bannerImage,
+        bannerImageLeft: data.bannerImageLeft,
+        bannerImageRight: data.bannerImageRight,
         bannerTitle: data.bannerTitle,
         bannerSubtitle: data.bannerSubtitle,
         toppers: data.toppers,
@@ -478,9 +479,26 @@ export default function ResultPageManagement() {
                     <div className="space-y-4">
                       <Section title="Banner" icon={FaImage} expanded={expandedSection === "banner"} onToggle={() => toggleSection("banner")}>
                         <div className="space-y-3">
-                          <InputRow label="Banner image URL" value={data.bannerImage} onChange={(v) => update("bannerImage", v)} placeholder="https://..." />
+                          <p className="text-xs text-gray-600">
+                            Top banner uses title and subtitle on a gradient (no background image).
+                          </p>
                           <InputRow label="Banner title" value={data.bannerTitle} onChange={(v) => update("bannerTitle", v)} placeholder={`e.g. ${selectedExam?.name} Result ${selectedYear}`} />
                           <InputRow label="Banner subtitle" value={data.bannerSubtitle} onChange={(v) => update("bannerSubtitle", v)} textarea placeholder="Short line under title" />
+                          <p className="text-xs text-gray-500 pt-1 border-t border-gray-100">
+                            Image row (optional): two images side by side on desktop; stacked on small screens.
+                          </p>
+                          <InputRow
+                            label="Banner row — left image URL"
+                            value={data.bannerImageLeft ?? ""}
+                            onChange={(v) => update("bannerImageLeft", v)}
+                            placeholder="https://..."
+                          />
+                          <InputRow
+                            label="Banner row — right image URL"
+                            value={data.bannerImageRight ?? ""}
+                            onChange={(v) => update("bannerImageRight", v)}
+                            placeholder="https://..."
+                          />
                         </div>
                       </Section>
 
@@ -495,7 +513,7 @@ export default function ResultPageManagement() {
                           {(item, i) => (
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2">
                               <input placeholder="Name" value={item.name} onChange={(e) => updateArray("toppers", i, "name", e.target.value)} className="rounded border px-2 py-1.5 text-sm" />
-                              <input placeholder="Percentile" value={item.percentile} onChange={(e) => updateArray("toppers", i, "percentile", e.target.value)} className="rounded border px-2 py-1.5 text-sm" />
+                              <input placeholder="Score" value={item.percentile} onChange={(e) => updateArray("toppers", i, "percentile", e.target.value)} className="rounded border px-2 py-1.5 text-sm" />
                               <input placeholder="Location" value={item.location} onChange={(e) => updateArray("toppers", i, "location", e.target.value)} className="rounded border px-2 py-1.5 text-sm" />
                               <input placeholder="Attempt" value={item.attempt} onChange={(e) => updateArray("toppers", i, "attempt", e.target.value)} className="rounded border px-2 py-1.5 text-sm" />
                               <input placeholder="Image URL or YouTube" value={item.image} onChange={(e) => updateArray("toppers", i, "image", e.target.value)} className="rounded border px-2 py-1.5 text-sm" />

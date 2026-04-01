@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { FaTrophy, FaQuoteLeft, FaStar, FaCheckCircle } from "react-icons/fa";
 
 const DEFAULT_HIGHLIGHTS = [
@@ -11,14 +12,27 @@ const DEFAULT_HIGHLIGHTS = [
   "Testprepkart continues to empower NRI students with top-notch guidance.",
 ];
 
+/** 16:10 — same target ratio as banner images on mobile; export e.g. 1600×1000 for no awkward crop with object-cover. */
+const CARD_MEDIA_CLASS =
+  "relative w-full aspect-[16/10] overflow-hidden shrink-0 bg-gradient-to-b from-indigo-50/95 to-purple-100/95 flex items-center justify-center";
+
+const DUAL_BANNER_SIZES = "(max-width: 768px) 100vw, (max-width: 1536px) 50vw, 720px";
+const CARD_IMAGE_SIZES = "(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 400px";
+
 export default function ResultPageClient({ examName, examSlug, initialData, initialYear, yearsList }) {
   const content = initialData || {};
   const displayYear = initialYear ?? new Date().getFullYear();
   const years = Array.isArray(yearsList) && yearsList.length ? yearsList : [displayYear];
 
-  const bannerImage = content.bannerImage ?? "";
   const bannerTitle = (content.bannerTitle || "").trim() || `${examName} Result ${displayYear}`;
   const bannerSubtitle = (content.bannerSubtitle || "").trim() || "Celebrate our toppers and connect with target achievers. Your success story could be next.";
+  let bannerImageLeft = (content.bannerImageLeft || "").trim();
+  let bannerImageRight = (content.bannerImageRight || "").trim();
+  if (!bannerImageLeft && !bannerImageRight) {
+    const legacy = (content.bannerImage || "").trim();
+    if (legacy) bannerImageLeft = legacy;
+  }
+  const hasDualBanner = Boolean(bannerImageLeft || bannerImageRight);
   const toppers = content.toppers ?? [];
   const targetAchievers = content.targetAchievers ?? [];
   const highlights = (content.highlights && content.highlights.length) ? content.highlights : DEFAULT_HIGHLIGHTS;
@@ -27,22 +41,21 @@ export default function ResultPageClient({ examName, examSlug, initialData, init
 
   return (
     <div className="space-y-10">
-      {/* Banner */}
+      {/* Banner — text hero on gradient only (no photo background) */}
       <section
-        className="w-full relative min-h-[280px] sm:min-h-[320px] md:min-h-[380px] flex items-center justify-center overflow-hidden rounded-xl border border-indigo-100/60 shadow-[0_2px_12px_rgba(120,90,200,0.08)]"
+        className="w-full relative min-h-[200px] sm:min-h-[220px] md:min-h-[240px] flex items-center justify-center overflow-hidden rounded-xl border border-indigo-100/60 shadow-[0_2px_12px_rgba(120,90,200,0.08)]"
         aria-label="Result banner"
       >
         <div
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat rounded-xl"
-          style={
-            bannerImage
-              ? { backgroundImage: `url(${bannerImage})` }
-              : { background: "linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #4f46e5 100%)" }
-          }
+          className="absolute inset-0 rounded-xl"
+          style={{
+            background: "linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #312e81 100%)",
+          }}
         />
-        <div className={`absolute inset-0 rounded-xl ${bannerImage ? "bg-black/60" : "bg-black/20"}`} aria-hidden />
-        <div className="relative z-10 w-full px-6 sm:px-8 py-12 sm:py-16 text-center">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-3 drop-shadow-md">
+        <div className="absolute inset-0 rounded-xl bg-[radial-gradient(ellipse_80%_60%_at_50%_-20%,rgba(255,255,255,0.22),transparent)]" aria-hidden />
+        <div className="absolute inset-0 rounded-xl bg-black/10" aria-hidden />
+        <div className="relative z-10 w-full px-6 sm:px-8 py-7 sm:py-9 md:py-10 text-center">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-2 sm:mb-2.5 drop-shadow-md">
             {bannerTitle}
           </h2>
           <p className="text-white/90 text-sm sm:text-base md:text-lg max-w-2xl mx-auto drop-shadow-sm">
@@ -50,6 +63,45 @@ export default function ResultPageClient({ examName, examSlug, initialData, init
           </p>
         </div>
       </section>
+
+      {/* Second banner — two images, responsive row */}
+      {hasDualBanner ? (
+        <section
+          className="w-full"
+          aria-label="Result imagery"
+        >
+          <div
+            className={`grid gap-3 sm:gap-4 ${
+              bannerImageLeft && bannerImageRight ? "grid-cols-1 md:grid-cols-2" : "grid-cols-1"
+            }`}
+          >
+            {bannerImageLeft ? (
+              <div className="relative w-full aspect-[16/10] sm:aspect-[21/9] overflow-hidden rounded-xl border border-indigo-100/60 shadow-[0_2px_12px_rgba(120,90,200,0.08)] bg-indigo-50/50">
+                <Image
+                  src={bannerImageLeft}
+                  alt=""
+                  fill
+                  className="object-cover object-center"
+                  sizes={DUAL_BANNER_SIZES}
+                  unoptimized={bannerImageLeft.startsWith("http://")}
+                />
+              </div>
+            ) : null}
+            {bannerImageRight ? (
+              <div className="relative w-full aspect-[16/10] sm:aspect-[21/9] overflow-hidden rounded-xl border border-indigo-100/60 shadow-[0_2px_12px_rgba(120,90,200,0.08)] bg-indigo-50/50">
+                <Image
+                  src={bannerImageRight}
+                  alt=""
+                  fill
+                  className="object-cover object-center"
+                  sizes={DUAL_BANNER_SIZES}
+                  unoptimized={bannerImageRight.startsWith("http://")}
+                />
+              </div>
+            ) : null}
+          </div>
+        </section>
+      ) : null}
 
       {/* Hero + year tabs */}
       <section className="rounded-xl p-6 sm:p-8 bg-gradient-to-br from-indigo-50 via-white to-purple-50 border border-indigo-100/60 shadow-[0_2px_12px_rgba(120,90,200,0.08)]" aria-labelledby="result-hero-title">
@@ -91,32 +143,37 @@ export default function ResultPageClient({ examName, examSlug, initialData, init
           {toppers.length ? (
             toppers.map((topper, i) => (
               <article key={i} className="bg-white rounded-xl border border-gray-200 shadow-md hover:shadow-lg transition-shadow overflow-hidden flex flex-col w-full">
-                <div className="relative w-full h-[200px] sm:h-[220px] flex items-center justify-center bg-gradient-to-b from-indigo-50/95 to-purple-100/95 shrink-0">
+                <div className={CARD_MEDIA_CLASS}>
                   {topper.image && (topper.image.includes("youtube") || topper.image.includes("youtu.be")) ? (
                     <iframe
                       title=""
                       src={topper.image.replace("watch?v=", "embed/").replace("youtu.be/", "youtube.com/embed/")}
-                      className="absolute inset-0 w-full h-full"
+                      className="absolute inset-0 h-full w-full"
                       allowFullScreen
                     />
                   ) : topper.image ? (
-                    <img
+                    <Image
                       src={topper.image}
                       alt=""
-                      width={400}
-                      height={280}
-                      className="absolute inset-0 w-full h-full object-cover object-center"
+                      fill
+                      className="object-cover object-center"
+                      sizes={CARD_IMAGE_SIZES}
+                      unoptimized={String(topper.image).startsWith("http://")}
                     />
                   ) : (
-                    <div className="flex items-baseline justify-center gap-0.5 px-2">
-                      <span className="text-5xl sm:text-6xl font-bold text-indigo-300/90 tabular-nums leading-none">{topper.percentile || "—"}</span>
-                      <span className="text-2xl sm:text-3xl font-bold text-indigo-300/80 leading-none">%</span>
+                    <div className="flex flex-col items-center justify-center gap-1 px-2 text-center">
+                      <span className="text-5xl sm:text-6xl font-bold text-indigo-300/90 tabular-nums leading-none">
+                        {topper.percentile || "—"}
+                      </span>
+                      <span className="text-xs font-semibold uppercase tracking-wider text-indigo-500/90">Score</span>
                     </div>
                   )}
                 </div>
                 <div className="flex flex-col justify-center p-4 sm:p-5 bg-white shrink-0">
                   <p className="font-semibold text-gray-900 text-sm sm:text-base leading-tight">
-                    {topper.name ? `${topper.name} scored ${topper.percentile || ""} %ile` : "—"}
+                    {topper.name
+                      ? `${topper.name} · Score: ${(topper.percentile || "").trim() || "—"}`
+                      : "—"}
                   </p>
                   <p className="text-xs sm:text-sm text-gray-500 mt-2 leading-snug">
                     {[topper.location, topper.attempt].some(Boolean)
@@ -146,21 +203,22 @@ export default function ResultPageClient({ examName, examSlug, initialData, init
                 key={i}
                 className="bg-white rounded-xl border border-gray-200 shadow-md hover:shadow-lg transition-shadow overflow-hidden flex flex-col w-full"
               >
-                <div className="relative w-full h-[200px] sm:h-[220px] flex items-center justify-center bg-gradient-to-b from-indigo-50/95 to-purple-100/95 shrink-0 overflow-hidden">
+                <div className={CARD_MEDIA_CLASS}>
                   {a.image && (a.image.includes("youtube") || a.image.includes("youtu.be")) ? (
                     <iframe
                       title=""
                       src={a.image.replace("watch?v=", "embed/").replace("youtu.be/", "youtube.com/embed/")}
-                      className="absolute inset-0 w-full h-full"
+                      className="absolute inset-0 h-full w-full"
                       allowFullScreen
                     />
                   ) : a.image ? (
-                    <img
+                    <Image
                       src={a.image}
                       alt=""
-                      width={400}
-                      height={280}
-                      className="absolute inset-0 w-full h-full object-cover object-center"
+                      fill
+                      className="object-cover object-center"
+                      sizes={CARD_IMAGE_SIZES}
+                      unoptimized={String(a.image).startsWith("http://")}
                     />
                   ) : (
                     <FaTrophy className="text-5xl sm:text-6xl text-indigo-300/80" />
@@ -182,7 +240,7 @@ export default function ResultPageClient({ examName, examSlug, initialData, init
                 key={i}
                 className="bg-white rounded-xl border border-gray-200 shadow-md hover:shadow-lg transition-shadow overflow-hidden flex flex-col w-full"
               >
-                <div className="relative w-full h-[200px] sm:h-[220px] flex items-center justify-center bg-gradient-to-b from-indigo-50/95 to-purple-100/95 shrink-0">
+                <div className={CARD_MEDIA_CLASS}>
                   <FaTrophy className="text-5xl sm:text-6xl text-indigo-300/80" />
                 </div>
                 <div className="flex flex-col justify-center p-4 sm:p-5 bg-white shrink-0">

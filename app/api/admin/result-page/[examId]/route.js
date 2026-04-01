@@ -38,6 +38,8 @@ export async function GET(request, { params }) {
       examId: String(doc.examId),
       year: doc.year,
       bannerImage: doc.bannerImage ?? "",
+      bannerImageLeft: doc.bannerImageLeft ?? "",
+      bannerImageRight: doc.bannerImageRight ?? "",
       bannerTitle: doc.bannerTitle ?? "",
       bannerSubtitle: doc.bannerSubtitle ?? "",
       toppers: doc.toppers ?? [],
@@ -76,6 +78,9 @@ export async function PATCH(request, { params }) {
     const body = await request.json();
     const update = {};
     if (typeof body.bannerImage === "string") update.bannerImage = body.bannerImage.trim();
+    if (typeof body.bannerImageLeft === "string") update.bannerImageLeft = body.bannerImageLeft.trim();
+    if (typeof body.bannerImageRight === "string")
+      update.bannerImageRight = body.bannerImageRight.trim();
     if (typeof body.bannerTitle === "string") update.bannerTitle = body.bannerTitle.trim();
     if (typeof body.bannerSubtitle === "string") update.bannerSubtitle = body.bannerSubtitle.trim();
     if (Array.isArray(body.toppers)) {
@@ -129,6 +134,8 @@ export async function PATCH(request, { params }) {
         examId: String(doc.examId),
         year: doc.year,
         bannerImage: doc.bannerImage ?? "",
+        bannerImageLeft: doc.bannerImageLeft ?? "",
+        bannerImageRight: doc.bannerImageRight ?? "",
         bannerTitle: doc.bannerTitle ?? "",
         bannerSubtitle: doc.bannerSubtitle ?? "",
         toppers: doc.toppers ?? [],
