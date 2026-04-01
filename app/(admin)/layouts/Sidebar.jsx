@@ -172,6 +172,7 @@ const Sidebar = memo(({ isOpen, onClose }) => {
   const [discussionPendingCount, setDiscussionPendingCount] = useState(0);
   const [discussionReplyPendingCount, setDiscussionReplyPendingCount] = useState(0);
   const [overviewCommentPendingCount, setOverviewCommentPendingCount] = useState(0);
+  const [leadPendingCount, setLeadPendingCount] = useState(0);
 
   // Fetch discussion pending (threads) and reply-pending counts (admin only)
   const fetchDiscussionCounts = useCallback(async () => {
@@ -301,32 +302,78 @@ const Sidebar = memo(({ isOpen, onClose }) => {
     };
   }, [fetchOverviewCommentPendingCount]);
 
-  // Get user role from localStorage (memoized)
-  useEffect(() => {
-    const getUserRole = () => {
-      if (typeof window === "undefined") return null;
-      const user = localStorage.getItem("user");
-      if (user) {
-        try {
-          const userData = JSON.parse(user);
-          return userData.role || null;
-        } catch (error) {
-          console.error("Error parsing user data:", error);
-          return null;
-        }
+  // Lead pending count (new + updated status)
+  const fetchLeadPendingCount = useCallback(async () => {
+    try {
+      const res = await api.get("/lead/pending-count");
+      if (res?.data?.success && typeof res.data.count === "number") {
+        setLeadPendingCount(res.data.count);
       }
+    } catch (_) {}
+  }, []);
+
+  const leadLastFetchedRef = React.useRef(0);
+  const LEAD_DEBOUNCE_MS = 60 * 1000;
+
+  useEffect(() => {
+    fetchLeadPendingCount().then(() => {
+      leadLastFetchedRef.current = Date.now();
+    });
+  }, [fetchLeadPendingCount]);
+
+  useEffect(() => {
+    const onFocus = () => {
+      const now = Date.now();
+      if (now - leadLastFetchedRef.current < LEAD_DEBOUNCE_MS) return;
+      leadLastFetchedRef.current = now;
+      fetchLeadPendingCount();
+    };
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, [fetchLeadPendingCount]);
+
+  useEffect(() => {
+    const handleUpdate = (e) => {
+      const d = e?.detail;
+      if (d && typeof d.count === "number") {
+        setLeadPendingCount(Math.max(0, d.count));
+      } else if (d && typeof d.delta === "number") {
+        setLeadPendingCount((c) => Math.max(0, c + d.delta));
+      }
+    };
+    const handleRefetch = () => {
+      leadLastFetchedRef.current = 0;
+      fetchLeadPendingCount().then(() => {
+        leadLastFetchedRef.current = Date.now();
+      });
+    };
+    window.addEventListener("admin-lead-pending-updated", handleUpdate);
+    window.addEventListener("admin-lead-pending-refetch", handleRefetch);
+    return () => {
+      window.removeEventListener("admin-lead-pending-updated", handleUpdate);
+      window.removeEventListener("admin-lead-pending-refetch", handleRefetch);
+    };
+  }, [fetchLeadPendingCount]);
+
+  useEffect(() => {
+    const readRole = () => {
+      if (typeof window === "undefined") return null;
+      try {
+        const raw = localStorage.getItem("user");
+        if (raw) return JSON.parse(raw).role || null;
+      } catch (_) {}
       return null;
     };
 
-    setUserRole(getUserRole());
-
-    // Listen for storage changes
-    const handleStorageChange = () => {
-      setUserRole(getUserRole());
+    const syncRole = () => {
+      const role = readRole();
+      setUserRole((prev) => (prev === role ? prev : role));
     };
-    window.addEventListener("storage", handleStorageChange);
-    return () => window.removeEventListener("storage", handleStorageChange);
-  }, [pathname]); // Update when pathname changes
+
+    syncRole();
+    window.addEventListener("storage", syncRole);
+    return () => window.removeEventListener("storage", syncRole);
+  }, []);
 
   // Filter menu items by route permission; support nested Admin children
   const MENU_ITEMS = useMemo(() => {
@@ -492,10 +539,22 @@ const Sidebar = memo(({ isOpen, onClose }) => {
                             aria-hidden
                           />
                         )}
+                        {name === "Admin" && leadPendingCount > 0 && (
+                          <span
+                            className="absolute -top-0.5 -left-0.5 w-2.5 h-2.5 rounded-full bg-blue-500 ring-2 ring-white animate-pulse"
+                            title={`${leadPendingCount} new leads`}
+                            aria-hidden
+                          />
+                        )}
                       </span>
                       <span className="flex-1 whitespace-nowrap overflow-hidden text-ellipsis text-left">
                         {name}
                       </span>
+                      {name === "Admin" && leadPendingCount > 0 && (
+                        <span className="shrink-0 inline-flex items-center justify-center min-w-5 h-5 px-2 rounded-full text-[10px] font-bold bg-blue-500 text-white" title={`${leadPendingCount} new leads`}>
+                          {leadPendingCount > 99 ? "99+" : leadPendingCount}
+                        </span>
+                      )}
                       {name === "Discussion" && (discussionPendingCount > 0 || discussionReplyPendingCount > 0) && (
                         <span className="shrink-0 flex items-center gap-1">
                           {discussionPendingCount > 0 && (
@@ -573,12 +632,24 @@ const Sidebar = memo(({ isOpen, onClose }) => {
                                                 aria-hidden
                                               />
                                             )}
+                                            {link.name === "Lead Management" && leadPendingCount > 0 && (
+                                              <span
+                                                className="absolute -top-0.5 -left-0.5 w-2 h-2 rounded-full bg-blue-500 ring-2 ring-white animate-pulse"
+                                                title={`${leadPendingCount} new leads`}
+                                                aria-hidden
+                                              />
+                                            )}
                                           </span>
                                           <span className="flex-1 whitespace-nowrap overflow-hidden text-ellipsis flex items-center gap-1.5">
                                             {link.name}
                                             {link.name === "Overview Comments" && overviewCommentPendingCount > 0 && (
                                               <span className="shrink-0 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 rounded-full text-[10px] font-bold bg-green-500 text-white">
                                                 {overviewCommentPendingCount > 99 ? "99+" : overviewCommentPendingCount}
+                                              </span>
+                                            )}
+                                            {link.name === "Lead Management" && leadPendingCount > 0 && (
+                                              <span className="shrink-0 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 rounded-full text-[10px] font-bold bg-blue-500 text-white">
+                                                {leadPendingCount > 99 ? "99+" : leadPendingCount}
                                               </span>
                                             )}
                                           </span>

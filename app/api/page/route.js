@@ -10,6 +10,7 @@ import {
 } from "@/utils/apiResponse";
 import { requireAuth } from "@/middleware/authMiddleware";
 import { STATUS } from "@/constants";
+import { parsePagination, createPaginationResponse } from "@/utils/pagination";
 
 /** Resolve exam param (slug or id) to ObjectId; "site" or empty => null */
 async function resolveExamParam(examParam) {
@@ -54,12 +55,19 @@ export async function GET(request) {
       query.exam = examId;
     }
 
-    const pages = await Page.find(query)
-      .populate("exam", "slug name")
-      .sort({ updatedAt: -1 })
-      .lean();
+    const { page, limit, skip } = parsePagination(searchParams);
 
-    return successResponse(pages);
+    const [pages, total] = await Promise.all([
+      Page.find(query)
+        .populate("exam", "slug name")
+        .sort({ updatedAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      Page.countDocuments(query),
+    ]);
+
+    return NextResponse.json(createPaginationResponse(pages, total, page, limit));
   } catch (error) {
     return handleApiError(error, "Failed to fetch pages");
   }

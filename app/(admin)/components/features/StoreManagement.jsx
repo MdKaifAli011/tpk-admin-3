@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   FaShoppingBag,
   FaSearch,
@@ -12,9 +12,11 @@ import {
 } from "react-icons/fa";
 import { ToastContainer, useToast } from "../ui/Toast";
 import { LoadingSpinner } from "../ui/SkeletonLoader";
+import PaginationBar from "../ui/PaginationBar";
+import { useFilterPersistence } from "../../hooks/useFilterPersistence";
+import { useDebouncedSearchQuery } from "../../hooks/useDebouncedSearchQuery";
 import api from "@/lib/api";
 
-const LIMIT = 100;
 const CATEGORIES = [
   { id: "all", name: "All" },
   { id: "course", name: "Online Courses" },
@@ -24,11 +26,13 @@ const CATEGORIES = [
 
 export default function StoreManagement() {
   const { toasts, removeToast, success, error: showError } = useToast();
+  const [filterState, setFilterState] = useFilterPersistence("store", { statusFilter: "all", searchQuery: "" });
+  const { page, limit, statusFilter, searchQuery } = filterState;
+  const [searchInput, setSearchInput] = useDebouncedSearchQuery(searchQuery, setFilterState);
   const [products, setProducts] = useState([]);
+  const [pagination, setPagination] = useState({});
   const [isLoading, setIsLoading] = useState(false);
-  const [statusFilter, setStatusFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
-  const [searchQuery, setSearchQuery] = useState("");
 
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -56,8 +60,8 @@ export default function StoreManagement() {
       setIsLoading(true);
       const params = new URLSearchParams({
         status: statusFilter,
-        limit: LIMIT,
-        page: 1,
+        limit: String(limit),
+        page: String(page),
       });
       if (categoryFilter !== "all") params.set("category", categoryFilter);
       if (searchQuery.trim()) params.set("search", searchQuery.trim());
@@ -68,48 +72,16 @@ export default function StoreManagement() {
       else if (payload && Array.isArray(payload.data)) list = payload.data;
       else if (res?.data?.data?.data && Array.isArray(res.data.data.data)) list = res.data.data.data;
       setProducts(list);
+      if (res?.data?.pagination) setPagination(res.data.pagination);
     } catch (err) {
       console.error(err);
       showError("Failed to fetch products");
     } finally {
       setIsLoading(false);
     }
-  }, [statusFilter, categoryFilter, searchQuery, showError]);
+  }, [page, limit, statusFilter, categoryFilter, searchQuery, showError]);
 
-  useEffect(() => {
-    let cancelled = false;
-    const run = async () => {
-      try {
-        setIsLoading(true);
-        const params = new URLSearchParams({
-          status: statusFilter,
-          limit: LIMIT,
-          page: 1,
-        });
-        if (categoryFilter !== "all") params.set("category", categoryFilter);
-        if (searchQuery.trim()) params.set("search", searchQuery.trim());
-        const res = await api.get(`/store?${params.toString()}`);
-        if (cancelled) return;
-        const payload = res?.data?.data;
-        let list = [];
-        if (Array.isArray(payload)) list = payload;
-        else if (payload && Array.isArray(payload.data)) list = payload.data;
-        else if (res?.data?.data?.data && Array.isArray(res.data.data.data)) list = res.data.data.data;
-        setProducts(list);
-      } catch (err) {
-        if (!cancelled) {
-          console.error(err);
-          showError("Failed to fetch products");
-        }
-      } finally {
-        if (!cancelled) setIsLoading(false);
-      }
-    };
-    run();
-    return () => { cancelled = true; };
-  }, [statusFilter, categoryFilter, searchQuery]);
-
-  const filteredProducts = useMemo(() => products, [products]);
+  useEffect(() => { fetchProducts(); }, [fetchProducts]);
 
   const openCreate = () => {
     setEditingId(null);
@@ -484,15 +456,15 @@ export default function StoreManagement() {
                   <input
                     type="text"
                     placeholder="Search by name, subject..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
                     className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   />
                 </div>
                 <div className="flex items-center gap-3 flex-wrap">
                   <select
                     value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
+                    onChange={(e) => setFilterState({ statusFilter: e.target.value, page: 1 })}
                     className="min-w-[120px] px-3 py-2.5 bg-white border border-gray-300 rounded-xl text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   >
                     <option value="all">All status</option>
@@ -502,7 +474,7 @@ export default function StoreManagement() {
                   </select>
                   <select
                     value={categoryFilter}
-                    onChange={(e) => setCategoryFilter(e.target.value)}
+                    onChange={(e) => { setCategoryFilter(e.target.value); setFilterState({ page: 1 }); }}
                     className="min-w-[140px] px-3 py-2.5 bg-white border border-gray-300 rounded-xl text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   >
                     {CATEGORIES.map((c) => (
@@ -521,7 +493,7 @@ export default function StoreManagement() {
               <div className="flex justify-center py-12">
                 <LoadingSpinner size="large" />
               </div>
-            ) : filteredProducts.length === 0 ? (
+            ) : products.length === 0 ? (
               <div className="text-center py-12 text-gray-500 text-sm px-4">
                 No products found. Create one to show on the store.
               </div>
@@ -540,7 +512,7 @@ export default function StoreManagement() {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {filteredProducts.map((p) => (
+                    {products.map((p) => (
                       <tr key={p._id} className="hover:bg-gray-50/80">
                         <td className="px-4 py-3 text-sm text-gray-700">{p.orderNumber ?? 0}</td>
                         <td className="px-4 py-3 text-sm font-medium text-gray-900 max-w-[240px] truncate" title={p.name}>
@@ -599,6 +571,16 @@ export default function StoreManagement() {
               </div>
             )}
           </div>
+          <PaginationBar
+            page={page}
+            limit={limit}
+            total={pagination.total}
+            totalPages={pagination.totalPages}
+            hasNextPage={pagination.hasNextPage}
+            hasPrevPage={pagination.hasPrevPage}
+            onPageChange={(p) => setFilterState({ page: p })}
+            onLimitChange={(l) => setFilterState({ limit: l, page: 1 })}
+          />
         </div>
       </div>
     </>

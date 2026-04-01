@@ -15,6 +15,9 @@ import { LoadingSpinner } from "../ui/SkeletonLoader";
 import api from "@/lib/api";
 import { PermissionButton } from "../common/PermissionButton";
 import { usePermissions, getPermissionMessage } from "../../hooks/usePermissions";
+import { useFilterPersistence } from "../../hooks/useFilterPersistence";
+import { useDebouncedSearchQuery } from "../../hooks/useDebouncedSearchQuery";
+import PaginationBar from "../ui/PaginationBar";
 
 const StatusBadge = ({ status }) => {
   const getStatusStyles = (s) => {
@@ -60,17 +63,14 @@ const BlogCommentManagement = () => {
   const { role } = usePermissions();
   const [comments, setComments] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [filters, setFilters] = useState({
-    status: "pending", // Default to pending for approval
-    hasUrl: "all",
-    search: "",
+  const [paginationMeta, setPaginationMeta] = useState({ total: 0, totalPages: 0 });
+  const [filterState, setFilterState] = useFilterPersistence("blog-comment", {
+    status: "all",
+    hasUrl: "false",
+    searchQuery: "",
   });
-  const [pagination, setPagination] = useState({
-    page: 1,
-    limit: 20,
-    total: 0,
-    totalPages: 0,
-  });
+  const { page, limit, status, hasUrl, searchQuery } = filterState;
+  const [searchInput, setSearchInput] = useDebouncedSearchQuery(searchQuery, setFilterState);
   const isFetchingRef = useRef(false);
 
   const fetchComments = async () => {
@@ -80,16 +80,16 @@ const BlogCommentManagement = () => {
     try {
       setIsLoading(true);
       const params = new URLSearchParams({
-        page: pagination.page.toString(),
-        limit: pagination.limit.toString(),
-        status: filters.status,
+        page: page.toString(),
+        limit: limit.toString(),
+        status,
       });
 
-      if (filters.hasUrl !== "all") {
-        params.append("hasUrl", filters.hasUrl);
+      if (hasUrl !== "all") {
+        params.append("hasUrl", hasUrl);
       }
-      if (filters.search.trim()) {
-        params.append("search", filters.search.trim());
+      if (searchQuery.trim()) {
+        params.append("search", searchQuery.trim());
       }
 
       const response = await api.get(`/blog/comment?${params.toString()}`);
@@ -97,11 +97,10 @@ const BlogCommentManagement = () => {
       if (response.data?.success) {
         setComments(response.data.data || []);
         if (response.data.pagination) {
-          setPagination((prev) => ({
-            ...prev,
+          setPaginationMeta({
             total: response.data.pagination.total || 0,
             totalPages: response.data.pagination.totalPages || 0,
-          }));
+          });
         }
       }
     } catch (err) {
@@ -116,7 +115,7 @@ const BlogCommentManagement = () => {
   useEffect(() => {
     fetchComments();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters.status, filters.hasUrl, filters.search, pagination.page]);
+  }, [status, hasUrl, searchQuery, page, limit]);
 
   const handleStatusChange = async (commentId, newStatus) => {
     try {
@@ -164,20 +163,6 @@ const BlogCommentManagement = () => {
       day: "numeric",
       hour: "2-digit",
       minute: "2-digit",
-    });
-  };
-
-  const highlightUrls = (text) => {
-    if (!text) return "";
-
-    // URL regex pattern (same as in model)
-    const urlRegex = /(https?:\/\/)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/gi;
-
-    // Split text by URLs to preserve non-URL text
-    return text.split(urlRegex).map((part, index) => {
-      // This split based regex approach is tricky with capturing groups. 
-      // Simpler approach: match all and replace.
-      return text; // Placeholder to switch to the safer HTML replacement below
     });
   };
 
@@ -236,10 +221,9 @@ const BlogCommentManagement = () => {
                 Status
               </label>
               <select
-                value={filters.status}
+                value={status}
                 onChange={(e) => {
-                  setFilters((prev) => ({ ...prev, status: e.target.value }));
-                  setPagination((prev) => ({ ...prev, page: 1 }));
+                  setFilterState({ status: e.target.value, page: 1 });
                 }}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
               >
@@ -256,10 +240,9 @@ const BlogCommentManagement = () => {
                 Has URL
               </label>
               <select
-                value={filters.hasUrl}
+                value={hasUrl}
                 onChange={(e) => {
-                  setFilters((prev) => ({ ...prev, hasUrl: e.target.value }));
-                  setPagination((prev) => ({ ...prev, page: 1 }));
+                  setFilterState({ hasUrl: e.target.value, page: 1 });
                 }}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
               >
@@ -278,11 +261,8 @@ const BlogCommentManagement = () => {
                 <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <input
                   type="text"
-                  value={filters.search}
-                  onChange={(e) => {
-                    setFilters((prev) => ({ ...prev, search: e.target.value }));
-                    setPagination((prev) => ({ ...prev, page: 1 }));
-                  }}
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
                   placeholder="Search in comments..."
                   className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                 />
@@ -296,9 +276,9 @@ const BlogCommentManagement = () => {
           <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-900">
-                Comments ({pagination.total})
+                Comments ({paginationMeta.total})
               </h2>
-              {filters.hasUrl === "true" && (
+              {hasUrl === "true" && (
                 <span className="text-xs text-yellow-700 bg-yellow-100 px-2 py-1 rounded">
                   <FaLink className="inline mr-1" />
                   Showing comments with URLs
@@ -440,40 +420,16 @@ const BlogCommentManagement = () => {
             )}
           </div>
 
-          {/* Pagination */}
-          {pagination.totalPages > 1 && (
-            <div className="px-4 py-3 border-t border-gray-200 bg-gray-50 flex items-center justify-between">
-              <p className="text-sm text-gray-600">
-                Page {pagination.page} of {pagination.totalPages}
-              </p>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() =>
-                    setPagination((prev) => ({
-                      ...prev,
-                      page: Math.max(1, prev.page - 1),
-                    }))
-                  }
-                  disabled={pagination.page === 1}
-                  className="px-3 py-1.5 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Previous
-                </button>
-                <button
-                  onClick={() =>
-                    setPagination((prev) => ({
-                      ...prev,
-                      page: Math.min(prev.totalPages, prev.page + 1),
-                    }))
-                  }
-                  disabled={pagination.page === pagination.totalPages}
-                  className="px-3 py-1.5 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Next
-                </button>
-              </div>
-            </div>
-          )}
+          <PaginationBar
+            page={page}
+            limit={limit}
+            total={paginationMeta.total}
+            totalPages={paginationMeta.totalPages}
+            hasNextPage={page < paginationMeta.totalPages}
+            hasPrevPage={page > 1}
+            onPageChange={(p) => setFilterState({ page: p })}
+            onLimitChange={(l) => setFilterState({ limit: l, page: 1 })}
+          />
         </div>
       </div>
     </>

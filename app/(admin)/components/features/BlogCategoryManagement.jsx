@@ -21,6 +21,8 @@ import {
   SkeletonPageContent,
   LoadingSpinner,
 } from "../ui/SkeletonLoader";
+import { useFilterPersistence } from "../../hooks/useFilterPersistence";
+import PaginationBar from "../ui/PaginationBar";
 
 const StatusBadge = ({ status, onClick }) => {
   const getStatusStyles = (s) => {
@@ -262,6 +264,9 @@ const BlogCategoryManagement = () => {
   const [categories, setCategories] = useState([]);
   const [editingCategory, setEditingCategory] = useState(null);
   const [isDataLoading, setIsDataLoading] = useState(false);
+  const [filterState, setFilterState] = useFilterPersistence("blog-category", {});
+  const { page, limit } = filterState;
+  const [pagination, setPagination] = useState({ total: 0, totalPages: 0, hasNextPage: false, hasPrevPage: false });
   const [formData, setFormData] = useState({
     name: "",
     examId: "",
@@ -291,9 +296,12 @@ const BlogCategoryManagement = () => {
     try {
       setIsDataLoading(true);
       setError(null);
-      const response = await api.get("/blog/category?status=all");
+      const response = await api.get(`/blog/category?status=all&page=${page}&limit=${limit}`);
       if (response.data?.success) {
         setCategories(response.data.data || []);
+        if (response.data.pagination) {
+          setPagination(response.data.pagination);
+        }
       } else {
         setError(response.data?.message || "Failed to fetch categories");
       }
@@ -312,8 +320,11 @@ const BlogCategoryManagement = () => {
 
   useEffect(() => {
     fetchExams();
-    fetchCategories();
   }, []);
+
+  useEffect(() => {
+    fetchCategories();
+  }, [page, limit]);
 
   // Calculate next order number when exam is selected
   useEffect(() => {
@@ -755,15 +766,27 @@ const BlogCategoryManagement = () => {
                 )}
               </div>
             ) : (
-              <BlogCategoryTable
-                categories={categories}
-                onEdit={handleEditCategory}
-                onDelete={handleDeleteCategory}
-                onToggleStatus={handleToggleStatus}
-                canEdit={canEdit}
-                canDelete={canDelete}
-                role={role}
-              />
+              <>
+                <BlogCategoryTable
+                  categories={categories}
+                  onEdit={handleEditCategory}
+                  onDelete={handleDeleteCategory}
+                  onToggleStatus={handleToggleStatus}
+                  canEdit={canEdit}
+                  canDelete={canDelete}
+                  role={role}
+                />
+                <PaginationBar
+                  page={page}
+                  limit={limit}
+                  total={pagination.total}
+                  totalPages={pagination.totalPages}
+                  hasNextPage={pagination.hasNextPage}
+                  hasPrevPage={pagination.hasPrevPage}
+                  onPageChange={(p) => setFilterState({ page: p })}
+                  onLimitChange={(l) => setFilterState({ limit: l, page: 1 })}
+                />
+              </>
             )}
           </div>
         </div>

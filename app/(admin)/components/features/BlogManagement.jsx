@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { LoadingWrapper, LoadingSpinner } from "../ui/SkeletonLoader";
 import {
   FaPlus,
@@ -12,12 +12,16 @@ import {
   FaImage,
   FaNewspaper,
   FaPowerOff,
+  FaCheck,
 } from "react-icons/fa";
 import { ToastContainer, useToast } from "../ui/Toast";
 import { PermissionButton } from "../common/PermissionButton";
 import { usePermissions, getPermissionMessage } from "../../hooks/usePermissions";
 import api from "@/lib/api";
 import { useRouter } from "next/navigation";
+import { useFilterPersistence } from "../../hooks/useFilterPersistence";
+import { useDebouncedSearchQuery } from "../../hooks/useDebouncedSearchQuery";
+import PaginationBar from "../ui/PaginationBar";
 
 const StatusBadge = ({ status, onClick }) => {
   const getStatusStyles = (s) => {
@@ -50,51 +54,41 @@ const StatusBadge = ({ status, onClick }) => {
   );
 };
 
-const BlogTable = ({ blogs, onEdit, onDelete, onToggleStatus }) => {
+const MetaIcon = ({ filled }) =>
+  filled ? (
+    <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-green-100 text-green-600">
+      <FaCheck className="w-2.5 h-2.5" />
+    </span>
+  ) : (
+    <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-gray-100 text-gray-400">
+      <FaTimes className="w-2.5 h-2.5" />
+    </span>
+  );
+
+const ExamBlogTable = ({ examName, blogs, onEdit, onDelete, onToggleStatus }) => {
   const { role } = usePermissions();
-  if (!blogs || blogs.length === 0) {
-    return (
-      <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200 shadow-sm">
-        <div className="text-5xl mb-3 animate-float">📝</div>
-        <h3 className="text-sm sm:text-sm font-bold text-gray-800 mb-1.5">
-          No Blogs Found
-        </h3>
-        <p className="text-gray-500 text-sm max-w-md mx-auto">
-          Create your first blog to get started with organizing your content and
-          sharing updates with your students.
-        </p>
-        <div className="mt-4">
-          <div className="inline-flex items-center gap-1.5 text-blue-600 text-sm font-medium">
-            <FaClipboardList className="w-3.5 h-3.5" />
-            <span>Ready to create your first blog?</span>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <div className="overflow-hidden">
-      {/* Desktop Table View */}
-      <div className="hidden md:block overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200 table-fixed">
+    <div className="mb-6">
+      <div className="flex items-center gap-2 px-3 py-2 bg-indigo-50 border border-indigo-100 rounded-t-lg">
+        <span className="inline-flex px-2 py-0.5 rounded text-xs font-semibold bg-indigo-600 text-white">
+          {examName}
+        </span>
+        <span className="text-xs text-gray-500">
+          {blogs.length} blog{blogs.length !== 1 ? "s" : ""}
+        </span>
+      </div>
+      <div className="overflow-x-auto border border-t-0 border-gray-200 rounded-b-lg">
+        {/* Desktop Table */}
+        <table className="hidden md:table min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Blog Details
-              </th>
-              <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-40">
-                Category
-              </th>
-              <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
-                Status
-              </th>
-              <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-40">
-                Metadata
-              </th>
-              <th className="px-2 py-1 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-40">
-                Actions
-              </th>
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Blog</th>
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase w-32">Category</th>
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase w-28">Content</th>
+              <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase w-16">Meta</th>
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase w-24">Status</th>
+              <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase w-40">Actions</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
@@ -105,7 +99,7 @@ const BlogTable = ({ blogs, onEdit, onDelete, onToggleStatus }) => {
                   blog.status === "inactive" ? "opacity-60" : ""
                 }`}
               >
-                <td className="px-3 py-2 whitespace-nowrap">
+                <td className="px-3 py-2">
                   <div className="flex items-center gap-2">
                     <div className="h-10 w-14 shrink-0 rounded overflow-hidden border border-gray-100 bg-gray-50">
                       {blog.image ? (
@@ -138,55 +132,49 @@ const BlogTable = ({ blogs, onEdit, onDelete, onToggleStatus }) => {
                       >
                         {blog.name}
                       </div>
-                      <div className="text-xs text-gray-400 font-mono truncate">
+                      <div className="text-[10px] text-gray-400 font-mono truncate">
                         /{blog.slug}
+                      </div>
+                      <div className="text-[11px] text-gray-400 truncate">
+                        {blog.author || "Admin"}
                       </div>
                     </div>
                   </div>
                 </td>
-                <td className="px-2 py-1 whitespace-nowrap w-40">
-                  <div className="flex flex-col gap-1">
-                    {blog.examId?.name ? (
-                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-indigo-50 text-indigo-700 border border-indigo-100">
-                        {blog.examId.name}
-                      </span>
-                    ) : (
-                      <span className="text-xs text-gray-400 italic">
-                        General
-                      </span>
-                    )}
-                    {blog.categoryId?.name ? (
-                      <span className="text-xs text-gray-600">
-                        {blog.categoryId.name}
-                      </span>
-                    ) : blog.category ? (
-                      <span className="text-xs text-gray-600">
-                        {blog.category}
-                      </span>
-                    ) : null}
-                  </div>
+                <td className="px-3 py-2 whitespace-nowrap w-32">
+                  {blog.categoryId?.name ? (
+                    <span className="text-xs text-gray-600">{blog.categoryId.name}</span>
+                  ) : blog.category ? (
+                    <span className="text-xs text-gray-600">{blog.category}</span>
+                  ) : (
+                    <span className="text-xs text-gray-400 italic">—</span>
+                  )}
                 </td>
-                <td className="px-2 py-1 whitespace-nowrap w-32">
+                <td className="px-3 py-2 whitespace-nowrap w-28">
+                  {blog._detailsSummary?.contentUpdatedAt ? (
+                    <span className="text-xs text-green-700 font-medium">
+                      {new Date(blog._detailsSummary.contentUpdatedAt).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      })}
+                    </span>
+                  ) : (
+                    <span className="text-xs text-orange-500 italic">Unavailable</span>
+                  )}
+                </td>
+                <td className="px-3 py-2 text-center w-16">
+                  <MetaIcon
+                    filled={!!(blog._detailsSummary && blog._detailsSummary.hasContent && blog._detailsSummary.hasMeta)}
+                  />
+                </td>
+                <td className="px-3 py-2 whitespace-nowrap w-24">
                   <StatusBadge
                     status={blog.status}
                     onClick={() => onToggleStatus(blog)}
                   />
                 </td>
-                <td className="px-2 py-1 whitespace-nowrap w-40">
-                  <div className="flex flex-col">
-                    <div className="text-xs text-gray-900 font-medium">
-                      {blog.author || "Admin"}
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      {new Date(blog.createdAt).toLocaleDateString(undefined, {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                      })}
-                    </div>
-                  </div>
-                </td>
-                <td className="px-2 py-1 whitespace-nowrap text-right w-40">
+                <td className="px-3 py-2 whitespace-nowrap text-right w-40">
                   <div className="flex items-center justify-end gap-1.5 flex-wrap">
                     <PermissionButton
                       action="edit"
@@ -223,124 +211,120 @@ const BlogTable = ({ blogs, onEdit, onDelete, onToggleStatus }) => {
             ))}
           </tbody>
         </table>
-      </div>
 
-      {/* Mobile Card View */}
-      <div className="md:hidden divide-y divide-gray-200">
-        {blogs.map((blog, index) => (
-          <div
-            key={blog._id || blog.id || index}
-            className={`p-1.5 hover:bg-gray-50 transition-colors ${
-              blog.status === "inactive" ? "opacity-60" : ""
-            }`}
-          >
-            <div className="flex items-start justify-between">
-              <div className="flex-1 min-w-0">
-                <div className="flex items-start gap-2 mb-2">
-                  <div className="h-12 w-16 shrink-0 rounded overflow-hidden border border-gray-100 bg-gray-50">
-                    {blog.image ? (
-                      <img
-                        className="h-full w-full object-cover"
-                        src={blog.image}
-                        alt=""
-                        onError={(e) => {
-                          e.target.style.display = "none";
-                          e.target.nextElementSibling.style.display = "flex";
-                        }}
-                      />
-                    ) : null}
-                    <div
-                      className={`h-full w-full ${
-                        blog.image ? "hidden" : "flex"
-                      } items-center justify-center text-gray-300`}
-                    >
-                      <FaImage className="w-4 h-4" />
-                    </div>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3
-                      className={`text-sm font-semibold mb-1 cursor-pointer hover:text-blue-600 transition-colors ${
-                        blog.status === "inactive"
-                          ? "text-gray-500 line-through"
-                          : "text-gray-900"
-                      }`}
-                      onClick={() => onEdit(blog)}
-                    >
-                      {blog.name}
-                    </h3>
-                    <div className="text-xs text-gray-400 font-mono truncate mb-1">
-                      /{blog.slug}
-                    </div>
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      {blog.examId?.name ? (
-                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-indigo-50 text-indigo-700 border border-indigo-100">
-                          {blog.examId.name}
-                        </span>
-                      ) : (
-                        <span className="text-xs text-gray-400 italic">
-                          General
-                        </span>
-                      )}
-                      {blog.categoryId?.name ? (
-                        <span className="text-xs text-gray-600">
-                          {blog.categoryId.name}
-                        </span>
-                      ) : blog.category ? (
-                        <span className="text-xs text-gray-600">
-                          {blog.category}
-                        </span>
+        {/* Mobile Card View */}
+        <div className="md:hidden divide-y divide-gray-200">
+          {blogs.map((blog, index) => (
+            <div
+              key={blog._id || blog.id || index}
+              className={`p-3 hover:bg-gray-50 transition-colors ${
+                blog.status === "inactive" ? "opacity-60" : ""
+              }`}
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start gap-2 mb-2">
+                    <div className="h-12 w-16 shrink-0 rounded overflow-hidden border border-gray-100 bg-gray-50">
+                      {blog.image ? (
+                        <img
+                          className="h-full w-full object-cover"
+                          src={blog.image}
+                          alt=""
+                          onError={(e) => {
+                            e.target.style.display = "none";
+                            e.target.nextElementSibling.style.display = "flex";
+                          }}
+                        />
                       ) : null}
+                      <div
+                        className={`h-full w-full ${
+                          blog.image ? "hidden" : "flex"
+                        } items-center justify-center text-gray-300`}
+                      >
+                        <FaImage className="w-4 h-4" />
+                      </div>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3
+                        className={`text-sm font-semibold mb-0.5 cursor-pointer hover:text-blue-600 transition-colors ${
+                          blog.status === "inactive"
+                            ? "text-gray-500 line-through"
+                            : "text-gray-900"
+                        }`}
+                        onClick={() => onEdit(blog)}
+                      >
+                        {blog.name}
+                      </h3>
+                      <div className="text-[10px] text-gray-400 font-mono truncate mb-0.5">
+                        /{blog.slug}
+                      </div>
+                      <div className="text-[11px] text-gray-400 truncate mb-1">
+                        {blog.author || "Admin"}
+                      </div>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {blog.categoryId?.name ? (
+                          <span className="text-xs text-gray-600">{blog.categoryId.name}</span>
+                        ) : blog.category ? (
+                          <span className="text-xs text-gray-600">{blog.category}</span>
+                        ) : null}
+                        <MetaIcon
+                          filled={!!(blog._detailsSummary && blog._detailsSummary.hasContent && blog._detailsSummary.hasMeta)}
+                        />
+                        {blog._detailsSummary?.contentUpdatedAt ? (
+                          <span className="text-[10px] text-green-700 font-medium">
+                            {new Date(blog._detailsSummary.contentUpdatedAt).toLocaleDateString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                            })}
+                          </span>
+                        ) : (
+                          <span className="text-[10px] text-orange-500 italic">No content</span>
+                        )}
+                      </div>
                     </div>
                   </div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <StatusBadge
+                      status={blog.status}
+                      onClick={() => onToggleStatus(blog)}
+                    />
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <StatusBadge
-                    status={blog.status}
+                <div className="flex items-center gap-1.5 ml-3 shrink-0">
+                  <PermissionButton
+                    action="edit"
                     onClick={() => onToggleStatus(blog)}
-                  />
-                  <span className="text-xs text-gray-500">
-                    {new Date(blog.createdAt).toLocaleDateString(undefined, {
-                      year: "numeric",
-                      month: "short",
-                      day: "numeric",
-                    })}
-                  </span>
+                    className={`px-2 py-1 rounded-lg text-xs font-medium transition-colors inline-flex items-center gap-1.5 ${
+                      blog.status === "active" || blog.status === "publish"
+                        ? "bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200"
+                        : "bg-green-50 text-green-700 hover:bg-green-100 border border-green-200"
+                    }`}
+                    title={blog.status === "active" || blog.status === "publish" ? "Set Inactive" : "Set Active"}
+                  >
+                    <FaPowerOff className="text-xs" />
+                    {blog.status === "active" || blog.status === "publish" ? "Inactive" : "Active"}
+                  </PermissionButton>
+                  <PermissionButton
+                    action="edit"
+                    onClick={() => onEdit(blog)}
+                    className="p-1.5 bg-blue-50 text-blue-600 rounded-lg transition-colors hover:bg-blue-100"
+                    title={getPermissionMessage("edit", role)}
+                  >
+                    <FaEdit className="text-sm" />
+                  </PermissionButton>
+                  <PermissionButton
+                    action="delete"
+                    onClick={() => onDelete(blog)}
+                    className="p-1.5 bg-red-50 text-red-600 rounded-lg transition-colors hover:bg-red-100"
+                    title={getPermissionMessage("delete", role)}
+                  >
+                    <FaTrash className="text-sm" />
+                  </PermissionButton>
                 </div>
-              </div>
-              <div className="flex items-center gap-1.5 ml-3 flex-shrink-0">
-                <PermissionButton
-                  action="edit"
-                  onClick={() => onToggleStatus(blog)}
-                  className={`px-2 py-1 rounded-lg text-xs font-medium transition-colors inline-flex items-center gap-1.5 ${
-                    blog.status === "active" || blog.status === "publish"
-                      ? "bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200"
-                      : "bg-green-50 text-green-700 hover:bg-green-100 border border-green-200"
-                  }`}
-                  title={blog.status === "active" || blog.status === "publish" ? "Set Inactive" : "Set Active"}
-                >
-                  <FaPowerOff className="text-xs" />
-                  {blog.status === "active" || blog.status === "publish" ? "Inactive" : "Active"}
-                </PermissionButton>
-                <PermissionButton
-                  action="edit"
-                  onClick={() => onEdit(blog)}
-                  className="p-1.5 bg-blue-50 text-blue-600 rounded-lg transition-colors hover:bg-blue-100"
-                  title={getPermissionMessage("edit", role)}
-                >
-                  <FaEdit className="text-sm" />
-                </PermissionButton>
-                <PermissionButton
-                  action="delete"
-                  onClick={() => onDelete(blog)}
-                  className="p-1.5 bg-red-50 text-red-600 rounded-lg transition-colors hover:bg-red-100"
-                  title={getPermissionMessage("delete", role)}
-                >
-                  <FaTrash className="text-sm" />
-                </PermissionButton>
               </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -366,26 +350,47 @@ const BlogManagement = () => {
   });
 
   const [formError, setFormError] = useState(null);
-  const [statusFilter, setStatusFilter] = useState("all"); // all | active | inactive | draft
+  const [filterState, setFilterState] = useFilterPersistence("blog", { statusFilter: "all", examFilter: "all", searchQuery: "" });
+  const { page, limit, statusFilter, examFilter, searchQuery } = filterState;
+  const [searchInput, setSearchInput] = useDebouncedSearchQuery(searchQuery, setFilterState);
+  const [pagination, setPagination] = useState({ total: 0, totalPages: 0, hasNextPage: false, hasPrevPage: false });
   const { toasts, removeToast, success, error: showError } = useToast();
   const isFetchingRef = useRef(false);
 
-  const fetchData = async () => {
+  const fetchBlogs = async () => {
     if (isFetchingRef.current) return;
     isFetchingRef.current = true;
     try {
       setIsDataLoading(true);
       setError(null);
 
-      const [blogsRes, examsRes, categoriesRes] = await Promise.all([
-        api.get(`/blog?status=${statusFilter}`),
+      const params = new URLSearchParams({ page: String(page), limit: String(limit), status: statusFilter });
+      if (searchQuery.trim()) params.set("search", searchQuery.trim());
+      if (examFilter && examFilter !== "all") params.set("examId", examFilter);
+      const blogsRes = await api.get(`/blog?${params.toString()}`);
+
+      if (blogsRes.data?.success) {
+        setBlogs(blogsRes.data.data || []);
+        if (blogsRes.data.pagination) {
+          setPagination(blogsRes.data.pagination);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching blogs:", error);
+      setError("Failed to fetch blogs");
+    } finally {
+      setIsDataLoading(false);
+      isFetchingRef.current = false;
+    }
+  };
+
+  const fetchMetadata = async () => {
+    try {
+      const [examsRes, categoriesRes] = await Promise.all([
         api.get("/exam?status=active"),
         api.get("/blog/category?status=active").catch(() => ({ data: { success: false } })),
       ]);
 
-      if (blogsRes.data?.success) {
-        setBlogs(blogsRes.data.data || []);
-      }
       if (examsRes.data?.success) {
         setExams(examsRes.data.data || []);
       }
@@ -393,17 +398,34 @@ const BlogManagement = () => {
         setCategories(categoriesRes.data.data || []);
       }
     } catch (error) {
-      console.error("Error fetching data:", error);
-      setError("Failed to fetch data");
-    } finally {
-      setIsDataLoading(false);
-      isFetchingRef.current = false;
+      console.error("Error fetching metadata:", error);
     }
   };
 
   useEffect(() => {
-    fetchData();
-  }, [statusFilter]);
+    fetchMetadata();
+  }, []);
+
+  useEffect(() => {
+    fetchBlogs();
+  }, [page, limit, statusFilter, examFilter, searchQuery]);
+
+  const examMap = useMemo(() => {
+    const m = new Map();
+    exams.forEach((e) => m.set(e._id, e.name));
+    return m;
+  }, [exams]);
+
+  const groupedBlogs = useMemo(() => {
+    const groups = new Map();
+    blogs.forEach((b) => {
+      const examId = b.examId?._id || b.examId || "unassigned";
+      const examName = b.examId?.name || examMap.get(examId) || "Unassigned";
+      if (!groups.has(examId)) groups.set(examId, { examName, items: [] });
+      groups.get(examId).items.push(b);
+    });
+    return Array.from(groups.values());
+  }, [blogs, examMap]);
 
   const handleAddBlog = async (e) => {
     e.preventDefault();
@@ -421,7 +443,7 @@ const BlogManagement = () => {
       };
       const response = await api.post("/blog", payload);
       if (response.data.success) {
-        fetchData();
+        fetchBlogs();
         success(`Blog "${formData.name}" created!`);
         setFormData({
           name: "",
@@ -449,13 +471,11 @@ const BlogManagement = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
     setFormError(null);
     
-    // When exam changes, reset categoryId
     if (name === "examId") {
       setFormData((prev) => ({ ...prev, categoryId: "" }));
     }
   };
   
-  // Get categories filtered by selected exam
   const getFilteredCategories = () => {
     if (!formData.examId) return [];
     return categories.filter(
@@ -513,7 +533,7 @@ const BlogManagement = () => {
       <ToastContainer toasts={toasts} removeToast={removeToast} />
       <div className="space-y-6">
         {/* Page Header */}
-        <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 rounded-lg border border-gray-200 p-4 shadow-sm">
+        <div className="bg-linear-to-r from-blue-50 via-indigo-50 to-purple-50 rounded-lg border border-gray-200 p-4 shadow-sm">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
               <h1 className="text-xl font-semibold text-gray-900 mb-1">
@@ -550,7 +570,6 @@ const BlogManagement = () => {
             </div>
 
             <form onSubmit={handleAddBlog} className="space-y-4">
-              {/* Form Error Display */}
               {formError && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                   <div className="flex items-center gap-2">
@@ -563,7 +582,6 @@ const BlogManagement = () => {
               )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Blog Name */}
                 <div className="space-y-2 md:col-span-2">
                   <label
                     htmlFor="name"
@@ -584,7 +602,6 @@ const BlogManagement = () => {
                   />
                 </div>
 
-                {/* Exam */}
                 <div className="space-y-2">
                   <label
                     htmlFor="examId"
@@ -635,7 +652,6 @@ const BlogManagement = () => {
                   )}
                 </div>
 
-                {/* Status */}
                 <div className="space-y-2">
                   <label
                     htmlFor="status"
@@ -657,7 +673,6 @@ const BlogManagement = () => {
                   </select>
                 </div>
 
-                {/* Cover Image URL */}
                 <div className="space-y-2">
                   <label
                     htmlFor="image"
@@ -678,7 +693,6 @@ const BlogManagement = () => {
                 </div>
               </div>
 
-              {/* Form Actions */}
               <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t border-gray-200">
                 <button
                   type="button"
@@ -722,17 +736,34 @@ const BlogManagement = () => {
                   Manage your blogs, view details, and perform actions
                 </p>
               </div>
-              <div className="flex items-center gap-3">
-                <label htmlFor="blog-status-filter" className="text-sm font-medium text-gray-700 whitespace-nowrap">
-                  Status
-                </label>
+              <div className="flex items-center gap-3 flex-wrap">
+                <div className="relative">
+                  <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-3 h-3" />
+                  <input
+                    type="text"
+                    placeholder="Search blogs..."
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
+                    className="pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm bg-white w-48"
+                  />
+                </div>
+                <select
+                  value={examFilter}
+                  onChange={(e) => setFilterState({ examFilter: e.target.value, page: 1 })}
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm bg-white"
+                >
+                  <option value="all">All Exams</option>
+                  {exams.map((ex) => (
+                    <option key={ex._id} value={ex._id}>{ex.name}</option>
+                  ))}
+                </select>
                 <select
                   id="blog-status-filter"
                   value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
+                  onChange={(e) => setFilterState({ statusFilter: e.target.value, page: 1 })}
                   className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm bg-white"
                 >
-                  <option value="all">All</option>
+                  <option value="all">All Status</option>
                   <option value="active">Active</option>
                   <option value="inactive">Inactive</option>
                   <option value="draft">Draft</option>
@@ -743,11 +774,9 @@ const BlogManagement = () => {
 
           <div>
             {isDataLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="text-center">
-                  <LoadingSpinner size="medium" />
-                  <p className="text-sm text-gray-500 mt-3">Loading blogs...</p>
-                </div>
+              <div className="flex flex-col items-center justify-center py-20">
+                <LoadingSpinner size="large" />
+                <p className="mt-3 text-sm text-gray-500">Loading blogs...</p>
               </div>
             ) : blogs.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-center">
@@ -770,12 +799,30 @@ const BlogManagement = () => {
                 </button>
               </div>
             ) : (
-              <BlogTable
-                blogs={blogs}
-                onEdit={(b) => router.push(`/admin/blog/${b._id}`)}
-                onDelete={handleDeleteBlog}
-                onToggleStatus={handleToggleStatus}
-              />
+              <>
+                <div className="p-4">
+                  {groupedBlogs.map((group) => (
+                    <ExamBlogTable
+                      key={group.examName}
+                      examName={group.examName}
+                      blogs={group.items}
+                      onEdit={(b) => router.push(`/admin/blog/${b._id}`)}
+                      onDelete={handleDeleteBlog}
+                      onToggleStatus={handleToggleStatus}
+                    />
+                  ))}
+                </div>
+                <PaginationBar
+                  page={page}
+                  limit={limit}
+                  total={pagination.total}
+                  totalPages={pagination.totalPages}
+                  hasNextPage={pagination.hasNextPage}
+                  hasPrevPage={pagination.hasPrevPage}
+                  onPageChange={(p) => setFilterState({ page: p })}
+                  onLimitChange={(l) => setFilterState({ limit: l, page: 1 })}
+                />
+              </>
             )}
           </div>
         </div>

@@ -7,8 +7,8 @@ import {
   handleApiError,
 } from "@/utils/apiResponse";
 import { requireAuth } from "@/middleware/authMiddleware";
+import { parsePagination, createPaginationResponse } from "@/utils/pagination";
 
-// GET: Fetch all forms (admin only)
 export async function GET(request) {
   try {
     const authCheck = await requireAuth(request);
@@ -25,9 +25,14 @@ export async function GET(request) {
       query.status = status;
     }
 
-    const forms = await Form.find(query).sort({ createdAt: -1 }).lean();
+    const { page, limit, skip } = parsePagination(searchParams);
 
-    return successResponse(forms, "Forms fetched successfully");
+    const [forms, total] = await Promise.all([
+      Form.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
+      Form.countDocuments(query),
+    ]);
+
+    return NextResponse.json(createPaginationResponse(forms, total, page, limit));
   } catch (error) {
     return handleApiError(error, "Failed to fetch forms");
   }

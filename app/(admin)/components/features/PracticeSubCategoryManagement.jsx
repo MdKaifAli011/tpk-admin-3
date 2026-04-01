@@ -23,7 +23,9 @@ import {
   LoadingSpinner,
 } from "../ui/SkeletonLoader";
 import PracticeSubCategoryTable from "../table/PracticeSubCategoryTable";
+import PaginationBar from "../ui/PaginationBar";
 import RichTextEditor from "../ui/RichTextEditor";
+import { useFilterPersistence } from "../../hooks/useFilterPersistence";
 
 // Helper function to Title-Case text while preserving ALL-CAPS tokens (e.g., "NEET").
 const titleCasePreserveAcronyms = (text) => {
@@ -51,6 +53,9 @@ const PracticeSubCategoryManagement = ({ categoryId: propCategoryId }) => {
   const params = useParams();
   const categoryId = propCategoryId || params?.categoryId;
   const { canCreate, canEdit, canDelete, canReorder, role } = usePermissions();
+  const [filterState, setFilterState] = useFilterPersistence("practice-subcategory", {});
+  const { page, limit } = filterState;
+  const [pagination, setPagination] = useState({});
   const [showAddForm, setShowAddForm] = useState(false);
   const [isFormLoading, setIsFormLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -220,11 +225,12 @@ const PracticeSubCategoryManagement = ({ categoryId: propCategoryId }) => {
       setIsDataLoading(true);
       setError(null);
       const queryParams = categoryId
-        ? `?categoryId=${categoryId}&status=all`
-        : "?status=all";
+        ? `?categoryId=${categoryId}&status=all&page=${page}&limit=${limit}`
+        : `?status=all&page=${page}&limit=${limit}`;
       const response = await api.get(`/practice/subcategory${queryParams}`);
       if (response.data?.success) {
         setSubCategories(response.data.data || []);
+        setPagination(response.data.pagination || {});
       } else {
         setError(response.data?.message || "Failed to fetch subcategories");
       }
@@ -239,7 +245,7 @@ const PracticeSubCategoryManagement = ({ categoryId: propCategoryId }) => {
       setIsDataLoading(false);
       isFetchingRef.current = false;
     }
-  }, [categoryId]);
+  }, [categoryId, page, limit]);
 
   useEffect(() => {
     fetchCategories();
@@ -1190,6 +1196,16 @@ const PracticeSubCategoryManagement = ({ categoryId: propCategoryId }) => {
               />
             )}
           </LoadingWrapper>
+          <PaginationBar
+            page={page}
+            limit={limit}
+            total={pagination.total}
+            totalPages={pagination.totalPages}
+            hasNextPage={pagination.hasNextPage}
+            hasPrevPage={pagination.hasPrevPage}
+            onPageChange={(p) => setFilterState({ page: p })}
+            onLimitChange={(l) => setFilterState({ page: 1, limit: l })}
+          />
         </div>
       </div>
     </>

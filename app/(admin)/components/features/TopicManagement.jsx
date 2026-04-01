@@ -978,7 +978,7 @@ const TopicManagement = () => {
         loading={isFormLoading}
       />
       <LoadingWrapper
-        isLoading={isDataLoading && topics.length === 0}
+        isLoading={isDataLoading && topics.length === 0 && !searchQuery}
         skeleton={<SkeletonChaptersTable />}
       >
         <div className="space-y-6">

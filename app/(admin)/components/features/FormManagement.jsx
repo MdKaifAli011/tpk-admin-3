@@ -7,10 +7,15 @@ import { LoadingSpinner } from "../ui/SkeletonLoader";
 import FormBuilder from "./FormBuilder";
 import { PermissionButton } from "../common/PermissionButton";
 import { usePermissions, getPermissionMessage } from "../../hooks/usePermissions";
+import { useFilterPersistence } from "../../hooks/useFilterPersistence";
+import PaginationBar from "../ui/PaginationBar";
 
 const FormManagement = () => {
   const { canCreate } = usePermissions();
+  const [filterState, setFilterState] = useFilterPersistence("form", {});
+  const { page, limit } = filterState;
   const [forms, setForms] = useState([]);
+  const [pagination, setPagination] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [showBuilder, setShowBuilder] = useState(false);
@@ -19,15 +24,16 @@ const FormManagement = () => {
 
   useEffect(() => {
     fetchForms();
-  }, []);
+  }, [page, limit]);
 
   const fetchForms = async () => {
     try {
       setIsLoading(true);
       setError(null);
-      const response = await api.get("/form");
+      const response = await api.get(`/form?page=${page}&limit=${limit}`);
       if (response.data?.success) {
         setForms(response.data.data || []);
+        setPagination(response.data.pagination || null);
       } else {
         setError(response.data?.message || "Failed to fetch forms");
       }
@@ -109,7 +115,7 @@ const FormManagement = () => {
       <div className="mt-6 bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
         <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
           <h2 className="text-xl font-semibold text-gray-900">
-            Forms ({forms.length})
+            Forms ({pagination?.total ?? forms.length})
           </h2>
         </div>
 
@@ -240,6 +246,19 @@ const FormManagement = () => {
             </div>
           )}
         </div>
+
+        {pagination && (
+          <PaginationBar
+            page={page}
+            limit={limit}
+            total={pagination.total}
+            totalPages={pagination.totalPages}
+            hasNextPage={pagination.hasNextPage}
+            hasPrevPage={pagination.hasPrevPage}
+            onPageChange={(p) => setFilterState({ page: p })}
+            onLimitChange={(l) => setFilterState({ page: 1, limit: l })}
+          />
+        )}
       </div>
     </>
   );

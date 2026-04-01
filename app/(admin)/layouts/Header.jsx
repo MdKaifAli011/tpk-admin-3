@@ -3,37 +3,33 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect, memo } from "react";
 import { FaUser, FaSignOutAlt, FaBars, FaSyncAlt } from "react-icons/fa";
-import { usePathname } from "next/navigation";
 import api from "@/lib/api";
 
 // Base path - should match next.config.mjs basePath
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
 
 const Header = memo(({ onMenuToggle }) => {
-  const pathname = usePathname();
   const [user, setUser] = useState(null);
   const [visitStatsRefreshing, setVisitStatsRefreshing] = useState(false);
   const [visitStatsMessage, setVisitStatsMessage] = useState(null);
 
   useEffect(() => {
-    // Get user from localStorage and update on pathname change
     const updateUser = () => {
       const userStr = localStorage.getItem("user");
-      if (userStr) {
-        try {
-          const userData = JSON.parse(userStr);
-          setUser(userData);
-        } catch (error) {
-          // Silently handle parse error
-        }
-      }
+      if (!userStr) return;
+      try {
+        const userData = JSON.parse(userStr);
+        setUser((prev) => {
+          if (prev?.name === userData.name && prev?.role === userData.role) return prev;
+          return userData;
+        });
+      } catch (_) {}
     };
 
     updateUser();
-    // Listen for storage changes (when user data is updated elsewhere)
     window.addEventListener("storage", updateUser);
     return () => window.removeEventListener("storage", updateUser);
-  }, [pathname]); // Update when pathname changes (in case user data was updated)
+  }, []);
 
   const handleRefreshVisitStats = async () => {
     setVisitStatsMessage(null);

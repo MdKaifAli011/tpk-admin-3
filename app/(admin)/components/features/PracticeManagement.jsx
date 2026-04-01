@@ -20,6 +20,8 @@ import {
 } from "../ui/SkeletonLoader";
 import PracticeCategoryTable from "../table/PracticeCategoryTable";
 import { FaTrash, FaPowerOff } from "react-icons/fa";
+import { useFilterPersistence } from "../../hooks/useFilterPersistence";
+import PaginationBar from "../ui/PaginationBar";
 
 const PracticeManagement = () => {
   const { canCreate, canEdit, canDelete, canReorder, role } = usePermissions();
@@ -42,6 +44,9 @@ const PracticeManagement = () => {
   });
   const [subjects, setSubjects] = useState([]);
   const [formError, setFormError] = useState(null);
+  const [filterState, setFilterState] = useFilterPersistence("practice", {});
+  const { page, limit } = filterState;
+  const [pagination, setPagination] = useState({ total: 0, totalPages: 0, hasNextPage: false, hasPrevPage: false });
   const { toasts, removeToast, success, error: showError } = useToast();
   const isFetchingRef = useRef(false);
 
@@ -80,9 +85,12 @@ const PracticeManagement = () => {
     try {
       setIsDataLoading(true);
       setError(null);
-      const response = await api.get("/practice/category?status=all");
+      const response = await api.get(`/practice/category?status=all&page=${page}&limit=${limit}`);
       if (response.data?.success) {
         setCategories(response.data.data || []);
+        if (response.data.pagination) {
+          setPagination(response.data.pagination);
+        }
       } else {
         setError(response.data?.message || "Failed to fetch categories");
       }
@@ -101,8 +109,11 @@ const PracticeManagement = () => {
 
   useEffect(() => {
     fetchExams();
-    fetchCategories();
   }, []);
+
+  useEffect(() => {
+    fetchCategories();
+  }, [page, limit]);
 
   // Calculate next order number when exam is selected
   useEffect(() => {
@@ -627,12 +638,24 @@ const PracticeManagement = () => {
                 <div className="text-red-500 text-sm">{error}</div>
               </div>
             ) : (
-              <PracticeCategoryTable
-                categories={categories}
-                onEdit={handleEditCategory}
-                onDelete={handleDeleteCategory}
-                onToggleStatus={handleToggleStatus}
-              />
+              <>
+                <PracticeCategoryTable
+                  categories={categories}
+                  onEdit={handleEditCategory}
+                  onDelete={handleDeleteCategory}
+                  onToggleStatus={handleToggleStatus}
+                />
+                <PaginationBar
+                  page={page}
+                  limit={limit}
+                  total={pagination.total}
+                  totalPages={pagination.totalPages}
+                  hasNextPage={pagination.hasNextPage}
+                  hasPrevPage={pagination.hasPrevPage}
+                  onPageChange={(p) => setFilterState({ page: p })}
+                  onLimitChange={(l) => setFilterState({ limit: l, page: 1 })}
+                />
+              </>
             )}
           </LoadingWrapper>
         </div>

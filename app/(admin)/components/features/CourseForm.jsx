@@ -27,6 +27,7 @@ const defaultForm = {
   videoThumbnail: "",
   brochureButtonUrl: "",
   status: "active",
+  orderNumber: "0",
 };
 
 export default function CourseForm({ courseId, isNew }) {
@@ -97,6 +98,7 @@ export default function CourseForm({ courseId, isNew }) {
               videoThumbnail: c.videoThumbnail || "",
               brochureButtonUrl: c.brochureButtonUrl || "",
               status: c.status || "active",
+              orderNumber: c.orderNumber != null ? String(c.orderNumber) : "0",
             });
           } else {
             setError("Course not found");
@@ -149,6 +151,7 @@ export default function CourseForm({ courseId, isNew }) {
         videoThumbnail: form.videoThumbnail.trim(),
         brochureButtonUrl: form.brochureButtonUrl.trim(),
         status: form.status,
+        orderNumber: form.orderNumber === "" ? 0 : parseInt(form.orderNumber, 10),
       };
       if (isNew) {
         const res = await api.post("/course", payload);
@@ -429,6 +432,21 @@ export default function CourseForm({ courseId, isNew }) {
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
                   disabled={saving}
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Order Number</label>
+                <input
+                  type="number"
+                  name="orderNumber"
+                  value={form.orderNumber}
+                  onChange={handleChange}
+                  placeholder="0"
+                  min="0"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                  disabled={saving}
+                />
+                <p className="text-xs text-gray-500 mt-1">Controls display order within this exam (lower = first)</p>
               </div>
 
               <div className="md:col-span-2">

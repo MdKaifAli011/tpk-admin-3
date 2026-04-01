@@ -22,8 +22,9 @@ import { ToastContainer, useToast } from "../ui/Toast";
 import { LoadingSpinner } from "../ui/SkeletonLoader";
 import RichTextEditor from "../ui/RichTextEditor";
 import api from "@/lib/api";
-
-const LIMIT = 500;
+import { useFilterPersistence } from "../../hooks/useFilterPersistence";
+import { useDebouncedSearchQuery } from "../../hooks/useDebouncedSearchQuery";
+import PaginationBar from "../ui/PaginationBar";
 
 import { config } from "@/config/config";
 
@@ -131,9 +132,11 @@ const stripHtmlPreview = (html, maxLen = 80) => {
 const NotificationManagement = () => {
   const { toasts, removeToast, success, error: showError } = useToast();
   const [notifications, setNotifications] = useState([]);
+  const [pagination, setPagination] = useState({ total: 0, totalPages: 0, hasNextPage: false, hasPrevPage: false });
   const [isLoading, setIsLoading] = useState(false);
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [filterState, setFilterState] = useFilterPersistence("notification", { statusFilter: "all", searchQuery: "" });
+  const { page, limit, statusFilter, searchQuery } = filterState;
+  const [searchInput, setSearchInput] = useDebouncedSearchQuery(searchQuery, setFilterState);
   const [showFilters, setShowFilters] = useState(false);
   const fetchRef = useRef(false);
 
@@ -206,7 +209,7 @@ const NotificationManagement = () => {
     fetchRef.current = true;
     try {
       setIsLoading(true);
-      const params = new URLSearchParams({ status: statusFilter, limit: LIMIT, page: 1 });
+      const params = new URLSearchParams({ status: statusFilter, limit: String(limit), page: String(page) });
       const hierarchy = getEffectiveHierarchy();
       if (hierarchy) {
         params.set("entityType", hierarchy.entityType);
@@ -217,8 +220,12 @@ const NotificationManagement = () => {
       let list = [];
       if (Array.isArray(payload)) list = payload;
       else if (payload && Array.isArray(payload.data)) list = payload.data;
-      else if (payload && payload.data && Array.isArray(payload.data)) list = payload.data;
       setNotifications(list);
+      if (payload?.pagination) {
+        setPagination(payload.pagination);
+      } else {
+        setPagination({ total: list.length, totalPages: 1, hasNextPage: false, hasPrevPage: false });
+      }
     } catch (err) {
       console.error(err);
       showError("Failed to fetch notifications");
@@ -226,11 +233,11 @@ const NotificationManagement = () => {
       setIsLoading(false);
       fetchRef.current = false;
     }
-  }, [statusFilter, getEffectiveHierarchy, showError]);
+  }, [page, limit, statusFilter, getEffectiveHierarchy, showError]);
 
   useEffect(() => {
     fetchNotifications();
-  }, [statusFilter, getEffectiveHierarchy]);
+  }, [fetchNotifications]);
 
   const filteredNotifications = useMemo(() => {
     let result = [...notifications];
@@ -297,7 +304,7 @@ const NotificationManagement = () => {
   useEffect(() => {
     let cancelled = false;
     setHierarchyLoading((p) => ({ ...p, exam: true }));
-    api.get(`/exam?status=all&limit=${LIMIT}&page=1`).then((res) => {
+    api.get(`/exam?status=all&limit=500&page=1`).then((res) => {
       if (!cancelled) setExams(parseListResponse(res));
     }).catch(() => { if (!cancelled) setExams([]); }).finally(() => {
       if (!cancelled) setHierarchyLoading((p) => ({ ...p, exam: false }));
@@ -315,7 +322,7 @@ const NotificationManagement = () => {
     setHierarchyLoading((p) => ({ ...p, subject: true }));
     setSubjectId(""); setUnitId(""); setChapterId(""); setTopicId(""); setSubTopicId(""); setDefinitionId("");
     setUnits([]); setChapters([]); setTopics([]); setSubtopics([]); setDefinitions([]);
-    api.get(`/subject?examId=${examId}&status=all&limit=${LIMIT}&page=1`).then((res) => {
+    api.get(`/subject?examId=${examId}&status=all&limit=500&page=1`).then((res) => {
       if (!cancelled) setSubjects(parseListResponse(res));
     }).catch(() => { if (!cancelled) setSubjects([]); }).finally(() => {
       if (!cancelled) setHierarchyLoading((p) => ({ ...p, subject: false }));
@@ -333,7 +340,7 @@ const NotificationManagement = () => {
     setHierarchyLoading((p) => ({ ...p, unit: true }));
     setUnitId(""); setChapterId(""); setTopicId(""); setSubTopicId(""); setDefinitionId("");
     setChapters([]); setTopics([]); setSubtopics([]); setDefinitions([]);
-    api.get(`/unit?subjectId=${subjectId}&status=all&limit=${LIMIT}&page=1`).then((res) => {
+    api.get(`/unit?subjectId=${subjectId}&status=all&limit=500&page=1`).then((res) => {
       if (!cancelled) setUnits(parseListResponse(res));
     }).catch(() => { if (!cancelled) setUnits([]); }).finally(() => {
       if (!cancelled) setHierarchyLoading((p) => ({ ...p, unit: false }));
@@ -351,7 +358,7 @@ const NotificationManagement = () => {
     setHierarchyLoading((p) => ({ ...p, chapter: true }));
     setChapterId(""); setTopicId(""); setSubTopicId(""); setDefinitionId("");
     setTopics([]); setSubtopics([]); setDefinitions([]);
-    api.get(`/chapter?unitId=${unitId}&status=all&limit=${LIMIT}&page=1`).then((res) => {
+    api.get(`/chapter?unitId=${unitId}&status=all&limit=500&page=1`).then((res) => {
       if (!cancelled) setChapters(parseListResponse(res));
     }).catch(() => { if (!cancelled) setChapters([]); }).finally(() => {
       if (!cancelled) setHierarchyLoading((p) => ({ ...p, chapter: false }));
@@ -369,7 +376,7 @@ const NotificationManagement = () => {
     setHierarchyLoading((p) => ({ ...p, topic: true }));
     setTopicId(""); setSubTopicId(""); setDefinitionId("");
     setSubtopics([]); setDefinitions([]);
-    api.get(`/topic?chapterId=${chapterId}&status=all&limit=${LIMIT}&page=1`).then((res) => {
+    api.get(`/topic?chapterId=${chapterId}&status=all&limit=500&page=1`).then((res) => {
       if (!cancelled) setTopics(parseListResponse(res));
     }).catch(() => { if (!cancelled) setTopics([]); }).finally(() => {
       if (!cancelled) setHierarchyLoading((p) => ({ ...p, topic: false }));
@@ -385,7 +392,7 @@ const NotificationManagement = () => {
     let cancelled = false;
     setHierarchyLoading((p) => ({ ...p, subtopic: true }));
     setSubTopicId(""); setDefinitionId(""); setDefinitions([]);
-    api.get(`/subtopic?topicId=${topicId}&status=all&limit=${LIMIT}&page=1`).then((res) => {
+    api.get(`/subtopic?topicId=${topicId}&status=all&limit=500&page=1`).then((res) => {
       if (!cancelled) setSubtopics(parseListResponse(res));
     }).catch(() => { if (!cancelled) setSubtopics([]); }).finally(() => {
       if (!cancelled) setHierarchyLoading((p) => ({ ...p, subtopic: false }));
@@ -401,7 +408,7 @@ const NotificationManagement = () => {
     let cancelled = false;
     setHierarchyLoading((p) => ({ ...p, definition: true }));
     setDefinitionId("");
-    api.get(`/definition?subTopicId=${subTopicId}&status=all&limit=${LIMIT}&page=1`).then((res) => {
+    api.get(`/definition?subTopicId=${subTopicId}&status=all&limit=500&page=1`).then((res) => {
       if (!cancelled) setDefinitions(parseListResponse(res));
     }).catch(() => { if (!cancelled) setDefinitions([]); }).finally(() => {
       if (!cancelled) setHierarchyLoading((p) => ({ ...p, definition: false }));
@@ -414,7 +421,7 @@ const NotificationManagement = () => {
     if (!showForm || editingId) return;
     let cancelled = false;
     setFormHierarchyLoading((p) => ({ ...p, exam: true }));
-    api.get(`/exam?status=all&limit=${LIMIT}&page=1`).then((res) => {
+    api.get(`/exam?status=all&limit=500&page=1`).then((res) => {
       if (!cancelled) setFormExams(parseListResponse(res));
     }).catch(() => { if (!cancelled) setFormExams([]); }).finally(() => {
       if (!cancelled) setFormHierarchyLoading((p) => ({ ...p, exam: false }));
@@ -431,7 +438,7 @@ const NotificationManagement = () => {
     setFormHierarchyLoading((p) => ({ ...p, subject: true }));
     setFormSubjectId(""); setFormUnitId(""); setFormChapterId(""); setFormTopicId(""); setFormSubTopicId(""); setFormDefinitionId("");
     setFormUnits([]); setFormChapters([]); setFormTopics([]); setFormSubtopics([]); setFormDefinitions([]);
-    api.get(`/subject?examId=${formExamId}&status=all&limit=${LIMIT}&page=1`).then((res) => {
+    api.get(`/subject?examId=${formExamId}&status=all&limit=500&page=1`).then((res) => {
       if (!cancelled) setFormSubjects(parseListResponse(res));
     }).catch(() => { if (!cancelled) setFormSubjects([]); }).finally(() => {
       if (!cancelled) setFormHierarchyLoading((p) => ({ ...p, subject: false }));
@@ -448,7 +455,7 @@ const NotificationManagement = () => {
     setFormHierarchyLoading((p) => ({ ...p, unit: true }));
     setFormUnitId(""); setFormChapterId(""); setFormTopicId(""); setFormSubTopicId(""); setFormDefinitionId("");
     setFormChapters([]); setFormTopics([]); setFormSubtopics([]); setFormDefinitions([]);
-    api.get(`/unit?subjectId=${formSubjectId}&status=all&limit=${LIMIT}&page=1`).then((res) => {
+    api.get(`/unit?subjectId=${formSubjectId}&status=all&limit=500&page=1`).then((res) => {
       if (!cancelled) setFormUnits(parseListResponse(res));
     }).catch(() => { if (!cancelled) setFormUnits([]); }).finally(() => {
       if (!cancelled) setFormHierarchyLoading((p) => ({ ...p, unit: false }));
@@ -465,7 +472,7 @@ const NotificationManagement = () => {
     setFormHierarchyLoading((p) => ({ ...p, chapter: true }));
     setFormChapterId(""); setFormTopicId(""); setFormSubTopicId(""); setFormDefinitionId("");
     setFormTopics([]); setFormSubtopics([]); setFormDefinitions([]);
-    api.get(`/chapter?unitId=${formUnitId}&status=all&limit=${LIMIT}&page=1`).then((res) => {
+    api.get(`/chapter?unitId=${formUnitId}&status=all&limit=500&page=1`).then((res) => {
       if (!cancelled) setFormChapters(parseListResponse(res));
     }).catch(() => { if (!cancelled) setFormChapters([]); }).finally(() => {
       if (!cancelled) setFormHierarchyLoading((p) => ({ ...p, chapter: false }));
@@ -482,7 +489,7 @@ const NotificationManagement = () => {
     setFormHierarchyLoading((p) => ({ ...p, topic: true }));
     setFormTopicId(""); setFormSubTopicId(""); setFormDefinitionId("");
     setFormSubtopics([]); setFormDefinitions([]);
-    api.get(`/topic?chapterId=${formChapterId}&status=all&limit=${LIMIT}&page=1`).then((res) => {
+    api.get(`/topic?chapterId=${formChapterId}&status=all&limit=500&page=1`).then((res) => {
       if (!cancelled) setFormTopics(parseListResponse(res));
     }).catch(() => { if (!cancelled) setFormTopics([]); }).finally(() => {
       if (!cancelled) setFormHierarchyLoading((p) => ({ ...p, topic: false }));
@@ -498,7 +505,7 @@ const NotificationManagement = () => {
     let cancelled = false;
     setFormHierarchyLoading((p) => ({ ...p, subtopic: true }));
     setFormSubTopicId(""); setFormDefinitionId(""); setFormDefinitions([]);
-    api.get(`/subtopic?topicId=${formTopicId}&status=all&limit=${LIMIT}&page=1`).then((res) => {
+    api.get(`/subtopic?topicId=${formTopicId}&status=all&limit=500&page=1`).then((res) => {
       if (!cancelled) setFormSubtopics(parseListResponse(res));
     }).catch(() => { if (!cancelled) setFormSubtopics([]); }).finally(() => {
       if (!cancelled) setFormHierarchyLoading((p) => ({ ...p, subtopic: false }));
@@ -514,7 +521,7 @@ const NotificationManagement = () => {
     let cancelled = false;
     setFormHierarchyLoading((p) => ({ ...p, definition: true }));
     setFormDefinitionId("");
-    api.get(`/definition?subTopicId=${formSubTopicId}&status=all&limit=${LIMIT}&page=1`).then((res) => {
+    api.get(`/definition?subTopicId=${formSubTopicId}&status=all&limit=500&page=1`).then((res) => {
       if (!cancelled) setFormDefinitions(parseListResponse(res));
     }).catch(() => { if (!cancelled) setFormDefinitions([]); }).finally(() => {
       if (!cancelled) setFormHierarchyLoading((p) => ({ ...p, definition: false }));
@@ -895,8 +902,8 @@ const NotificationManagement = () => {
                   <input
                     type="text"
                     placeholder="Search by title, message, slug..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
                     className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow"
                   />
                 </div>
@@ -905,7 +912,7 @@ const NotificationManagement = () => {
                     <label className="text-sm font-medium text-gray-700 whitespace-nowrap">Status</label>
                     <select
                       value={statusFilter}
-                      onChange={(e) => setStatusFilter(e.target.value)}
+                      onChange={(e) => setFilterState({ statusFilter: e.target.value, page: 1 })}
                       className="min-w-[120px] px-3 py-2.5 bg-white border border-gray-300 rounded-xl text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow"
                     >
                       <option value="all">All</option>
@@ -1226,6 +1233,16 @@ const NotificationManagement = () => {
               </div>
             )}
           </div>
+          <PaginationBar
+            page={page}
+            limit={limit}
+            total={pagination.total}
+            totalPages={pagination.totalPages}
+            hasNextPage={pagination.hasNextPage}
+            hasPrevPage={pagination.hasPrevPage}
+            onPageChange={(p) => setFilterState({ page: p })}
+            onLimitChange={(l) => setFilterState({ limit: l, page: 1 })}
+          />
         </div>
       </div>
 

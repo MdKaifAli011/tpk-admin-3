@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import {
   FaImage,
   FaFile,
@@ -13,8 +13,6 @@ import {
   FaEdit,
   FaTimes,
   FaInfoCircle,
-  FaChevronLeft,
-  FaChevronRight,
   FaCopy,
   FaFolder,
   FaFolderOpen,
@@ -30,6 +28,9 @@ import { ToastContainer, useToast } from "../ui/Toast";
 import { LoadingWrapper, LoadingSpinner } from "../ui/SkeletonLoader";
 import api from "@/lib/api";
 import { usePermissions } from "../../hooks/usePermissions";
+import { useFilterPersistence } from "../../hooks/useFilterPersistence";
+import { useDebouncedSearchQuery } from "../../hooks/useDebouncedSearchQuery";
+import PaginationBar from "../ui/PaginationBar";
 
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
 
@@ -111,11 +112,11 @@ function slugifyPath(p) {
 export default function MediaManagement() {
   const [activeFilter, setActiveFilter] = useState("image");
   const [viewMode, setViewMode] = useState("library");
-  const [search, setSearch] = useState("");
-  const [searchDebounced, setSearchDebounced] = useState("");
+  const [filterState, setFilterState] = useFilterPersistence("media", { viewMode: "grid", searchQuery: "" });
+  const { page, limit, viewMode: layoutView, searchQuery } = filterState;
+  const [searchInput, setSearchInput] = useDebouncedSearchQuery(searchQuery, setFilterState);
   const [items, setItems] = useState([]);
-  const [pagination, setPagination] = useState({ page: 1, limit: 24, total: 0, totalPages: 0 });
-  const [pageSize, setPageSize] = useState(10);
+  const [pagination, setPagination] = useState({ total: 0, totalPages: 0, hasNextPage: false, hasPrevPage: false });
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [selectedIds, setSelectedIds] = useState(new Set());
@@ -132,7 +133,6 @@ export default function MediaManagement() {
   const [folderMenuOpen, setFolderMenuOpen] = useState(null);
   const [fileMenuOpen, setFileMenuOpen] = useState(null);
   const [previewItem, setPreviewItem] = useState(null);
-  const [layoutView, setLayoutView] = useState("list"); // "grid" | "list"
   const [renameFolder, setRenameFolder] = useState(null); // { path, name } or null
   const [renameName, setRenameName] = useState("");
   const [renamingFolder, setRenamingFolder] = useState(false);
@@ -167,7 +167,7 @@ export default function MediaManagement() {
     }
   }, []);
 
-  const fetchMedia = useCallback(async (page = 1) => {
+  const fetchMedia = async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
@@ -177,13 +177,19 @@ export default function MediaManagement() {
         params.set("folder", currentFolderPath);
       }
       params.set("page", String(page));
-      params.set("limit", String(pageSize));
-      if (searchDebounced.trim()) params.set("search", searchDebounced.trim());
+      params.set("limit", String(limit));
+      if (searchQuery.trim()) params.set("search", searchQuery.trim());
 
       const res = await api.get(`/media?${params.toString()}`);
       if (res.data?.success) {
         setItems(res.data.data?.data ?? []);
-        setPagination(res.data.data?.pagination ?? { page: 1, limit: pageSize, total: 0, totalPages: 0 });
+        const pag = res.data.data?.pagination ?? {};
+        setPagination({
+          total: pag.total ?? 0,
+          totalPages: pag.totalPages ?? 0,
+          hasNextPage: pag.hasNextPage ?? (page < (pag.totalPages ?? 0)),
+          hasPrevPage: pag.hasPrevPage ?? (page > 1),
+        });
       } else {
         setItems([]);
       }
@@ -194,12 +200,12 @@ export default function MediaManagement() {
     } finally {
       setLoading(false);
     }
-  // showError intentionally omitted: stable deps to avoid refetch loop (toast returns new refs each render)
-  }, [activeFilter, viewMode, searchDebounced, currentFolderPath, pageSize]);
+  };
 
   useEffect(() => {
-    fetchMedia(1);
-  }, [fetchMedia]);
+    fetchMedia();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, limit, searchQuery, activeFilter, viewMode, currentFolderPath]);
 
   useEffect(() => {
     if (viewMode === "library") fetchFolders(activeFilter === "all" ? undefined : activeFilter);
@@ -240,7 +246,7 @@ export default function MediaManagement() {
         if (viewMode === "library") fetchFolders(activeFilter);
         else fetchFolders();
         setCurrentFolderPath(res.data.data?.path ?? slugifyPath(currentFolderPath ? `${currentFolderPath}/${name}` : name));
-        fetchMedia(1);
+        setFilterState({ page: 1 });
       } else showError(res.data?.message || "Failed to create folder");
     } catch (err) {
       showError(err.response?.data?.message || "Failed to create folder");
@@ -262,7 +268,7 @@ export default function MediaManagement() {
         setRenameName("");
         if (viewMode === "library") fetchFolders(activeFilter);
         else fetchFolders();
-        fetchMedia(1);
+        setFilterState({ page: 1 });
       } else showError(res.data?.message || "Failed to rename folder");
     } catch (err) {
       showError(err.response?.data?.message || "Failed to rename folder");
@@ -287,7 +293,7 @@ export default function MediaManagement() {
         }
         if (viewMode === "library") fetchFolders(activeFilter);
         else fetchFolders();
-        fetchMedia(1);
+        setFilterState({ page: 1 });
       } else showError(res.data?.message || "Failed to delete folder");
     } catch (err) {
       showError(err.response?.data?.message || err.response?.data?.error || "Failed to delete folder.");
@@ -295,11 +301,6 @@ export default function MediaManagement() {
       setDeletingFolder(false);
     }
   };
-
-  useEffect(() => {
-    const t = setTimeout(() => setSearchDebounced(search), 300);
-    return () => clearTimeout(t);
-  }, [search]);
 
   useEffect(() => {
     if (!previewItem) return;
@@ -333,7 +334,7 @@ export default function MediaManagement() {
     if (fileInputRef.current) fileInputRef.current.value = "";
     if (done) {
       success(`${done} file(s) uploaded`);
-      fetchMedia(pagination.page);
+      fetchMedia();
     }
     if (failed) showError(`${failed} file(s) failed to upload`);
   };
@@ -387,7 +388,7 @@ export default function MediaManagement() {
       if (res.data?.success) {
         success("Media updated");
         setEditingItem(null);
-        fetchMedia(pagination.page);
+        fetchMedia();
       } else showError(res.data?.message || "Update failed");
     } catch (err) {
       showError(err.response?.data?.message || "Update failed");
@@ -401,7 +402,7 @@ export default function MediaManagement() {
       await api.delete(`/media/${id}`);
       success("Moved to trash");
       setSelectedIds((prev) => { const n = new Set(prev); n.delete(id); return n; });
-      fetchMedia(pagination.page);
+      fetchMedia();
     } catch {
       showError("Failed to move to trash");
     }
@@ -413,7 +414,7 @@ export default function MediaManagement() {
       success("Restored");
       setSelectedIds((prev) => { const n = new Set(prev); n.delete(id); return n; });
       setEditingItem(null);
-      fetchMedia(pagination.page);
+      fetchMedia();
     } catch {
       showError("Failed to restore");
     }
@@ -426,7 +427,7 @@ export default function MediaManagement() {
       success("Permanently deleted");
       setEditingItem(null);
       setSelectedIds((prev) => { const n = new Set(prev); n.delete(id); return n; });
-      fetchMedia(pagination.page);
+      fetchMedia();
     } catch {
       showError("Failed to delete");
     }
@@ -442,7 +443,7 @@ export default function MediaManagement() {
     }
     setSelectedIds(new Set());
     success(ids.length === 1 ? "Restored" : `${ids.length} items restored`);
-    fetchMedia(pagination.page);
+    fetchMedia();
   };
 
   const copyUrl = (url) => {
@@ -452,11 +453,11 @@ export default function MediaManagement() {
     }
   };
 
-  const subfolders = viewMode === "library" ? foldersFlat.filter((f) => (f.parentPath || "") === currentFolderPath) : [];
-  const breadcrumbSegments = currentFolderPath ? currentFolderPath.split("/").filter(Boolean) : [];
+  const subfolders = useMemo(() => viewMode === "library" ? foldersFlat.filter((f) => (f.parentPath || "") === currentFolderPath) : [], [viewMode, foldersFlat, currentFolderPath]);
+  const breadcrumbSegments = useMemo(() => currentFolderPath ? currentFolderPath.split("/").filter(Boolean) : [], [currentFolderPath]);
   const displayItems = items;
 
-  const selectedItem = displayItems.find((i) => i._id === Array.from(selectedIds)[0]);
+  const selectedItem = useMemo(() => displayItems.find((i) => i._id === Array.from(selectedIds)[0]), [displayItems, selectedIds]);
 
   return (
     <>
@@ -477,6 +478,7 @@ export default function MediaManagement() {
                     setViewMode("library");
                     setActiveFilter(id);
                         setCurrentFolderPath("");
+                        setFilterState({ page: 1 });
                   }}
                       className={`flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm transition-colors ${
                     viewMode === "library" && activeFilter === id
@@ -491,7 +493,7 @@ export default function MediaManagement() {
                   <div className="my-2 border-t border-slate-200" />
               <button
                 type="button"
-                onClick={() => setViewMode("recent")}
+                onClick={() => { setViewMode("recent"); setFilterState({ page: 1 }); }}
                     className={`flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm transition-colors ${
                       viewMode === "recent" ? "bg-[#0052CC] text-white shadow-sm" : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                 }`}
@@ -501,7 +503,7 @@ export default function MediaManagement() {
               </button>
               <button
                 type="button"
-                onClick={() => setViewMode("trash")}
+                onClick={() => { setViewMode("trash"); setFilterState({ page: 1 }); }}
                     className={`flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm transition-colors ${
                       viewMode === "trash" ? "bg-[#0052CC] text-white shadow-sm" : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                 }`}
@@ -524,7 +526,7 @@ export default function MediaManagement() {
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
-                    onClick={() => setLayoutView("grid")}
+                    onClick={() => setFilterState({ viewMode: "grid" })}
                     className={`p-2 rounded-lg border transition-colors ${layoutView === "grid" ? "bg-[#E8EFFF] border-[#0052CC] text-[#0052CC]" : "bg-white border-slate-200 text-slate-400 hover:text-[#0052CC]"}`}
                     title="Grid view"
                   >
@@ -532,7 +534,7 @@ export default function MediaManagement() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setLayoutView("list")}
+                    onClick={() => setFilterState({ viewMode: "list" })}
                     className={`p-2 rounded-lg border transition-colors ${layoutView === "list" ? "bg-[#E8EFFF] border-[#0052CC] text-[#0052CC]" : "bg-white border-slate-200 text-slate-400 hover:text-[#0052CC]"}`}
                     title="List view"
                   >
@@ -546,11 +548,11 @@ export default function MediaManagement() {
                 {/* Breadcrumbs + Search + New Folder + Upload */}
                 <div className="border-b border-slate-200 bg-white p-4">
                   <div className="flex items-center gap-2 text-sm text-slate-500 mb-4">
-                    <button type="button" onClick={() => setCurrentFolderPath("")} className="hover:text-[#0052CC] flex items-center gap-1 transition-colors">
+                    <button type="button" onClick={() => { setCurrentFolderPath(""); setFilterState({ page: 1 }); }} className="hover:text-[#0052CC] flex items-center gap-1 transition-colors">
                       <FaFolderOpen className="h-4 w-4" /> Root
                     </button>
                     <span className="text-slate-400">/</span>
-                    <button type="button" onClick={() => setCurrentFolderPath("")} className="hover:text-[#0052CC] transition-colors">Media</button>
+                    <button type="button" onClick={() => { setCurrentFolderPath(""); setFilterState({ page: 1 }); }} className="hover:text-[#0052CC] transition-colors">Media</button>
                     {viewMode === "trash" ? (
                       <>
                         <span className="text-slate-400">/</span>
@@ -566,7 +568,7 @@ export default function MediaManagement() {
                             <span className="text-slate-400">/</span>
                             <button
                               type="button"
-                              onClick={() => setCurrentFolderPath(pathUp)}
+                              onClick={() => { setCurrentFolderPath(pathUp); setFilterState({ page: 1 }); }}
                               className={`transition-colors ${isLast ? "text-slate-900 font-medium" : "hover:text-[#0052CC]"}`}
                             >
                               {displayName}
@@ -581,8 +583,8 @@ export default function MediaManagement() {
                       <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                   <input
                     type="text"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
                         placeholder="Search files and folders..."
                         className="w-full pl-10 pr-4 py-2 bg-slate-50 border-0 focus:ring-1 focus:ring-[#0052CC] rounded-lg text-sm"
                   />
@@ -610,7 +612,7 @@ export default function MediaManagement() {
                               }
                               setSelectedIds(new Set());
                               success(ids.length === 1 ? "Permanently deleted" : `${ids.length} items permanently deleted`);
-                              fetchMedia(pagination.page);
+                              fetchMedia();
                             }}
                             className="flex items-center gap-2 px-4 py-2 text-white font-medium text-sm bg-red-600 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
                             disabled={selectedIds.size === 0}
@@ -655,7 +657,7 @@ export default function MediaManagement() {
                                 }
                                 setSelectedIds(new Set());
                                 success(ids.length === 1 ? "Moved to trash" : `${ids.length} items moved to trash`);
-                                fetchMedia(pagination.page);
+                                fetchMedia();
                               }
                             }}
                             className="flex items-center gap-2 px-4 py-2 text-white font-medium text-sm bg-red-600 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
@@ -729,7 +731,7 @@ export default function MediaManagement() {
                             <tr
                               key={`folder-${f.path}`}
                               className={`group cursor-pointer transition-colors ${selectedFolderPaths.has(f.path) ? "bg-blue-50/30" : "hover:bg-slate-50"}`}
-                              onClick={() => { setCurrentFolderPath(f.path); setFolderMenuOpen(null); }}
+                              onClick={() => { setCurrentFolderPath(f.path); setFolderMenuOpen(null); setFilterState({ page: 1 }); }}
                             >
                               <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                                 <input
@@ -760,7 +762,7 @@ export default function MediaManagement() {
                                   </button>
                                   {folderMenuOpen === f.path && (
                                     <div className="absolute right-0 top-full z-20 mt-1 min-w-[160px] rounded-lg border border-slate-200 bg-white py-1 shadow-lg" onClick={(e) => e.stopPropagation()}>
-                                      <button type="button" onClick={() => { setShowCreateFolder(true); setNewFolderName(""); setCurrentFolderPath(f.path); setFolderMenuOpen(null); }} className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50">
+                                      <button type="button" onClick={() => { setShowCreateFolder(true); setNewFolderName(""); setCurrentFolderPath(f.path); setFolderMenuOpen(null); setFilterState({ page: 1 }); }} className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50">
                                         <FaPlus className="h-3.5 w-3.5 text-slate-400" /> New subfolder
                                       </button>
                                       <button type="button" onClick={() => { setRenameFolder({ path: f.path, name: f.name || f.path }); setRenameName(f.name || f.path); setFolderMenuOpen(null); }} className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50">
@@ -894,7 +896,7 @@ export default function MediaManagement() {
                             key={f.path}
                             type="button"
                             onClick={(e) => { e.stopPropagation(); toggleSelectFolder(f.path); }}
-                            onDoubleClick={(e) => { e.stopPropagation(); setCurrentFolderPath(f.path); setFolderMenuOpen(null); }}
+                            onDoubleClick={(e) => { e.stopPropagation(); setCurrentFolderPath(f.path); setFolderMenuOpen(null); setFilterState({ page: 1 }); }}
                             className={`flex min-w-[120px] items-center gap-2.5 rounded-xl border px-3 py-2.5 shadow-sm transition-colors ${
                               selectedFolderPaths.has(f.path)
                                 ? "border-[#0052CC] bg-[#E8EFFF] ring-2 ring-[#0052CC] ring-offset-2"
@@ -1049,61 +1051,16 @@ export default function MediaManagement() {
                 }
                 </div>
 
-                {/* Footer bar — items count, selected, and pagination (10, 20, 50, 100) */}
-                <div className="h-12 border-t border-slate-200 px-6 flex items-center justify-between bg-slate-50 text-xs text-slate-500 shrink-0">
-                  <div className="flex items-center gap-4">
-                    <span>{subfolders.length + displayItems.length} items</span>
-                    {(selectedIds.size > 0 || selectedFolderPaths.size > 0) && (
-                      <>
-                        <span className="w-px h-3 bg-slate-300" />
-                        <span className="font-medium text-[#0052CC]">
-                          {selectedFolderPaths.size > 0 && selectedIds.size > 0
-                            ? `${selectedFolderPaths.size} folder(s), ${selectedIds.size} file(s) selected`
-                            : selectedFolderPaths.size > 0
-                              ? `${selectedFolderPaths.size} folder(s) selected`
-                              : `${selectedIds.size} item${selectedIds.size !== 1 ? "s" : ""} selected${selectedItem && selectedIds.size === 1 && selectedItem.size != null ? ` (${formatSize(selectedItem.size)})` : ""}`}
-                        </span>
-                      </>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-slate-500">Items per page:</span>
-                    <div className="flex items-center gap-1">
-                      {[10, 20, 50, 100].map((n) => (
-                        <button
-                          key={n}
-                          type="button"
-                          onClick={() => { setPageSize(n); }}
-                          className={`min-w-[2rem] px-2 py-1 rounded border text-sm font-medium transition-colors ${pageSize === n ? "bg-[#0052CC] border-[#0052CC] text-white" : "border-slate-200 text-slate-600 hover:bg-slate-100"}`}
-                        >
-                          {n}
-                        </button>
-                      ))}
-                    </div>
-                    <span className="w-px h-4 bg-slate-200" />
-                    <div className="flex items-center gap-1">
-                    <button
-                      type="button"
-                      onClick={() => fetchMedia(pagination.page - 1)}
-                      disabled={pagination.page <= 1}
-                        className="flex h-8 w-8 items-center justify-center rounded border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:pointer-events-none"
-                    >
-                        <FaChevronLeft className="h-4 w-4" />
-                    </button>
-                      <span className="min-w-[4rem] text-center text-sm text-slate-600">
-                        Page {pagination.page} of {pagination.totalPages || 1}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => fetchMedia(pagination.page + 1)}
-                      disabled={pagination.page >= pagination.totalPages}
-                        className="flex h-8 w-8 items-center justify-center rounded border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:pointer-events-none"
-                    >
-                        <FaChevronRight className="h-4 w-4" />
-                    </button>
-                  </div>
-                  </div>
-                </div>
+                <PaginationBar
+                  page={page}
+                  limit={limit}
+                  total={pagination.total}
+                  totalPages={pagination.totalPages}
+                  hasNextPage={pagination.hasNextPage}
+                  hasPrevPage={pagination.hasPrevPage}
+                  onPageChange={(p) => setFilterState({ page: p })}
+                  onLimitChange={(l) => setFilterState({ limit: l, page: 1 })}
+                />
               </div>
             </main>
           </div>
@@ -1411,7 +1368,7 @@ export default function MediaManagement() {
                       }
                       setMoveCopyModal(null);
                       setMoveCopyDestination("");
-                      fetchMedia(pagination.page);
+                      fetchMedia();
                     } catch (e) {
                       showError("Failed to complete");
                     } finally {
@@ -1534,7 +1491,7 @@ export default function MediaManagement() {
                       </button>
                       <button
                         type="button"
-                        onClick={() => { setCurrentFolderPath(deleteFolder.path); setDeleteFolder(null); setFolderDeleteCounts(null); fetchMedia(1); }}
+                        onClick={() => { setCurrentFolderPath(deleteFolder.path); setDeleteFolder(null); setFolderDeleteCounts(null); setFilterState({ page: 1 }); }}
                         className="rounded-lg bg-[#0052CC] px-4 py-2 text-sm font-medium text-white hover:bg-[#0044AA]"
                       >
                         Go to folder

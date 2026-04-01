@@ -19,6 +19,9 @@ import { LoadingSpinner } from "../ui/SkeletonLoader";
 import api from "@/lib/api";
 import { PermissionButton } from "../common/PermissionButton";
 import { usePermissions, getPermissionMessage } from "../../hooks/usePermissions";
+import { useFilterPersistence } from "../../hooks/useFilterPersistence";
+import { useDebouncedSearchQuery } from "../../hooks/useDebouncedSearchQuery";
+import PaginationBar from "../ui/PaginationBar";
 
 const LIMIT = 500;
 
@@ -82,10 +85,12 @@ const HierarchyPills = ({ path }) => {
 const OverviewCommentManagement = () => {
   const { toasts, removeToast, success, error: showError } = useToast();
   const { role } = usePermissions();
+  const [filterState, setFilterState] = useFilterPersistence("overview-comment", { statusFilter: "pending", searchQuery: "" });
+  const { page, limit, statusFilter, searchQuery } = filterState;
+  const [searchInput, setSearchInput] = useDebouncedSearchQuery(searchQuery, setFilterState);
   const [comments, setComments] = useState([]);
+  const [pagination, setPagination] = useState({});
   const [isLoading, setIsLoading] = useState(false);
-  const [statusFilter, setStatusFilter] = useState("pending");
-  const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const fetchRef = useRef(false);
   const showErrorRef = useRef(showError);
@@ -126,13 +131,21 @@ const OverviewCommentManagement = () => {
     fetchRef.current = true;
     try {
       setIsLoading(true);
-      const params = new URLSearchParams({ listAll: "true", status: statusFilter, includeHierarchy: "true" });
+      const params = new URLSearchParams({
+        listAll: "true",
+        includeHierarchy: "true",
+        status: statusFilter,
+        page: String(page),
+        limit: String(limit),
+      });
       const res = await api.get(`/overview-comment?${params.toString()}`);
       if (res.data?.success) {
         const data = res.data.data || [];
         setComments(data);
+        setPagination(res.data.pagination || {});
         if (statusFilter === "pending" && typeof window !== "undefined") {
-          window.dispatchEvent(new CustomEvent("admin-overview-comment-pending-updated", { detail: { count: data.length } }));
+          const total = res.data.pagination?.total ?? data.length;
+          window.dispatchEvent(new CustomEvent("admin-overview-comment-pending-updated", { detail: { count: total } }));
         }
       }
     } catch (err) {
@@ -142,11 +155,11 @@ const OverviewCommentManagement = () => {
       setIsLoading(false);
       fetchRef.current = false;
     }
-  }, [statusFilter]);
+  }, [statusFilter, page, limit]);
 
   useEffect(() => {
     fetchComments();
-  }, [statusFilter]);
+  }, [fetchComments]);
 
   const getAuthorName = (c) => {
     if (c.studentId?.firstName && c.studentId?.lastName) {
@@ -195,6 +208,12 @@ const OverviewCommentManagement = () => {
     setSubTopicId("");
     setDefinitionId("");
   };
+
+  const hierarchyMountRef = useRef(true);
+  useEffect(() => {
+    if (hierarchyMountRef.current) { hierarchyMountRef.current = false; return; }
+    setFilterState(prev => prev.page === 1 ? prev : { ...prev, page: 1 });
+  }, [examId, subjectId, unitId, chapterId, topicId, subTopicId, definitionId, setFilterState]);
 
   // Load exams on mount
   useEffect(() => {
@@ -496,8 +515,8 @@ const OverviewCommentManagement = () => {
                     <input
                       type="text"
                       placeholder="Search by author, email or comment..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
+                      value={searchInput}
+                      onChange={(e) => setSearchInput(e.target.value)}
                       className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow"
                     />
                   </div>
@@ -506,7 +525,7 @@ const OverviewCommentManagement = () => {
                       <label className="text-sm font-medium text-gray-700 whitespace-nowrap">Status</label>
                       <select
                         value={statusFilter}
-                        onChange={(e) => setStatusFilter(e.target.value)}
+                        onChange={(e) => setFilterState({ statusFilter: e.target.value, page: 1 })}
                         className="min-w-[120px] px-3 py-2.5 bg-white border border-gray-300 rounded-xl text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow"
                       >
                         <option value="all">All</option>
@@ -828,6 +847,18 @@ const OverviewCommentManagement = () => {
                   </div>
                 )}
               </div>
+              {!isLoading && (
+                <PaginationBar
+                  page={page}
+                  limit={limit}
+                  total={pagination.total}
+                  totalPages={pagination.totalPages}
+                  hasNextPage={pagination.hasNextPage}
+                  hasPrevPage={pagination.hasPrevPage}
+                  onPageChange={(p) => setFilterState({ page: p })}
+                  onLimitChange={(l) => setFilterState({ limit: l, page: 1 })}
+                />
+              )}
             </div>
           </div>
         </div>

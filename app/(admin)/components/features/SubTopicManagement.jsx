@@ -1137,7 +1137,7 @@ const SubTopicsManagement = () => {
         loading={isFormLoading}
       />
       <LoadingWrapper
-        isLoading={isDataLoading && subTopics.length === 0}
+        isLoading={isDataLoading && subTopics.length === 0 && !searchQuery}
         skeleton={<SkeletonChaptersTable />}
       >
         <div className="space-y-6">

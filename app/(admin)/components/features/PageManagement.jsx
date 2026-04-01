@@ -16,6 +16,9 @@ import { PermissionButton } from "../common/PermissionButton";
 import { usePermissions, getPermissionMessage } from "../../hooks/usePermissions";
 import api from "@/lib/api";
 import { useRouter } from "next/navigation";
+import { useFilterPersistence } from "../../hooks/useFilterPersistence";
+import { useDebouncedSearchQuery } from "../../hooks/useDebouncedSearchQuery";
+import PaginationBar from "../ui/PaginationBar";
 
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
 
@@ -335,19 +338,25 @@ const PageManagement = () => {
   const [exams, setExams] = useState([]);
   const [error, setError] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
-  const [scopeFilter, setScopeFilter] = useState("all"); // "all" | "site" | examId
-  const [deletedFilter, setDeletedFilter] = useState("false"); // "false" | "true" | "only"
   const [deleteModalPage, setDeleteModalPage] = useState(null);
+  const [filterState, setFilterState] = useFilterPersistence("page", { examFilter: "all", statusFilter: "all", searchQuery: "" });
+  const { page: pageNum, limit, examFilter, statusFilter, searchQuery } = filterState;
+  const [searchInput, setSearchInput] = useDebouncedSearchQuery(searchQuery, setFilterState);
+  const [pagination, setPagination] = useState({ total: 0, totalPages: 0, hasNextPage: false, hasPrevPage: false });
   const { toasts, removeToast, success, error: showError } = useToast();
   const isFetchingRef = useRef(false);
 
-  const fetchExams = useCallback(async () => {
-    try {
-      const res = await api.get("/exam?status=all&limit=1000");
-      if (res.data?.success) setExams(res.data.data || []);
-    } catch {
-      setExams([]);
-    }
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await api.get("/exam?status=all&limit=1000");
+        if (!cancelled && res.data?.success) setExams(res.data.data || []);
+      } catch {
+        if (!cancelled) setExams([]);
+      }
+    })();
+    return () => { cancelled = true; };
   }, []);
 
   const fetchData = useCallback(async () => {
@@ -356,12 +365,25 @@ const PageManagement = () => {
     try {
       setIsDataLoading(true);
       setError(null);
-      const params = new URLSearchParams();
-      if (scopeFilter !== "all") params.set("exam", scopeFilter);
-      if (deletedFilter !== "false") params.set("deleted", deletedFilter);
+      const params = new URLSearchParams({
+        page: String(pageNum),
+        limit: String(limit),
+      });
+      if (examFilter !== "all") params.set("exam", examFilter);
+      if (statusFilter !== "all") params.set("status", statusFilter);
+      if (searchQuery.trim()) params.set("search", searchQuery.trim());
       const res = await api.get(`/page?${params.toString()}`);
       if (res.data?.success) {
         setPages(res.data.data || []);
+        const pag = res.data?.pagination;
+        if (pag) {
+          setPagination({
+            total: pag.total ?? 0,
+            totalPages: pag.totalPages ?? 0,
+            hasNextPage: !!pag.hasNextPage,
+            hasPrevPage: !!pag.hasPrevPage,
+          });
+        }
       }
     } catch (err) {
       console.error("Error fetching pages:", err);
@@ -370,11 +392,7 @@ const PageManagement = () => {
       setIsDataLoading(false);
       isFetchingRef.current = false;
     }
-  }, [scopeFilter, deletedFilter]);
-
-  useEffect(() => {
-    fetchExams();
-  }, [fetchExams]);
+  }, [pageNum, limit, examFilter, statusFilter, searchQuery]);
 
   useEffect(() => {
     fetchData();
@@ -455,10 +473,10 @@ const PageManagement = () => {
     return examSlug ? `${base}?exam=${examSlug}` : base;
   };
 
-  const activeFilterCount = (scopeFilter !== "all" ? 1 : 0) + (deletedFilter !== "false" ? 1 : 0);
+  const activeFilterCount = (examFilter !== "all" ? 1 : 0) + (statusFilter !== "all" ? 1 : 0) + (searchQuery.trim() ? 1 : 0);
   const clearFilters = () => {
-    setScopeFilter("all");
-    setDeletedFilter("false");
+    setFilterState({ examFilter: "all", statusFilter: "all", searchQuery: "", page: 1 });
+    setSearchInput("");
   };
 
   return (
@@ -539,10 +557,20 @@ const PageManagement = () => {
             {showFilters && (
               <div className="mt-4 p-4 bg-white rounded-lg border border-gray-200 space-y-4">
                 <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Search</label>
+                  <input
+                    type="text"
+                    placeholder="Search pages…"
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
+                    className="w-full max-w-xs px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                  />
+                </div>
+                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Scope</label>
                   <select
-                    value={scopeFilter}
-                    onChange={(e) => setScopeFilter(e.target.value)}
+                    value={examFilter}
+                    onChange={(e) => setFilterState({ examFilter: e.target.value, page: 1 })}
                     className="w-full max-w-xs px-3 py-2 border border-gray-300 rounded-lg text-sm"
                   >
                     <option value="all">All pages</option>
@@ -555,15 +583,16 @@ const PageManagement = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Deleted</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
                   <select
-                    value={deletedFilter}
-                    onChange={(e) => setDeletedFilter(e.target.value)}
+                    value={statusFilter}
+                    onChange={(e) => setFilterState({ statusFilter: e.target.value, page: 1 })}
                     className="w-full max-w-xs px-3 py-2 border border-gray-300 rounded-lg text-sm"
                   >
-                    <option value="false">Exclude deleted</option>
-                    <option value="true">Include deleted</option>
-                    <option value="only">Deleted only</option>
+                    <option value="all">All statuses</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                    <option value="draft">Draft</option>
                   </select>
                 </div>
                 {activeFilterCount > 0 && (
@@ -607,14 +636,28 @@ const PageManagement = () => {
                 </button>
               </div>
             ) : (
-              <PageTable
-                pages={pages}
-                onEdit={(p) => router.push(getEditHref(p))}
-                onDelete={handleDeleteClick}
-                onToggleStatus={handleToggleStatus}
-                onRestore={handleRestore}
-                onView={handleView}
-              />
+              <>
+                <PageTable
+                  pages={pages}
+                  onEdit={(p) => router.push(getEditHref(p))}
+                  onDelete={handleDeleteClick}
+                  onToggleStatus={handleToggleStatus}
+                  onRestore={handleRestore}
+                  onView={handleView}
+                />
+                {(pagination.totalPages > 0 || pagination.total > 0) && (
+                  <PaginationBar
+                    page={pageNum}
+                    limit={limit}
+                    total={pagination.total}
+                    totalPages={pagination.totalPages}
+                    hasNextPage={pagination.hasNextPage}
+                    hasPrevPage={pagination.hasPrevPage}
+                    onPageChange={(p) => setFilterState({ page: p })}
+                    onLimitChange={(l) => setFilterState({ limit: l, page: 1 })}
+                  />
+                )}
+              </>
             )}
           </div>
         </div>

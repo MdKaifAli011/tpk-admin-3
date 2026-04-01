@@ -5,6 +5,7 @@ import Exam from "@/models/Exam";
 import mongoose from "mongoose";
 import { successResponse, errorResponse, handleApiError } from "@/utils/apiResponse";
 import { requireAuth } from "@/middleware/authMiddleware";
+import { parsePagination, createPaginationResponse } from "@/utils/pagination";
 
 export async function GET(request) {
   try {
@@ -12,13 +13,9 @@ export async function GET(request) {
     const examSlug = searchParams.get("exam");
     const examIdParam = searchParams.get("examId");
     const statusFilter = searchParams.get("status") || "all";
-    const pageParam = searchParams.get("page");
-    const limitParam = searchParams.get("limit");
-    const usePagination = pageParam != null || limitParam != null;
-    const page = usePagination ? Math.max(1, parseInt(pageParam || "1", 10) || 1) : 1;
-    const limit = usePagination ? Math.min(100, Math.max(1, parseInt(limitParam || "10", 10) || 10)) : 1000;
+    const search = searchParams.get("search")?.trim();
+    const { page, limit, skip } = parsePagination(searchParams);
 
-    // Public: either exam slug (no id) or examId only (for exact exam from server)
     const isPublicRequest =
       (!!examSlug && !examIdParam) ||
       (!!examIdParam && !examSlug);
@@ -36,9 +33,8 @@ export async function GET(request) {
     if (examIdParam) {
       const idStr = String(examIdParam).trim();
       if (!mongoose.Types.ObjectId.isValid(idStr)) {
-        return successResponse([]);
+        return NextResponse.json(createPaginationResponse([], 0, page, limit));
       }
-      // Match both ObjectId and string examId (DB has mixed types)
       query.$or = [
         { examId: new mongoose.Types.ObjectId(idStr) },
         { examId: idStr },
@@ -46,7 +42,7 @@ export async function GET(request) {
     } else if (examSlug) {
       const slugTrimmed = String(examSlug).trim();
       if (!slugTrimmed) {
-        return successResponse([]);
+        return NextResponse.json(createPaginationResponse([], 0, page, limit));
       }
       const isObjectId = mongoose.Types.ObjectId.isValid(slugTrimmed) && slugTrimmed.length === 24 && String(new mongoose.Types.ObjectId(slugTrimmed)) === slugTrimmed;
 
@@ -60,7 +56,6 @@ export async function GET(request) {
         const nameFromSlug = slugTrimmed.replace(/-/g, " ");
         const nameEscaped = nameFromSlug.replace(/[.*+?^${}()|[\]\\]/g, "\\$0");
         const nameExact = new RegExp("^" + nameEscaped + "$", "i");
-        // Prefer exact slug/name match, then fall back to "starts with" (e.g. "neet" matches "NEET Exam")
         exam = await Exam.findOne({
           $or: [{ slug: slugExact }, { name: nameExact }],
         }).select("_id").lean();
@@ -73,9 +68,8 @@ export async function GET(request) {
         }
       }
       if (!exam) {
-        return successResponse([]);
+        return NextResponse.json(createPaginationResponse([], 0, page, limit));
       }
-      // Match both ObjectId and string examId (DB may have mixed types)
       const examIdObj = exam._id;
       const examIdStr = examIdObj?.toString?.() || String(examIdObj);
       query.$or = [
@@ -90,57 +84,51 @@ export async function GET(request) {
       query.status = "active";
     }
 
-    // When query uses $or (examId as ObjectId or string), use native collection
-    // so Mongoose doesn't cast string to ObjectId and we match both DB types
-    let courses;
+    if (search) {
+      const regex = new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
+      const searchConditions = [
+        { title: { $regex: regex } },
+        { shortDescription: { $regex: regex } },
+      ];
+      if (query.$or) {
+        query.$and = [{ $or: query.$or }, { $or: searchConditions }];
+        delete query.$or;
+      } else {
+        query.$or = searchConditions;
+      }
+    }
+
     if (query.$or) {
       const raw = await Course.collection
         .find(query)
         .sort({ orderNumber: 1, createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
         .toArray();
+      const total = await Course.collection.countDocuments(query);
       const ids = raw.map((d) => d._id);
       if (ids.length === 0) {
-        if (usePagination) {
-          return NextResponse.json({
-            success: true,
-            message: "Data fetched successfully",
-            data: [],
-            pagination: { total: 0, page: 1, limit, totalPages: 0 },
-            timestamp: new Date().toISOString(),
-          }, { status: 200 });
-        }
-        return successResponse([]);
+        return NextResponse.json(createPaginationResponse([], total, page, limit));
       }
       const list = await Course.find({ _id: { $in: ids } })
         .populate("examId", "name slug")
         .lean();
       const order = new Map(ids.map((id, i) => [id.toString(), i]));
       list.sort((a, b) => (order.get(a._id.toString()) ?? 0) - (order.get(b._id.toString()) ?? 0));
-      courses = list;
-    } else {
-      courses = await Course.find(query)
+      return NextResponse.json(createPaginationResponse(list, total, page, limit));
+    }
+
+    const [courses, total] = await Promise.all([
+      Course.find(query)
         .sort({ orderNumber: 1, createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
         .populate("examId", "name slug")
-        .lean();
-    }
+        .lean(),
+      Course.countDocuments(query),
+    ]);
 
-    if (!usePagination) {
-      return successResponse(courses);
-    }
-
-    const total = courses.length;
-    const totalPages = Math.max(0, Math.ceil(total / limit));
-    const pageClamped = Math.min(page, totalPages || 1);
-    const skip = (pageClamped - 1) * limit;
-    const pageData = courses.slice(skip, skip + limit);
-
-    return NextResponse.json({
-      success: true,
-      message: "Data fetched successfully",
-      data: pageData,
-      pagination: { total, page: pageClamped, limit, totalPages },
-      timestamp: new Date().toISOString(),
-    }, { status: 200 });
+    return NextResponse.json(createPaginationResponse(courses, total, page, limit));
   } catch (error) {
     return handleApiError(error, "Failed to fetch courses");
   }

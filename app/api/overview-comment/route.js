@@ -7,6 +7,7 @@ import {
   errorResponse,
   handleApiError,
 } from "@/utils/apiResponse";
+import { parsePagination, createPaginationResponse } from "@/utils/pagination";
 import { verifyStudentToken } from "@/lib/studentAuth";
 import { requireAuth } from "@/middleware/authMiddleware";
 import { sendMail } from "@/lib/mailer";
@@ -104,10 +105,18 @@ export async function GET(request) {
       const includeHierarchy = searchParams.get("includeHierarchy") === "true";
       const query = {};
       if (status !== "all") query.status = status;
-      const comments = await OverviewComment.find(query)
-        .populate("studentId", "firstName lastName email")
-        .sort({ createdAt: -1 })
-        .lean();
+
+      const { page, limit, skip } = parsePagination(searchParams);
+
+      const [comments, total] = await Promise.all([
+        OverviewComment.find(query)
+          .populate("studentId", "firstName lastName email")
+          .sort({ createdAt: -1 })
+          .skip(skip)
+          .limit(limit)
+          .lean(),
+        OverviewComment.countDocuments(query),
+      ]);
       let formatted = comments.map((c) => ({
         ...c,
         anonymousName: c.studentId ? null : c.name,
@@ -116,7 +125,7 @@ export async function GET(request) {
       if (includeHierarchy && formatted.length > 0) {
         formatted = await attachHierarchyPaths(formatted);
       }
-      return successResponse(formatted);
+      return NextResponse.json(createPaginationResponse(formatted, total, page, limit));
     }
 
     // Public: require entityType and entityId

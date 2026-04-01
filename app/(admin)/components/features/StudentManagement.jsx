@@ -13,7 +13,9 @@ import {
   usePermissions,
   getPermissionMessage,
 } from "../../hooks/usePermissions";
-import Pagination from "@/components/shared/Pagination";
+import { useFilterPersistence } from "../../hooks/useFilterPersistence";
+import { useDebouncedSearchQuery } from "../../hooks/useDebouncedSearchQuery";
+import PaginationBar from "../ui/PaginationBar";
 
 const StudentManagement = () => {
   const { canDelete, role } = usePermissions();
@@ -26,66 +28,43 @@ const StudentManagement = () => {
   const { toasts, removeToast, success, error: showError } = useToast();
   const isFetchingRef = useRef(false);
 
-  // Filter states
-  const [filterCountry, setFilterCountry] = useState("");
-  const [filterClassName, setFilterClassName] = useState("");
-  const [filterStatus, setFilterStatus] = useState("all");
-  const [filterSearch, setFilterSearch] = useState("");
+  const [filterState, setFilterState] = useFilterPersistence("student", {
+    filterCountry: "",
+    filterClassName: "",
+    filterStatus: "all",
+    searchQuery: "",
+  });
+  const { page, limit, filterCountry, filterClassName, filterStatus, searchQuery } = filterState;
+  const [searchInput, setSearchInput] = useDebouncedSearchQuery(searchQuery, setFilterState);
+  const [pagination, setPagination] = useState({ total: 0, totalPages: 0, hasNextPage: false, hasPrevPage: false });
+
   const [filterDateFrom, setFilterDateFrom] = useState("");
   const [filterDateTo, setFilterDateTo] = useState("");
 
-  // Pagination state
-  const [pagination, setPagination] = useState({
-    page: 1,
-    limit: 10,
-    total: 0,
-    totalPages: 0,
-  });
-
-  // Fetch students with filters and pagination
-  const fetchStudents = async (page = 1, limit = 10) => {
+  const fetchStudents = async () => {
     if (isFetchingRef.current) return;
     isFetchingRef.current = true;
     try {
       setIsDataLoading(true);
       setError(null);
 
-      // Build query parameters
       const params = new URLSearchParams();
       params.append("page", page.toString());
       params.append("limit", limit.toString());
 
-      if (filterCountry) {
-        params.append("country", filterCountry);
-      }
-      if (filterClassName) {
-        params.append("className", filterClassName);
-      }
-      if (filterStatus && filterStatus !== "all") {
-        params.append("status", filterStatus);
-      }
-      if (filterSearch) {
-        params.append("search", filterSearch);
-      }
-      if (filterDateFrom) {
-        params.append("dateFrom", filterDateFrom);
-      }
-      if (filterDateTo) {
-        params.append("dateTo", filterDateTo);
-      }
+      if (filterCountry) params.append("country", filterCountry);
+      if (filterClassName) params.append("className", filterClassName);
+      if (filterStatus && filterStatus !== "all") params.append("status", filterStatus);
+      if (searchQuery) params.append("search", searchQuery);
+      if (filterDateFrom) params.append("dateFrom", filterDateFrom);
+      if (filterDateTo) params.append("dateTo", filterDateTo);
 
       const response = await api.get(`/student?${params.toString()}`);
 
       if (response.data?.success) {
         setStudents(response.data.data || []);
-        // Update pagination from response
         if (response.data.pagination) {
-          setPagination({
-            page: response.data.pagination.page || page,
-            limit: response.data.pagination.limit || limit,
-            total: response.data.pagination.total || 0,
-            totalPages: response.data.pagination.totalPages || 0,
-          });
+          setPagination(response.data.pagination);
         }
       } else {
         setError(response.data?.message || "Failed to fetch students");
@@ -105,19 +84,9 @@ const StudentManagement = () => {
     }
   };
 
-  // Load students on component mount and when filters/pagination change
   useEffect(() => {
-    fetchStudents(pagination.page, pagination.limit);
-  }, [
-    pagination.page,
-    pagination.limit,
-    filterCountry,
-    filterClassName,
-    filterStatus,
-    filterSearch,
-    filterDateFrom,
-    filterDateTo,
-  ]);
+    fetchStudents();
+  }, [page, limit, filterCountry, filterClassName, filterStatus, searchQuery, filterDateFrom, filterDateTo]);
 
   // Get unique countries and class names for filter dropdowns
   const uniqueCountries = useMemo(() => {
@@ -136,34 +105,22 @@ const StudentManagement = () => {
     return Array.from(classNames).sort();
   }, [students]);
 
-  // Get active filter count
   const activeFilterCount = useMemo(() => {
     let count = 0;
     if (filterCountry) count++;
     if (filterClassName) count++;
     if (filterStatus && filterStatus !== "all") count++;
-    if (filterSearch) count++;
+    if (searchQuery) count++;
     if (filterDateFrom) count++;
     if (filterDateTo) count++;
     return count;
-  }, [
-    filterCountry,
-    filterClassName,
-    filterStatus,
-    filterSearch,
-    filterDateFrom,
-    filterDateTo,
-  ]);
+  }, [filterCountry, filterClassName, filterStatus, searchQuery, filterDateFrom, filterDateTo]);
 
-  // Clear all filters
   const clearFilters = () => {
-    setFilterCountry("");
-    setFilterClassName("");
-    setFilterStatus("all");
-    setFilterSearch("");
+    setFilterState({ filterCountry: "", filterClassName: "", filterStatus: "all", searchQuery: "", page: 1 });
+    setSearchInput("");
     setFilterDateFrom("");
     setFilterDateTo("");
-    setPagination((prev) => ({ ...prev, page: 1 }));
   };
 
   // Handle view student
@@ -195,8 +152,7 @@ const StudentManagement = () => {
 
       if (response.data?.success) {
         success("Student and all related data deleted successfully!");
-        // Refresh students
-        await fetchStudents(pagination.page, pagination.limit);
+        await fetchStudents();
       } else {
         throw new Error(response.data?.message || "Failed to delete student");
       }
@@ -266,11 +222,8 @@ const StudentManagement = () => {
                 </label>
                 <input
                   type="text"
-                  value={filterSearch}
-                  onChange={(e) => {
-                    setFilterSearch(e.target.value);
-                    setPagination((prev) => ({ ...prev, page: 1 }));
-                  }}
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
                   placeholder="Search by name, email, or phone number..."
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-all"
                 />
@@ -284,10 +237,7 @@ const StudentManagement = () => {
                 <input
                   type="text"
                   value={filterCountry}
-                  onChange={(e) => {
-                    setFilterCountry(e.target.value);
-                    setPagination((prev) => ({ ...prev, page: 1 }));
-                  }}
+                  onChange={(e) => setFilterState({ filterCountry: e.target.value, page: 1 })}
                   placeholder="Enter country..."
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-all"
                 />
@@ -301,10 +251,7 @@ const StudentManagement = () => {
                 <input
                   type="text"
                   value={filterClassName}
-                  onChange={(e) => {
-                    setFilterClassName(e.target.value);
-                    setPagination((prev) => ({ ...prev, page: 1 }));
-                  }}
+                  onChange={(e) => setFilterState({ filterClassName: e.target.value, page: 1 })}
                   placeholder="Enter class name..."
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-all"
                 />
@@ -317,10 +264,7 @@ const StudentManagement = () => {
                 </label>
                 <select
                   value={filterStatus}
-                  onChange={(e) => {
-                    setFilterStatus(e.target.value);
-                    setPagination((prev) => ({ ...prev, page: 1 }));
-                  }}
+                  onChange={(e) => setFilterState({ filterStatus: e.target.value, page: 1 })}
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-all"
                 >
                   <option value="all">All Status</option>
@@ -339,7 +283,7 @@ const StudentManagement = () => {
                   value={filterDateFrom}
                   onChange={(e) => {
                     setFilterDateFrom(e.target.value);
-                    setPagination((prev) => ({ ...prev, page: 1 }));
+                    setFilterState({ page: 1 });
                   }}
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-all"
                 />
@@ -355,7 +299,7 @@ const StudentManagement = () => {
                   value={filterDateTo}
                   onChange={(e) => {
                     setFilterDateTo(e.target.value);
-                    setPagination((prev) => ({ ...prev, page: 1 }));
+                    setFilterState({ page: 1 });
                   }}
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-all"
                 />
@@ -372,10 +316,7 @@ const StudentManagement = () => {
                   <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
                     Country: {filterCountry}
                     <button
-                      onClick={() => {
-                        setFilterCountry("");
-                        setPagination((prev) => ({ ...prev, page: 1 }));
-                      }}
+                      onClick={() => setFilterState({ filterCountry: "", page: 1 })}
                       className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"
                     >
                       <FaTimes className="w-3 h-3" />
@@ -386,10 +327,7 @@ const StudentManagement = () => {
                   <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
                     Class: {filterClassName}
                     <button
-                      onClick={() => {
-                        setFilterClassName("");
-                        setPagination((prev) => ({ ...prev, page: 1 }));
-                      }}
+                      onClick={() => setFilterState({ filterClassName: "", page: 1 })}
                       className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"
                     >
                       <FaTimes className="w-3 h-3" />
@@ -400,23 +338,20 @@ const StudentManagement = () => {
                   <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
                     Status: {filterStatus}
                     <button
-                      onClick={() => {
-                        setFilterStatus("all");
-                        setPagination((prev) => ({ ...prev, page: 1 }));
-                      }}
+                      onClick={() => setFilterState({ filterStatus: "all", page: 1 })}
                       className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"
                     >
                       <FaTimes className="w-3 h-3" />
                     </button>
                   </span>
                 )}
-                {filterSearch && (
+                {searchQuery && (
                   <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
-                    Search: {filterSearch}
+                    Search: {searchQuery}
                     <button
                       onClick={() => {
-                        setFilterSearch("");
-                        setPagination((prev) => ({ ...prev, page: 1 }));
+                        setFilterState({ searchQuery: "", page: 1 });
+                        setSearchInput("");
                       }}
                       className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"
                     >
@@ -431,7 +366,7 @@ const StudentManagement = () => {
                       onClick={() => {
                         setFilterDateFrom("");
                         setFilterDateTo("");
-                        setPagination((prev) => ({ ...prev, page: 1 }));
+                        setFilterState({ page: 1 });
                       }}
                       className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"
                     >
@@ -469,7 +404,7 @@ const StudentManagement = () => {
               </h3>
               <p className="text-sm text-gray-500 mb-4">{error}</p>
               <button
-                onClick={() => fetchStudents(pagination.page, pagination.limit)}
+                onClick={() => fetchStudents()}
                 className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
               >
                 Retry
@@ -509,56 +444,17 @@ const StudentManagement = () => {
         </div>
       </div>
 
-      {/* Pagination Footer */}
-      {!isDataLoading && !error && students.length > 0 && pagination.total > 0 && (
-        <>
-          <div className="mt-4 bg-white rounded-lg border border-gray-200 shadow-sm px-4 py-3">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-              <div className="text-sm text-gray-600">
-                Showing {(pagination.page - 1) * pagination.limit + 1} to{" "}
-                {Math.min(
-                  pagination.page * pagination.limit,
-                  pagination.total
-                )}{" "}
-                of {pagination.total} students
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-600 whitespace-nowrap">
-                  Items per page:
-                </span>
-                <select
-                  value={pagination.limit}
-                  onChange={(e) => {
-                    setPagination((prev) => ({
-                      ...prev,
-                      limit: parseInt(e.target.value),
-                      page: 1,
-                    }));
-                  }}
-                  className="px-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm bg-white cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 4 5%22><path fill=%22%23666%22 d=%22M2 0L0 2h4zm0 5L0 3h4z%22/></svg>')] bg-[length:12px] bg-[right:8px_center] bg-no-repeat pr-8"
-                >
-                  <option value="10">10</option>
-                  <option value="25">25</option>
-                  <option value="50">50</option>
-                  <option value="100">100</option>
-                </select>
-              </div>
-            </div>
-          </div>
-          {pagination.totalPages > 1 && (
-            <div className="mt-3 flex justify-center">
-              <Pagination
-                currentPage={pagination.page}
-                totalPages={pagination.totalPages}
-                onPageChange={(newPage) => {
-                  setPagination((prev) => ({ ...prev, page: newPage }));
-                }}
-                showPrevNext={true}
-                maxVisible={5}
-              />
-            </div>
-          )}
-        </>
+      {!isDataLoading && !error && students.length > 0 && (
+        <PaginationBar
+          page={page}
+          limit={limit}
+          total={pagination.total}
+          totalPages={pagination.totalPages}
+          hasNextPage={pagination.hasNextPage}
+          hasPrevPage={pagination.hasPrevPage}
+          onPageChange={(p) => setFilterState({ page: p })}
+          onLimitChange={(l) => setFilterState({ limit: l, page: 1 })}
+        />
       )}
 
       {/* View Student Modal */}

@@ -13,6 +13,9 @@ import DiscussionTable from "../table/DiscussionTable";
 import RichTextEditor from "../ui/RichTextEditor";
 import { usePermissions, getDiscussionPermissions, getDiscussionPermissionMessage } from "../../hooks/usePermissions";
 import { getThreadHierarchyQueryString } from "@/lib/discussionThreadQuery";
+import { useFilterPersistence } from "../../hooks/useFilterPersistence";
+import { useDebouncedSearchQuery } from "../../hooks/useDebouncedSearchQuery";
+import PaginationBar from "../ui/PaginationBar";
 
 const timeAgo = (date) => {
     const seconds = Math.floor((new Date() - new Date(date)) / 1000);
@@ -30,12 +33,19 @@ const timeAgo = (date) => {
 const DiscussionManagement = () => {
     const [threads, setThreads] = useState([]);
     const [isDataLoading, setIsDataLoading] = useState(true);
-    const [search, setSearch] = useState("");
-    const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
-    const [statusFilter, setStatusFilter] = useState("all");
-    const [sortByViews, setSortByViews] = useState(false); // Top Views filter state
-    const [dateSort, setDateSort] = useState("newest"); // 'newest' | 'oldest' — default recent first
+    const [totalCount, setTotalCount] = useState(0);
+
+    const [filterState, setFilterState] = useFilterPersistence("discussion", {
+        statusFilter: "all",
+        searchQuery: "",
+        sortOrder: "new"
+    });
+    const { page, limit, statusFilter, searchQuery, sortOrder } = filterState;
+    const [searchInput, setSearchInput] = useDebouncedSearchQuery(searchQuery, setFilterState);
+
+    const [sortByViews, setSortByViews] = useState(false);
+    const [dateSort, setDateSort] = useState("newest");
     const [dateFrom, setDateFrom] = useState("");
     const [dateTo, setDateTo] = useState("");
     const [showDateRange, setShowDateRange] = useState(false);
@@ -255,22 +265,20 @@ const DiscussionManagement = () => {
     const clearFilters = () => {
         setFilterExam(""); setFilterSubject(""); setFilterUnit(""); setFilterChapter(""); setFilterTopic(""); setFilterSubTopic(""); setFilterDefinition("");
         setDateSort("newest");
+        setSortByViews(false);
         setDateFrom(""); setDateTo("");
-        setPage(1);
+        setFilterState(prev => ({ ...prev, page: 1, sortOrder: "new" }));
     };
 
     const fetchThreads = async () => {
         isFetchingRef.current = true;
         try {
             setIsDataLoading(true);
-            let sortValue = sortByViews ? "views" : "new"; // default: strict newest first (same as Recently Created)
-            if (dateSort === "oldest") sortValue = "date_asc";
-            else if (dateSort === "newest") sortValue = "new";
             const queryParams = new URLSearchParams({
                 page,
-                limit: "10",
-                search,
-                sort: sortValue,
+                limit,
+                search: searchQuery,
+                sort: sortOrder,
                 status: statusFilter
             });
             if (dateFrom) queryParams.set("dateFrom", dateFrom);
@@ -287,9 +295,10 @@ const DiscussionManagement = () => {
             if (res.data.success) {
                 setThreads(res.data.data);
                 setTotalPages(res.data.pagination?.pages || 1);
+                const total = res.data.pagination?.total || 0;
+                setTotalCount(total);
 
                 // Aggregated counts for the header
-                const total = res.data.pagination?.total || 0;
                 if (statusFilter === "all") {
                     setStats(prev => ({ ...prev, total }));
                 } else if (statusFilter === "pending") {
@@ -314,7 +323,7 @@ const DiscussionManagement = () => {
 
     useEffect(() => {
         fetchThreads();
-    }, [page, search, statusFilter, sortByViews, dateSort, dateFrom, dateTo, filterExam, filterSubject, filterUnit, filterChapter, filterTopic, filterSubTopic, filterDefinition]);
+    }, [page, limit, searchQuery, statusFilter, sortOrder, dateFrom, dateTo, filterExam, filterSubject, filterUnit, filterChapter, filterTopic, filterSubTopic, filterDefinition]);
 
     const fetchRecentThreads = useCallback(async () => {
         setRecentThreadsLoading(true);
@@ -828,7 +837,7 @@ const DiscussionManagement = () => {
                                 const next = !sortByViews;
                                 setSortByViews(next);
                                 if (next) setDateSort(null);
-                                setPage(1);
+                                setFilterState(prev => ({ ...prev, sortOrder: next ? "views" : "new", page: 1 }));
                             }}
                             className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-bold transition-all ${sortByViews ? "bg-orange-50 border-orange-200 text-orange-600" : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"}`}
                         >
@@ -867,7 +876,7 @@ const DiscussionManagement = () => {
                                                 onClick={() => {
                                                     setDateSort(opt.id);
                                                     setSortByViews(false);
-                                                    setPage(1);
+                                                    setFilterState(prev => ({ ...prev, sortOrder: opt.id === "oldest" ? "date_asc" : "new", page: 1 }));
                                                 }}
                                                 className={`px-2 py-1 rounded text-xs font-medium ${dateSort === opt.id ? "bg-teal-100 text-teal-800 border border-teal-200" : "bg-gray-100 text-gray-600 border border-transparent hover:bg-gray-200"}`}
                                             >
@@ -883,7 +892,7 @@ const DiscussionManagement = () => {
                                                 <input
                                                     type="date"
                                                     value={dateFrom}
-                                                    onChange={(e) => { setDateFrom(e.target.value); setPage(1); }}
+                                                    onChange={(e) => { setDateFrom(e.target.value); setFilterState(prev => ({ ...prev, page: 1 })); }}
                                                     className="w-full text-xs p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-100 outline-none"
                                                 />
                                             </div>
@@ -893,7 +902,7 @@ const DiscussionManagement = () => {
                                                     type="date"
                                                     value={dateTo}
                                                     min={dateFrom || undefined}
-                                                    onChange={(e) => { setDateTo(e.target.value); setPage(1); }}
+                                                    onChange={(e) => { setDateTo(e.target.value); setFilterState(prev => ({ ...prev, page: 1 })); }}
                                                     className="w-full text-xs p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-100 outline-none"
                                                 />
                                             </div>
@@ -903,7 +912,7 @@ const DiscussionManagement = () => {
                                         )}
                                         {(dateFrom || dateTo) && (
                                             <button
-                                                onClick={() => { setDateFrom(""); setDateTo(""); setPage(1); }}
+                                                onClick={() => { setDateFrom(""); setDateTo(""); setFilterState(prev => ({ ...prev, page: 1 })); }}
                                                 className="mt-2 text-xs text-teal-600 hover:text-teal-800 font-medium"
                                             >
                                                 Clear date range
@@ -1076,7 +1085,7 @@ const DiscussionManagement = () => {
                         ].map(tab => (
                             <button
                                 key={tab.id}
-                                onClick={() => { setStatusFilter(tab.id); setPage(1); }}
+                                onClick={() => { setFilterState(prev => ({ ...prev, statusFilter: tab.id, page: 1 })); }}
                                 className={`flex items-center gap-2 px-4 py-1.5 rounded-md text-[11px] font-bold uppercase tracking-wider transition-all flex-1 md:flex-none ${statusFilter === tab.id ? "bg-white text-blue-600 shadow-sm border border-gray-100" : "text-gray-500 hover:text-gray-900 hover:bg-gray-100/50"}`}
                             >
                                 {tab.icon} {tab.label}
@@ -1094,15 +1103,15 @@ const DiscussionManagement = () => {
                         <input
                             type="text"
                             placeholder="Search by title..."
-                            value={search}
-                            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+                            value={searchInput}
+                            onChange={(e) => setSearchInput(e.target.value)}
                             className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all text-sm text-gray-800 placeholder-gray-400"
                         />
                     </div>
                 </div>
 
                 {/* Recently Created - hidden when global search is active so only search results show */}
-                {showRecentSection && !search.trim() && (
+                {showRecentSection && !searchInput.trim() && (
                 <div ref={recentSectionRef} className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
                     <div className="px-4 py-3 border-b border-gray-200 bg-emerald-50/80 flex items-start justify-between gap-3">
                         <div className="flex-1 min-w-0">
@@ -1178,11 +1187,11 @@ const DiscussionManagement = () => {
                     <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
                         <div className="space-y-0.5">
                             <h2 className="text-xl font-semibold text-gray-900">
-                                {search.trim() ? "Search results" : "Discussions List"}
+                                {searchInput.trim() ? "Search results" : "Discussions List"}
                             </h2>
                             <p className="text-sm text-gray-600">
-                                {search.trim()
-                                    ? `Showing threads matching "${search.trim()}". Only search results are listed.`
+                                {searchInput.trim()
+                                    ? `Showing threads matching "${searchInput.trim()}". Only search results are listed.`
                                     : "Moderate community topics, verify guest posts, and track forum engagement."}
                             </p>
                         </div>
@@ -1195,35 +1204,26 @@ const DiscussionManagement = () => {
                             onToggleApproval={handleToggleApproval}
                             onDelete={handleDelete}
                             onTogglePin={handleTogglePin}
-                            isSearchMode={!!search.trim()}
+                            isSearchMode={!!searchInput.trim()}
                         />
                     </LoadingWrapper>
 
-                    {/* Pagination - Professional Footer */}
-                    {!isDataLoading && totalPages > 1 && (
-                        <div className="px-6 py-4 bg-gray-50/50 border-t border-gray-100 flex items-center justify-between">
-                            <div className="flex items-center gap-4">
-                                <p className="text-[11px] font-bold text-gray-500">
-                                    Page {page} of {totalPages}
-                                </p>
-                            </div>
-                            <div className="flex gap-2">
-                                <button
-                                    disabled={page <= 1}
-                                    onClick={() => { setPage(p => Math.max(1, p - 1)); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                                    className="px-4 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-bold text-gray-600 hover:border-blue-500 hover:text-blue-600 disabled:opacity-30 disabled:pointer-events-none transition-all shadow-sm"
-                                >
-                                    Previous
-                                </button>
-                                <button
-                                    disabled={page >= totalPages}
-                                    onClick={() => { setPage(p => p + 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                                    className="px-4 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-bold text-gray-600 hover:border-blue-500 hover:text-blue-600 disabled:opacity-30 disabled:pointer-events-none transition-all shadow-sm"
-                                >
-                                    Next
-                                </button>
-                            </div>
-                        </div>
+                    {!isDataLoading && (
+                        <PaginationBar
+                            page={page}
+                            limit={limit}
+                            total={totalCount}
+                            totalPages={totalPages}
+                            hasNextPage={page < totalPages}
+                            hasPrevPage={page > 1}
+                            onPageChange={(newPage) => {
+                                setFilterState(prev => ({ ...prev, page: newPage }));
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                            }}
+                            onLimitChange={(newLimit) => {
+                                setFilterState(prev => ({ ...prev, limit: newLimit, page: 1 }));
+                            }}
+                        />
                     )}
                 </div>
             </div>

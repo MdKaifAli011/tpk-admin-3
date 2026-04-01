@@ -24,8 +24,6 @@ import {
   FaSearch,
   FaCheck,
   FaGripVertical,
-  FaChevronLeft,
-  FaChevronRight,
 } from "react-icons/fa";
 import { ToastContainer, useToast } from "../ui/Toast";
 import StatusCascadeModal from "../ui/StatusCascadeModal";
@@ -36,7 +34,7 @@ import { usePermissions, getPermissionMessage } from "../../hooks/usePermissions
 import { IoFilterOutline } from "react-icons/io5";
 import { useFilterPersistence } from "../../hooks/useFilterPersistence";
 import { useDebouncedSearchQuery } from "../../hooks/useDebouncedSearchQuery";
-import { ADMIN_PAGINATION } from "@/constants";
+import PaginationBar from "../ui/PaginationBar";
 
 // Lazy load heavy components
 const UnitsTable = lazy(() => import("../table/UnitsTable"));
@@ -1360,58 +1358,16 @@ const UnitsManagement = () => {
                     isReorderAllowed={isReorderMode && !searchQuery.trim()}
                   />
                 </Suspense>
-                {/* Pagination */}
-                {(pagination.totalPages > 0 || pagination.total > 0) && (
-                  <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 border-t border-gray-200 bg-gray-50">
-                    <div className="flex items-center gap-4">
-                      <span className="text-sm text-gray-600">
-                        Showing {(page - 1) * limit + 1}–{Math.min(page * limit, pagination.total)} of {pagination.total}
-                      </span>
-                      <label className="flex items-center gap-2 text-sm text-gray-600">
-                        Per page
-                        <select
-                          value={limit}
-                          onChange={(e) =>
-                            setFilterState({
-                              limit: Number(e.target.value),
-                              page: 1,
-                            })
-                          }
-                          className="px-2 py-1 border border-gray-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none"
-                        >
-                          {ADMIN_PAGINATION.PAGE_SIZE_OPTIONS.map((n) => (
-                            <option key={n} value={n}>
-                              {n}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setFilterState({ page: page - 1 })}
-                        disabled={!pagination.hasPrevPage}
-                        className="p-2 rounded-lg border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                        aria-label="Previous page"
-                      >
-                        <FaChevronLeft className="w-4 h-4" />
-                      </button>
-                      <span className="text-sm text-gray-600 whitespace-nowrap">
-                        Page {page} of {pagination.totalPages || 1}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => setFilterState({ page: page + 1 })}
-                        disabled={!pagination.hasNextPage}
-                        className="p-2 rounded-lg border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                        aria-label="Next page"
-                      >
-                        <FaChevronRight className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                )}
+                <PaginationBar
+                  page={page}
+                  limit={limit}
+                  total={pagination.total}
+                  totalPages={pagination.totalPages}
+                  hasNextPage={pagination.hasNextPage}
+                  hasPrevPage={pagination.hasPrevPage}
+                  onPageChange={(p) => setFilterState({ page: p })}
+                  onLimitChange={(l) => setFilterState({ limit: l, page: 1 })}
+                />
               </>
             )}
           </div>

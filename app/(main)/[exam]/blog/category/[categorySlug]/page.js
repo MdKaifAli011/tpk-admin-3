@@ -29,7 +29,7 @@ const BlogCategoryPage = async ({ params }) => {
 
   // Find the category by slug
   const category = categories.find(
-    (cat) => createSlug(cat.name) === categorySlug
+    (cat) => createSlug(cat.name) === categorySlug,
   );
 
   if (!category) {
@@ -48,7 +48,7 @@ const BlogCategoryPage = async ({ params }) => {
       status: "active",
       limit: 100,
     });
-    
+
     // Filter blogs by categoryId
     blogs = allBlogs.filter((blog) => {
       const blogCategoryId = blog.categoryId?._id || blog.categoryId;
@@ -63,12 +63,14 @@ const BlogCategoryPage = async ({ params }) => {
   const blogsWithDetails = await Promise.all(
     blogs.map(async (blog) => {
       try {
-        const details = await fetchBlogDetails(blog._id, { excludeContent: true });
+        const details = await fetchBlogDetails(blog._id, {
+          excludeContent: true,
+        });
         return { ...blog, details };
       } catch (error) {
         return { ...blog, details: null };
       }
-    })
+    }),
   );
 
   // Transform blogs to posts format
@@ -144,4 +146,3 @@ const BlogCategoryPage = async ({ params }) => {
 };
 
 export default BlogCategoryPage;
-

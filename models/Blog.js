@@ -11,7 +11,6 @@ const blogSchema = new mongoose.Schema(
     },
     slug: {
       type: String,
-      unique: true,
       sparse: true,
       trim: true,
     },
@@ -65,16 +64,14 @@ const blogSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// slug already has unique: true (creates index); avoid duplicate index
-blogSchema.index({ examId: 1 });
+blogSchema.index({ examId: 1, slug: 1 }, { unique: true, sparse: true });
 
-// Pre-save hook to auto-generate slug
 blogSchema.pre("save", async function (next) {
-  if (this.isModified("name") || this.isNew) {
+  if (this.isModified("name") || this.isModified("examId") || this.isNew) {
     const baseSlug = createSlug(this.name);
 
     const checkExists = async (slug, excludeId) => {
-      const query = { slug };
+      const query = { slug, examId: this.examId || null };
       if (excludeId) {
         query._id = { $ne: excludeId };
       }

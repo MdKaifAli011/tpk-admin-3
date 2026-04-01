@@ -142,6 +142,59 @@ const getSingleLevelColumns = (importType) => {
     return cols;
 };
 
+const PREVIEW_INITIAL = 50;
+const PREVIEW_INCREMENT = 100;
+
+function DataPreviewTable({ headers, parsedData }) {
+    const [visibleCount, setVisibleCount] = React.useState(PREVIEW_INITIAL);
+    const visible = parsedData.slice(0, visibleCount);
+    const hasMore = visibleCount < parsedData.length;
+
+    return (
+        <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+            <div className="p-4 border-b border-gray-200 bg-gray-50">
+                <h3 className="font-semibold text-gray-800 text-sm">
+                    Data Preview ({parsedData.length} Rows)
+                </h3>
+            </div>
+            <div className="overflow-x-auto overflow-y-auto" style={{ maxHeight: 480 }}>
+                <table className="w-full text-left text-sm">
+                    <thead className="bg-gray-100 text-gray-600 border-b border-gray-200 sticky top-0">
+                        <tr>
+                            <th className="px-4 py-3 text-xs font-medium">#</th>
+                            {headers.map((h) => (
+                                <th key={h} className="px-4 py-3 text-xs font-medium capitalize">{h}</th>
+                            ))}
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                        {visible.map((row, i) => (
+                            <tr key={i} className="hover:bg-gray-50">
+                                <td className="px-4 py-2 font-mono text-xs text-gray-400">{i + 1}</td>
+                                {headers.map((h) => (
+                                    <td key={h} className="px-4 py-2 text-xs text-gray-700">{row[h]}</td>
+                                ))}
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+            <div className="p-2 text-center text-xs text-gray-500 bg-gray-50 border-t border-gray-200 space-y-1">
+                <span>Showing {visible.length} of {parsedData.length} rows</span>
+                {hasMore && (
+                    <button
+                        type="button"
+                        onClick={() => setVisibleCount((c) => c + PREVIEW_INCREMENT)}
+                        className="ml-2 text-blue-600 hover:text-blue-800 font-medium"
+                    >
+                        Show {Math.min(PREVIEW_INCREMENT, parsedData.length - visibleCount)} more
+                    </button>
+                )}
+            </div>
+        </div>
+    );
+}
+
 const BulkImportManagement = () => {
     const { success, error: showError, toasts, removeToast } = useToast();
 
@@ -1534,36 +1587,9 @@ const BulkImportManagement = () => {
                     )}
                 </div>
 
-                {/* Data Preview */}
+                {/* Data Preview (capped to avoid rendering thousands of DOM rows) */}
                 {parsedData.length > 0 && (
-                    <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
-                        <div className="p-4 border-b border-gray-200 bg-gray-50">
-                            <h3 className="font-semibold text-gray-800 text-sm">Data Preview ({parsedData.length} Rows)</h3>
-                        </div>
-                        <div className="overflow-x-auto overflow-y-auto">
-                            <table className="w-full text-left text-sm">
-                                <thead className="bg-gray-100 text-gray-600 border-b border-gray-200 sticky top-0">
-                                    <tr>
-                                        <th className="px-4 py-3 text-xs font-medium">#</th>
-                                        {headers.map(h => <th key={h} className="px-4 py-3 text-xs font-medium capitalize">{h}</th>)}
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-100">
-                                    {parsedData.map((row, i) => (
-                                        <tr key={i} className="hover:bg-gray-50">
-                                            <td className="px-4 py-2 font-mono text-xs text-gray-400">{i + 1}</td>
-                                            {headers.map(h => (
-                                                <td key={h} className="px-4 py-2 text-xs text-gray-700">{row[h]}</td>
-                                            ))}
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                        <div className="p-2 text-center text-xs text-gray-500 bg-gray-50 border-t border-gray-200">
-                            Total {parsedData.length} rows ready for import
-                        </div>
-                    </div>
+                    <DataPreviewTable headers={headers} parsedData={parsedData} />
                 )}
             </div>
 

@@ -16,6 +16,9 @@ import {
 import { useRouter } from "next/navigation";
 import { config } from "@/config/config";
 import { isLeadFormIdBlackBadge } from "@/constants/leadFormBadges";
+import { useDebouncedSearchQuery } from "../../hooks/useDebouncedSearchQuery";
+import { useFilterPersistence } from "../../hooks/useFilterPersistence";
+import PaginationBar from "../ui/PaginationBar";
 
 const LEAD_ACCESS_STORAGE_KEY = "lead-management-access-verified";
 const LEAD_ACCESS_PASSWORD =
@@ -35,9 +38,6 @@ const HIGHLIGHT_COUNTRIES_SET = new Set([
 const isHighlightCountry = (country) =>
   country && HIGHLIGHT_COUNTRIES_SET.has(String(country).trim());
 
-const PER_PAGE_OPTIONS = [10, 20, 50, 100, 1000];
-const DEFAULT_LIMIT = 50;
-
 const LeadManagement = () => {
   const router = useRouter();
   const { canDelete, role } = usePermissions();
@@ -50,41 +50,35 @@ const LeadManagement = () => {
   const passwordInputRef = useRef(null);
 
   const [isDataLoading, setIsDataLoading] = useState(false);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [error, setError] = useState(null);
   const [leads, setLeads] = useState([]);
   const [selectedLeads, setSelectedLeads] = useState(new Set());
   const leadTableRef = useRef(null);
-  const loadMoreSentinelRef = useRef(null);
-  const paginationRef = useRef(null);
   const [showFilters, setShowFilters] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedLead, setSelectedLead] = useState(null);
   const { toasts, removeToast, success, error: showError } = useToast();
-  const isFetchingRef = useRef(false);
-  const queuedFetchRef = useRef(null);
 
-  // Filter states
-  const [filterCountry, setFilterCountry] = useState("");
-  const [filterClassName, setFilterClassName] = useState("");
-  const [filterStatus, setFilterStatus] = useState("all");
-  const [filterSearch, setFilterSearch] = useState("");
-  const [filterDateFrom, setFilterDateFrom] = useState("");
-  const [filterDateTo, setFilterDateTo] = useState("");
-
-  // Pagination state (infinite scroll: page 1 loads first, scroll loads more pages)
-  const [pagination, setPagination] = useState({
-    page: 1,
-    limit: DEFAULT_LIMIT,
-    total: 0,
-    totalPages: 0,
+  const [filterState, setFilterState] = useFilterPersistence("lead", {
+    filterSearch: "",
+    filterCountry: "",
+    filterClassName: "",
+    filterDateFrom: "",
+    filterDateTo: "",
+    filterForm: "",
+    filterStatus: "all",
+    searchQuery: "",
   });
+  const { page, limit, searchQuery, filterCountry, filterClassName, filterDateFrom, filterDateTo, filterForm, filterStatus } = filterState;
+  const [searchInput, setSearchInput] = useDebouncedSearchQuery(searchQuery, setFilterState);
+
+  const [pagination, setPagination] = useState({ total: 0, totalPages: 0, hasNextPage: false, hasPrevPage: false });
 
   // Form IDs marked "highlight in leads" (black badge in lead table)
   const [highlightedFormIds, setHighlightedFormIds] = useState([]);
+  const highlightedFormIdsSet = useMemo(() => new Set(highlightedFormIds), [highlightedFormIds]);
 
-  // Loading state for Send / Export / Export & Send (shows spinner on button)
-  const [actionLoading, setActionLoading] = useState(null); // null | "send" | "export" | "exportAndSend"
+  const [actionLoading, setActionLoading] = useState(null);
 
   // Check session storage for existing verification on mount
   useEffect(() => {
@@ -154,113 +148,49 @@ const LeadManagement = () => {
     router.push("/admin");
   };
 
-  // Fetch leads: replace (page 1) or append (next page on scroll)
-  const fetchLeads = async (page = 1, limit = DEFAULT_LIMIT, append = false) => {
-    if (isFetchingRef.current) {
-      // Keep only the latest requested fetch (e.g. per-page change while load-more is in-flight).
-      queuedFetchRef.current = { page, limit, append };
-      return;
-    }
-    isFetchingRef.current = true;
+  const fetchLeads = async () => {
     try {
-      if (append) {
-        setIsLoadingMore(true);
-      } else {
-        setIsDataLoading(true);
-      }
+      setIsDataLoading(true);
       setError(null);
 
       const params = new URLSearchParams();
-      params.append("page", page.toString());
-      params.append("limit", limit.toString());
+      params.append("page", String(page));
+      params.append("limit", String(limit));
+      if (searchQuery) params.append("search", searchQuery);
       if (filterCountry) params.append("country", filterCountry);
       if (filterClassName) params.append("className", filterClassName);
       if (filterStatus && filterStatus !== "all") params.append("status", filterStatus);
-      if (filterSearch) params.append("search", filterSearch);
       if (filterDateFrom) params.append("dateFrom", filterDateFrom);
       if (filterDateTo) params.append("dateTo", filterDateTo);
 
       const response = await api.get(`/lead?${params.toString()}`);
 
       if (response.data?.success) {
-        const data = response.data.data || [];
+        setLeads(response.data.data || []);
         const pag = response.data.pagination || {};
-        if (append) {
-          setLeads((prev) => [...prev, ...data]);
-        } else {
-          setLeads(data);
-        }
-        setPagination((prev) => ({
-          ...prev,
-          page: pag.page ?? page,
-          limit: pag.limit ?? limit,
+        setPagination({
           total: pag.total ?? 0,
           totalPages: pag.totalPages ?? 0,
-        }));
+          hasNextPage: pag.hasNextPage ?? false,
+          hasPrevPage: pag.hasPrevPage ?? false,
+        });
       } else {
         setError(response.data?.message || "Failed to fetch leads");
-        if (!append) setLeads([]);
+        setLeads([]);
       }
     } catch (err) {
       console.error("❌ Error fetching leads:", err);
-      const errorMessage =
-        err?.response?.data?.message ||
-        err?.message ||
-        "Failed to fetch leads. Please check your connection.";
-      setError(errorMessage);
-      if (!append) setLeads([]);
+      setError(err?.response?.data?.message || err?.message || "Failed to fetch leads. Please check your connection.");
+      setLeads([]);
     } finally {
-      if (append) {
-        setIsLoadingMore(false);
-      } else {
-        setIsDataLoading(false);
-      }
-      isFetchingRef.current = false;
-      if (queuedFetchRef.current) {
-        const next = queuedFetchRef.current;
-        queuedFetchRef.current = null;
-        fetchLeads(next.page, next.limit, next.append);
-      }
+      setIsDataLoading(false);
     }
   };
 
-  paginationRef.current = pagination;
-
-  // Initial load and when filters or per-page limit change: fetch page 1 (replace)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    setPagination((prev) => ({ ...prev, page: 1 }));
-    fetchLeads(1, pagination.limit, false);
-  }, [
-    filterCountry,
-    filterClassName,
-    filterStatus,
-    filterSearch,
-    filterDateFrom,
-    filterDateTo,
-    pagination.limit,
-  ]);
-
-  // Infinite scroll: when sentinel is visible, load next page (append)
-  useEffect(() => {
-    const sentinel = loadMoreSentinelRef.current;
-    if (!sentinel) return;
-    const pag = paginationRef.current;
-    const hasMore = pag.totalPages > 0 && pag.page < pag.totalPages;
-    if (!hasMore) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const [entry] = entries;
-        if (!entry?.isIntersecting) return;
-        const { page, limit, totalPages } = paginationRef.current;
-        if (page >= totalPages || isFetchingRef.current) return;
-        fetchLeads(page + 1, limit, true);
-      },
-      { root: null, rootMargin: "400px 0px", threshold: 0 }
-    );
-    observer.observe(sentinel);
-    return () => observer.disconnect();
-  }, [leads.length, pagination.page, pagination.totalPages]);
+    fetchLeads();
+  }, [page, limit, searchQuery, filterCountry, filterClassName, filterStatus, filterDateFrom, filterDateTo]);
 
   // Get unique countries and class names for filter dropdowns
   const uniqueCountries = useMemo(() => {
@@ -285,7 +215,7 @@ const LeadManagement = () => {
     if (filterCountry) count++;
     if (filterClassName) count++;
     if (filterStatus && filterStatus !== "all") count++;
-    if (filterSearch) count++;
+    if (searchQuery) count++;
     if (filterDateFrom) count++;
     if (filterDateTo) count++;
     return count;
@@ -293,20 +223,24 @@ const LeadManagement = () => {
     filterCountry,
     filterClassName,
     filterStatus,
-    filterSearch,
+    searchQuery,
     filterDateFrom,
     filterDateTo,
   ]);
 
   // Clear all filters
   const clearFilters = () => {
-    setFilterCountry("");
-    setFilterClassName("");
-    setFilterStatus("all");
-    setFilterSearch("");
-    setFilterDateFrom("");
-    setFilterDateTo("");
-    setPagination((prev) => ({ ...prev, page: 1 }));
+    setFilterState({
+      filterCountry: "",
+      filterClassName: "",
+      filterStatus: "all",
+      searchQuery: "",
+      filterDateFrom: "",
+      filterDateTo: "",
+      filterForm: "",
+      page: 1,
+    });
+    setSearchInput("");
   };
 
   // Handle view lead
@@ -331,13 +265,14 @@ const LeadManagement = () => {
     }
 
     try {
-      setIsDataLoading(true);
       const response = await api.delete(`/lead/${leadToDelete._id}`);
 
       if (response.data?.success) {
         success("Lead deleted successfully!");
-        setPagination((prev) => ({ ...prev, page: 1 }));
-        await fetchLeads(1, pagination.limit, false);
+        if (leadToDelete.status === "new" || leadToDelete.status === "updated") {
+          window.dispatchEvent(new CustomEvent("admin-lead-pending-updated", { detail: { delta: -1 } }));
+        }
+        fetchLeads();
       } else {
         throw new Error(response.data?.message || "Failed to delete lead");
       }
@@ -346,8 +281,6 @@ const LeadManagement = () => {
       showError(
         err?.response?.data?.message || err?.message || "Failed to delete lead"
       );
-    } finally {
-      setIsDataLoading(false);
     }
   };
 
@@ -597,48 +530,6 @@ const LeadManagement = () => {
                 </button>
               </div>
             </div>
-            {/* Top bar: count + per page (like YouTube/Instagram) */}
-            {!isDataLoading && !error && leads.length > 0 && pagination.total > 0 && (
-              <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-200/80">
-                <p className="text-sm text-slate-600">
-                  {pagination.page >= pagination.totalPages ? (
-                    <>Showing all <span className="font-medium text-slate-800">{pagination.total}</span> leads</>
-                  ) : (
-                    <>
-                      <span className="font-medium text-slate-800">{leads.length}</span>
-                      {" of "}
-                      <span className="font-medium text-slate-800">{pagination.total}</span>
-                      {" — scroll down for more"}
-                    </>
-                  )}
-                </p>
-                <div className="flex items-center gap-2">
-                  <label htmlFor="lead-per-page" className="text-sm text-slate-600 whitespace-nowrap">Per page</label>
-                  <select
-                    id="lead-per-page"
-                    value={pagination.limit}
-                    onChange={(e) => {
-                      const nextLimit = parseInt(e.target.value, 10);
-                      // Immediate UX reset so old page-size rows aren't shown while refetching.
-                      setSelectedLeads(new Set());
-                      setLeads([]);
-                      setIsLoadingMore(false);
-                      queuedFetchRef.current = { page: 1, limit: nextLimit, append: false };
-                      setPagination((prev) => ({
-                        ...prev,
-                        limit: nextLimit,
-                        page: 1,
-                      }));
-                    }}
-                    className="px-3 py-1.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white cursor-pointer"
-                  >
-                    {PER_PAGE_OPTIONS.map((n) => (
-                      <option key={n} value={n}>{n}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            )}
           </div>
         </div>
 
@@ -659,11 +550,8 @@ const LeadManagement = () => {
                   <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
                   <input
                     type="text"
-                    value={filterSearch}
-                    onChange={(e) => {
-                      setFilterSearch(e.target.value);
-                      setPagination((prev) => ({ ...prev, page: 1 }));
-                    }}
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
                     placeholder="Search by name, email, or phone..."
                     className="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white transition-all"
                   />
@@ -675,10 +563,7 @@ const LeadManagement = () => {
                 <input
                   type="text"
                   value={filterCountry}
-                  onChange={(e) => {
-                    setFilterCountry(e.target.value);
-                    setPagination((prev) => ({ ...prev, page: 1 }));
-                  }}
+                  onChange={(e) => setFilterState({ filterCountry: e.target.value, page: 1 })}
                   placeholder="Enter country..."
                   className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white transition-all"
                 />
@@ -689,10 +574,7 @@ const LeadManagement = () => {
                 <input
                   type="text"
                   value={filterClassName}
-                  onChange={(e) => {
-                    setFilterClassName(e.target.value);
-                    setPagination((prev) => ({ ...prev, page: 1 }));
-                  }}
+                  onChange={(e) => setFilterState({ filterClassName: e.target.value, page: 1 })}
                   placeholder="Enter class name..."
                   className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white transition-all"
                 />
@@ -702,10 +584,7 @@ const LeadManagement = () => {
                 <label className="block text-sm font-medium text-slate-700 mb-1.5">Status</label>
                 <select
                   value={filterStatus}
-                  onChange={(e) => {
-                    setFilterStatus(e.target.value);
-                    setPagination((prev) => ({ ...prev, page: 1 }));
-                  }}
+                  onChange={(e) => setFilterState({ filterStatus: e.target.value, page: 1 })}
                   className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white transition-all"
                 >
                   <option value="all">All Status</option>
@@ -722,10 +601,7 @@ const LeadManagement = () => {
                 <input
                   type="date"
                   value={filterDateFrom}
-                  onChange={(e) => {
-                    setFilterDateFrom(e.target.value);
-                    setPagination((prev) => ({ ...prev, page: 1 }));
-                  }}
+                  onChange={(e) => setFilterState({ filterDateFrom: e.target.value, page: 1 })}
                   className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white transition-all"
                 />
               </div>
@@ -735,10 +611,7 @@ const LeadManagement = () => {
                 <input
                   type="date"
                   value={filterDateTo}
-                  onChange={(e) => {
-                    setFilterDateTo(e.target.value);
-                    setPagination((prev) => ({ ...prev, page: 1 }));
-                  }}
+                  onChange={(e) => setFilterState({ filterDateTo: e.target.value, page: 1 })}
                   className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white transition-all"
                 />
               </div>
@@ -752,31 +625,31 @@ const LeadManagement = () => {
                   {filterCountry && (
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 text-blue-700 rounded-lg text-xs font-medium border border-blue-200/60">
                       Country: {filterCountry}
-                      <button type="button" onClick={() => { setFilterCountry(""); setPagination((p) => ({ ...p, page: 1 })); }} className="hover:bg-blue-200/60 rounded p-0.5 transition-colors" aria-label="Remove country filter"><FaTimes className="w-3 h-3" /></button>
+                      <button type="button" onClick={() => setFilterState({ filterCountry: "", page: 1 })} className="hover:bg-blue-200/60 rounded p-0.5 transition-colors" aria-label="Remove country filter"><FaTimes className="w-3 h-3" /></button>
                     </span>
                   )}
                   {filterClassName && (
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 text-blue-700 rounded-lg text-xs font-medium border border-blue-200/60">
                       Class: {filterClassName}
-                      <button type="button" onClick={() => { setFilterClassName(""); setPagination((p) => ({ ...p, page: 1 })); }} className="hover:bg-blue-200/60 rounded p-0.5 transition-colors" aria-label="Remove class filter"><FaTimes className="w-3 h-3" /></button>
+                      <button type="button" onClick={() => setFilterState({ filterClassName: "", page: 1 })} className="hover:bg-blue-200/60 rounded p-0.5 transition-colors" aria-label="Remove class filter"><FaTimes className="w-3 h-3" /></button>
                     </span>
                   )}
                   {filterStatus && filterStatus !== "all" && (
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 text-blue-700 rounded-lg text-xs font-medium border border-blue-200/60">
                       Status: {filterStatus}
-                      <button type="button" onClick={() => { setFilterStatus("all"); setPagination((p) => ({ ...p, page: 1 })); }} className="hover:bg-blue-200/60 rounded p-0.5 transition-colors" aria-label="Remove status filter"><FaTimes className="w-3 h-3" /></button>
+                      <button type="button" onClick={() => setFilterState({ filterStatus: "all", page: 1 })} className="hover:bg-blue-200/60 rounded p-0.5 transition-colors" aria-label="Remove status filter"><FaTimes className="w-3 h-3" /></button>
                     </span>
                   )}
-                  {filterSearch && (
+                  {searchQuery && (
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 text-blue-700 rounded-lg text-xs font-medium border border-blue-200/60">
-                      Search: {filterSearch}
-                      <button type="button" onClick={() => { setFilterSearch(""); setPagination((p) => ({ ...p, page: 1 })); }} className="hover:bg-blue-200/60 rounded p-0.5 transition-colors" aria-label="Clear search"><FaTimes className="w-3 h-3" /></button>
+                      Search: {searchQuery}
+                      <button type="button" onClick={() => { setSearchInput(""); setFilterState({ searchQuery: "", page: 1 }); }} className="hover:bg-blue-200/60 rounded p-0.5 transition-colors" aria-label="Clear search"><FaTimes className="w-3 h-3" /></button>
                     </span>
                   )}
                   {(filterDateFrom || filterDateTo) && (
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 text-blue-700 rounded-lg text-xs font-medium border border-blue-200/60">
                       Date: {filterDateFrom || "…"} – {filterDateTo || "…"}
-                      <button type="button" onClick={() => { setFilterDateFrom(""); setFilterDateTo(""); setPagination((p) => ({ ...p, page: 1 })); }} className="hover:bg-blue-200/60 rounded p-0.5 transition-colors" aria-label="Clear date filter"><FaTimes className="w-3 h-3" /></button>
+                      <button type="button" onClick={() => setFilterState({ filterDateFrom: "", filterDateTo: "", page: 1 })} className="hover:bg-blue-200/60 rounded p-0.5 transition-colors" aria-label="Clear date filter"><FaTimes className="w-3 h-3" /></button>
                     </span>
                   )}
                   <button type="button" onClick={clearFilters} className="ml-auto inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg text-xs font-medium transition-colors">
@@ -812,7 +685,7 @@ const LeadManagement = () => {
                 <p className="text-sm text-slate-600 mb-5">{error}</p>
                 <button
                   type="button"
-                  onClick={() => fetchLeads(1, pagination.limit, false)}
+                  onClick={() => fetchLeads()}
                   className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors shadow-sm"
                 >
                   Try again
@@ -852,28 +725,23 @@ const LeadManagement = () => {
                 selectedLeads={selectedLeads}
                 onSelectionChange={setSelectedLeads}
                 totalLeads={pagination.total}
-                highlightedFormIds={new Set(highlightedFormIds)}
+                highlightedFormIds={highlightedFormIdsSet}
                 onExportEmailSent={(ok, msg) => {
                   setActionLoading(null);
                   if (ok) success("Export email sent to configured address.");
                   else showError(msg || "Failed to send export email.");
                 }}
               />
-              {/* Scroll sentinel: load more when near bottom (YouTube/Instagram style) */}
-              {pagination.totalPages > 0 && pagination.page < pagination.totalPages && (
-                <div
-                  ref={loadMoreSentinelRef}
-                  className="min-h-px flex items-center justify-center py-6"
-                  aria-hidden="true"
-                >
-                  {isLoadingMore && (
-                    <div className="flex items-center gap-2 text-slate-400">
-                      <LoadingSpinner size="small" />
-                      <span className="text-xs">Loading more…</span>
-                    </div>
-                  )}
-                </div>
-              )}
+              <PaginationBar
+                page={page}
+                limit={limit}
+                total={pagination.total}
+                totalPages={pagination.totalPages}
+                hasNextPage={pagination.hasNextPage}
+                hasPrevPage={pagination.hasPrevPage}
+                onPageChange={(p) => setFilterState({ page: p })}
+                onLimitChange={(l) => setFilterState({ limit: l, page: 1 })}
+              />
             </>
           )}
         </div>
