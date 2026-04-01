@@ -687,9 +687,10 @@ const ExamManagement = () => {
                   <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-3.5 h-3.5" />
                   {searchQuery && (
                     <button
-                      onClick={() =>
-                        setFilterState({ searchQuery: "", page: 1 })
-                      }
+                      onClick={() => {
+                        setSearchInput("");
+                        setFilterState({ searchQuery: "", page: 1 });
+                      }}
                       className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                     >
                       <FaTimes className="w-3 h-3" />
@@ -738,7 +739,7 @@ const ExamManagement = () => {
                 </p>
                 {searchQuery ? (
                   <button
-                    onClick={() => setFilterState({ searchQuery: "", page: 1 })}
+                    onClick={() => { setSearchInput(""); setFilterState({ searchQuery: "", page: 1 }); }}
                     className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
                   >
                     Clear Search

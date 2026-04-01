@@ -1381,7 +1381,7 @@ const DefinitionManagement = () => {
     <>
       <ToastContainer toasts={toasts} removeToast={removeToast} />
       <LoadingWrapper
-        isLoading={isDataLoading}
+        isLoading={isDataLoading && definitions.length === 0}
         skeleton={<SkeletonChaptersTable />}
       >
         <div className="space-y-6">

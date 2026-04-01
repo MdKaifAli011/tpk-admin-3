@@ -153,6 +153,7 @@ const SubjectManagement = () => {
 
   // Clear all filters
   const clearFilters = () => {
+    setSearchInput("");
     setFilterState({ filterExam: "", searchQuery: "", page: 1 });
   };
 
@@ -700,9 +701,10 @@ const SubjectManagement = () => {
                   <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-3.5 h-3.5" />
                   {searchQuery && (
                     <button
-                      onClick={() =>
-                        setFilterState({ searchQuery: "", page: 1 })
-                    }
+                      onClick={() => {
+                        setSearchInput("");
+                        setFilterState({ searchQuery: "", page: 1 });
+                      }}
                       className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                     >
                       <FaTimes className="w-3 h-3" />
@@ -795,9 +797,10 @@ const SubjectManagement = () => {
                 <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-medium">
                   Search: {searchQuery}
                   <button
-                    onClick={() =>
-                      setFilterState({ searchQuery: "", page: 1 })
-                    }
+                    onClick={() => {
+                      setSearchInput("");
+                      setFilterState({ searchQuery: "", page: 1 });
+                    }}
                     className="hover:bg-indigo-200 rounded-full p-0.5 transition-colors"
                   >
                     <FaTimes className="w-3 h-3" />
