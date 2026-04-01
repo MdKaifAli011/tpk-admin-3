@@ -5,6 +5,7 @@ import {
   createSlug,
 } from "@/app/(main)/lib/api";
 import AssignedBlogsSectionClient from "./AssignedBlogsSectionClient";
+import { BLOG_PUBLIC_AUTHOR_LABEL } from "@/constants/blogPublic";
 
 /**
  * Fetches blogs assigned to the current hierarchy level and renders up to 3 cards
@@ -68,7 +69,7 @@ const AssignedBlogsSection = async (props) => {
       id: blog._id,
       title: blog.name || "Untitled Blog",
       excerpt,
-      author: blog.author || "Admin",
+      author: BLOG_PUBLIC_AUTHOR_LABEL,
       date: new Date(blogDate).toLocaleDateString(undefined, {
         year: "numeric",
         month: "short",

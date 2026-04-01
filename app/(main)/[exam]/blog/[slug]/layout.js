@@ -2,6 +2,7 @@ import { generateMetadata as generateSEO } from "@/utils/seo";
 import { createSlug } from "@/utils/slug";
 import { logger } from "@/utils/logger";
 import { SEO_DEFAULTS, APP_CONFIG } from "@/constants";
+import { BLOG_PUBLIC_AUTHOR_LABEL } from "@/constants/blogPublic";
 
 // Force dynamic rendering to ensure fresh metadata
 export const dynamic = "force-dynamic";
@@ -83,9 +84,7 @@ export async function generateMetadata({ params }) {
         "exam preparation",
         "study guide",
       ];
-      if (blog.author) {
-        baseKeywords.push(blog.author);
-      }
+      baseKeywords.push(BLOG_PUBLIC_AUTHOR_LABEL);
       keywords = baseKeywords.filter(Boolean).join(", ");
     }
 
@@ -138,9 +137,7 @@ export async function generateMetadata({ params }) {
         },
       };
     }
-    if (blog.author) {
-      metadata.openGraph.authors = [blog.author];
-    }
+    metadata.openGraph.authors = [BLOG_PUBLIC_AUTHOR_LABEL];
     if (blog.createdAt) {
       metadata.openGraph.publishedTime = new Date(blog.createdAt).toISOString();
     }

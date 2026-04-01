@@ -10,18 +10,7 @@ import {
 } from "../../lib/api";
 import BlogListClient from "./BlogListClient";
 import BlogSearchInput from "./BlogSearchInput";
-
-const BLOG_BRAND_NAME = "TestprepKart";
-
-const normalizeBlogAuthorName = (author) => {
-  const raw = String(author || "").trim();
-  if (!raw) return BLOG_BRAND_NAME;
-  const compact = raw.toLowerCase().replace(/[^a-z]/g, "");
-  if (raw.toLowerCase().endsWith("@admin.com") || compact === "testprepkart") {
-    return BLOG_BRAND_NAME;
-  }
-  return raw;
-};
+import { BLOG_PUBLIC_AUTHOR_LABEL } from "@/constants/blogPublic";
 
 const BlogPage = async ({ params }) => {
   const { exam: examIdOrSlug } = await params;
@@ -77,7 +66,7 @@ const BlogPage = async ({ params }) => {
       id: blog._id,
       title: blog.name || "Untitled Blog",
       excerpt: excerpt,
-      author: normalizeBlogAuthorName(blog.author),
+      author: BLOG_PUBLIC_AUTHOR_LABEL,
       date: new Date(blogDate).toLocaleDateString(undefined, {
         year: "numeric",
         month: "short",

@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { FaCalendarAlt, FaUser } from "react-icons/fa";
 import Image from "next/image";
 import Link from "next/link";
+import { BLOG_PUBLIC_AUTHOR_LABEL } from "@/constants/blogPublic";
 
 // Helper function to resolve image path with base path
 const resolveImagePath = (path) => {
@@ -21,19 +22,8 @@ const resolveImagePath = (path) => {
 
 const BlogCard = ({ post, examSlug }) => {
   const [imageError, setImageError] = useState(false);
-  const rawAuthor = String(post?.author || "").trim();
-  const compactAuthor = rawAuthor.toLowerCase().replace(/[^a-z]/g, "");
-  const displayAuthor =
-    !rawAuthor ||
-      rawAuthor.toLowerCase().endsWith("@admin.com") ||
-      compactAuthor === "testprepkart"
-      ? "TestprepKart"
-      : rawAuthor;
 
-  // Check if image is external URL
   const imageSrc = resolveImagePath(post.image);
-  const isExternalImage =
-    imageSrc.startsWith("http://") || imageSrc.startsWith("https://");
 
   return (
     <article
@@ -44,20 +34,19 @@ const BlogCard = ({ post, examSlug }) => {
               transition-all duration-300
             "
     >
-      {/* Image with fallback */}
-      <div className="h-40 bg-gray-50 relative overflow-hidden">
+      {/* Thumbnail: natural image height (no forced aspect ratio). */}
+      <div className="relative w-full rounded-t-xl bg-gray-50 overflow-hidden">
         {post.image && !imageError ? (
-          <div className="relative w-full h-full">
-            <Image
-              src={imageSrc}
-              alt={post.title}
-              fill
-              className="object-cover group-hover:scale-105 transition-transform duration-500"
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-              onError={() => setImageError(true)}
-              unoptimized={isExternalImage}
-            />
-          </div>
+          <Image
+            src={imageSrc}
+            alt={post.title}
+            width={827}
+            height={312}
+            className="h-auto w-full object-contain object-center group-hover:scale-105 transition-transform duration-500"
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
+            onError={() => setImageError(true)}
+            unoptimized={imageSrc.startsWith("http://")}
+          />
         ) : (
           <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/50 to-purple-50/50 group-hover:scale-105 transition-transform duration-500 flex items-center justify-center">
             {/* Abstract Shapes */}
@@ -68,25 +57,20 @@ const BlogCard = ({ post, examSlug }) => {
             </span>
           </div>
         )}
-        <div className="absolute top-2 right-2 z-10">
-          <span className="px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase text-indigo-700 bg-white/90 backdrop-blur-sm border border-indigo-100 rounded-md shadow-sm">
-            {post.category}
-          </span>
-        </div>
       </div>
 
       <div className="p-4 flex-1 flex flex-col">
-        <div className="flex items-center gap-2 mb-2 text-[10px] text-gray-500">
+        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 mb-2.5 text-[11px] text-gray-500">
           <FaCalendarAlt className="text-indigo-400" />
           <span>{post.date}</span>
           <span className="mx-1">•</span>
           <span className="flex items-center gap-1">
             <FaUser className="text-indigo-400" />
-            {displayAuthor}
+            {BLOG_PUBLIC_AUTHOR_LABEL}
           </span>
         </div>
 
-        <h2 className="text-base font-bold text-gray-800 mb-2 line-clamp-2 leading-snug group-hover:text-indigo-600 transition-colors">
+        <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-2 line-clamp-2 leading-snug group-hover:text-indigo-600 transition-colors">
           <Link
             href={`/${examSlug}/blog/${post.slug}`}
             className="focus:outline-none hover:underline cursor-pointer"
@@ -95,7 +79,7 @@ const BlogCard = ({ post, examSlug }) => {
           </Link>
         </h2>
 
-        <p className="text-xs text-gray-600 line-clamp-3 mb-4 flex-1 leading-relaxed">
+        <p className="text-sm text-gray-600 line-clamp-3 mb-4 flex-1 leading-relaxed">
           {post.excerpt}
         </p>
 
@@ -104,7 +88,7 @@ const BlogCard = ({ post, examSlug }) => {
             href={`/${examSlug}/blog/${post.slug}`}
             className="flex items-center justify-between group/link cursor-pointer"
           >
-            <span className="text-[10px] font-semibold text-indigo-600 group-hover/link:underline uppercase tracking-wider">
+            <span className="text-xs font-semibold text-indigo-600 group-hover/link:underline uppercase tracking-wider">
               Read Article
             </span>
             <div className="w-5 h-5 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center transform group-hover/link:translate-x-1 transition-transform">

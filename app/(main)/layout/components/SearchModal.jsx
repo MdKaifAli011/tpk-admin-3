@@ -15,6 +15,7 @@ import Link from "next/link";
 import { useSearchContext } from "../context/SearchContext";
 import { tokenizeQuery, textMatchesTokens, getSearchableText } from "../utils/searchTokens";
 import api from "@/lib/api";
+import { BLOG_PUBLIC_AUTHOR_LABEL } from "@/constants/blogPublic";
 
 function createSlug(name) {
   if (!name || typeof name !== "string") return "";
@@ -501,7 +502,7 @@ const SearchModal = ({ isOpen, onClose }) => {
                                       {blog.name}
                                     </p>
                                     <p className="text-xs text-gray-500 truncate mt-0.5">
-                                      {blog.author || "Admin"} · {categoryName}
+                                      {BLOG_PUBLIC_AUTHOR_LABEL} · {categoryName}
                                       {blog.examId?.name && ` · ${blog.examId.name}`}
                                     </p>
                                   </div>

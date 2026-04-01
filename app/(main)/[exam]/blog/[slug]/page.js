@@ -11,18 +11,7 @@ import {
 } from "../../../lib/api";
 import RichContent from "../../../components/RichContent";
 import BlogComments from "./BlogComments";
-
-const BLOG_BRAND_NAME = "TestprepKart";
-
-const normalizeBlogAuthorName = (author) => {
-  const raw = String(author || "").trim();
-  if (!raw) return BLOG_BRAND_NAME;
-  const compact = raw.toLowerCase().replace(/[^a-z]/g, "");
-  if (raw.toLowerCase().endsWith("@admin.com") || compact === "testprepkart") {
-    return BLOG_BRAND_NAME;
-  }
-  return raw;
-};
+import { BLOG_PUBLIC_AUTHOR_LABEL } from "@/constants/blogPublic";
 
 // Helper function to resolve image path with base path
 const resolveImagePath = (path) => {
@@ -75,13 +64,10 @@ const BlogDetailPage = async ({ params }) => {
   const keywords = blogDetails?.keywords || "";
   const tags = blogDetails?.tags || "";
 
-  // Check if image is external URL
   const imageSrc = resolveImagePath(blog.image);
-  const isExternalImage =
-    imageSrc.startsWith("http://") || imageSrc.startsWith("https://");
 
   return (
-    <div className="space-y-4">
+    <div className="mx-auto w-full max-w-6xl space-y-4">
       {/* Header Section */}
       <section
         className="hero-section rounded-xl p-3 sm:p-4 bg-gradient-to-br from-indigo-50 via-white to-purple-50 border border-indigo-100/60 shadow-[0_2px_12px_rgba(120,90,200,0.08)]"
@@ -103,7 +89,7 @@ const BlogDetailPage = async ({ params }) => {
               <span className="mx-1">•</span>
               <span className="flex items-center gap-1">
                 <FaUser className="text-indigo-400" />
-                {normalizeBlogAuthorName(blog.author)}
+                {BLOG_PUBLIC_AUTHOR_LABEL}
               </span>
               {(blog.categoryId?.name || blog.category) && (
                 <>
@@ -119,66 +105,72 @@ const BlogDetailPage = async ({ params }) => {
         </div>
       </section>
 
-      {/* Blog cover — short banner, responsive height, stable CLS via explicit box */}
-      {blog.image && (
-        <div
-          className="relative w-full h-[clamp(140px,26vw,280px)] sm:h-[clamp(168px,24vw,340px)] rounded-xl overflow-hidden bg-gray-100 border border-indigo-100/60 shadow-[0_2px_12px_rgba(120,90,200,0.08)]"
-        >
-          <Image
-            src={imageSrc}
-            alt={displayTitle ? `${displayTitle} — cover image` : "Blog cover image"}
-            fill
-            className="object-cover object-center"
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 92vw, min(960px, 72vw)"
-            unoptimized={isExternalImage}
-            priority
-          />
-        </div>
-      )}
-
       {/* Blog Content */}
-      <article className="bg-white rounded-xl border border-gray-200/60 p-4 sm:p-6 lg:p-8">
-        {/* Content */}
-        {content ? (
-          <div
-            className="prose prose-sm sm:prose-base max-w-none
+      <article className="bg-white rounded-xl border border-gray-200/60 overflow-hidden">
+        {/* Cover merged with content card for cleaner visual flow */}
+        {blog.image && (
+          <div className="bg-gray-100 border-b border-indigo-100/60">
+            <Image
+              src={imageSrc}
+              alt={
+                displayTitle
+                  ? `${displayTitle} — cover image`
+                  : "Blog cover image"
+              }
+              width={827}
+              height={312}
+              className="block w-full h-auto object-contain"
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 92vw, min(960px, 72vw)"
+              unoptimized={imageSrc.startsWith("http://")}
+              priority
+            />
+          </div>
+        )}
+
+        <div className="p-4 sm:p-6 lg:p-8">
+          {/* Content */}
+          {content ? (
+            <div
+              className="prose prose-sm sm:prose-base max-w-none
             prose-headings:text-gray-900 prose-headings:font-bold
             prose-p:text-gray-700 prose-p:leading-relaxed
             prose-a:text-indigo-600 prose-a:no-underline hover:prose-a:underline
             prose-strong:text-gray-900 prose-strong:font-semibold
             prose-ul:text-gray-700 prose-ol:text-gray-700
             prose-li:text-gray-700
-            prose-img:rounded-lg prose-img:shadow-md
+            prose-img:rounded-lg prose-img:shadow-md prose-img:mx-auto prose-img:block
+            prose-img:max-w-full prose-img:h-auto prose-img:max-h-[min(720px,85vh)]
             prose-blockquote:border-indigo-200 prose-blockquote:bg-indigo-50/50
             prose-code:text-indigo-600 prose-code:bg-indigo-50 prose-code:px-1 prose-code:py-0.5 prose-code:rounded
           "
-          >
-            <RichContent html={content} />
-          </div>
-        ) : (
-          <div className="text-center py-12">
-            <p className="text-gray-500 text-sm">
-              Content is being prepared. Please check back soon.
-            </p>
-          </div>
-        )}
-
-        {/* Tags */}
-        {tags && (
-          <div className="mt-8 pt-6 border-t border-gray-200">
-            <p className="text-xs text-gray-500 mb-2">Tags:</p>
-            <div className="flex flex-wrap gap-2">
-              {tags.split(",").map((tag, index) => (
-                <span
-                  key={index}
-                  className="px-3 py-1 text-xs bg-indigo-50 text-indigo-700 rounded-full border border-indigo-100"
-                >
-                  {tag.trim()}
-                </span>
-              ))}
+            >
+              <RichContent html={content} />
             </div>
-          </div>
-        )}
+          ) : (
+            <div className="text-center py-12">
+              <p className="text-gray-500 text-sm">
+                Content is being prepared. Please check back soon.
+              </p>
+            </div>
+          )}
+
+          {/* Tags */}
+          {tags && (
+            <div className="mt-8 pt-6 border-t border-gray-200">
+              <p className="text-xs text-gray-500 mb-2">Tags:</p>
+              <div className="flex flex-wrap gap-2">
+                {tags.split(",").map((tag, index) => (
+                  <span
+                    key={index}
+                    className="px-3 py-1 text-xs bg-indigo-50 text-indigo-700 rounded-full border border-indigo-100"
+                  >
+                    {tag.trim()}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       </article>
 
       {/* Comments Section */}
