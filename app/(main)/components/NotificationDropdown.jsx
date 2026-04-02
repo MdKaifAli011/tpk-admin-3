@@ -66,13 +66,18 @@ export default function NotificationDropdown() {
   const segments = getPathSegments(pathname);
   const useForContext = isExamOrChildPage(segments);
 
-  // Fetch unread count for red dot (when student is logged in)
+  const lastUnreadFetchRef = useRef(0);
+  const UNREAD_DEBOUNCE_MS = 60000;
+
   useEffect(() => {
     const token = typeof window !== "undefined" ? localStorage.getItem("student_token") : null;
     if (!token) {
       setUnreadCount(0);
       return;
     }
+    const now = Date.now();
+    if (now - lastUnreadFetchRef.current < UNREAD_DEBOUNCE_MS) return;
+    lastUnreadFetchRef.current = now;
     let cancelled = false;
     const params = new URLSearchParams();
     if (useForContext) {

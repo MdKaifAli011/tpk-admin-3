@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
 import {
   FaCheckCircle,
@@ -134,24 +134,28 @@ export const ToastContainer = ({ toasts, removeToast }) => {
 export const useToast = () => {
   const [toasts, setToasts] = useState([]);
 
-  const addToast = (message, type = "success", duration = 3500) => {
+  const addToast = useCallback((message, type = "success", duration = 3500) => {
     const id = Date.now() + Math.random();
     setToasts((prev) => [
       ...prev,
       { id, message, type, duration },
     ]);
-  };
+  }, []);
 
-  const removeToast = (id) => {
+  const removeToast = useCallback((id) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
-  };
+  }, []);
+
+  const success = useCallback((msg, d) => addToast(msg, "success", d), [addToast]);
+  const error = useCallback((msg, d) => addToast(msg, "error", d), [addToast]);
+  const info = useCallback((msg, d) => addToast(msg, "info", d), [addToast]);
 
   return {
     toasts,
     removeToast,
-    success: (msg, d) => addToast(msg, "success", d),
-    error: (msg, d) => addToast(msg, "error", d),
-    info: (msg, d) => addToast(msg, "info", d),
+    success,
+    error,
+    info,
   };
 };
 

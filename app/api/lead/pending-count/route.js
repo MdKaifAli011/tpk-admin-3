@@ -21,7 +21,11 @@ export async function GET(request) {
     }
 
     await connectDB();
-    const count = await Lead.countDocuments({ status: { $in: ["new", "updated"] } });
+    // Only brand-new leads not yet opened in Lead Management (like unread notifications)
+    const count = await Lead.countDocuments({
+      status: "new",
+      $or: [{ adminViewedAt: { $exists: false } }, { adminViewedAt: null }],
+    });
 
     return NextResponse.json({ success: true, count });
   } catch (error) {

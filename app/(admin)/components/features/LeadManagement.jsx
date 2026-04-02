@@ -243,10 +243,39 @@ const LeadManagement = () => {
     setSearchInput("");
   };
 
-  // Handle view lead
-  const handleViewLead = (lead) => {
+  // Handle view lead — mark unopened "new" leads as viewed (sidebar badge drops, like notifications)
+  const handleViewLead = async (lead) => {
     setSelectedLead(lead);
     setShowViewModal(true);
+    const countsTowardBadge =
+      lead?.status === "new" && lead?.adminViewedAt == null;
+    if (!countsTowardBadge) return;
+    try {
+      const response = await api.patch(`/lead/${lead._id}`, {
+        markViewed: true,
+      });
+      if (response.data?.success) {
+        const viewedAt =
+          response.data?.data?.adminViewedAt ?? new Date().toISOString();
+        window.dispatchEvent(
+          new CustomEvent("admin-lead-pending-updated", {
+            detail: { delta: -1 },
+          })
+        );
+        setLeads((prev) =>
+          prev.map((l) =>
+            l._id === lead._id ? { ...l, adminViewedAt: viewedAt } : l
+          )
+        );
+        setSelectedLead((prev) =>
+          prev && prev._id === lead._id
+            ? { ...prev, adminViewedAt: viewedAt }
+            : prev
+        );
+      }
+    } catch (err) {
+      console.error("Failed to mark lead as viewed:", err);
+    }
   };
 
   // Handle delete lead
@@ -269,8 +298,15 @@ const LeadManagement = () => {
 
       if (response.data?.success) {
         success("Lead deleted successfully!");
-        if (leadToDelete.status === "new" || leadToDelete.status === "updated") {
-          window.dispatchEvent(new CustomEvent("admin-lead-pending-updated", { detail: { delta: -1 } }));
+        if (
+          leadToDelete.status === "new" &&
+          leadToDelete.adminViewedAt == null
+        ) {
+          window.dispatchEvent(
+            new CustomEvent("admin-lead-pending-updated", {
+              detail: { delta: -1 },
+            })
+          );
         }
         fetchLeads();
       } else {

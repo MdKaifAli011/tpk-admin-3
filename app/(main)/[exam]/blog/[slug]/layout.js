@@ -4,9 +4,7 @@ import { logger } from "@/utils/logger";
 import { SEO_DEFAULTS, APP_CONFIG } from "@/constants";
 import { BLOG_PUBLIC_AUTHOR_LABEL } from "@/constants/blogPublic";
 
-// Force dynamic rendering to ensure fresh metadata
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = 60;
 
 export async function generateMetadata({ params }) {
   const { exam: examSlug, slug } = await params;

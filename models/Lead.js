@@ -39,6 +39,11 @@ const leadSchema = new mongoose.Schema(
       enum: ["new", "contacted", "converted", "archived", "updated"],
       default: "new",
     },
+    /** Set when an admin opens the lead in Lead Management — removes it from sidebar "new" badge count */
+    adminViewedAt: {
+      type: Date,
+      default: null,
+    },
     updateCount: {
       type: Number,
       default: 0,
@@ -87,6 +92,7 @@ const leadSchema = new mongoose.Schema(
 );
 
 leadSchema.index({ status: 1 });
+leadSchema.index({ status: 1, adminViewedAt: 1 });
 leadSchema.index({ createdAt: -1 });
 leadSchema.index({ country: 1 });
 leadSchema.index({ className: 1 });

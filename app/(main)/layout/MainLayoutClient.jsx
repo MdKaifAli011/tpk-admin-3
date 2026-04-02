@@ -27,8 +27,9 @@ export default function MainLayoutClient({ children }) {
 
   // Memoize showSidebar to prevent unnecessary recalculations
   const showSidebar = useMemo(() => {
-    // No sidebar on: home, contact, calculator, store, explore, auth, site-level /pages, or exam custom page *detail* (/exam/pages/slug — not the index list at /exam/pages). Tool routes (/exam/tool) show the sidebar like other exam hubs.
+    // No sidebar on: home, contact, calculator, store, explore, auth, site-level /pages, exam custom page *detail*, or NEET counseling tool (/neet/tool). Other exam /tool routes (e.g. SAT) still show the sidebar.
     const isExamPageDetailRoute = pathname?.match(/^\/[^/]+\/pages\/.+/);
+    const isNeetToolRoute = pathname?.startsWith("/neet/tool");
     return (
       pathname !== "/" &&
       pathname !== "/contact" &&
@@ -38,7 +39,8 @@ export default function MainLayoutClient({ children }) {
       !pathname?.startsWith("/forgot-password") &&
       !pathname?.startsWith("/reset-password") &&
       !pathname?.startsWith("/pages") &&
-      !isExamPageDetailRoute
+      !isExamPageDetailRoute &&
+      !isNeetToolRoute
     );
   }, [pathname]);
 
@@ -89,11 +91,16 @@ export default function MainLayoutClient({ children }) {
      Student Authentication Check — Defer until idle to reduce TBT
      -------------------------------------------------------- */
   useEffect(() => {
+    const lastVerifiedRef = { ts: 0 };
+    const AUTH_VERIFY_INTERVAL = 5 * 60 * 1000;
+
     const checkStudentAuth = async () => {
+      if (Date.now() - lastVerifiedRef.ts < AUTH_VERIFY_INTERVAL) return;
       if (pathname?.includes("/login") || pathname?.includes("/register") || pathname?.includes("/forgot-password") || pathname?.includes("/reset-password")) return;
       const studentToken = localStorage.getItem("student_token");
       if (!studentToken) return;
       try {
+        lastVerifiedRef.ts = Date.now();
         const response = await api.get("/student/auth/verify", {
           headers: { Authorization: `Bearer ${studentToken}` },
         });
@@ -116,7 +123,8 @@ export default function MainLayoutClient({ children }) {
     };
     const t = setTimeout(runWhenIdle, 0);
     return () => clearTimeout(t);
-  }, [pathname]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   /* -------------------------------------------------------
      Mobile Scroll Lock — Simplified + Reliable

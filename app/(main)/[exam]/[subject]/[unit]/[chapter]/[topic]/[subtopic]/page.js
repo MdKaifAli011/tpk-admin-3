@@ -35,8 +35,7 @@ import { generateTabAwareMetadata, extractSearchParams } from "@/utils/tabSeo";
 import { logger } from "@/utils/logger";
 import OverviewCommentSection from "@/app/(main)/components/OverviewCommentSection";
 import AssignedBlogsSection from "@/app/(main)/components/AssignedBlogsSection";
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = 60;
 
 /**
  * Generate metadata for subtopic pages with tab awareness

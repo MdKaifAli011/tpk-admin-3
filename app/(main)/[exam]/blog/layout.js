@@ -2,9 +2,7 @@ import { generateMetadata as generateSEO } from "@/utils/seo";
 import { createSlug } from "@/utils/slug";
 import { logger } from "@/utils/logger";
 
-// Force dynamic rendering to ensure fresh metadata
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = 60;
 
 export async function generateMetadata({ params }) {
   const { exam: examSlug } = await params;

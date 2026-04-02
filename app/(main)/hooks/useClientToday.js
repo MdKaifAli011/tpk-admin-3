@@ -12,19 +12,27 @@ export function useClientToday() {
   const [today, setToday] = useState(null);
 
   useEffect(() => {
-    const update = () => setToday(new Date());
+    const update = () => {
+      setToday(prev => {
+        const now = new Date();
+        if (prev && now.toDateString() === prev.toDateString()) return prev;
+        return now;
+      });
+    };
 
     update();
 
     const interval = setInterval(update, 60 * 1000);
-    const onVisible = () => update();
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') update();
+    };
     document.addEventListener("visibilitychange", onVisible);
-    window.addEventListener("focus", onVisible);
+    window.addEventListener("focus", update);
 
     return () => {
       clearInterval(interval);
       document.removeEventListener("visibilitychange", onVisible);
-      window.removeEventListener("focus", onVisible);
+      window.removeEventListener("focus", update);
     };
   }, []);
 

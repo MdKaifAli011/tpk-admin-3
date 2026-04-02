@@ -26,6 +26,8 @@ const CATEGORIES = [
 
 export default function StoreManagement() {
   const { toasts, removeToast, success, error: showError } = useToast();
+  const showErrorRef = useRef(showError);
+  showErrorRef.current = showError;
   const [filterState, setFilterState] = useFilterPersistence("store", { statusFilter: "all", searchQuery: "" });
   const { page, limit, statusFilter, searchQuery } = filterState;
   const [searchInput, setSearchInput] = useDebouncedSearchQuery(searchQuery, setFilterState);
@@ -75,13 +77,17 @@ export default function StoreManagement() {
       if (res?.data?.pagination) setPagination(res.data.pagination);
     } catch (err) {
       console.error(err);
-      showError("Failed to fetch products");
+      showErrorRef.current("Failed to fetch products");
     } finally {
       setIsLoading(false);
     }
-  }, [page, limit, statusFilter, categoryFilter, searchQuery, showError]);
+  }, [page, limit, statusFilter, categoryFilter, searchQuery]);
 
-  useEffect(() => { fetchProducts(); }, [fetchProducts]);
+  useEffect(() => {
+    fetchProducts();
+    // Only re-fetch when filter primitives change — not when fetchProducts identity flips (avoids load loops)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, limit, statusFilter, categoryFilter, searchQuery]);
 
   const openCreate = () => {
     setEditingId(null);

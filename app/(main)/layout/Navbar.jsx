@@ -875,11 +875,13 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen, showSidebar }) => {
         </div>
       </div>
 
-      {/* Search Modal */}
-      <SearchModal
-        isOpen={isSearchModalOpen}
-        onClose={() => setIsSearchModalOpen(false)}
-      />
+      {/* Search Modal — only mount when open to avoid wasted hooks/listeners */}
+      {isSearchModalOpen && (
+        <SearchModal
+          isOpen={isSearchModalOpen}
+          onClose={() => setIsSearchModalOpen(false)}
+        />
+      )}
     </nav>
   );
 });

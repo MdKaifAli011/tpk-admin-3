@@ -1,6 +1,6 @@
 # Result & blog — image sizes and ratios
 
-Use this when exporting artwork or pasting image URLs in admin. This file reflects the **current code behavior** for result and blog pages.
+Use this when exporting artwork or pasting image URLs in admin. This file reflects the **current code behavior** for result, blog, and course pages where relevant.
 
 ---
 
@@ -65,6 +65,20 @@ Public UI:
 
 ---
 
+## Course detail — “Connect with counselor” form (sidebar image)
+
+Public UI: `app/(main)/[exam]/course/[slug]/page.js` (callback form section).
+
+- **Placeholder files:** See `app/(main)/components/utils/formPlaceholderImage.js` — e.g. `{examSlug}-course-form-placeholder.png`, then fallbacks.
+- **Layout (desktop):** Two columns; left column is **hidden on mobile**, visible from **`lg`**. Grid row uses **`min-h-[520px]`** so image + form stay aligned; if the form column grows (e.g. long message), the row height increases and the image column stretches with it.
+- **Image fit:** `next/image` with **`fill`**, **`object-cover object-center`** — fills the left column; no stretch distortion.
+- **Recommended export (for designers):**
+  - **1600 × 1380** px (≈ **1.16∶1**, slightly wider than tall), or **1200 × 1040** px at minimum.
+  - Keep important content **centered**; edges may crop slightly on wide/narrow viewports.
+  - For sharp **2×** displays, prefer **at least** ~**1200px** width for the asset.
+
+---
+
 ## Quick reference
 
 | Area | Ratio / behavior | Example size |
@@ -75,6 +89,7 @@ Public UI:
 | Blog list card | Full width + auto height (`w-full h-auto`) | 827×312 (recommended) |
 | Blog detail cover | Full width + auto height (`w-full h-auto`) | 827×312 (recommended) |
 | Blog inline (prose) | Full width, max height cap | Any; wide ≤ content column |
+| Course form sidebar (`lg+`) | `object-cover`, row `min-h` 520px | 1600×1380 (recommended) |
 
 ---
 
@@ -82,3 +97,4 @@ Public UI:
 
 - Result: highlights, testimonials, CTA.
 - Blog: comments and text-only blocks (no extra image slots beyond cover + editor content).
+- Course: mobile hides the form sidebar image; form still works full width.

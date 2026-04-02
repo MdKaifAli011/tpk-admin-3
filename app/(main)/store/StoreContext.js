@@ -1,14 +1,14 @@
 
 "use client";
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, useRef } from "react";
 
 const StoreContext = createContext();
 
 export function StoreProvider({ children }) {
     const [cart, setCart] = useState([]);
     const [isCartOpen, setIsCartOpen] = useState(false);
+    const hydratedRef = useRef(false);
 
-    // Load cart from local storage on mount
     useEffect(() => {
         const savedCart = localStorage.getItem("tpk_store_cart");
         if (savedCart) {
@@ -18,14 +18,15 @@ export function StoreProvider({ children }) {
                 console.error("Failed to parse cart", e);
             }
         }
+        hydratedRef.current = true;
     }, []);
 
-    // Sync cart to local storage
     useEffect(() => {
+        if (!hydratedRef.current) return;
         localStorage.setItem("tpk_store_cart", JSON.stringify(cart));
     }, [cart]);
 
-    const addToCart = (product) => {
+    const addToCart = useCallback((product) => {
         setCart((prev) => {
             const existing = prev.find((item) => item.id === product.id);
             if (existing) {
@@ -36,13 +37,13 @@ export function StoreProvider({ children }) {
             return [...prev, { ...product, quantity: 1 }];
         });
         setIsCartOpen(true);
-    };
+    }, []);
 
-    const removeFromCart = (productId) => {
+    const removeFromCart = useCallback((productId) => {
         setCart((prev) => prev.filter((item) => item.id !== productId));
-    };
+    }, []);
 
-    const updateQuantity = (productId, delta) => {
+    const updateQuantity = useCallback((productId, delta) => {
         setCart((prev) =>
             prev.map((item) => {
                 if (item.id === productId) {
@@ -52,10 +53,10 @@ export function StoreProvider({ children }) {
                 return item;
             })
         );
-    };
+    }, []);
 
-    const cartTotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-    const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+    const cartTotal = useMemo(() => cart.reduce((sum, item) => sum + item.price * item.quantity, 0), [cart]);
+    const cartCount = useMemo(() => cart.reduce((sum, item) => sum + item.quantity, 0), [cart]);
 
     return (
         <StoreContext.Provider

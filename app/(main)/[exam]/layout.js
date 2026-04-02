@@ -5,9 +5,7 @@ import { generateTabAwareMetadata, extractSearchParams } from "@/utils/tabSeo";
 import NotificationStrip from "../components/NotificationStrip";
 import { ExamLeadProvider } from "../components/context/ExamLeadContext";
 
-// Force dynamic rendering to ensure fresh metadata
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+export const revalidate = 60;
 
 /**
  * Generate metadata for exam pages with tab awareness

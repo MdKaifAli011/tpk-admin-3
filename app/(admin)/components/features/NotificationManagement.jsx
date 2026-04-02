@@ -131,6 +131,8 @@ const stripHtmlPreview = (html, maxLen = 80) => {
 
 const NotificationManagement = () => {
   const { toasts, removeToast, success, error: showError } = useToast();
+  const showErrorRef = useRef(showError);
+  showErrorRef.current = showError;
   const [notifications, setNotifications] = useState([]);
   const [pagination, setPagination] = useState({ total: 0, totalPages: 0, hasNextPage: false, hasPrevPage: false });
   const [isLoading, setIsLoading] = useState(false);
@@ -138,7 +140,6 @@ const NotificationManagement = () => {
   const { page, limit, statusFilter, searchQuery } = filterState;
   const [searchInput, setSearchInput] = useDebouncedSearchQuery(searchQuery, setFilterState);
   const [showFilters, setShowFilters] = useState(false);
-  const fetchRef = useRef(false);
 
   const [filterLevel, setFilterLevel] = useState("all"); // "all" | "general" | "hierarchy"
   const [examId, setExamId] = useState("");
@@ -191,26 +192,21 @@ const NotificationManagement = () => {
   const [formDefinitions, setFormDefinitions] = useState([]);
   const [formHierarchyLoading, setFormHierarchyLoading] = useState({});
 
-  const getEffectiveHierarchy = useCallback(() => {
-    if (filterLevel === "general") return { entityType: "general" };
-    if (filterLevel !== "hierarchy") return null;
-    if (definitionId) return { entityType: "definition", entityId: definitionId };
-    if (subTopicId) return { entityType: "subtopic", entityId: subTopicId };
-    if (topicId) return { entityType: "topic", entityId: topicId };
-    if (chapterId) return { entityType: "chapter", entityId: chapterId };
-    if (unitId) return { entityType: "unit", entityId: unitId };
-    if (subjectId) return { entityType: "subject", entityId: subjectId };
-    if (examId) return { entityType: "exam", entityId: examId };
-    return null;
-  }, [filterLevel, examId, subjectId, unitId, chapterId, topicId, subTopicId, definitionId]);
-
   const fetchNotifications = useCallback(async () => {
-    if (fetchRef.current) return;
-    fetchRef.current = true;
     try {
       setIsLoading(true);
       const params = new URLSearchParams({ status: statusFilter, limit: String(limit), page: String(page) });
-      const hierarchy = getEffectiveHierarchy();
+      let hierarchy = null;
+      if (filterLevel === "general") hierarchy = { entityType: "general" };
+      else if (filterLevel === "hierarchy") {
+        if (definitionId) hierarchy = { entityType: "definition", entityId: definitionId };
+        else if (subTopicId) hierarchy = { entityType: "subtopic", entityId: subTopicId };
+        else if (topicId) hierarchy = { entityType: "topic", entityId: topicId };
+        else if (chapterId) hierarchy = { entityType: "chapter", entityId: chapterId };
+        else if (unitId) hierarchy = { entityType: "unit", entityId: unitId };
+        else if (subjectId) hierarchy = { entityType: "subject", entityId: subjectId };
+        else if (examId) hierarchy = { entityType: "exam", entityId: examId };
+      }
       if (hierarchy) {
         params.set("entityType", hierarchy.entityType);
         if (hierarchy.entityId) params.set("entityId", hierarchy.entityId);
@@ -228,16 +224,41 @@ const NotificationManagement = () => {
       }
     } catch (err) {
       console.error(err);
-      showError("Failed to fetch notifications");
+      showErrorRef.current("Failed to fetch notifications");
     } finally {
       setIsLoading(false);
-      fetchRef.current = false;
     }
-  }, [page, limit, statusFilter, getEffectiveHierarchy, showError]);
+  }, [
+    page,
+    limit,
+    statusFilter,
+    filterLevel,
+    examId,
+    subjectId,
+    unitId,
+    chapterId,
+    topicId,
+    subTopicId,
+    definitionId,
+  ]);
 
   useEffect(() => {
     fetchNotifications();
-  }, [fetchNotifications]);
+    // Re-fetch only when list filters change — not when fetchNotifications identity churns (prevents load loops)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    page,
+    limit,
+    statusFilter,
+    filterLevel,
+    examId,
+    subjectId,
+    unitId,
+    chapterId,
+    topicId,
+    subTopicId,
+    definitionId,
+  ]);
 
   const filteredNotifications = useMemo(() => {
     let result = [...notifications];

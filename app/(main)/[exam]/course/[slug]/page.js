@@ -78,11 +78,13 @@ export default function CourseDetailPage() {
   const examPreparedDefault = useExamPreparedDefault();
   const pathname = usePathname();
   const { exam: examSlug, slug } = useParams();
-  const { src: courseFormPlaceholderSrc, onError: onCourseFormPlaceholderError } =
-    useFormPlaceholderImage(pathname, basePath, {
-      variant: "course",
-      examSlug,
-    });
+  const {
+    src: courseFormPlaceholderSrc,
+    onError: onCourseFormPlaceholderError,
+  } = useFormPlaceholderImage(pathname, basePath, {
+    variant: "course",
+    examSlug,
+  });
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
   const [videoModalOpen, setVideoModalOpen] = useState(false);
@@ -332,7 +334,10 @@ export default function CourseDetailPage() {
         ? String(course[field]).trim()
         : null;
     if (label === "Target" && !value) value = examName;
-    return { label: toTitleCase(label), value: value != null ? toTitleCase(String(value)) : null };
+    return {
+      label: toTitleCase(label),
+      value: value != null ? toTitleCase(String(value)) : null,
+    };
   }).filter((row) => row.value != null && row.value !== "");
 
   const callPhone =
@@ -340,9 +345,17 @@ export default function CourseDetailPage() {
       ? String(course.callPhone).trim()
       : "";
   // WhatsApp: show button only when a number exists (course, then env, then site default)
-  const whatsappNumber = (callPhone || process.env.NEXT_PUBLIC_WHATSAPP_PHONE || "15107069331").trim().replace(/\D/g, "");
+  const whatsappNumber = (
+    callPhone ||
+    process.env.NEXT_PUBLIC_WHATSAPP_PHONE ||
+    "15107069331"
+  )
+    .trim()
+    .replace(/\D/g, "");
   const showWhatsAppButton = whatsappNumber.length > 0;
-  const whatsappUrl = showWhatsAppButton ? `https://api.whatsapp.com/send?phone=15107069331` : null;
+  const whatsappUrl = showWhatsAppButton
+    ? `https://api.whatsapp.com/send?phone=15107069331`
+    : null;
   const batchClosingDays =
     course.batchClosingDays != null && Number(course.batchClosingDays) >= 0
       ? Number(course.batchClosingDays)
@@ -373,7 +386,10 @@ export default function CourseDetailPage() {
   return (
     <div className="min-h-screen bg-white text-slate-900 space-y-6 mt-6">
       {/* Hero — gradient bg; left: info + price + CTAs; right: video card (white border) */}
-      <section className="hero-section relative overflow-hidden border-b border-slate-200/60" aria-labelledby="course-detail-title">
+      <section
+        className="hero-section relative overflow-hidden border-b border-slate-200/60"
+        aria-labelledby="course-detail-title"
+      >
         <div
           className="absolute inset-0 bg-gradient-to-br from-indigo-50 via-white to-purple-50
     border border-indigo-100/60
@@ -415,7 +431,10 @@ export default function CourseDetailPage() {
             {/* LEFT */}
             <div className="lg:col-span-8 min-w-0">
               {/* Title (Improved Scale) */}
-              <h1 id="course-detail-title" className="text-3xl sm:text-4xl lg:text-[38px] font-bold text-slate-900 tracking-tight leading-snug mb-3 break-words">
+              <h1
+                id="course-detail-title"
+                className="text-3xl sm:text-4xl lg:text-[38px] font-bold text-slate-900 tracking-tight leading-snug mb-3 break-words"
+              >
                 {courseTitleDisplay}
               </h1>
 
@@ -742,24 +761,26 @@ export default function CourseDetailPage() {
         </div>
       </div>
 
-      {/* Callback form section */}
+      {/* Callback form section — fixed min height on lg so image + form column stay aligned; image uses object-cover in a stable frame */}
       <section id="course-contact" className="max-w-7xl mx-auto mt-10">
         <div className="rounded-xl border border-slate-200 overflow-hidden bg-white shadow-sm">
-          <div className="grid grid-cols-1 lg:grid-cols-2">
-            <div className="relative hidden overflow-hidden lg:block lg:min-h-0">
+          <div className="grid grid-cols-1 lg:grid-cols-2 lg:items-stretch lg:min-h-[520px]">
+            <div className="relative hidden h-full min-h-[520px] overflow-hidden lg:block">
               <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-indigo-700 to-purple-700" />
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <Image
                 src={courseFormPlaceholderSrc}
                 alt="Counselor illustration"
-                className="absolute inset-0 h-full w-full object-cover opacity-90"
+                fill
+                className="object-cover object-center opacity-90"
+                sizes="(max-width: 1024px) 0px, 50vw"
                 onError={onCourseFormPlaceholderError}
+                unoptimized={String(courseFormPlaceholderSrc).startsWith("http://")}
               />
-              <div className="absolute inset-0 bg-black/10" />
+              <div className="absolute inset-0 bg-black/10 pointer-events-none" />
             </div>
 
-            <div className="flex-1 overflow-y-auto">
-              <div className="p-5 lg:p-6">
+            <div className="flex min-h-0 flex-1 flex-col lg:min-h-[520px]">
+              <div className="flex flex-1 flex-col p-5 lg:p-6">
                 <span className="inline-block rounded-full bg-indigo-600 px-3 py-1 text-xs font-semibold text-white mb-2">
                   Connect With Expert Counselor
                 </span>

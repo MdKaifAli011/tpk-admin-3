@@ -1,8 +1,7 @@
 import { generateMetadata as generateSEO } from "@/utils/seo";
 import { logger } from "@/utils/logger";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = 60;
 
 function getBaseUrl() {
   if (typeof window !== "undefined") return "";

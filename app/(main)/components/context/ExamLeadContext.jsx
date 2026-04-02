@@ -12,6 +12,8 @@ import { fetchExamById } from "@/app/(main)/lib/api";
 
 const ExamLeadContext = createContext(null);
 
+const examCache = new Map();
+
 function formatSlugAsLabel(slug) {
   if (!slug || typeof slug !== "string") return "";
   return slug
@@ -34,10 +36,17 @@ export function ExamLeadProvider({ children }) {
       setResolvedName("");
       return;
     }
+    if (examCache.has(examSlug)) {
+      const cached = examCache.get(examSlug);
+      const name = cached?.name != null ? String(cached.name).trim() : "";
+      setResolvedName(name);
+      return;
+    }
     let cancelled = false;
     fetchExamById(examSlug)
       .then((exam) => {
         if (cancelled) return;
+        if (exam) examCache.set(examSlug, exam);
         const name = exam?.name != null ? String(exam.name).trim() : "";
         setResolvedName(name);
       })

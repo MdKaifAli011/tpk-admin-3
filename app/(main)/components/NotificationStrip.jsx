@@ -129,16 +129,22 @@ export default function NotificationStrip() {
 
   currentKeyRef.current = segmentsKey(segments);
 
+  const lastStripExamRef = useRef("");
+
   useEffect(() => {
     if (!shouldShowStrip) {
       setItems([]);
+      lastStripExamRef.current = "";
       return;
     }
-    // Clear immediately when route/exam changes so we never show another exam's notifications (e.g. JEE on NEET).
-    setItems([]);
+    const examKey = segments.exam || "__root__";
+    const examChanged = lastStripExamRef.current !== examKey;
+    if (examChanged) {
+      setItems([]);
+      lastStripExamRef.current = examKey;
+    }
     let cancelled = false;
     const fetchKey = segmentsKey(segments);
-    // Pass hierarchy slugs so API returns only: general + that exam + that level's notifications (not other exams).
     const params = new URLSearchParams();
     if (segments.exam) params.set("exam", segments.exam);
     if (segments.subject) params.set("subject", segments.subject);
@@ -153,7 +159,6 @@ export default function NotificationStrip() {
       .then((res) => res.json())
       .then((data) => {
         if (cancelled) return;
-        // Only apply if still on same route (avoid showing wrong exam's notifications after nav).
         if (currentKeyRef.current !== fetchKey) return;
         if (data?.success) {
           const list = Array.isArray(data?.data?.data)

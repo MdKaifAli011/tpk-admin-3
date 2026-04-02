@@ -77,10 +77,12 @@ export const useProgress = (unitId, chapters = []) => {
   }, [storageKey, chapters]);
 
   // Load progress from database
+  // authOverride allows the init effect to pass the auth result directly,
+  // avoiding a double-fetch when isAuthenticated state hasn't updated yet.
   const loadProgressFromDB = useCallback(
-    async (abortSignal) => {
-    if (!isAuthenticated) {
-      // If not authenticated, return empty progress (no localStorage fallback)
+    async (abortSignal, authOverride) => {
+    const authenticated = authOverride ?? isAuthenticated;
+    if (!authenticated) {
       return { progress: {}, unitProgress: 0 };
     }
 
@@ -218,7 +220,6 @@ export const useProgress = (unitId, chapters = []) => {
                   detail: { unitId, unitProgress: calculatedUnitProgress },
                 })
               );
-              window.dispatchEvent(new CustomEvent("chapterProgressUpdate"));
             }
           }
         } catch (error) {
@@ -260,7 +261,7 @@ export const useProgress = (unitId, chapters = []) => {
       setIsAuthenticated(authStatus);
 
       try {
-        const loaded = await loadProgressFromDB(abortController.signal);
+        const loaded = await loadProgressFromDB(abortController.signal, authStatus);
         
         if (!isMounted || !loaded) return;
         

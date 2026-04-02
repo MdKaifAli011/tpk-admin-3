@@ -182,20 +182,20 @@ const OverviewTab = ({
 
   useEffect(() => {
     if (entityType !== "exam" || !examId) return;
+    if (initialExamInfo) {
+      setExamInfo(initialExamInfo);
+      return;
+    }
     let cancelled = false;
     const id = examId != null ? String(examId) : "";
     if (!id) return;
-    const fetchIt = () =>
-      api.get(`/exam-info?examId=${id}`).then((res) => {
-        if (cancelled || !res.data?.data?.length) return;
+    api.get(`/exam-info?examId=${id}`).then((res) => {
+      if (!cancelled && res.data?.data?.length) {
         setExamInfo(res.data.data[0]);
-      });
-    fetchIt().catch(() => {
-      if (cancelled) return;
-      setTimeout(() => fetchIt().catch(() => {}), 800);
-    });
+      }
+    }).catch(() => {});
     return () => { cancelled = true; };
-  }, [entityType, examId]);
+  }, [entityType, examId, initialExamInfo]);
 
   const handleHoursPerDayChange = useCallback((n) => {
     const v = Math.min(24, Math.max(1, Number(n)));

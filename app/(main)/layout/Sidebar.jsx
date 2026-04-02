@@ -58,7 +58,7 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
   const pendingApiRequestsRef = useRef(new Map());
 
   // ui state
-  const [sidebarOpen, setSidebarOpen] = useState(isOpen);
+  const sidebarOpen = isOpen;
   const [openSubjectId, setOpenSubjectId] = useState(null);
   const [openUnitId, setOpenUnitId] = useState(null);
   const [openChapterId, setOpenChapterId] = useState(null);
@@ -73,9 +73,6 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
   // ✅ Subjects button visibility logic
   const shouldShowSubjectsButton = activeMenu !== "subjects";
 
-  // sync prop
-  useEffect(() => setSidebarOpen(isOpen), [isOpen]);
-
   // Monitor navbar height for accurate positioning - ensures no gap
   useEffect(() => {
     const updateNavbarHeight = () => {
@@ -83,7 +80,7 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
       if (navbar) {
         const height = navbar.offsetHeight;
         if (height > 0) {
-          setNavbarHeight(height);
+          setNavbarHeight((prev) => (prev === height ? prev : height));
           return;
         }
       }
@@ -94,7 +91,7 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
       if (cssHeight && cssHeight !== "0px") {
         const numericHeight = parseInt(cssHeight, 10);
         if (!isNaN(numericHeight) && numericHeight > 0) {
-          setNavbarHeight(numericHeight);
+          setNavbarHeight((prev) => (prev === numericHeight ? prev : numericHeight));
         }
       }
     };
@@ -392,10 +389,16 @@ const Sidebar = React.memo(function Sidebar({ isOpen = true, onClose }) {
   );
 
   /* -------------------- lifecycle -------------------- */
+  const examsLastFetchedRef = useRef(0);
   useEffect(() => {
     loadExams();
-    const interval = setInterval(() => loadExams(true), 5 * 60 * 1000);
-    const onFocus = () => loadExams(true);
+    examsLastFetchedRef.current = Date.now();
+    const interval = setInterval(() => { loadExams(true); examsLastFetchedRef.current = Date.now(); }, 5 * 60 * 1000);
+    const onFocus = () => {
+      if (Date.now() - examsLastFetchedRef.current < 5 * 60 * 1000) return;
+      loadExams(true);
+      examsLastFetchedRef.current = Date.now();
+    };
     window.addEventListener("focus", onFocus);
     return () => {
       clearInterval(interval);

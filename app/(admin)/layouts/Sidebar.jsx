@@ -542,7 +542,7 @@ const Sidebar = memo(({ isOpen, onClose }) => {
                         {name === "Admin" && leadPendingCount > 0 && (
                           <span
                             className="absolute -top-0.5 -left-0.5 w-2.5 h-2.5 rounded-full bg-blue-500 ring-2 ring-white animate-pulse"
-                            title={`${leadPendingCount} new leads`}
+                            title={`${leadPendingCount} unopened new lead${leadPendingCount !== 1 ? "s" : ""}`}
                             aria-hidden
                           />
                         )}
@@ -551,7 +551,7 @@ const Sidebar = memo(({ isOpen, onClose }) => {
                         {name}
                       </span>
                       {name === "Admin" && leadPendingCount > 0 && (
-                        <span className="shrink-0 inline-flex items-center justify-center min-w-5 h-5 px-2 rounded-full text-[10px] font-bold bg-blue-500 text-white" title={`${leadPendingCount} new leads`}>
+                        <span className="shrink-0 inline-flex items-center justify-center min-w-5 h-5 px-2 rounded-full text-[10px] font-bold bg-blue-500 text-white" title={`${leadPendingCount} unopened new lead${leadPendingCount !== 1 ? "s" : ""}`}>
                           {leadPendingCount > 99 ? "99+" : leadPendingCount}
                         </span>
                       )}
@@ -635,7 +635,7 @@ const Sidebar = memo(({ isOpen, onClose }) => {
                                             {link.name === "Lead Management" && leadPendingCount > 0 && (
                                               <span
                                                 className="absolute -top-0.5 -left-0.5 w-2 h-2 rounded-full bg-blue-500 ring-2 ring-white animate-pulse"
-                                                title={`${leadPendingCount} new leads`}
+                                                title={`${leadPendingCount} unopened new lead${leadPendingCount !== 1 ? "s" : ""}`}
                                                 aria-hidden
                                               />
                                             )}

@@ -29,8 +29,7 @@ const OverviewCommentSection = nextDynamic(
   { ssr: true, loading: () => null }
 );
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = 60;
 
 /**
  * Generate metadata for exam pages with tab awareness

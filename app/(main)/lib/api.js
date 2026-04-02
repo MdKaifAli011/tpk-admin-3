@@ -54,7 +54,7 @@ export async function getServerRequestBaseUrl() {
 
 // Request cache for deduplication (prevents duplicate requests)
 const requestCache = new Map();
-const CACHE_DURATION = 5000; // 5 seconds
+const CACHE_DURATION = 60000; // 60 seconds
 
 // Helper to get cache key
 const getCacheKey = (url, params = {}) => {
@@ -601,21 +601,14 @@ export const fetchChaptersBySubject = async (subjectId, examId) => {
   }
 };
 
-// Fetch all chapters for a subject (through units)
+// Fetch all chapters for a subject (through units) — parallel
 export const fetchAllChaptersForSubject = async (subjectId, examId) => {
   try {
-    // First fetch units for this subject
     const units = await fetchUnitsBySubject(subjectId, examId);
-
-    // Then fetch chapters for each unit
-    const allChapters = [];
-    for (const unit of units) {
-      const chapters = await fetchChaptersByUnit(unit._id);
-      allChapters.push(...chapters);
-    }
-
-    // Sort by orderNumber
-    return allChapters.sort(
+    const chapterArrays = await Promise.all(
+      units.map((unit) => fetchChaptersByUnit(unit._id).catch(() => []))
+    );
+    return chapterArrays.flat().sort(
       (a, b) => (a.orderNumber || 0) - (b.orderNumber || 0)
     );
   } catch (error) {

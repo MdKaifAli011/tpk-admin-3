@@ -6,8 +6,7 @@ import {
 } from "../../lib/api";
 import DownloadPageClient from "./DownloadPageClient";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = 60;
 
 const DownloadPage = async ({ params }) => {
   const { exam: examIdOrSlug } = await params;

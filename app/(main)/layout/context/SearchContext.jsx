@@ -217,14 +217,13 @@ export const SearchProvider = ({ children }) => {
     return () => window.removeEventListener("treeDataUpdated", handleTreeUpdate);
   }, []);
 
-  const value = {
+  const value = useMemo(() => ({
     tree,
     treeLoading,
     activeExamId,
     activeExamSlug,
     exams,
     hierarchyIds,
-    /** URL-based scope: when on /neet or nested, only this exam's data is searched. */
     searchScopeExamSlug,
     searchScopeExamId,
     setTree,
@@ -232,7 +231,7 @@ export const SearchProvider = ({ children }) => {
     setActiveExamId,
     setActiveExamSlug,
     setExams,
-  };
+  }), [tree, treeLoading, activeExamId, activeExamSlug, exams, hierarchyIds, searchScopeExamSlug, searchScopeExamId]);
 
   return (
     <SearchContext.Provider value={value}>

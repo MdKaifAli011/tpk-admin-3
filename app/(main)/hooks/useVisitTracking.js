@@ -284,12 +284,12 @@ export const useRealtimeVisits = (level, itemId) => {
   useEffect(() => {
     if (!level || !itemId) return;
 
-    const interval = setInterval(async () => {
+    const poll = async () => {
+      if (document.visibilityState === "hidden") return;
       try {
         const response = await fetch(
           `${getBasePath()}/api/analytics/track-visit?level=${level}&itemId=${itemId}`
         );
-
         if (response.ok) {
           const result = await response.json();
           if (result.success) {
@@ -298,11 +298,11 @@ export const useRealtimeVisits = (level, itemId) => {
           }
         }
       } catch (error) {
-        console.error('Real-time visit update failed:', error);
         setIsConnected(false);
       }
-    }, 30000);
+    };
 
+    const interval = setInterval(poll, 30000);
     return () => clearInterval(interval);
   }, [level, itemId]);
 

@@ -6,7 +6,7 @@ import { getNextExam, getPreviousExam } from "../../lib/hierarchicalNavigation";
 import ResultYearsList from "./ResultYearsList";
 import NavigationClient from "../../components/NavigationClient";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export async function generateMetadata({ params }) {
   const { exam: examSlug } = await params;
