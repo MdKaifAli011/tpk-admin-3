@@ -30,6 +30,7 @@ import BlogCategory from "@/models/BlogCategory";
 import DownloadFolder from "@/models/DownloadFolder";
 import Notification from "@/models/Notification";
 import { STATUS } from "@/constants";
+import { regexExactInsensitive } from "@/utils/escapeRegex.js";
 import { createSlug } from "@/utils/serverSlug";
 import { STORE_PRODUCTS } from "@/app/(main)/store/storeData";
 
@@ -139,7 +140,7 @@ export default async function sitemap() {
   try {
     await connectDB();
 
-    const statusActive = { $regex: new RegExp(`^${STATUS.ACTIVE}$`, "i") };
+    const statusActive = { $regex: regexExactInsensitive(STATUS.ACTIVE) };
 
     // --- Active exams ---
     const exams = await Exam.find({ status: statusActive })

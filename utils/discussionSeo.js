@@ -80,12 +80,14 @@ export function generateThreadMetadata(thread, entityData = {}, options = {}) {
     );
   }
 
-  // Clean HTML from content for description
-  const cleanContent = (thread.content || "")
-    .replace(/<[^>]+>/g, "")
-    .replace(/\s+/g, " ")
-    .trim()
-    .substring(0, 150);
+  // Clean HTML from content for description (repeat strip until stable)
+  let rawContent = thread.content || "";
+  for (let i = 0; i < 12; i++) {
+    const next = rawContent.replace(/<[^>]+>/g, "");
+    if (next === rawContent) break;
+    rawContent = next;
+  }
+  const cleanContent = rawContent.replace(/\s+/g, " ").trim().substring(0, 150);
 
   const threadTitle = thread.title || "Discussion Thread";
   const entityName = entityData?.name || thread.chapterId?.name || thread.subjectId?.name || thread.examId?.name || "";

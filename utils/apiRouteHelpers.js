@@ -157,7 +157,8 @@ export async function updateSubCategoryQuestionCount(subCategoryId) {
     return questionCount;
   } catch (error) {
     console.error(
-      `Error updating question count for subcategory ${subCategoryId}:`,
+      "Error updating question count for subcategory:",
+      subCategoryId,
       error
     );
     // Don't throw - allow the operation to continue even if count update fails

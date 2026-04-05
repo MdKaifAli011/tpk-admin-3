@@ -17,6 +17,7 @@ import {
   combineQueryWithSearchFilter,
   findWithSearchRelevance,
 } from "@/utils/searchTokenHelper";
+import { regexExactInsensitive } from "@/utils/escapeRegex.js";
 
 // ---------- GET ALL DEFINITIONS ----------
 export async function GET(request) {
@@ -88,7 +89,7 @@ export async function GET(request) {
       filter.chapterId = chapterId;
     }
     if (statusFilter !== "all") {
-      filter.status = { $regex: new RegExp(`^${statusFilter}$`, "i") };
+      filter.status = { $regex: regexExactInsensitive(statusFilter) };
     }
     if (search) {
       const searchCondition = buildTokenSearchCondition(search, "name");
@@ -339,7 +340,7 @@ export async function POST(request) {
       // Check for duplicate name within the same subtopic (case-insensitive)
       // Duplicate names are NOT allowed - each definition name must be unique per subtopic
       const existingDefinition = await Definition.findOne({
-        name: { $regex: new RegExp(`^${definitionName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') },
+        name: { $regex: regexExactInsensitive(definitionName) },
         subTopicId,
       });
       if (existingDefinition) {
@@ -533,11 +534,11 @@ export async function POST(request) {
             console.log(`✅ Retried creation after duplicate key error for definition "${definitionName}"`);
           } catch (err2) {
             // If retry still fails, return detailed error
-            console.error(`❌ Failed to create definition "${definitionName}" after retry:`, err2);
+            console.error("Failed to create definition after retry:", err2);
             return NextResponse.json(
               {
                 success: false,
-                message: `Failed to create definition "${definitionName}": ${err2.message || "Duplicate key error"}`,
+                message: "Failed to create definition after retry",
                 error: err2.keyPattern || err2.keyValue || err2.message,
               },
               { status: 409 }

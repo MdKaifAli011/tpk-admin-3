@@ -50,7 +50,14 @@ export const useVisitTracking = (level, itemId, itemSlug) => {
     if (typeof window === 'undefined') return null;
     let sessionId = sessionStorage.getItem('visit_session_id');
     if (!sessionId) {
-      sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+      const bytes = new Uint8Array(8);
+      if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+        crypto.getRandomValues(bytes);
+      } else {
+        for (let i = 0; i < bytes.length; i++) bytes[i] = Math.floor(Math.random() * 256);
+      }
+      const rand = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+      sessionId = 'session_' + Date.now() + '_' + rand;
       sessionStorage.setItem('visit_session_id', sessionId);
     }
     return sessionId;

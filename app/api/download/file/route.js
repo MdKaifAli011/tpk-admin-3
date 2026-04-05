@@ -10,6 +10,7 @@ import {
 } from "@/utils/apiResponse";
 import { STATUS, ERROR_MESSAGES } from "@/constants";
 import { requireAuth, requireAction } from "@/middleware/authMiddleware";
+import { regexExactInsensitive } from "@/utils/escapeRegex.js";
 
 // GET: Fetch all download files with optional filters
 export async function GET(request) {
@@ -58,7 +59,7 @@ export async function GET(request) {
 
     // Filter by status
     if (statusFilter !== "all") {
-      query.status = { $regex: new RegExp(`^${statusFilter}$`, "i") };
+      query.status = { $regex: regexExactInsensitive(statusFilter) };
     }
 
     // Fetch files with pagination

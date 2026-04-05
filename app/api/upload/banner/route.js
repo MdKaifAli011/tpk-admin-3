@@ -9,6 +9,7 @@ import connectDB from "@/lib/mongodb";
 import Exam from "@/models/Exam";
 import { requireAction } from "@/middleware/authMiddleware";
 import { successResponse, errorResponse, handleApiError } from "@/utils/apiResponse";
+import { escapeRegex } from "@/utils/escapeRegex.js";
 
 const publicDir = path.join(process.cwd(), "public");
 const MAX_SIZE = 5 * 1024 * 1024; // 5MB
@@ -114,7 +115,7 @@ export async function POST(request) {
     let files = await readdir(bannerDir);
     // Match: neet_ImageBanner1 with ANY extension (all image types supported)
     const bannerFiles = files.filter((f) =>
-      f.match(new RegExp(`^${examSlug}_ImageBanner\\d+\\.[a-zA-Z0-9]+$`, 'i'))
+      f.match(new RegExp(`^${escapeRegex(examSlug)}_ImageBanner\\d+\\.[a-zA-Z0-9]+$`, "i"))
     );
     
     const bannerCount = bannerFiles.length;
@@ -135,7 +136,7 @@ export async function POST(request) {
     /* ===== RECALCULATE INDEX (sorted order) ===== */
     files = await readdir(bannerDir);
     const sortedBannerFiles = files
-      .filter((f) => f.match(new RegExp(`^${examSlug}_ImageBanner\\d+\\.(png|jpg|jpeg|gif|webp)$`, 'i')))
+      .filter((f) => f.match(new RegExp(`^${escapeRegex(examSlug)}_ImageBanner\\d+\\.(png|jpg|jpeg|gif|webp)$`, "i")))
       .sort((a, b) => {
         // Natural sort: ImageBanner1 < ImageBanner2 < ImageBanner10
         const numA = parseInt(a.match(/ImageBanner(\d+)/i)?.[1] || '0');

@@ -17,6 +17,7 @@ import { requireAuth, requireAction } from "@/middleware/authMiddleware";
 import cacheManager from "@/utils/cacheManager";
 import { updateSubCategoryQuestionCount } from "@/utils/apiRouteHelpers";
 import { createSlug } from "@/utils/slug";
+import { regexExactInsensitive } from "@/utils/escapeRegex.js";
 
 // ---------- GET ALL PRACTICE SUBCATEGORIES (optimized) ----------
 export async function GET(request) {
@@ -43,7 +44,7 @@ export async function GET(request) {
     // Tests linked to a topic should ONLY appear on that topic page, not on parent chapter/unit pages
     const query = {};
     if (statusFilter !== "all") {
-      query.status = { $regex: new RegExp(`^${statusFilter}$`, "i") };
+      query.status = { $regex: regexExactInsensitive(statusFilter) };
     }
 
     // Filter by categoryId, examId, or subjectId
@@ -54,7 +55,7 @@ export async function GET(request) {
       // Find categories for this exam
       const categories = await PracticeCategory.find({
         examId,
-        status: { $regex: new RegExp(`^${STATUS.ACTIVE}$`, "i") },
+        status: { $regex: regexExactInsensitive(STATUS.ACTIVE) },
       })
         .select("_id")
         .lean();
@@ -69,7 +70,7 @@ export async function GET(request) {
       // Find categories for this subject
       const categories = await PracticeCategory.find({
         subjectId,
-        status: { $regex: new RegExp(`^${STATUS.ACTIVE}$`, "i") },
+        status: { $regex: regexExactInsensitive(STATUS.ACTIVE) },
       })
         .select("_id")
         .lean();

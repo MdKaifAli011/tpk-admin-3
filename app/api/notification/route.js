@@ -17,6 +17,7 @@ import Topic from "@/models/Topic";
 import SubTopic from "@/models/SubTopic";
 import Definition from "@/models/Definition";
 import { createSlug } from "@/utils/serverSlug";
+import { regexExactInsensitive } from "@/utils/escapeRegex.js";
 
 const ENTITY_TYPES = ["general", "exam", "exam_with_children", "subject", "unit", "chapter", "topic", "subtopic", "definition"];
 
@@ -102,7 +103,7 @@ export async function GET(request) {
 
     let query = {};
     if (statusFilter !== "all") {
-      query.status = { $regex: new RegExp(`^${statusFilter}$`, "i") };
+      query.status = { $regex: regexExactInsensitive(statusFilter) };
     }
     if (entityType && ENTITY_TYPES.includes(entityType)) {
       query.entityType = entityType;

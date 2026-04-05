@@ -13,6 +13,7 @@ import { STATUS, ERROR_MESSAGES } from "@/constants";
 import { requireAuth } from "@/middleware/authMiddleware";
 import cacheManager from "@/utils/cacheManager";
 import { updateSubCategoryQuestionCount } from "@/utils/apiRouteHelpers";
+import { regexExactInsensitive } from "@/utils/escapeRegex.js";
 
 // ---------- GET ALL PRACTICE QUESTIONS (optimized) ----------
 export async function GET(request) {
@@ -31,7 +32,7 @@ export async function GET(request) {
     // Build query
     const query = {};
     if (statusFilter !== "all") {
-      query.status = { $regex: new RegExp(`^${statusFilter}$`, "i") };
+      query.status = { $regex: regexExactInsensitive(statusFilter) };
     }
     if (subCategoryId) {
       if (mongoose.Types.ObjectId.isValid(subCategoryId)) {

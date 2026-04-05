@@ -3,6 +3,7 @@ import connectDB from "@/lib/mongodb";
 import ExamResultPage from "@/models/ExamResultPage";
 import Exam from "@/models/Exam";
 import { createSlug } from "@/utils/slug";
+import { regexExactInsensitive } from "@/utils/escapeRegex.js";
 
 const currentYear = new Date().getFullYear();
 
@@ -24,7 +25,7 @@ export async function GET(request, { params }) {
     const exam = await Exam.findOne({
       $or: [
         { slug: slugLower },
-        { name: new RegExp(`^${examSlug.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i") },
+        { name: { $regex: regexExactInsensitive(examSlug) } },
       ],
       status: "active",
     })

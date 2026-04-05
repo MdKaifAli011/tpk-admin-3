@@ -13,6 +13,7 @@ import { successResponse, handleApiError } from "@/utils/apiResponse";
 import { createSlug } from "@/utils/serverSlug";
 import NotificationRead from "@/models/NotificationRead";
 import { verifyStudentToken } from "@/lib/studentAuth";
+import { regexExactFromSlugSegment } from "@/utils/escapeRegex.js";
 
 /**
  * Resolve URL path slugs to entity IDs.
@@ -43,7 +44,7 @@ async function resolveContextFromSlugs(searchParams) {
   const exam = await Exam.findOne({
     $or: [
       { slug: examSlug },
-      { name: { $regex: new RegExp(`^${examSlug.replace(/-/g, " ")}$`, "i") } },
+      { name: { $regex: regexExactFromSlugSegment(examSlug) } },
     ],
     status: { $in: ["active", "draft"] },
   }).lean();
@@ -55,7 +56,7 @@ async function resolveContextFromSlugs(searchParams) {
     examId: exam._id,
     $or: [
       { slug: subjectSlug },
-      { name: { $regex: new RegExp(`^${subjectSlug.replace(/-/g, " ")}$`, "i") } },
+      { name: { $regex: regexExactFromSlugSegment(subjectSlug) } },
     ],
     status: "active",
   }).lean();
@@ -67,7 +68,7 @@ async function resolveContextFromSlugs(searchParams) {
     subjectId: subject._id,
     $or: [
       { slug: unitSlug },
-      { name: { $regex: new RegExp(`^${unitSlug.replace(/-/g, " ")}$`, "i") } },
+      { name: { $regex: regexExactFromSlugSegment(unitSlug) } },
     ],
     status: "active",
   }).lean();
@@ -79,7 +80,7 @@ async function resolveContextFromSlugs(searchParams) {
     unitId: unit._id,
     $or: [
       { slug: chapterSlug },
-      { name: { $regex: new RegExp(`^${chapterSlug.replace(/-/g, " ")}$`, "i") } },
+      { name: { $regex: regexExactFromSlugSegment(chapterSlug) } },
     ],
     status: "active",
   }).lean();
@@ -91,7 +92,7 @@ async function resolveContextFromSlugs(searchParams) {
     chapterId: chapter._id,
     $or: [
       { slug: topicSlug },
-      { name: { $regex: new RegExp(`^${topicSlug.replace(/-/g, " ")}$`, "i") } },
+      { name: { $regex: regexExactFromSlugSegment(topicSlug) } },
     ],
     status: "active",
   }).lean();
@@ -103,7 +104,7 @@ async function resolveContextFromSlugs(searchParams) {
     topicId: topic._id,
     $or: [
       { slug: subtopicSlug },
-      { name: { $regex: new RegExp(`^${subtopicSlug.replace(/-/g, " ")}$`, "i") } },
+      { name: { $regex: regexExactFromSlugSegment(subtopicSlug) } },
     ],
     status: "active",
   }).lean();
@@ -115,8 +116,8 @@ async function resolveContextFromSlugs(searchParams) {
     subTopicId: subtopic._id,
     $or: [
       { slug: definitionSlug },
-      { name: { $regex: new RegExp(`^${definitionSlug.replace(/-/g, " ")}$`, "i") } },
-      { term: { $regex: new RegExp(`^${definitionSlug.replace(/-/g, " ")}$`, "i") } },
+      { name: { $regex: regexExactFromSlugSegment(definitionSlug) } },
+      { term: { $regex: regexExactFromSlugSegment(definitionSlug) } },
     ],
     status: "active",
   }).lean();

@@ -20,6 +20,7 @@ import {
   combineQueryWithSearchFilter,
   findWithSearchRelevance,
 } from "@/utils/searchTokenHelper";
+import { regexExactInsensitive } from "@/utils/escapeRegex.js";
 
 // ✅ GET: Fetch all exams with pagination (optimized)
 export async function GET(request) {
@@ -51,13 +52,13 @@ export async function GET(request) {
       // Include active OR missing/null status so newly created or cloned docs without status still show
       if (statusFilter === STATUS.ACTIVE) {
         query.$or = [
-          { status: { $regex: new RegExp(`^${statusFilter}$`, "i") } },
+          { status: { $regex: regexExactInsensitive(statusFilter) } },
           { status: { $exists: false } },
           { status: null },
           { status: "" },
         ];
       } else {
-        query.status = { $regex: new RegExp(`^${statusFilter}$`, "i") };
+        query.status = { $regex: regexExactInsensitive(statusFilter) };
       }
     }
 

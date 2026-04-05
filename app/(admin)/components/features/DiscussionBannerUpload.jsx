@@ -338,8 +338,8 @@ const DiscussionBannerUpload = () => {
   // ✅ DRAG AND DROP HANDLERS
   const handleDragStart = (e, index) => {
     setDraggedIndex(index);
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/html', e.target.innerHTML);
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", String(index));
   };
 
   const handleDragOver = (e, index) => {
@@ -543,8 +543,8 @@ const DiscussionBannerUpload = () => {
                         alt="Preview"
                         className="w-full h-48 object-cover rounded-xl border-2 border-gray-200 shadow-sm"
                         onError={(e) => {
-                          console.error("Preview failed:", previewUrl);
-                          e.target.style.display = 'none';
+                          console.error("Preview image failed to load");
+                          e.target.style.display = "none";
                         }}
                       />
                       {isUploading && (
@@ -872,8 +872,15 @@ const DiscussionBannerUpload = () => {
                                 alt={`${exam.name} banner`}
                                 className="w-full h-full object-cover"
                                 onError={(e) => {
-                                  e.currentTarget.style.display = 'none';
-                                  e.currentTarget.parentNode.innerHTML = '<div class="w-full h-full bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center"><svg class="w-8 h-8 text-white opacity-75" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"></path></svg></div>';
+                                  const img = e.currentTarget;
+                                  img.style.display = "none";
+                                  const parent = img.parentNode;
+                                  if (!parent) return;
+                                  const placeholder = document.createElement("div");
+                                  placeholder.className =
+                                    "w-full h-full bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center";
+                                  placeholder.setAttribute("role", "presentation");
+                                  parent.replaceChildren(placeholder);
                                 }}
                               />
                             </div>

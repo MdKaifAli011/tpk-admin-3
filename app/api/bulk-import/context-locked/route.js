@@ -11,6 +11,7 @@ import Definition from "@/models/Definition";
 import DefinitionDetails from "@/models/DefinitionDetails";
 import { requireAuth, requireAction } from "@/middleware/authMiddleware";
 import { createSlug, generateUniqueSlug, allocateUniqueSlugSync } from "@/utils/serverSlug";
+import { regexExactInsensitive } from "@/utils/escapeRegex.js";
 
 // Increase max duration for bulk imports (10 minutes) to support very long imports without timeout
 export const maxDuration = 600; // 10 minutes in seconds
@@ -52,7 +53,7 @@ const findOrCreateUnit = async (name, subjectId, examId, existingSlugs) => {
     const trimmedName = trimName(name);
 
     let unit = await Unit.findOne({
-        name: { $regex: new RegExp(`^${trimmedName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') },
+        name: { $regex: regexExactInsensitive(trimmedName) },
         subjectId,
         examId
     });
@@ -148,7 +149,7 @@ const findOrCreateChapter = async (name, unitId, subjectId, examId, rowData, exi
     const trimmedName = trimName(name);
 
     let chapter = await Chapter.findOne({
-        name: { $regex: new RegExp(`^${trimmedName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') },
+        name: { $regex: regexExactInsensitive(trimmedName) },
         unitId,
         subjectId,
         examId
@@ -250,7 +251,7 @@ const findOrCreateTopic = async (name, chapterId, unitId, subjectId, examId, exi
     const trimmedName = trimName(name);
 
     let topic = await Topic.findOne({
-        name: { $regex: new RegExp(`^${trimmedName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') },
+        name: { $regex: regexExactInsensitive(trimmedName) },
         chapterId,
         unitId,
         subjectId,
@@ -345,7 +346,7 @@ const findOrCreateSubTopic = async (name, topicId, chapterId, unitId, subjectId,
     const trimmedName = trimName(name);
 
     let subTopic = await SubTopic.findOne({
-        name: { $regex: new RegExp(`^${trimmedName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') },
+        name: { $regex: regexExactInsensitive(trimmedName) },
         topicId,
         chapterId,
         unitId,
@@ -445,7 +446,7 @@ const createDefinition = async (name, subTopicId, topicId, chapterId, unitId, su
     // Definition uniqueness is based on: name, subTopicId, topicId, unitId, subjectId, examId
     // chapterId is optional and doesn't affect uniqueness
     const duplicateQuery = {
-        name: { $regex: new RegExp(`^${trimmedName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') },
+        name: { $regex: regexExactInsensitive(trimmedName) },
         subTopicId,
         topicId,
         unitId,
@@ -557,7 +558,7 @@ const createDefinition = async (name, subTopicId, topicId, chapterId, unitId, su
             
             // Try to find existing definition and update it
             const recoveryQuery = {
-                name: { $regex: new RegExp(`^${trimmedName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') },
+                name: { $regex: regexExactInsensitive(trimmedName) },
                 subTopicId,
                 topicId,
                 unitId,
@@ -1147,7 +1148,7 @@ export async function POST(request) {
                             } catch (defErr) {
                                 if (defErr.code === 11000) {
                                     const existingDef = await Definition.findOne({
-                                        name: { $regex: new RegExp(`^${normName(definitionName).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i") },
+                                        name: { $regex: regexExactInsensitive(normName(definitionName)) },
                                         subTopicId: subTopic._id,
                                         subjectId,
                                         examId

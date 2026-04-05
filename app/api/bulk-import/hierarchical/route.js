@@ -11,6 +11,7 @@ import Definition from "@/models/Definition";
 import DefinitionDetails from "@/models/DefinitionDetails";
 import { requireAuth, requireAction } from "@/middleware/authMiddleware";
 import { createSlug, generateUniqueSlug } from "@/utils/serverSlug";
+import { regexExactInsensitive } from "@/utils/escapeRegex.js";
 
 // Hierarchy definitions
 const HIERARCHY = [
@@ -106,7 +107,7 @@ export async function POST(request) {
 
                     if (!entity) {
                         // DB Lookup
-                        const query = { name: { $regex: new RegExp(`^${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, "i") } };
+                        const query = { name: { $regex: regexExactInsensitive(name) } };
                         if (parentId) query[parentField] = parentId;
 
                         let doc = await model.findOne(query);
@@ -246,7 +247,7 @@ export async function POST(request) {
                                         { upsert: true, new: true }
                                     );
                                 } catch (detailErr) {
-                                    console.error(`Failed to update/create DefinitionDetails for ${name}:`, detailErr);
+                                    console.error("Failed to update/create DefinitionDetails:", detailErr);
                                 }
                             }
                         }
@@ -262,7 +263,7 @@ export async function POST(request) {
                 successCount++;
 
             } catch (err) {
-                console.error(`Row ${rowIndex + 1} Error:`, err);
+                console.error("Row import error, row:", rowIndex + 1, err);
                 failCount++;
                 errors.push(`Row ${rowIndex + 1}: ${err.message}`);
             }

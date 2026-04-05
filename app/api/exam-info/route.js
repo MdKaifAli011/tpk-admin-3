@@ -11,6 +11,7 @@ import {
 } from "@/utils/apiResponse";
 import { requireAuth, requireAction } from "@/middleware/authMiddleware";
 import { STATUS } from "@/constants";
+import { regexExactInsensitive } from "@/utils/escapeRegex.js";
 
 // GET: Fetch all exam info or filter by examId
 // Public read when only examId is provided (so dashboard can show exam date / prep days without login)
@@ -35,7 +36,7 @@ export async function GET(request) {
       query.examId = new mongoose.Types.ObjectId(examId);
     }
     if (status && status !== "all") {
-      query.status = { $regex: new RegExp(`^${status}$`, "i") };
+      query.status = { $regex: regexExactInsensitive(status) };
     }
 
     const examInfos = await ExamInfo.find(query)

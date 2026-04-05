@@ -15,6 +15,7 @@ import {
   combineQueryWithSearchFilter,
   findWithSearchRelevance,
 } from "@/utils/searchTokenHelper";
+import { regexExactInsensitive } from "@/utils/escapeRegex.js";
 
 // ---------- GET ALL TOPICS ----------
 export async function GET(request) {
@@ -72,7 +73,7 @@ export async function GET(request) {
       filter.unitId = unitId;
     }
     if (statusFilter !== "all") {
-      filter.status = { $regex: new RegExp(`^${statusFilter}$`, "i") };
+      filter.status = { $regex: regexExactInsensitive(statusFilter) };
     }
     if (search) {
       const searchCondition = buildTokenSearchCondition(search, "name");

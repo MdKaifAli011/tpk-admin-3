@@ -11,6 +11,7 @@ import SubTopic from "@/models/SubTopic";
 import Definition from "@/models/Definition";
 import { successResponse, handleApiError } from "@/utils/apiResponse";
 import { verifyStudentToken } from "@/lib/studentAuth";
+import { regexExactFromSlugSegment } from "@/utils/escapeRegex.js";
 
 /**
  * Resolve exam slug to examId; optionally resolve level slugs to IDs under that exam.
@@ -24,7 +25,7 @@ async function resolveExamAndLevelIds(searchParams) {
     {
       $or: [
         { slug: examSlug },
-        { name: { $regex: new RegExp(`^${examSlug.replace(/-/g, " ")}$`, "i") } },
+        { name: { $regex: regexExactFromSlugSegment(examSlug) } },
       ],
       status: { $in: ["active", "draft"] },
     },
@@ -70,42 +71,42 @@ async function resolveExamAndLevelIds(searchParams) {
   // If level slugs provided, restrict to that context (only those IDs)
   if (subjectSlug) {
     const subject = await Subject.findOne(
-      { examId, $or: [{ slug: subjectSlug }, { name: { $regex: new RegExp(`^${subjectSlug.replace(/-/g, " ")}$`, "i") } }], status: "active" },
+      { examId, $or: [{ slug: subjectSlug }, { name: { $regex: regexExactFromSlugSegment(subjectSlug) } }], status: "active" },
       "_id"
     ).lean();
     if (subject) result.subjectIds = [subject._id];
   }
   if (unitSlug) {
     const unit = await Unit.findOne(
-      { examId, $or: [{ slug: unitSlug }, { name: { $regex: new RegExp(`^${unitSlug.replace(/-/g, " ")}$`, "i") } }], status: "active" },
+      { examId, $or: [{ slug: unitSlug }, { name: { $regex: regexExactFromSlugSegment(unitSlug) } }], status: "active" },
       "_id"
     ).lean();
     if (unit) result.unitIds = [unit._id];
   }
   if (chapterSlug) {
     const chapter = await Chapter.findOne(
-      { examId, $or: [{ slug: chapterSlug }, { name: { $regex: new RegExp(`^${chapterSlug.replace(/-/g, " ")}$`, "i") } }], status: "active" },
+      { examId, $or: [{ slug: chapterSlug }, { name: { $regex: regexExactFromSlugSegment(chapterSlug) } }], status: "active" },
       "_id"
     ).lean();
     if (chapter) result.chapterIds = [chapter._id];
   }
   if (topicSlug) {
     const topic = await Topic.findOne(
-      { examId, $or: [{ slug: topicSlug }, { name: { $regex: new RegExp(`^${topicSlug.replace(/-/g, " ")}$`, "i") } }], status: "active" },
+      { examId, $or: [{ slug: topicSlug }, { name: { $regex: regexExactFromSlugSegment(topicSlug) } }], status: "active" },
       "_id"
     ).lean();
     if (topic) result.topicIds = [topic._id];
   }
   if (subtopicSlug) {
     const subtopic = await SubTopic.findOne(
-      { examId, $or: [{ slug: subtopicSlug }, { name: { $regex: new RegExp(`^${subtopicSlug.replace(/-/g, " ")}$`, "i") } }], status: "active" },
+      { examId, $or: [{ slug: subtopicSlug }, { name: { $regex: regexExactFromSlugSegment(subtopicSlug) } }], status: "active" },
       "_id"
     ).lean();
     if (subtopic) result.subTopicIds = [subtopic._id];
   }
   if (definitionSlug) {
     const definition = await Definition.findOne(
-      { examId, $or: [{ slug: definitionSlug }, { name: { $regex: new RegExp(`^${definitionSlug.replace(/-/g, " ")}$`, "i") } }, { term: { $regex: new RegExp(`^${definitionSlug.replace(/-/g, " ")}$`, "i") } }], status: "active" },
+      { examId, $or: [{ slug: definitionSlug }, { name: { $regex: regexExactFromSlugSegment(definitionSlug) } }, { term: { $regex: regexExactFromSlugSegment(definitionSlug) } }], status: "active" },
       "_id"
     ).lean();
     if (definition) result.definitionIds = [definition._id];

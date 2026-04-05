@@ -20,10 +20,17 @@ const resolveImagePath = (path) => {
   return `${basePath}${cleanPath}`;
 };
 
+const DEFAULT_BLOG_CARD_IMAGE =
+  "https://data.testprepkart.com/images/neet_blog/Default-Article-Image.webp";
+
 const BlogCard = ({ post, examSlug }) => {
   const [imageError, setImageError] = useState(false);
+  const [defaultImageError, setDefaultImageError] = useState(false);
 
   const imageSrc = resolveImagePath(post.image);
+  const hasPrimaryImage = Boolean(post.image && String(post.image).trim());
+  const effectiveSrc =
+    hasPrimaryImage && !imageError ? imageSrc : DEFAULT_BLOG_CARD_IMAGE;
 
   return (
     <article
@@ -36,16 +43,19 @@ const BlogCard = ({ post, examSlug }) => {
     >
       {/* Thumbnail: natural image height (no forced aspect ratio). */}
       <div className="relative w-full rounded-t-xl bg-gray-50 overflow-hidden">
-        {post.image && !imageError ? (
+        {!defaultImageError ? (
           <Image
-            src={imageSrc}
+            src={effectiveSrc}
             alt={post.title}
             width={827}
             height={312}
             className="h-auto w-full object-contain object-center group-hover:scale-105 transition-transform duration-500"
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
-            onError={() => setImageError(true)}
-            unoptimized={imageSrc.startsWith("http://")}
+            onError={() => {
+              if (hasPrimaryImage && !imageError) setImageError(true);
+              else setDefaultImageError(true);
+            }}
+            unoptimized={effectiveSrc.startsWith("http://")}
           />
         ) : (
           <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/50 to-purple-50/50 group-hover:scale-105 transition-transform duration-500 flex items-center justify-center">

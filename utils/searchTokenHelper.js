@@ -9,6 +9,8 @@
  *   (full phrase, prefix phrase, two-word proximity) sort above unrelated `orderNumber` noise.
  */
 
+import { escapeRegex } from "@/utils/escapeRegex.js";
+
 const DEFAULT_STOP_WORDS = new Set([
   "a", "an", "and", "are", "as", "at", "be", "by", "for", "from",
   "has", "he", "in", "is", "it", "its", "of", "on", "or", "that",
@@ -19,6 +21,7 @@ const DEFAULT_STOP_WORDS = new Set([
 ]);
 
 const MAX_TOKENS = 12;
+const MAX_RAW_SEARCH_INPUT = 4000;
 
 /**
  * Tries to extract the "actual user query" from noisy prompt-like text.
@@ -30,14 +33,17 @@ const MAX_TOKENS = 12;
  * @returns {string}
  */
 function extractPrimarySearchText(raw) {
-  const s = String(raw || "").trim();
+  const s = String(raw || "").trim().slice(0, MAX_RAW_SEARCH_INPUT);
   if (!s) return "";
 
-  // Prefer explicit Input/Query line if present.
-  const labeled = s.match(
-    /(?:^|\n)\s*(?:input|query)\s*:\s*["“”']([^"“”'\n]{1,200})["“”']/i
-  );
-  if (labeled?.[1]) return labeled[1].trim();
+  // Prefer explicit Input/Query line if present (line-based to avoid ReDoS on long inputs).
+  const lines = s.split(/\r?\n/);
+  for (const line of lines) {
+    const labeled = line.match(
+      /^\s*(?:input|query)\s*:\s*["“”']([^"“”']+)["“”']/i
+    );
+    if (labeled?.[1]) return labeled[1].trim().slice(0, 500);
+  }
 
   // Next, any short quoted phrase (often the intended search string in prompts).
   const quoted = [...s.matchAll(/["“”']([^"“”'\n]{2,160})["“”']/g)]
@@ -79,15 +85,6 @@ function buildAdjacentPhrases(tokens) {
     }
   }
   return out;
-}
-
-/**
- * Escape special regex characters in a string.
- * @param {string} s
- * @returns {string}
- */
-function escapeRegex(s) {
-  return String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 /**
@@ -335,6 +332,6 @@ export {
   buildTokenSearchCondition,
   combineQueryWithSearchFilter,
   findWithSearchRelevance,
-  escapeRegex,
   DEFAULT_STOP_WORDS,
 };
+export { escapeRegex } from "@/utils/escapeRegex.js";

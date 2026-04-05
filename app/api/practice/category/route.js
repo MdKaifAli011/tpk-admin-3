@@ -7,6 +7,7 @@ import { successResponse, errorResponse, handleApiError } from "@/utils/apiRespo
 import { STATUS, ERROR_MESSAGES } from "@/constants";
 import { requireAuth, requireAction } from "@/middleware/authMiddleware";
 import cacheManager from "@/utils/cacheManager";
+import { regexExactInsensitive } from "@/utils/escapeRegex.js";
 
 // ---------- GET ALL PRACTICE CATEGORIES (optimized) ----------
 export async function GET(request) {
@@ -33,7 +34,7 @@ export async function GET(request) {
       query.subjectId = subjectId;
     }
     if (statusFilter !== "all") {
-      query.status = { $regex: new RegExp(`^${statusFilter}$`, "i") };
+      query.status = { $regex: regexExactInsensitive(statusFilter) };
     }
 
     // Create cache key

@@ -2490,9 +2490,8 @@ export const submitDownloadForm = async (formData) => {
   }
 
   try {
-    // Store form data in localStorage to unlock downloads
+    // Store only a non-sensitive flag to unlock downloads (avoid PII in localStorage)
     localStorage.setItem("download_form_submitted", "true");
-    localStorage.setItem("download_form_data", JSON.stringify(formData));
 
     // Optionally send to API if you want to track submissions
     // const response = await api.post("/download/form", formData);

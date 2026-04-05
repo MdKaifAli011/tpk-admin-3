@@ -5,6 +5,7 @@ import path from "path";
 import { verifyToken } from "@/lib/auth";
 import connectDB from "@/lib/mongodb";
 import mongoose from "mongoose";
+import { escapeRegex } from "@/utils/escapeRegex.js";
 
 const publicDir = path.join(process.cwd(), "public");
 const MAX_BANNERS_PER_EXAM = 50;
@@ -63,7 +64,7 @@ async function getExamBanners(examId, examName) {
 
   const files = await readdir(bannerDir);
   const bannerFiles = files
-    .filter(f => f.match(new RegExp(`^${examSlug}_ImageBanner\\d+\\.[a-zA-Z0-9]+$`, 'i')))
+    .filter((f) => f.match(new RegExp(`^${escapeRegex(examSlug)}_ImageBanner\\d+\\.[a-zA-Z0-9]+$`, "i")))
     .sort((a, b) => {
       const numA = parseInt(a.match(/ImageBanner(\d+)/i)?.[1] || '0');
       const numB = parseInt(b.match(/ImageBanner(\d+)/i)?.[1] || '0');

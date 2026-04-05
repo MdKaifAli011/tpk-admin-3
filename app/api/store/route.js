@@ -9,6 +9,7 @@ import {
 import { requireAuth } from "@/middleware/authMiddleware";
 import { parsePagination, createPaginationResponse } from "@/utils/pagination";
 import { createSlug } from "@/utils/serverSlug";
+import { escapeRegex, regexExactInsensitive } from "@/utils/escapeRegex.js";
 
 const STORE_CATEGORIES = ["course", "ebook", "paper"];
 
@@ -29,15 +30,16 @@ export async function GET(request) {
 
     const query = {};
     if (statusFilter !== "all") {
-      query.status = { $regex: new RegExp(`^${statusFilter}$`, "i") };
+      query.status = { $regex: regexExactInsensitive(statusFilter) };
     }
     if (category && STORE_CATEGORIES.includes(category)) {
       query.category = category;
     }
     if (search.trim()) {
+      const safe = escapeRegex(search.trim());
       query.$or = [
-        { name: { $regex: search.trim(), $options: "i" } },
-        { subject: { $regex: search.trim(), $options: "i" } },
+        { name: { $regex: safe, $options: "i" } },
+        { subject: { $regex: safe, $options: "i" } },
         { description: { $regex: search.trim(), $options: "i" } },
       ];
     }

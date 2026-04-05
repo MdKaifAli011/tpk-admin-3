@@ -25,20 +25,29 @@ export function stripHtml(html) {
     }
   }
 
-  // Fallback: use regex to strip HTML tags (works on both client and server)
-  return html
-    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "") // Remove script tags
-    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "") // Remove style tags
-    .replace(/<[^>]+>/g, "") // Remove all HTML tags
-    .replace(/&nbsp;/g, " ") // Replace &nbsp; with space
-    .replace(/&amp;/g, "&") // Replace &amp; with &
-    .replace(/&lt;/g, "<") // Replace &lt; with <
-    .replace(/&gt;/g, ">") // Replace &gt; with >
-    .replace(/&quot;/g, '"') // Replace &quot; with "
-    .replace(/&#39;/g, "'") // Replace &#39; with '
-    .replace(/&#x27;/g, "'") // Replace &#x27; with '
-    .replace(/\s+/g, " ") // Replace multiple spaces with single space
-    .trim();
+  // Fallback: strip tags iteratively, then decode entities until stable (server-safe)
+  let out = String(html || "");
+  for (let i = 0; i < 24; i++) {
+    const next = out
+      .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, "")
+      .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, "")
+      .replace(/<[^>]+>/g, "");
+    if (next === out) break;
+    out = next;
+  }
+  let prev;
+  do {
+    prev = out;
+    out = out
+      .replace(/&nbsp;/g, " ")
+      .replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/&#x27;/g, "'");
+  } while (out !== prev);
+  return out.replace(/\s+/g, " ").trim();
 }
 
 /**

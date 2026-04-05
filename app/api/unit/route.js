@@ -12,6 +12,7 @@ import {
   combineQueryWithSearchFilter,
   findWithSearchRelevance,
 } from "@/utils/searchTokenHelper";
+import { regexExactInsensitive } from "@/utils/escapeRegex.js";
 
 // ---------- GET ALL UNITS ----------
 export async function GET(request) {
@@ -49,7 +50,7 @@ export async function GET(request) {
       query.examId = examId;
     }
     if (statusFilter !== "all") {
-      query.status = { $regex: new RegExp(`^${statusFilter}$`, "i") };
+      query.status = { $regex: regexExactInsensitive(statusFilter) };
     }
     if (search) {
       const searchCondition = buildTokenSearchCondition(search, "name");

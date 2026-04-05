@@ -69,21 +69,24 @@ const decodeCache = new Map();
 const decodeAttr = (str) => {
   if (!str) return "";
   if (decodeCache.has(str)) {
-    // Move to end (LRU)
     const value = decodeCache.get(str);
     decodeCache.delete(str);
     decodeCache.set(str, value);
     return value;
   }
-  const decoded = str
-    .replace(/&quot;/g, '"')
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&#39;/g, "'")
-    .replace(/&#x27;/g, "'")
-    .trim();
-  // LRU eviction: remove oldest if cache is full
+  let decoded = String(str);
+  let prev;
+  do {
+    prev = decoded;
+    decoded = decoded
+      .replace(/&quot;/g, '"')
+      .replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&#39;/g, "'")
+      .replace(/&#x27;/g, "'")
+      .trim();
+  } while (decoded !== prev);
   if (decodeCache.size >= MAX_DECODE_CACHE_SIZE) {
     const firstKey = decodeCache.keys().next().value;
     decodeCache.delete(firstKey);
@@ -155,6 +158,23 @@ const normalizeYouTubeUrl = (url) => {
   // If we can't extract, return original URL
   return url;
 };
+
+function isYouTubeOrYouTuBeUrl(url) {
+  if (!url || typeof url !== "string") return false;
+  try {
+    const u = new URL(url.trim(), "https://www.youtube.com");
+    const h = u.hostname.toLowerCase();
+    return (
+      h === "youtube.com" ||
+      h === "www.youtube.com" ||
+      h === "m.youtube.com" ||
+      h === "youtu.be" ||
+      h === "www.youtu.be"
+    );
+  } catch {
+    return false;
+  }
+}
 
 const RichContent = forwardRef(({ html = "" }, ref) => {
   const containerRef = useRef(null);
@@ -301,7 +321,7 @@ const RichContent = forwardRef(({ html = "" }, ref) => {
         if (url) {
           // Normalize YouTube URLs (including Shorts) to embed format
           let normalizedUrl = url;
-          if (type === "youtube" || url.includes("youtube.com") || url.includes("youtu.be")) {
+          if (type === "youtube" || isYouTubeOrYouTuBeUrl(url)) {
             normalizedUrl = normalizeYouTubeUrl(url);
           }
           setActiveVideo({ url: normalizedUrl, type: type || "youtube", mimeType });

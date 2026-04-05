@@ -3,6 +3,7 @@ import connectDB from "@/lib/mongodb";
 import mongoose from "mongoose";
 import { requireAction } from "@/middleware/authMiddleware";
 import { createSlug, generateUniqueSlug } from "@/utils/serverSlug";
+import { regexExactInsensitive } from "@/utils/escapeRegex.js";
 
 // Import all models and their details
 import Exam from "@/models/Exam";
@@ -78,7 +79,7 @@ export async function POST(request) {
                 // 2. Try finding by Name + Parents
                 if (!entity) {
                     const query = {
-                        name: { $regex: new RegExp(`^${name.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') }
+                        name: { $regex: regexExactInsensitive(name.trim()) }
                     };
                     parents.forEach(p => {
                         if (filters[p]) query[p] = new mongoose.Types.ObjectId(filters[p]);

@@ -26,23 +26,22 @@
     "@lexical/selection": "^0.38.1",
     "@lexical/utils": "^0.38.1",
     "@monaco-editor/react": "^4.7.0",
-    "axios": "^1.13.1",
+    "axios": "^1.14.0",
     "bcryptjs": "^3.0.3",
-    "ckeditor4": "^4.22.1",
+    "ckeditor4": "^4.25.1",
     "critters": "^0.0.23",
-    "dompurify": "^3.3.1",
+    "dompurify": "^3.3.3",
     "dotenv": "^17.2.3",
     "framer-motion": "^12.23.24",
     "jsonwebtoken": "^9.0.2",
     "lexical": "^0.38.1",
     "lucide-react": "^0.561.0",
     "marked": "^17.0.1",
-    "mathjax": "^2.7.9",
     "md-to-pdf": "^5.2.5",
     "monaco-editor": "^0.55.1",
     "mongoose": "^8.19.2",
-    "next": "16.0.1",
-    "nodemailer": "^7.0.13",
+    "next": "16.2.2",
+    "nodemailer": "^8.0.4",
     "pdf-parse": "^2.4.5",
     "prismjs": "^1.30.0",
     "qs": "^6.14.0",
@@ -51,12 +50,15 @@
     "react-icons": "^5.5.0",
     "slugify": "^1.6.6"
   },
+  "overrides": {
+    "dompurify": "^3.3.3"
+  },
   "devDependencies": {
-    "@next/bundle-analyzer": "^16.1.6",
+    "@next/bundle-analyzer": "16.2.2",
     "@tailwindcss/postcss": "^4",
     "@types/react": "19.2.7",
     "eslint": "^9",
-    "eslint-config-next": "16.0.1",
+    "eslint-config-next": "16.2.2",
     "tailwindcss": "^4"
   }
 }

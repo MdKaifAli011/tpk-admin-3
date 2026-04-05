@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import ContentVideo from "@/models/ContentVideo";
 import Exam from "@/models/Exam";
+import { regexExactFromSlugSegment } from "@/utils/escapeRegex.js";
 
 export const dynamic = "force-dynamic";
 
@@ -22,7 +23,7 @@ export async function GET(request) {
       const exam = await Exam.findOne({
         $or: [
           { slug: examSlug },
-          { name: { $regex: new RegExp(`^${examSlug.replace(/-/g, " ")}$`, "i") } },
+          { name: { $regex: regexExactFromSlugSegment(examSlug) } },
         ],
         status: { $in: ["active", "draft"] },
       })

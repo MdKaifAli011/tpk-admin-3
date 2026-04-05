@@ -12,6 +12,7 @@ import Definition from "@/models/Definition";
 import { successResponse, handleApiError } from "@/utils/apiResponse";
 import { verifyStudentToken } from "@/lib/studentAuth";
 import { createSlug } from "@/utils/serverSlug";
+import { regexExactFromSlugSegment } from "@/utils/escapeRegex.js";
 
 async function resolveContextFromSlugs(searchParams) {
   const examSlug = searchParams.get("exam");
@@ -25,37 +26,37 @@ async function resolveContextFromSlugs(searchParams) {
   const result = { examId: null, subjectId: null, unitId: null, chapterId: null, topicId: null, subTopicId: null, definitionId: null };
   if (!examSlug) return result;
 
-  const exam = await Exam.findOne({ $or: [{ slug: examSlug }, { name: { $regex: new RegExp(`^${examSlug.replace(/-/g, " ")}$`, "i") } }], status: { $in: ["active", "draft"] } }).lean();
+  const exam = await Exam.findOne({ $or: [{ slug: examSlug }, { name: { $regex: regexExactFromSlugSegment(examSlug) } }], status: { $in: ["active", "draft"] } }).lean();
   if (!exam) return result;
   result.examId = exam._id;
   if (!subjectSlug) return result;
 
-  const subject = await Subject.findOne({ examId: exam._id, $or: [{ slug: subjectSlug }, { name: { $regex: new RegExp(`^${subjectSlug.replace(/-/g, " ")}$`, "i") } }], status: "active" }).lean();
+  const subject = await Subject.findOne({ examId: exam._id, $or: [{ slug: subjectSlug }, { name: { $regex: regexExactFromSlugSegment(subjectSlug) } }], status: "active" }).lean();
   if (!subject) return result;
   result.subjectId = subject._id;
   if (!unitSlug) return result;
 
-  const unit = await Unit.findOne({ subjectId: subject._id, $or: [{ slug: unitSlug }, { name: { $regex: new RegExp(`^${unitSlug.replace(/-/g, " ")}$`, "i") } }], status: "active" }).lean();
+  const unit = await Unit.findOne({ subjectId: subject._id, $or: [{ slug: unitSlug }, { name: { $regex: regexExactFromSlugSegment(unitSlug) } }], status: "active" }).lean();
   if (!unit) return result;
   result.unitId = unit._id;
   if (!chapterSlug) return result;
 
-  const chapter = await Chapter.findOne({ unitId: unit._id, $or: [{ slug: chapterSlug }, { name: { $regex: new RegExp(`^${chapterSlug.replace(/-/g, " ")}$`, "i") } }], status: "active" }).lean();
+  const chapter = await Chapter.findOne({ unitId: unit._id, $or: [{ slug: chapterSlug }, { name: { $regex: regexExactFromSlugSegment(chapterSlug) } }], status: "active" }).lean();
   if (!chapter) return result;
   result.chapterId = chapter._id;
   if (!topicSlug) return result;
 
-  const topic = await Topic.findOne({ chapterId: chapter._id, $or: [{ slug: topicSlug }, { name: { $regex: new RegExp(`^${topicSlug.replace(/-/g, " ")}$`, "i") } }], status: "active" }).lean();
+  const topic = await Topic.findOne({ chapterId: chapter._id, $or: [{ slug: topicSlug }, { name: { $regex: regexExactFromSlugSegment(topicSlug) } }], status: "active" }).lean();
   if (!topic) return result;
   result.topicId = topic._id;
   if (!subtopicSlug) return result;
 
-  const subtopic = await SubTopic.findOne({ topicId: topic._id, $or: [{ slug: subtopicSlug }, { name: { $regex: new RegExp(`^${subtopicSlug.replace(/-/g, " ")}$`, "i") } }], status: "active" }).lean();
+  const subtopic = await SubTopic.findOne({ topicId: topic._id, $or: [{ slug: subtopicSlug }, { name: { $regex: regexExactFromSlugSegment(subtopicSlug) } }], status: "active" }).lean();
   if (!subtopic) return result;
   result.subTopicId = subtopic._id;
   if (!definitionSlug) return result;
 
-  const definition = await Definition.findOne({ subTopicId: subtopic._id, $or: [{ slug: definitionSlug }, { name: { $regex: new RegExp(`^${definitionSlug.replace(/-/g, " ")}$`, "i") } }, { term: { $regex: new RegExp(`^${definitionSlug.replace(/-/g, " ")}$`, "i") } }], status: "active" }).lean();
+  const definition = await Definition.findOne({ subTopicId: subtopic._id, $or: [{ slug: definitionSlug }, { name: { $regex: regexExactFromSlugSegment(definitionSlug) } }, { term: { $regex: regexExactFromSlugSegment(definitionSlug) } }], status: "active" }).lean();
   if (!definition) return result;
   result.definitionId = definition._id;
   return result;
