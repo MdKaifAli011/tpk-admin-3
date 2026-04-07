@@ -11,6 +11,7 @@ import {
 } from "@/utils/apiResponse";
 import { STATUS, ERROR_MESSAGES } from "@/constants";
 import { requireAuth, requireAction } from "@/middleware/authMiddleware";
+import { escapeRegex } from "@/utils/escapeRegex.js";
 
 // GET: Fetch all download folders with optional filters
 export async function GET(request) {
@@ -24,7 +25,9 @@ export async function GET(request) {
     if (statusFilter !== STATUS.ACTIVE) {
       const authCheck = await requireAuth(request);
       if (authCheck.error) {
-        return NextResponse.json(authCheck, { status: authCheck.status || 401 });
+        return NextResponse.json(authCheck, {
+          status: authCheck.status || 401,
+        });
       }
     }
 
@@ -43,9 +46,16 @@ export async function GET(request) {
     const query = {};
 
     // Filter by parent folder (null for root folders)
-    if (parentFolderId === "null" || parentFolderId === null || parentFolderId === "undefined") {
+    if (
+      parentFolderId === "null" ||
+      parentFolderId === null ||
+      parentFolderId === "undefined"
+    ) {
       query.parentFolderId = null;
-    } else if (parentFolderId && mongoose.Types.ObjectId.isValid(parentFolderId)) {
+    } else if (
+      parentFolderId &&
+      mongoose.Types.ObjectId.isValid(parentFolderId)
+    ) {
       query.parentFolderId = new mongoose.Types.ObjectId(parentFolderId);
     }
 
@@ -57,6 +67,17 @@ export async function GET(request) {
     // Filter by status - Fixed regex issue
     if (statusFilter !== "all") {
       query.status = statusFilter; // Direct match instead of regex
+    }
+
+    // Admin list: search name, description, slug (case-insensitive substring)
+    const searchRaw = searchParams.get("search")?.trim();
+    if (searchRaw) {
+      const rx = new RegExp(escapeRegex(searchRaw), "i");
+      query.$or = [
+        { name: { $regex: rx } },
+        { description: { $regex: rx } },
+        { slug: { $regex: rx } },
+      ];
     }
 
     let folders;
@@ -80,7 +101,9 @@ export async function GET(request) {
           status: { $regex: /^active$/i },
         });
         const idSet = new Set(idsWithFiles.map((id) => id.toString()));
-        const filtered = allSubfolders.filter((f) => idSet.has(f._id.toString()));
+        const filtered = allSubfolders.filter((f) =>
+          idSet.has(f._id.toString()),
+        );
         total = filtered.length;
         folders = filtered.slice(skip, skip + limit);
       }
@@ -93,7 +116,7 @@ export async function GET(request) {
           .skip(skip)
           .limit(limit)
           .lean(),
-        DownloadFolder.countDocuments(query)
+        DownloadFolder.countDocuments(query),
       ]);
     }
 
@@ -146,7 +169,8 @@ export async function GET(request) {
       subfolders.forEach((s) => {
         const rootId = s.parentFolderId?.toString();
         if (rootId) {
-          subfolderCountByRoot[rootId] = (subfolderCountByRoot[rootId] || 0) + 1;
+          subfolderCountByRoot[rootId] =
+            (subfolderCountByRoot[rootId] || 0) + 1;
         }
       });
 
@@ -158,7 +182,7 @@ export async function GET(request) {
     }
 
     return NextResponse.json(
-      createPaginationResponse(folders, total, page, limit)
+      createPaginationResponse(folders, total, page, limit),
     );
   } catch (error) {
     return handleApiError(error, "Failed to fetch download folders");
@@ -192,7 +216,7 @@ export async function POST(request) {
         return errorResponse("Invalid parent folder ID", 400);
       }
       parentFolderId = new mongoose.Types.ObjectId(body.parentFolderId);
-      
+
       // Check if parent folder exists and is not itself (prevent circular reference)
       const parentFolder = await DownloadFolder.findById(parentFolderId);
       if (!parentFolder) {
@@ -213,11 +237,14 @@ export async function POST(request) {
     const duplicateCheck = await DownloadFolder.findOne({
       name: sanitizedName,
       parentFolderId: parentFolderId,
-      status: { $ne: 'deleted' } // Exclude soft-deleted folders
+      status: { $ne: "deleted" }, // Exclude soft-deleted folders
     });
-    
+
     if (duplicateCheck) {
-      return errorResponse("A folder with this name already exists in this location", 409);
+      return errorResponse(
+        "A folder with this name already exists in this location",
+        409,
+      );
     }
 
     // Auto-generate orderNumber if not provided
@@ -228,7 +255,9 @@ export async function POST(request) {
         .sort({ orderNumber: -1 })
         .select("orderNumber")
         .lean();
-      orderNumber = maxOrderFolder?.orderNumber ? maxOrderFolder.orderNumber + 1 : 1;
+      orderNumber = maxOrderFolder?.orderNumber
+        ? maxOrderFolder.orderNumber + 1
+        : 1;
     }
 
     // Create new folder
@@ -245,10 +274,17 @@ export async function POST(request) {
     await newFolder.populate("parentFolderId", "name slug");
     await newFolder.populate("examId", "name slug");
 
-    return successResponse(newFolder, "Download folder created successfully", 201);
+    return successResponse(
+      newFolder,
+      "Download folder created successfully",
+      201,
+    );
   } catch (error) {
     if (error.code === 11000) {
-      return errorResponse("A folder with this name already exists in this location", 409);
+      return errorResponse(
+        "A folder with this name already exists in this location",
+        409,
+      );
     }
     return handleApiError(error, ERROR_MESSAGES.SAVE_FAILED);
   }

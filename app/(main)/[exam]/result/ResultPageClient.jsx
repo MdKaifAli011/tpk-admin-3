@@ -74,24 +74,26 @@ export default function ResultPageClient({ examName, examSlug, initialData, init
             }`}
           >
             {bannerImageLeft ? (
-              <div className="relative w-full aspect-[16/10] sm:aspect-[21/9] overflow-hidden rounded-xl border border-indigo-100/60 shadow-[0_2px_12px_rgba(120,90,200,0.08)] bg-indigo-50/50">
+              <div className="w-full overflow-hidden rounded-xl border border-indigo-100/60 shadow-[0_2px_12px_rgba(120,90,200,0.08)] bg-indigo-50/50">
                 <Image
                   src={bannerImageLeft}
                   alt=""
-                  fill
-                  className="object-cover object-center"
+                  width={1600}
+                  height={1000}
+                  className="w-full h-auto max-w-full block align-middle"
                   sizes={DUAL_BANNER_SIZES}
                   unoptimized={bannerImageLeft.startsWith("http://")}
                 />
               </div>
             ) : null}
             {bannerImageRight ? (
-              <div className="relative w-full aspect-[16/10] sm:aspect-[21/9] overflow-hidden rounded-xl border border-indigo-100/60 shadow-[0_2px_12px_rgba(120,90,200,0.08)] bg-indigo-50/50">
+              <div className="w-full overflow-hidden rounded-xl border border-indigo-100/60 shadow-[0_2px_12px_rgba(120,90,200,0.08)] bg-indigo-50/50">
                 <Image
                   src={bannerImageRight}
                   alt=""
-                  fill
-                  className="object-cover object-center"
+                  width={1600}
+                  height={1000}
+                  className="w-full h-auto max-w-full block align-middle"
                   sizes={DUAL_BANNER_SIZES}
                   unoptimized={bannerImageRight.startsWith("http://")}
                 />

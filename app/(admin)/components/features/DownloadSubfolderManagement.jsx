@@ -11,6 +11,8 @@ import {
 } from "react-icons/fa";
 import { ToastContainer, useToast } from "../ui/Toast";
 import api from "@/lib/api";
+import DownloadListPagination from "../common/DownloadListPagination";
+import DownloadListSearchBar from "../common/DownloadListSearchBar";
 import { PermissionButton } from "../common/PermissionButton";
 import { usePermissions, getPermissionMessage } from "../../hooks/usePermissions";
 
@@ -119,6 +121,8 @@ const SubfolderList = ({ subfolders, onEdit, onDelete, onToggleStatus, role }) =
   );
 };
 
+const DROPDOWN_LIST_LIMIT = 500;
+
 const DownloadSubfolderManagement = () => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
@@ -128,12 +132,11 @@ const DownloadSubfolderManagement = () => {
   const [subfolders, setSubfolders] = useState([]);
   const [totalSubfolders, setTotalSubfolders] = useState(0);
   const [subfolderPage, setSubfolderPage] = useState(1);
-  const [loadingMoreSubfolders, setLoadingMoreSubfolders] = useState(false);
+  const [subfolderPageSize, setSubfolderPageSize] = useState(50);
   const [folders, setFolders] = useState([]);
-  const [totalFolders, setTotalFolders] = useState(0);
-  const [folderPage, setFolderPage] = useState(1);
-  const [loadingMoreFolders, setLoadingMoreFolders] = useState(false);
   const [selectedFolderId, setSelectedFolderId] = useState("");
+  const [subfolderSearchInput, setSubfolderSearchInput] = useState("");
+  const [subfolderSearch, setSubfolderSearch] = useState("");
   const [error, setError] = useState(null);
 
   const [formData, setFormData] = useState({
@@ -148,61 +151,58 @@ const DownloadSubfolderManagement = () => {
   const { role } = usePermissions();
   const isFetchingRef = useRef(false);
 
-  const SUBFOLDER_PAGE_SIZE = 50;
-
-  const FOLDER_PAGE_SIZE = 50;
-
-  const fetchData = async (append = false) => {
-    if (isFetchingRef.current && !append) return;
-    if (append) setLoadingMoreFolders(true);
-    else { isFetchingRef.current = true; setIsDataLoading(true); setError(null); }
-    const page = append ? folderPage + 1 : 1;
+  const loadFoldersForDropdown = async () => {
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
+    setIsDataLoading(true);
+    setError(null);
     try {
-      const foldersRes = await api.get(`/download/folder?status=all&parentFolderId=null&limit=${FOLDER_PAGE_SIZE}&page=${page}`);
+      const foldersRes = await api.get(
+        `/download/folder?status=all&parentFolderId=null&limit=${DROPDOWN_LIST_LIMIT}&page=1`
+      );
       if (foldersRes.data?.success) {
-        const list = foldersRes.data.data || [];
-        const total = foldersRes.data.pagination?.total ?? list.length;
-        if (append) {
-          setFolders((prev) => [...prev, ...list]);
-          setFolderPage(page);
-        } else {
-          setFolders(list);
-          setFolderPage(1);
-        }
-        setTotalFolders(total);
+        setFolders(foldersRes.data.data || []);
       }
     } catch (err) {
       console.error("Error fetching data:", err);
       setError("Failed to fetch data");
     } finally {
       setIsDataLoading(false);
-      setLoadingMoreFolders(false);
       isFetchingRef.current = false;
     }
   };
 
-  const fetchSubfolders = async (folderId, append = false) => {
+  const fetchSubfolders = async (
+    folderId,
+    page = 1,
+    limit = subfolderPageSize,
+    searchOverride
+  ) => {
     if (!folderId) {
       setSubfolders([]);
       setTotalSubfolders(0);
       setSubfolderPage(1);
       return;
     }
-    if (append) setLoadingMoreSubfolders(true);
-    else setIsDataLoading(true);
-    const page = append ? subfolderPage + 1 : 1;
+    setIsDataLoading(true);
+    const effectiveSearch =
+      searchOverride !== undefined ? searchOverride : subfolderSearch;
+    const q = String(effectiveSearch || "").trim();
+    const searchParam = q ? `&search=${encodeURIComponent(q)}` : "";
     try {
-      const response = await api.get(`/download/folder?status=all&parentFolderId=${folderId}&limit=${SUBFOLDER_PAGE_SIZE}&page=${page}`);
+      const response = await api.get(
+        `/download/folder?status=all&parentFolderId=${folderId}&limit=${limit}&page=${page}${searchParam}`
+      );
       if (response.data?.success) {
         const list = response.data.data || [];
         const total = response.data.pagination?.total ?? list.length;
-        if (append) {
-          setSubfolders((prev) => [...prev, ...list]);
-          setSubfolderPage(page);
-        } else {
-          setSubfolders(list);
-          setSubfolderPage(1);
+        if (list.length === 0 && page > 1 && total > 0) {
+          setIsDataLoading(false);
+          await fetchSubfolders(folderId, page - 1, limit, effectiveSearch);
+          return;
         }
+        setSubfolders(list);
+        setSubfolderPage(page);
         setTotalSubfolders(total);
       }
     } catch (err) {
@@ -210,24 +210,40 @@ const DownloadSubfolderManagement = () => {
       showError("Failed to fetch subfolders");
     } finally {
       setIsDataLoading(false);
-      setLoadingMoreSubfolders(false);
     }
   };
 
-  const hasMoreFolders = folders.length < totalFolders;
-  const hasMoreSubfolders = subfolders.length < totalSubfolders;
-
   useEffect(() => {
-    fetchData();
+    loadFoldersForDropdown();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- initial load only
   }, []);
 
   useEffect(() => {
+    setSubfolderSearchInput("");
+    setSubfolderSearch("");
     if (selectedFolderId) {
-      fetchSubfolders(selectedFolderId);
+      fetchSubfolders(selectedFolderId, 1, subfolderPageSize, "");
     } else {
       setSubfolders([]);
+      setTotalSubfolders(0);
+      setSubfolderPage(1);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- refetch when folder changes; page size handled in UI
   }, [selectedFolderId]);
+
+  const applySubfolderSearch = () => {
+    if (!selectedFolderId) return;
+    const q = subfolderSearchInput.trim();
+    setSubfolderSearch(q);
+    fetchSubfolders(selectedFolderId, 1, subfolderPageSize, q);
+  };
+
+  const clearSubfolderSearch = () => {
+    if (!selectedFolderId) return;
+    setSubfolderSearchInput("");
+    setSubfolderSearch("");
+    fetchSubfolders(selectedFolderId, 1, subfolderPageSize, "");
+  };
 
   const handleAddSubfolder = async (e) => {
     e.preventDefault();
@@ -245,7 +261,7 @@ const DownloadSubfolderManagement = () => {
       };
       const response = await api.post("/download/folder", payload);
       if (response.data.success) {
-        fetchSubfolders(selectedFolderId);
+        fetchSubfolders(selectedFolderId, 1, subfolderPageSize);
         success(`Subfolder "${formData.name}" created!`);
         setFormData({
           name: "",
@@ -283,7 +299,7 @@ const DownloadSubfolderManagement = () => {
       };
       const response = await api.put(`/download/folder/${editingSubfolder._id}`, payload);
       if (response.data.success) {
-        fetchSubfolders(selectedFolderId);
+        fetchSubfolders(selectedFolderId, subfolderPage, subfolderPageSize);
         success(`Subfolder "${formData.name}" updated!`);
         setShowEditForm(false);
         setEditingSubfolder(null);
@@ -314,11 +330,7 @@ const DownloadSubfolderManagement = () => {
     // When parent folder changes, update selected folder and fetch subfolders
     if (name === "parentFolderId") {
       setSelectedFolderId(value);
-      if (value) {
-        fetchSubfolders(value);
-      } else {
-        setSubfolders([]);
-      }
+      if (!value) setSubfolders([]);
     }
   };
 
@@ -347,7 +359,7 @@ const DownloadSubfolderManagement = () => {
     try {
       const response = await api.delete(`/download/folder/${subfolder._id}`);
       if (response.data.success) {
-        setSubfolders((prev) => prev.filter((f) => f._id !== subfolder._id));
+        fetchSubfolders(selectedFolderId, subfolderPage, subfolderPageSize);
         success("Subfolder deleted successfully");
       }
     } catch (err) {
@@ -384,10 +396,8 @@ const DownloadSubfolderManagement = () => {
     const folderId = e.target.value;
     setSelectedFolderId(folderId);
     if (folderId) {
-      fetchSubfolders(folderId);
       setFormData((prev) => ({ ...prev, parentFolderId: folderId }));
     } else {
-      setSubfolders([]);
       setFormData((prev) => ({ ...prev, parentFolderId: "" }));
     }
   };
@@ -397,39 +407,61 @@ const DownloadSubfolderManagement = () => {
       <ToastContainer toasts={toasts} removeToast={removeToast} />
       <div className="space-y-6">
         {/* Page Header */}
-        <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 rounded-lg border border-gray-200 p-4 shadow-sm">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div>
-              <h1 className="text-xl font-semibold text-gray-900 mb-1">
-                Download Subfolder Management
-              </h1>
-              <p className="text-xs text-gray-600">
-                Create and manage subfolders inside your root folders.
-              </p>
+        <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 rounded-lg border border-gray-200 p-4 sm:p-5 shadow-sm">
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-3">
+              <div className="min-w-0 flex-1 max-w-xl">
+                <h1 className="text-xl font-semibold text-gray-900 mb-1">
+                  Download Subfolder Management
+                </h1>
+                <p className="text-xs text-gray-600">
+                  Create and manage subfolders inside your root folders.
+                </p>
+              </div>
+              <div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-3 w-full lg:w-auto lg:min-w-[min(100%,22rem)] lg:max-w-2xl">
+                <DownloadListSearchBar
+                  variant="toolbar"
+                  inputId="subfolder-mgmt-search"
+                  inputAriaLabel="Search subfolders"
+                  value={subfolderSearchInput}
+                  onChange={setSubfolderSearchInput}
+                  onSearch={applySubfolderSearch}
+                  onClear={clearSubfolderSearch}
+                  activeQuery={subfolderSearch}
+                  placeholder={
+                    selectedFolderId
+                      ? "Search subfolders…"
+                      : "Select a folder below first"
+                  }
+                  loading={isDataLoading}
+                  disabled={!selectedFolderId}
+                  className="flex-1 min-w-0 sm:pt-0.5"
+                />
+                <PermissionButton
+                  action="create"
+                  onClick={() => {
+                    if (!selectedFolderId) {
+                      showError("Please select a folder first");
+                      return;
+                    }
+                    setShowAddForm(true);
+                    setShowEditForm(false);
+                    setEditingSubfolder(null);
+                    setFormData({
+                      name: "",
+                      parentFolderId: selectedFolderId,
+                      status: "active",
+                      description: "",
+                    });
+                  }}
+                  className="shrink-0 self-end sm:self-center px-3 py-2 bg-[#0056FF] hover:bg-[#0044CC] text-white rounded-lg text-xs font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm whitespace-nowrap"
+                  disabled={!selectedFolderId}
+                  title={getPermissionMessage("create", role)}
+                >
+                  Add New Subfolder
+                </PermissionButton>
+              </div>
             </div>
-            <PermissionButton
-              action="create"
-              onClick={() => {
-                if (!selectedFolderId) {
-                  showError("Please select a folder first");
-                  return;
-                }
-                setShowAddForm(true);
-                setShowEditForm(false);
-                setEditingSubfolder(null);
-                setFormData({
-                  name: "",
-                  parentFolderId: selectedFolderId,
-                  status: "active",
-                  description: "",
-                });
-              }}
-              className="px-2 py-1 bg-[#0056FF] hover:bg-[#0044CC] text-white rounded-lg text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={!selectedFolderId}
-              title={getPermissionMessage("create", role)}
-            >
-              Add New Subfolder
-            </PermissionButton>
           </div>
         </div>
 
@@ -456,16 +488,6 @@ const DownloadSubfolderManagement = () => {
                 </option>
               ))}
             </select>
-            {hasMoreFolders && (
-              <button
-                type="button"
-                onClick={() => fetchData(true)}
-                disabled={loadingMoreFolders}
-                className="px-3 py-2 text-sm font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 disabled:opacity-60 transition-colors shrink-0"
-              >
-                {loadingMoreFolders ? "Loading…" : `View more (${folders.length} of ${totalFolders})`}
-              </button>
-            )}
           </div>
           {!selectedFolderId && (
             <p className="text-xs text-gray-500 mt-2">
@@ -657,25 +679,21 @@ const DownloadSubfolderManagement = () => {
                     onToggleStatus={handleToggleStatus}
                     role={role}
                   />
-                  {hasMoreSubfolders && (
-                    <div className="mt-4 flex justify-center">
-                      <button
-                        type="button"
-                        onClick={() => fetchSubfolders(selectedFolderId, true)}
-                        disabled={loadingMoreSubfolders}
-                        className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 disabled:opacity-60 transition-colors"
-                      >
-                        {loadingMoreSubfolders ? (
-                          <>
-                            <LoadingSpinner size="small" />
-                            Loading…
-                          </>
-                        ) : (
-                          <>View more ({subfolders.length} of {totalSubfolders})</>
-                        )}
-                      </button>
-                    </div>
-                  )}
+                  <DownloadListPagination
+                    page={subfolderPage}
+                    totalItems={totalSubfolders}
+                    pageSize={subfolderPageSize}
+                    onPageChange={(p) =>
+                      fetchSubfolders(selectedFolderId, p, subfolderPageSize)
+                    }
+                    onPageSizeChange={(s) => {
+                      setSubfolderPageSize(s);
+                      fetchSubfolders(selectedFolderId, 1, s);
+                    }}
+                    loading={isDataLoading}
+                    itemLabel="subfolders"
+                    hint="Use Previous / Next for more pages. Per page sets how many subfolders load at once."
+                  />
                 </>
               )}
             </div>

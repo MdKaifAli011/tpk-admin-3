@@ -10,7 +10,10 @@ import {
 } from "@/utils/apiResponse";
 import { STATUS, ERROR_MESSAGES } from "@/constants";
 import { requireAuth, requireAction } from "@/middleware/authMiddleware";
-import { regexExactInsensitive } from "@/utils/escapeRegex.js";
+import {
+  escapeRegex,
+  regexExactInsensitive,
+} from "@/utils/escapeRegex.js";
 
 // GET: Fetch all download files with optional filters
 export async function GET(request) {
@@ -42,14 +45,28 @@ export async function GET(request) {
 
     // Get filters
     const folderId = searchParams.get("folderId");
+    /** Root download folder: include files on this folder and all direct child subfolders (admin list / load more). */
+    const rootFolderId = searchParams.get("rootFolderId");
     const fileType = searchParams.get("fileType");
 
     // Build query
     const query = {};
 
-    // Filter by folder
+    // Filter by folder (single folder or subfolder)
     if (folderId && mongoose.Types.ObjectId.isValid(folderId)) {
       query.folderId = folderId;
+    } else if (
+      rootFolderId &&
+      mongoose.Types.ObjectId.isValid(rootFolderId) &&
+      !folderId
+    ) {
+      const DownloadFolder = (await import("@/models/DownloadFolder")).default;
+      const rootOid = new mongoose.Types.ObjectId(rootFolderId);
+      const subfolders = await DownloadFolder.find({ parentFolderId: rootOid })
+        .select("_id")
+        .lean();
+      const subIds = subfolders.map((s) => s._id);
+      query.folderId = { $in: [rootOid, ...subIds] };
     }
 
     // Filter by file type
@@ -60,6 +77,17 @@ export async function GET(request) {
     // Filter by status
     if (statusFilter !== "all") {
       query.status = { $regex: regexExactInsensitive(statusFilter) };
+    }
+
+    // Admin list: search name, description, slug (case-insensitive substring)
+    const searchRaw = searchParams.get("search")?.trim();
+    if (searchRaw) {
+      const rx = new RegExp(escapeRegex(searchRaw), "i");
+      query.$or = [
+        { name: { $regex: rx } },
+        { description: { $regex: rx } },
+        { slug: { $regex: rx } },
+      ];
     }
 
     // Fetch files with pagination

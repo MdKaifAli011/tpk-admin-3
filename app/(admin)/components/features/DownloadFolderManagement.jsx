@@ -14,6 +14,8 @@ import {
 } from "react-icons/fa";
 import { ToastContainer, useToast } from "../ui/Toast";
 import api from "@/lib/api";
+import DownloadListPagination from "../common/DownloadListPagination";
+import DownloadListSearchBar from "../common/DownloadListSearchBar";
 import { PermissionButton } from "../common/PermissionButton";
 import { usePermissions, getPermissionMessage } from "../../hooks/usePermissions";
 
@@ -111,12 +113,12 @@ const DownloadFolderManagement = () => {
   const [folders, setFolders] = useState([]);
   const [totalFolders, setTotalFolders] = useState(0);
   const [folderPage, setFolderPage] = useState(1);
-  const [loadingMoreFolders, setLoadingMoreFolders] = useState(false);
+  const [folderPageSize, setFolderPageSize] = useState(50);
   const [exams, setExams] = useState([]);
   const [selectedExam, setSelectedExam] = useState("");
+  const [folderSearchInput, setFolderSearchInput] = useState("");
+  const [folderSearch, setFolderSearch] = useState("");
   const [error, setError] = useState(null);
-
-  const FOLDER_PAGE_SIZE = 50;
 
   const [formData, setFormData] = useState({
     name: "",
@@ -129,60 +131,81 @@ const DownloadFolderManagement = () => {
   const { toasts, removeToast, success, error: showError } = useToast();
   const isFetchingRef = useRef(false);
 
-  const fetchData = async (append = false) => {
-    if (isFetchingRef.current && !append) return;
-    if (append) setLoadingMoreFolders(true);
-    else { isFetchingRef.current = true; setIsDataLoading(true); }
+  const fetchFolders = async (page = 1, limit = folderPageSize, searchOverride) => {
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
+    setIsDataLoading(true);
     setError(null);
-    const page = append ? folderPage + 1 : 1;
+    const effectiveSearch =
+      searchOverride !== undefined ? searchOverride : folderSearch;
+    const q = String(effectiveSearch || "").trim();
+    const searchParam = q ? `&search=${encodeURIComponent(q)}` : "";
+    const examParam = selectedExam
+      ? `&examId=${encodeURIComponent(selectedExam)}`
+      : "";
     try {
-      if (append) {
-        const foldersRes = await api.get(`/download/folder?status=all&parentFolderId=null&limit=${FOLDER_PAGE_SIZE}&page=${page}`);
-        if (foldersRes.data?.success) {
-          const list = foldersRes.data.data || [];
-          const total = foldersRes.data.pagination?.total ?? 0;
-          setFolders((prev) => [...prev, ...list]);
-          setFolderPage(page);
-          setTotalFolders(total);
+      const foldersRes = await api.get(
+        `/download/folder?status=all&parentFolderId=null&limit=${limit}&page=${page}${examParam}${searchParam}`
+      );
+      if (foldersRes.data?.success) {
+        const list = foldersRes.data.data || [];
+        const total = foldersRes.data.pagination?.total ?? list.length;
+        if (list.length === 0 && page > 1 && total > 0) {
+          isFetchingRef.current = false;
+          setIsDataLoading(false);
+          await fetchFolders(page - 1, limit, effectiveSearch);
+          return;
         }
-      } else {
-        const [foldersRes, examsRes] = await Promise.all([
-          api.get(`/download/folder?status=all&parentFolderId=null&limit=${FOLDER_PAGE_SIZE}&page=1`),
-          api.get("/exam?status=active"),
-        ]);
-        if (foldersRes.data?.success) {
-          const list = foldersRes.data.data || [];
-          const total = foldersRes.data.pagination?.total ?? list.length;
-          setFolders(list);
-          setFolderPage(1);
-          setTotalFolders(total);
-        }
-        if (examsRes?.data?.success) setExams(examsRes.data.data || []);
+        setFolders(list);
+        setFolderPage(page);
+        setTotalFolders(total);
       }
     } catch (err) {
       console.error("Error fetching data:", err);
       setError("Failed to fetch data");
     } finally {
       setIsDataLoading(false);
-      setLoadingMoreFolders(false);
       isFetchingRef.current = false;
     }
   };
 
-  const handleViewMoreFolders = () => fetchData(true);
-  const hasMoreFolders = folders.length < totalFolders;
+  const loadExams = async () => {
+    try {
+      const examsRes = await api.get("/exam?status=active");
+      if (examsRes?.data?.success) setExams(examsRes.data.data || []);
+    } catch (err) {
+      console.error("Error fetching exams:", err);
+    }
+  };
 
-  // Filter folders by selected exam
-  const filteredFolders = selectedExam
-    ? folders.filter((f) => {
-        const folderExamId = f.examId?._id || f.examId;
-        return folderExamId === selectedExam;
-      })
-    : folders;
+  const examFilterInitialized = useRef(false);
 
   useEffect(() => {
-    fetchData();
+    loadExams();
+    fetchFolders(1, folderPageSize);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- initial load only
   }, []);
+
+  useEffect(() => {
+    if (!examFilterInitialized.current) {
+      examFilterInitialized.current = true;
+      return;
+    }
+    fetchFolders(1, folderPageSize);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- refetch when exam filter changes
+  }, [selectedExam]);
+
+  const applyFolderSearch = () => {
+    const q = folderSearchInput.trim();
+    setFolderSearch(q);
+    fetchFolders(1, folderPageSize, q);
+  };
+
+  const clearFolderSearch = () => {
+    setFolderSearchInput("");
+    setFolderSearch("");
+    fetchFolders(1, folderPageSize, "");
+  };
 
   const handleAddFolder = async (e) => {
     e.preventDefault();
@@ -201,7 +224,7 @@ const DownloadFolderManagement = () => {
       };
       const response = await api.post("/download/folder", payload);
       if (response.data.success) {
-        fetchData();
+        fetchFolders(1, folderPageSize);
         success(`Folder "${formData.name}" created!`);
         setFormData({
           name: "",
@@ -244,7 +267,7 @@ const DownloadFolderManagement = () => {
         payload
       );
       if (response.data.success) {
-        fetchData();
+        fetchFolders(folderPage, folderPageSize);
         success(`Folder "${formData.name}" updated!`);
         setShowEditForm(false);
         setEditingFolder(null);
@@ -300,7 +323,7 @@ const DownloadFolderManagement = () => {
     try {
       const response = await api.delete(`/download/folder/${folder._id}`);
       if (response.data.success) {
-        setFolders((prev) => prev.filter((f) => f._id !== folder._id));
+        fetchFolders(folderPage, folderPageSize);
         success("Folder deleted successfully");
       }
     } catch (err) {
@@ -338,27 +361,44 @@ const DownloadFolderManagement = () => {
       <ToastContainer toasts={toasts} removeToast={removeToast} />
       <div className="space-y-6">
         {/* Page Header */}
-        <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 rounded-lg border border-gray-200 p-4 shadow-sm">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div>
-              <h1 className="text-xl font-semibold text-gray-900 mb-1">
-                Download Folder Management
-              </h1>
-              <p className="text-xs text-gray-600">
-                Create and organize folders and subfolders for your downloads.
-              </p>
+        <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 rounded-lg border border-gray-200 p-4 sm:p-5 shadow-sm">
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-3">
+              <div className="min-w-0 flex-1 max-w-xl">
+                <h1 className="text-xl font-semibold text-gray-900 mb-1">
+                  Download Folder Management
+                </h1>
+                <p className="text-xs text-gray-600">
+                  Create and organize folders and subfolders for your downloads.
+                </p>
+              </div>
+              <div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-3 w-full lg:w-auto lg:min-w-[min(100%,22rem)] lg:max-w-2xl">
+                <DownloadListSearchBar
+                  variant="toolbar"
+                  inputId="folder-mgmt-search"
+                  inputAriaLabel="Search folders"
+                  value={folderSearchInput}
+                  onChange={setFolderSearchInput}
+                  onSearch={applyFolderSearch}
+                  onClear={clearFolderSearch}
+                  activeQuery={folderSearch}
+                  placeholder="Search folders…"
+                  loading={isDataLoading}
+                  className="flex-1 min-w-0 sm:pt-0.5"
+                />
+                <PermissionButton
+                  action="create"
+                  onClick={() => {
+                    setShowAddForm(true);
+                    setShowEditForm(false);
+                    setEditingFolder(null);
+                  }}
+                  className="shrink-0 self-end sm:self-center px-3 py-2 bg-[#0056FF] hover:bg-[#0044CC] text-white rounded-lg text-xs font-semibold transition-colors shadow-sm whitespace-nowrap"
+                >
+                  Add New Folder
+                </PermissionButton>
+              </div>
             </div>
-            <PermissionButton
-              action="create"
-              onClick={() => {
-                setShowAddForm(true);
-                setShowEditForm(false);
-                setEditingFolder(null);
-              }}
-              className="px-2 py-1 bg-[#0056FF] hover:bg-[#0044CC] text-white rounded-lg text-xs font-medium transition-colors"
-            >
-              Add New Folder
-            </PermissionButton>
           </div>
         </div>
 
@@ -571,30 +611,24 @@ const DownloadFolderManagement = () => {
             ) : (
               <>
                 <FolderList
-                  folders={filteredFolders}
+                  folders={folders}
                   onEdit={handleEdit}
                   onDelete={handleDeleteFolder}
                   onToggleStatus={handleToggleStatus}
                 />
-                {hasMoreFolders && (
-                  <div className="mt-4 flex justify-center">
-                    <button
-                      type="button"
-                      onClick={handleViewMoreFolders}
-                      disabled={loadingMoreFolders}
-                      className="px-4 py-2.5 text-sm font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 disabled:opacity-60 disabled:cursor-not-allowed transition-colors inline-flex items-center gap-2"
-                    >
-                      {loadingMoreFolders ? (
-                        <>
-                          <LoadingSpinner size="small" />
-                          Loading…
-                        </>
-                      ) : (
-                        <>View more ({folders.length} of {totalFolders})</>
-                      )}
-                    </button>
-                  </div>
-                )}
+                <DownloadListPagination
+                  page={folderPage}
+                  totalItems={totalFolders}
+                  pageSize={folderPageSize}
+                  onPageChange={(p) => fetchFolders(p, folderPageSize)}
+                  onPageSizeChange={(s) => {
+                    setFolderPageSize(s);
+                    fetchFolders(1, s);
+                  }}
+                  loading={isDataLoading}
+                  itemLabel="folders"
+                  hint="Use Previous / Next for more pages. Per page sets how many folders load at once."
+                />
               </>
             )}
           </div>

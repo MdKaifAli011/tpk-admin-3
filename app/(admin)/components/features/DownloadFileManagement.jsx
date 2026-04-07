@@ -12,11 +12,23 @@ import {
   FaLink,
   FaUpload,
   FaDownload,
+  FaCheck,
 } from "react-icons/fa";
 import { ToastContainer, useToast } from "../ui/Toast";
 import { PermissionButton } from "../common/PermissionButton";
 import { usePermissions, getPermissionMessage } from "../../hooks/usePermissions";
 import api from "@/lib/api";
+import DownloadListPagination from "../common/DownloadListPagination";
+import DownloadListSearchBar from "../common/DownloadListSearchBar";
+
+/** True if URL or uploaded path is set for this file record. */
+function isDownloadResourcePresent(file) {
+  if (!file) return false;
+  if (file.fileType === "url") {
+    return !!(file.fileUrl && String(file.fileUrl).trim());
+  }
+  return !!(file.uploadedFile && String(file.uploadedFile).trim());
+}
 
 const StatusBadge = ({ status, onClick }) => {
   const getStatusStyles = (s) => {
@@ -79,13 +91,6 @@ const StatusBadge = ({ status, onClick }) => {
     }
   });
 
-  const formatFileSize = (bytes) => {
-    if (!bytes) return "N/A";
-    if (bytes < 1024) return bytes + " B";
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + " KB";
-    return (bytes / (1024 * 1024)).toFixed(2) + " MB";
-  };
-
   if (!files || files.length === 0) {
     return (
       <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
@@ -141,8 +146,8 @@ const StatusBadge = ({ status, onClick }) => {
                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Type
                           </th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Size
+                          <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            File Available
                           </th>
                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Status
@@ -199,8 +204,20 @@ const StatusBadge = ({ status, onClick }) => {
                                 )}
                               </span>
                             </td>
-                            <td className="px-4 py-3 text-sm text-gray-600">
-                              {formatFileSize(file.fileSize)}
+                            <td className="px-4 py-3 text-center">
+                              {isDownloadResourcePresent(file) ? (
+                                <FaCheck
+                                  className="w-5 h-5 text-green-600 inline-block"
+                                  title="URL or file path added"
+                                  aria-label="File available"
+                                />
+                              ) : (
+                                <FaTimes
+                                  className="w-5 h-5 text-red-500 inline-block"
+                                  title="No URL or file path yet"
+                                  aria-label="File not available"
+                                />
+                              )}
                             </td>
                             <td className="px-4 py-3">
                               <StatusBadge
@@ -260,8 +277,8 @@ const StatusBadge = ({ status, onClick }) => {
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Type
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Size
+                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      File Available
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Status
@@ -321,8 +338,20 @@ const StatusBadge = ({ status, onClick }) => {
                           )}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-600">
-                        {formatFileSize(file.fileSize)}
+                      <td className="px-4 py-3 text-center">
+                        {isDownloadResourcePresent(file) ? (
+                          <FaCheck
+                            className="w-5 h-5 text-green-600 inline-block"
+                            title="URL or file path added"
+                            aria-label="File available"
+                          />
+                        ) : (
+                          <FaTimes
+                            className="w-5 h-5 text-red-500 inline-block"
+                            title="No URL or file path yet"
+                            aria-label="File not available"
+                          />
+                        )}
                       </td>
                       <td className="px-4 py-3">
                         <StatusBadge
@@ -373,6 +402,9 @@ const StatusBadge = ({ status, onClick }) => {
   );
 };
 
+/** Root / subfolder dropdowns load up to this many rows (no per-page UI on this screen). */
+const DROPDOWN_LIST_LIMIT = 500;
+
 const DownloadFileManagement = () => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
@@ -382,20 +414,14 @@ const DownloadFileManagement = () => {
   const [files, setFiles] = useState([]);
   const [totalFiles, setTotalFiles] = useState(0);
   const [filePage, setFilePage] = useState(1);
-  const [loadingMoreFiles, setLoadingMoreFiles] = useState(false);
+  const [filePageSize, setFilePageSize] = useState(50);
   const [folders, setFolders] = useState([]);
-  const [totalFolders, setTotalFolders] = useState(0);
-  const [folderPage, setFolderPage] = useState(1);
-  const [loadingMoreFolders, setLoadingMoreFolders] = useState(false);
   const [subfolders, setSubfolders] = useState([]);
-  const [totalSubfolders, setTotalSubfolders] = useState(0);
-  const [subfolderPage, setSubfolderPage] = useState(1);
-  const [loadingMoreSubfolders, setLoadingMoreSubfolders] = useState(false);
   const [selectedFolderId, setSelectedFolderId] = useState("");
   const [selectedSubfolderId, setSelectedSubfolderId] = useState("");
+  const [fileSearchInput, setFileSearchInput] = useState("");
+  const [fileSearch, setFileSearch] = useState("");
   const [error, setError] = useState(null);
-
-  const PAGE_SIZE = 50;
 
   const [formData, setFormData] = useState({
     name: "",
@@ -403,8 +429,6 @@ const DownloadFileManagement = () => {
     fileType: "url",
     fileUrl: "",
     uploadedFile: "",
-    fileSize: "",
-    mimeType: "",
     description: "",
     status: "active",
   });
@@ -413,92 +437,78 @@ const DownloadFileManagement = () => {
   const { toasts, removeToast, success, error: showError } = useToast();
   const isFetchingRef = useRef(false);
 
-  const fetchData = async (append = false) => {
-    if (isFetchingRef.current && !append) return;
-    if (append) setLoadingMoreFolders(true);
-    else { isFetchingRef.current = true; setIsDataLoading(true); setError(null); }
-    const page = append ? folderPage + 1 : 1;
+  const loadFoldersForDropdown = async () => {
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
+    setIsDataLoading(true);
+    setError(null);
     try {
-      const foldersRes = await api.get(`/download/folder?status=all&parentFolderId=null&limit=${PAGE_SIZE}&page=${page}`);
+      const foldersRes = await api.get(
+        `/download/folder?status=all&parentFolderId=null&limit=${DROPDOWN_LIST_LIMIT}&page=1`
+      );
       if (foldersRes.data?.success) {
-        const list = foldersRes.data.data || [];
-        const total = foldersRes.data.pagination?.total ?? list.length;
-        if (append) {
-          setFolders((prev) => [...prev, ...list]);
-          setFolderPage(page);
-        } else {
-          setFolders(list);
-          setFolderPage(1);
-        }
-        setTotalFolders(total);
+        setFolders(foldersRes.data.data || []);
       }
     } catch (err) {
       console.error("Error fetching data:", err);
       setError("Failed to fetch data");
     } finally {
       setIsDataLoading(false);
-      setLoadingMoreFolders(false);
       isFetchingRef.current = false;
     }
   };
 
-  const fetchSubfolders = async (folderId, append = false) => {
+  const loadSubfoldersForDropdown = async (folderId) => {
     if (!folderId) {
       setSubfolders([]);
-      setTotalSubfolders(0);
-      setSubfolderPage(1);
       setSelectedSubfolderId("");
       setFiles([]);
+      setTotalFiles(0);
+      setFilePage(1);
       return;
     }
-    if (append) setLoadingMoreSubfolders(true);
-    else setIsDataLoading(true);
-    const page = append ? subfolderPage + 1 : 1;
+    setIsDataLoading(true);
     try {
-      const response = await api.get(`/download/folder?status=all&parentFolderId=${folderId}&limit=${PAGE_SIZE}&page=${page}`);
+      const response = await api.get(
+        `/download/folder?status=all&parentFolderId=${folderId}&limit=${DROPDOWN_LIST_LIMIT}&page=1`
+      );
       if (response.data?.success) {
-        const list = response.data.data || [];
-        const total = response.data.pagination?.total ?? list.length;
-        if (append) {
-          setSubfolders((prev) => [...prev, ...list]);
-          setSubfolderPage(page);
-        } else {
-          setSubfolders(list);
-          setSubfolderPage(1);
-        }
-        setTotalSubfolders(total);
+        setSubfolders(response.data.data || []);
       }
     } catch (err) {
       console.error("Error fetching subfolders:", err);
       showError("Failed to fetch subfolders");
     } finally {
       setIsDataLoading(false);
-      setLoadingMoreSubfolders(false);
     }
   };
 
-  const fetchFiles = async (subfolderId, append = false) => {
+  const fetchFiles = async (subfolderId, page = 1, limit = filePageSize, searchOverride) => {
     if (!subfolderId) {
       setFiles([]);
       setTotalFiles(0);
       setFilePage(1);
       return;
     }
-    if (append) setLoadingMoreFiles(true);
-    else setIsDataLoading(true);
-    const page = append ? filePage + 1 : 1;
+    setIsDataLoading(true);
+    const effectiveSearch =
+      searchOverride !== undefined ? searchOverride : fileSearch;
+    const q = String(effectiveSearch || "").trim();
+    const searchParam = q ? `&search=${encodeURIComponent(q)}` : "";
     try {
-      const response = await api.get(`/download/file?status=all&folderId=${subfolderId}&limit=${PAGE_SIZE}&page=${page}`);
+      const response = await api.get(
+        `/download/file?status=all&folderId=${subfolderId}&limit=${limit}&page=${page}${searchParam}`
+      );
       if (response.data?.success) {
         const list = response.data.data || [];
         const total = response.data.pagination?.total ?? list.length;
-        if (append) {
-          setFiles((prev) => [...prev, ...list]);
-          setFilePage(page);
-        } else {
-          setFiles(list);
-          setFilePage(1);
+        if (list.length === 0 && page > 1 && total > 0) {
+          setIsDataLoading(false);
+          await fetchFiles(subfolderId, page - 1, limit, effectiveSearch);
+          return;
         }
+        setFiles(list);
+        setFilePage(page);
         setTotalFiles(total);
       }
     } catch (err) {
@@ -506,84 +516,114 @@ const DownloadFileManagement = () => {
       showError("Failed to fetch files");
     } finally {
       setIsDataLoading(false);
-      setLoadingMoreFiles(false);
     }
   };
 
-  const hasMoreFolders = folders.length < totalFolders;
-  const hasMoreSubfolders = subfolders.length < totalSubfolders;
-  const hasMoreFiles = files.length < totalFiles;
-
-  // Fetch all files when folder is selected (to show all files in all subfolders)
-  const fetchAllFilesForFolder = async (folderId) => {
+  /** Files on root folder + all its subfolders (paginated). */
+  const fetchFilesForRootFolder = async (
+    folderId,
+    page = 1,
+    limit = filePageSize,
+    searchOverride
+  ) => {
     if (!folderId) {
       setFiles([]);
+      setTotalFiles(0);
+      setFilePage(1);
       return;
     }
+    setIsDataLoading(true);
+    const effectiveSearch =
+      searchOverride !== undefined ? searchOverride : fileSearch;
+    const q = String(effectiveSearch || "").trim();
+    const searchParam = q ? `&search=${encodeURIComponent(q)}` : "";
     try {
-      setIsDataLoading(true);
-      // Get all subfolders first
-      const subfoldersRes = await api.get(`/download/folder?status=all&parentFolderId=${folderId}`);
-      if (subfoldersRes.data?.success) {
-        const allSubfolders = subfoldersRes.data.data || [];
-        setSubfolders(allSubfolders);
-        
-        // Fetch files for all subfolders
-        if (allSubfolders.length > 0) {
-          const subfolderIds = allSubfolders.map((sf) => sf._id);
-          const filesPromises = subfolderIds.map((subfolderId) =>
-            api.get(`/download/file?status=all&folderId=${subfolderId}`)
-          );
-          const filesResponses = await Promise.all(filesPromises);
-          const allFiles = filesResponses
-            .map((res) => res.data?.data || [])
-            .flat();
-          setFiles(allFiles);
-        } else {
-          // If no subfolders, fetch files directly in folder
-          const filesRes = await api.get(`/download/file?status=all&folderId=${folderId}`);
-          if (filesRes.data?.success) {
-            setFiles(filesRes.data.data || []);
-          }
+      const response = await api.get(
+        `/download/file?status=all&rootFolderId=${folderId}&limit=${limit}&page=${page}${searchParam}`
+      );
+      if (response.data?.success) {
+        const list = response.data.data || [];
+        const total = response.data.pagination?.total ?? list.length;
+        if (list.length === 0 && page > 1 && total > 0) {
+          setIsDataLoading(false);
+          await fetchFilesForRootFolder(folderId, page - 1, limit, effectiveSearch);
+          return;
         }
+        setFiles(list);
+        setFilePage(page);
+        setTotalFiles(total);
       }
-    } catch (error) {
-      console.error("Error fetching all files:", error);
+    } catch (err) {
+      console.error("Error fetching files:", err);
       showError("Failed to fetch files");
     } finally {
       setIsDataLoading(false);
     }
   };
 
+  const refreshFilesForCurrentSelection = async () => {
+    if (selectedSubfolderId) {
+      await fetchFiles(selectedSubfolderId, 1, filePageSize, fileSearch);
+    } else if (selectedFolderId) {
+      await fetchFilesForRootFolder(selectedFolderId, 1, filePageSize, fileSearch);
+    }
+  };
+
   useEffect(() => {
-    fetchData();
+    loadFoldersForDropdown();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- initial load only
   }, []);
 
   useEffect(() => {
+    setFileSearchInput("");
+    setFileSearch("");
     if (selectedFolderId) {
-      fetchSubfolders(selectedFolderId);
-      // Fetch all files for this folder (from all subfolders)
-      fetchAllFilesForFolder(selectedFolderId);
+      loadSubfoldersForDropdown(selectedFolderId);
     } else {
       setSubfolders([]);
       setSelectedSubfolderId("");
       setFiles([]);
+      setTotalFiles(0);
+      setFilePage(1);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedFolderId]);
 
   useEffect(() => {
+    if (!selectedFolderId) return;
+    setFileSearchInput("");
+    setFileSearch("");
     if (selectedSubfolderId) {
-      fetchFiles(selectedSubfolderId);
+      fetchFiles(selectedSubfolderId, 1, filePageSize, "");
       setFormData((prev) => ({ ...prev, folderId: selectedSubfolderId }));
-    } else if (selectedFolderId) {
-      // If subfolder is cleared but folder is selected, show all files
-      fetchAllFilesForFolder(selectedFolderId);
-      setFormData((prev) => ({ ...prev, folderId: "" }));
     } else {
-      setFiles([]);
+      fetchFilesForRootFolder(selectedFolderId, 1, filePageSize, "");
       setFormData((prev) => ({ ...prev, folderId: "" }));
     }
-  }, [selectedSubfolderId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedFolderId, selectedSubfolderId]);
+
+  const applyFileSearch = () => {
+    if (!selectedFolderId) return;
+    const q = fileSearchInput.trim();
+    setFileSearch(q);
+    if (selectedSubfolderId) {
+      fetchFiles(selectedSubfolderId, 1, filePageSize, q);
+    } else {
+      fetchFilesForRootFolder(selectedFolderId, 1, filePageSize, q);
+    }
+  };
+
+  const clearFileSearch = () => {
+    if (!selectedFolderId) return;
+    setFileSearchInput("");
+    setFileSearch("");
+    if (selectedSubfolderId) {
+      fetchFiles(selectedSubfolderId, 1, filePageSize, "");
+    } else {
+      fetchFilesForRootFolder(selectedFolderId, 1, filePageSize, "");
+    }
+  };
 
   const handleAddFile = async (e) => {
     e.preventDefault();
@@ -608,18 +648,12 @@ const DownloadFileManagement = () => {
         fileType: formData.fileType,
         fileUrl: formData.fileType === "url" ? formData.fileUrl.trim() : undefined,
         uploadedFile: formData.fileType === "upload" ? formData.uploadedFile.trim() : undefined,
-        fileSize: formData.fileSize ? parseInt(formData.fileSize) : undefined,
-        mimeType: formData.mimeType || undefined,
         description: formData.description || "",
         status: formData.status,
       };
       const response = await api.post("/download/file", payload);
       if (response.data.success) {
-        if (selectedFolderId) {
-          fetchAllFilesForFolder(selectedFolderId);
-        } else if (selectedSubfolderId) {
-          fetchFiles(selectedSubfolderId);
-        }
+        await refreshFilesForCurrentSelection();
         success(`File "${formData.name}" created!`);
         setFormData({
           name: "",
@@ -627,8 +661,6 @@ const DownloadFileManagement = () => {
           fileType: "url",
           fileUrl: "",
           uploadedFile: "",
-          fileSize: "",
-          mimeType: "",
           description: "",
           status: "active",
         });
@@ -671,18 +703,12 @@ const DownloadFileManagement = () => {
         fileType: formData.fileType,
         fileUrl: formData.fileType === "url" ? formData.fileUrl.trim() : undefined,
         uploadedFile: formData.fileType === "upload" ? formData.uploadedFile.trim() : undefined,
-        fileSize: formData.fileSize ? parseInt(formData.fileSize) : undefined,
-        mimeType: formData.mimeType || undefined,
         description: formData.description || "",
         status: formData.status,
       };
       const response = await api.put(`/download/file/${editingFile._id}`, payload);
       if (response.data.success) {
-        if (selectedFolderId) {
-          fetchAllFilesForFolder(selectedFolderId);
-        } else if (selectedSubfolderId) {
-          fetchFiles(selectedSubfolderId);
-        }
+        await refreshFilesForCurrentSelection();
         success(`File "${formData.name}" updated!`);
         setShowEditForm(false);
         setEditingFile(null);
@@ -692,8 +718,6 @@ const DownloadFileManagement = () => {
           fileType: "url",
           fileUrl: "",
           uploadedFile: "",
-          fileSize: "",
-          mimeType: "",
           description: "",
           status: "active",
         });
@@ -741,13 +765,7 @@ const DownloadFileManagement = () => {
     try {
       const response = await api.delete(`/download/file/${file._id}`);
       if (response.data.success) {
-        if (selectedFolderId) {
-          fetchAllFilesForFolder(selectedFolderId);
-        } else if (selectedSubfolderId) {
-          fetchFiles(selectedSubfolderId);
-        } else {
-          setFiles((prev) => prev.filter((f) => f._id !== file._id));
-        }
+        await refreshFilesForCurrentSelection();
         success("File deleted successfully");
       }
     } catch (err) {
@@ -764,35 +782,29 @@ const DownloadFileManagement = () => {
       (sf) => sf._id === fileFolderId
     );
     
-    // If subfolder not found in current list, fetch it
+    // If not in loaded subfolders, fetch folder doc (root or subfolder)
     if (!fileSubfolder) {
       try {
-        const subfolderRes = await api.get(`/download/folder/${fileFolderId}`);
-        if (subfolderRes.data?.success) {
-          fileSubfolder = subfolderRes.data.data;
-          const parentFolderId = fileSubfolder.parentFolderId?._id || fileSubfolder.parentFolderId;
-          
-          // Set the parent folder and fetch its subfolders
-          if (parentFolderId && parentFolderId !== selectedFolderId) {
-            setSelectedFolderId(parentFolderId);
-            await fetchSubfolders(parentFolderId);
-            await fetchAllFilesForFolder(parentFolderId);
-          }
+        const folderRes = await api.get(`/download/folder/${fileFolderId}`);
+        if (folderRes.data?.success) {
+          fileSubfolder = folderRes.data.data;
         }
       } catch (err) {
-        console.error("Error fetching subfolder:", err);
+        console.error("Error fetching folder:", err);
       }
     }
-    
+
     if (fileSubfolder) {
       const parentFolderId = fileSubfolder.parentFolderId?._id || fileSubfolder.parentFolderId;
-      if (parentFolderId && parentFolderId !== selectedFolderId) {
-        setSelectedFolderId(parentFolderId);
-        await fetchSubfolders(parentFolderId);
-        await fetchAllFilesForFolder(parentFolderId);
-      }
-      if (fileFolderId !== selectedSubfolderId) {
-        setSelectedSubfolderId(fileFolderId);
+      if (!parentFolderId) {
+        // File lives on root folder (no subfolder)
+        setSelectedFolderId(String(fileFolderId));
+        setSelectedSubfolderId("");
+      } else {
+        setSelectedFolderId(String(parentFolderId));
+        if (String(fileFolderId) !== String(selectedSubfolderId)) {
+          setSelectedSubfolderId(String(fileFolderId));
+        }
       }
     }
     
@@ -802,8 +814,6 @@ const DownloadFileManagement = () => {
       fileType: file.fileType,
       fileUrl: file.fileUrl || "",
       uploadedFile: file.uploadedFile || "",
-      fileSize: file.fileSize || "",
-      mimeType: file.mimeType || "",
       description: file.description || "",
       status: file.status,
     });
@@ -818,8 +828,6 @@ const DownloadFileManagement = () => {
       fileType: "url",
       fileUrl: "",
       uploadedFile: "",
-      fileSize: "",
-      mimeType: "",
       description: "",
       status: "active",
     });
@@ -846,50 +854,71 @@ const DownloadFileManagement = () => {
       <ToastContainer toasts={toasts} removeToast={removeToast} />
       <div className="space-y-6">
         {/* Page Header */}
-        <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 rounded-lg border border-gray-200 p-4 shadow-sm">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div>
-              <h1 className="text-xl font-semibold text-gray-900 mb-1">
-                Download File Management
-              </h1>
-              <p className="text-xs text-gray-600">
-                Add and manage files in your subfolders. Support both URL links and file uploads.
-              </p>
+        <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 rounded-lg border border-gray-200 p-4 sm:p-5 shadow-sm">
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-3">
+              <div className="min-w-0 flex-1 max-w-xl">
+                <h1 className="text-xl font-semibold text-gray-900 mb-1">
+                  Download File Management
+                </h1>
+                <p className="text-xs text-gray-600">
+                  Add and manage files in your subfolders. Support both URL links and file uploads.
+                </p>
+              </div>
+              <div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-3 w-full lg:w-auto lg:min-w-[min(100%,22rem)] lg:max-w-2xl">
+                <DownloadListSearchBar
+                  variant="toolbar"
+                  inputId="file-mgmt-file-search"
+                  inputAriaLabel="Search files"
+                  value={fileSearchInput}
+                  onChange={setFileSearchInput}
+                  onSearch={applyFileSearch}
+                  onClear={clearFileSearch}
+                  activeQuery={fileSearch}
+                  placeholder={
+                    selectedFolderId
+                      ? "Search files…"
+                      : "Select a folder below first"
+                  }
+                  loading={isDataLoading}
+                  disabled={!selectedFolderId}
+                  className="flex-1 min-w-0 sm:pt-0.5"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!selectedFolderId) {
+                      showError("Please select a folder first");
+                      return;
+                    }
+                    if (subfolders.length === 0) {
+                      showError("Please create subfolders first in Subfolder Management");
+                      return;
+                    }
+                    if (!selectedSubfolderId) {
+                      showError("Please select a subfolder first");
+                      return;
+                    }
+                    setShowAddForm(true);
+                    setShowEditForm(false);
+                    setEditingFile(null);
+                    setFormData({
+                      name: "",
+                      folderId: selectedSubfolderId,
+                      fileType: "url",
+                      fileUrl: "",
+                      uploadedFile: "",
+                      description: "",
+                      status: "active",
+                    });
+                  }}
+                  className="shrink-0 self-end sm:self-center px-3 py-2 bg-[#0056FF] hover:bg-[#0044CC] text-white rounded-lg text-xs font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm whitespace-nowrap"
+                  disabled={!selectedFolderId || !selectedSubfolderId}
+                >
+                  Add New File
+                </button>
+              </div>
             </div>
-            <button
-              onClick={() => {
-                if (!selectedFolderId) {
-                  showError("Please select a folder first");
-                  return;
-                }
-                if (subfolders.length === 0) {
-                  showError("Please create subfolders first in Subfolder Management");
-                  return;
-                }
-                if (!selectedSubfolderId) {
-                  showError("Please select a subfolder first");
-                  return;
-                }
-                setShowAddForm(true);
-                setShowEditForm(false);
-                setEditingFile(null);
-                setFormData({
-                  name: "",
-                  folderId: selectedSubfolderId,
-                  fileType: "url",
-                  fileUrl: "",
-                  uploadedFile: "",
-                  fileSize: "",
-                  mimeType: "",
-                  description: "",
-                  status: "active",
-                });
-              }}
-              className="px-2 py-1 bg-[#0056FF] hover:bg-[#0044CC] text-white rounded-lg text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={!selectedFolderId || !selectedSubfolderId}
-            >
-              Add New File
-            </button>
           </div>
         </div>
 
@@ -916,16 +945,6 @@ const DownloadFileManagement = () => {
                 </option>
               ))}
             </select>
-            {hasMoreFolders && (
-              <button
-                type="button"
-                onClick={() => fetchData(true)}
-                disabled={loadingMoreFolders}
-                className="px-3 py-2 text-sm font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 disabled:opacity-60 transition-colors shrink-0"
-              >
-                {loadingMoreFolders ? "Loading…" : `View more (${folders.length} of ${totalFolders})`}
-              </button>
-            )}
           </div>
           {selectedFolderId && (
             <div className="flex flex-col sm:flex-row sm:items-center gap-4">
@@ -949,16 +968,6 @@ const DownloadFileManagement = () => {
                   </option>
                 ))}
               </select>
-              {hasMoreSubfolders && (
-                <button
-                  type="button"
-                  onClick={() => fetchSubfolders(selectedFolderId, true)}
-                  disabled={loadingMoreSubfolders}
-                  className="px-3 py-2 text-sm font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 disabled:opacity-60 transition-colors shrink-0"
-                >
-                  {loadingMoreSubfolders ? "Loading…" : `View more (${subfolders.length} of ${totalSubfolders})`}
-                </button>
-              )}
             </div>
           )}
           {!selectedFolderId && (
@@ -1137,47 +1146,6 @@ const DownloadFileManagement = () => {
                   </div>
                 )}
 
-                {/* File Size */}
-                <div className="space-y-2">
-                  <label
-                    htmlFor="fileSize"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    File Size (bytes)
-                  </label>
-                  <input
-                    type="number"
-                    id="fileSize"
-                    name="fileSize"
-                    value={formData.fileSize}
-                    onChange={handleFormChange}
-                    placeholder="1024"
-                    min="0"
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm placeholder-gray-400 transition-all"
-                    disabled={isFormLoading}
-                  />
-                </div>
-
-                {/* MIME Type */}
-                <div className="space-y-2">
-                  <label
-                    htmlFor="mimeType"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    MIME Type
-                  </label>
-                  <input
-                    type="text"
-                    id="mimeType"
-                    name="mimeType"
-                    value={formData.mimeType}
-                    onChange={handleFormChange}
-                    placeholder="application/pdf"
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm placeholder-gray-400 transition-all"
-                    disabled={isFormLoading}
-                  />
-                </div>
-
                 {/* Status */}
                 <div className="space-y-2">
                   <label
@@ -1288,25 +1256,29 @@ const DownloadFileManagement = () => {
                     onDelete={handleDeleteFile}
                     onToggleStatus={handleToggleStatus}
                   />
-                  {selectedSubfolderId && hasMoreFiles && (
-                    <div className="mt-4 flex justify-center">
-                      <button
-                        type="button"
-                        onClick={() => fetchFiles(selectedSubfolderId, true)}
-                        disabled={loadingMoreFiles}
-                        className="px-4 py-2.5 text-sm font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 disabled:opacity-60 disabled:cursor-not-allowed transition-colors inline-flex items-center gap-2"
-                      >
-                        {loadingMoreFiles ? (
-                          <>
-                            <LoadingSpinner size="small" />
-                            Loading…
-                          </>
-                        ) : (
-                          <>View more ({files.length} of {totalFiles})</>
-                        )}
-                      </button>
-                    </div>
-                  )}
+                  <DownloadListPagination
+                    page={filePage}
+                    totalItems={totalFiles}
+                    pageSize={filePageSize}
+                    onPageChange={(p) => {
+                      if (selectedSubfolderId) {
+                        fetchFiles(selectedSubfolderId, p, filePageSize);
+                      } else {
+                        fetchFilesForRootFolder(selectedFolderId, p, filePageSize);
+                      }
+                    }}
+                    onPageSizeChange={(s) => {
+                      setFilePageSize(s);
+                      if (selectedSubfolderId) {
+                        fetchFiles(selectedSubfolderId, 1, s);
+                      } else {
+                        fetchFilesForRootFolder(selectedFolderId, 1, s);
+                      }
+                    }}
+                    loading={isDataLoading}
+                    itemLabel="files"
+                    hint="Page through files for the current folder/subfolder selection."
+                  />
                 </>
               )}
             </div>

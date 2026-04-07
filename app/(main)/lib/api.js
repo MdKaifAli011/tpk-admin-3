@@ -10,7 +10,11 @@ import { logger } from "@/utils/logger";
 const createSlugLocal = createSlugUtil;
 
 // Base path - should match next.config.mjs basePath (trim to tolerate spaces in .env)
-const basePath = (process.env.NEXT_PUBLIC_BASE_PATH || "/self-study").replace(/^\s+|\s+$/g, "") || "/self-study";
+const basePath =
+  (process.env.NEXT_PUBLIC_BASE_PATH || "/self-study").replace(
+    /^\s+|\s+$/g,
+    "",
+  ) || "/self-study";
 
 // Helper to get base URL for server-side requests (optionally from current request)
 const getBaseUrl = (overrides = {}) => {
@@ -64,7 +68,12 @@ const getCacheKey = (url, params = {}) => {
 // Fetch all active exams (with pagination support and request deduplication)
 export const fetchExams = async (options = {}) => {
   try {
-    const { page = 1, limit = 100, status = STATUS.ACTIVE, baseUrl: baseUrlOverride } = options;
+    const {
+      page = 1,
+      limit = 100,
+      status = STATUS.ACTIVE,
+      baseUrl: baseUrlOverride,
+    } = options;
 
     // Check if we're on server side
     const isServer = typeof window === "undefined";
@@ -116,8 +125,9 @@ export const fetchExams = async (options = {}) => {
           // If axios fails, try with fetch (no auth)
           if (status === STATUS.ACTIVE) {
             return fetch(
-              `${baseUrl || ""
-              }/api/exam?page=${page}&limit=${limit}&status=${status}`
+              `${
+                baseUrl || ""
+              }/api/exam?page=${page}&limit=${limit}&status=${status}`,
             )
               .then((res) => res.json())
               .catch(() => ({ success: false, data: [] }));
@@ -148,7 +158,10 @@ export const fetchExams = async (options = {}) => {
     const errDetail = {
       errorMessage: error?.message,
       errorCode: error?.code,
-      ...(error?.response && { status: error.response?.status, responseData: error.response?.data }),
+      ...(error?.response && {
+        status: error.response?.status,
+        responseData: error.response?.data,
+      }),
     };
     logger.error("Error fetching exams:", errDetail);
     return [];
@@ -206,7 +219,7 @@ export const fetchExamById = async (examId, options = {}) => {
       (exam) =>
         String(exam._id) === String(examId) ||
         exam.name?.toLowerCase() === examIdLower ||
-        createSlugLocal(exam.name) === examIdLower
+        createSlugLocal(exam.name) === examIdLower,
     );
 
     // If found by slug, fetch the full exam data by its actual ID
@@ -253,12 +266,21 @@ export const fetchPrimeVideo = async (examSlug = null) => {
   try {
     if (isServer) {
       const response = await fetch(url, { cache: "no-store" });
-      if (!response.ok) return { success: false, data: { exams: [], nodes: [] } };
+      if (!response.ok)
+        return { success: false, data: { exams: [], nodes: [] } };
       const json = await response.json();
-      return json.success ? json : { success: false, data: { exams: [], nodes: [] } };
+      return json.success
+        ? json
+        : { success: false, data: { exams: [], nodes: [] } };
     }
-    const response = await api.get(examSlug ? `/video-library?exam=${encodeURIComponent(examSlug)}` : "/video-library");
-    return response.data?.success ? response.data : { success: false, data: { exams: [], nodes: [] } };
+    const response = await api.get(
+      examSlug
+        ? `/video-library?exam=${encodeURIComponent(examSlug)}`
+        : "/video-library",
+    );
+    return response.data?.success
+      ? response.data
+      : { success: false, data: { exams: [], nodes: [] } };
   } catch (err) {
     logger.warn("fetchPrimeVideo error:", err?.message);
     return { success: false, data: { exams: [], nodes: [] } };
@@ -297,14 +319,14 @@ export const fetchSubjectsByExam = async (examId, options = {}) => {
               const matchesExam =
                 String(subjectExamId) === String(examId) ||
                 subject.examId?.name?.toLowerCase() ===
-                String(examId).toLowerCase();
+                  String(examId).toLowerCase();
               const matchesStatus = subject.status
                 ? subject.status.toLowerCase() === STATUS.ACTIVE.toLowerCase()
                 : false;
               return matchesExam && matchesStatus;
             });
             return validSubjects.sort(
-              (a, b) => (a.orderNumber || 0) - (b.orderNumber || 0)
+              (a, b) => (a.orderNumber || 0) - (b.orderNumber || 0),
             );
           }
 
@@ -315,14 +337,14 @@ export const fetchSubjectsByExam = async (examId, options = {}) => {
               String(subjectExamId) === String(examId) ||
               subject.examId === examId ||
               subject.examId?.name?.toLowerCase() ===
-              String(examId).toLowerCase();
+                String(examId).toLowerCase();
             const matchesStatus = subject.status
               ? subject.status.toLowerCase() === STATUS.ACTIVE.toLowerCase()
               : false;
             return matchesExam && matchesStatus;
           });
           return filteredSubjects.sort(
-            (a, b) => (a.orderNumber || 0) - (b.orderNumber || 0)
+            (a, b) => (a.orderNumber || 0) - (b.orderNumber || 0),
           );
         }
       }
@@ -330,7 +352,7 @@ export const fetchSubjectsByExam = async (examId, options = {}) => {
     } else {
       // Client-side: use axios
       const response = await api.get(
-        `/subject?examId=${examId}&page=${page}&limit=${limit}&status=${STATUS.ACTIVE}`
+        `/subject?examId=${examId}&page=${page}&limit=${limit}&status=${STATUS.ACTIVE}`,
       );
 
       if (response.data?.success) {
@@ -344,7 +366,7 @@ export const fetchSubjectsByExam = async (examId, options = {}) => {
             const matchesExam =
               String(subjectExamId) === String(examId) ||
               subject.examId?.name?.toLowerCase() ===
-              String(examId).toLowerCase();
+                String(examId).toLowerCase();
             const matchesStatus = subject.status
               ? subject.status.toLowerCase() === STATUS.ACTIVE.toLowerCase()
               : false;
@@ -353,7 +375,7 @@ export const fetchSubjectsByExam = async (examId, options = {}) => {
 
           // Sort by orderNumber
           return validSubjects.sort(
-            (a, b) => (a.orderNumber || 0) - (b.orderNumber || 0)
+            (a, b) => (a.orderNumber || 0) - (b.orderNumber || 0),
           );
         }
 
@@ -364,7 +386,7 @@ export const fetchSubjectsByExam = async (examId, options = {}) => {
             String(subjectExamId) === String(examId) ||
             subject.examId === examId ||
             subject.examId?.name?.toLowerCase() ===
-            String(examId).toLowerCase();
+              String(examId).toLowerCase();
           const matchesStatus = subject.status
             ? subject.status.toLowerCase() === STATUS.ACTIVE.toLowerCase()
             : false;
@@ -372,13 +394,13 @@ export const fetchSubjectsByExam = async (examId, options = {}) => {
         });
         // Sort by orderNumber
         return filteredSubjects.sort(
-          (a, b) => (a.orderNumber || 0) - (b.orderNumber || 0)
+          (a, b) => (a.orderNumber || 0) - (b.orderNumber || 0),
         );
       }
 
       logger.warn(
         "fetchSubjectsByExam: Response not successful:",
-        response.data
+        response.data,
       );
       return [];
     }
@@ -451,8 +473,9 @@ export const fetchUnitsBySubject = async (subjectId, examId, options = {}) => {
 
   try {
     const { page = 1, limit = 100 } = options;
-    const url = `${baseUrl}/api/unit?subjectId=${subjectId}${examId ? `&examId=${examId}` : ""
-      }&page=${page}&limit=${limit}&status=${STATUS.ACTIVE}`;
+    const url = `${baseUrl}/api/unit?subjectId=${subjectId}${
+      examId ? `&examId=${examId}` : ""
+    }&page=${page}&limit=${limit}&status=${STATUS.ACTIVE}`;
 
     if (isServer) {
       // Server-side: use fetch
@@ -471,11 +494,11 @@ export const fetchUnitsBySubject = async (subjectId, examId, options = {}) => {
           const filteredUnits = (data.data || []).filter(
             (unit) =>
               unit.status &&
-              unit.status.toLowerCase() === STATUS.ACTIVE.toLowerCase()
+              unit.status.toLowerCase() === STATUS.ACTIVE.toLowerCase(),
           );
           // Sort by orderNumber
           return filteredUnits.sort(
-            (a, b) => (a.orderNumber || 0) - (b.orderNumber || 0)
+            (a, b) => (a.orderNumber || 0) - (b.orderNumber || 0),
           );
         }
       }
@@ -483,8 +506,9 @@ export const fetchUnitsBySubject = async (subjectId, examId, options = {}) => {
     } else {
       // Client-side: use axios
       const response = await api.get(
-        `/unit?subjectId=${subjectId}${examId ? `&examId=${examId}` : ""
-        }&page=${page}&limit=${limit}&status=${STATUS.ACTIVE}`
+        `/unit?subjectId=${subjectId}${
+          examId ? `&examId=${examId}` : ""
+        }&page=${page}&limit=${limit}&status=${STATUS.ACTIVE}`,
       );
 
       if (response.data.success) {
@@ -496,11 +520,11 @@ export const fetchUnitsBySubject = async (subjectId, examId, options = {}) => {
         const filteredUnits = (response.data.data || []).filter(
           (unit) =>
             unit.status &&
-            unit.status.toLowerCase() === STATUS.ACTIVE.toLowerCase()
+            unit.status.toLowerCase() === STATUS.ACTIVE.toLowerCase(),
         );
         // Sort by orderNumber
         return filteredUnits.sort(
-          (a, b) => (a.orderNumber || 0) - (b.orderNumber || 0)
+          (a, b) => (a.orderNumber || 0) - (b.orderNumber || 0),
         );
       }
       return [];
@@ -539,11 +563,11 @@ export const fetchChaptersByUnit = async (unitId, options = {}) => {
           const filteredChapters = (data.data || []).filter(
             (chapter) =>
               chapter.status &&
-              chapter.status.toLowerCase() === STATUS.ACTIVE.toLowerCase()
+              chapter.status.toLowerCase() === STATUS.ACTIVE.toLowerCase(),
           );
           // Sort by orderNumber
           return filteredChapters.sort(
-            (a, b) => (a.orderNumber || 0) - (b.orderNumber || 0)
+            (a, b) => (a.orderNumber || 0) - (b.orderNumber || 0),
           );
         }
       }
@@ -551,7 +575,7 @@ export const fetchChaptersByUnit = async (unitId, options = {}) => {
     } else {
       // Client-side: use axios
       const response = await api.get(
-        `/chapter?unitId=${unitId}&page=${page}&limit=${limit}&status=${STATUS.ACTIVE}`
+        `/chapter?unitId=${unitId}&page=${page}&limit=${limit}&status=${STATUS.ACTIVE}`,
       );
 
       if (response.data.success) {
@@ -563,11 +587,11 @@ export const fetchChaptersByUnit = async (unitId, options = {}) => {
         const filteredChapters = (response.data.data || []).filter(
           (chapter) =>
             chapter.status &&
-            chapter.status.toLowerCase() === STATUS.ACTIVE.toLowerCase()
+            chapter.status.toLowerCase() === STATUS.ACTIVE.toLowerCase(),
         );
         // Sort by orderNumber
         return filteredChapters.sort(
-          (a, b) => (a.orderNumber || 0) - (b.orderNumber || 0)
+          (a, b) => (a.orderNumber || 0) - (b.orderNumber || 0),
         );
       }
       return [];
@@ -591,7 +615,7 @@ export const fetchChaptersBySubject = async (subjectId, examId) => {
       return response.data.data.filter(
         (chapter) =>
           chapter.status &&
-          chapter.status.toLowerCase() === STATUS.ACTIVE.toLowerCase()
+          chapter.status.toLowerCase() === STATUS.ACTIVE.toLowerCase(),
       );
     }
     return [];
@@ -606,11 +630,11 @@ export const fetchAllChaptersForSubject = async (subjectId, examId) => {
   try {
     const units = await fetchUnitsBySubject(subjectId, examId);
     const chapterArrays = await Promise.all(
-      units.map((unit) => fetchChaptersByUnit(unit._id).catch(() => []))
+      units.map((unit) => fetchChaptersByUnit(unit._id).catch(() => [])),
     );
-    return chapterArrays.flat().sort(
-      (a, b) => (a.orderNumber || 0) - (b.orderNumber || 0)
-    );
+    return chapterArrays
+      .flat()
+      .sort((a, b) => (a.orderNumber || 0) - (b.orderNumber || 0));
   } catch (error) {
     logger.error("Error fetching all chapters for subject:", error);
     return [];
@@ -743,11 +767,11 @@ export const fetchTopicsByChapter = async (chapterId, options = {}) => {
           const filteredTopics = (data.data || []).filter(
             (topic) =>
               topic.status &&
-              topic.status.toLowerCase() === STATUS.ACTIVE.toLowerCase()
+              topic.status.toLowerCase() === STATUS.ACTIVE.toLowerCase(),
           );
           // Sort by orderNumber
           return filteredTopics.sort(
-            (a, b) => (a.orderNumber || 0) - (b.orderNumber || 0)
+            (a, b) => (a.orderNumber || 0) - (b.orderNumber || 0),
           );
         }
       }
@@ -755,7 +779,7 @@ export const fetchTopicsByChapter = async (chapterId, options = {}) => {
     } else {
       // Client-side: use axios
       const response = await api.get(
-        `/topic?chapterId=${chapterId}&page=${page}&limit=${limit}&status=${STATUS.ACTIVE}`
+        `/topic?chapterId=${chapterId}&page=${page}&limit=${limit}&status=${STATUS.ACTIVE}`,
       );
 
       if (response.data.success) {
@@ -767,11 +791,11 @@ export const fetchTopicsByChapter = async (chapterId, options = {}) => {
         const filteredTopics = (response.data.data || []).filter(
           (topic) =>
             topic.status &&
-            topic.status.toLowerCase() === STATUS.ACTIVE.toLowerCase()
+            topic.status.toLowerCase() === STATUS.ACTIVE.toLowerCase(),
         );
         // Sort by orderNumber
         return filteredTopics.sort(
-          (a, b) => (a.orderNumber || 0) - (b.orderNumber || 0)
+          (a, b) => (a.orderNumber || 0) - (b.orderNumber || 0),
         );
       }
       return [];
@@ -859,11 +883,11 @@ export const fetchSubTopicsByTopic = async (topicId, options = {}) => {
           const filteredSubTopics = (data.data || []).filter(
             (sub) =>
               sub.status &&
-              sub.status.toLowerCase() === STATUS.ACTIVE.toLowerCase()
+              sub.status.toLowerCase() === STATUS.ACTIVE.toLowerCase(),
           );
           // Sort by orderNumber
           return filteredSubTopics.sort(
-            (a, b) => (a.orderNumber || 0) - (b.orderNumber || 0)
+            (a, b) => (a.orderNumber || 0) - (b.orderNumber || 0),
           );
         }
       }
@@ -871,7 +895,7 @@ export const fetchSubTopicsByTopic = async (topicId, options = {}) => {
     } else {
       // Client-side: use axios
       const response = await api.get(
-        `/subtopic?topicId=${topicId}&page=${page}&limit=${limit}&status=${STATUS.ACTIVE}`
+        `/subtopic?topicId=${topicId}&page=${page}&limit=${limit}&status=${STATUS.ACTIVE}`,
       );
 
       if (response.data.success) {
@@ -883,11 +907,11 @@ export const fetchSubTopicsByTopic = async (topicId, options = {}) => {
         const filteredSubTopics = (response.data.data || []).filter(
           (sub) =>
             sub.status &&
-            sub.status.toLowerCase() === STATUS.ACTIVE.toLowerCase()
+            sub.status.toLowerCase() === STATUS.ACTIVE.toLowerCase(),
         );
         // Sort by orderNumber
         return filteredSubTopics.sort(
-          (a, b) => (a.orderNumber || 0) - (b.orderNumber || 0)
+          (a, b) => (a.orderNumber || 0) - (b.orderNumber || 0),
         );
       }
       return [];
@@ -916,7 +940,7 @@ export const fetchSubTopicById = async (subTopicId) => {
             `${baseUrl}/api/subtopic/${subTopicId}`,
             {
               next: { revalidate: 60 },
-            }
+            },
           );
 
           if (response.ok) {
@@ -969,7 +993,7 @@ export const fetchExamDetailsById = async (examId) => {
         `${baseUrl}/api/exam/${examIdString}/details`,
         {
           cache: "no-store", // Always fetch fresh data for metadata
-        }
+        },
       );
 
       if (response.ok) {
@@ -1055,7 +1079,7 @@ export const fetchSubjectDetailsById = async (subjectId) => {
         `${baseUrl}/api/subject/${subjectIdString}/details`,
         {
           cache: "no-store", // Always fetch fresh data for metadata
-        }
+        },
       );
 
       if (response.ok) {
@@ -1186,7 +1210,7 @@ export const fetchChapterDetailsById = async (chapterId) => {
         `${baseUrl}/api/chapter/${chapterIdString}/details`,
         {
           cache: "no-store", // Always fetch fresh data for metadata
-        }
+        },
       );
 
       if (response.ok) {
@@ -1244,7 +1268,7 @@ export const fetchTopicDetailsById = async (topicId) => {
         `${baseUrl}/api/topic/${topicIdString}/details`,
         {
           cache: "no-store", // Always fetch fresh data for metadata
-        }
+        },
       );
 
       if (response.ok) {
@@ -1304,7 +1328,7 @@ export const fetchSubTopicDetailsById = async (subTopicId) => {
         `${baseUrl}/api/subtopic/${subTopicIdString}/details`,
         {
           cache: "no-store", // Always fetch fresh data for metadata
-        }
+        },
       );
 
       if (response.ok) {
@@ -1400,7 +1424,7 @@ export const fetchPracticeTests = async (filters = {}) => {
     } else {
       // Client-side: use axios
       const response = await api.get(
-        `/practice/subcategory?${params.toString()}`
+        `/practice/subcategory?${params.toString()}`,
       );
 
       if (response.data.success && response.data.data) {
@@ -1450,7 +1474,7 @@ export const fetchPracticeCategories = async (filters = {}) => {
           categories = categories.filter(
             (cat) =>
               String(cat.examId?._id || cat.examId) === eid ||
-              String(cat.examId) === eid
+              String(cat.examId) === eid,
           );
         }
         if (subjectId) {
@@ -1458,7 +1482,7 @@ export const fetchPracticeCategories = async (filters = {}) => {
           categories = categories.filter(
             (cat) =>
               String(cat.subjectId?._id || cat.subjectId) === sid ||
-              String(cat.subjectId) === sid
+              String(cat.subjectId) === sid,
           );
         }
 
@@ -1477,7 +1501,7 @@ export const fetchPracticeCategories = async (filters = {}) => {
           categories = categories.filter(
             (cat) =>
               String(cat.examId?._id || cat.examId) === eid ||
-              String(cat.examId) === eid
+              String(cat.examId) === eid,
           );
         }
         if (subjectId) {
@@ -1485,7 +1509,7 @@ export const fetchPracticeCategories = async (filters = {}) => {
           categories = categories.filter(
             (cat) =>
               String(cat.subjectId?._id || cat.subjectId) === sid ||
-              String(cat.subjectId) === sid
+              String(cat.subjectId) === sid,
           );
         }
 
@@ -1512,7 +1536,7 @@ export const fetchPracticeTestById = async (identifier) => {
         `${baseUrl}/api/practice/subcategory/${identifier}`,
         {
           next: { revalidate: 60 },
-        }
+        },
       );
 
       if (response.ok) {
@@ -1528,7 +1552,10 @@ export const fetchPracticeTestById = async (identifier) => {
       }
     }
   } catch (error) {
-    logger.error(`Error fetching practice test by ID/Slug ${identifier}:`, error);
+    logger.error(
+      `Error fetching practice test by ID/Slug ${identifier}:`,
+      error,
+    );
   }
 
   return null;
@@ -1558,19 +1585,19 @@ export const fetchPracticeTestQuestions = async (subCategoryId) => {
       if (data.success && data.data) {
         // Sort by orderNumber
         return (data.data || []).sort(
-          (a, b) => (a.orderNumber || 0) - (b.orderNumber || 0)
+          (a, b) => (a.orderNumber || 0) - (b.orderNumber || 0),
         );
       }
       return [];
     } else {
       const response = await api.get(
-        `/practice/question?subCategoryId=${subCategoryId}&status=active&page=1&limit=1000`
+        `/practice/question?subCategoryId=${subCategoryId}&status=active&page=1&limit=1000`,
       );
 
       if (response.data.success && response.data.data) {
         // Sort by orderNumber
         return (response.data.data || []).sort(
-          (a, b) => (a.orderNumber || 0) - (b.orderNumber || 0)
+          (a, b) => (a.orderNumber || 0) - (b.orderNumber || 0),
         );
       }
       return [];
@@ -1651,19 +1678,19 @@ export const fetchDefinitionsBySubTopic = async (subTopicId, options = {}) => {
       if (data.success && data.data) {
         // Sort by orderNumber
         return (data.data || []).sort(
-          (a, b) => (a.orderNumber || 0) - (b.orderNumber || 0)
+          (a, b) => (a.orderNumber || 0) - (b.orderNumber || 0),
         );
       }
       return [];
     } else {
       const response = await api.get(
-        `/definition?subTopicId=${subTopicId}&status=${status}&page=${page}&limit=${limit}`
+        `/definition?subTopicId=${subTopicId}&status=${status}&page=${page}&limit=${limit}`,
       );
 
       if (response.data.success && response.data.data) {
         // Sort by orderNumber
         return (response.data.data || []).sort(
-          (a, b) => (a.orderNumber || 0) - (b.orderNumber || 0)
+          (a, b) => (a.orderNumber || 0) - (b.orderNumber || 0),
         );
       }
       return [];
@@ -1691,7 +1718,7 @@ export const fetchDefinitionById = async (definitionId) => {
             `${baseUrl}/api/definition/${definitionId}`,
             {
               next: { revalidate: 60 },
-            }
+            },
           );
 
           if (response.ok) {
@@ -1819,10 +1846,16 @@ export async function saveTestResult(resultData) {
     });
 
     if (response.data.success) {
-      console.log("saveTestResult: Successfully saved test result", response.data.data?._id);
+      console.log(
+        "saveTestResult: Successfully saved test result",
+        response.data.data?._id,
+      );
       return { success: true, data: response.data.data };
     }
-    console.warn("saveTestResult: Response indicates failure", response.data.message);
+    console.warn(
+      "saveTestResult: Response indicates failure",
+      response.data.message,
+    );
     return { success: false, message: response.data.message };
   } catch (error) {
     console.error("saveTestResult: Error occurred", {
@@ -1961,12 +1994,18 @@ export const fetchBlogs = async (options = {}) => {
     }
     if (assignmentLevel) {
       queryString += `&assignmentLevel=${encodeURIComponent(assignmentLevel)}`;
-      if (assignmentSubjectId) queryString += `&assignmentSubjectId=${assignmentSubjectId}`;
-      if (assignmentUnitId) queryString += `&assignmentUnitId=${assignmentUnitId}`;
-      if (assignmentChapterId) queryString += `&assignmentChapterId=${assignmentChapterId}`;
-      if (assignmentTopicId) queryString += `&assignmentTopicId=${assignmentTopicId}`;
-      if (assignmentSubTopicId) queryString += `&assignmentSubTopicId=${assignmentSubTopicId}`;
-      if (assignmentDefinitionId) queryString += `&assignmentDefinitionId=${assignmentDefinitionId}`;
+      if (assignmentSubjectId)
+        queryString += `&assignmentSubjectId=${assignmentSubjectId}`;
+      if (assignmentUnitId)
+        queryString += `&assignmentUnitId=${assignmentUnitId}`;
+      if (assignmentChapterId)
+        queryString += `&assignmentChapterId=${assignmentChapterId}`;
+      if (assignmentTopicId)
+        queryString += `&assignmentTopicId=${assignmentTopicId}`;
+      if (assignmentSubTopicId)
+        queryString += `&assignmentSubTopicId=${assignmentSubTopicId}`;
+      if (assignmentDefinitionId)
+        queryString += `&assignmentDefinitionId=${assignmentDefinitionId}`;
     }
 
     const url = `${baseUrl}/api/blog?${queryString}`;
@@ -2283,7 +2322,11 @@ export const fetchDownloadFolders = async (examId, options = {}) => {
         if (returnFullResponse) {
           return {
             data: list,
-            pagination: data.pagination || { total: list.length, page: 1, limit },
+            pagination: data.pagination || {
+              total: list.length,
+              page: 1,
+              limit,
+            },
           };
         }
         return list;
@@ -2297,8 +2340,11 @@ export const fetchDownloadFolders = async (examId, options = {}) => {
         if (returnFullResponse) {
           return {
             data: list,
-            pagination:
-              response.data.pagination || { total: list.length, page: 1, limit },
+            pagination: response.data.pagination || {
+              total: list.length,
+              page: 1,
+              limit,
+            },
           };
         }
         return list;
@@ -2307,7 +2353,9 @@ export const fetchDownloadFolders = async (examId, options = {}) => {
     }
   } catch (error) {
     logger.error("Error fetching download folders:", error);
-    return options.returnFullResponse ? { data: [], pagination: { total: 0 } } : [];
+    return options.returnFullResponse
+      ? { data: [], pagination: { total: 0 } }
+      : [];
   }
 };
 
@@ -2322,9 +2370,12 @@ export const fetchDownloadFolderById = async (folderId) => {
     const isObjectId = /^[0-9a-fA-F]{24}$/.test(folderId);
     if (isObjectId) {
       if (isServer) {
-        const response = await fetch(`${baseUrl}/api/download/folder/${folderId}`, {
-          next: { revalidate: 60 },
-        });
+        const response = await fetch(
+          `${baseUrl}/api/download/folder/${folderId}`,
+          {
+            next: { revalidate: 60 },
+          },
+        );
 
         if (response.ok) {
           const data = await response.json();
@@ -2349,7 +2400,10 @@ export const fetchDownloadFolderById = async (folderId) => {
 // Fetch subfolders by parent folder ID.
 // Options: status, limit, page, onlyWithFiles, returnFullResponse (returns { data, pagination }).
 export const fetchSubfoldersByFolder = async (folderId, options = {}) => {
-  if (!folderId) return options.returnFullResponse ? { data: [], pagination: { total: 0 } } : [];
+  if (!folderId)
+    return options.returnFullResponse
+      ? { data: [], pagination: { total: 0 } }
+      : [];
 
   const {
     status = STATUS.ACTIVE,
@@ -2402,8 +2456,11 @@ export const fetchSubfoldersByFolder = async (folderId, options = {}) => {
         if (returnFullResponse) {
           return {
             data: list,
-            pagination:
-              response.data.pagination || { total: list.length, page, limit },
+            pagination: response.data.pagination || {
+              total: list.length,
+              page,
+              limit,
+            },
           };
         }
         return list;
@@ -2412,7 +2469,9 @@ export const fetchSubfoldersByFolder = async (folderId, options = {}) => {
     }
   } catch (error) {
     logger.error("Error fetching subfolders:", error);
-    return options.returnFullResponse ? { data: [], pagination: { total: 0 } } : [];
+    return options.returnFullResponse
+      ? { data: [], pagination: { total: 0 } }
+      : [];
   }
 };
 
@@ -2420,9 +2479,18 @@ export const fetchSubfoldersByFolder = async (folderId, options = {}) => {
 // Options: status, limit, page, skip. Use skip for load-more (next N items); when skip is set it overrides page.
 // If returnFullResponse: true, returns { data, pagination }.
 export const fetchFilesByFolder = async (folderId, options = {}) => {
-  if (!folderId) return options.returnFullResponse ? { data: [], pagination: { total: 0 } } : [];
+  if (!folderId)
+    return options.returnFullResponse
+      ? { data: [], pagination: { total: 0 } }
+      : [];
 
-  const { status = STATUS.ACTIVE, limit = 100, page = 1, skip: skipOption, returnFullResponse = false } = options;
+  const {
+    status = STATUS.ACTIVE,
+    limit = 100,
+    page = 1,
+    skip: skipOption,
+    returnFullResponse = false,
+  } = options;
   const isServer = typeof window === "undefined";
   const baseUrl = getBaseUrl();
 
@@ -2431,7 +2499,12 @@ export const fetchFilesByFolder = async (folderId, options = {}) => {
     params.append("folderId", folderId);
     params.append("status", status);
     params.append("limit", limit.toString());
-    if (skipOption !== undefined && skipOption !== null && Number.isInteger(skipOption) && skipOption >= 0) {
+    if (
+      skipOption !== undefined &&
+      skipOption !== null &&
+      Number.isInteger(skipOption) &&
+      skipOption >= 0
+    ) {
       params.append("skip", String(skipOption));
     } else {
       params.append("page", String(page));
@@ -2454,7 +2527,11 @@ export const fetchFilesByFolder = async (folderId, options = {}) => {
         if (returnFullResponse) {
           return {
             data: list,
-            pagination: data.pagination || { total: list.length, page: 1, limit },
+            pagination: data.pagination || {
+              total: list.length,
+              page: 1,
+              limit,
+            },
           };
         }
         return list;
@@ -2468,7 +2545,11 @@ export const fetchFilesByFolder = async (folderId, options = {}) => {
         if (returnFullResponse) {
           return {
             data: list,
-            pagination: response.data.pagination || { total: list.length, page: 1, limit },
+            pagination: response.data.pagination || {
+              total: list.length,
+              page: 1,
+              limit,
+            },
           };
         }
         return list;

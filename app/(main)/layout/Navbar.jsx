@@ -259,25 +259,39 @@ const Navbar = memo(({ onMenuToggle, isMenuOpen, showSidebar }) => {
           <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3 md:gap-4">
             {/* Left: Social Media Engagement */}
             <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 flex-wrap min-w-0 flex-1">
-              <div className="flex items-center gap-1 whitespace-nowrap" aria-hidden>
-                <FaInstagram className="text-[10px] sm:text-xs md:text-sm shrink-0" />
+              <a
+                href="https://www.instagram.com/testprepkartonline"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 cursor-pointer rounded-sm outline-offset-2 underline-offset-2 decoration-transparent hover:underline hover:decoration-blue-300 hover:text-blue-300 focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-800 transition-colors whitespace-nowrap touch-manipulation"
+                title="instagram.com/testprepkartonline — opens in new tab"
+                aria-label="Testprepkart on Instagram — 100k followers (opens in new tab)"
+              >
+                <FaInstagram className="text-[10px] sm:text-xs md:text-sm shrink-0" aria-hidden />
                 <span className="hidden sm:inline text-[10px] sm:text-xs">
                   100k Followers
                 </span>
                 <span className="sm:hidden text-[10px]">100k</span>
-              </div>
-              <div className="flex items-center gap-1 whitespace-nowrap" aria-hidden>
-                <FaFacebook className="text-[10px] sm:text-xs md:text-sm shrink-0" />
+              </a>
+              <a
+                href="https://www.facebook.com/testprepkart"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 cursor-pointer rounded-sm outline-offset-2 underline-offset-2 decoration-transparent hover:underline hover:decoration-blue-300 hover:text-blue-300 focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-800 transition-colors whitespace-nowrap touch-manipulation"
+                title="facebook.com/testprepkart — opens in new tab"
+                aria-label="Testprepkart on Facebook — 500k followers (opens in new tab)"
+              >
+                <FaFacebook className="text-[10px] sm:text-xs md:text-sm shrink-0" aria-hidden />
                 <span className="hidden sm:inline text-[10px] sm:text-xs">
                   500k Followers
                 </span>
                 <span className="sm:hidden text-[10px]">500k</span>
-              </div>
+              </a>
               <a
                 href="https://api.whatsapp.com/send?phone=15107069331"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1 hover:text-blue-300 transition-colors whitespace-nowrap items-center"
+                className="flex items-center gap-1 hover:text-blue-300 transition-colors whitespace-nowrap touch-manipulation"
                 aria-label="Contact us on WhatsApp: +1 (510) 706-9331"
               >
                 <FaWhatsapp className="text-[10px] sm:text-xs md:text-sm shrink-0" aria-hidden />

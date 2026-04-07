@@ -83,8 +83,7 @@ const ExamBlogTable = ({ examName, blogs, onEdit, onDelete, onToggleStatus }) =>
         <table className="hidden md:table min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Blog</th>
-              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase w-32">Category</th>
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase min-w-0 max-w-md">Blog</th>
               <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase w-28">Content</th>
               <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase w-16">Meta</th>
               <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase w-24">Status</th>
@@ -99,8 +98,8 @@ const ExamBlogTable = ({ examName, blogs, onEdit, onDelete, onToggleStatus }) =>
                   blog.status === "inactive" ? "opacity-60" : ""
                 }`}
               >
-                <td className="px-3 py-2">
-                  <div className="flex items-center gap-2">
+                <td className="px-3 py-2 min-w-0 max-w-md">
+                  <div className="flex items-center gap-2 min-w-0">
                     <div className="h-10 w-14 shrink-0 rounded overflow-hidden border border-gray-100 bg-gray-50">
                       {blog.image ? (
                         <img
@@ -121,8 +120,9 @@ const ExamBlogTable = ({ examName, blogs, onEdit, onDelete, onToggleStatus }) =>
                         <FaImage className="w-4 h-4" />
                       </div>
                     </div>
-                    <div className="min-w-0 flex-1">
+                    <div className="min-w-0 flex-1 overflow-hidden">
                       <div
+                        title={blog.name}
                         className={`text-sm font-medium truncate cursor-pointer hover:text-blue-600 transition-colors ${
                           blog.status === "inactive"
                             ? "text-gray-500 line-through"
@@ -140,15 +140,6 @@ const ExamBlogTable = ({ examName, blogs, onEdit, onDelete, onToggleStatus }) =>
                       </div>
                     </div>
                   </div>
-                </td>
-                <td className="px-3 py-2 whitespace-nowrap w-32">
-                  {blog.categoryId?.name ? (
-                    <span className="text-xs text-gray-600">{blog.categoryId.name}</span>
-                  ) : blog.category ? (
-                    <span className="text-xs text-gray-600">{blog.category}</span>
-                  ) : (
-                    <span className="text-xs text-gray-400 italic">—</span>
-                  )}
                 </td>
                 <td className="px-3 py-2 whitespace-nowrap w-28">
                   {blog._detailsSummary?.contentUpdatedAt ? (
@@ -244,9 +235,10 @@ const ExamBlogTable = ({ examName, blogs, onEdit, onDelete, onToggleStatus }) =>
                         <FaImage className="w-4 h-4" />
                       </div>
                     </div>
-                    <div className="flex-1 min-w-0">
+                    <div className="flex-1 min-w-0 overflow-hidden">
                       <h3
-                        className={`text-sm font-semibold mb-0.5 cursor-pointer hover:text-blue-600 transition-colors ${
+                        title={blog.name}
+                        className={`text-sm font-semibold mb-0.5 cursor-pointer hover:text-blue-600 transition-colors truncate ${
                           blog.status === "inactive"
                             ? "text-gray-500 line-through"
                             : "text-gray-900"
@@ -262,11 +254,6 @@ const ExamBlogTable = ({ examName, blogs, onEdit, onDelete, onToggleStatus }) =>
                         {blog.author || "Admin"}
                       </div>
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        {blog.categoryId?.name ? (
-                          <span className="text-xs text-gray-600">{blog.categoryId.name}</span>
-                        ) : blog.category ? (
-                          <span className="text-xs text-gray-600">{blog.category}</span>
-                        ) : null}
                         <MetaIcon
                           filled={!!(blog._detailsSummary && blog._detailsSummary.hasContent && blog._detailsSummary.hasMeta)}
                         />
