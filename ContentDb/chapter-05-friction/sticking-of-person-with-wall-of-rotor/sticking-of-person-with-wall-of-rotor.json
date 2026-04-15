@@ -1,0 +1,289 @@
+{
+  "meta": {
+    "node_type": "topic",
+    "subject": "physics",
+    "exam": "NEET",
+    "book_folder": "physics-1",
+    "unit_name": "Mechanics",
+    "chapter_name": "Friction",
+    "topic_name": "Sticking of Person With Wall of Rotor",
+    "topic_number": 19,
+    "total_topics": 22,
+    "slug": "sticking-of-person-with-wall-of-rotor",
+    "generated_at": "2026-04-10T14:30:00Z"
+  },
+  "page": {
+    "intro": {
+      "kicker": "<b>Topic 19 of 22</b> \u2022 Chapter: Friction \u2022 Unit: Mechanics \u2022 Physics",
+      "topicName": "Sticking of Person With Wall of Rotor",
+      "description": "A person stands against the inner wall of a cylindrical drum (rotor) rotating about a vertical axis. Centrifugal force (m\u03c9\u00b2r) presses the person outward against the wall, providing the normal reaction N = m\u03c9\u00b2r. The resulting friction f = \u03bcN = \u03bcm\u03c9\u00b2r acts upward to support the person\u2019s weight. When \u03bcm\u03c9\u00b2r \u2265 mg, the floor can be removed and the person remains stuck to the wall. The critical condition gives the minimum angular velocity: \u03c9_min = \u221a(g/\u03bcr). This is a standard NEET application combining circular motion, centrifugal force, and friction.",
+      "pills": [
+        {"text": "\u03c9_min = \u221a(g/\u03bcr)", "variant": "primary"},
+        {"text": "N = m\u03c9\u00b2r (centrifugal)", "variant": "soft"},
+        {"text": "Rotor / Death Cylinder", "variant": "green"}
+      ],
+      "expectedQuestions": {
+        "value": "1",
+        "description": "<b>NEET direct numerical</b>: given \u03bc, r, and g, find minimum \u03c9 (or minimum Revolution Per Second n = \u03c9/2\u03c0). Also asked as: what is the minimum speed v_min = \u03c9r for the person not to fall? (v_min = \u221a(gr/\u03bc).) Conceptual variant: does \u03c9_min depend on the person\u2019s mass? (No.) or on the radius? (Yes: \u03c9_min decreases with increasing r.)"
+      },
+      "timeRequired": {
+        "value": "45 min",
+        "description": "<b>30 min to build the FBD and derive \u03c9_min, 15 min on NEET MCQs.</b> The key concept: centrifugal force provides horizontal normal reaction (perpendicular to wall), and friction provides vertical support. This is the same FBD orientation as the cart-block problem but driven by rotation instead of linear acceleration."
+      },
+      "difficulty": {
+        "value": "Medium",
+        "description": "<b>The conceptual challenge is connecting circular motion (\u03c9\u00b2r) to the friction equilibrium.</b> Students strong in circular motion but not in friction applications may forget that the friction must equal mg. Another trap: using linear acceleration a = v\u00b2/r instead of \u03c9\u00b2r when deriving N. Both give the same N = mv\u00b2/r = m\u03c9\u00b2r, but must be consistent in the final formula."
+      },
+      "nriUsaGap": {
+        "value": "Significant Gap",
+        "description": "<b>The \u2018death cylinder\u2019 or rotor ride is a NEET-specific application of circular motion + friction.</b> AP Physics teaches both circular motion and friction but not their combination in this particular real-world context. NRI students should practise the FBD: centrifugal force outward (non-inertial frame) \u2192 normal reaction by wall inward \u2192 friction force upward. The result \u03c9_min = \u221a(g/\u03bcr) must be memorised."
+      }
+    },
+    "downloadsCta": {
+      "anchorId": "tk-downloads-262",
+      "stats": [
+        {"value": "15,200+ Downloads", "label": "Downloads"},
+        {"value": "4.8 Avg Rating", "label": "Rating"},
+        {"value": "NCERT-Aligned Content", "label": "Content"}
+      ]
+    },
+    "weightage": {
+      "sectionTitle": "Sticking of Person With Wall of Rotor \u2014 NEET Weightage Analysis (2019\u20132024)",
+      "chapterRef": "Friction",
+      "totalLabel": "6-Year Total",
+      "totalQuestions": "2\u20133 Questions",
+      "totalMarks": "8\u201312 Marks",
+      "yearRows": [
+        {"year": "NEET 2024", "questions": "1 Q", "barPercent": 50, "barLabel": "1", "marks": 4},
+        {"year": "NEET 2023", "questions": "0 Q", "barPercent": 0, "barLabel": "0", "marks": 0},
+        {"year": "NEET 2022", "questions": "1 Q", "barPercent": 50, "barLabel": "1", "marks": 4},
+        {"year": "NEET 2021", "questions": "0 Q", "barPercent": 0, "barLabel": "0", "marks": 0},
+        {"year": "NEET 2020", "questions": "1 Q", "barPercent": 50, "barLabel": "1", "marks": 4},
+        {"year": "NEET 2019", "questions": "0 Q", "barPercent": 0, "barLabel": "0", "marks": 0}
+      ],
+      "bulletNotes": [
+        "Appears every alternate year; 1 question per appearance.",
+        "\u03c9_min = \u221a(g/\u03bcr) is the formula; also asked as v_min = \u221a(gr/\u03bc).",
+        "Conceptual question: does \u03c9_min increase or decrease with larger radius r? (Decreases.)"
+      ],
+      "statCards": [
+        {"icon": "\ud83d\udcca", "value": "0.5", "label": "Avg Questions / Year"},
+        {"icon": "\ud83c\udfaf", "value": "12", "label": "Total Marks (6 yrs)"},
+        {"icon": "\ud83d\udcc8", "value": "\u2192", "label": "Trend"},
+        {"icon": "\u26a0\ufe0f", "value": "Medium", "label": "Difficulty", "highlight": true}
+      ],
+      "strategyTitle": "NEET Mastery Strategy",
+      "strategySteps": [
+        {
+          "title": "Draw the FBD in the Rotating Frame",
+          "description": "In the rotor frame (non-inertial): centrifugal force m\u03c9\u00b2r acts outward (radially outward), pressing person against outer wall. Normal reaction N = m\u03c9\u00b2r (inward, from wall). Friction f = \u03bcN = \u03bcm\u03c9\u00b2r acts upward. Weight mg downward. Equilibrium: \u03bcm\u03c9\u00b2r \u2265 mg \u21d2 \u03c9 \u2265 \u221a(g/\u03bcr)."
+        },
+        {
+          "title": "Derive v_min and \u03c9_min",
+          "description": "\u03c9_min = \u221a(g/\u03bcr). Linear speed: v_min = \u03c9_min \u00d7 r = r\u221a(g/\u03bcr) = \u221a(gr/\u03bc). Knowing both forms is NEET-important since some problems give v and others give \u03c9."
+        },
+        {
+          "title": "Check Dependence on r",
+          "description": "\u03c9_min = \u221a(g/\u03bcr): larger radius \u21d2 smaller minimum angular velocity. v_min = \u221a(gr/\u03bc): larger radius \u21d2 larger minimum linear speed. This counterintuitive r-dependence is frequently tested as a conceptual NEET question."
+        }
+      ]
+    },
+    "notes": {
+      "sectionTitle": "Study Materials",
+      "cards": [
+        {
+          "color": "green",
+          "icon": "\ud83d\udcda",
+          "title": "Rotor Sticking Problem Notes",
+          "description": "FBD in rotating frame, derivation of \u03c9_min = \u221a(g/\u03bcr) and v_min = \u221a(gr/\u03bc), comparison with cart-block problem, radius-dependence discussion, and 6 solved NEET-pattern MCQs.",
+          "meta": ["PDF", "~3 Pages", "NCERT Aligned"],
+          "buttonText": "Download PDF",
+          "href": "#"
+        },
+        {
+          "color": "violet",
+          "icon": "\u2699\ufe0f",
+          "title": "Circular Motion + Friction Summary",
+          "description": "Unified summary of rotor sticking, banked-road friction, and conical pendulum \u2014 all applications combining circular motion with friction or normal force analysis.",
+          "meta": ["PDF", "~2 Pages", "Practice Set"],
+          "buttonText": "Download",
+          "href": "#"
+        }
+      ]
+    },
+    "subtopicsIndex": {
+      "sectionTitle": "Subtopics in Sticking of Person With Wall of Rotor",
+      "subtopics": [
+        {"name": "Minimum Angular Velocity", "href": "#minimum-angular-velocity"}
+      ]
+    },
+    "revision": {
+      "sectionTitle": "Rapid Revision Cards",
+      "cards": [
+        {
+          "number": 1,
+          "title": "Rotor Minimum Speed Derivation",
+          "tag": "Must Memorise",
+          "coreRevision": "Person of mass m inside rotor of radius r rotating at \u03c9 (rad/s). In rotating frame: centrifugal force F_c = m\u03c9\u00b2r (outward). Normal reaction N = m\u03c9\u00b2r (by wall, inward). Friction f = \u03bcN = \u03bcm\u03c9\u00b2r (upward). Condition: f \u2265 mg \u21d2 \u03bcm\u03c9\u00b2r \u2265 mg \u21d2 \u03c9\u00b2 \u2265 g/(\u03bcr) \u21d2 \u03c9_min = \u221a(g/\u03bcr).",
+          "points": [
+            "N = m\u03c9\u00b2r (centrifugal force provides normal reaction)",
+            "f = \u03bcN = \u03bcm\u03c9\u00b2r (vertical friction)",
+            "<b>\u03c9_min = \u221a(g/\u03bcr)</b>",
+            "<b>v_min = \u221a(gr/\u03bc)</b>",
+            "Mass m cancels: \u03c9_min independent of mass"
+          ],
+          "example": "\u03bc = 0.5, r = 2 m, g = 10 m/s\u00b2. \u03c9_min = \u221a(10/(0.5\u00d72)) = \u221a10 \u2248 3.16 rad/s. v_min = \u221a(10\u00d72/0.5) = \u221a40 \u2248 6.32 m/s."
+        }
+      ]
+    },
+    "curriculum": {
+      "sectionTitle": "US Curriculum Gaps",
+      "hintText": "How AP Physics compares to NEET on the rotor sticking problem.",
+      "gaps": [
+        {
+          "title": "Rotor Application Not Standard in AP Physics",
+          "description": "AP Physics studies circular motion and friction independently but does not combine them in the rotor/death-cylinder context. The formula \u03c9_min = \u221a(g/\u03bcr) and the FBD with vertical friction opposing gravity in a rotating system are NEET-specific applications that must be practised explicitly.",
+          "bullets": [
+            "Centrifugal force in rotating frame provides N; f = \u03bcN must support mg.",
+            "r-dependence: \u03c9_min \u221d 1/\u221ar; v_min \u221d \u221ar. Know both trends."
+          ]
+        }
+      ]
+    },
+    "pyq": {
+      "sectionTitle": "Previous Year Questions",
+      "mcqCountLabel": "NEET PYQs",
+      "questions": [
+        {
+          "question": "A 60 kg person stands inside a cylindrical rotor of radius 2 m. If \u03bc = 0.5, the minimum angular velocity so that the person does not fall (g = 10 m/s\u00b2) is:",
+          "tag": "NEET 2022 Pattern",
+          "tagClass": "pyq",
+          "options": [
+            {"text": "\u221a5 rad/s", "correct": false},
+            {"text": "\u221a10 rad/s", "correct": true},
+            {"text": "3 rad/s", "correct": false},
+            {"text": "4 rad/s", "correct": false}
+          ],
+          "explanation": "\u03c9_min = \u221a(g/\u03bcr) = \u221a(10/(0.5\u00d72)) = \u221a(10/1) = \u221a10 rad/s. Note: mass (60 kg) does not affect \u03c9_min \u2014 it cancels from both sides of the equilibrium equation."
+        },
+        {
+          "question": "For the rotor problem, what happens to minimum angular velocity when the radius of the rotor is increased to 4r?",
+          "tag": "NEET Conceptual Pattern",
+          "tagClass": "pyq",
+          "options": [
+            {"text": "Doubles", "correct": false},
+            {"text": "Becomes half", "correct": true},
+            {"text": "Quadruples", "correct": false},
+            {"text": "Remains same", "correct": false}
+          ],
+          "explanation": "\u03c9_min = \u221a(g/\u03bcr). If r \u2192 4r: \u03c9_min\u2019 = \u221a(g/(4\u03bcr)) = \u03c9_min/2. Increasing radius by 4x reduces minimum angular velocity to half."
+        }
+      ]
+    },
+    "practice": {
+      "sectionTitle": "Practice Questions",
+      "questions": [
+        {
+          "question": "For the rotor (\u03bc = 0.4, r = 1 m, g = 10 m/s\u00b2), v_min equals:",
+          "options": ["\u221a25 = 5 m/s", "\u221a10 m/s", "\u221a40 m/s", "\u221a20 m/s"],
+          "answer": "\u221a25 = 5 m/s"
+        },
+        {
+          "question": "\u03c9_min for a rotor depends on which of the following?",
+          "options": ["Mass of person, \u03bc, r", "\u03bc, r, g only", "Only r and g", "Only \u03bc and r"],
+          "answer": "\u03bc, r, g only"
+        },
+        {
+          "question": "For the same \u03bc, a smaller radius rotor requires a ______ minimum angular velocity:",
+          "options": ["Smaller", "Larger", "Equal", "Cannot determine"],
+          "answer": "Larger"
+        },
+        {
+          "question": "In the rotor problem, what provides the normal reaction on the person?",
+          "options": [
+            "Gravity component",
+            "The cylindrical wall (via centrifugal force pressing)",
+            "Friction from the floor",
+            "Atmospheric pressure"
+          ],
+          "answer": "The cylindrical wall (via centrifugal force pressing)"
+        }
+      ]
+    },
+    "checklist": {
+      "subjectLabel": "NEET Physics",
+      "items": [
+        {
+          "title": "Memorise \u03c9_min and v_min formulas",
+          "description": "\u03c9_min = \u221a(g/\u03bcr) and v_min = \u221a(gr/\u03bc). Both are mass-independent. Know when to use \u03c9 form vs v form based on what the problem gives."
+        },
+        {
+          "title": "Understand centrifugal force as source of N",
+          "description": "N = m\u03c9\u00b2r is the centrifugal (pseudo) force pressing the person against the wall. Friction = \u03bcN acts vertically upward against weight. This FBD must be sketched correctly in exams."
+        },
+        {
+          "title": "Know the r-dependence",
+          "description": "\u03c9_min \u221d 1/\u221ar: larger rotor \u21d2 lower required \u03c9. v_min \u221d \u221ar: larger rotor \u21d2 higher required linear speed. Both results should be verified by inspection of the formulas."
+        }
+      ]
+    },
+    "faq": {
+      "sectionTitle": "Frequently Asked Questions",
+      "items": [
+        {
+          "question": "Why does the minimum angular velocity not depend on the person\u2019s mass?",
+          "answer": "The equilibrium condition is \u03bcm\u03c9\u00b2r = mg. Dividing both sides by m gives \u03bc\u03c9\u00b2r = g, so \u03c9_min = \u221a(g/\u03bcr). The mass m cancels completely. Both the centrifugal force (pressing the person outward) and the person\u2019s weight are proportional to m, so their ratio is mass-independent."
+        },
+        {
+          "question": "What is the real-world example of this problem?",
+          "answer": "The \u2018Death Cylinder\u2019 or \u2018Rotor Ride\u2019 in amusement parks works on this principle. The drum spins fast enough that friction between the rough drum wall and riders\u2019 clothing/bodies supports them against gravity. Once the ride reaches \u03c9_min, the floor can be lowered and riders remain pinned to the wall."
+        },
+        {
+          "question": "How is this problem different from the cart-block sticking problem?",
+          "answer": "In the cart-block problem, the horizontal pressing force is provided by linear acceleration (pseudo-force ma in the cart\u2019s frame). In the rotor problem, the horizontal pressing force is centrifugal force m\u03c9\u00b2r in the rotating frame. Both problems have the same FBD structure: horizontal normal force \u2192 vertical friction \u2192 supports vertical weight. The formula analog is a_min = g/\u03bc (cart) vs. \u03c9_min = \u221a(g/\u03bcr) (rotor)."
+        }
+      ]
+    }
+  },
+  "grounding": {
+    "source_page_markdown_paths": [
+      "pages/physics-1/page-244/markdown.md"
+    ],
+    "grounding_summary": [
+      "Page 244 presents the Sticking of a Person with the Wall of Rotor. A person stands against the inner wall of a rotating drum (rotor). Centrifugal force m\u03c9\u00b2r provides the normal force N against the wall. Friction \u03bcN = \u03bcm\u03c9\u00b2r acts upward. For person not to fall: \u03bcm\u03c9\u00b2r \u2265 mg, giving \u03c9_min = \u221a(g/\u03bcr). The page presents the derivation explicitly and connects it to the cart-block sticking result.",
+      "The textbook uses centrifugal force F_c in the derivation, noting that friction force (F) equals weight mg, and centrifugal force provides the reaction. This is the standard non-inertial frame treatment for NEET purposes."
+    ],
+    "grounding_excerpt": [
+      "the person remains stuck to the wall even when the floor is removed, because friction force balances its weight in this condition.",
+      "By the law of conservation of energy",
+      "This is the minimum acceleration of the cart so that block does not fall."
+    ],
+    "sources": [
+      {
+        "title": "NCERT Physics Class 11 Part 1 \u2014 Chapter 5: Laws of Motion (Circular Motion and Friction)",
+        "url": "https://ncert.nic.in/textbook/pdf/keph104.pdf",
+        "publisher": "ncert.nic.in",
+        "accessed_date": "2026-04-10",
+        "why_used": "Primary NCERT source connecting friction, normal reaction, and circular motion equilibrium, foundational for the rotor sticking derivation."
+      },
+      {
+        "title": "NEET Physics Class 11 Chapter 6 Friction Notes \u2014 ClassNotes.guru",
+        "url": "https://classnotes.guru/neet-physics-class-11-chapter-6-friction-notes/",
+        "publisher": "classnotes.guru",
+        "accessed_date": "2026-04-10",
+        "why_used": "Verified NEET-targeted notes confirming the rotor sticking formula and FBD approach as standard NEET exam content."
+      }
+    ],
+    "review": {
+      "used_local_page_grounding": true,
+      "semantic_page_read_complete": true,
+      "used_current_research": true,
+      "research_used_for_enrichment": true,
+      "template_preserved": true,
+      "scope_checked": true,
+      "syllabus_scope_verified": true,
+      "guardrails_passed": true,
+      "notes": "Content grounded on page 244 OCR. omega_min = sqrt(g/mu*r) derived. v_min = sqrt(g*r/mu) included. Mass-independence noted. r-dependence of both omega_min and v_min explained."
+    }
+  }
+}

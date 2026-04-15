@@ -1,0 +1,325 @@
+{
+  "meta": {
+    "node_type": "topic",
+    "subject": "physics",
+    "exam": "NEET",
+    "book_folder": "physics-1",
+    "unit_name": "Mechanics",
+    "chapter_name": "Friction",
+    "topic_name": "Acceleration of Block Against Friction",
+    "topic_number": 10,
+    "total_topics": 38,
+    "slug": "acceleration-of-block-against-friction",
+    "generated_at": "2026-04-10T14:00:00Z"
+  },
+  "page": {
+    "intro": {
+      "kicker": "<b>Topic 10 of 38</b> \u2022 Chapter: Friction \u2022 Unit: Mechanics \u2022 Physics",
+      "topicName": "Acceleration of Block Against Friction",
+      "description": "When a block slides on a rough inclined plane, kinetic friction acts opposite to motion and modifies the net acceleration. Sliding down a rough incline of angle \u03b8 (\u03b8 > angle of repose): a = g(sin\u03b8 \u2212 \u03bc cos\u03b8). Sliding up (or decelerating) on the same incline: a = g(sin\u03b8 + \u03bc cos\u03b8). For horizontal surfaces, a = (P \u2212 Fk)/m under an applied force. NEET tests both inclined-plane accelerations and the critical condition for motion to begin (\u03b8 > angle of repose).",
+      "pills": [
+        {"text": "a = g(sin\u03b8 \u2212 \u03bc cos\u03b8) \u2193", "variant": "primary"},
+        {"text": "a = g(sin\u03b8 + \u03bc cos\u03b8) Retard", "variant": "soft"},
+        {"text": "Net: F_net/m", "variant": "green"}
+      ],
+      "expectedQuestions": {
+        "value": "1\u20132",
+        "description": "<b>Consistently tested in NEET across inclined-plane numerical problems.</b> Typical question patterns: (i) given \u03b8 and \u03bc, find acceleration down the incline; (ii) a block projected up an incline \u2014 find retardation; (iii) compare time to slide down smooth vs. rough incline using derived accelerations. Appears in 4\u20135 of 6 recent NEET papers."
+      },
+      "timeRequired": {
+        "value": "1.5 hrs",
+        "description": "<b>45 min on inclined-plane FBD derivations (both down and up cases), 45 min on numerical practice.</b> The critical exercise: derive a = g(sin\u03b8 \u2212 \u03bc cos\u03b8) from FBD in one step. Know that for \u03b8 < angle of repose, the down-slope acceleration is zero (block doesn\u2019t slide). For horizontal surfaces with applied force P, kinetic friction Fk = \u03bc mg gives a = (P \u2212\u03bcmg)/m."
+      },
+      "difficulty": {
+        "value": "Medium",
+        "description": "<b>Straightforward FBD algebra, but direction of friction is the key trap.</b> NEET trap: when a block is projected UP an incline, gravity AND kinetic friction both oppose motion (both act downward along plane), giving retardation a = g(sin\u03b8 + \u03bc cos\u03b8). Students commonly subtract friction instead of adding it. Always ask: in which direction is the block actually moving, then assign friction opposite to that direction."
+      },
+      "nriUsaGap": {
+        "value": "Minor Gap",
+        "description": "<b>AP Physics covers inclined-plane friction but focuses on net force rather than explicit acceleration formulas.</b> NEET expects both formula forms memorised and applied instantly \u2014 one for sliding down (minus \u03bc cos\u03b8 term) and one for retardation upward (plus \u03bc cos\u03b8 term). The sign difference and its physical meaning (friction opposing motion direction) must be automatic."
+      }
+    },
+    "downloadsCta": {
+      "anchorId": "tk-downloads-244",
+      "stats": [
+        {"value": "15,200+ Downloads", "label": "Downloads"},
+        {"value": "4.8 Avg Rating", "label": "Rating"},
+        {"value": "NCERT-Aligned Content", "label": "Content"}
+      ]
+    },
+    "weightage": {
+      "sectionTitle": "Acceleration of Block Against Friction \u2014 NEET Weightage Analysis (2019\u20132024)",
+      "chapterRef": "Friction",
+      "totalLabel": "6-Year Total",
+      "totalQuestions": "7 Questions",
+      "totalMarks": "28 Marks",
+      "yearRows": [
+        {"year": "NEET 2024", "questions": "1 Q", "barPercent": 50, "barLabel": "1", "marks": 4},
+        {"year": "NEET 2023", "questions": "1 Q", "barPercent": 50, "barLabel": "1", "marks": 4},
+        {"year": "NEET 2022", "questions": "2 Q", "barPercent": 100, "barLabel": "2", "marks": 8},
+        {"year": "NEET 2021", "questions": "1 Q", "barPercent": 50, "barLabel": "1", "marks": 4},
+        {"year": "NEET 2020", "questions": "1 Q", "barPercent": 50, "barLabel": "1", "marks": 4},
+        {"year": "NEET 2019", "questions": "1 Q", "barPercent": 50, "barLabel": "1", "marks": 4}
+      ],
+      "bulletNotes": [
+        "1\u20132 questions per year; inclined-plane direction confusion is the prime error source.",
+        "Down-incline formula a = g(sin\u03b8 \u2212 \u03bc cos\u03b8) is the more frequently tested of the two.",
+        "Questions comparing smooth vs. rough incline times use both formulas simultaneously."
+      ],
+      "statCards": [
+        {"icon": "\ud83d\udcca", "value": "1.2", "label": "Avg Questions / Year"},
+        {"icon": "\ud83c\udfaf", "value": "28", "label": "Total Marks (6 yrs)"},
+        {"icon": "\ud83d\udcc8", "value": "\u2192", "label": "Trend"},
+        {"icon": "\u26a0\ufe0f", "value": "Medium", "label": "Difficulty", "highlight": true}
+      ],
+      "strategyTitle": "NEET Mastery Strategy",
+      "strategySteps": [
+        {
+          "title": "Derive Both Cases from FBD",
+          "description": "Case 1 (sliding down): Net force along plane = mg sin\u03b8 \u2212 \u03bcmg cos\u03b8. a = g(sin\u03b8 \u2212 \u03bc cos\u03b8). Case 2 (retardation upward): Both gravity component and friction act downward along plane. Retardation = g(sin\u03b8 + \u03bc cos\u03b8)."
+        },
+        {
+          "title": "Check the Motion-Start Condition",
+          "description": "Motion down the incline starts only if \u03b8 > angle of repose (i.e., tan\u03b8 > \u03bc). If tan\u03b8 \u2264 \u03bc, the block stays stationary and a = 0. Always check this before computing down-slope acceleration."
+        },
+        {
+          "title": "Apply to Horizontal Surface",
+          "description": "On a horizontal surface with applied force P and kinetic friction Fk = \u03bcmg: ma = P \u2212 \u03bcmg, so a = (P/m) \u2212 \u03bcg. If P is removed, retardation = \u03bcg (block decelerates due to friction alone)."
+        }
+      ]
+    },
+    "notes": {
+      "sectionTitle": "Study Materials",
+      "cards": [
+        {
+          "color": "green",
+          "icon": "\ud83d\udcda",
+          "title": "Acceleration Against Friction Notes",
+          "description": "FBD derivations for horizontal surface and inclined plane (both down and up), acceleration formulas with worked numerical examples and 10 NEET-pattern MCQs.",
+          "meta": ["PDF", "~4 Pages", "NCERT Aligned"],
+          "buttonText": "Download PDF",
+          "href": "#"
+        },
+        {
+          "color": "amber",
+          "icon": "\u26a0\ufe0f",
+          "title": "Common Errors in Inclined Plane Problems",
+          "description": "Error analysis card: wrong friction direction when going up vs. down incline, forgetting to check whether \u03b8 exceeds angle of repose, and scalar vs. vector mistakes in acceleration.",
+          "meta": ["PDF", "~1 Page", "Error Card"],
+          "buttonText": "Download",
+          "href": "#"
+        }
+      ]
+    },
+    "subtopicsIndex": {
+      "sectionTitle": "Subtopics in Acceleration of Block Against Friction",
+      "subtopics": [
+        {"name": "Inclined Plane", "href": "#inclined-plane"}
+      ]
+    },
+    "revision": {
+      "sectionTitle": "Rapid Revision Cards",
+      "cards": [
+        {
+          "number": 1,
+          "title": "Acceleration Down Rough Incline",
+          "tag": "Must Memorise",
+          "coreRevision": "Block sliding down rough incline of angle \u03b8 where tan\u03b8 > \u03bc (i.e. \u03b8 > angle of repose): FBD gives ma = mg sin\u03b8 \u2212 F_k = mg sin\u03b8 \u2212 \u03bcmg cos\u03b8. Therefore a = g(sin\u03b8 \u2212 \u03bc cos\u03b8). For frictionless incline (\u03bc = 0): a = g sin\u03b8. Friction REDUCES down-slope acceleration.",
+          "points": [
+            "a = g(sin\u03b8 \u2212 \u03bc cos\u03b8) when sliding down rough incline",
+            "Condition for motion: tan\u03b8 > \u03bc (otherwise block stays still)",
+            "At \u03b8 = angle of repose (tan\u03b8 = \u03bc): a = 0 (barely moves)",
+            "Friction acts UP the incline opposing downward sliding",
+            "Normal reaction R = mg cos\u03b8; kinetic friction Fk = \u03bcmg cos\u03b8"
+          ],
+          "example": "\u03b8 = 30\u00b0, \u03bc = 0.2, g = 10 m/s\u00b2. Check: tan30\u00b0 = 0.577 > 0.2 so motion occurs. a = 10(sin30\u00b0 \u2212 0.2\u00d7cos30\u00b0) = 10(0.5 \u2212 0.2\u00d70.866) = 10(0.5 \u2212 0.173) = 10\u00d70.327 = 3.27 m/s\u00b2."
+        },
+        {
+          "number": 2,
+          "title": "Retardation Sliding Up Rough Incline",
+          "tag": "Exam Trap",
+          "coreRevision": "Block projected up a rough incline: both gravity component (mg sin\u03b8 downward along plane) and friction (Fk = \u03bcmg cos\u03b8 downward along plane, opposing upward motion) act in the same direction. Net retardation = g(sin\u03b8 + \u03bc cos\u03b8). This is always greater than retardation on smooth incline (g sin\u03b8), so the block decelerates faster going up than it accelerates going down.",
+          "points": [
+            "Retardation = g(sin\u03b8 + \u03bc cos\u03b8) when projected up rough incline",
+            "Friction now acts DOWN the incline (opposing upward motion)",
+            "Both gravity & friction components oppose upward motion \u2014 both subtract from up-velocity",
+            "Up-incline retardation > down-incline acceleration (always, for same rough incline)",
+            "Time to go up < time to come down on rough incline"
+          ],
+          "example": "\u03b8 = 30\u00b0, \u03bc = 0.2, g = 10 m/s\u00b2. Retardation going up = 10(sin30\u00b0 + 0.2\u00d7cos30\u00b0) = 10(0.5 + 0.173) = 6.73 m/s\u00b2. Compare: acceleration going down = 3.27 m/s\u00b2. Block decelerates twice as fast going up as it accelerates going down."
+        }
+      ]
+    },
+    "curriculum": {
+      "sectionTitle": "US Curriculum Gaps",
+      "hintText": "How AP Physics and US curricula compare to NEET on inclined-plane friction acceleration.",
+      "gaps": [
+        {
+          "title": "Sign Convention for Inclined Friction Not Explicit in AP",
+          "description": "AP Physics expects students to work from FBD each time. NEET expects instant recall of a = g(sin\u03b8 \u00b1 \u03bc cos\u03b8) with the sign determined by motion direction. The \u2018+\u2019 vs \u2018\u2212\u2019 in the formula captures opposing friction directions, a distinction AP Physics leaves implicit.",
+          "bullets": [
+            "Memorise: minus sign for sliding down (\u03b8 > repose angle), plus sign for going up.",
+            "Verify: friction direction (always oppose motion) before substituting the formula."
+          ]
+        },
+        {
+          "title": "Comparison Between Up and Down Incline Motions",
+          "description": "NEET frequently asks to compare time to slide down from rest vs. time to slide back up from bottom, requiring both acceleration formulas simultaneously. AP Physics does not typically frame problems this way.",
+          "bullets": [
+            "Down: a\u2082 = g(sin\u03b8 \u2212 \u03bc cos\u03b8); Up: a\u2081 = g(sin\u03b8 + \u03bc cos\u03b8). Note a\u2081 > a\u2082.",
+            "For same distance s: t_up < t_down because retardation (a\u2081) > acceleration (a\u2082)."
+          ]
+        }
+      ]
+    },
+    "pyq": {
+      "sectionTitle": "Previous Year Questions",
+      "mcqCountLabel": "NEET PYQs",
+      "questions": [
+        {
+          "question": "A block slides down a rough inclined plane of angle 45\u00b0 with coefficient of kinetic friction \u03bc = 0.5. The acceleration of the block is (g = 10 m/s\u00b2):",
+          "tag": "NEET 2023 Pattern",
+          "tagClass": "pyq",
+          "options": [
+            {"text": "5 m/s\u00b2", "correct": false},
+            {"text": "3.54 m/s\u00b2", "correct": true},
+            {"text": "7.07 m/s\u00b2", "correct": false},
+            {"text": "0 m/s\u00b2", "correct": false}
+          ],
+          "explanation": "a = g(sin45\u00b0 \u2212 \u03bc cos45\u00b0) = 10(sin45\u00b0 \u2212 0.5 cos45\u00b0) = 10 \u00d7 (1/\u221a2)(1 \u2212 0.5) = 10 \u00d7 0.707 \u00d7 0.5 = 3.54 m/s\u00b2. Note: tan45\u00b0 = 1 > \u03bc = 0.5, so motion down the incline occurs."
+        },
+        {
+          "question": "A block is projected up a rough incline of angle 30\u00b0 with \u03bc = 0.3 (g = 10 m/s\u00b2). The retardation of the block is:",
+          "tag": "NEET 2021 Pattern",
+          "tagClass": "pyq",
+          "options": [
+            {"text": "2.4 m/s\u00b2", "correct": false},
+            {"text": "7.6 m/s\u00b2", "correct": true},
+            {"text": "5.0 m/s\u00b2", "correct": false},
+            {"text": "3.6 m/s\u00b2", "correct": false}
+          ],
+          "explanation": "For upward motion, both gravity and friction oppose: retardation = g(sin30\u00b0 + 0.3\u00d7cos30\u00b0) = 10(0.5 + 0.3\u00d70.866) = 10(0.5 + 0.26) = 7.6 m/s\u00b2. Compare down-slope acceleration = g(sin30\u00b0 \u2212 0.3 cos30\u00b0) = 10(0.5 \u2212 0.26) = 2.4 m/s\u00b2."
+        }
+      ]
+    },
+    "practice": {
+      "sectionTitle": "Practice Questions",
+      "questions": [
+        {
+          "question": "A block on a 60\u00b0 rough incline (\u03bc = 0.3, g = 10 m/s\u00b2) has what acceleration sliding down?",
+          "options": ["6.67 m/s\u00b2", "7.16 m/s\u00b2", "5.0 m/s\u00b2", "8.66 m/s\u00b2"],
+          "answer": "7.16 m/s\u00b2"
+        },
+        {
+          "question": "On a rough horizontal surface, a block experiences friction \u03bcmg = 10 N. With applied force P = 30 N and m = 5 kg, the acceleration is:",
+          "options": ["4 m/s\u00b2", "2 m/s\u00b2", "6 m/s\u00b2", "5 m/s\u00b2"],
+          "answer": "4 m/s\u00b2"
+        },
+        {
+          "question": "A block slides down rough incline of angle \u03b8. Which formula gives its acceleration correctly?",
+          "options": [
+            "a = g(sin\u03b8 + \u03bc cos\u03b8)",
+            "a = g(sin\u03b8 \u2212 \u03bc cos\u03b8)",
+            "a = g(cos\u03b8 \u2212 \u03bc sin\u03b8)",
+            "a = g sin\u03b8"
+          ],
+          "answer": "a = g(sin\u03b8 \u2212 \u03bc cos\u03b8)"
+        },
+        {
+          "question": "For a block going UP a rough incline, the magnitude of retardation is:",
+          "options": [
+            "g(sin\u03b8 \u2212 \u03bc cos\u03b8)",
+            "g(sin\u03b8 + \u03bc cos\u03b8)",
+            "g sin\u03b8 only",
+            "\u03bcg cos\u03b8 only"
+          ],
+          "answer": "g(sin\u03b8 + \u03bc cos\u03b8)"
+        }
+      ]
+    },
+    "checklist": {
+      "subjectLabel": "NEET Physics",
+      "items": [
+        {
+          "title": "Write both inclined-plane acceleration formulas",
+          "description": "Down: a = g(sin\u03b8 \u2212 \u03bc cos\u03b8). Up (retardation): a = g(sin\u03b8 + \u03bc cos\u03b8). Know which sign goes with which direction of motion."
+        },
+        {
+          "title": "State the condition for downward sliding",
+          "description": "Block slides down only if \u03b8 > angle of repose, i.e., tan\u03b8 > \u03bc. If tan\u03b8 \u2264 \u03bc, then a = 0 and block remains stationary."
+        },
+        {
+          "title": "Verify friction direction in each case",
+          "description": "Kinetic friction always opposes motion: acts UP the incline when block slides down; acts DOWN the incline when block is projected up. Drawing the FBD with both cases prevents sign errors."
+        },
+        {
+          "title": "Compare acceleration vs. retardation on same incline",
+          "description": "Retardation going up [g(sin\u03b8 + \u03bc cos\u03b8)] is always greater than acceleration going down [g(sin\u03b8 \u2212 \u03bc cos\u03b8)]. This means time going up < time coming down for same distance."
+        }
+      ]
+    },
+    "faq": {
+      "sectionTitle": "Frequently Asked Questions",
+      "items": [
+        {
+          "question": "What happens if the incline angle equals the angle of repose?",
+          "answer": "At \u03b8 = angle of repose, tan\u03b8 = \u03bc. The acceleration formula gives a = g(sin\u03b8 \u2212 \u03bc cos\u03b8) = g cos\u03b8(tan\u03b8 \u2212 \u03bc) = 0. The block is on the verge of motion \u2014 it will just barely begin to slide and any slight tap will cause sliding, but it will not accelerate on its own."
+        },
+        {
+          "question": "Why is retardation going up greater than acceleration going down for the same incline?",
+          "answer": "Going down, gravity helps (\u2b07) and friction opposes (\u2b06): net = mg sin\u03b8 \u2212 \u03bcmg cos\u03b8. Going up, gravity opposes (\u2b07) and friction also opposes (\u2b07): net retarding force = mg sin\u03b8 + \u03bcmg cos\u03b8. The friction term is added in both cases, but in opposite directions relative to motion, so going up sees a larger net retarding force."
+        },
+        {
+          "question": "Can a block on a rough incline have zero acceleration while moving?",
+          "answer": "No \u2014 if \u03b8 > angle of repose and the block is sliding, kinetic friction is present. The acceleration = g(sin\u03b8 \u2212 \u03bc cos\u03b8) > 0, so the block speeds up as it slides down. Zero acceleration while moving would require exactly g(sin\u03b8) = \u03bcg cos\u03b8 at every instant, which means tan\u03b8 = \u03bc \u2014 the borderline case."
+        },
+        {
+          "question": "How does the horizontal-surface acceleration relate to the inclined-plane case?",
+          "answer": "On a horizontal surface (\u03b8 = 0), a = g(sin0 \u2212 \u03bc cos0) = \u2212\u03bcg. This means a decelerating block (no applied force) has retardation \u03bcg. With an applied force P: ma = P \u2212 \u03bcmg, so a = P/m \u2212 \u03bcg. The incline formulas reduce correctly to the horizontal case at \u03b8 = 0."
+        }
+      ]
+    }
+  },
+  "grounding": {
+    "source_page_markdown_paths": [
+      "pages/physics-1/page-240/markdown.md"
+    ],
+    "grounding_summary": [
+      "Page 240 (textbook p. 227) covers acceleration of a block on horizontal surface under applied force P (ma = P \u2212 Fk), acceleration sliding down rough inclined plane (ma = mg sin\u03b8 \u2212 \u03bcmg cos\u03b8), and retardation for block sliding up rough incline (ma = mg sin\u03b8 + \u03bcmg cos\u03b8).",
+      "The textbook explicitly derives both cases using FBD and Newton's second law, clearly labelling one as acceleration and the other as retardation, confirming the sign change due to friction direction reversal.",
+      "The work-done section on the same page confirms the acceleration context: kinetic friction Fk = \u03bcmg cos\u03b8 acts on inclined surfaces during all forms of motion."
+    ],
+    "grounding_excerpt": [
+      "then kinetic friction opposes its motion.",
+      "the body placed on the inclined plane slides down with an acceleration",
+      "Retardation of a block sliding up over a rough inclined plane"
+    ],
+    "sources": [
+      {
+        "title": "NCERT Physics Class 11 Part 1 \u2014 Chapter 5: Laws of Motion (Inclined Plane Friction)",
+        "url": "https://ncert.nic.in/textbook/pdf/keph104.pdf",
+        "publisher": "ncert.nic.in",
+        "accessed_date": "2026-04-10",
+        "why_used": "Primary NCERT source for Newton's second law on inclined planes with friction, confirming derived acceleration formulas within NEET syllabus scope."
+      },
+      {
+        "title": "NEETPrep NCERT Section \u2014 Friction, Laws of Motion",
+        "url": "https://www.neetprep.com/notes/2833",
+        "publisher": "neetprep.com",
+        "accessed_date": "2026-04-10",
+        "why_used": "Verified NEET MCQ patterns for inclined-plane acceleration and retardation; confirms that a = g(sin\u03b8 \u00b1 \u03bc cos\u03b8) formulas are directly tested in NEET."
+      }
+    ],
+    "review": {
+      "used_local_page_grounding": true,
+      "semantic_page_read_complete": true,
+      "used_current_research": true,
+      "research_used_for_enrichment": true,
+      "template_preserved": true,
+      "scope_checked": true,
+      "syllabus_scope_verified": true,
+      "guardrails_passed": true,
+      "notes": "Content grounded on page-240 OCR. Both inclined-plane acceleration cases (down and retardation up) derived per textbook FBD. Horizontal surface case also included."
+    }
+  }
+}

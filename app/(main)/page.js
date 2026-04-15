@@ -217,10 +217,10 @@ function HomepageContent() {
       {/* =======================================================
           HERO SECTION (PREMIUM & CONVERSION-FOCUSED)
       ======================================================= */}
-      <section className="hero-section relative overflow-hidden" aria-labelledby="home-hero-title">
-
-
-
+      <section
+        className="hero-section relative overflow-hidden"
+        aria-labelledby="home-hero-title"
+      >
         <div className="relative container mx-auto px-1 sm:px-2 lg:px-2 pt-3 ">
           <div className="text-center max-w-5xl mx-auto space-y-8">
             {/* Trust Badge */}
@@ -239,7 +239,10 @@ function HomepageContent() {
             </div>
 
             {/* Main Headline - Value Proposition */}
-            <h1 id="home-hero-title" className="text-xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold leading-[1.1] text-gray-900">
+            <h1
+              id="home-hero-title"
+              className="text-xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold leading-[1.1] text-gray-900"
+            >
               Your{" "}
               <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 bg-clip-text text-transparent">
                 Exam
@@ -250,7 +253,8 @@ function HomepageContent() {
 
             {/* Subheadline - Benefit-Focused */}
             <p className="text-lg sm:text-xl text-gray-700 max-w-4xl mx-auto leading-relaxed font-medium">
-              Master concepts, track progress, and ace competitive exams with our self paced preparation platform designed for students.
+              Master concepts, track progress, and ace competitive exams with
+              our self paced preparation platform designed for students.
             </p>
 
             {/* Primary CTA Section */}
@@ -261,10 +265,11 @@ function HomepageContent() {
                 className="group inline-flex items-center justify-center gap-3 min-h-[44px] px-2 sm:px-4 py-2 sm:py-3 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 text-white rounded-xl font-semibold text-sm sm:text-base shadow-md hover:shadow-lg hover:scale-105 transition-all"
               >
                 Start Free Learning Journey
-                <FaArrowRight className="text-xs group-hover:translate-x-1 transition-transform" aria-hidden />
+                <FaArrowRight
+                  className="text-xs group-hover:translate-x-1 transition-transform"
+                  aria-hidden
+                />
               </Link>
-
-
             </div>
 
             {/* Social Proof - Stats */}
@@ -354,10 +359,7 @@ function HomepageContent() {
       {/* =======================================================
           EXAM SECTION (PRIMARY CONVERSION POINT)
       ======================================================= */}
-      <section
-        id="exams"
-        className="relative "
-      >
+      <section id="exams" className="relative ">
         <div className="">
           <div className="text-center mb-16">
             <div className="inline-block px-4 py-2 bg-purple-100 text-purple-700 rounded-full text-sm font-semibold mb-4">
@@ -376,7 +378,10 @@ function HomepageContent() {
             {loading ? (
               <div className="flex flex-wrap justify-center items-start gap-4 sm:gap-6 lg:gap-8">
                 {[...Array(4)].map((_, i) => (
-                  <div key={i} className="w-full sm:w-[calc(50%-0.5rem)] md:w-[calc(50%-0.75rem)] lg:w-[calc(33.333%-1.33rem)] xl:w-[calc(25%-1.5rem)] max-w-[280px]">
+                  <div
+                    key={i}
+                    className="w-full sm:w-[calc(50%-0.5rem)] md:w-[calc(50%-0.75rem)] lg:w-[calc(33.333%-1.33rem)] xl:w-[calc(25%-1.5rem)] max-w-[280px]"
+                  >
                     <ExamCardSkeleton />
                   </div>
                 ))}
@@ -397,7 +402,6 @@ function HomepageContent() {
                   </div>
                 ))}
               </div>
-
             ) : (
               <p className="text-center text-sm sm:text-base text-gray-500 py-12">
                 {PLACEHOLDERS.NO_DATA}
@@ -563,7 +567,10 @@ function HomepageContent() {
                 className="group inline-flex items-center justify-center gap-3 min-h-[44px] px-6 sm:px-8 md:px-10 py-3 sm:py-4 md:py-5 bg-white text-indigo-700 rounded-xl font-semibold text-sm sm:text-base md:text-lg shadow-2xl hover:shadow-3xl hover:scale-105 transition-all"
               >
                 Start Learning Free
-                <FaArrowRight className="text-sm group-hover:translate-x-1 transition-transform" aria-hidden />
+                <FaArrowRight
+                  className="text-sm group-hover:translate-x-1 transition-transform"
+                  aria-hidden
+                />
               </Link>
 
               <Link

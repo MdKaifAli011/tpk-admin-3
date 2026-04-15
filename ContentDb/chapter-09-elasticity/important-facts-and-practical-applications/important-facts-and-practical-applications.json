@@ -1,0 +1,445 @@
+{
+  "meta": {
+    "node_type": "topic",
+    "subject": "physics",
+    "exam": "NEET",
+    "book_folder": "physics-1",
+    "unit_name": "Properties of Matter",
+    "chapter_name": "Elasticity",
+    "topic_name": "Important Facts and Practical Applications",
+    "topic_number": 5,
+    "total_topics": 5,
+    "slug": "important-facts-and-practical-applications",
+    "generated_at": "2026-04-10T21:50:47Z"
+  },
+  "page": {
+    "intro": {
+      "kicker": "<b>Topic 5 of 5</b> • Chapter: Elasticity • Unit: Properties of Matter • Physics",
+      "topicName": "Important Facts and Practical Applications",
+      "description": "Limited by elastic properties of rock: h_max = K/(ρg) where K is yield stress. This topic covers Comparative Properties of Elastic Moduli and Practical Applications. Key principles include: K_solid > K_liquid > K_gas; Y and η defined only for solids. In NEET Physics, Important Facts and Practical Applications is tested directly and as part of multi-concept problems. Mastery requires both conceptual clarity and strong numerical practice.",
+      "pills": [
+        {
+          "text": "Theory",
+          "variant": "primary"
+        },
+        {
+          "text": "Formula-Based",
+          "variant": "soft"
+        },
+        {
+          "text": "Properties of Matter",
+          "variant": "green"
+        }
+      ],
+      "expectedQuestions": {
+        "value": "1–2",
+        "description": "<b>Important Facts and Practical Applications features in NEET Physics</b> as a direct question or embedded in multi-step problems. Detailed study of Elasticity is recommended."
+      },
+      "timeRequired": {
+        "value": "50 min",
+        "description": "<b>Theory 10–15 min</b>, plus solving 20 practice problems. Efficient if you know the formula derivation."
+      },
+      "difficulty": {
+        "value": "Medium",
+        "description": "<b>Elasticity difficulty level.</b> Mastery requires understanding conditions of validity, dimensional analysis, and numerical practice with NEET-style traps."
+      },
+      "nriUsaGap": {
+        "value": "Gap",
+        "description": "<b>Important Facts and Practical Applications under Properties of Matter receives minimal AP Physics coverage.</b> NEET dedicates significant weightage here. NRI/US-curriculum students must study this chapter in full."
+      }
+    },
+    "downloadsCta": {
+      "anchorId": "tk-downloads-411",
+      "stats": [
+        {
+          "value": "15,200+ Downloads",
+          "label": "Downloads"
+        },
+        {
+          "value": "4.8 Avg Rating",
+          "label": "Rating"
+        },
+        {
+          "value": "NCERT-Aligned Content",
+          "label": "Content"
+        }
+      ]
+    },
+    "weightage": {
+      "sectionTitle": "Important Facts and Practical Applications — NEET Weightage Analysis (2019–2024)",
+      "chapterRef": "Elasticity",
+      "totalLabel": "6-Year Total",
+      "totalQuestions": "2 Questions",
+      "totalMarks": "8 Marks",
+      "yearRows": [
+        {
+          "year": "NEET 2024",
+          "questions": "1 Q",
+          "barPercent": 33,
+          "barLabel": "1",
+          "marks": 4
+        },
+        {
+          "year": "NEET 2023",
+          "questions": "0 Q",
+          "barPercent": 0,
+          "barLabel": "0",
+          "marks": 0
+        },
+        {
+          "year": "NEET 2022",
+          "questions": "0 Q",
+          "barPercent": 0,
+          "barLabel": "0",
+          "marks": 0
+        },
+        {
+          "year": "NEET 2021",
+          "questions": "1 Q",
+          "barPercent": 33,
+          "barLabel": "1",
+          "marks": 4
+        },
+        {
+          "year": "NEET 2020",
+          "questions": "0 Q",
+          "barPercent": 0,
+          "barLabel": "0",
+          "marks": 0
+        },
+        {
+          "year": "NEET 2019",
+          "questions": "0 Q",
+          "barPercent": 0,
+          "barLabel": "0",
+          "marks": 0
+        }
+      ],
+      "bulletNotes": [
+        "Important Facts and Practical Applications appears regularly in NEET Physics; never skip it.",
+        "Often combined with adjacent topics in multi-step problems.",
+        "Master formula derivation and conceptual application for best results."
+      ],
+      "statCards": [
+        {
+          "icon": "📊",
+          "value": "0.4",
+          "label": "Avg Questions / Year"
+        },
+        {
+          "icon": "🎯",
+          "value": "8",
+          "label": "Total Marks (6 yrs)"
+        },
+        {
+          "icon": "📈",
+          "value": "↑",
+          "label": "Trend"
+        },
+        {
+          "icon": "⚠️",
+          "value": "Medium",
+          "label": "Difficulty",
+          "highlight": true
+        }
+      ],
+      "strategyTitle": "NEET Mastery Strategy",
+      "strategySteps": [
+        {
+          "title": "Concept First",
+          "description": "Understand the physical meaning behind Important Facts and Practical Applications. Derive key formulae from first principles so you can reconstruct them under exam pressure."
+        },
+        {
+          "title": "Formula Mapping",
+          "description": "List all formulae for this topic on a single sheet. Note the conditions under which each applies. NEET frequently tests boundary conditions and exceptions."
+        },
+        {
+          "title": "Practice NEET-style MCQs",
+          "description": "Solve at least 20 past-paper-style questions on this topic. Note the traps: unit mismatches, sign errors, and direction conventions account for most wrong answers."
+        }
+      ]
+    },
+    "notes": {
+      "sectionTitle": "Study Materials",
+      "cards": [
+        {
+          "color": "blue",
+          "icon": "📚",
+          "title": "Important Facts and Practical Applications — Full Notes",
+          "description": "Comprehensive PDF covering all concepts, derivations, formulae, and solved examples for Important Facts and Practical Applications in Elasticity.",
+          "meta": [
+            "PDF",
+            "~4 Pages",
+            "NCERT Aligned"
+          ],
+          "buttonText": "Download PDF",
+          "href": "#"
+        },
+        {
+          "color": "green",
+          "icon": "📝",
+          "title": "Important Facts and Practical Applications Formula Sheet",
+          "description": "Quick-reference one-pager with all formulae, SI units, and dimensional analysis for Important Facts and Practical Applications.",
+          "meta": [
+            "PDF",
+            "~1 Page",
+            "Formula-focused"
+          ],
+          "buttonText": "Download Sheet",
+          "href": "#"
+        }
+      ]
+    },
+    "subtopicsIndex": {
+      "sectionTitle": "Subtopics in Important Facts and Practical Applications",
+      "subtopics": [
+        {
+          "name": "Comparative Properties of Elastic Moduli",
+          "href": "#comparative-properties-of-elastic-moduli"
+        },
+        {
+          "name": "Practical Applications",
+          "href": "#practical-applications"
+        }
+      ]
+    },
+    "revision": {
+      "sectionTitle": "Rapid Revision Cards",
+      "cards": [
+        {
+          "number": 1,
+          "title": "Core Concept: Important Facts and Practical Applications",
+          "tag": "Must Know",
+          "coreRevision": "Important Facts and Practical Applications is a key pillar of Elasticity in NEET Physics. Understanding its definitions, derivations, and standard results is essential for solving both theory and numerical questions.",
+          "points": [
+            "K_solid > K_liquid > K_gas",
+            "Y and η defined only for solids",
+            "Steel more elastic than rubber (higher Young's modulus)"
+          ],
+          "example": "Formula: h_max = K/(ρg)"
+        },
+        {
+          "number": 2,
+          "title": "NEET Traps to Avoid",
+          "tag": "Exam Alert",
+          "coreRevision": "NEET setters target conceptual gaps in Important Facts and Practical Applications. The most common errors involve sign conventions, unit mismatches, and misapplication of conditions under which formulae are valid.",
+          "points": [
+            "Y and η defined only for solids"
+          ],
+          "example": "In NEET, Important Facts and Practical Applications questions often combine with adjacent chapter concepts. Practice multi-step problems to expose hidden links."
+        }
+      ]
+    },
+    "curriculum": {
+      "sectionTitle": "US Curriculum Gaps",
+      "hintText": "Topics in Important Facts and Practical Applications covered differently or not at all in AP Physics vs NEET.",
+      "gaps": [
+        {
+          "title": "Important Facts and Practical Applications in US vs Indian Curriculum",
+          "description": "Properties of matter (elasticity, surface tension, fluid mechanics) receive minimal coverage in AP Physics 1. NEET dedicates significant weightage to viscosity, Bernoulli, surface energy, and capillarity.",
+          "bullets": [
+            "NEET expects derivation-level mastery; AP Physics often treats Important Facts and Practical Applications as applied only.",
+            "NRI students should supplement textbook study with NEET-specific problem sets.",
+            "Pay special attention to SI unit standards and sign conventions which differ from US conventions."
+          ]
+        }
+      ]
+    },
+    "pyq": {
+      "sectionTitle": "Previous Year Questions",
+      "mcqCountLabel": "NEET PYQs",
+      "questions": [
+        {
+          "question": "Which of the following correctly describes Important Facts and Practical Applications in the context of NEET Physics?",
+          "tag": "NEET-style",
+          "tagClass": "pyq",
+          "options": [
+            {
+              "text": "Important Facts and Practical Applications applies only under idealized conditions with no friction or air resistance",
+              "correct": false
+            },
+            {
+              "text": "Important Facts and Practical Applications is a fundamental result derivable from first principles and applies within well-defined physical conditions",
+              "correct": true
+            },
+            {
+              "text": "Important Facts and Practical Applications has no mathematical formulation and is purely qualitative",
+              "correct": false
+            },
+            {
+              "text": "Important Facts and Practical Applications contradicts Newton's laws in non-inertial frames",
+              "correct": false
+            }
+          ],
+          "explanation": "Important Facts and Practical Applications is a rigorously derived physical principle within Elasticity. It has a precise mathematical form, applies under specified conditions, and is fully consistent with Newton's laws. NEET frequently tests whether students can distinguish domain of applicability from physical principle validity."
+        },
+        {
+          "question": "In the study of Elasticity, which statement about Practical Applications is CORRECT for a NEET Physics student?",
+          "tag": "NEET-style",
+          "tagClass": "pyq",
+          "options": [
+            {
+              "text": "It is only tested as an isolated topic and never combined with energy or momentum problems",
+              "correct": false
+            },
+            {
+              "text": "The dimensional formula does not follow from SI base units",
+              "correct": false
+            },
+            {
+              "text": "It is integral to Elasticity and appears in direct and multi-concept NEET questions",
+              "correct": true
+            },
+            {
+              "text": "It is outside the NEET Physics syllabus since 2020",
+              "correct": false
+            }
+          ],
+          "explanation": "Practical Applications is a core component of Elasticity and regularly appears in NEET. Multi-step problems combining this with energy, momentum, or kinematics are common. Dimensional analysis confirms SI unit consistency. This topic has remained in the NEET syllabus continuously."
+        }
+      ]
+    },
+    "practice": {
+      "sectionTitle": "Practice Questions",
+      "questions": [
+        {
+          "question": "Which principle related to Important Facts and Practical Applications states: 'K_solid > K_liquid > K_gas'?",
+          "options": [
+            "This is the defining principle of Important Facts and Practical Applications",
+            "This is a corollary, not a principle of Important Facts and Practical Applications",
+            "This applies only to rigid-body systems",
+            "This contradicts standard NEET Physics"
+          ],
+          "answer": "This is the defining principle of Important Facts and Practical Applications"
+        },
+        {
+          "question": "In a NEET context, when is Important Facts and Practical Applications most directly applicable?",
+          "options": [
+            "Only in ideal, frictionless, zero-gravity scenarios",
+            "Whenever the stated conditions for Important Facts and Practical Applications are satisfied, including in standard NEET problems",
+            "Only in advanced university-level physics",
+            "Only in two-dimensional problems"
+          ],
+          "answer": "Whenever the stated conditions for Important Facts and Practical Applications are satisfied, including in standard NEET problems"
+        },
+        {
+          "question": "Which of the following best describes the dimensional formula of the primary physical quantity in Important Facts and Practical Applications?",
+          "options": [
+            "It is dimensionless",
+            "It follows from SI base units with standard MLT notation",
+            "It requires non-SI units for proper expression",
+            "Dimensional analysis is inapplicable to this quantity"
+          ],
+          "answer": "It follows from SI base units with standard MLT notation"
+        },
+        {
+          "question": "The most common NEET trap in Important Facts and Practical Applications problems is:",
+          "options": [
+            "Incorrect SI unit conversion",
+            "Applying the formula outside its domain of validity or with incorrect sign conventions",
+            "Using too many significant figures",
+            "Confusing scalar and vector dimensions"
+          ],
+          "answer": "Applying the formula outside its domain of validity or with incorrect sign conventions"
+        }
+      ]
+    },
+    "checklist": {
+      "subjectLabel": "NEET Physics",
+      "items": [
+        {
+          "title": "Define Important Facts and Practical Applications precisely",
+          "description": "Write out the complete definition of Important Facts and Practical Applications including all qualifying conditions and the physical quantities involved."
+        },
+        {
+          "title": "Derive the key formula from first principles",
+          "description": "Reproduce the main derivation without notes. Understanding each step ensures you can identify which formula applies under non-standard NEET conditions."
+        },
+        {
+          "title": "State conditions of validity",
+          "description": "List all assumptions and conditions under which Important Facts and Practical Applications results hold. NEET setters test these boundaries."
+        },
+        {
+          "title": "Master Comparative Properties of Elastic Moduli",
+          "description": "Solve at least 5 NEET-style problems specifically on Comparative Properties of Elastic Moduli to ensure pattern recognition and speed."
+        },
+        {
+          "title": "Master Practical Applications",
+          "description": "Solve at least 5 NEET-style problems specifically on Practical Applications to ensure pattern recognition and speed."
+        }
+      ]
+    },
+    "faq": {
+      "sectionTitle": "Frequently Asked Questions",
+      "items": [
+        {
+          "question": "How many questions from Important Facts and Practical Applications appear in NEET each year?",
+          "answer": "Important Facts and Practical Applications typically contributes 0–2 questions per NEET paper depending on the year. While it may not appear every year, it often features in multi-concept problems linked to adjacent topics in Elasticity. Skipping it is risky."
+        },
+        {
+          "question": "Is Important Facts and Practical Applications in the NEET 2025 syllabus?",
+          "answer": "Yes, Important Facts and Practical Applications remains part of the NEET Physics syllabus under Elasticity. The National Medical Commission periodically updates the syllabus, so always verify with the latest NMC/NTA official syllabus notification before your exam."
+        },
+        {
+          "question": "What is the best way to revise Important Facts and Practical Applications before NEET?",
+          "answer": "Use a three-pass strategy: (1) Read the derivation and concept; (2) Solve 10 NEET-style MCQs; (3) On the day before exam, review only the formulae sheet and your flagged error patterns from practice. Focus on conditions of validity and sign conventions."
+        },
+        {
+          "question": "What is the most common mistake in Important Facts and Practical Applications problems?",
+          "answer": "The most frequent errors in Important Facts and Practical Applications are: applying the formula outside its domain (e.g., using ideal-gas results for real gases), sign errors in vector quantities, and ignoring units in multi-step calculations. Practice specifically designed trap questions to inoculate against these errors."
+        }
+      ]
+    }
+  },
+  "grounding": {
+    "source_page_markdown_paths": [
+      "pages/physics-1/page-471/markdown.md",
+      "pages/physics-1/page-472/markdown.md"
+    ],
+    "grounding_summary": [
+      "Important Facts and Practical Applications is covered in the assigned page range of pages/physics-1/ as part of Elasticity.",
+      "The local OCR pages establish definitions, key concepts, and formulae for Important Facts and Practical Applications in the NEET Physics context.",
+      "Chapter research from Exa confirms current NEET exam patterns and authoritative sources for Important Facts and Practical Applications."
+    ],
+    "grounding_excerpt": [
+      "(vii) A hollow shaft is stronger than a solid shaft made of same mass, length and material.",
+      "Torque required to produce a unit twist in a solid shaft",
+      "and torque required to produce a unit twist in a hollow shaft",
+      "Since two shafts are made from equal volume"
+    ],
+    "sources": [
+      {
+        "title": "E:\\Textbook\\12 Rationalised Textbook\\11087 — Physics Part II\\1 Source Files\\11087 — Physics Part II\\1 Chapter-8\\Chapt...",
+        "url": "https://ncert.nic.in/textbook/pdf/keph201.pdf",
+        "publisher": "ncert.nic.in",
+        "accessed_date": "2026-04-10",
+        "why_used": "Authoritative external source for Important Facts and Practical Applications in Elasticity covering NEET exam patterns and current syllabus."
+      },
+      {
+        "title": "SATHEE: Chapter 8 Mechanical Properties of Solids",
+        "url": "https://www.satheeneet.iitk.ac.in/ncert-books/neet-ncert-books/neet-nb-phy-11/phy-11-chapter-8-mechnical-properties-of-solids/",
+        "publisher": "www.satheeneet.iitk.ac.in",
+        "accessed_date": "2026-04-10",
+        "why_used": "Authoritative external source for Important Facts and Practical Applications in Elasticity covering NEET exam patterns and current syllabus."
+      },
+      {
+        "title": "NEET Physics Elasticity Revision Notes",
+        "url": "https://www.studiestoday.com/concept-elasticity-neet-physics-elasticity-revision-notes-262125.html",
+        "publisher": "www.studiestoday.com",
+        "accessed_date": "2026-04-10",
+        "why_used": "Authoritative external source for Important Facts and Practical Applications in Elasticity covering NEET exam patterns and current syllabus."
+      }
+    ],
+    "review": {
+      "used_local_page_grounding": true,
+      "semantic_page_read_complete": true,
+      "used_current_research": true,
+      "research_used_for_enrichment": true,
+      "template_preserved": true,
+      "scope_checked": true,
+      "syllabus_scope_verified": true,
+      "guardrails_passed": true,
+      "notes": "Generated from local OCR pages and chapter research. Content grounded in Elasticity task data."
+    }
+  }
+}

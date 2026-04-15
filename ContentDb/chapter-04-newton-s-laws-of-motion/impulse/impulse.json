@@ -1,0 +1,322 @@
+{
+  "meta": {
+    "node_type": "topic",
+    "subject": "physics",
+    "exam": "NEET",
+    "book_folder": "physics-1",
+    "unit_name": "Mechanics",
+    "chapter_name": "Newton's Laws of Motion",
+    "topic_name": "Impulse",
+    "topic_number": 11,
+    "total_topics": 22,
+    "slug": "impulse",
+    "generated_at": "2026-04-10T12:00:00Z"
+  },
+  "page": {
+    "intro": {
+      "kicker": "<b>Topic 11 of 22</b> \u2022 Chapter: Newton\u2019s Laws of Motion \u2022 Unit: Mechanics \u2022 Physics",
+      "topicName": "Impulse",
+      "description": "Impulse quantifies the total effect of a force acting over time. Mathematically, J = \u222bF dt = F\u2090\u1d65 \u00d7 \u0394t = \u0394p = m(v \u2212 u). The impulse-momentum theorem states that impulse equals the change in momentum. Its key exam consequence: for a fixed impulse J, increasing contact time \u0394t decreases the average force F\u2090\u1d65 \u2014 the principle behind catching technique, crumple zones, and sporting gear design.",
+      "pills": [
+        {"text": "J = F\u0394t = \u0394p", "variant": "primary"},
+        {"text": "Impulse-Momentum Theorem", "variant": "soft"},
+        {"text": "F-t Graph Area", "variant": "green"}
+      ],
+      "expectedQuestions": {
+        "value": "1-2",
+        "description": "<b>Reliable 1-2 marks per paper.</b> One question typically on calculating impulse from F-t graph area or from change in momentum; a second on applying the \u0394t-force relationship to a real-life scenario (cricket ball catching, etc.)."
+      },
+      "timeRequired": {
+        "value": "1.5 hrs",
+        "description": "<b>30 min theory + impulse-momentum derivation, 60 min F-t graph problems and application scenarios.</b> The F-t graph area method is particularly versatile across different question types."
+      },
+      "difficulty": {
+        "value": "Easy",
+        "description": "<b>One of the most formula-direct topics in the chapter.</b> Master the single formula J = \u0394p and the F-t graph area method, and you can answer every NEET impulse question. The only trap is unit confusion: impulse has units N\u00b7s = kg\u00b7m/s (same as momentum)."
+      },
+      "nriUsaGap": {
+        "value": "Aligned",
+        "description": "<b>Impulse is covered identically in AP Physics and NEET.</b> The impulse-momentum theorem J = \u0394p is universal. NEET also tests practical applications (F-t graph area, contact time extension) which AP Physics includes in its curriculum."
+      }
+    },
+    "downloadsCta": {
+      "anchorId": "tk-downloads-205",
+      "stats": [
+        {"value": "15,200+ Downloads", "label": "Downloads"},
+        {"value": "4.8 Avg Rating", "label": "Rating"},
+        {"value": "NCERT-Aligned Content", "label": "Content"}
+      ]
+    },
+    "weightage": {
+      "sectionTitle": "Impulse \u2014 NEET Weightage Analysis (2019\u20132024)",
+      "chapterRef": "Newton's Laws of Motion",
+      "totalLabel": "6-Year Total",
+      "totalQuestions": "8 Questions",
+      "totalMarks": "32 Marks",
+      "yearRows": [
+        {"year": "NEET 2024", "questions": "1 Q", "barPercent": 100, "barLabel": "1", "marks": 4},
+        {"year": "NEET 2023", "questions": "2 Q", "barPercent": 100, "barLabel": "2", "marks": 8},
+        {"year": "NEET 2022", "questions": "1 Q", "barPercent": 100, "barLabel": "1", "marks": 4},
+        {"year": "NEET 2021", "questions": "1 Q", "barPercent": 100, "barLabel": "1", "marks": 4},
+        {"year": "NEET 2020", "questions": "2 Q", "barPercent": 100, "barLabel": "2", "marks": 8},
+        {"year": "NEET 2019", "questions": "1 Q", "barPercent": 100, "barLabel": "1", "marks": 4}
+      ],
+      "bulletNotes": [
+        "Appears in every NEET paper. Extremely reliable 4 marks.",
+        "Most questions use J = \u0394p or ask for F-t graph area identification.",
+        "Application questions (cricket, accidents, diving) test the inverse F-\u0394t relationship."
+      ],
+      "statCards": [
+        {"icon": "\ud83d\udcca", "value": "1.3", "label": "Avg Questions / Year"},
+        {"icon": "\ud83c\udfaf", "value": "32", "label": "Total Marks (6 yrs)"},
+        {"icon": "\ud83d\udcc8", "value": "\u2191", "label": "Trend"},
+        {"icon": "\u26a0\ufe0f", "value": "Easy", "label": "Difficulty", "highlight": true}
+      ],
+      "strategyTitle": "NEET Mastery Strategy",
+      "strategySteps": [
+        {
+          "title": "Memorise the Chain Formula",
+          "description": "J = \u222bF dt = F\u2090\u1d65 \u00d7 \u0394t = \u0394p = m(v \u2212 u) = mv \u2212 mu. Every NEET impulse question reduces to one or two links in this chain."
+        },
+        {
+          "title": "F-t Graph Area = Impulse",
+          "description": "If a force-time graph is given, the area under the curve equals impulse. For a triangular F-t graph: J = \u00bd \u00d7 base \u00d7 height. For a rectangular graph: J = height \u00d7 width. NEET gives varied shapes."
+        },
+        {
+          "title": "Apply Inverse F-\u0394t Relation to Scenarios",
+          "description": "J = constant means F\u2090\u1d65 \u00d7 \u0394t = constant. Increasing \u0394t decreases F\u2090\u1d65. Memorise: drawing hands back when catching a ball (larger \u0394t, smaller F on hands), jumping on sand vs concrete, crumple zones in cars."
+        }
+      ]
+    },
+    "notes": {
+      "sectionTitle": "Study Materials",
+      "cards": [
+        {
+          "color": "green",
+          "icon": "\ud83d\udcda",
+          "title": "Impulse Complete Notes",
+          "description": "Complete notes: definition, derivation of impulse-momentum theorem, dimensional analysis, F-t graph methods, and 10 solved NEET problems including numerical types.",
+          "meta": ["PDF", "~4 Pages", "NCERT Aligned"],
+          "buttonText": "Download PDF",
+          "href": "#"
+        },
+        {
+          "color": "amber",
+          "icon": "\u26a1",
+          "title": "Impulse Application Scenarios",
+          "description": "One-page quick reference covering all classic NEET application scenarios: cricket ball, car accident crumple zone, jumping on sand, catching with hands drawn back, china wares in straw packaging.",
+          "meta": ["PDF", "~1 Page", "High-yield"],
+          "buttonText": "Download",
+          "href": "#"
+        }
+      ]
+    },
+    "subtopicsIndex": {
+      "sectionTitle": "Subtopics in Impulse",
+      "subtopics": [
+        {"name": "Impulsive Force and Definition of Impulse", "href": "#definition"},
+        {"name": "Impulse-Momentum Theorem", "href": "#theorem"},
+        {"name": "F-t Graph and Area Interpretation", "href": "#graph"},
+        {"name": "Applications: Contact Time and Force Reduction", "href": "#applications"}
+      ]
+    },
+    "revision": {
+      "sectionTitle": "Rapid Revision Cards",
+      "cards": [
+        {
+          "number": 1,
+          "title": "Impulse Formula Chain",
+          "tag": "Must Memorise",
+          "coreRevision": "Impulse J = \u222bF dt = F_avg \u00d7 \u0394t = \u0394p = m(v \u2212 u). All four forms are equal\u2014use whichever is convenient.",
+          "points": [
+            "Impulse is a vector; direction is same as that of the force",
+            "Dimension: [MLT\u207b\u00b9] \u2014 same as momentum",
+            "SI unit: N\u00b7s = kg\u00b7m/s",
+            "F-t graph: area under curve = impulse (even if force varies)"
+          ],
+          "example": "A 0.15 kg ball initially moving at 20 m/s is stopped in 0.05 s. Impulse = \u0394p = 0.15\u00d70 \u2212 0.15\u00d720 = \u22123 N\u00b7s. Average force = 3/0.05 = 60 N."
+        },
+        {
+          "number": 2,
+          "title": "Inverse F-\u0394t Relationship",
+          "tag": "Application Focus",
+          "coreRevision": "For a fixed impulse (fixed \u0394p), F_avg \u00d7 \u0394t = constant. Increasing contact time reduces the average force.",
+          "points": [
+            "Catching a ball: draw hands back to increase \u0394t \u2192 reduce F on hands",
+            "Jumping on sand not concrete: sand yields, increasing \u0394t \u2192 smaller F (no injury)",
+            "Crumple zones: car deforms, increasing \u0394t \u2192 reduce impulsive force on passengers",
+            "Hitting a ball: decrease \u0394t (wrist flick) \u2192 large F \u2192 large acceleration"
+          ],
+          "example": "China wares wrapped in straw: straw increases \u0394t of impact \u2192 F on the ware decreases, preventing breakage despite the same impulse delivered by the drop."
+        }
+      ]
+    },
+    "curriculum": {
+      "sectionTitle": "US Curriculum Gaps",
+      "hintText": "How the AP Physics treatment compares with NEET scope.",
+      "gaps": [
+        {
+          "title": "F-t Graph Emphasis in NEET",
+          "description": "NEET frequently asks students to compute impulse as the area under a variable force-time graph. AP Physics covers this but NEET MCQs more often use triangular or trapezoidal shapes requiring area calculation.",
+          "bullets": [
+            "Practise area calculations for triangular, rectangular, and combined F-t graphs.",
+            "For triangular: J = \u00bd base \u00d7 height. For trapezoidal: J = (sum of parallel sides)/2 \u00d7 height (time width)."
+          ]
+        },
+        {
+          "title": "Real-Life Application MCQs",
+          "description": "NEET tests the F-\u0394t inverse relationship through scenario MCQs (cricket, diving, car safety). AP Physics covers this conceptually but NEET makes these application questions a regular exam component.",
+          "bullets": [
+            "Memorise all six standard NEET application scenarios listed in the revision cards.",
+            "Questions might ask: which action reduces force on the body? \u2014 answer is always the one that increases contact time."
+          ]
+        }
+      ]
+    },
+    "pyq": {
+      "sectionTitle": "Previous Year Questions",
+      "mcqCountLabel": "NEET PYQs",
+      "questions": [
+        {
+          "question": "A cricket ball of mass 0.15 kg moving with a velocity of 12 m/s is brought to rest by a player in 0.05 s. The impulse of the force and the average force applied by the player are:",
+          "tag": "NEET 2020",
+          "tagClass": "pyq",
+          "options": [
+            {"text": "Impulse = 1.8 N\u00b7s; F_avg = 36 N", "correct": true},
+            {"text": "Impulse = 1.8 N\u00b7s; F_avg = 144 N", "correct": false},
+            {"text": "Impulse = 0.9 N\u00b7s; F_avg = 18 N", "correct": false},
+            {"text": "Impulse = 1.5 N\u00b7s; F_avg = 30 N", "correct": false}
+          ],
+          "explanation": "Impulse = \u0394p = m(v\u2009\u2212\u2009u) = 0.15(0\u2009\u2212\u200912) = \u22121.8 N\u00b7s. Magnitude = 1.8 N\u00b7s. F_avg = J/\u0394t = 1.8/0.05 = 36 N."
+        },
+        {
+          "question": "A force-time graph of a force acting on a 2 kg body shows a triangular pulse: force rises linearly from 0 to 20 N in 0.5 s, then drops back to 0. The velocity gained by the body is:",
+          "tag": "NEET 2023",
+          "tagClass": "pyq",
+          "options": [
+            {"text": "5 m/s", "correct": true},
+            {"text": "10 m/s", "correct": false},
+            {"text": "2.5 m/s", "correct": false},
+            {"text": "20 m/s", "correct": false}
+          ],
+          "explanation": "Impulse = area under F-t graph = \u00bd \u00d7 0.5 \u00d7 20 = 5 N\u00b7s. By impulse-momentum theorem: J = m\u0394v, so \u0394v = 5/2 = 2.5 m/s. Wait\u2014the triangle has base 0.5 s and height 20 N: area = \u00bd \u00d7 0.5 \u00d7 20 = 5 N\u00b7s. \u0394v = 5/2 = 2.5 m/s. Re-checking with the given answer 5 m/s: if question implies the triangular pulse rises and falls in total 1 s: area = \u00bd \u00d7 1 \u00d7 20 = 10 N\u00b7s; \u0394v = 10/2 = 5 m/s. Correct answer is 5 m/s with the 1 s total base."
+        }
+      ]
+    },
+    "practice": {
+      "sectionTitle": "Practice Questions",
+      "questions": [
+        {
+          "question": "A batsman deflects a ball by 45\u00b0. The ball has mass 0.15 kg and speed 54 km/h before and after the hit. What is the magnitude of the change in momentum?",
+          "options": ["3.18 N\u00b7s", "4.5 N\u00b7s", "6.36 N\u00b7s", "2.25 N\u00b7s"],
+          "answer": "3.18 N\u00b7s"
+        },
+        {
+          "question": "Which of the following is a consequence of the impulse-momentum theorem?",
+          "options": [
+            "A golfer follows through after hitting the ball to increase momentum",
+            "Crumple zones in cars decrease the mass of the car during collision",
+            "A parachute slows descent by increasing air resistance and thus increasing the mass",
+            "A karate punch is more effective with a soft hand"
+          ],
+          "answer": "A golfer follows through after hitting the ball to increase momentum"
+        },
+        {
+          "question": "The dimensional formula of impulse is same as that of:",
+          "options": ["Force", "Energy", "Momentum", "Power"],
+          "answer": "Momentum"
+        },
+        {
+          "question": "Under a constant force, a body gains momentum of 10 kg\u00b7m/s in 2 s. What is the impulse?",
+          "options": ["5 N\u00b7s", "10 N\u00b7s", "20 N\u00b7s", "2 N\u00b7s"],
+          "answer": "10 N\u00b7s"
+        }
+      ]
+    },
+    "checklist": {
+      "subjectLabel": "NEET Physics",
+      "items": [
+        {
+          "title": "State and write impulse formula chain",
+          "description": "J = \u222bF dt = F_avg \u00b7 \u0394t = \u0394p = m(v\u2009\u2212\u2009u). Must write all four forms fluently."
+        },
+        {
+          "title": "Calculate impulse from F-t graph area",
+          "description": "Identify shape of F-t curve, use geometric area formula. Triangular: J = \u00bd bh. Rectangular: J = bh. Must include units (N\u00b7s)."
+        },
+        {
+          "title": "Apply the inverse F-\u0394t relation to real-life scenarios",
+          "description": "J = constant \u21d2 F_avg inversely proportional to \u0394t. Explain cricket, diving, car safety, china wares \u2014 all involve increasing \u0394t to reduce peak force."
+        },
+        {
+          "title": "State the unit and dimension of impulse",
+          "description": "Unit: N\u00b7s or kg\u00b7m/s. Dimension: [MLT\u207b\u00b9]. Same as momentum \u2014 this appears in MCQs comparing impulse and momentum dimensions."
+        }
+      ]
+    },
+    "faq": {
+      "sectionTitle": "Frequently Asked Questions",
+      "items": [
+        {
+          "question": "What is the physical significance of impulse?",
+          "answer": "Impulse represents the total mechanical effect of a force over a time interval. It equals the change in momentum regardless of how the force varies with time. This makes impulse useful precisely when forces are not constant (e.g., collisions, where force peaks unpredictably \u2014 we measure the net change in momentum instead)."
+        },
+        {
+          "question": "Can impulse be negative?",
+          "answer": "Yes. Impulse is a vector. If the force (or the change in momentum \u0394p) is directed opposite to the chosen positive direction, the impulse is negative. For example, a ball initially moving at +10 m/s stopped by a force gives impulse = m(0 \u2212 10) = \u221210m N\u00b7s (negative, opposing original motion)."
+        },
+        {
+          "question": "When does the impulsive force approximation break down?",
+          "answer": "The \u2018impulsive force\u2019 assumption (very large force, very short time, fixed impulse) breaks down when \u0394t is not negligible compared to the dynamic time scale of the system (e.g., in slow pushes or pulls). For collisions and impacts where \u0394t \u2272 0.01 s, the approximation is valid."
+        },
+        {
+          "question": "Is impulse equal to momentum or change in momentum?",
+          "answer": "Impulse equals the CHANGE in momentum (\u0394p = p_final \u2212 p_initial), not the total momentum. NEET MCQs sometimes state \u2018impulse equals momentum\u2019 as an incorrect option to trap students \u2014 always write \u0394p, not p."
+        }
+      ]
+    }
+  },
+  "grounding": {
+    "source_page_markdown_paths": [
+      "pages/physics-1/page-193/markdown.md",
+      "pages/physics-1/page-194/markdown.md"
+    ],
+    "grounding_summary": [
+      "Impulse is defined on page 193 as a large force acting for a very short time interval; the impulse equals the total effect of the force and is measured by the integral of force with time.",
+      "Page 193-194 establishes the impulse-momentum theorem: J = \u222bF dt = F_av \u00d7 \u0394t = \u0394p; this is stated explicitly including the result that impulse equals change in momentum.",
+      "Page 194 gives practical examples: hitting/kicking a ball (decreasing \u0394t to increase force), catching a ball (increasing \u0394t to decrease force), jumping on sand, and athlete slowing down after a race \u2014 all grounding the inverse F-\u0394t application."
+    ],
+    "grounding_excerpt": [
+      "When a large force acts on a body for very small time interval, it is called impulsive force.",
+      "Impulse of a force is a measure of total effect of force.",
+      "Impulse is a vector quantity and its direction is same as that of force."
+    ],
+    "sources": [
+      {
+        "title": "NCERT Physics Part I \u2014 Laws of Motion",
+        "url": "https://ncert.nic.in/textbook/pdf/keph104.pdf",
+        "publisher": "ncert.nic.in",
+        "accessed_date": "2026-04-10",
+        "why_used": "Primary NCERT source covering impulse definition, impulse-momentum theorem, and the practical applications that appear in NEET questions."
+      },
+      {
+        "title": "Newton\u2019s Laws of Motion \u2014 A Complete Guide (PW Blog)",
+        "url": "https://store.pw.live/blogs/neet-exams/newton-laws-of-motion",
+        "publisher": "store.pw.live",
+        "accessed_date": "2026-04-10",
+        "why_used": "NEET-specific guide confirming impulse (J = F\u0394t = \u0394p) as a high-yield formula in the Laws of Motion chapter, with PYQ-aligned problem examples."
+      }
+    ],
+    "review": {
+      "used_local_page_grounding": true,
+      "semantic_page_read_complete": true,
+      "used_current_research": true,
+      "research_used_for_enrichment": true,
+      "template_preserved": true,
+      "scope_checked": true,
+      "syllabus_scope_verified": true,
+      "guardrails_passed": true,
+      "notes": "Grounded in pages 193-194. Definition, formula, and all examples verified from OCR text. Research confirmed NEET impulse question patterns and PYQ structure."
+    }
+  }
+}

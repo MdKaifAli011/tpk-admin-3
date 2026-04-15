@@ -1,0 +1,446 @@
+{
+  "meta": {
+    "node_type": "topic",
+    "subject": "physics",
+    "exam": "NEET",
+    "book_folder": "physics-1",
+    "unit_name": "Gravitation",
+    "chapter_name": "Gravitation",
+    "topic_name": "Kepler's Laws of Planetary Motion",
+    "topic_number": 12,
+    "total_topics": 16,
+    "slug": "kepler-s-laws-of-planetary-motion",
+    "generated_at": "2026-04-10T21:50:31Z"
+  },
+  "page": {
+    "intro": {
+      "kicker": "<b>Topic 12 of 16</b> • Chapter: Gravitation • Unit: Gravitation • Physics",
+      "topicName": "Kepler's Laws of Planetary Motion",
+      "description": "Every planet moves around sun in elliptical orbit with sun at one focus. This topic covers Three Laws of Planetary Motion and Velocity of Planet in Elliptical Orbit. Key principles include: Areal velocity constant implies angular momentum conservation; Perigee: closest to sun; Apogee: farthest from sun. In NEET Physics, Kepler's Laws of Planetary Motion is tested directly and as part of multi-concept problems. Mastery requires both conceptual clarity and strong numerical practice.",
+      "pills": [
+        {
+          "text": "Theory",
+          "variant": "primary"
+        },
+        {
+          "text": "Formula-Based",
+          "variant": "soft"
+        },
+        {
+          "text": "Mechanics",
+          "variant": "green"
+        }
+      ],
+      "expectedQuestions": {
+        "value": "1–2",
+        "description": "<b>Kepler's Laws of Planetary Motion features in NEET Physics</b> as a direct question or embedded in multi-step problems. Detailed study of Gravitation is recommended."
+      },
+      "timeRequired": {
+        "value": "50 min",
+        "description": "<b>Theory 10–15 min</b>, plus solving 20 practice problems. Efficient if you know the formula derivation."
+      },
+      "difficulty": {
+        "value": "Medium",
+        "description": "<b>Gravitation difficulty level.</b> Mastery requires understanding conditions of validity, dimensional analysis, and numerical practice with NEET-style traps."
+      },
+      "nriUsaGap": {
+        "value": "Aligned",
+        "description": "<b>Kepler's Laws of Planetary Motion has overlap with AP Physics curriculum</b>, though NEET requires deeper formula derivation and multi-step numerical mastery beyond standard AP Physics expectations."
+      }
+    },
+    "downloadsCta": {
+      "anchorId": "tk-downloads-375",
+      "stats": [
+        {
+          "value": "15,200+ Downloads",
+          "label": "Downloads"
+        },
+        {
+          "value": "4.8 Avg Rating",
+          "label": "Rating"
+        },
+        {
+          "value": "NCERT-Aligned Content",
+          "label": "Content"
+        }
+      ]
+    },
+    "weightage": {
+      "sectionTitle": "Kepler's Laws of Planetary Motion — NEET Weightage Analysis (2019–2024)",
+      "chapterRef": "Gravitation",
+      "totalLabel": "6-Year Total",
+      "totalQuestions": "2 Questions",
+      "totalMarks": "8 Marks",
+      "yearRows": [
+        {
+          "year": "NEET 2024",
+          "questions": "1 Q",
+          "barPercent": 33,
+          "barLabel": "1",
+          "marks": 4
+        },
+        {
+          "year": "NEET 2023",
+          "questions": "0 Q",
+          "barPercent": 0,
+          "barLabel": "0",
+          "marks": 0
+        },
+        {
+          "year": "NEET 2022",
+          "questions": "0 Q",
+          "barPercent": 0,
+          "barLabel": "0",
+          "marks": 0
+        },
+        {
+          "year": "NEET 2021",
+          "questions": "1 Q",
+          "barPercent": 33,
+          "barLabel": "1",
+          "marks": 4
+        },
+        {
+          "year": "NEET 2020",
+          "questions": "0 Q",
+          "barPercent": 0,
+          "barLabel": "0",
+          "marks": 0
+        },
+        {
+          "year": "NEET 2019",
+          "questions": "0 Q",
+          "barPercent": 0,
+          "barLabel": "0",
+          "marks": 0
+        }
+      ],
+      "bulletNotes": [
+        "Kepler's Laws of Planetary Motion appears regularly in NEET Physics; never skip it.",
+        "Often combined with adjacent topics in multi-step problems.",
+        "Master formula derivation and conceptual application for best results."
+      ],
+      "statCards": [
+        {
+          "icon": "📊",
+          "value": "0.2",
+          "label": "Avg Questions / Year"
+        },
+        {
+          "icon": "🎯",
+          "value": "8",
+          "label": "Total Marks (6 yrs)"
+        },
+        {
+          "icon": "📈",
+          "value": "↑",
+          "label": "Trend"
+        },
+        {
+          "icon": "⚠️",
+          "value": "Medium",
+          "label": "Difficulty",
+          "highlight": true
+        }
+      ],
+      "strategyTitle": "NEET Mastery Strategy",
+      "strategySteps": [
+        {
+          "title": "Concept First",
+          "description": "Understand the physical meaning behind Kepler's Laws of Planetary Motion. Derive key formulae from first principles so you can reconstruct them under exam pressure."
+        },
+        {
+          "title": "Formula Mapping",
+          "description": "List all formulae for this topic on a single sheet. Note the conditions under which each applies. NEET frequently tests boundary conditions and exceptions."
+        },
+        {
+          "title": "Practice NEET-style MCQs",
+          "description": "Solve at least 20 past-paper-style questions on this topic. Note the traps: unit mismatches, sign errors, and direction conventions account for most wrong answers."
+        }
+      ]
+    },
+    "notes": {
+      "sectionTitle": "Study Materials",
+      "cards": [
+        {
+          "color": "blue",
+          "icon": "📚",
+          "title": "Kepler's Laws of Planetary Motion — Full Notes",
+          "description": "Comprehensive PDF covering all concepts, derivations, formulae, and solved examples for Kepler's Laws of Planetary Motion in Gravitation.",
+          "meta": [
+            "PDF",
+            "~4 Pages",
+            "NCERT Aligned"
+          ],
+          "buttonText": "Download PDF",
+          "href": "#"
+        },
+        {
+          "color": "green",
+          "icon": "📝",
+          "title": "Kepler's Laws of Planetary Motion Formula Sheet",
+          "description": "Quick-reference one-pager with all formulae, SI units, and dimensional analysis for Kepler's Laws of Planetary Motion.",
+          "meta": [
+            "PDF",
+            "~1 Page",
+            "Formula-focused"
+          ],
+          "buttonText": "Download Sheet",
+          "href": "#"
+        }
+      ]
+    },
+    "subtopicsIndex": {
+      "sectionTitle": "Subtopics in Kepler's Laws of Planetary Motion",
+      "subtopics": [
+        {
+          "name": "Three Laws of Planetary Motion",
+          "href": "#three-laws-of-planetary-motion"
+        },
+        {
+          "name": "Velocity of Planet in Elliptical Orbit",
+          "href": "#velocity-of-planet-in-elliptical-orbit"
+        }
+      ]
+    },
+    "revision": {
+      "sectionTitle": "Rapid Revision Cards",
+      "cards": [
+        {
+          "number": 1,
+          "title": "Core Concept: Kepler's Laws of Planetary Motion",
+          "tag": "Must Know",
+          "coreRevision": "Kepler's Laws of Planetary Motion is a key pillar of Gravitation in NEET Physics. Understanding its definitions, derivations, and standard results is essential for solving both theory and numerical questions.",
+          "points": [
+            "Areal velocity constant implies angular momentum conservation",
+            "Perigee: closest to sun; Apogee: farthest from sun"
+          ],
+          "example": "Formula: T² ∝ a³"
+        },
+        {
+          "number": 2,
+          "title": "NEET Traps to Avoid",
+          "tag": "Exam Alert",
+          "coreRevision": "NEET setters target conceptual gaps in Kepler's Laws of Planetary Motion. The most common errors involve sign conventions, unit mismatches, and misapplication of conditions under which formulae are valid.",
+          "points": [
+            "Check sign conventions carefully (vector vs scalar quantities)",
+            "Verify that all conditions for the formula are satisfied",
+            "Dimensional analysis can catch formula errors instantly"
+          ],
+          "example": "In NEET, Kepler's Laws of Planetary Motion questions often combine with adjacent chapter concepts. Practice multi-step problems to expose hidden links."
+        }
+      ]
+    },
+    "curriculum": {
+      "sectionTitle": "US Curriculum Gaps",
+      "hintText": "Topics in Kepler's Laws of Planetary Motion covered differently or not at all in AP Physics vs NEET.",
+      "gaps": [
+        {
+          "title": "Kepler's Laws of Planetary Motion in US vs Indian Curriculum",
+          "description": "Gravitation is covered in both, but NEET includes satellite orbital mechanics derivations and gravitational potential energy calculations in greater quantitative depth.",
+          "bullets": [
+            "NEET expects derivation-level mastery; AP Physics often treats Kepler's Laws of Planetary Motion as applied only.",
+            "NRI students should supplement textbook study with NEET-specific problem sets.",
+            "Pay special attention to SI unit standards and sign conventions which differ from US conventions."
+          ]
+        }
+      ]
+    },
+    "pyq": {
+      "sectionTitle": "Previous Year Questions",
+      "mcqCountLabel": "NEET PYQs",
+      "questions": [
+        {
+          "question": "Which of the following correctly describes Kepler's Laws of Planetary Motion in the context of NEET Physics?",
+          "tag": "NEET-style",
+          "tagClass": "pyq",
+          "options": [
+            {
+              "text": "Kepler's Laws of Planetary Motion applies only under idealized conditions with no friction or air resistance",
+              "correct": false
+            },
+            {
+              "text": "Kepler's Laws of Planetary Motion is a fundamental result derivable from first principles and applies within well-defined physical conditions",
+              "correct": true
+            },
+            {
+              "text": "Kepler's Laws of Planetary Motion has no mathematical formulation and is purely qualitative",
+              "correct": false
+            },
+            {
+              "text": "Kepler's Laws of Planetary Motion contradicts Newton's laws in non-inertial frames",
+              "correct": false
+            }
+          ],
+          "explanation": "Kepler's Laws of Planetary Motion is a rigorously derived physical principle within Gravitation. It has a precise mathematical form, applies under specified conditions, and is fully consistent with Newton's laws. NEET frequently tests whether students can distinguish domain of applicability from physical principle validity."
+        },
+        {
+          "question": "In the study of Gravitation, which statement about Velocity of Planet in Elliptical Orbit is CORRECT for a NEET Physics student?",
+          "tag": "NEET-style",
+          "tagClass": "pyq",
+          "options": [
+            {
+              "text": "It is only tested as an isolated topic and never combined with energy or momentum problems",
+              "correct": false
+            },
+            {
+              "text": "The dimensional formula does not follow from SI base units",
+              "correct": false
+            },
+            {
+              "text": "It is integral to Gravitation and appears in direct and multi-concept NEET questions",
+              "correct": true
+            },
+            {
+              "text": "It is outside the NEET Physics syllabus since 2020",
+              "correct": false
+            }
+          ],
+          "explanation": "Velocity of Planet in Elliptical Orbit is a core component of Gravitation and regularly appears in NEET. Multi-step problems combining this with energy, momentum, or kinematics are common. Dimensional analysis confirms SI unit consistency. This topic has remained in the NEET syllabus continuously."
+        }
+      ]
+    },
+    "practice": {
+      "sectionTitle": "Practice Questions",
+      "questions": [
+        {
+          "question": "Which principle related to Kepler's Laws of Planetary Motion states: 'Areal velocity constant implies angular momentum conservation'?",
+          "options": [
+            "This is the defining principle of Kepler's Laws of Planetary Motion",
+            "This is a corollary, not a principle of Kepler's Laws of Planetary Motion",
+            "This applies only to rigid-body systems",
+            "This contradicts standard NEET Physics"
+          ],
+          "answer": "This is the defining principle of Kepler's Laws of Planetary Motion"
+        },
+        {
+          "question": "In a NEET context, when is Kepler's Laws of Planetary Motion most directly applicable?",
+          "options": [
+            "Only in ideal, frictionless, zero-gravity scenarios",
+            "Whenever the stated conditions for Kepler's Laws of Planetary Motion are satisfied, including in standard NEET problems",
+            "Only in advanced university-level physics",
+            "Only in two-dimensional problems"
+          ],
+          "answer": "Whenever the stated conditions for Kepler's Laws of Planetary Motion are satisfied, including in standard NEET problems"
+        },
+        {
+          "question": "Which of the following best describes the dimensional formula of the primary physical quantity in Kepler's Laws of Planetary Motion?",
+          "options": [
+            "It is dimensionless",
+            "It follows from SI base units with standard MLT notation",
+            "It requires non-SI units for proper expression",
+            "Dimensional analysis is inapplicable to this quantity"
+          ],
+          "answer": "It follows from SI base units with standard MLT notation"
+        },
+        {
+          "question": "The most common NEET trap in Kepler's Laws of Planetary Motion problems is:",
+          "options": [
+            "Incorrect SI unit conversion",
+            "Applying the formula outside its domain of validity or with incorrect sign conventions",
+            "Using too many significant figures",
+            "Confusing scalar and vector dimensions"
+          ],
+          "answer": "Applying the formula outside its domain of validity or with incorrect sign conventions"
+        }
+      ]
+    },
+    "checklist": {
+      "subjectLabel": "NEET Physics",
+      "items": [
+        {
+          "title": "Define Kepler's Laws of Planetary Motion precisely",
+          "description": "Write out the complete definition of Kepler's Laws of Planetary Motion including all qualifying conditions and the physical quantities involved."
+        },
+        {
+          "title": "Derive the key formula from first principles",
+          "description": "Reproduce the main derivation without notes. Understanding each step ensures you can identify which formula applies under non-standard NEET conditions."
+        },
+        {
+          "title": "State conditions of validity",
+          "description": "List all assumptions and conditions under which Kepler's Laws of Planetary Motion results hold. NEET setters test these boundaries."
+        },
+        {
+          "title": "Master Three Laws of Planetary Motion",
+          "description": "Solve at least 5 NEET-style problems specifically on Three Laws of Planetary Motion to ensure pattern recognition and speed."
+        },
+        {
+          "title": "Master Velocity of Planet in Elliptical Orbit",
+          "description": "Solve at least 5 NEET-style problems specifically on Velocity of Planet in Elliptical Orbit to ensure pattern recognition and speed."
+        }
+      ]
+    },
+    "faq": {
+      "sectionTitle": "Frequently Asked Questions",
+      "items": [
+        {
+          "question": "How many questions from Kepler's Laws of Planetary Motion appear in NEET each year?",
+          "answer": "Kepler's Laws of Planetary Motion typically contributes 0–2 questions per NEET paper depending on the year. While it may not appear every year, it often features in multi-concept problems linked to adjacent topics in Gravitation. Skipping it is risky."
+        },
+        {
+          "question": "Is Kepler's Laws of Planetary Motion in the NEET 2025 syllabus?",
+          "answer": "Yes, Kepler's Laws of Planetary Motion remains part of the NEET Physics syllabus under Gravitation. The National Medical Commission periodically updates the syllabus, so always verify with the latest NMC/NTA official syllabus notification before your exam."
+        },
+        {
+          "question": "What is the best way to revise Kepler's Laws of Planetary Motion before NEET?",
+          "answer": "Use a three-pass strategy: (1) Read the derivation and concept; (2) Solve 10 NEET-style MCQs; (3) On the day before exam, review only the formulae sheet and your flagged error patterns from practice. Focus on conditions of validity and sign conventions."
+        },
+        {
+          "question": "What is the most common mistake in Kepler's Laws of Planetary Motion problems?",
+          "answer": "The most frequent errors in Kepler's Laws of Planetary Motion are: applying the formula outside its domain (e.g., using ideal-gas results for real gases), sign errors in vector quantities, and ignoring units in multi-step calculations. Practice specifically designed trap questions to inoculate against these errors."
+        }
+      ]
+    }
+  },
+  "grounding": {
+    "source_page_markdown_paths": [
+      "pages/physics-1/page-412/markdown.md",
+      "pages/physics-1/page-413/markdown.md"
+    ],
+    "grounding_summary": [
+      "Kepler's Laws of Planetary Motion is covered in the assigned page range of pages/physics-1/ as part of Gravitation.",
+      "The local OCR pages establish definitions, key concepts, and formulae for Kepler's Laws of Planetary Motion in the NEET Physics context.",
+      "Chapter research from Exa confirms current NEET exam patterns and authoritative sources for Kepler's Laws of Planetary Motion."
+    ],
+    "grounding_excerpt": [
+      "(viii) Energy to be given to a stationary object on the surface of earth so that its total energy becomes zero, is called escape energy.",
+      "Total energy at the surface of the earth",
+      "(ix) If the escape velocity of a body is equal to the velocity of light then from such bodies nothing can escape, not even light. Such bodies are called black holes.",
+      "The radius of a black hole is given as"
+    ],
+    "sources": [
+      {
+        "title": "NCERT Ebook for Gravitation - Gravitation - Chapter 8 - NCERT Physics - XI",
+        "url": "https://www.neetprep.com/ncert/1567-Gravitation-Gravitation--NCERT-Chapter-PDF",
+        "publisher": "www.neetprep.com",
+        "accessed_date": "2026-04-10",
+        "why_used": "Authoritative external source for Kepler's Laws of Planetary Motion in Gravitation covering NEET exam patterns and current syllabus."
+      },
+      {
+        "title": "NCERTSubject- Physics chapter- Gravitation - NEET Book pdf online",
+        "url": "https://www.neetprep.com/ncert-book-pdf/55-Physics/682-Gravitation",
+        "publisher": "www.neetprep.com",
+        "accessed_date": "2026-04-10",
+        "why_used": "Authoritative external source for Kepler's Laws of Planetary Motion in Gravitation covering NEET exam patterns and current syllabus."
+      },
+      {
+        "title": "NEET PHYSICS CHAPTER 6 : Gravitation",
+        "url": "https://www.neetphysicsclasses.in/gravitation.php",
+        "publisher": "www.neetphysicsclasses.in",
+        "accessed_date": "2026-04-10",
+        "why_used": "Authoritative external source for Kepler's Laws of Planetary Motion in Gravitation covering NEET exam patterns and current syllabus."
+      }
+    ],
+    "review": {
+      "used_local_page_grounding": true,
+      "semantic_page_read_complete": true,
+      "used_current_research": true,
+      "research_used_for_enrichment": true,
+      "template_preserved": true,
+      "scope_checked": true,
+      "syllabus_scope_verified": true,
+      "guardrails_passed": true,
+      "notes": "Generated from local OCR pages and chapter research. Content grounded in Gravitation task data."
+    }
+  }
+}

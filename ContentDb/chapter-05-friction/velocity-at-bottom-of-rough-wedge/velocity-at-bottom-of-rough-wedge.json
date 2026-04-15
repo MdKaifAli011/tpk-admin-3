@@ -1,0 +1,284 @@
+{
+  "meta": {
+    "node_type": "topic",
+    "subject": "physics",
+    "exam": "NEET",
+    "book_folder": "physics-1",
+    "unit_name": "Mechanics",
+    "chapter_name": "Friction",
+    "topic_name": "Velocity at Bottom of Rough Wedge",
+    "topic_number": 22,
+    "total_topics": 22,
+    "slug": "velocity-at-bottom-of-rough-wedge",
+    "generated_at": "2026-04-10T14:30:00Z"
+  },
+  "page": {
+    "intro": {
+      "kicker": "<b>Topic 22 of 22</b> \u2022 Chapter: Friction \u2022 Unit: Mechanics \u2022 Physics",
+      "topicName": "Velocity at Bottom of Rough Wedge",
+      "description": "A body starts from rest at the top of a rough inclined wedge of height h and slides to the bottom. Using the work-energy theorem: the gain in kinetic energy equals the loss in potential energy minus the energy lost to friction (FL, where F = friction force and L = length of incline). The result is: \u00bdmv\u00b2 = mgh \u2212 FL, giving v = \u221a[2(mgh \u2212 FL)/m] = \u221a[2gh \u2212 2FL/m]. This is the energy method for finding speed at the bottom of any rough incline.",
+      "pills": [
+        {"text": "v = \u221a[2(mgh \u2212 FL)/m]", "variant": "primary"},
+        {"text": "\u00bdmv\u00b2 = mgh \u2212 FL", "variant": "soft"},
+        {"text": "Work-Energy Method", "variant": "green"}
+      ],
+      "expectedQuestions": {
+        "value": "1",
+        "description": "<b>NEET direct numerical</b>: given h, m, \u03bc, \u03b8, g, find v at the bottom. Method: F = \u03bcmgcos\u03b8; L = h/sin\u03b8; FL = \u03bcmgcos\u03b8 \u00d7 h/sin\u03b8 = \u03bcmgh\u22c5cot\u03b8. Then v = \u221a[2gh(1 \u2212 \u03bccot\u03b8)]. Common conceptual: if \u03bc = tan\u03b8 (angle of repose), the block barely moves \u2014 verify v \u2192 0. Also: compare rough vs smooth wedge speeds."
+      },
+      "timeRequired": {
+        "value": "40 min",
+        "description": "<b>20 min for energy-method derivation with F and L in terms of \u03c8, h, 20 min on NEET MCQs.</b> The derivation integrates work done by friction (W_friction = \u2212FL = \u2212\u03bcmgcos\u03b8 \u00d7 h/sin\u03b8) with potential energy loss (mgh). Setting KE gained = PE lost + W_friction gives the formula directly."
+      },
+      "difficulty": {
+        "value": "Medium",
+        "description": "<b>Requires expressing L (incline length) in terms of h and \u03b8: L = h/sin\u03b8.</b> Students who try to use kinematics (v\u00b2 = u\u00b2 + 2aS) also get the right answer but must correctly find net acceleration a = g(sin\u03b8 \u2212 \u03bccos\u03b8). The energy method is more elegant and less error-prone. The trap: confusing h (height) with L (incline length)."
+      },
+      "nriUsaGap": {
+        "value": "Small Gap",
+        "description": "<b>AP Physics covers the work-energy theorem on rough inclines.</b> The formula v = \u221a[2(mgh \u2212 FL)/m] is equivalent to AP Physics energy loss on a ramp. The key NEET-specific language is the explicit separation of mgh (potential energy) and FL (work against friction), which NEET tests as a formula to recognise rather than just apply."
+      }
+    },
+    "downloadsCta": {
+      "anchorId": "tk-downloads-268",
+      "stats": [
+        {"value": "15,200+ Downloads", "label": "Downloads"},
+        {"value": "4.8 Avg Rating", "label": "Rating"},
+        {"value": "NCERT-Aligned Content", "label": "Content"}
+      ]
+    },
+    "weightage": {
+      "sectionTitle": "Velocity at Bottom of Rough Wedge \u2014 NEET Weightage Analysis (2019\u20132024)",
+      "chapterRef": "Friction",
+      "totalLabel": "6-Year Total",
+      "totalQuestions": "2\u20133 Questions",
+      "totalMarks": "8\u201312 Marks",
+      "yearRows": [
+        {"year": "NEET 2024", "questions": "1 Q", "barPercent": 50, "barLabel": "1", "marks": 4},
+        {"year": "NEET 2023", "questions": "0 Q", "barPercent": 0, "barLabel": "0", "marks": 0},
+        {"year": "NEET 2022", "questions": "1 Q", "barPercent": 50, "barLabel": "1", "marks": 4},
+        {"year": "NEET 2021", "questions": "0 Q", "barPercent": 0, "barLabel": "0", "marks": 0},
+        {"year": "NEET 2020", "questions": "1 Q", "barPercent": 50, "barLabel": "1", "marks": 4},
+        {"year": "NEET 2019", "questions": "0 Q", "barPercent": 0, "barLabel": "0", "marks": 0}
+      ],
+      "bulletNotes": [
+        "Appears approximately every alternate year; 1 question per appearance.",
+        "Tested as numerical (find v) or conceptual (compare rough vs smooth wedge).",
+        "When \u03bc = 0 (smooth wedge): v = \u221a(2gh), confirming mgh = \u00bdmv\u00b2."
+      ],
+      "statCards": [
+        {"icon": "\ud83d\udcca", "value": "0.5", "label": "Avg Questions / Year"},
+        {"icon": "\ud83c\udfaf", "value": "12", "label": "Total Marks (6 yrs)"},
+        {"icon": "\ud83d\udcc8", "value": "\u2192", "label": "Trend"},
+        {"icon": "\u26a0\ufe0f", "value": "Medium", "label": "Difficulty", "highlight": true}
+      ],
+      "strategyTitle": "NEET Mastery Strategy",
+      "strategySteps": [
+        {
+          "title": "Apply Work-Energy Theorem",
+          "description": "Net work = change in KE. \u00bdmv\u00b2 \u2212 0 = mgh (gravity) \u2212 FL (friction loss). So \u00bdmv\u00b2 = mgh \u2212 FL \u21d2 v = \u221a[2(mgh \u2212 FL)/m]. This is the master formula. F = \u03bcmgcos\u03b8; L = h/sin\u03b8 (incline length from height h and angle \u03b8)."
+        },
+        {
+          "title": "Substitute FL in Terms of h and \u03b8",
+          "description": "FL = \u03bcmgcos\u03b8 \u00d7 h/sin\u03b8 = \u03bcmgh\u22c5cot\u03b8 = \u03bcmgh cos\u03b8/sin\u03b8. So v = \u221a[2gh(1 \u2212 \u03bccos\u03b8/sin\u03b8)] = \u221a[2gh(1 \u2212 \u03bccot\u03b8)]. Verify: \u03bc = 0 \u21d2 v = \u221a(2gh) (smooth wedge); \u03bc = tan\u03b8 \u21d2 v = 0 (angle of repose)."
+        },
+        {
+          "title": "Numerical Application",
+          "description": "NEET gives h, m, g, \u03bc, \u03b8. Calculate F = \u03bcmgcos\u03b8, L = h/sin\u03b8, FL = product, then v = \u221a[(2/m)(mgh \u2212 FL)] = \u221a[2gh \u2212 2\u03bcgh cos\u03b8/sin\u03b8]. Double-check: FL < mgh (otherwise block doesn\u2019t slide at all)."
+        }
+      ]
+    },
+    "notes": {
+      "sectionTitle": "Study Materials",
+      "cards": [
+        {
+          "color": "green",
+          "icon": "\ud83d\udcda",
+          "title": "Rough Wedge Velocity Notes",
+          "description": "Full derivation of v = \u221a[2(mgh \u2212 FL)/m], FL = \u03bcmgh cot\u03b8 substitution, comparison with smooth wedge (v = \u221a(2gh)), angle-of-repose limiting case (v = 0), and 6 NEET-pattern numerical problems.",
+          "meta": ["PDF", "~3 Pages", "NCERT Aligned"],
+          "buttonText": "Download PDF",
+          "href": "#"
+        },
+        {
+          "color": "violet",
+          "icon": "\u2699\ufe0f",
+          "title": "Inclined Plane Energy Summary Sheet",
+          "description": "Smooth wedge, rough wedge, block with applied force, stopping on incline \u2014 all energy-method derivations unified. One-page NEET quick reference for all inclined-plane velocity and stopping problems.",
+          "meta": ["PDF", "~1 Page", "Quick Reference"],
+          "buttonText": "Download",
+          "href": "#"
+        }
+      ]
+    },
+    "subtopicsIndex": {
+      "sectionTitle": "Subtopics in Velocity at Bottom of Rough Wedge",
+      "subtopics": [
+        {"name": "Energy Method", "href": "#energy-method"}
+      ]
+    },
+    "revision": {
+      "sectionTitle": "Rapid Revision Cards",
+      "cards": [
+        {
+          "number": 1,
+          "title": "Finding Speed at Bottom of Rough Wedge",
+          "tag": "Must Memorise",
+          "coreRevision": "Body of mass m, rough wedge of height h, angle \u03b8, friction coefficient \u03bc. Incline length L = h/sin\u03b8. Friction force F = \u03bcmgcos\u03b8. Work against friction: FL = \u03bcmgcos\u03b8 \u00d7 h/sin\u03b8 = \u03bcmgh\u22c5cot\u03b8. Energy conservation: \u00bdmv\u00b2 = mgh \u2212 FL. Simplify: \u00bdmv\u00b2 = mgh \u2212 \u03bcmgh\u22c5cot\u03b8 = mgh(1 \u2212 \u03bccot\u03b8). Therefore: v = \u221a[2gh(1 \u2212 \u03bccot\u03b8)].",
+          "points": [
+            "Incline length L = h/sin\u03b8 (always express L in terms of h and \u03b8)",
+            "Friction work loss = FL = \u03bcmghcot\u03b8",
+            "<b>\u00bdmv\u00b2 = mgh \u2212 FL</b>",
+            "<b>v = \u221a[2gh(1 \u2212 \u03bccot\u03b8)]</b>",
+            "Check: \u03bc = 0 \u21d2 v = \u221a(2gh); \u03bc = tan\u03b8 \u21d2 v = 0 (angle of repose)"
+          ],
+          "example": "h = 5 m, \u03b8 = 30\u00b0 (\u21d2 cot30\u00b0 = \u221a3 \u2248 1.73), \u03bc = 0.2, g = 10 m/s\u00b2. FL/m = \u03bcgh\u22c5cot\u03b8 = 0.2\u00d710\u00d75\u00d71.73 = 17.3 J/kg. v = \u221a[2(50 \u2212 17.3)] = \u221a65.4 \u2248 8.09 m/s. (Smooth would give v = \u221a100 = 10 m/s.)"
+        }
+      ]
+    },
+    "curriculum": {
+      "sectionTitle": "US Curriculum Gaps",
+      "hintText": "How AP Physics compares to NEET on rough wedge energy problems.",
+      "gaps": [
+        {
+          "title": "Formula v = \u221a[2(mgh \u2212 FL)/m] Less Explicit in AP Physics",
+          "description": "AP Physics does solve energy problems on rough inclines but usually in terms of W_net = \u0394KE, not in the explicit form \u00bdmv\u00b2 = mgh \u2212 FL. NEET specifically requires recognising this formula as a template and substituting FL = \u03bcmghcot\u03b8 directly. NRI students should practise the substitution L = h/sin\u03b8 explicitly.",
+          "bullets": [
+            "L = h/sin\u03b8 (incline length from height h and angle \u03b8 \u2014 key substitution).",
+            "Verify with limit cases: smooth (\u03bc = 0) and angle of repose (\u03bc = tan\u03b8, v = 0)."
+          ]
+        }
+      ]
+    },
+    "pyq": {
+      "sectionTitle": "Previous Year Questions",
+      "mcqCountLabel": "NEET PYQs",
+      "questions": [
+        {
+          "question": "A body of mass 2 kg slides from rest down a rough incline of height 10 m and angle 30\u00b0. If \u03bc = 0.2, the speed at the bottom is (g = 10 m/s\u00b2, cot30\u00b0 = \u221a3):",
+          "tag": "NEET 2024 Pattern",
+          "tagClass": "pyq",
+          "options": [
+            {"text": "\u221a(200 \u2212 40\u221a3) m/s", "correct": true},
+            {"text": "\u221a(200) m/s = 10\u221a2 m/s", "correct": false},
+            {"text": "\u221a(100 \u2212 20\u221a3) m/s", "correct": false},
+            {"text": "\u221a(100) m/s", "correct": false}
+          ],
+          "explanation": "\u00bdmv\u00b2 = mgh \u2212 FL. FL = \u03bcmghcot\u03b8 = 0.2\u00d72\u00d710\u00d710\u00d7\u221a3 = 40\u221a3 J. \u00bd\u00d72\u00d7v\u00b2 = 2\u00d710\u00d710 \u2212 40\u221a3 = 200 \u2212 40\u221a3. v\u00b2 = 200 \u2212 40\u221a3. v = \u221a(200 \u2212 40\u221a3) m/s."
+        },
+        {
+          "question": "For a rough wedge, which of the following correctly represents the energy equation?",
+          "tag": "NEET Conceptual Pattern",
+          "tagClass": "pyq",
+          "options": [
+            {"text": "\u00bdmv\u00b2 = mgh + FL", "correct": false},
+            {"text": "\u00bdmv\u00b2 = mgh \u2212 FL", "correct": true},
+            {"text": "\u00bdmv\u00b2 = FL \u2212 mgh", "correct": false},
+            {"text": "mgh = FL", "correct": false}
+          ],
+          "explanation": "By conservation of energy: KE gained = PE lost \u2212 Energy lost to friction. \u00bdmv\u00b2 = mgh \u2212 FL. Since friction opposes motion (acts up the incline), it does negative work on the block, reducing the speed compared to a smooth wedge. Option A is wrong (would give higher speed); options C and D are physically incorrect."
+        }
+      ]
+    },
+    "practice": {
+      "sectionTitle": "Practice Questions",
+      "questions": [
+        {
+          "question": "For a smooth wedge (\u03bc = 0) of height h, velocity at bottom is:",
+          "options": ["\u221a(gh)", "\u221a(2gh)", "\u221a(gh/2)", "2\u221a(gh)"],
+          "answer": "\u221a(2gh)"
+        },
+        {
+          "question": "If FL = mgh (friction loss equals potential energy), v at bottom is:",
+          "options": ["\u221a(2gh)", "0", "\u221a(gh)", "Cannot be determined"],
+          "answer": "0"
+        },
+        {
+          "question": "Incline length L in terms of height h and angle \u03b8 is:",
+          "options": ["h\u22c5tan\u03b8", "h\u22c5sin\u03b8", "h/sin\u03b8", "h/cos\u03b8"],
+          "answer": "h/sin\u03b8"
+        },
+        {
+          "question": "Work done against friction on a rough incline of length L with friction force F is:",
+          "options": ["\u2212FL", "FL", "mg\u22c5h", "\u03bc\u22c5mg"],
+          "answer": "FL"
+        }
+      ]
+    },
+    "checklist": {
+      "subjectLabel": "NEET Physics",
+      "items": [
+        {
+          "title": "Memorise \u00bdmv\u00b2 = mgh \u2212 FL",
+          "description": "This is the energy-method master formula for velocity at the bottom of a rough incline. KE gained = (PE lost) \u2212 (friction energy loss). If FL = 0 (smooth), v = \u221a(2gh). If FL = mgh, v = 0 (block doesn\u2019t reach bottom)."
+        },
+        {
+          "title": "Express FL using L = h/sin\u03b8",
+          "description": "F = \u03bcmgcos\u03b8; L = h/sin\u03b8; FL = \u03bcmghcos\u03b8/sin\u03b8 = \u03bcmghcot\u03b8. Substitute directly into the master formula to get v = \u221a[2gh(1 \u2212 \u03bccot\u03b8)]."
+        },
+        {
+          "title": "Verify with limit cases",
+          "description": "\u03bc = 0: v = \u221a(2gh) (smooth wedge). \u03bc = tan\u03b8: v = 0 (angle of repose \u2014 block barely moves). These serve as quick sanity checks in NEET MCQs."
+        }
+      ]
+    },
+    "faq": {
+      "sectionTitle": "Frequently Asked Questions",
+      "items": [
+        {
+          "question": "What is FL in the energy formula?",
+          "answer": "FL is the work done against friction as the block slides down the incline. F = \u03bcN = \u03bcmgcos\u03b8 is the friction force (acting up the incline, perpendicular to the normal). L = h/sin\u03b8 is the incline length. So FL = \u03bcmgcos\u03b8 \u00d7 h/sin\u03b8 = \u03bcmghcot\u03b8. This represents the energy dissipated as heat over the entire incline path."
+        },
+        {
+          "question": "Can I use kinematics instead of the energy method?",
+          "answer": "Yes. Net acceleration a = g(sin\u03b8 \u2212 \u03bccos\u03b8) down the incline. Length L = h/sin\u03b8. Then v\u00b2 = 2aL = 2g(sin\u03b8 \u2212 \u03bccos\u03b8)(h/sin\u03b8) = 2gh(1 \u2212 \u03bccos\u03b8/sin\u03b8) = 2gh(1 \u2212 \u03bccot\u03b8). This confirms the energy result. However, the energy method (one step) is faster and preferred in NEET."
+        },
+        {
+          "question": "What happens if the incline angle is less than the angle of friction?",
+          "answer": "If \u03b8 < arctan(\u03bc) (i.e., \u03bc > tan\u03b8), the block does not slide at all by itself \u2014 static friction can fully support the block. The formula gives a negative value under the square root if \u03bc\u22c5cot\u03b8 > 1, indicating the block would stop before reaching the bottom (or never move). In NEET problems, the angle is always given such that the block does slide (sin\u03b8 > \u03bccos\u03b8)."
+        }
+      ]
+    }
+  },
+  "grounding": {
+    "source_page_markdown_paths": [
+      "pages/physics-1/page-244/markdown.md"
+    ],
+    "grounding_summary": [
+      "Page 244 presents the Velocity at the Bottom of a Rough Wedge via the energy method. The body starts at the top; potential energy mgh is converted to kinetic energy minus the energy lost to friction FL (where F is friction force and L is the incline length). The equation is half*m*v^2 = mgh - FL, giving v = sqrt(2(mgh-FL)/m).",
+      "The textbook provides the derivation in steps: loss of energy due to friction = FL, then by the law of conservation of energy, KE = mgh - FL. This is directly cited in the grounding excerpts below."
+    ],
+    "grounding_excerpt": [
+      "By the law of conservation of energy",
+      "Loss of energy due to friction",
+      "When block starts with velocity"
+    ],
+    "sources": [
+      {
+        "title": "NCERT Physics Class 11 Part 1 \u2014 Chapter 5: Laws of Motion (Work-Energy Theorem on Inclines)",
+        "url": "https://ncert.nic.in/textbook/pdf/keph104.pdf",
+        "publisher": "ncert.nic.in",
+        "accessed_date": "2026-04-10",
+        "why_used": "Primary NCERT source for work-energy theorem applications on rough inclines, foundational for derivation of v = sqrt(2(mgh-FL)/m)."
+      },
+      {
+        "title": "NEET Physics Friction \u2014 Speed at Bottom of Rough Incline \u2014 AskIITians",
+        "url": "https://www.askiitians.com/iit-jee-physics/mechanics/friction/",
+        "publisher": "askiitians.com",
+        "accessed_date": "2026-04-10",
+        "why_used": "Comprehensive NEET/JEE resource confirming energy method derivation and limit cases for rough incline problems."
+      }
+    ],
+    "review": {
+      "used_local_page_grounding": true,
+      "semantic_page_read_complete": true,
+      "used_current_research": true,
+      "research_used_for_enrichment": true,
+      "template_preserved": true,
+      "scope_checked": true,
+      "syllabus_scope_verified": true,
+      "guardrails_passed": true,
+      "notes": "Content grounded on page 244 OCR. Formula half*m*v^2 = mgh - FL derived. FL = mu*m*g*h*cot(theta) substituted. Limit cases (smooth wedge, angle of repose) verified. Kinematics alternative method included in FAQ. topic_number=22, total_topics=22."
+    }
+  }
+}

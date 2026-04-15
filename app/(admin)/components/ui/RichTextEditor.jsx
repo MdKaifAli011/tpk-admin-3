@@ -118,7 +118,6 @@ const RichTextEditor = ({
   const [imageMediaPickerCopyUrlToast, setImageMediaPickerCopyUrlToast] = useState(false);
   const [showVideoModal, setShowVideoModal] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
-  const [uploadingVideo, setUploadingVideo] = useState(false);
   const [imageError, setImageError] = useState("");
   const [videoError, setVideoError] = useState("");
   const [forms, setForms] = useState([]);
@@ -139,7 +138,6 @@ const RichTextEditor = ({
   });
   const [youtubeUrl, setYoutubeUrl] = useState("");
   const [youtubeUrlList, setYoutubeUrlList] = useState([""]); // multiple YouTube URLs
-  const [videoTab, setVideoTab] = useState("upload"); // "upload" or "youtube"
   const [videoAlign, setVideoAlign] = useState("center"); // "left", "center", "right"
   const [customWidth, setCustomWidth] = useState("640");
   const [customHeight, setCustomHeight] = useState("360");
@@ -1608,30 +1606,6 @@ const RichTextEditor = ({
     }
   };
 
-  // Handle video upload (single or multiple files)
-  const handleVideoUpload = async (e) => {
-    const fileList = e.target.files;
-    if (!fileList?.length) return;
-
-    const allowedTypes = ["video/mp4", "video/webm", "video/ogg", "video/quicktime"];
-    const maxSize = 100 * 1024 * 1024;
-    const files = Array.from(fileList);
-
-    for (const file of files) {
-      if (!allowedTypes.includes(file.type)) {
-        setVideoError(`Invalid file type: ${file.name}. Only MP4, WebM, OGG, and MOV are allowed.`);
-        return;
-      }
-      if (file.size > maxSize) {
-        setVideoError(`File too large: ${file.name}. Max 100MB.`);
-        return;
-      }
-    }
-
-    await uploadMultipleAndInsertVideo(files);
-    e.target.value = "";
-  };
-
   // Get video dimensions and alignment based on selection
   const getVideoDimensions = () => {
     const w = parseInt(customWidth) || 640;
@@ -1720,60 +1694,6 @@ const RichTextEditor = ({
     editor.insertHtml(gridHtml);
   };
 
-  // Upload multiple videos and insert as grid
-  const uploadMultipleAndInsertVideo = async (files) => {
-    if (!files?.length) return;
-    try {
-      setUploadingVideo(true);
-      setVideoError("");
-      const items = [];
-
-      for (const file of files) {
-        const formData = new FormData();
-        formData.append("video", file);
-        if (examId) formData.append("examId", examId);
-        if (subjectId) formData.append("subjectId", subjectId);
-        if (unitId) formData.append("unitId", unitId);
-        if (chapterId) formData.append("chapterId", chapterId);
-        if (topicId) formData.append("topicId", topicId);
-        if (subtopicId) formData.append("subtopicId", subtopicId);
-        if (definitionId) formData.append("definitionId", definitionId);
-
-        const response = await api.post("/upload/video", formData);
-
-        if (response.data?.success && response.data?.data?.url) {
-          items.push({ url: response.data.data.url, type: "upload", mimeType: file.type });
-        } else {
-          setVideoError(response.data?.message || "Failed to upload one or more videos.");
-          setUploadingVideo(false);
-          return;
-        }
-      }
-
-      if (items.length) {
-        insertVideoGrid(items);
-        setShowVideoModal(false);
-        setVideoError("");
-        setYoutubeUrl("");
-        setYoutubeUrlList([""]);
-        setVideoTab("upload");
-        setVideoAlign("center");
-        setCustomWidth("640");
-        setCustomHeight("360");
-        setVideoGridColumns("auto");
-      }
-    } catch (error) {
-      console.error("Video upload error:", error);
-      setVideoError(
-        error.response?.data?.message ||
-        error.message ||
-        "Failed to upload video. Please try again."
-      );
-    } finally {
-      setUploadingVideo(false);
-    }
-  };
-
   // Extract YouTube video ID from URL (including YouTube Shorts)
   const extractYouTubeId = (url) => {
     if (!url) return null;
@@ -1829,7 +1749,6 @@ const RichTextEditor = ({
     setVideoError("");
     setYoutubeUrl("");
     setYoutubeUrlList([""]);
-    setVideoTab("upload");
     setVideoAlign("center");
     setCustomWidth("640");
     setCustomHeight("360");
@@ -3269,14 +3188,14 @@ const RichTextEditor = ({
                 />
               </div>
               <div className="flex rounded-lg border border-gray-200 p-0.5">
-                {["image", "video", "document", "file"].map((t) => (
+                {["image", "document", "file"].map((t) => (
                   <button
                     key={t}
                     type="button"
                     onClick={() => { setMediaLibraryType(t); setMediaLibraryPage(1); }}
                     className={`px-3 py-1.5 rounded-md text-sm font-medium capitalize ${mediaLibraryType === t ? "bg-indigo-600 text-white" : "text-gray-600 hover:bg-gray-100"}`}
                   >
-                    {t === "image" ? "Images" : t === "video" ? "Videos" : t === "document" ? "Docs" : "Files"}
+                    {t === "image" ? "Images" : t === "document" ? "Docs" : "Files"}
                   </button>
                 ))}
               </div>
@@ -3372,27 +3291,26 @@ const RichTextEditor = ({
         document.body
       )}
 
-      {/* Video Upload/YouTube Modal */}
+      {/* Insert video — YouTube embed only (file upload disabled) */}
       {showVideoModal && typeof document !== "undefined" && createPortal(
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden border border-gray-200 max-h-[90vh] flex flex-col">
-            {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b bg-white">
               <div>
                 <h2 className="text-xl font-semibold text-gray-900">
                   Insert Video
                 </h2>
                 <p className="text-xs text-gray-500 mt-0.5">
-                  Upload a video file or embed from YouTube
+                  Paste a YouTube link. Uploading video files is disabled — use Media Library for images and documents only.
                 </p>
               </div>
               <button
+                type="button"
                 onClick={() => {
                   setShowVideoModal(false);
                   setVideoError("");
                   setYoutubeUrl("");
                   setYoutubeUrlList([""]);
-                  setVideoTab("upload");
                   setVideoGridColumns("auto");
                 }}
                 className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-2 rounded-lg transition"
@@ -3401,354 +3319,168 @@ const RichTextEditor = ({
               </button>
             </div>
 
-            {/* Tabs */}
-            <div className="flex border-b border-gray-200 bg-gray-50">
-              <button
-                onClick={() => {
-                  setVideoTab("upload");
-                  setVideoError("");
-                }}
-                className="flex-1 px-4 py-3 text-sm font-medium transition-colors border-b-2 hover:bg-gray-100"
-                style={{
-                  borderBottomColor: videoTab === "upload" ? "#ef4444" : "transparent",
-                  color: videoTab === "upload" ? "#ef4444" : "#6b7280",
-                  backgroundColor: videoTab === "upload" ? "#ffffff" : "transparent",
-                }}
-              >
-                <div className="flex items-center justify-center gap-2">
-                  <FaUpload className="w-4 h-4" />
-                  Upload Video
-                </div>
-              </button>
-              <button
-                onClick={() => {
-                  setVideoTab("youtube");
-                  setVideoError("");
-                }}
-                className="flex-1 px-4 py-3 text-sm font-medium transition-colors border-b-2 hover:bg-gray-100"
-                style={{
-                  borderBottomColor: videoTab === "youtube" ? "#ef4444" : "transparent",
-                  color: videoTab === "youtube" ? "#ef4444" : "#6b7280",
-                  backgroundColor: videoTab === "youtube" ? "#ffffff" : "transparent",
-                }}
-              >
-                <div className="flex items-center justify-center gap-2">
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
-                  </svg>
-                  YouTube URL
-                </div>
-              </button>
-            </div>
-
-            {/* Body */}
             <div className="flex-1 overflow-y-auto p-6 space-y-4">
-              {/* Upload Tab Content */}
-              {videoTab === "upload" && (
-                <>
-                  {/* File Input - multiple */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Select Video File(s)
-                    </label>
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-red-400 transition-colors">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  YouTube Video URL(s)
+                </label>
+                <p className="text-xs text-gray-500 mb-2">
+                  Add one or more URLs (watch, Shorts, or youtu.be). They will be inserted in a responsive grid.
+                </p>
+                <div className="space-y-2">
+                  {youtubeUrlList.map((url, index) => (
+                    <div key={index} className="flex gap-2 items-center">
                       <input
-                        type="file"
-                        id="video-upload"
-                        accept="video/mp4,video/webm,video/ogg,video/quicktime"
-                        multiple
-                        onChange={handleVideoUpload}
-                        className="hidden"
-                        disabled={uploadingVideo}
+                        type="url"
+                        value={url}
+                        onChange={(e) => {
+                          setYoutubeUrlAt(index, e.target.value);
+                          setVideoError("");
+                        }}
+                        placeholder="https://www.youtube.com/watch?v=... or youtube.com/shorts/..."
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
                       />
-                      <label
-                        htmlFor="video-upload"
-                        className="cursor-pointer flex flex-col items-center"
+                      <button
+                        type="button"
+                        onClick={() => removeYoutubeUrlRow(index)}
+                        disabled={youtubeUrlList.length <= 1}
+                        className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed"
+                        title="Remove URL"
                       >
-                        <FaVideo className="w-8 h-8 text-gray-400 mb-2" />
-                        <span className="text-sm text-gray-600">
-                          Click to select one or more videos
-                        </span>
-                        <span className="text-xs text-gray-500 mt-1">
-                          MP4, WebM, OGG, MOV (max 100MB each)
-                        </span>
-                      </label>
+                        <FaTimes className="w-4 h-4" />
+                      </button>
                     </div>
-                  </div>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  onClick={addYoutubeUrlRow}
+                  className="mt-2 text-sm text-red-600 hover:text-red-700 font-medium"
+                >
+                  + Add another URL
+                </button>
+              </div>
 
-                  {/* Grid columns */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Grid layout
-                    </label>
-                    <div className="flex flex-wrap gap-2">
-                      {[
-                        { id: "auto", label: "Auto (responsive)" },
-                        { id: "2", label: "2 columns" },
-                        { id: "3", label: "3 columns" },
-                      ].map((opt) => (
-                        <button
-                          key={opt.id}
-                          type="button"
-                          onClick={() => setVideoGridColumns(opt.id)}
-                          className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${videoGridColumns === opt.id ? "bg-red-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}
-                        >
-                          {opt.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Video Dimensions & Alignment */}
-                  <div className="pt-4 border-t border-gray-100 space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-3">
-                        Video Dimensions
-                      </label>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-[11px] font-medium text-gray-500 uppercase tracking-wider mb-1">
-                            Width (px)
-                          </label>
-                          <input
-                            type="number"
-                            value={customWidth}
-                            onChange={(e) => setCustomWidth(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
-                            placeholder="640"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-[11px] font-medium text-gray-500 uppercase tracking-wider mb-1">
-                            Height (px)
-                          </label>
-                          <input
-                            type="number"
-                            value={customHeight}
-                            onChange={(e) => setCustomHeight(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
-                            placeholder="360"
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Alignment
-                      </label>
-                      <div className="flex bg-gray-100 p-1 rounded-lg w-max">
-                        {[
-                          { id: "left", icon: <FaAlignLeft /> },
-                          { id: "center", icon: <FaAlignCenter /> },
-                          { id: "right", icon: <FaAlignRight /> },
-                        ].map((align) => (
-                          <button
-                            key={align.id}
-                            type="button"
-                            onClick={() => setVideoAlign(align.id)}
-                            className={`p-2 rounded-md transition-all ${videoAlign === align.id
-                              ? "bg-white text-red-600 shadow-sm"
-                              : "text-gray-500 hover:text-gray-700"
-                              }`}
-                          >
-                            {align.icon}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Info Message */}
-                  <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                    <p className="text-xs text-blue-700">
-                      <strong>💡 Tip:</strong> Select multiple files to insert several videos at once. They will appear in a responsive grid. Width and height set the size of each video.
-                    </p>
-                  </div>
-                </>
-              )}
-
-              {/* YouTube Tab Content */}
-              {videoTab === "youtube" && (
-                <>
-                  {/* Multiple YouTube URLs */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      YouTube Video URL(s)
-                    </label>
-                    <p className="text-xs text-gray-500 mb-2">
-                      Add one or more URLs (watch, Shorts, or youtu.be). They will be inserted in a responsive grid.
-                    </p>
-                    <div className="space-y-2">
-                      {youtubeUrlList.map((url, index) => (
-                        <div key={index} className="flex gap-2 items-center">
-                          <input
-                            type="url"
-                            value={url}
-                            onChange={(e) => {
-                              setYoutubeUrlAt(index, e.target.value);
-                              setVideoError("");
-                            }}
-                            placeholder="https://www.youtube.com/watch?v=... or youtube.com/shorts/..."
-                            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => removeYoutubeUrlRow(index)}
-                            disabled={youtubeUrlList.length <= 1}
-                            className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed"
-                            title="Remove URL"
-                          >
-                            <FaTimes className="w-4 h-4" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Grid layout
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { id: "auto", label: "Auto (responsive)" },
+                    { id: "2", label: "2 columns" },
+                    { id: "3", label: "3 columns" },
+                  ].map((opt) => (
                     <button
+                      key={opt.id}
                       type="button"
-                      onClick={addYoutubeUrlRow}
-                      className="mt-2 text-sm text-red-600 hover:text-red-700 font-medium"
+                      onClick={() => setVideoGridColumns(opt.id)}
+                      className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${videoGridColumns === opt.id ? "bg-red-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}
                     >
-                      + Add another URL
+                      {opt.label}
                     </button>
-                  </div>
+                  ))}
+                </div>
+              </div>
 
-                  {/* Grid columns */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Grid layout
-                    </label>
-                    <div className="flex flex-wrap gap-2">
-                      {[
-                        { id: "auto", label: "Auto (responsive)" },
-                        { id: "2", label: "2 columns" },
-                        { id: "3", label: "3 columns" },
-                      ].map((opt) => (
-                        <button
-                          key={opt.id}
-                          type="button"
-                          onClick={() => setVideoGridColumns(opt.id)}
-                          className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${videoGridColumns === opt.id ? "bg-red-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}
-                        >
-                          {opt.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+              <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-xs text-red-700">
+                  <strong>YouTube:</strong> Supports regular videos and Shorts. Multiple videos are inserted in a responsive grid with the size you set below.
+                </p>
+              </div>
 
-                  {/* YouTube Info */}
-                  <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                    <p className="text-xs text-red-700">
-                      <strong>📺 YouTube:</strong> Supports regular videos and Shorts. Multiple videos are inserted in a responsive grid with the height you set below.
-                    </p>
-                  </div>
-
-                  {/* Dimensions & Alignment */}
-                  <div className="pt-4 border-t border-gray-100 space-y-4">
+              <div className="pt-4 border-t border-gray-100 space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                    Embed size (px)
+                  </label>
+                  <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-3">
-                        Video Dimensions
+                      <label className="block text-[11px] font-medium text-gray-500 uppercase tracking-wider mb-1">
+                        Width (px)
                       </label>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-[11px] font-medium text-gray-500 uppercase tracking-wider mb-1">
-                            Width (px)
-                          </label>
-                          <input
-                            type="number"
-                            value={customWidth}
-                            onChange={(e) => setCustomWidth(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
-                            placeholder="640"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-[11px] font-medium text-gray-500 uppercase tracking-wider mb-1">
-                            Height (px)
-                          </label>
-                          <input
-                            type="number"
-                            value={customHeight}
-                            onChange={(e) => setCustomHeight(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
-                            placeholder="360"
-                          />
-                        </div>
-                      </div>
+                      <input
+                        type="number"
+                        value={customWidth}
+                        onChange={(e) => setCustomWidth(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
+                        placeholder="640"
+                      />
                     </div>
-
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Alignment
+                      <label className="block text-[11px] font-medium text-gray-500 uppercase tracking-wider mb-1">
+                        Height (px)
                       </label>
-                      <div className="flex bg-gray-100 p-1 rounded-lg w-max">
-                        {[
-                          { id: "left", icon: <FaAlignLeft /> },
-                          { id: "center", icon: <FaAlignCenter /> },
-                          { id: "right", icon: <FaAlignRight /> },
-                        ].map((align) => (
-                          <button
-                            key={align.id}
-                            type="button"
-                            onClick={() => setVideoAlign(align.id)}
-                            className={`p-2 rounded-md transition-all ${videoAlign === align.id
-                              ? "bg-white text-red-600 shadow-sm"
-                              : "text-gray-500 hover:text-gray-700"
-                              }`}
-                          >
-                            {align.icon}
-                          </button>
-                        ))}
-                      </div>
+                      <input
+                        type="number"
+                        value={customHeight}
+                        onChange={(e) => setCustomHeight(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
+                        placeholder="360"
+                      />
                     </div>
                   </div>
-                </>
-              )}
+                </div>
 
-              {/* Error Message */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Alignment
+                  </label>
+                  <div className="flex bg-gray-100 p-1 rounded-lg w-max">
+                    {[
+                      { id: "left", icon: <FaAlignLeft /> },
+                      { id: "center", icon: <FaAlignCenter /> },
+                      { id: "right", icon: <FaAlignRight /> },
+                    ].map((align) => (
+                      <button
+                        key={align.id}
+                        type="button"
+                        onClick={() => setVideoAlign(align.id)}
+                        className={`p-2 rounded-md transition-all ${videoAlign === align.id
+                          ? "bg-white text-red-600 shadow-sm"
+                          : "text-gray-500 hover:text-gray-700"
+                          }`}
+                      >
+                        {align.icon}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
               {videoError && (
                 <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
                   <p className="text-sm text-red-600">{videoError}</p>
                 </div>
               )}
-
-              {/* Upload Progress */}
-              {uploadingVideo && (
-                <div className="flex items-center justify-center gap-2 p-4">
-                  <FaSpinner className="w-5 h-5 animate-spin text-red-600" />
-                  <span className="text-sm text-gray-600">Uploading video...</span>
-                </div>
-              )}
             </div>
 
-            {/* Footer */}
-            {videoTab === "youtube" && (
-              <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50">
-                <button
-                  onClick={() => {
-                    setShowVideoModal(false);
-                    setVideoError("");
-                    setYoutubeUrl("");
-                    setYoutubeUrlList([""]);
-                    setVideoTab("upload");
-                    setVideoGridColumns("auto");
-                  }}
-                  className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-900 rounded-lg text-sm font-medium transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={insertYouTubeVideos}
-                  disabled={!youtubeUrlList.some((u) => u?.trim())}
-                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
-                  </svg>
-                  Insert YouTube Video(s)
-                </button>
-              </div>
-            )}
+            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowVideoModal(false);
+                  setVideoError("");
+                  setYoutubeUrl("");
+                  setYoutubeUrlList([""]);
+                  setVideoGridColumns("auto");
+                }}
+                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-900 rounded-lg text-sm font-medium transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={insertYouTubeVideos}
+                disabled={!youtubeUrlList.some((u) => u?.trim())}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+                </svg>
+                Insert YouTube Video(s)
+              </button>
+            </div>
           </div>
         </div>,
         document.body

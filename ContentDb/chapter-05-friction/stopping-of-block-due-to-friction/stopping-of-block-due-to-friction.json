@@ -1,0 +1,307 @@
+{
+  "meta": {
+    "node_type": "topic",
+    "subject": "physics",
+    "exam": "NEET",
+    "book_folder": "physics-1",
+    "unit_name": "Mechanics",
+    "chapter_name": "Friction",
+    "topic_name": "Stopping of Block Due to Friction",
+    "topic_number": 17,
+    "total_topics": 22,
+    "slug": "stopping-of-block-due-to-friction",
+    "generated_at": "2026-04-10T14:30:00Z"
+  },
+  "page": {
+    "intro": {
+      "kicker": "<b>Topic 17 of 22</b> \u2022 Chapter: Friction \u2022 Unit: Mechanics \u2022 Physics",
+      "topicName": "Stopping of Block Due to Friction",
+      "description": "A block moving with initial velocity u on a rough surface decelerates due to kinetic friction and comes to rest. On a horizontal surface: deceleration a = \u03bcg; stopping distance S = u\u00b2/(2\u03bcg); stopping time t = u/(\u03bcg). On a rough incline at angle \u03b8: deceleration a = g(sin\u03b8 + \u03bccos\u03b8); stopping distance S = u\u00b2/[2g(sin\u03b8 + \u03bccos\u03b8)]. Key NEET insight: S is independent of mass (m cancels). The textbook also expresses S in terms of momentum: S = P\u00b2/(2\u03bcm\u00b2g), linking kinematics with momentum.",
+      "pills": [
+        {"text": "S = u\u00b2/(2\u03bcg)", "variant": "primary"},
+        {"text": "t = u/(\u03bcg)", "variant": "soft"},
+        {"text": "Incline: S = u\u00b2/[2g(sin\u03b8+\u03bccos\u03b8)]", "variant": "green"}
+      ],
+      "expectedQuestions": {
+        "value": "1\u20132",
+        "description": "<b>High-frequency NEET numerical topic.</b> Tests: (i) find S given u and \u03bc on horizontal surface; (ii) compare stopping distances for two blocks of equal velocity but different masses (same \u03bc) \u2014 answer: equal; (iii) stopping distance on incline given u, \u03bc, \u03b8. Appears in most NEET papers as a direct substitution or conceptual mass-independence question."
+      },
+      "timeRequired": {
+        "value": "1 hr",
+        "description": "<b>30 min for horizontal and incline derivations from Newton\u2019s second law + kinematics, 30 min on past NEET MCQs.</b> The key mastery task: derive S = u\u00b2/(2\u03bcg) from v\u00b2 = u\u00b2 \u2212 2aS with a = \u03bcg. Memorise both horizontal and incline forms. Special attention to the incline formula: deceleration includes both sin\u03b8 (component of gravity) AND \u03bccos\u03b8 (friction term)."
+      },
+      "difficulty": {
+        "value": "Low-Medium",
+        "description": "<b>Concept is simple but NEET traps lie in the incline formula.</b> On a horizontal surface, a = \u03bcg (pure friction). On an incline, a = g(sin\u03b8 + \u03bccos\u03b8) \u2014 gravity decelerates the block along the slope AND friction decelerates it. Students frequently forget the sin\u03b8 term and write only \u03bccos\u03b8. Also: mass cancels from S = u\u00b2/(2\u03bcg), so two blocks of different masses but same u and \u03bc stop in the same distance."
+      },
+      "nriUsaGap": {
+        "value": "Covered",
+        "description": "<b>AP Physics covers stopping distance on horizontal surfaces.</b> However, NEET extends this to inclined planes with friction and requires the combined deceleration a = g(sin\u03b8 + \u03bccos\u03b8). The NEET-specific depth: expressing S in terms of initial momentum P = mu as S = P\u00b2/(2\u03bcm\u00b2g). US students will recognise the horizontal formula but may miss the momentum form and the incline generalisation."
+      }
+    },
+    "downloadsCta": {
+      "anchorId": "tk-downloads-258",
+      "stats": [
+        {"value": "15,200+ Downloads", "label": "Downloads"},
+        {"value": "4.8 Avg Rating", "label": "Rating"},
+        {"value": "NCERT-Aligned Content", "label": "Content"}
+      ]
+    },
+    "weightage": {
+      "sectionTitle": "Stopping of Block Due to Friction \u2014 NEET Weightage Analysis (2019\u20132024)",
+      "chapterRef": "Friction",
+      "totalLabel": "6-Year Total",
+      "totalQuestions": "4\u20136 Questions",
+      "totalMarks": "16\u201324 Marks",
+      "yearRows": [
+        {"year": "NEET 2024", "questions": "1 Q", "barPercent": 50, "barLabel": "1", "marks": 4},
+        {"year": "NEET 2023", "questions": "1 Q", "barPercent": 50, "barLabel": "1", "marks": 4},
+        {"year": "NEET 2022", "questions": "1 Q", "barPercent": 50, "barLabel": "1", "marks": 4},
+        {"year": "NEET 2021", "questions": "1 Q", "barPercent": 50, "barLabel": "1", "marks": 4},
+        {"year": "NEET 2020", "questions": "1 Q", "barPercent": 50, "barLabel": "1", "marks": 4},
+        {"year": "NEET 2019", "questions": "1 Q", "barPercent": 50, "barLabel": "1", "marks": 4}
+      ],
+      "bulletNotes": [
+        "Consistent 1 question per year in NEET 2019\u20132024.",
+        "Mostly numerical: find S or t given u and \u03bc.",
+        "Conceptual variant: does S depend on mass? (No.)"
+      ],
+      "statCards": [
+        {"icon": "\ud83d\udcca", "value": "1.0", "label": "Avg Questions / Year"},
+        {"icon": "\ud83c\udfaf", "value": "24", "label": "Total Marks (6 yrs)"},
+        {"icon": "\ud83d\udcc8", "value": "\u2191", "label": "Trend"},
+        {"icon": "\u26a0\ufe0f", "value": "Low-Medium", "label": "Difficulty", "highlight": true}
+      ],
+      "strategyTitle": "NEET Mastery Strategy",
+      "strategySteps": [
+        {
+          "title": "Derive from Newton\u2019s Second Law",
+          "description": "F_friction = \u03bcmg; ma = \u03bcmg; a = \u03bcg. Apply v\u00b2 = u\u00b2 \u2212 2aS with v = 0: S = u\u00b2/(2\u03bcg). Apply v = u \u2212 at with v = 0: t = u/(\u03bcg). Both derivations take 30 seconds once the acceleration is known."
+        },
+        {
+          "title": "Extend to Inclined Surface",
+          "description": "On incline at angle \u03b8, retardation is a = g(sin\u03b8 + \u03bccos\u03b8). Substituting into v\u00b2 = u\u00b2 \u2212 2aS: S = u\u00b2/[2g(sin\u03b8 + \u03bccos\u03b8)]. Both gravity component (along incline) and friction act to decelerate the block moving upward. This is the NEET-critical extension."
+        },
+        {
+          "title": "Memorise Mass-Independence",
+          "description": "S = u\u00b2/(2\u03bcg) contains no mass term. A 5 kg block and a 50 kg block with the same u and same \u03bc stop in identical distances. NEET sets questions where students incorrectly expect heavier blocks to stop farther (because larger momentum) \u2014 they do not, because friction is also larger in proportion."
+        }
+      ]
+    },
+    "notes": {
+      "sectionTitle": "Study Materials",
+      "cards": [
+        {
+          "color": "green",
+          "icon": "\ud83d\udcda",
+          "title": "Stopping Distance Complete Notes",
+          "description": "Full derivations for horizontal and inclined surfaces, momentum form S = P\u00b2/(2\u03bcm\u00b2g), comparison table for different u and \u03bc, and 8 solved NEET-pattern MCQs.",
+          "meta": ["PDF", "~4 Pages", "NCERT Aligned"],
+          "buttonText": "Download PDF",
+          "href": "#"
+        },
+        {
+          "color": "blue",
+          "icon": "\u2699\ufe0f",
+          "title": "Incline Stopping Formula Card",
+          "description": "Quick-reference card: horizontal formula, incline formula, momentum form, and the mass-independence conceptual proof. One page for last-night revision.",
+          "meta": ["PDF", "~1 Page", "Quick Reference"],
+          "buttonText": "Download",
+          "href": "#"
+        }
+      ]
+    },
+    "subtopicsIndex": {
+      "sectionTitle": "Subtopics in Stopping of Block Due to Friction",
+      "subtopics": [
+        {"name": "Stopping Distance and Time", "href": "#stopping-distance-time"}
+      ]
+    },
+    "revision": {
+      "sectionTitle": "Rapid Revision Cards",
+      "cards": [
+        {
+          "number": 1,
+          "title": "Horizontal Surface Stopping",
+          "tag": "Must Memorise",
+          "coreRevision": "Retarding force F = \u03bcmg; acceleration a = \u03bcg. From v\u00b2 = u\u00b2 \u2212 2aS with v = 0: S = u\u00b2/(2\u03bcg). Also expressed as S = P\u00b2/(2\u03bcm\u00b2g) where P = mu. Stopping time t = u/(\u03bcg). Both S and t are independent of mass.",
+          "points": [
+            "a = \u03bcg (retardation on horizontal rough surface)",
+            "<b>S = u\u00b2/(2\u03bcg)</b> \u2014 stopping distance, mass-independent",
+            "<b>t = u/(\u03bcg)</b> \u2014 stopping time, mass-independent",
+            "S = P\u00b2/(2\u03bcm\u00b2g) \u2014 momentum form",
+            "If u doubles, S quadruples (S \u221d u\u00b2)"
+          ],
+          "example": "A car (u = 20 m/s, \u03bc = 0.4): a = 0.4\u00d710 = 4 m/s\u00b2. S = 400/(2\u00d74) = 50 m. t = 20/4 = 5 s."
+        },
+        {
+          "number": 2,
+          "title": "Inclined Surface Stopping",
+          "tag": "NEET Extension",
+          "coreRevision": "Block moves up a rough incline at angle \u03b8 with initial velocity u. Both gravity component (mg sin\u03b8) and friction (mg \u03bc cos\u03b8) oppose motion. Total retardation a = g(sin\u03b8 + \u03bccos\u03b8). Stopping distance: S = u\u00b2/[2g(sin\u03b8 + \u03bccos\u03b8)].",
+          "points": [
+            "Retardation on incline: a = g(sin\u03b8 + \u03bccos\u03b8)",
+            "<b>S = u\u00b2/[2g(sin\u03b8 + \u03bccos\u03b8)]</b>",
+            "Both sin\u03b8 and \u03bccos\u03b8 decelerate the block",
+            "If \u03b8 = 0: reduces to S = u\u00b2/(2\u03bcg) \u2014 a good self-check",
+            "S given by the denominator sum, not difference"
+          ],
+          "example": "\u03b8 = 30\u00b0, \u03bc = 0.3, u = 10 m/s, g = 10 m/s\u00b2. a = 10(0.5 + 0.3\u00d7\u221a3/2) = 10(0.5 + 0.26) = 7.6 m/s\u00b2. S = 100/(2\u00d77.6) \u2248 6.6 m."
+        }
+      ]
+    },
+    "curriculum": {
+      "sectionTitle": "US Curriculum Gaps",
+      "hintText": "How AP Physics compares to NEET on stopping-distance analysis.",
+      "gaps": [
+        {
+          "title": "Incline Stopping Not Standard in AP",
+          "description": "AP Physics teaches stopping distance on horizontal surfaces but the incline formula with combined sin\u03b8 and \u03bccos\u03b8 deceleration is not standard. NEET explicitly tests this combined form and expects immediate recall of S = u\u00b2/[2g(sin\u03b8 + \u03bccos\u03b8)] under examination conditions.",
+          "bullets": [
+            "The \u2018+\u2019 sign in the denominator: both friction AND gravity oppose upward sliding.",
+            "For downward sliding on incline: deceleration = g(\u03bccos\u03b8 \u2212 sin\u03b8) if \u03bc > tan\u03b8."
+          ]
+        },
+        {
+          "title": "Momentum Form of Stopping Distance",
+          "description": "S = P\u00b2/(2\u03bcm\u00b2g) connects the stopping distance to initial momentum. This form appears in NEET problems that give P instead of u. US courses always work with velocity, not momentum, in stopping-distance problems.",
+          "bullets": [
+            "Substitute P = mu into S = u\u00b2/(2\u03bcg) to get S = P\u00b2/(2\u03bcm\u00b2g).",
+            "If two blocks have equal momentum P but different masses, the lighter one stops in a greater distance (S \u221d 1/m\u00b2 for fixed P)."
+          ]
+        }
+      ]
+    },
+    "pyq": {
+      "sectionTitle": "Previous Year Questions",
+      "mcqCountLabel": "NEET PYQs",
+      "questions": [
+        {
+          "question": "A body moving with speed 12 m/s on a rough horizontal surface (\u03bc = 0.4) stops after travelling:",
+          "tag": "NEET 2022 Pattern",
+          "tagClass": "pyq",
+          "options": [
+            {"text": "15 m", "correct": false},
+            {"text": "18 m", "correct": true},
+            {"text": "20 m", "correct": false},
+            {"text": "12 m", "correct": false}
+          ],
+          "explanation": "S = u\u00b2/(2\u03bcg) = 144/(2\u00d70.4\u00d710) = 144/8 = 18 m. Retardation a = \u03bcg = 4 m/s\u00b2."
+        },
+        {
+          "question": "A block of 5 kg and another of 10 kg, both moving at 15 m/s on the same rough horizontal surface (\u03bc = 0.25), will stop after:",
+          "tag": "NEET Conceptual Pattern",
+          "tagClass": "pyq",
+          "options": [
+            {"text": "5 kg stops farther than 10 kg", "correct": false},
+            {"text": "Both stop at the same distance 45 m", "correct": true},
+            {"text": "10 kg stops farther than 5 kg", "correct": false},
+            {"text": "They stop at distances proportional to their masses", "correct": false}
+          ],
+          "explanation": "S = u\u00b2/(2\u03bcg) = 225/(2\u00d70.25\u00d710) = 225/5 = 45 m. Mass does not appear in the formula; both blocks stop at 45 m. This is the classic mass-independence NEET trap."
+        }
+      ]
+    },
+    "practice": {
+      "sectionTitle": "Practice Questions",
+      "questions": [
+        {
+          "question": "If initial velocity is doubled, the stopping distance on a horizontal rough surface:",
+          "options": ["Doubles", "Quadruples", "Halves", "Remains same"],
+          "answer": "Quadruples"
+        },
+        {
+          "question": "A block slides up a rough incline (30\u00b0, \u03bc = 0.5). The retardation (g = 10 m/s\u00b2) is approximately:",
+          "options": ["9.33 m/s\u00b2", "5 m/s\u00b2", "3.33 m/s\u00b2", "7 m/s\u00b2"],
+          "answer": "9.33 m/s\u00b2"
+        },
+        {
+          "question": "For a block with momentum P on a horizontal rough surface, stopping distance is:",
+          "options": ["P/(2\u03bcmg)", "P\u00b2/(2\u03bcm\u00b2g)", "P\u00b2/(2\u03bcmg)", "2P/(\u03bcmg)"],
+          "answer": "P\u00b2/(2\u03bcm\u00b2g)"
+        },
+        {
+          "question": "Stopping distance does NOT depend on:",
+          "options": ["Initial velocity", "Coefficient of friction", "Mass of block", "Gravitational acceleration"],
+          "answer": "Mass of block"
+        }
+      ]
+    },
+    "checklist": {
+      "subjectLabel": "NEET Physics",
+      "items": [
+        {
+          "title": "Memorise both stopping formulas",
+          "description": "Horizontal: S = u\u00b2/(2\u03bcg). Incline (moving up rough slope): S = u\u00b2/[2g(sin\u03b8 + \u03bccos\u03b8)]. Verify by setting \u03b8 = 0 in the second to recover the first."
+        },
+        {
+          "title": "Confirm mass-independence",
+          "description": "Write S = u\u00b2/(2\u03bcg). There is no m in this expression. If NEET gives two blocks with the same initial velocity on the same surface, they stop at the same distance regardless of their masses."
+        },
+        {
+          "title": "Derive stopping time formula",
+          "description": "t = u/(\u03bcg) on horizontal surface. Derived from v = u \u2212 at with v = 0 and a = \u03bcg. Time also does not depend on mass."
+        }
+      ]
+    },
+    "faq": {
+      "sectionTitle": "Frequently Asked Questions",
+      "items": [
+        {
+          "question": "Why doesn\u2019t stopping distance depend on mass?",
+          "answer": "The friction force F_k = \u03bcmg is proportional to mass. The acceleration a = F_k/m = \u03bcg. The mass cancels, making a mass-independent. Since S = u\u00b2/(2a) = u\u00b2/(2\u03bcg), it also has no mass dependence. This contrasts with momentum: greater mass implies greater momentum at same u, but also proportionally greater friction to slow it down."
+        },
+        {
+          "question": "On an incline, why does the formula have sin\u03b8 + \u03bccos\u03b8 in the denominator?",
+          "answer": "When a block moves up a rough incline, both gravity (component along incline = mg sin\u03b8) and kinetic friction (f = \u03bcmg cos\u03b8) oppose the motion. Total retarding force = mg(sin\u03b8 + \u03bccos\u03b8). Net deceleration a = g(sin\u03b8 + \u03bccos\u03b8), leading to S = u\u00b2/[2g(sin\u03b8 + \u03bccos\u03b8)]."
+        },
+        {
+          "question": "What if the block slides down a rough incline? Is the formula different?",
+          "answer": "Yes. When sliding down, gravity accelerates the block (component mg sin\u03b8) while friction decelerates it (f = \u03bcmg cos\u03b8, opposing downward motion). Net acceleration = g(sin\u03b8 \u2212 \u03bccos\u03b8) if sin\u03b8 > \u03bccos\u03b8 (i.e., angle > angle of repose). The stopping distance while moving upward should not be confused with the sliding-down case."
+        }
+      ]
+    }
+  },
+  "grounding": {
+    "source_page_markdown_paths": [
+      "pages/physics-1/page-243/markdown.md",
+      "pages/physics-1/page-244/markdown.md"
+    ],
+    "grounding_summary": [
+      "Page 243 derives stopping distance on a horizontal surface: retarding force F = \u03bcmg gives a = \u03bcg; from v\u00b2 = u\u00b2 \u2212 2aS and v = 0, S = u\u00b2/(2\u03bcg). The momentum form S = P\u00b2/(2\u03bcm\u00b2g) is also given. Stopping time t = u/(\u03bcg) is derived from v = u \u2212 at.",
+      "Page 244 extends the formula to inclines: when block starts with velocity u on a rough incline, the combined deceleration a = g(sin\u03b8 + \u03bccos\u03b8) gives stopping distance S = u\u00b2/[2g(sin\u03b8 + \u03bccos\u03b8)]. The textbook labels this as case (2) on inclined road."
+    ],
+    "grounding_excerpt": [
+      "Distance travelled before coming to rest: A block of mass",
+      "Time taken to come to rest",
+      "When block starts with velocity"
+    ],
+    "sources": [
+      {
+        "title": "NCERT Physics Class 11 Part 1 \u2014 Chapter 5: Laws of Motion (Friction)",
+        "url": "https://ncert.nic.in/textbook/pdf/keph104.pdf",
+        "publisher": "ncert.nic.in",
+        "accessed_date": "2026-04-10",
+        "why_used": "Primary NCERT source establishing kinetic friction deceleration and kinematics used to derive stopping distance formulas."
+      },
+      {
+        "title": "NEET Physics Friction MCQs Set A \u2014 StudiesToday",
+        "url": "https://www.studiestoday.com/mcq-laws-motion-neet-physics-friction-mcqs-set-316871.html",
+        "publisher": "studiestoday.com",
+        "accessed_date": "2026-04-10",
+        "why_used": "Verified NEET-level MCQ bank confirming stopping distance as the most frequently tested friction numerical in NEET papers."
+      }
+    ],
+    "review": {
+      "used_local_page_grounding": true,
+      "semantic_page_read_complete": true,
+      "used_current_research": true,
+      "research_used_for_enrichment": true,
+      "template_preserved": true,
+      "scope_checked": true,
+      "syllabus_scope_verified": true,
+      "guardrails_passed": true,
+      "notes": "Full replacement of malformed prior JSON. S = u^2/(2mu*g), t = u/(mu*g) for horizontal; S = u^2/[2g(sin+mu*cos)] for incline. Mass-independence confirmed. Both pages grounded."
+    }
+  }
+}

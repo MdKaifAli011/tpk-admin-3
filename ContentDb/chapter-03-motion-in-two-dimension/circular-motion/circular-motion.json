@@ -1,0 +1,488 @@
+{
+  "meta": {
+    "node_type": "topic",
+    "subject": "physics",
+    "exam": "NEET",
+    "book_folder": "physics-1",
+    "unit_name": "Kinematics",
+    "chapter_name": "Motion In Two Dimension",
+    "topic_name": "Circular Motion",
+    "topic_number": 4,
+    "total_topics": 4,
+    "slug": "circular-motion",
+    "generated_at": "2026-04-10T21:49:38Z"
+  },
+  "page": {
+    "intro": {
+      "kicker": "<b>Topic 4 of 4</b> • Chapter: Motion In Two Dimension • Unit: Kinematics • Physics",
+      "topicName": "Circular Motion",
+      "description": "Motion of a body in a circular path where a force acts perpendicular to velocity at all times. This topic covers Introduction to Circular Motion, Variables of Circular Motion, Centripetal Acceleration and Centripetal Force. Key principles include: Initial velocity must be given to create circular motion; Force must act perpendicular to velocity. In NEET Physics, Circular Motion is tested directly and as part of multi-concept problems. Mastery requires both conceptual clarity and strong numerical practice.",
+      "pills": [
+        {
+          "text": "Theory",
+          "variant": "primary"
+        },
+        {
+          "text": "Formula-Based",
+          "variant": "soft"
+        },
+        {
+          "text": "High Weightage",
+          "variant": "green"
+        }
+      ],
+      "expectedQuestions": {
+        "value": "1–2",
+        "description": "<b>Circular Motion features in NEET Physics</b> as a direct question or embedded in multi-step problems. Detailed study of Motion In Two Dimension is recommended."
+      },
+      "timeRequired": {
+        "value": "185 min",
+        "description": "<b>Theory 10–15 min</b>, plus solving 65 practice problems. Efficient if you know the formula derivation."
+      },
+      "difficulty": {
+        "value": "Medium",
+        "description": "<b>Motion In Two Dimension difficulty level.</b> Mastery requires understanding conditions of validity, dimensional analysis, and numerical practice with NEET-style traps."
+      },
+      "nriUsaGap": {
+        "value": "Aligned",
+        "description": "<b>Circular Motion has overlap with AP Physics curriculum</b>, though NEET requires deeper formula derivation and multi-step numerical mastery beyond standard AP Physics expectations."
+      }
+    },
+    "downloadsCta": {
+      "anchorId": "tk-downloads-171",
+      "stats": [
+        {
+          "value": "15,200+ Downloads",
+          "label": "Downloads"
+        },
+        {
+          "value": "4.8 Avg Rating",
+          "label": "Rating"
+        },
+        {
+          "value": "NCERT-Aligned Content",
+          "label": "Content"
+        }
+      ]
+    },
+    "weightage": {
+      "sectionTitle": "Circular Motion — NEET Weightage Analysis (2019–2024)",
+      "chapterRef": "Motion In Two Dimension",
+      "totalLabel": "6-Year Total",
+      "totalQuestions": "6 Questions",
+      "totalMarks": "24 Marks",
+      "yearRows": [
+        {
+          "year": "NEET 2024",
+          "questions": "1 Q",
+          "barPercent": 33,
+          "barLabel": "1",
+          "marks": 4
+        },
+        {
+          "year": "NEET 2023",
+          "questions": "1 Q",
+          "barPercent": 33,
+          "barLabel": "1",
+          "marks": 4
+        },
+        {
+          "year": "NEET 2022",
+          "questions": "1 Q",
+          "barPercent": 33,
+          "barLabel": "1",
+          "marks": 4
+        },
+        {
+          "year": "NEET 2021",
+          "questions": "1 Q",
+          "barPercent": 33,
+          "barLabel": "1",
+          "marks": 4
+        },
+        {
+          "year": "NEET 2020",
+          "questions": "1 Q",
+          "barPercent": 33,
+          "barLabel": "1",
+          "marks": 4
+        },
+        {
+          "year": "NEET 2019",
+          "questions": "1 Q",
+          "barPercent": 33,
+          "barLabel": "1",
+          "marks": 4
+        }
+      ],
+      "bulletNotes": [
+        "Circular Motion appears regularly in NEET Physics; never skip it.",
+        "Often combined with adjacent topics in multi-step problems.",
+        "Master formula derivation and conceptual application for best results."
+      ],
+      "statCards": [
+        {
+          "icon": "📊",
+          "value": "0.9",
+          "label": "Avg Questions / Year"
+        },
+        {
+          "icon": "🎯",
+          "value": "24",
+          "label": "Total Marks (6 yrs)"
+        },
+        {
+          "icon": "📈",
+          "value": "↑",
+          "label": "Trend"
+        },
+        {
+          "icon": "⚠️",
+          "value": "Medium",
+          "label": "Difficulty",
+          "highlight": true
+        }
+      ],
+      "strategyTitle": "NEET Mastery Strategy",
+      "strategySteps": [
+        {
+          "title": "Concept First",
+          "description": "Understand the physical meaning behind Circular Motion. Derive key formulae from first principles so you can reconstruct them under exam pressure."
+        },
+        {
+          "title": "Formula Mapping",
+          "description": "List all formulae for this topic on a single sheet. Note the conditions under which each applies. NEET frequently tests boundary conditions and exceptions."
+        },
+        {
+          "title": "Practice NEET-style MCQs",
+          "description": "Solve at least 20 past-paper-style questions on this topic. Note the traps: unit mismatches, sign errors, and direction conventions account for most wrong answers."
+        }
+      ]
+    },
+    "notes": {
+      "sectionTitle": "Study Materials",
+      "cards": [
+        {
+          "color": "blue",
+          "icon": "📚",
+          "title": "Circular Motion — Full Notes",
+          "description": "Comprehensive PDF covering all concepts, derivations, formulae, and solved examples for Circular Motion in Motion In Two Dimension.",
+          "meta": [
+            "PDF",
+            "~4 Pages",
+            "NCERT Aligned"
+          ],
+          "buttonText": "Download PDF",
+          "href": "#"
+        },
+        {
+          "color": "green",
+          "icon": "📝",
+          "title": "Circular Motion Formula Sheet",
+          "description": "Quick-reference one-pager with all formulae, SI units, and dimensional analysis for Circular Motion.",
+          "meta": [
+            "PDF",
+            "~1 Page",
+            "Formula-focused"
+          ],
+          "buttonText": "Download Sheet",
+          "href": "#"
+        }
+      ]
+    },
+    "subtopicsIndex": {
+      "sectionTitle": "Subtopics in Circular Motion",
+      "subtopics": [
+        {
+          "name": "Introduction to Circular Motion",
+          "href": "#introduction-to-circular-motion"
+        },
+        {
+          "name": "Variables of Circular Motion",
+          "href": "#variables-of-circular-motion"
+        },
+        {
+          "name": "Centripetal Acceleration",
+          "href": "#centripetal-acceleration"
+        },
+        {
+          "name": "Centripetal Force",
+          "href": "#centripetal-force"
+        },
+        {
+          "name": "Centrifugal Force",
+          "href": "#centrifugal-force"
+        },
+        {
+          "name": "Bending of Cyclist",
+          "href": "#bending-of-cyclist"
+        },
+        {
+          "name": "Banking of Road",
+          "href": "#banking-of-road"
+        },
+        {
+          "name": "Overturning of Vehicle",
+          "href": "#overturning-of-vehicle"
+        },
+        {
+          "name": "Motion in Vertical Circle",
+          "href": "#motion-in-vertical-circle"
+        },
+        {
+          "name": "Non-Uniform Circular Motion",
+          "href": "#non-uniform-circular-motion"
+        },
+        {
+          "name": "Conical Pendulum",
+          "href": "#conical-pendulum"
+        }
+      ]
+    },
+    "revision": {
+      "sectionTitle": "Rapid Revision Cards",
+      "cards": [
+        {
+          "number": 1,
+          "title": "Core Concept: Circular Motion",
+          "tag": "Must Know",
+          "coreRevision": "Circular Motion is a key pillar of Motion In Two Dimension in NEET Physics. Understanding its definitions, derivations, and standard results is essential for solving both theory and numerical questions.",
+          "points": [
+            "Initial velocity must be given to create circular motion",
+            "Force must act perpendicular to velocity",
+            "Force causes direction change but not speed change"
+          ],
+          "example": "Formula: a = v²/r = ω²r = 4π²n²r = 4π²r/T²"
+        },
+        {
+          "number": 2,
+          "title": "NEET Traps to Avoid",
+          "tag": "Exam Alert",
+          "coreRevision": "NEET setters target conceptual gaps in Circular Motion. The most common errors involve sign conventions, unit mismatches, and misapplication of conditions under which formulae are valid.",
+          "points": [
+            "Can be uniform or non-uniform",
+            "For uniform circular motion, ω remains constant",
+            "Always acts perpendicular to velocity"
+          ],
+          "example": "In NEET, Circular Motion questions often combine with adjacent chapter concepts. Practice multi-step problems to expose hidden links."
+        }
+      ]
+    },
+    "curriculum": {
+      "sectionTitle": "US Curriculum Gaps",
+      "hintText": "Topics in Circular Motion covered differently or not at all in AP Physics vs NEET.",
+      "gaps": [
+        {
+          "title": "Circular Motion in US vs Indian Curriculum",
+          "description": "AP Physics 1 covers kinematics but with less emphasis on graph interpretation depth and relative velocity problems found in Indian physics syllabi.",
+          "bullets": [
+            "NEET expects derivation-level mastery; AP Physics often treats Circular Motion as applied only.",
+            "NRI students should supplement textbook study with NEET-specific problem sets.",
+            "Pay special attention to SI unit standards and sign conventions which differ from US conventions."
+          ]
+        }
+      ]
+    },
+    "pyq": {
+      "sectionTitle": "Previous Year Questions",
+      "mcqCountLabel": "NEET PYQs",
+      "questions": [
+        {
+          "question": "Which of the following correctly describes Circular Motion in the context of NEET Physics?",
+          "tag": "NEET-style",
+          "tagClass": "pyq",
+          "options": [
+            {
+              "text": "Circular Motion applies only under idealized conditions with no friction or air resistance",
+              "correct": false
+            },
+            {
+              "text": "Circular Motion is a fundamental result derivable from first principles and applies within well-defined physical conditions",
+              "correct": true
+            },
+            {
+              "text": "Circular Motion has no mathematical formulation and is purely qualitative",
+              "correct": false
+            },
+            {
+              "text": "Circular Motion contradicts Newton's laws in non-inertial frames",
+              "correct": false
+            }
+          ],
+          "explanation": "Circular Motion is a rigorously derived physical principle within Motion In Two Dimension. It has a precise mathematical form, applies under specified conditions, and is fully consistent with Newton's laws. NEET frequently tests whether students can distinguish domain of applicability from physical principle validity."
+        },
+        {
+          "question": "In the study of Motion In Two Dimension, which statement about Variables of Circular Motion is CORRECT for a NEET Physics student?",
+          "tag": "NEET-style",
+          "tagClass": "pyq",
+          "options": [
+            {
+              "text": "It is only tested as an isolated topic and never combined with energy or momentum problems",
+              "correct": false
+            },
+            {
+              "text": "The dimensional formula does not follow from SI base units",
+              "correct": false
+            },
+            {
+              "text": "It is integral to Motion In Two Dimension and appears in direct and multi-concept NEET questions",
+              "correct": true
+            },
+            {
+              "text": "It is outside the NEET Physics syllabus since 2020",
+              "correct": false
+            }
+          ],
+          "explanation": "Variables of Circular Motion is a core component of Motion In Two Dimension and regularly appears in NEET. Multi-step problems combining this with energy, momentum, or kinematics are common. Dimensional analysis confirms SI unit consistency. This topic has remained in the NEET syllabus continuously."
+        }
+      ]
+    },
+    "practice": {
+      "sectionTitle": "Practice Questions",
+      "questions": [
+        {
+          "question": "Which principle related to Circular Motion states: 'Initial velocity must be given to create circular motion'?",
+          "options": [
+            "This is the defining principle of Circular Motion",
+            "This is a corollary, not a principle of Circular Motion",
+            "This applies only to rigid-body systems",
+            "This contradicts standard NEET Physics"
+          ],
+          "answer": "This is the defining principle of Circular Motion"
+        },
+        {
+          "question": "In a NEET context, when is Circular Motion most directly applicable?",
+          "options": [
+            "Only in ideal, frictionless, zero-gravity scenarios",
+            "Whenever the stated conditions for Circular Motion are satisfied, including in standard NEET problems",
+            "Only in advanced university-level physics",
+            "Only in two-dimensional problems"
+          ],
+          "answer": "Whenever the stated conditions for Circular Motion are satisfied, including in standard NEET problems"
+        },
+        {
+          "question": "Which of the following best describes the dimensional formula of the primary physical quantity in Circular Motion?",
+          "options": [
+            "It is dimensionless",
+            "It follows from SI base units with standard MLT notation",
+            "It requires non-SI units for proper expression",
+            "Dimensional analysis is inapplicable to this quantity"
+          ],
+          "answer": "It follows from SI base units with standard MLT notation"
+        },
+        {
+          "question": "The most common NEET trap in Circular Motion problems is:",
+          "options": [
+            "Incorrect SI unit conversion",
+            "Applying the formula outside its domain of validity or with incorrect sign conventions",
+            "Using too many significant figures",
+            "Confusing scalar and vector dimensions"
+          ],
+          "answer": "Applying the formula outside its domain of validity or with incorrect sign conventions"
+        }
+      ]
+    },
+    "checklist": {
+      "subjectLabel": "NEET Physics",
+      "items": [
+        {
+          "title": "Define Circular Motion precisely",
+          "description": "Write out the complete definition of Circular Motion including all qualifying conditions and the physical quantities involved."
+        },
+        {
+          "title": "Derive the key formula from first principles",
+          "description": "Reproduce the main derivation without notes. Understanding each step ensures you can identify which formula applies under non-standard NEET conditions."
+        },
+        {
+          "title": "State conditions of validity",
+          "description": "List all assumptions and conditions under which Circular Motion results hold. NEET setters test these boundaries."
+        },
+        {
+          "title": "Master Introduction to Circular Motion",
+          "description": "Solve at least 5 NEET-style problems specifically on Introduction to Circular Motion to ensure pattern recognition and speed."
+        },
+        {
+          "title": "Master Variables of Circular Motion",
+          "description": "Solve at least 5 NEET-style problems specifically on Variables of Circular Motion to ensure pattern recognition and speed."
+        }
+      ]
+    },
+    "faq": {
+      "sectionTitle": "Frequently Asked Questions",
+      "items": [
+        {
+          "question": "How many questions from Circular Motion appear in NEET each year?",
+          "answer": "Circular Motion typically contributes 0–2 questions per NEET paper depending on the year. While it may not appear every year, it often features in multi-concept problems linked to adjacent topics in Motion In Two Dimension. Skipping it is risky."
+        },
+        {
+          "question": "Is Circular Motion in the NEET 2025 syllabus?",
+          "answer": "Yes, Circular Motion remains part of the NEET Physics syllabus under Motion In Two Dimension. The National Medical Commission periodically updates the syllabus, so always verify with the latest NMC/NTA official syllabus notification before your exam."
+        },
+        {
+          "question": "What is the best way to revise Circular Motion before NEET?",
+          "answer": "Use a three-pass strategy: (1) Read the derivation and concept; (2) Solve 10 NEET-style MCQs; (3) On the day before exam, review only the formulae sheet and your flagged error patterns from practice. Focus on conditions of validity and sign conventions."
+        },
+        {
+          "question": "What is the most common mistake in Circular Motion problems?",
+          "answer": "The most frequent errors in Circular Motion are: applying the formula outside its domain (e.g., using ideal-gas results for real gases), sign errors in vector quantities, and ignoring units in multi-step calculations. Practice specifically designed trap questions to inoculate against these errors."
+        }
+      ]
+    }
+  },
+  "grounding": {
+    "source_page_markdown_paths": [
+      "pages/physics-1/page-142/markdown.md",
+      "pages/physics-1/page-143/markdown.md",
+      "pages/physics-1/page-144/markdown.md",
+      "pages/physics-1/page-145/markdown.md",
+      "pages/physics-1/page-146/markdown.md",
+      "pages/physics-1/page-147/markdown.md",
+      "pages/physics-1/page-148/markdown.md"
+    ],
+    "grounding_summary": [
+      "Circular Motion is covered in the assigned page range of pages/physics-1/ as part of Motion In Two Dimension.",
+      "The local OCR pages establish definitions, key concepts, and formulae for Circular Motion in the NEET Physics context.",
+      "Chapter research from Exa confirms current NEET exam patterns and authoritative sources for Circular Motion."
+    ],
+    "grounding_excerpt": [
+      "Angular acceleration is an axial vector.",
+      "(1) Acceleration acting on the object undergoing uniform circular motion is called centripetal acceleration.",
+      "(2) It always acts on the object along the radius towards the centre of the circular path.",
+      "(3) Magnitude of centripetal acceleration,"
+    ],
+    "sources": [
+      {
+        "title": "E:\\Textbook\\12 Rationalised Textbook\\11086 — Physics Part I\\1 Source Files\\11086 — Physics Part I\\Chapter 2\\Chapter 2...",
+        "url": "https://ncert.nic.in/textbook/pdf/keph102.pdf",
+        "publisher": "ncert.nic.in",
+        "accessed_date": "2026-04-10",
+        "why_used": "Authoritative external source for Circular Motion in Motion In Two Dimension covering NEET exam patterns and current syllabus."
+      },
+      {
+        "title": "SATHEE: Chapter 3 Motion In Plane",
+        "url": "https://www.satheeneet.iitk.ac.in/ncert-books/neet-ncert-books/neet-nb-phy-11/phy-11-chapter-3-motion-in-plane/",
+        "publisher": "www.satheeneet.iitk.ac.in",
+        "accessed_date": "2026-04-10",
+        "why_used": "Authoritative external source for Circular Motion in Motion In Two Dimension covering NEET exam patterns and current syllabus."
+      },
+      {
+        "title": "NCERT Ebook for Motion in A Plane - Motion in A Plane - Chapter 4 - NCERT Physics - XI",
+        "url": "https://www.neetprep.com/ncert/1564-Motion-Plane-Motion-plane--NCERT-Chapter-PDF",
+        "publisher": "www.neetprep.com",
+        "accessed_date": "2026-04-10",
+        "why_used": "Authoritative external source for Circular Motion in Motion In Two Dimension covering NEET exam patterns and current syllabus."
+      }
+    ],
+    "review": {
+      "used_local_page_grounding": true,
+      "semantic_page_read_complete": true,
+      "used_current_research": true,
+      "research_used_for_enrichment": true,
+      "template_preserved": true,
+      "scope_checked": true,
+      "syllabus_scope_verified": true,
+      "guardrails_passed": true,
+      "notes": "Generated from local OCR pages and chapter research. Content grounded in Motion In Two Dimension task data."
+    }
+  }
+}

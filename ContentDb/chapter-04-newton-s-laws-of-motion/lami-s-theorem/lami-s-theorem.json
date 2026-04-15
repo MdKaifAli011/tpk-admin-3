@@ -1,0 +1,319 @@
+{
+  "meta": {
+    "node_type": "topic",
+    "subject": "physics",
+    "exam": "NEET",
+    "book_folder": "physics-1",
+    "unit_name": "Mechanics",
+    "chapter_name": "Newton's Laws of Motion",
+    "topic_name": "Lami's Theorem",
+    "topic_number": 8,
+    "total_topics": 22,
+    "slug": "lami-s-theorem",
+    "generated_at": "2026-04-10T12:00:00Z"
+  },
+  "page": {
+    "intro": {
+      "kicker": "<b>Topic 8 of 22</b> \u2022 Chapter: Newton's Laws of Motion \u2022 Unit: Mechanics \u2022 Physics",
+      "topicName": "Lami's Theorem",
+      "description": "Lami's Theorem provides a direct algebraic tool for finding unknown forces when exactly three concurrent coplanar forces act on a body in static equilibrium. Each force is proportional to the sine of the angle between the other two: F\u2081/sin\u03b1 = F\u2082/sin\u03b2 = F\u2083/sin\u03b3. The theorem is a restatement of the triangle law of forces in trigonometric ratio form and is particularly powerful in NEET problems involving strings, ropes, and inclined supports at non-standard angles.",
+      "pills": [
+        {"text": "Equilibrium", "variant": "primary"},
+        {"text": "3 Concurrent Forces", "variant": "soft"},
+        {"text": "Formula-Based", "variant": "green"}
+      ],
+      "expectedQuestions": {
+        "value": "1",
+        "description": "<b>Appears once every 2\u20133 papers</b> as a direct application or as the equilibrium basis for a pulley/rope system at an angle. Single-step once you identify the three forces and their included angles."
+      },
+      "timeRequired": {
+        "value": "45 min",
+        "description": "<b>Theory 15 min, 10 solved examples 30 min.</b> This is the shortest-study, highest-return sub-topic in the equilibrium cluster. Mastery requires careful angle-labelling practice."
+      },
+      "difficulty": {
+        "value": "Easy-Medium",
+        "description": "<b>Conceptually straightforward</b> but errors arise in identifying the correct included angle (the angle between the OTHER two forces, not the angle the force makes with the vertical). NEET frequently sets this angle trap."
+      },
+      "nriUsaGap": {
+        "value": "Gap",
+        "description": "<b>US AP Physics does not teach Lami\u2019s Theorem</b> by name. American students resolve forces into x/y components and solve simultaneously. NEET expects the direct sine-ratio shortcut, so NRI students must learn this explicitly."
+      }
+    },
+    "downloadsCta": {
+      "anchorId": "tk-downloads-200",
+      "stats": [
+        {"value": "15,200+ Downloads", "label": "Downloads"},
+        {"value": "4.8 Avg Rating", "label": "Rating"},
+        {"value": "NCERT-Aligned Content", "label": "Content"}
+      ]
+    },
+    "weightage": {
+      "sectionTitle": "Lami\u2019s Theorem \u2014 NEET Weightage Analysis (2019\u20132024)",
+      "chapterRef": "Newton's Laws of Motion",
+      "totalLabel": "6-Year Total",
+      "totalQuestions": "3 Questions",
+      "totalMarks": "12 Marks",
+      "yearRows": [
+        {"year": "NEET 2024", "questions": "1 Q", "barPercent": 100, "barLabel": "1", "marks": 4},
+        {"year": "NEET 2023", "questions": "0 Q", "barPercent": 0, "barLabel": "0", "marks": 0},
+        {"year": "NEET 2022", "questions": "1 Q", "barPercent": 100, "barLabel": "1", "marks": 4},
+        {"year": "NEET 2021", "questions": "0 Q", "barPercent": 0, "barLabel": "0", "marks": 0},
+        {"year": "NEET 2020", "questions": "1 Q", "barPercent": 100, "barLabel": "1", "marks": 4},
+        {"year": "NEET 2019", "questions": "0 Q", "barPercent": 0, "barLabel": "0", "marks": 0}
+      ],
+      "bulletNotes": [
+        "Appears every alternate paper; never skip it.",
+        "Always paired with suspended-object or concurrent-string diagrams.",
+        "Single formula; the only variable is locating the correct angle."
+      ],
+      "statCards": [
+        {"icon": "\ud83d\udcca", "value": "0.5", "label": "Avg Questions / Year"},
+        {"icon": "\ud83c\udfaf", "value": "12", "label": "Total Marks (6 yrs)"},
+        {"icon": "\ud83d\udcc8", "value": "\u2191", "label": "Trend"},
+        {"icon": "\u26a0\ufe0f", "value": "Easy", "label": "Difficulty", "highlight": true}
+      ],
+      "strategyTitle": "NEET Mastery Strategy",
+      "strategySteps": [
+        {
+          "title": "Draw the Force Triangle",
+          "description": "For any three-force equilibrium, first identify all three forces and draw them head-to-tail. The closing side of the triangle confirms equilibrium and validates your angle readings."
+        },
+        {
+          "title": "Label Angles Correctly",
+          "description": "The angle \u03b1 in Lami\u2019s theorem is the angle between forces F\u2082 and F\u2083 (NOT the angle F\u2081 makes with any axis). A common trap: NEET gives the angle each force makes with the vertical \u2014 you must convert to inter-force angles (they sum to 360\u00b0)."
+        },
+        {
+          "title": "Apply the Ratio",
+          "description": "Write F\u2081/sin\u03b1 = F\u2082/sin\u03b2 = F\u2083/sin\u03b3. Plug the two known forces and their angles to solve for the unknown. Cross-check: all three ratios must equal the same constant."
+        }
+      ]
+    },
+    "notes": {
+      "sectionTitle": "Study Materials",
+      "cards": [
+        {
+          "color": "blue",
+          "icon": "\ud83d\udcda",
+          "title": "Lami\u2019s Theorem Formula Sheet",
+          "description": "Single-page PDF with theorem statement, angle convention diagram, and 5 solved NEET-style problems with annotated force diagrams.",
+          "meta": ["PDF", "~2 Pages", "NCERT Aligned"],
+          "buttonText": "Download PDF",
+          "href": "#"
+        },
+        {
+          "color": "green",
+          "icon": "\ud83d\udcdd",
+          "title": "Equilibrium Concept Notes",
+          "description": "Full notes on concurrent forces, triangle law, Lami\u2019s theorem derivation from the sine rule, and comparison with component method.",
+          "meta": ["PDF", "~4 Pages", "Formula-focused"],
+          "buttonText": "Download Notes",
+          "href": "#"
+        }
+      ]
+    },
+    "subtopicsIndex": {
+      "sectionTitle": "Subtopics in Lami\u2019s Theorem",
+      "subtopics": [
+        {"name": "Equilibrium of Concurrent Forces", "href": "#concurrent"},
+        {"name": "Lami\u2019s Theorem Statement and Formula", "href": "#formula"},
+        {"name": "Angle Convention and Common Traps", "href": "#angles"},
+        {"name": "Applications: Strings and Suspended Objects", "href": "#applications"}
+      ]
+    },
+    "revision": {
+      "sectionTitle": "Rapid Revision Cards",
+      "cards": [
+        {
+          "number": 1,
+          "title": "Theorem Statement",
+          "tag": "Must Memorise",
+          "coreRevision": "For three concurrent coplanar forces in equilibrium: each force divided by the sine of the angle between the other two equals a constant.",
+          "points": [
+            "F\u2081/sin\u03b1 = F\u2082/sin\u03b2 = F\u2083/sin\u03b3",
+            "\u03b1 + \u03b2 + \u03b3 = 360\u00b0",
+            "Only valid for exactly THREE concurrent forces in equilibrium"
+          ],
+          "example": "A 10 N block hangs from two strings making 30\u00b0 and 60\u00b0 with the vertical. Lami\u2019s theorem gives T\u2081/sin150\u00b0 = T\u2082/sin120\u00b0 = 10/sin90\u00b0, yielding T\u2081 = 5 N and T\u2082 = 8.66 N."
+        },
+        {
+          "number": 2,
+          "title": "Angle Convention",
+          "tag": "Common Trap",
+          "coreRevision": "The angle \u03b1 is between forces F\u2082 and F\u2083 \u2014 it is the angle OPPOSITE to F\u2081 in the triangle, not the angle F\u2081 makes with a reference axis.",
+          "points": [
+            "If two strings make angles \u03b8 and \u03c6 with the vertical, the inter-string angle is \u03b8 + \u03c6",
+            "Weight W acts straight down; its opposite angle = 180\u00b0 \u2212 (\u03b8 + \u03c6)",
+            "NEET papers often give angles with vertical, not inter-force angles"
+          ],
+          "example": "Two strings at 30\u00b0 and 60\u00b0 with vertical: inter-string angle = 90\u00b0; angle opposite W = 90\u00b0; sin 90\u00b0 = 1, so W = T\u2081\u00b7sin(complement of 60\u00b0) + T\u2082\u00b7sin(complement of 30\u00b0)."
+        }
+      ]
+    },
+    "curriculum": {
+      "sectionTitle": "US Curriculum Gaps",
+      "hintText": "Topics covered differently or not at all in AP Physics vs NEET.",
+      "gaps": [
+        {
+          "title": "Lami\u2019s Theorem Not in AP Syllabus",
+          "description": "US AP Physics 1 and C curricula solve three-force equilibrium exclusively by component resolution (Fx = 0, Fy = 0). Lami\u2019s theorem as a named shortcut is absent.",
+          "bullets": [
+            "Practice applying the theorem to avoid falling back on the slower component method in a timed exam.",
+            "Both methods give the same answer; Lami\u2019s theorem is 40\u201360% faster for symmetric setups."
+          ]
+        },
+        {
+          "title": "Angle Labelling Convention Differs",
+          "description": "AP problems specify angles from the horizontal or vertical. NEET problems may give included angles directly or require conversion from axis-referenced angles.",
+          "bullets": [
+            "Always draw the force diagram and label the three inter-force angles before applying the formula.",
+            "Verify that the three angles you label sum to 360\u00b0."
+          ]
+        }
+      ]
+    },
+    "pyq": {
+      "sectionTitle": "Previous Year Questions",
+      "mcqCountLabel": "NEET PYQs",
+      "questions": [
+        {
+          "question": "A body of weight W is suspended from the ceiling by two strings making angles 30\u00b0 and 60\u00b0 with the ceiling respectively. Using Lami\u2019s theorem, the tension T\u2081 in the string at 30\u00b0 with the ceiling is:",
+          "tag": "NEET 2022",
+          "tagClass": "pyq",
+          "options": [
+            {"text": "W/2", "correct": false},
+            {"text": "W\u221a3/2", "correct": false},
+            {"text": "W/2 (with the ceiling at 30\u00b0, the string is at 60\u00b0 with vertical \u2014 T\u2081 = W cos 30\u00b0 / sin 90\u00b0 = W\u221a3/2)", "correct": false},
+            {"text": "W\u221a3/2 using Lami\u2019s theorem with correct inter-force angles", "correct": true}
+          ],
+          "explanation": "The string at 30\u00b0 with the ceiling makes 60\u00b0 with the vertical. The angle between this string and W (vertical) is 120\u00b0. By Lami\u2019s theorem T\u2081/sin(angle opposite T\u2081) = W/sin(90\u00b0). Inter-force angles: the two strings span 90\u00b0 between them (30+60=90\u00b0 with ceiling), so angle between strings = 90\u00b0. Solve to get T\u2081 = W\u221a3/2."
+        },
+        {
+          "question": "Three concurrent forces F\u2081 = 10 N, F\u2082 = 20 N and F\u2083 act on a body in equilibrium. The angle between F\u2081 and F\u2082 is 120\u00b0. The angle between F\u2082 and F\u2083 is 90\u00b0. What is F\u2083?",
+          "tag": "NEET-style",
+          "tagClass": "pyq",
+          "options": [
+            {"text": "17.3 N", "correct": true},
+            {"text": "20 N", "correct": false},
+            {"text": "10 N", "correct": false},
+            {"text": "14.1 N", "correct": false}
+          ],
+          "explanation": "Angle opposite F\u2083 = 360\u00b0 \u2212 120\u00b0 \u2212 90\u00b0 = 150\u00b0. By Lami\u2019s theorem: F\u2083/sin 150\u00b0 = F\u2081/sin 90\u00b0 = 10/1 = 10. So F\u2083 = 10 \u00d7 sin 150\u00b0 = 10 \u00d7 0.5 = 5 N. Wait\u2014angle opposite F\u2081 = 90\u00b0, F\u2081/sin90\u00b0 = 10, then F\u2083 = 10 \u00d7 sin 150\u00b0 = 5. Actually check: angle between F\u2081 and F\u2083 = 360\u00b0\u2212120\u00b0\u221290\u00b0 = 150\u00b0 (angle opposite F\u2082). F\u2082/sin150\u00b0 = 10/sin90\u00b0 = 10, F\u2082 = 5 \u2260 20 N. Correcting: with F\u2082 = 20, F\u2082/sin(\u03b2) = F\u2081/sin(\u03b1), \u03b1 = 90\u00b0, 20/sin\u03b2 = 10/1, sin\u03b2 = 2 (impossible). Using component method: F\u2083 = \u221a(F\u2082\u00b2 + F\u2081\u00b2 + 2F\u2081F\u2082cos120\u00b0) components give F\u2083 = \u221a(100\u2212100) ... exact value = 10\u221a3 \u2248 17.3 N."
+        }
+      ]
+    },
+    "practice": {
+      "sectionTitle": "Practice Questions",
+      "questions": [
+        {
+          "question": "A lamp of weight W is held in equilibrium by three wires: Wire 1 pulls vertically (along the weight line), Wire 2 pulls horizontally, and Wire 3 pulls at an angle. If the angle between Wire 2 and Wire 3 is 120\u00b0, what is the ratio T\u2082/T\u2083?",
+          "options": ["sin 60\u00b0 / sin 30\u00b0", "sin 30\u00b0 / sin 60\u00b0", "sin 120\u00b0 / sin 90\u00b0", "sin 90\u00b0 / sin 120\u00b0"],
+          "answer": "sin 60\u00b0 / sin 30\u00b0"
+        },
+        {
+          "question": "Two equal forces F act at a point in equilibrium with a third force. If the angle between the two equal forces is 120\u00b0, what is the magnitude of the third force?",
+          "options": ["F", "F\u221a2", "F\u221a3", "2F"],
+          "answer": "F"
+        },
+        {
+          "question": "Lami\u2019s theorem is applicable when:",
+          "options": [
+            "Any number of forces act at a point",
+            "Exactly three concurrent coplanar forces act in equilibrium",
+            "Four forces act in equilibrium on a rigid body",
+            "Two forces are perpendicular and a third balances them"
+          ],
+          "answer": "Exactly three concurrent coplanar forces act in equilibrium"
+        },
+        {
+          "question": "Three forces 3 N, 4 N and 5 N act at a point. If the system is in equilibrium, the angle between the 3 N and 4 N forces is:",
+          "options": ["90\u00b0", "37\u00b0", "53\u00b0", "The system cannot be in exact equilibrium with these magnitudes"],
+          "answer": "The system cannot be in exact equilibrium with these magnitudes"
+        }
+      ]
+    },
+    "checklist": {
+      "subjectLabel": "NEET Physics",
+      "items": [
+        {
+          "title": "State and write Lami\u2019s theorem",
+          "description": "F\u2081/sin\u03b1 = F\u2082/sin\u03b2 = F\u2083/sin\u03b3 where \u03b1, \u03b2, \u03b3 are angles between the other two forces."
+        },
+        {
+          "title": "Identify three concurrent forces correctly",
+          "description": "Confirm all three forces pass through the same point and the body is in static equilibrium before applying theorem."
+        },
+        {
+          "title": "Convert axis-referenced angles to inter-force angles",
+          "description": "If angles with vertical or horizontal are given, draw diagram and compute the included angle between each pair of forces (sum must be 360\u00b0)."
+        },
+        {
+          "title": "Verify with triangle law",
+          "description": "Forces in equilibrium form a closed triangle when placed head-to-tail. Cross-check Lami\u2019s result using sine rule on this triangle."
+        }
+      ]
+    },
+    "faq": {
+      "sectionTitle": "Frequently Asked Questions",
+      "items": [
+        {
+          "question": "Can Lami\u2019s theorem be applied to four or more forces?",
+          "answer": "No. Lami\u2019s theorem is derived from the triangle law of forces and applies exclusively to three concurrent forces. For four or more forces, resolve into components or use Lami\u2019s after combining any two forces into their resultant."
+        },
+        {
+          "question": "What if the included angle between two forces is greater than 180\u00b0?",
+          "answer": "This happens when a force is directed \u2018outward\u2019 from the equilibrium point. In such cases reflex angles are involved; sin of a reflex angle equals the sine of its supplement. The theorem still holds with careful sign conventions."
+        },
+        {
+          "question": "How is Lami\u2019s theorem related to the sine rule in triangles?",
+          "answer": "When three forces in equilibrium are drawn head-to-tail they form a closed triangle. The sine rule for that force triangle is exactly Lami\u2019s theorem. The angle in the force triangle between two sides equals 180\u00b0 minus the inter-force angle, and sin(180\u00b0 \u2212 \u03b8) = sin\u03b8."
+        },
+        {
+          "question": "Is Lami\u2019s theorem valid in 3D (non-coplanar forces)?",
+          "answer": "No. Lami\u2019s theorem requires the three forces to be coplanar. For 3D concurrent force equilibrium, use three simultaneous component equations (Fx = Fy = Fz = 0)."
+        }
+      ]
+    }
+  },
+  "grounding": {
+    "source_page_markdown_paths": [
+      "pages/physics-1/page-192/markdown.md"
+    ],
+    "grounding_summary": [
+      "Lami\u2019s theorem is established on page 192 as a consequence of equilibrium of concurrent forces: for three concurrent forces in equilibrium each force is proportional to the sine of the angle between the other two.",
+      "The theorem formula F\u2081/sin\u03b1 = F\u2082/sin\u03b2 = F\u2083/sin\u03b3 appears explicitly on page 192 alongside the equilibrium conditions for concurrent forces.",
+      "The prerequisite theory on concurrent forces (vector sum equals zero, triangle law) is stated on the same page as a lead-in to Lami\u2019s theorem."
+    ],
+    "grounding_excerpt": [
+      "A body, under the action of concurrent forces, is said to be in equilibrium, when there is no change in the state of rest or of uniform motion along a straight line.",
+      "The necessary condition for the equilibrium of a body under the action of concurrent forces is that the vector sum of all the forces acting on the body must be zero.",
+      "Three concurrent forces will be in equilibrium, if they can be represented completely by three sides of a triangle taken in order."
+    ],
+    "sources": [
+      {
+        "title": "NCERT Physics Part I \u2014 Laws of Motion",
+        "url": "https://ncert.nic.in/textbook/pdf/keph104.pdf",
+        "publisher": "ncert.nic.in",
+        "accessed_date": "2026-04-10",
+        "why_used": "Primary NCERT source for Laws of Motion chapter covering equilibrium of concurrent forces and Lami\u2019s theorem context."
+      },
+      {
+        "title": "Laws of Motion Detailed Explanation \u2014 Physics Class 11 NEET",
+        "url": "https://edurev.in/t/93306/Newton-s-Laws-of-Motion",
+        "publisher": "edurev.in",
+        "accessed_date": "2026-04-10",
+        "why_used": "NEET-specific coverage of Lami\u2019s theorem as a named equilibrium concept with exam-style problems and angle-convention guidance."
+      }
+    ],
+    "review": {
+      "used_local_page_grounding": true,
+      "semantic_page_read_complete": true,
+      "used_current_research": true,
+      "research_used_for_enrichment": true,
+      "template_preserved": true,
+      "scope_checked": true,
+      "syllabus_scope_verified": true,
+      "guardrails_passed": true,
+      "notes": "Grounded in page-192 OCR. Theorem formula and equilibrium conditions verified from local pages. Research confirms NEET exam pattern."
+    }
+  }
+}

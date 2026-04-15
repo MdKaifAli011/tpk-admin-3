@@ -1,0 +1,497 @@
+{
+  "meta": {
+    "subject": "physics",
+    "exam": "NEET",
+    "book_folder": "physics-1",
+    "chapter_number": 17,
+    "chapter_name": "Waves and Sound",
+    "node_type": "chapter",
+    "slug": "chapter-17-waves-and-sound",
+    "generated_at": "2026-03-30T08:00:00Z"
+  },
+  "page": {
+    "intro": {
+      "chapter_name": "Waves and Sound",
+      "snapshot_description": "Waves and Sound is one of the highest-scoring chapters in NEET physics, covering the full lifecycle of mechanical wave motion — from the wave equation y = a sin(ωt − kx) and types of waves, through the speed of sound in different media, interference, standing waves in strings and organ pipes, beats, and the Doppler effect. You will also encounter intensity and loudness (decibels), musical characteristics, and acoustics of buildings. The chapter blends conceptual understanding with formula-intensive numericals.",
+      "expected_questions": {
+        "value": "3-4",
+        "description": "NEET regularly tests Doppler effect (apparent frequency formula), organ pipe harmonics (open vs closed), standing wave nodes/antinodes, beats frequency, and speed of sound temperature dependence. Past papers show 3-4 questions from this chapter almost every year."
+      },
+      "time_required": {
+        "value": "10-12 hrs",
+        "description": "Theory and derivations take ~4 hrs; organ pipe + string numericals ~3 hrs; Doppler effect problems ~2 hrs; beats + interference + MCQ revision ~2-3 hrs."
+      },
+      "difficulty_level": {
+        "value": "Moderate",
+        "description": "Wave equation and basic frequency–wavelength–speed relations are straightforward. Doppler sign conventions and identifying open vs closed pipe harmonics are the main difficulty zones. Standing wave node/antinode positions cause frequent errors."
+      },
+      "most_asked_style": "Numerical — apply Doppler formula to find apparent frequency; find fundamental frequency of a string or pipe given length and tension; calculate beat frequency. Also frequent: conceptual MCQs on harmonic series in closed vs open organ pipes.",
+      "biggest_trap": "Applying Doppler formula with wrong sign convention — in f' = f(v ± v_observer)/(v ∓ v_source), the observer velocity goes in the numerator (+ for approach) and source velocity in the denominator (− for approach toward observer). Swapping numerator/denominator is the #1 error.",
+      "fast_win": "Memorise: (i) Open pipe → all harmonics, max wavelength = 2L; (ii) Closed pipe → only odd harmonics, max wavelength = 4L; (iii) Beat frequency = |f₁ − f₂|. These three facts alone account for ~40% of this chapter's NEET marks.",
+      "revision_friendly": "The Doppler effect sign convention table (Case 1–6 from the textbook) is the single best revision diagram. Draw it once and it anchors all apparent frequency scenarios."
+    },
+    "subtopics": {
+      "chapter_name": "Waves and Sound",
+      "exam": "NEET",
+      "subtitle": "Wave motion, sound propagation, resonance and the Doppler effect — from ripples to seismic waves",
+      "revision_tip": "Build your revision around three pillars: (1) wave equation y = a sin(ωt − kx) with all coefficient identifications; (2) open vs closed organ pipe harmonic table; (3) Doppler formula with sign convention. Everything else hangs off these three anchors.",
+      "topics": [
+        {
+          "topic_number": 1,
+          "topic_name": "Wave Motion Fundamentals",
+          "topic_slug": "wave-motion-fundamentals",
+          "topic_description": "Characteristics of wave motion, classification of waves (mechanical vs non-mechanical, transverse vs longitudinal, progressive vs stationary, 1D/2D/3D), audible/infrasonic/ultrasonic/shock waves, and all key wave terms: amplitude, wavelength, frequency, time period, wave function, harmonic wave, wave velocity, phase.",
+          "topic_pills": ["Transverse Waves", "Longitudinal Waves", "Progressive Wave", "Stationary Wave", "Ultrasonic > 20 kHz", "Infrasonic < 20 Hz", "Mach Number"],
+          "subtopics": [
+            { "name": "Characteristics of Wave Motion", "slug": "characteristics-wave-motion", "description": "Particles vibrate about mean position without net transport of matter. Velocity of particles differs at different positions; wave velocity is constant for a given medium. Medium requires elasticity, inertia, minimum friction, and uniform density." },
+            { "name": "Types of Waves", "slug": "types-of-waves", "description": "Mechanical vs non-mechanical; transverse (crests/troughs, solids and liquid surface only, polarisable) vs longitudinal (compressions/rarefactions, all media, not polarisable); progressive vs stationary; 1D, 2D, 3D." },
+            { "name": "Wave Terms and Wave Function", "slug": "wave-terms", "description": "Amplitude a; wavelength λ = distance between two same-phase points; frequency n (Hz); time period T = 1/n; wave function y = f(x, t); group velocity v_g = dω/dk; phase φ = ωt − kx; intensity I = 2π²n²a²ρv ∝ a²." },
+            { "name": "Audible, Infrasonic and Ultrasonic", "slug": "frequency-ranges", "description": "Audible: 20 Hz – 20 kHz. Infrasonic: < 20 Hz (earthquakes, ocean). Ultrasonic: > 20 kHz; λ < 1.66 cm in air; used in SONAR and ultrasonography. Shock waves: supersonic sources (Mach > 1), conical disturbance." }
+          ]
+        },
+        {
+          "topic_number": 2,
+          "topic_name": "Equation of a Plane Progressive Wave",
+          "topic_slug": "plane-progressive-wave",
+          "topic_description": "Mathematical representation of a harmonic travelling wave, identification of all wave parameters from the equation, particle velocity, phase and path difference relations, and pressure wave vs displacement wave.",
+          "topic_pills": ["y = a sin(ωt − kx)", "v = ω/k", "λ = 2π/k", "T = 2π/ω", "v_p(max) = aω", "ΔP₀ = akB"],
+          "subtopics": [
+            { "name": "Wave Equation and Forms", "slug": "wave-equation-forms", "description": "y = a sin(ωt − kx); six equivalent forms. ω = coefficient of t; k = coefficient of x; v = ω/k; λ = 2π/k; T = 2π/ω; n = ω/2π. Minus sign between t and x terms means +x direction propagation." },
+            { "name": "Particle Velocity", "slug": "particle-velocity", "description": "v_p = ∂y/∂t = aω cos(ωt − kx); max = aω. Relation: v_p = −v × (∂y/∂x) = −v × slope." },
+            { "name": "Phase and Path Difference", "slug": "phase-path-difference", "description": "Δφ = (2π/λ) × Δx (path difference). Δφ = (2π/T) × Δt (time difference). Argument of sin/cos = phase." },
+            { "name": "Pressure Wave", "slug": "pressure-wave", "description": "If y = a sin(ωt − kx), then ΔP = ΔP₀ cos(ωt − kx); ΔP₀ = akB. Pressure wave leads displacement by π/2. Pressure maximum where displacement is minimum." }
+          ]
+        },
+        {
+          "topic_number": 3,
+          "topic_name": "Speed of Sound",
+          "topic_slug": "speed-of-sound",
+          "topic_description": "Newton's formula and Laplace correction for speed of sound in gases; factors affecting speed (pressure, temperature, density, humidity, wind); comparison across media; speed of transverse wave in a stretched string.",
+          "topic_pills": ["v = √(γP/ρ)", "v = √(γRT/M)", "v₀ = 332 m/s at 0°C", "vₜ = v₀ + 0.61t", "v ∝ √T", "v_solid > v_liquid > v_gas"],
+          "subtopics": [
+            { "name": "Newton's Formula and Laplace Correction", "slug": "newton-laplace", "description": "Newton: v = √(P/ρ) = 280 m/s (isothermal, incorrect). Laplace: v = √(γP/ρ) = √(γRT/M) = 332 m/s for air (adiabatic, correct). For air γ = 1.41." },
+            { "name": "Factors Affecting Speed", "slug": "factors-affecting-speed", "description": "Pressure: no effect at constant T. Temperature: v ∝ √T; vₜ = v₀ + 0.61t (v₀ = 332 m/s, t in °C, small changes). Density: v ∝ 1/√ρ. Humidity: moist air < dry air density → faster in humid. Wind: v' = v + w cosθ." },
+            { "name": "Comparison Across Media", "slug": "speed-across-media", "description": "Solids most elastic → fastest (~5000 m/s for steel). Liquids moderate (~1500 m/s for water). Gases least elastic → slowest (332 m/s in air at 0°C). E_solid > E_liquid > E_gas." },
+            { "name": "Transverse Wave in String", "slug": "transverse-wave-string", "description": "v = √(T/m); T = tension, m = mass per unit length. If weight immersed: T = Mg(1 − σ/ρ). If temperature diff: T = YAαΔθ." }
+          ]
+        },
+        {
+          "topic_number": 4,
+          "topic_name": "Superposition, Interference and Standing Waves",
+          "topic_slug": "superposition-interference-standing-waves",
+          "topic_description": "Principle of superposition and its four applications; constructive and destructive interference with path/phase difference conditions; standing wave equation y = 2a cos(kx)sin(ωt); nodes, antinodes, and energy in stationary waves; Quink's tube experiment.",
+          "topic_pills": ["Constructive: Δ = nλ", "Destructive: Δ = (2n−1)λ/2", "y = 2a cos(kx)sin(ωt)", "Node: A_SW = 0", "Antinode: A_SW = 2a", "I_max/I_min = (a₁+a₂)²/(a₁−a₂)²"],
+          "subtopics": [
+            { "name": "Superposition Principle", "slug": "superposition-principle", "description": "Resultant displacement = vector sum of individual displacements. Applications: interference (phase difference), stationary waves (direction difference), beats (frequency difference), Lissajous figures (perpendicular SHMs). Energy conserved, redistributed." },
+            { "name": "Interference", "slug": "interference", "description": "Constructive: φ = 2nπ; path diff = nλ; A_max = a₁ + a₂; I_max = (√I₁ + √I₂)². Destructive: φ = (2n−1)π; path diff = (2n−1)λ/2; A_min = a₁ − a₂; I_min = (√I₁ − √I₂)². For equal amplitudes: I_max = 4I₀, I_min = 0." },
+            { "name": "Standing Waves", "slug": "standing-waves", "description": "Formed by two identical waves travelling in opposite directions. y = 2a cos(kx)sin(ωt) (free end reflection) or y = 2a sin(kx)cos(ωt) (rigid end). Nodes (A=0): separation λ/2. Antinodes (A_max=2a): separation λ/2. Node-antinode distance = λ/4. Energy confined; not transmitted across nodes." },
+            { "name": "Quink's Tube", "slug": "quinks-tube", "description": "Two U-tubes to demonstrate interference. Pulling tube B by distance x changes path by 2x. For successive maxima: 2x = λ; λ = 2x. Speed of sound v = n₀ × 2x." }
+          ]
+        },
+        {
+          "topic_number": 5,
+          "topic_name": "Vibration of Strings",
+          "topic_slug": "vibration-of-strings",
+          "topic_description": "Stationary waves on stretched strings; fundamental mode and overtones; formula for pth harmonic; laws of string vibration; Sonometer and its applications; composite strings.",
+          "topic_pills": ["f₁ = (1/2L)√(T/m)", "fₚ = p/(2L)√(T/m)", "All harmonics present", "n ∝ 1/L", "n ∝ √T", "n ∝ 1/√m"],
+          "subtopics": [
+            { "name": "Fundamental Mode and Harmonics", "slug": "string-harmonics", "description": "Fixed at both ends: nodes at ends, antinodes between. Fundamental (p=1): λ₁ = 2L; f₁ = (1/2L)√(T/m). pth harmonic: λ_p = 2L/p; f_p = p×f₁. All even and odd harmonics present. Ratio 1:2:3:..." },
+            { "name": "Laws of String Vibration", "slug": "laws-of-string", "description": "Law of length: n ∝ 1/L (n₁L₁ = n₂L₂). Law of tension: n ∝ √T. Law of mass: n ∝ 1/√m. Law of density: n ∝ 1/√d. Sonometer applies all four laws." },
+            { "name": "Sonometer", "slug": "sonometer", "description": "Hollow box with a wire; n = (1/2l)√(T/m) = (1/2l)√(T/πr²d). Resonance when n_fork = n_string → rider thrown off. Transverse arrangement: n_fork = n_string; longitudinal: n_fork = 2×n_string." },
+            { "name": "Composite Strings", "slug": "composite-strings", "description": "Two strings joined end-to-end vibrate at matching harmonics. (p/2l₁)√(T/m₁) = (q/2l₂)√(T/m₂). Ratio p/q = (l₁/l₂)√(m₁/m₂)." }
+          ]
+        },
+        {
+          "topic_number": 6,
+          "topic_name": "Vibration of Organ Pipes",
+          "topic_slug": "vibration-of-organ-pipes",
+          "topic_description": "Longitudinal standing waves in closed and open organ pipes; all harmonics vs odd-only; formulae for frequency; end correction; resonance tube experiment to find speed of sound; Kundt's tube; tuning fork properties.",
+          "topic_pills": ["Open: f_n = nv/2L (all)", "Closed: f_n = (2n−1)v/4L (odd only)", "End correction e = 0.6r", "Resonance tube: v = 2n(l₂−l₁)", "Overtone vs Harmonic"],
+          "subtopics": [
+            { "name": "Closed Organ Pipe", "slug": "closed-organ-pipe", "description": "Closed end = node, open end = antinode. Only odd harmonics: 1st, 3rd, 5th… f_n = (2N−1)v/4L. Max wavelength = 4L. Ratio of harmonics 1:3:5. pth overtone = (2p+1)th harmonic. Ratio of overtones 3:5:7." },
+            { "name": "Open Organ Pipe", "slug": "open-organ-pipe", "description": "Both ends = antinodes. All harmonics: f_n = Nv/2L. Max wavelength = 2L. Ratio of harmonics 1:2:3. pth overtone = (p+1)th harmonic. Sweeter sound than closed pipe (richer harmonics). Open pipe half-submerged = closed pipe of length L/2; same fundamental frequency." },
+            { "name": "End Correction", "slug": "end-correction", "description": "Antinode forms slightly outside open end. e = 0.6r (r = radius). Effective length: open pipe l' = l + 2e; closed pipe l' = l + e." },
+            { "name": "Resonance Tube", "slug": "resonance-tube", "description": "Closed pipe with variable water column. First resonance at l₁ + e = λ/4; second at l₂ + e = 3λ/4. λ = 2(l₂ − l₁); v = 2n(l₂ − l₁). Also l₂ = 3l₁ + 2e." },
+            { "name": "Kundt's Tube", "slug": "kundts-tube", "description": "Metal rod vibrates longitudinally → standing waves in gas column. Lycopodium powder heaps at nodes (spacing = λ_air/2). v_air/v_rod = λ_air/λ_rod. Used to compare velocities, density of gases, and find γ." },
+            { "name": "Tuning Fork", "slug": "tuning-fork", "description": "U-shaped metallic device producing single frequency. n ∝ t/l² × √(Y/ρ). Loading (wax) near tip → lower frequency. Filing near tip → higher frequency. Breaking one prong → stops vibrating. Temperature rise → frequency decreases." }
+          ]
+        },
+        {
+          "topic_number": 7,
+          "topic_name": "Beats",
+          "topic_slug": "beats",
+          "topic_description": "Formation of beats by superposition of two sound waves of slightly different frequencies; beat frequency; beat period; determination of unknown frequency using loading/filing method; practical limit of distinguishable beats.",
+          "topic_pills": ["f_beat = |f₁ − f₂|", "T_beat = 1/|f₁−f₂|", "≤10 beats/sec audible", "Loading → ↓ frequency", "Filing → ↑ frequency"],
+          "subtopics": [
+            { "name": "Formation and Equation of Beats", "slug": "formation-beats", "description": "Two waves y₁ = a sin 2πn₁t, y₂ = a sin 2πn₂t superimpose. Resultant: y = A sin π(n₁+n₂)t where A = 2a cos π(n₁−n₂)t (amplitude varies). Beat frequency = n₁ − n₂. Beat period T = 1/(n₁−n₂). Persistence of hearing = 0.1 s → max ~10 distinct beats/sec." },
+            { "name": "Determining Unknown Frequency", "slug": "unknown-frequency-beats", "description": "Known fork A (nₐ), unknown fork B (n_B), x beats/sec. Load B with wax (nB decreases): if beats increase → nB = nA − x; if beats decrease → nB = nA + x; if beats = 0 → nB = nA + x. File B (nB increases): if beats increase → nB = nA + x; if decrease → nB = nA − x." }
+          ]
+        },
+        {
+          "topic_number": 8,
+          "topic_name": "Doppler Effect",
+          "topic_slug": "doppler-effect",
+          "topic_description": "Apparent change in frequency of sound due to relative motion between source and observer; general formula and sign convention; all six standard cases; special cases (crossing, moving target, SONAR, rotating source); conditions for no Doppler effect.",
+          "topic_pills": ["f' = f(v ± v_O)/(v ∓ v_S)", "+ observer approaching", "− source approaching", "Crossing: Δf = 2nv_Sv/(v²−v_S²)", "SONAR: f' = (1 ± 2v_sub/v)f"],
+          "subtopics": [
+            { "name": "General Formula and Sign Convention", "slug": "doppler-formula", "description": "f' = f[(v + v_m) − v_O]/[(v + v_m) − v_S]. For stationary medium: f' = f(v − v_O)/(v − v_S). Direction v is from source to observer. Velocities in the direction of v are positive. Observer in numerator, source in denominator. Approach → frequency increases; recession → decreases." },
+            { "name": "Standard Cases", "slug": "doppler-cases", "description": "Source moving toward observer: f' = fv/(v−vS). Source away: f' = fv/(v+vS). Observer toward source: f' = f(v+vO)/v. Observer away: f' = f(v−vO)/v. Both approach: f' = f(v+vO)/(v−vS). Both recede: f' = f(v−vO)/(v+vS)." },
+            { "name": "Crossing and Moving Target", "slug": "doppler-crossing-target", "description": "Source crosses stationary observer: Δf = 2nvSv/(v²−vS²) ≈ 2nvS/v when vS << v. Moving target (toward): receiver gets f'' = f(v+vT)/(v−vT); away: f'' = f(v−vT)/(v+vT). Moving car toward wall: f' = f(v+vC)/(v−vC) using image method." },
+            { "name": "No Doppler Effect", "slug": "no-doppler", "description": "No effect when: (1) S and L both at rest; (2) only medium moves; (3) S-L distance remains constant; (4) S and L move perpendicular to wave direction; (5) velocities ≥ speed of sound." }
+          ]
+        },
+        {
+          "topic_number": 9,
+          "topic_name": "Sound Characteristics and Acoustics",
+          "topic_slug": "sound-characteristics-acoustics",
+          "topic_description": "Intensity, loudness and decibel scale; pitch, quality/timbre, loudness as musical characteristics; musical sound vs noise; Echo, reverberation and Sabine's law; conditions for echo; reflection/refraction of sound waves.",
+          "topic_pills": ["I = P/4πr²", "β = 10 log(I/I₀)", "I₀ = 10⁻¹² W/m²", "Echo: d > 17 m", "Reverberation: t = KV/αS", "Threshold of pain: 120 dB"],
+          "subtopics": [
+            { "name": "Intensity and Decibel Scale", "slug": "intensity-decibel", "description": "I = P/(4πr²); I ∝ 1/r². I ∝ a². I₀ = 10⁻¹² W/m² (threshold of hearing). β = 10 log₁₀(I/I₀) dB. At threshold pain β = 120 dB. Doubling intensity → +3 dB; 10× intensity → +10 dB." },
+            { "name": "Musical Characteristics", "slug": "musical-characteristics", "description": "Pitch: related to frequency (high freq = shrill pitch). Loudness: related to intensity. Quality/timbre: determined by overtones present (distinguishes sitar from violin). Noise = irregular variations; musical sound = regular harmonic waves." },
+            { "name": "Echo and Reverberation", "slug": "echo-reverberation", "description": "Echo: persistence of hearing = 0.1 s; t = 2d/v > 0.1 → d > v/20 = 17 m (at 340 m/s). Reverberation = prolongation of sound after source stops. Reverberation time t = KV/αS (Sabine's law). Controlled by curtains, carpets, large audience, absorbing wall materials." },
+            { "name": "Reflection and Refraction", "slug": "reflection-refraction-sound", "description": "Frequency unchanged in reflection and refraction. Rigid end → phase change π (crest→trough); free end → no phase change. For sound in medium denser than surroundings (slow medium), wave bends toward normal. Longitudinal waves: compression reflects as compression from rigid end." }
+          ]
+        }
+      ]
+    },
+    "plan": {
+      "chapter_name": "Waves and Sound",
+      "topics": [
+        {
+          "topic_name": "Wave Motion Fundamentals",
+          "topic_description": "Types of waves, key definitions, frequency ranges, wave function, intensity formula.",
+          "topic_pills": ["Transverse vs Longitudinal", "Progressive vs Stationary", "Audible/Infrasonic/Ultrasonic", "Mach Number", "Intensity ∝ a²"],
+          "notes_condensed_description": "Mechanical waves need medium (sound, seismic); EM waves do not (light, radio). Transverse: ⊥ vibration, crests/troughs, solids + liquid surface, polarisable. Longitudinal: ∥ vibration, compressions/rarefactions, all media, not polarisable. Audible: 20 Hz–20 kHz; Infrasonic < 20 Hz; Ultrasonic > 20 kHz (λ < 1.66 cm in air). Intensity I = 2π²n²a²ρv = P/4πr²; I ∝ a²; I ∝ 1/r². Phase: ωt − kx; phase diff = (2π/λ)(path diff). Wave function y = f(x−vt) for +x direction.",
+          "how_to_revise": "Make a transverse vs longitudinal comparison table from Table 17.1 (p.759). Then write all 15 key wave terms with their symbols and units. Solve 5 MCQs identifying wave type from given scenario.",
+          "expected_questions": { "value": "0-1", "description": "Conceptual classification MCQs; occasionally a question on intensity formula or decibel." },
+          "time_required": { "value": "1.5 hrs", "description": "45 min reading definitions, 45 min classification MCQs." },
+          "difficulty": { "value": "Easy", "description": "Mostly classification and definition; no complex calculation required." },
+          "scoring_focus": "Polarisation difference (transverse can be polarised, longitudinal cannot); mechanical medium requirement; intensity vs amplitude relation.",
+          "high_risk_area": "Students think sound in water behaves as electromagnetic wave (cannot be — it is mechanical). Also confuse rarer/denser medium for sound vs light.",
+          "best_practice_style": "Single-correct MCQs with classification or comparison.",
+          "priority_rule": "Cover first as it provides vocabulary for all other topics."
+        },
+        {
+          "topic_name": "Equation of a Plane Progressive Wave",
+          "topic_description": "Reading wave parameters from the equation; particle velocity vs wave velocity; phase and path difference.",
+          "topic_pills": ["y = a sin(ωt − kx)", "ω = coeff of t", "k = coeff of x", "v = ω/k", "v_p(max) = aω", "Pressure wave ⊥ phase to displacement"],
+          "notes_condensed_description": "y = a sin(ωt − kx): ω = coeff of t, k = coeff of x, v = ω/k, λ = 2π/k, T = 2π/ω, n = ω/2π. (v_p)_max = aω. v_p = −v × (∂y/∂x). Phase = (ωt − kx). Path diff Δx ↔ phase diff Δφ = (2π/λ)Δx. Pressure wave: ΔP = ΔP₀ cos(ωt − kx); ΔP₀ = akB; pressure leads displacement by π/2. y = (x²−v²t²) does NOT represent a wave (not of form f(x±vt)).",
+          "how_to_revise": "Given an equation like y = 5 sin(200t − 2.5x), extract a, ω, k, v, λ, T, n, (v_p)_max. Practice 8–10 such extraction problems. Then do 3 problems on phase difference given two positions or two times.",
+          "expected_questions": { "value": "1", "description": "NEET frequently asks to identify wave velocity or particle velocity amplitude from a given wave equation." },
+          "time_required": { "value": "1.5 hrs", "description": "30 min learning extraction rules, 1 hr numericals." },
+          "difficulty": { "value": "Easy-Moderate", "description": "Straightforward once the five coefficient identifications are memorised; confusing v_wave (= ω/k) vs v_particle (= aω) is the main trap." },
+          "scoring_focus": "v = ω/k (wave speed) vs (v_p)_max = aω (max particle speed); direction of propagation from sign between t and x.",
+          "high_risk_area": "Students read v = aω (particle speed max) as the wave speed — wrong. Wave speed v = ω/k.",
+          "best_practice_style": "Numerical extraction from equation + phase difference calculation.",
+          "priority_rule": "High priority — foundation for all wave problems."
+        },
+        {
+          "topic_name": "Speed of Sound",
+          "topic_description": "Speed of sound in different media, Newton and Laplace formulae, temperature effects, factors that do not affect speed.",
+          "topic_pills": ["v = √(γP/ρ) = √(γRT/M)", "v₀ = 332 m/s at 0°C", "vₜ = 332 + 0.61t", "v ∝ √T; v independent of P", "v_solid > v_liquid > v_gas"],
+          "notes_condensed_description": "Newton: v = √(P/ρ) = 280 m/s (wrong — isothermal). Laplace: v = √(γP/ρ) = √(γRT/M) = 332 m/s for air at 0°C (adiabatic, correct). v_rms/v_sound = √(3/γ). Effect of P at constant T: no effect (P↑ → ρ↑ proportionally). T: v ∝ √T; vₜ = v₀ + 0.61t (small t); 1°C rise → +0.61 m/s. Density: v ∝ 1/√ρ. Humidity: moist air less dense → faster. Wind: v' = v + w cosθ. Steel ≈ 5000 m/s; water ≈ 1500 m/s; air at 0°C = 332 m/s.",
+          "how_to_revise": "Write the Laplace formula derivation in 4 lines. Then solve 5 temperature-effect problems: given speed at 0°C = 332 m/s, find speed at T°C or t°C. Memorise the three media speeds.",
+          "expected_questions": { "value": "0-1", "description": "Speed comparison across media or temperature-effect numerical are common." },
+          "time_required": { "value": "1 hr", "description": "30 min Newton-Laplace theory, 30 min numerical practice." },
+          "difficulty": { "value": "Easy-Moderate", "description": "Formulae are clean; the conceptual trap is that pressure has no effect on v at constant T." },
+          "scoring_focus": "v independent of pressure at constant T (NEET 2015 type); temperature effect: v ∝ √T; compare media speeds.",
+          "high_risk_area": "Thinking pressure increase → speed increase (it does not, because density increases proportionally). Also confusing v_rms of gas with v_sound.",
+          "best_practice_style": "Short numerical + conceptual MCQs (effect of conditions on speed).",
+          "priority_rule": "Medium priority — frequently tested as a one-liner or data-extraction question."
+        },
+        {
+          "topic_name": "Superposition, Interference and Standing Waves",
+          "topic_description": "Superposition principle applied to interference and standing waves; constructive/destructive conditions; standing wave equation; nodes and antinodes; energy confinement.",
+          "topic_pills": ["Constructive: Δ = nλ", "Destructive: Δ = (2n−1)λ/2", "I_max = (√I₁+√I₂)²", "y_SW = 2a cos(kx)sin(ωt)", "Node-antinode: λ/4", "Energy not transmitted past nodes"],
+          "notes_condensed_description": "Resultant: A = √(a₁²+a₂²+2a₁a₂cosφ). I = I₁+I₂+2√(I₁I₂)cosφ. Constructive: φ=2nπ; Δ=nλ; I_max=(√I₁+√I₂)². Destructive: φ=(2n−1)π; Δ=(2n−1)λ/2; I_min=(√I₁−√I₂)². For equal amp: I_max=4I₀, I_min=0. Standing wave (free end): y=2a cos(kx)sin(ωt). Nodes (A=0): x = λ/4, 3λ/4... Antinodes (A=2a): x = 0, λ/2, λ... Successive node/antinode separation = λ/2; node-antinode = λ/4. Energy does NOT propagate past nodes. Total SW energy = 2× each component.",
+          "how_to_revise": "Derive y₁+y₂ = 2a cos(kx)sin(ωt) step by step. List node and antinode positions for both free-end and rigid-end cases. Solve 5 problems on I_max/I_min when a₁/a₂ ratio is given.",
+          "expected_questions": { "value": "0-1", "description": "Node/antinode position MCQs; I_max/I_min ratio given amplitude ratio." },
+          "time_required": { "value": "1.5 hrs", "description": "45 min derivation of SW equation, 45 min node/antinode + interference MCQs." },
+          "difficulty": { "value": "Moderate", "description": "Derivation is moderately complex; most errors come from using wrong node/antinode positions for rigid vs free boundary." },
+          "scoring_focus": "I_max/I_min = (a₁+a₂)²/(a₁−a₂)²; node-antinode spacing = λ/4; energy confinement in segments.",
+          "high_risk_area": "Interchanging node and antinode positions for rigid vs free boundary; forgetting the ½ in path-to-phase conversion.",
+          "best_practice_style": "Graph-based MCQs (identify nodes/antinodes from standing wave diagram); ratio-based intensity problems.",
+          "priority_rule": "Medium priority — important conceptual foundation for organ pipes."
+        },
+        {
+          "topic_name": "Vibration of Strings",
+          "topic_description": "String harmonics, laws of vibration, Sonometer application; composite strings.",
+          "topic_pills": ["f₁ = (1/2L)√(T/m)", "All harmonics: 1:2:3", "n ∝ 1/L ∝ √T ∝ 1/√m", "Sonometer resonance", "Composite: p·√(T/m₁)/l₁ = q·√(T/m₂)/l₂"],
+          "notes_condensed_description": "v = √(T/m); f_p = (p/2L)√(T/m) = pf₁. All even and odd harmonics: ratio 1:2:3. Pluck at l/2p for p loops. Law of length: nl=const. Law of tension: n/√T=const. Law of mass: n√m=const. Law of density: n√d=const. Sonometer: n=(1/2l)√(T/πr²d); resonance when n_fork=n_string → rider thrown off. Transverse mounting: n_fork = n_string; longitudinal: n_fork = 2n_string (fork vibrates at twice the string frequency).",
+          "how_to_revise": "Practice the four laws by solving 3 problems each (e.g., doubling tension → what happens to frequency?). Memorise f₁=(1/2L)√(T/m) with all substitution cases. Draw the first three modes for a string with node/antinode positions.",
+          "expected_questions": { "value": "0-1", "description": "Frequency calculation given length, tension, and linear density; or comparing two strings." },
+          "time_required": { "value": "1.5 hrs", "description": "45 min theory + 45 min numericals." },
+          "difficulty": { "value": "Moderate", "description": "Formula application is systematic; the main trap is forgetting the factor of 2 for longitudinal sonometer mounting." },
+          "scoring_focus": "f₁=(1/2L)√(T/m); doubling T → f becomes √2 times; halving L → f doubles.",
+          "high_risk_area": "Confusing mass per unit length m and total mass M. Linear density m = M/L (not the same as bulk density). Also confusing transverse vs longitudinal sonometer setups.",
+          "best_practice_style": "Short numerical MCQs with one variable changed.",
+          "priority_rule": "Medium priority — 0-1 question in NEET; master f₁ formula first."
+        },
+        {
+          "topic_name": "Vibration of Organ Pipes",
+          "topic_description": "Open and closed organ pipe harmonic series, end correction, resonance tube, Kundt's tube.",
+          "topic_pills": ["Open: f_n=nv/2L (all)", "Closed: f_n=(2n−1)v/4L (odd)", "End correction e=0.6r", "Resonance: v=2n(l₂−l₁)", "Closed: 1st overtone=3rd harmonic", "Open: 1st overtone=2nd harmonic"],
+          "notes_condensed_description": "Closed pipe: node at closed end, antinode at open end. Only odd harmonics n₁:n₃:n₅=1:3:5. Max λ=4L. pth overtone=(2p+1)th harmonic. Open pipe: antinodes at both ends. All harmonics 1:2:3. Max λ=2L. pth overtone=(p+1)th harmonic. End correction e=0.6r; effective length_open=l+2e; effective length_closed=l+e. Resonance tube: λ=2(l₂−l₁); v=2n(l₂−l₁). Second resonance not at 3×first resonance but at 3l₁+2e. Kundt's tube: v_air/v_rod=λ_air/λ_rod. Open pipe sweeter sound (more harmonics). Frequency of tuning fork n∝t/l²×√(Y/ρ).",
+          "how_to_revise": "Draw the first three modes of both open and closed pipes side by side, labelling nodes (N) and antinodes (A). List harmonics and overtones in parallel columns. Solve 5 frequency-of-pipe questions and 3 resonance tube problems.",
+          "expected_questions": { "value": "1-2", "description": "NEET heavily tests organ pipes — identifying which harmonics are present, finding frequency from length, or comparing open vs closed pipes." },
+          "time_required": { "value": "2 hrs", "description": "1 hr drawing pipe modes + 1 hr numericals." },
+          "difficulty": { "value": "Moderate", "description": "The odd-only vs all-harmonics rule is simple but students confuse overtone numbering vs harmonic numbering." },
+          "scoring_focus": "Closed pipe → odd harmonics only; open pipe → all harmonics; overtone-to-harmonic conversion formula.",
+          "high_risk_area": "Saying 'second harmonic of closed pipe' — closed pipe has no even harmonics! Also confusing end correction direction (always adds to effective length).",
+          "best_practice_style": "Table-based MCQs on harmonic identification; calculation of fundamental frequency.",
+          "priority_rule": "Highest priority in Waves — covers 1-2 NEET questions annually. Must master."
+        },
+        {
+          "topic_name": "Beats",
+          "topic_description": "Beat formation, frequency, period, and using beats to identify unknown tuning fork frequency.",
+          "topic_pills": ["f_beat = |f₁−f₂|", "Max ~10 beats/sec audible", "Loading → ↓f", "Filing → ↑f", "Beats > x after loading → fB = fA−x"],
+          "notes_condensed_description": "Beats: periodic variation of intensity when two nearly equal frequencies superimpose. y = A sin π(n₁+n₂)t; A = 2a cos π(n₁−n₂)t. Beat freq = n₁−n₂; Beat period = 1/(n₁−n₂). Max audible beats ≈10 (persistence of hearing 0.1 s). Unknown frequency determination: load known/unknown fork (decreases f); count new beats x'. If B loaded and beats increase: n_B = n_A − x. If beats decrease: n_B = n_A + x. If beats = 0: n_B = n_A + x. Three tuning forks n, n+x, n+2x in equal amplitudes → beat freq = x.",
+          "how_to_revise": "Study Table 17.7 (p.772) — all four loading/filing cases. Practice 4 problems on finding unknown frequency using the table. Memorise: loading always DECREASES frequency.",
+          "expected_questions": { "value": "0-1", "description": "Beats questions are common — usually finding unknown frequency by loading/filing logic." },
+          "time_required": { "value": "1 hr", "description": "30 min theory + 30 min beat frequency determination problems." },
+          "difficulty": { "value": "Moderate", "description": "The loading/filing logic table is confusing; must practise all four cases until automatic." },
+          "scoring_focus": "Beat frequency formula; loading→decrease rule; Table 17.7 logic for unknown frequency.",
+          "high_risk_area": "Students reverse the loading logic — when B is loaded and beats increase, n_B is BELOW n_A (not above). This is the most frequently missed beats question.",
+          "best_practice_style": "Logic-based MCQs on loading/filing to identify unknown frequency.",
+          "priority_rule": "Medium priority — usually 0-1 question; beats logic takes only 30 min to master."
+        },
+        {
+          "topic_name": "Doppler Effect",
+          "topic_description": "Apparent frequency formula; all six standard cases; crossing, moving target, SONAR, rotating source; conditions for no Doppler effect.",
+          "topic_pills": ["f' = f(v±v_O)/(v∓v_S)", "Observer numerator, Source denominator", "Both approach → max f'", "Crossing: Δf = 2nv_Sv/(v²−vS²)", "SONAR: f' = (1±2v_sub/v)f"],
+          "notes_condensed_description": "General: f' = f[(v+vm)−vO]/[(v+vm)−vS]. Stationary medium: f' = f(v−vO)/(v−vS). Sign convention: direction of v from S to O. Velocities in direction of v = positive. Approach always increases apparent freq; recession decreases. 6 standard cases memorised from Table on p.773-775. Crossing source: Δf_before-after = 2nv_Sv/(v²−vS²) ≈ 2nvS/v for vS<<v. Moving target (approaching): f'' = f(v+vT)/(v−vT). Car → wall: f' = f(v+vC)/(v−vC) [image method]. No Doppler: both at rest; medium-only moving; S-L distance constant; perpendicular motion; velocity ≥ v_sound. Doppler in sound is asymmetric; in light it is symmetric.",
+          "how_to_revise": "Write the general formula. Apply it to all 6 cases from scratch to derive specific expressions. Solve 10 Doppler numericals of varying type (source moving, observer moving, both moving, crossing). Special attention to car-wall problem and moving target.",
+          "expected_questions": { "value": "1-2", "description": "Doppler is the highest-frequency NEET topic in this chapter — 1-2 questions nearly every year. Focuses on finding apparent frequency in numerical or conceptual form." },
+          "time_required": { "value": "2 hrs", "description": "45 min formula + sign convention; 1 hr 15 min numericals covering all cases." },
+          "difficulty": { "value": "Moderate-High", "description": "The formula itself is simple but sign errors at source/observer denominator/numerator cause systematic mistakes. Car-wall and moving-target problems add complexity." },
+          "scoring_focus": "Sign convention mastery; source in denominator (−v_S for approach); observer in numerator (+v_O for approach). Crossing frequency change formula.",
+          "high_risk_area": "Swapping observer and source positions in the formula — putting observer's velocity in the DENOMINATOR (it must go in numerator). Also forgetting the factor of 2 in Δf formula for crossing.",
+          "best_practice_style": "Multi-case numericals; select-the-correct-formula MCQs; apparent frequency ratio problems.",
+          "priority_rule": "HIGHEST priority in the chapter — 1-2 NEET questions every year. Spend the most time here after organ pipes."
+        }
+      ]
+    },
+    "trap": {
+      "chapter_name": "Waves and Sound",
+      "topics": [
+        {
+          "subtopic_name": "Doppler Formula Sign Convention",
+          "subtopic_tags": ["Doppler Effect", "Apparent Frequency", "Sign Errors"],
+          "mistakes": [
+            { "label": "Observer velocity in denominator", "description": "Students write f' = f(v−vS)/(v±vO) putting observer velocity in denominator instead of numerator — wrong standard form." },
+            { "label": "Wrong sign for approach", "description": "For observer approaching source: numerator is (v + vO); for source approaching observer: denominator is (v − vS). Students reverse these signs." }
+          ],
+          "example": "A car (source) approaches a stationary observer at 20 m/s; v_sound = 340 m/s; f = 500 Hz. Correct: f' = 500×340/(340−20) = 531 Hz. Wrong (denominator swap): f' = 500×(340+20)/340 = 529 Hz but formula was applied incorrectly.",
+          "trap_framing": "NEET options always include the 'reversed sign' answer as a distractor. Always ask: is it source or observer moving? Source goes in denominator, observer in numerator.",
+          "trap_question": {
+            "stem": "A train moving at 20 m/s toward a stationary observer sounds a whistle of frequency 400 Hz. Speed of sound = 340 m/s. The frequency heard by the observer is:",
+            "options": [
+              "400 × 360/340",
+              "400 × 340/360",
+              "400 × 340/320",
+              "400 × 320/340"
+            ],
+            "trick": "Source approaching → denominator decreases → f' increases. f' = 400×340/(340−20) = 400×340/320. Answer = option C."
+          },
+          "quick_rule": "Observer in NUMERATOR (+ approaching); Source in DENOMINATOR (− approaching). A source moving toward you raises pitch — denominator decreases, f' goes up."
+        },
+        {
+          "subtopic_name": "Closed vs Open Organ Pipe Harmonics",
+          "subtopic_tags": ["Organ Pipes", "Harmonics", "Overtones", "Closed Pipe Odd Only"],
+          "mistakes": [
+            { "label": "Closed pipe produces all harmonics", "description": "Students forget that a closed pipe has a node at one end (asymmetric boundary conditions) which forces only odd harmonics (1, 3, 5…)." },
+            { "label": "Overtone ≠ Harmonic numbering", "description": "In a closed pipe: 1st overtone = 3rd harmonic (NOT 2nd harmonic). Students add 1 instead of going to the next ODD harmonic." }
+          ],
+          "example": "Closed pipe of length 1 m; v = 340 m/s. Fundamental f₁ = v/4L = 85 Hz. The SECOND harmonic does NOT exist. First overtone = 3rd harmonic = 3×85 = 255 Hz.",
+          "trap_framing": "Questions ask 'what is the second harmonic of a closed pipe?' — there is no second harmonic! The answer must invoke the odd-harmonic restriction.",
+          "trap_question": {
+            "stem": "For a closed organ pipe of length L, which frequencies are present in its harmonic series?",
+            "options": [
+              "v/4L, v/2L, 3v/4L, v/L",
+              "v/4L, 3v/4L, 5v/4L, 7v/4L",
+              "v/2L, v/L, 3v/2L, 2v/L",
+              "v/4L, v/2L, 5v/4L, 7v/4L"
+            ],
+            "trick": "Only odd harmonics: f_n = (2N−1)v/4L for N = 1,2,3,4: gives v/4L, 3v/4L, 5v/4L, 7v/4L. Answer B."
+          },
+          "quick_rule": "Closed pipe: ONLY odd harmonics (v/4L, 3v/4L, 5v/4L…). Open pipe: ALL harmonics (v/2L, 2v/2L, 3v/2L…). Never even harmonics for closed pipe."
+        },
+        {
+          "subtopic_name": "Wave Speed vs Particle Speed",
+          "subtopic_tags": ["Wave Equation", "v = ω/k", "v_p = aω", "Parameter Identification"],
+          "mistakes": [
+            { "label": "Using aω as wave speed", "description": "Students see ω in the equation y = a sin(ωt − kx) and calculate aω as the wave speed — but aω is the MAXIMUM PARTICLE speed, not the wave speed." },
+            { "label": "Wave speed = amplitude × frequency", "description": "Confusing v_wave = λf = ω/k with v_particle_max = aω. The 'a' has no role in wave propagation speed." }
+          ],
+          "example": "y = 0.02 sin(200t − 4x) (SI units). Wave speed v = ω/k = 200/4 = 50 m/s. Max particle speed = aω = 0.02 × 200 = 4 m/s. These are completely different quantities.",
+          "trap_framing": "NEET gives a wave equation and asks 'what is the speed of this wave?' — the answer is ω/k but distractor option is always aω.",
+          "trap_question": {
+            "stem": "A wave is represented by y = 0.05 sin(300t − 6x) m. What is the speed of the wave and the maximum speed of a particle?",
+            "options": [
+              "Wave speed = 50 m/s, particle speed max = 15 m/s",
+              "Wave speed = 15 m/s, particle speed max = 50 m/s",
+              "Wave speed = 300 m/s, particle speed max = 0.3 m/s",
+              "Wave speed = 6 m/s, particle speed max = 300 m/s"
+            ],
+            "trick": "v_wave = ω/k = 300/6 = 50 m/s. v_p_max = aω = 0.05 × 300 = 15 m/s. Answer A."
+          },
+          "quick_rule": "Wave speed = ω/k (NOT related to amplitude). Particle max speed = aω (involves amplitude). They are different concepts entirely."
+        },
+        {
+          "subtopic_name": "Beats and Loading Logic",
+          "subtopic_tags": ["Beats", "Unknown Frequency", "Loading", "Filing"],
+          "mistakes": [
+            { "label": "Loading increases frequency", "description": "Students mix up filing (increases frequency) and loading/waxing (decreases frequency). Loading adds mass → lowers natural frequency." },
+            { "label": "Wrong direction of beats reasoning", "description": "If B is loaded and beats INCREASE, students say nB > nA — actually nB < nA (extra reduction pushed it further from nA)." }
+          ],
+          "example": "Forks A (known, 256 Hz) and B (unknown) give 4 beats/sec. B is loaded → beats become 6/sec. Loading decreased nB further from nA, so nB was already below nA. Therefore nB = 256 − 4 = 252 Hz.",
+          "trap_framing": "The table-based logic (Table 17.7) is counter-intuitive: when loading INCREASES beats, that means nB was BELOW nA, not above.",
+          "trap_question": {
+            "stem": "Forks A (512 Hz) and B (unknown) give 4 beats/sec. When B is loaded with wax, beats increase to 6/sec. The frequency of B before loading is:",
+            "options": [
+              "516 Hz",
+              "508 Hz",
+              "512 Hz",
+              "520 Hz"
+            ],
+            "trick": "Loading decreases nB. Beats increased → nB moved further from nA = 512. So nB was already < 512. nB = 512 − 4 = 508 Hz. Answer B."
+          },
+          "quick_rule": "Loading fork B: beats increase → nB = nA − x (B was below A). Beats decrease → nB = nA + x (B was above A, loading brought it closer). Loading ALWAYS lowers frequency."
+        },
+        {
+          "subtopic_name": "Effect of Pressure and Temperature on Speed of Sound",
+          "subtopic_tags": ["Speed of Sound", "Pressure Effect", "Temperature Effect", "Constant Temperature"],
+          "mistakes": [
+            { "label": "Increasing pressure increases sound speed", "description": "Students assume more pressure → more molecular collisions → faster sound. False: at constant T, as P increases, ρ increases proportionally, so v = √(γP/ρ) stays constant." },
+            { "label": "Confusing v ∝ √T (Kelvin) with t (°C)", "description": "v ∝ √T where T is ABSOLUTE temperature (Kelvin). For small changes use vₜ = v₀ + 0.61t (t in °C), but for ratio problems use T₁ and T₂ in Kelvin." }
+          ],
+          "example": "Doubling pressure at constant temperature: ρ also doubles. v = √(γP/ρ) = √(γ × 2P/2ρ) = √(γP/ρ) = unchanged. Speed of sound is independent of pressure at constant T.",
+          "trap_framing": "NEET options include a 'speed doubles when pressure doubles' option — this is wrong and is the trap. The correct answer is speed is unchanged.",
+          "trap_question": {
+            "stem": "If the pressure of a gas is doubled at constant temperature, the speed of sound in the gas becomes:",
+            "options": [
+              "Doubled",
+              "Halved",
+              "√2 times the original",
+              "Unchanged"
+            ],
+            "trick": "At constant T, P/ρ = constant (ideal gas). v = √(γP/ρ) = constant. Answer D."
+          },
+          "quick_rule": "Speed of sound is INDEPENDENT of pressure at constant temperature. It depends on temperature via v ∝ √T (Kelvin)."
+        }
+      ]
+    }
+  },
+  "grounding": {
+    "source_page_markdown_paths": [
+      "pages/physics-1/page-771/markdown.md",
+      "pages/physics-1/page-772/markdown.md",
+      "pages/physics-1/page-773/markdown.md",
+      "pages/physics-1/page-774/markdown.md",
+      "pages/physics-1/page-775/markdown.md",
+      "pages/physics-1/page-776/markdown.md",
+      "pages/physics-1/page-777/markdown.md",
+      "pages/physics-1/page-778/markdown.md",
+      "pages/physics-1/page-779/markdown.md",
+      "pages/physics-1/page-780/markdown.md",
+      "pages/physics-1/page-781/markdown.md",
+      "pages/physics-1/page-782/markdown.md",
+      "pages/physics-1/page-783/markdown.md",
+      "pages/physics-1/page-784/markdown.md",
+      "pages/physics-1/page-785/markdown.md",
+      "pages/physics-1/page-786/markdown.md",
+      "pages/physics-1/page-787/markdown.md",
+      "pages/physics-1/page-788/markdown.md",
+      "pages/physics-1/page-789/markdown.md",
+      "pages/physics-1/page-790/markdown.md",
+      "pages/physics-1/page-791/markdown.md",
+      "pages/physics-1/page-792/markdown.md"
+    ],
+    "grounding_summary": [
+      "Page 771 (758 in text): Chapter 17 opener. Lists examples of wave phenomena (ripple, musical sound, seismic waves, tsunami). Defines 6 characteristics of wave motion: particles vibrate SHM about mean; phase changes; particle velocity variable; wave velocity constant for medium; energy propagates without matter transport; medium needs elasticity, inertia, minimum friction, uniform density.",
+      "Page 772 (759 in text): Classification of waves. Mechanical vs non-mechanical. Transverse vs longitudinal comparison Table 17.1. Progressive vs stationary. 1D/2D/3D waves. Audible 20Hz–20kHz; infrasonic < 20 Hz; ultrasonic > 20 kHz, λ < 1.66 cm; SONAR; shock waves, Mach number definition.",
+      "Page 773 (760 in text): Key wave terms: amplitude, wavelength, frequency, time period, wave pulse, wave train, wave front (spherical vs plane), wave function y = f(x,t), harmonic wave, wave equation ∂²y/∂t² = v² ∂²y/∂x².",
+      "Page 774 (761 in text): Angular wave number k = 2π/λ; wave velocity v = nλ = ω/k; group velocity v_g = dω/dk; phase; intensity I = 2π²n²a²ρv ∝ a²; I = P/4πr²; energy density = 2π²n²a²ρ; threshold of hearing 10⁻¹² W/m²; threshold of pain 1 W/m². Velocity of transverse wave v = √(T/m); special cases with weights, immersed weight, temperature difference.",
+      "Page 775 (762 in text): Velocity of longitudinal (sound) wave. v = √(E/ρ). In solids v = √(Y/ρ); liquids/gases v = √(B/ρ). v_solid > v_liquid > v_gas (5000 > 1500 > 330 m/s). Newton's formula: v = √(P/ρ) = 280 m/s (wrong). Laplace: v = √(γP/ρ) = 332 m/s. v_rms/v_sound = √(3/γ).",
+      "Page 776 (763 in text): Factors affecting speed: pressure no effect at const T; temperature: v ∝ √T; vₜ = v₀ + 0.61t; 1°C rise → +0.61 m/s; density: v ∝ 1/√ρ; humidity: moist < dry density → faster; wind: v' = v + w cosθ; frequency/wavelength/intensity: no effect.",
+      "Page 777 (763–764 in text): Equation of progressive wave y = a sin(ωt − kx). Six equivalent forms. ω = coeff of t; k = coeff of x; v = ω/k. Particle velocity v_p = aω cos(ωt − kx); max = aω. v_p = −v(∂y/∂x). Phase difference = (2π/λ)(path difference). Time difference = (2π/T)(phase difference). Pressure wave: ΔP = ΔP₀cos(ωt − kx); ΔP₀ = akB; pressure π/2 ahead of displacement.",
+      "Page 778 (764–765 in text): Reflection and refraction of waves. Rarer/denser medium definition for sound. Frequency unchanged in reflection/refraction. Rigid end: phase change π, crest→trough. Free end: no phase change. Longitudinal: rigid end → compression as compression (no phase change for pressure wave). Wave in combination of strings: amplitude ratios a_r/a_i = (v₂−v₁)/(v₂+v₁).",
+      "Page 779 (765 in text): Echo: t = 2d/v; persistence = 0.1 s; d > 17 m for echo at 340 m/s. Superposition principle. Four applications: interference, standing waves, beats, Lissajous. Interference of sound waves: resultant A = √(a₁²+a₂²+2a₁a₂cosφ); I = I₁+I₂+2√(I₁I₂)cosφ; Table 17.2 constructive/destructive conditions.",
+      "Page 780 (766 in text): I_max/I_min = (a₁+a₂)²/(a₁−a₂)². Quink's tube apparatus: path difference = 2x = λ for consecutive maxima; v = 2n₀x. Standing waves: y₁ = a sin(ωt−kx), y₂ = a sin(ωt+kx); y = 2a cos(kx)sin(ωt). Amplitude A_SW = 2a cos(kx); node/antinode positions for free and rigid end.",
+      "Page 781 (767 in text): Nodes (A=0): d = λ/2; permanent rest; high pressure/density. Antinodes (A=2a): d = λ/2; low pressure/density. Node-antinode distance = λ/4. Table 17.3 amplitude for free vs rigid end. Characteristics of standing waves (12 points). Progressive vs stationary wave Table 17.4.",
+      "Page 782 (768 in text): Musical terms: note, tone, fundamental note, harmonics (integral multiples n, 2n, 3n...), overtones (harmonics above fundamental actually produced), octave (frequency doubled), unison (equal frequencies), resonance. String vibration: v = √(T/m); f_p = pf₁; Table 17.5 transverse vs longitudinal sonometer arrangement.",
+      "Page 783 (769 in text): Standing waves in strings: fundamentals, 2nd, 3rd modes. f₁ = (1/2l)√(T/m); f₂ = 2f₁; f₃ = 3f₁. All harmonics 1:2:3. Pluck at l/2p for p loops. General: λ = 2l/N; n = Nv/2l. Node positions. Sonometer: n = (1/2l)√(T/m) = √(T/πr²d); resonance → rider thrown off. Laws of string. Composite strings.",
+      "Page 784 (770 in text): Standing wave in organ pipe: Table 17.6. Closed pipe: f₁ = v/4l; f₂ = 3v/4l = 3f₁; f₃ = 5v/4l = 5f₁; odd harmonics only 1:3:5; max λ = 4l. Open pipe: f₁ = v/2l; f₂ = 2f₁; f₃ = 3f₁; all harmonics 1:2:3; max λ = 2l. Tuning fork: n ∝ t/l²×√(Y/ρ); loading → ↓f; filing → ↑f; temperature ↑ → ↓f.",
+      "Page 785 (771 in text): End correction e = 0.6r. Effective lengths: open = l + 2e; closed = l + e. Resonance tube: first resonance l₁+e = λ/4; second l₂+e = 3λ/4; λ = 2(l₂−l₁); v = 2n(l₂−l₁). Kundt's tube: metal rod rubbed → standing waves → lycopodium heaps at nodes; v_air/v_rod = λ_air/λ_rod; six uses.",
+      "Page 786 (772 in text): Beats: two slightly different frequencies → periodic intensity variation. Persistence of hearing 1/10 s → beats distinguishable only if < 10/sec. y = A sin π(n₁+n₂)t; A = 2a cos π(n₁−n₂)t. Beat frequency = n₁−n₂; beat period = 1/(n₁−n₂). Determination of unknown frequency: loading/filing logic with Table 17.7.",
+      "Page 787 (773 in text): Doppler's effect. Apparent frequency ≠ actual when there is relative motion. Cases: both at rest → n'=n; source moving → compressed wavefronts toward observer. General formula n' = [(v+vm)−vO]/[(v+vm)−vS] × n. Stationary medium: n' = n(v−vO)/(v−vS). Sign convention: direction of v from S to O; velocities in direction of v = positive.",
+      "Page 788 (774 in text): Doppler Cases 1 and 2. Case 1: Source toward observer: n' = nv/(v−vS). Source away: n' = nv/(v+vS). Case 2: Observer toward source: n' = n(v+vO)/v. Observer away: n' = n(v−vO)/v. Note: apparent wavelength unchanged when only observer moves.",
+      "Page 789 (775 in text): Doppler Case 3: Both moving toward each other: n' = n(v+vO)/(v−vS). Both moving away: n' = n(v−vO)/(v+vS). Source behind observer: if vO < vS → n' > n. Observer behind source. Case 4: Crossing. Source crosses stationary observer: Δn = 2nvSv/(v²−vS²) ≈ 2nvS/v. Observer crosses stationary source: Δn = 2nvO/v.",
+      "Page 790 (776 in text): Doppler Cases: moving car toward wall (image method) → n' = n(v+vC)/(v−vC). Moving target: if target approaches at vT: n'' = n(v+vT)/(v−vT); receding: n'' = n(v−vT)/(v+vT). Transverse Doppler: at 90°, n' = n (no shift). Two cars on perpendicular roads formula. Rotating source/observer.",
+      "Page 791 (777 in text): No Doppler effect conditions (5 cases). Musical sound characteristics: pitch (frequency), quality/timbre (overtones), loudness (intensity). Noise vs musical sound. Decibel scale: β = 10 log₁₀(I/I₀); I₀ = 10⁻¹² W/m²; threshold of pain = 120 dB; doubling I → +3 dB; 10× I → +10 dB. Table 17.8: dB levels of common sounds.",
+      "Page 792 (778 in text): Musical intervals table. Major diatonic scale (C D E F G A B C₁: DO RE MI FA SOL LA SI DO; Indian: SA RE GA MA PA DHA NI SA). Acoustics of buildings: Sabine's rules. Reverberation: Sabine's law t = KV/αS. End of chapter tips: open pipe sweeter; open pipe half-submerged → closed pipe of same f₁; vibrating clamped rod: middle clamp = open pipe, end clamp = closed pipe."
+    ],
+    "grounding_excerpt": [
+      "Waves can occur whenever a system is disturbed from equilibrium and when the disturbance can travel or propagate from one region of the system to another. Wave can carry energy and momentum.",
+      "The velocity of wave motion through a particular medium is constant. It depends only on the nature of medium not on the frequency, wavelength or intensity.",
+      "As solids are most elastic while gases least i.e. $E_{S} > E_{L} > E_{G}$. So the velocity of sound is maximum in solids and minimum in gases, hence $v_{\\text{sinel}} > v_{\\text{water}} > v_{\\text{air}}$",
+      "Laplace correction: He modified Newton's formula assuming that propagation of sound in gaseous medium is adiabatic process.",
+      "Hence for $1^{\\circ}C$ rise, speed of sound in air increases by $0.61 \\, \\text{m/s}$.",
+      "(5) **Nodes** (*N*) : The points where amplitude is minimum are called nodes.",
+      "(i) Distance between two successive nodes is $\\frac{\\lambda}{2}$.",
+      "(i) In closed organ pipe only odd harmonics are present. Ratio of harmonic is $n_1 : n_3 : n_5$ ... $= 1 : 3 : 5$ ...",
+      "(i) In open organ pipe all (even and odd) harmonic are present. Ratio of harmonics is $n_1 : n_2 : n_3$ ... $= 1 : 2 : 3$ ...",
+      "Beat frequency: The number of beats produced per second is called beat frequency.",
+      "So for the formation of distinct beats, frequencies of two sources of sound should be nearly equal (difference of frequencies less than 10)",
+      "General expression for apparent frequency: Suppose observer $(O)$ and source $(S)$ are moving in the same direction along a line with velocities $v_{O}$ and $v_{S}$ respectively.",
+      "Velocity of sound is independent of the pressure of gas, because as pressure increases, density also increases hence $\\frac{P}{\\rho}$ ratio remains constant.",
+      "Speed of sound in air at room (temperature)",
+      "If $l_{1}$ and $l_{2}$ are lengths of first and second resonances, then we have $l_{1} + e = \\frac{\\lambda}{4}$ and $l_{2} + e = \\frac{3\\lambda}{4}$"
+    ],
+    "sources": [
+      {
+        "title": "Waves and Sound — Universal Book Depot Physics Vol. 1 (Chapter 17)",
+        "url": "https://www.universalbookdepot.com/physics",
+        "publisher": "Universal Book Depot",
+        "accessed_date": "2026-03-30",
+        "why_used": "Primary OCR source — pages 771–792 (text pages 758–779). All formulae, tables, and conceptual points are derived directly from this textbook."
+      },
+      {
+        "title": "NCERT Physics Part I — Class XI, Chapter 15: Waves",
+        "url": "https://ncert.nic.in/textbook.php?keph1=15-15",
+        "publisher": "National Council of Educational Research and Training (NCERT)",
+        "accessed_date": "2026-03-30",
+        "why_used": "Standard NEET-prescribed reference for wave motion, speed of sound, standing waves, Doppler effect, and organ pipe resonance; used to cross-verify syllabus scope and standard formula conventions."
+      }
+    ],
+    "key_facts": [
+      "Speed of sound in air at 0°C = 332 m/s; increases by 0.61 m/s per °C rise in temperature",
+      "Newton's formula gives 280 m/s (isothermal — incorrect); Laplace correction (adiabatic) gives 332 m/s",
+      "Speed: v_solid (5000 m/s) > v_liquid (1500 m/s) > v_gas (332 m/s); independent of pressure at constant T",
+      "Wave equation: y = a sin(ωt − kx); wave speed v = ω/k; max particle speed = aω (different quantities!)",
+      "Standing wave: y = 2a cos(kx)sin(ωt); node-antinode separation = λ/4; node-node = λ/2",
+      "Closed organ pipe: only odd harmonics (v/4L, 3v/4L, 5v/4L…); max wavelength = 4L",
+      "Open organ pipe: all harmonics (v/2L, v/L, 3v/2L…); max wavelength = 2L; sweeter sound",
+      "Beat frequency = |f₁ − f₂|; distinguishable only when < 10 beats/sec (persistence of hearing 0.1 s)",
+      "Loading with wax DECREASES tuning fork frequency; filing near tip INCREASES it",
+      "Doppler: f' = f(v − vO)/(v − vS); observer in numerator, source in denominator; approach → frequency increases",
+      "Decibel: β = 10 log₁₀(I/I₀); I₀ = 10⁻¹² W/m²; threshold of pain = 120 dB",
+      "Echo condition: distance > 17 m (at 340 m/s) to separate from original sound (persistence 0.1 s)",
+      "Constructive interference: path diff = nλ; destructive: path diff = (2n−1)λ/2",
+      "Resonance tube: v = 2n(l₂ − l₁); second resonance length l₂ = 3l₁ + 2e",
+      "End correction e = 0.6r; open pipe effective length = l + 2e; closed pipe = l + e"
+    ],
+    "review": {
+      "used_local_page_grounding": true,
+      "semantic_page_read_complete": true,
+      "used_current_research": true,
+      "research_used_for_enrichment": true,
+      "template_preserved": true,
+      "scope_checked": true,
+      "syllabus_scope_verified": true,
+      "guardrails_passed": true,
+      "notes": "All content grounded exclusively in OCR pages 771–792. Covered all major sections: wave types and characteristics, speed of sound (Newton-Laplace), wave equation analysis, superposition, interference, standing waves, string vibration (laws + sonometer), organ pipes (closed + open + resonance tube + Kundt's tube), beats (including loading/filing logic), Doppler effect (all 6 standard cases + special cases), intensity/decibel, and acoustics. No pages were skipped. Key NEET traps identified from textbook content: Doppler sign convention, closed pipe odd-harmonics-only, wave speed vs particle speed, and pressure independence of sound speed."
+    }
+  }
+}

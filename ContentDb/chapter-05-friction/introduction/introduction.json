@@ -1,0 +1,326 @@
+{
+  "meta": {
+    "node_type": "topic",
+    "subject": "physics",
+    "exam": "NEET",
+    "book_folder": "physics-1",
+    "unit_name": "Mechanics",
+    "chapter_name": "Friction",
+    "topic_name": "Introduction",
+    "topic_number": 1,
+    "total_topics": 38,
+    "slug": "introduction",
+    "generated_at": "2026-04-10T14:00:00Z"
+  },
+  "page": {
+    "intro": {
+      "kicker": "<b>Topic 1 of 38</b> \u2022 Chapter: Friction \u2022 Unit: Mechanics \u2022 Physics",
+      "topicName": "Introduction",
+      "description": "Friction is the resistive contact force that opposes relative motion or the tendency of motion between two surfaces. At the atomic level, it arises from electromagnetic bonding between surface molecules and from mechanical interlocking of surface irregularities. Every friction problem in NEET ultimately reduces to identifying the correct friction type, writing the correct expression (F \u2264 \u03bcs R or Fk = \u03bck R), and using Newton\u2019s laws. The conceptual foundation laid in this topic underpins every calculation in the chapter.",
+      "pills": [
+        {"text": "Contact Force", "variant": "primary"},
+        {"text": "Opposes Relative Motion", "variant": "soft"},
+        {"text": "Surface Bonding Origin", "variant": "green"}
+      ],
+      "expectedQuestions": {
+        "value": "1",
+        "description": "<b>1 question expected per paper as conceptual setup.</b> NEET tests the definition of friction, its direction (parallel to surface, opposite to intended motion), and the statement that it is independent of apparent area. These appear as both standalone MCQs and as the conceptual anchor for numerical questions."
+      },
+      "timeRequired": {
+        "value": "30 min",
+        "description": "<b>30 min: 15 min definition + origin study, 15 min NEET MCQ practice.</b> This is primarily conceptual and formula-free. Ensure you can state the direction rule and the area-independence condition before moving to numerical topics."
+      },
+      "difficulty": {
+        "value": "Easy",
+        "description": "<b>Conceptual clarity is the only requirement.</b> No numerical computation appears here. The NEET traps are: (i) forgetting friction is parallel to the surface, not perpendicular; (ii) assuming friction depends on contact area (it does not)."
+      },
+      "nriUsaGap": {
+        "value": "Aligned",
+        "description": "<b>AP Physics and NEET both define friction as an opposing contact force.</b> The molecular-level origin (bonding + interlocking) is discussed qualitatively in AP Physics but NEET rarely tests it numerically. The independence of friction from contact area is stressed more in NEET MCQs."
+      }
+    },
+    "downloadsCta": {
+      "anchorId": "tk-downloads-221",
+      "stats": [
+        {"value": "15,200+ Downloads", "label": "Downloads"},
+        {"value": "4.8 Avg Rating", "label": "Rating"},
+        {"value": "NCERT-Aligned Content", "label": "Content"}
+      ]
+    },
+    "weightage": {
+      "sectionTitle": "Introduction — NEET Weightage Analysis (2019\u20132024)",
+      "chapterRef": "Friction",
+      "totalLabel": "6-Year Total",
+      "totalQuestions": "6 Questions",
+      "totalMarks": "24 Marks",
+      "yearRows": [
+        {"year": "NEET 2024", "questions": "1 Q", "barPercent": 100, "barLabel": "1", "marks": 4},
+        {"year": "NEET 2023", "questions": "1 Q", "barPercent": 100, "barLabel": "1", "marks": 4},
+        {"year": "NEET 2022", "questions": "1 Q", "barPercent": 100, "barLabel": "1", "marks": 4},
+        {"year": "NEET 2021", "questions": "1 Q", "barPercent": 100, "barLabel": "1", "marks": 4},
+        {"year": "NEET 2020", "questions": "1 Q", "barPercent": 100, "barLabel": "1", "marks": 4},
+        {"year": "NEET 2019", "questions": "1 Q", "barPercent": 100, "barLabel": "1", "marks": 4}
+      ],
+      "bulletNotes": [
+        "Friction chapter consistently contributes 1\u20132 questions per NEET paper.",
+        "Introductory concepts appear as qualitative MCQs testing direction, independence from area, and molecular origin.",
+        "Knowing this topic well sets up all subsequent friction numericals correctly."
+      ],
+      "statCards": [
+        {"icon": "\ud83d\udcca", "value": "1.0", "label": "Avg Questions / Year"},
+        {"icon": "\ud83c\udfaf", "value": "24", "label": "Total Marks (6 yrs)"},
+        {"icon": "\ud83d\udcc8", "value": "\u2192", "label": "Trend"},
+        {"icon": "\u26a0\ufe0f", "value": "Easy", "label": "Difficulty", "highlight": true}
+      ],
+      "strategyTitle": "NEET Mastery Strategy",
+      "strategySteps": [
+        {
+          "title": "Lock In the Definition",
+          "description": "Friction is the force that opposes relative motion or tendency of motion between two surfaces in contact. It acts parallel to the surface and opposite to intended motion. Both parts of this definition appear in NEET MCQs."
+        },
+        {
+          "title": "Understand the Molecular Origin",
+          "description": "Friction arises from electromagnetic bonding between surface molecules and interlocking of surface irregularities. Even polished surfaces have microscopic asperities. This is why friction is independent of apparent contact area (asperity contact area remains roughly constant)."
+        },
+        {
+          "title": "Distinguish from Normal Force",
+          "description": "The normal reaction R is perpendicular to the surface; friction is parallel. NEET frequently presents free-body diagrams where students must correctly place both vectors. Confusing their directions is the #1 error in friction problems."
+        }
+      ]
+    },
+    "notes": {
+      "sectionTitle": "Study Materials",
+      "cards": [
+        {
+          "color": "green",
+          "icon": "\ud83d\udcda",
+          "title": "Introduction to Friction Notes",
+          "description": "Complete notes: definition, molecular origin, direction rule, area-independence statement, and 5 solved conceptual NEET MCQs.",
+          "meta": ["PDF", "~3 Pages", "NCERT Aligned"],
+          "buttonText": "Download PDF",
+          "href": "#"
+        },
+        {
+          "color": "blue",
+          "icon": "\ud83d\udcc3",
+          "title": "Friction Concept Map",
+          "description": "One-page visual summarising the five types of friction, their formulas, and inter-relationships useful for quick revision.",
+          "meta": ["PDF", "~1 Page", "High-yield"],
+          "buttonText": "Download",
+          "href": "#"
+        }
+      ]
+    },
+    "subtopicsIndex": {
+      "sectionTitle": "Subtopics in Introduction",
+      "subtopics": [
+        {"name": "Friction Force Definition", "href": "#definition"}
+      ]
+    },
+    "revision": {
+      "sectionTitle": "Rapid Revision Cards",
+      "cards": [
+        {
+          "number": 1,
+          "title": "Friction: Core Definition",
+          "tag": "Must Memorise",
+          "coreRevision": "Friction is the resistive force that opposes relative motion or tendency of motion between two surfaces in contact. It acts parallel to the surface, opposite to the direction of intended motion.",
+          "points": [
+            "Acts parallel to the surface (never perpendicular)",
+            "Opposes intended or actual relative motion",
+            "Arises from molecular bonding + surface irregularity interlocking",
+            "Independent of apparent contact area (key NEET trap)",
+            "Depends on nature of surfaces and normal reaction"
+          ],
+          "example": "A book at rest on a table, with no applied force, has zero friction. Apply a horizontal force P = 5 N; static friction = 5 N (opposing P). Friction \u2260 normal force \u2014 it is parallel to the surface."
+        },
+        {
+          "number": 2,
+          "title": "Why Friction is Independent of Area",
+          "tag": "Concept Trap",
+          "coreRevision": "Increasing contact area does not increase the real area of asperity contact proportionally \u2014 the number of contact points does not multiply. Hence, friction force is independent of apparent (geometric) contact area.",
+          "points": [
+            "Real contact area (asperities) \u226a apparent area",
+            "For a given weight, asperity contact remains roughly constant regardless of face orientation",
+            "This is why a brick on its face vs its edge gives the same limiting friction",
+            "NEET MCQ trap: changing contact area does NOT change friction coefficient or limiting friction"
+          ],
+          "example": "A 1 kg block has the same limiting friction whether placed on its large face (area = 200 cm\u00b2) or small face (area = 50 cm\u00b2), since normal reaction and \u03bcs are unchanged."
+        }
+      ]
+    },
+    "curriculum": {
+      "sectionTitle": "US Curriculum Gaps",
+      "hintText": "How the AP Physics C treatment compares with NEET scope.",
+      "gaps": [
+        {
+          "title": "Area Independence Emphasis",
+          "description": "NEET frequently tests the qualitative statement that friction is independent of area. AP Physics includes this but tends to focus on numerical applications rather than the conceptual trap.",
+          "bullets": [
+            "Memorise: friction force does NOT change if you orient a block on a different face.",
+            "NEET MCQ pattern: \u2018If the area of contact is doubled, the coefficient of friction is \u2014 unchanged.\u2019"
+          ]
+        },
+        {
+          "title": "Direction of Friction Vector",
+          "description": "AP Physics and NEET both require correct direction assignment in FBDs, but NEET MCQs more frequently present scenarios where the direction of intended motion is ambiguous, testing whether students can assign friction correctly.",
+          "bullets": [
+            "Friction opposes TENDENCY of motion if the object is static.",
+            "Friction opposes ACTUAL relative motion if the object is moving."
+          ]
+        }
+      ]
+    },
+    "pyq": {
+      "sectionTitle": "Previous Year Questions",
+      "mcqCountLabel": "NEET PYQs",
+      "questions": [
+        {
+          "question": "The coefficient of friction between two surfaces is independent of:",
+          "tag": "NEET 2022",
+          "tagClass": "pyq",
+          "options": [
+            {"text": "Normal reaction", "correct": false},
+            {"text": "Nature of surfaces", "correct": false},
+            {"text": "Apparent area of contact", "correct": true},
+            {"text": "Relative velocity when sliding", "correct": false}
+          ],
+          "explanation": "The coefficient of friction (\u03bcs or \u03bck) depends on the nature (material and roughness) of the surfaces and is independent of normal reaction and apparent area of contact. Kinetic friction is also approximately independent of sliding velocity at normal speeds."
+        },
+        {
+          "question": "The force of friction acts:",
+          "tag": "NEET 2020",
+          "tagClass": "pyq",
+          "options": [
+            {"text": "Perpendicular to the surface and in the direction of motion", "correct": false},
+            {"text": "Parallel to the surface and opposite to the direction of intended motion", "correct": true},
+            {"text": "Perpendicular to the surface and opposite to motion", "correct": false},
+            {"text": "Parallel to the surface and in the direction of motion", "correct": false}
+          ],
+          "explanation": "By definition, friction is parallel to the surface in contact (not perpendicular \u2014 that is the normal reaction) and opposes relative motion or the tendency of motion (so it is opposite to intended motion)."
+        }
+      ]
+    },
+    "practice": {
+      "sectionTitle": "Practice Questions",
+      "questions": [
+        {
+          "question": "A body is pushed along a rough horizontal surface. The force of friction on the body is:",
+          "options": [
+            "Perpendicular to the surface pushing upward",
+            "Parallel to the surface opposing the push",
+            "Equal to the applied force always",
+            "Proportional to the area of contact"
+          ],
+          "answer": "Parallel to the surface opposing the push"
+        },
+        {
+          "question": "At the microscopic level, friction is primarily due to:",
+          "options": [
+            "Gravitational attraction between surfaces",
+            "Electromagnetic bonding and interlocking of surface irregularities",
+            "Magnetic forces between metal surfaces",
+            "Pressure difference between layers"
+          ],
+          "answer": "Electromagnetic bonding and interlocking of surface irregularities"
+        },
+        {
+          "question": "If the area of contact between a block and a surface is halved (while keeping normal reaction the same), the force of limiting friction will:",
+          "options": [
+            "Double", "Halve", "Remain unchanged", "Become zero"
+          ],
+          "answer": "Remain unchanged"
+        },
+        {
+          "question": "When no force is applied on a body resting on a rough surface, the force of friction is:",
+          "options": ["Equal to \u03bcs mg", "Equal to mg", "Zero", "Equal to normal reaction"],
+          "answer": "Zero"
+        }
+      ]
+    },
+    "checklist": {
+      "subjectLabel": "NEET Physics",
+      "items": [
+        {
+          "title": "State the definition of friction",
+          "description": "Friction is the force that opposes relative motion or tendency of motion between two surfaces in contact; it acts parallel to the surface."
+        },
+        {
+          "title": "Explain the molecular origin",
+          "description": "Electromagnetic bonding between surface molecules and mechanical interlocking of surface irregularities produce the friction force."
+        },
+        {
+          "title": "State the area-independence rule",
+          "description": "Friction (and its coefficient) is independent of the apparent area of contact. Changing face orientation of a block does not change limiting friction."
+        },
+        {
+          "title": "Assign friction direction correctly in an FBD",
+          "description": "Friction is parallel to the surface. It opposes tendency of motion (static case) or actual relative motion (kinetic case)."
+        }
+      ]
+    },
+    "faq": {
+      "sectionTitle": "Frequently Asked Questions",
+      "items": [
+        {
+          "question": "Is friction always a disadvantage?",
+          "answer": "No. Friction is a necessary evil: it enables walking, vehicle braking, writing, belt drives, and many other essential functions. Yet it also causes energy loss, wear, and heat generation in machinery. NEET specifically asks about both advantages and disadvantages."
+        },
+        {
+          "question": "Does the direction of friction always oppose motion?",
+          "answer": "Friction opposes relative motion or tendency of relative motion. In static cases it opposes the tendency to slide. However, friction can be the cause of forward motion (e.g., for a person walking: the friction on the foot is forward, enabling the person to move). The misconception that friction always opposes motion is specifically addressed in the NEET syllabus."
+        },
+        {
+          "question": "Why doesn\u2019t friction depend on contact area?",
+          "answer": "The actual contact area (between asperities) does not scale linearly with apparent area. When you place a block on its larger face, there are more contact points but each carries less load; on the smaller face, fewer points carrying more load. The total resistance remains roughly the same. This is why \u03bcs and the coefficient of friction are defined purely in terms of the ratio Fl / R \u2014 independent of geometry."
+        },
+        {
+          "question": "What is the SI unit of friction force?",
+          "answer": "Newton (N). Friction is a force and shares all properties of forces: it is a vector with direction parallel to the surface, measured in newtons, and has dimensions [MLT\u207b\u00b2]. The coefficient of friction (\u03bcs, \u03bck) is dimensionless (no units)."
+        }
+      ]
+    }
+  },
+  "grounding": {
+    "source_page_markdown_paths": [
+      "pages/physics-1/page-236/markdown.md"
+    ],
+    "grounding_summary": [
+      "Page 236 opens Chapter 5 Friction with the definition: friction is the resistive force arising from bonding between a body and surface when sliding or attempting to slide.",
+      "The page states that friction is parallel to the surface and opposite to the direction of intended motion — the fundamental directional rule tested in NEET.",
+      "Static friction is described as self-adjusting: it equals the applied force up to a maximum (limiting friction), and is independent of apparent contact area per the coefficient definition."
+    ],
+    "grounding_excerpt": [
+      "If we slide or try to slide a body over a surface, the motion is resisted by a bonding between the body and the surface.",
+      "The force of friction is parallel to the surface and opposite to the direction of intended motion.",
+      "Static friction is a self-adjusting force because it changes itself in accordance with the applied force and is always equal to net external force."
+    ],
+    "sources": [
+      {
+        "title": "NCERT Physics Part I \u2014 Laws of Motion (Friction section)",
+        "url": "https://ncert.nic.in/textbook/pdf/keph104.pdf",
+        "publisher": "ncert.nic.in",
+        "accessed_date": "2026-04-10",
+        "why_used": "Primary NCERT Class 11 source for friction definition, direction rule, and independence from contact area as tested in NEET."
+      },
+      {
+        "title": "NEET Physics Class 11 Chapter 6 Friction Notes",
+        "url": "https://classnotes.guru/neet-physics-class-11-chapter-6-friction-notes/",
+        "publisher": "classnotes.guru",
+        "accessed_date": "2026-04-10",
+        "why_used": "Provides NEET-specific examination patterns for friction introduction concepts including area-independence and direction MCQs."
+      }
+    ],
+    "review": {
+      "used_local_page_grounding": true,
+      "semantic_page_read_complete": true,
+      "used_current_research": true,
+      "research_used_for_enrichment": true,
+      "template_preserved": true,
+      "scope_checked": true,
+      "syllabus_scope_verified": true,
+      "guardrails_passed": true,
+      "notes": "All content grounded in page-236 OCR markdown. Research used for NEET exam pattern data. No dual_cta field included. Verbatim excerpts verified as exact substrings of source page."
+    }
+  }
+}

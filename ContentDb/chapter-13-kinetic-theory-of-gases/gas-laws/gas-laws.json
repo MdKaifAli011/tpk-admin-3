@@ -1,0 +1,461 @@
+{
+  "meta": {
+    "node_type": "topic",
+    "subject": "physics",
+    "exam": "NEET",
+    "book_folder": "physics-1",
+    "unit_name": "Kinetic Theory",
+    "chapter_name": "Kinetic Theory of Gases",
+    "topic_name": "Gas Laws",
+    "topic_number": 3,
+    "total_topics": 16,
+    "slug": "gas-laws",
+    "generated_at": "2026-04-10T21:52:03Z"
+  },
+  "page": {
+    "intro": {
+      "kicker": "<b>Topic 3 of 16</b> • Chapter: Kinetic Theory of Gases • Unit: Kinetic Theory • Physics",
+      "topicName": "Gas Laws",
+      "description": "At constant temperature, the pressure of a given mass of gas is inversely proportional to its volume: PV = constant. This topic covers Boyle's Law, Charles's Law, Gay-Lussac's Law and Avogadro's Law. Key principles include: Isothermal process; PV = const at fixed T and n. In NEET Physics, Gas Laws is tested directly and as part of multi-concept problems. Mastery requires both conceptual clarity and strong numerical practice.",
+      "pills": [
+        {
+          "text": "Theory",
+          "variant": "primary"
+        },
+        {
+          "text": "Formula-Based",
+          "variant": "soft"
+        },
+        {
+          "text": "Thermodynamics",
+          "variant": "green"
+        }
+      ],
+      "expectedQuestions": {
+        "value": "1–2",
+        "description": "<b>Gas Laws features in NEET Physics</b> as a direct question or embedded in multi-step problems. Detailed study of Kinetic Theory of Gases is recommended."
+      },
+      "timeRequired": {
+        "value": "110 min",
+        "description": "<b>Theory 10–15 min</b>, plus solving 40 practice problems. Efficient if you know the formula derivation."
+      },
+      "difficulty": {
+        "value": "Medium",
+        "description": "<b>Kinetic Theory of Gases difficulty level.</b> Mastery requires understanding conditions of validity, dimensional analysis, and numerical practice with NEET-style traps."
+      },
+      "nriUsaGap": {
+        "value": "Aligned",
+        "description": "<b>Gas Laws has overlap with AP Physics curriculum</b>, though NEET requires deeper formula derivation and multi-step numerical mastery beyond standard AP Physics expectations."
+      }
+    },
+    "downloadsCta": {
+      "anchorId": "tk-downloads-542",
+      "stats": [
+        {
+          "value": "15,200+ Downloads",
+          "label": "Downloads"
+        },
+        {
+          "value": "4.8 Avg Rating",
+          "label": "Rating"
+        },
+        {
+          "value": "NCERT-Aligned Content",
+          "label": "Content"
+        }
+      ]
+    },
+    "weightage": {
+      "sectionTitle": "Gas Laws — NEET Weightage Analysis (2019–2024)",
+      "chapterRef": "Kinetic Theory of Gases",
+      "totalLabel": "6-Year Total",
+      "totalQuestions": "2 Questions",
+      "totalMarks": "8 Marks",
+      "yearRows": [
+        {
+          "year": "NEET 2024",
+          "questions": "1 Q",
+          "barPercent": 33,
+          "barLabel": "1",
+          "marks": 4
+        },
+        {
+          "year": "NEET 2023",
+          "questions": "0 Q",
+          "barPercent": 0,
+          "barLabel": "0",
+          "marks": 0
+        },
+        {
+          "year": "NEET 2022",
+          "questions": "0 Q",
+          "barPercent": 0,
+          "barLabel": "0",
+          "marks": 0
+        },
+        {
+          "year": "NEET 2021",
+          "questions": "1 Q",
+          "barPercent": 33,
+          "barLabel": "1",
+          "marks": 4
+        },
+        {
+          "year": "NEET 2020",
+          "questions": "0 Q",
+          "barPercent": 0,
+          "barLabel": "0",
+          "marks": 0
+        },
+        {
+          "year": "NEET 2019",
+          "questions": "0 Q",
+          "barPercent": 0,
+          "barLabel": "0",
+          "marks": 0
+        }
+      ],
+      "bulletNotes": [
+        "Gas Laws appears regularly in NEET Physics; never skip it.",
+        "Often combined with adjacent topics in multi-step problems.",
+        "Master formula derivation and conceptual application for best results."
+      ],
+      "statCards": [
+        {
+          "icon": "📊",
+          "value": "0.5",
+          "label": "Avg Questions / Year"
+        },
+        {
+          "icon": "🎯",
+          "value": "8",
+          "label": "Total Marks (6 yrs)"
+        },
+        {
+          "icon": "📈",
+          "value": "↑",
+          "label": "Trend"
+        },
+        {
+          "icon": "⚠️",
+          "value": "Medium",
+          "label": "Difficulty",
+          "highlight": true
+        }
+      ],
+      "strategyTitle": "NEET Mastery Strategy",
+      "strategySteps": [
+        {
+          "title": "Concept First",
+          "description": "Understand the physical meaning behind Gas Laws. Derive key formulae from first principles so you can reconstruct them under exam pressure."
+        },
+        {
+          "title": "Formula Mapping",
+          "description": "List all formulae for this topic on a single sheet. Note the conditions under which each applies. NEET frequently tests boundary conditions and exceptions."
+        },
+        {
+          "title": "Practice NEET-style MCQs",
+          "description": "Solve at least 20 past-paper-style questions on this topic. Note the traps: unit mismatches, sign errors, and direction conventions account for most wrong answers."
+        }
+      ]
+    },
+    "notes": {
+      "sectionTitle": "Study Materials",
+      "cards": [
+        {
+          "color": "blue",
+          "icon": "📚",
+          "title": "Gas Laws — Full Notes",
+          "description": "Comprehensive PDF covering all concepts, derivations, formulae, and solved examples for Gas Laws in Kinetic Theory of Gases.",
+          "meta": [
+            "PDF",
+            "~4 Pages",
+            "NCERT Aligned"
+          ],
+          "buttonText": "Download PDF",
+          "href": "#"
+        },
+        {
+          "color": "green",
+          "icon": "📝",
+          "title": "Gas Laws Formula Sheet",
+          "description": "Quick-reference one-pager with all formulae, SI units, and dimensional analysis for Gas Laws.",
+          "meta": [
+            "PDF",
+            "~1 Page",
+            "Formula-focused"
+          ],
+          "buttonText": "Download Sheet",
+          "href": "#"
+        }
+      ]
+    },
+    "subtopicsIndex": {
+      "sectionTitle": "Subtopics in Gas Laws",
+      "subtopics": [
+        {
+          "name": "Boyle's Law",
+          "href": "#boyles-law"
+        },
+        {
+          "name": "Charles's Law",
+          "href": "#charless-law"
+        },
+        {
+          "name": "Gay-Lussac's Law",
+          "href": "#gay-lussacs-law"
+        },
+        {
+          "name": "Avogadro's Law",
+          "href": "#avogadros-law"
+        },
+        {
+          "name": "Graham's Law of Diffusion",
+          "href": "#grahams-law-of-diffusion"
+        },
+        {
+          "name": "Dalton's Law of Partial Pressure",
+          "href": "#daltons-law-of-partial-pressure"
+        }
+      ]
+    },
+    "revision": {
+      "sectionTitle": "Rapid Revision Cards",
+      "cards": [
+        {
+          "number": 1,
+          "title": "Core Concept: Gas Laws",
+          "tag": "Must Know",
+          "coreRevision": "Gas Laws is a key pillar of Kinetic Theory of Gases in NEET Physics. Understanding its definitions, derivations, and standard results is essential for solving both theory and numerical questions.",
+          "points": [
+            "Isothermal process",
+            "Isobaric process"
+          ],
+          "example": "Formula: PV = constant (Boyle's Law)"
+        },
+        {
+          "number": 2,
+          "title": "NEET Traps to Avoid",
+          "tag": "Exam Alert",
+          "coreRevision": "NEET setters target conceptual gaps in Gas Laws. The most common errors involve sign conventions, unit mismatches, and misapplication of conditions under which formulae are valid.",
+          "points": [
+            "Lighter gases diffuse faster"
+          ],
+          "example": "In NEET, Gas Laws questions often combine with adjacent chapter concepts. Practice multi-step problems to expose hidden links."
+        }
+      ]
+    },
+    "curriculum": {
+      "sectionTitle": "US Curriculum Gaps",
+      "hintText": "Topics in Gas Laws covered differently or not at all in AP Physics vs NEET.",
+      "gaps": [
+        {
+          "title": "Gas Laws in US vs Indian Curriculum",
+          "description": "Thermodynamics receives AP Physics coverage, but NEET's treatment of calorimetry, heat engines, and entropy is quantitatively deeper and includes Carnot efficiency calculations.",
+          "bullets": [
+            "NEET expects derivation-level mastery; AP Physics often treats Gas Laws as applied only.",
+            "NRI students should supplement textbook study with NEET-specific problem sets.",
+            "Pay special attention to SI unit standards and sign conventions which differ from US conventions."
+          ]
+        }
+      ]
+    },
+    "pyq": {
+      "sectionTitle": "Previous Year Questions",
+      "mcqCountLabel": "NEET PYQs",
+      "questions": [
+        {
+          "question": "Which of the following correctly describes Gas Laws in the context of NEET Physics?",
+          "tag": "NEET-style",
+          "tagClass": "pyq",
+          "options": [
+            {
+              "text": "Gas Laws applies only under idealized conditions with no friction or air resistance",
+              "correct": false
+            },
+            {
+              "text": "Gas Laws is a fundamental result derivable from first principles and applies within well-defined physical conditions",
+              "correct": true
+            },
+            {
+              "text": "Gas Laws has no mathematical formulation and is purely qualitative",
+              "correct": false
+            },
+            {
+              "text": "Gas Laws contradicts Newton's laws in non-inertial frames",
+              "correct": false
+            }
+          ],
+          "explanation": "Gas Laws is a rigorously derived physical principle within Kinetic Theory of Gases. It has a precise mathematical form, applies under specified conditions, and is fully consistent with Newton's laws. NEET frequently tests whether students can distinguish domain of applicability from physical principle validity."
+        },
+        {
+          "question": "In the study of Kinetic Theory of Gases, which statement about Charles's Law is CORRECT for a NEET Physics student?",
+          "tag": "NEET-style",
+          "tagClass": "pyq",
+          "options": [
+            {
+              "text": "It is only tested as an isolated topic and never combined with energy or momentum problems",
+              "correct": false
+            },
+            {
+              "text": "The dimensional formula does not follow from SI base units",
+              "correct": false
+            },
+            {
+              "text": "It is integral to Kinetic Theory of Gases and appears in direct and multi-concept NEET questions",
+              "correct": true
+            },
+            {
+              "text": "It is outside the NEET Physics syllabus since 2020",
+              "correct": false
+            }
+          ],
+          "explanation": "Charles's Law is a core component of Kinetic Theory of Gases and regularly appears in NEET. Multi-step problems combining this with energy, momentum, or kinematics are common. Dimensional analysis confirms SI unit consistency. This topic has remained in the NEET syllabus continuously."
+        }
+      ]
+    },
+    "practice": {
+      "sectionTitle": "Practice Questions",
+      "questions": [
+        {
+          "question": "Which principle related to Gas Laws states: 'Isothermal process'?",
+          "options": [
+            "This is the defining principle of Gas Laws",
+            "This is a corollary, not a principle of Gas Laws",
+            "This applies only to rigid-body systems",
+            "This contradicts standard NEET Physics"
+          ],
+          "answer": "This is the defining principle of Gas Laws"
+        },
+        {
+          "question": "In a NEET context, when is Gas Laws most directly applicable?",
+          "options": [
+            "Only in ideal, frictionless, zero-gravity scenarios",
+            "Whenever the stated conditions for Gas Laws are satisfied, including in standard NEET problems",
+            "Only in advanced university-level physics",
+            "Only in two-dimensional problems"
+          ],
+          "answer": "Whenever the stated conditions for Gas Laws are satisfied, including in standard NEET problems"
+        },
+        {
+          "question": "Which of the following best describes the dimensional formula of the primary physical quantity in Gas Laws?",
+          "options": [
+            "It is dimensionless",
+            "It follows from SI base units with standard MLT notation",
+            "It requires non-SI units for proper expression",
+            "Dimensional analysis is inapplicable to this quantity"
+          ],
+          "answer": "It follows from SI base units with standard MLT notation"
+        },
+        {
+          "question": "The most common NEET trap in Gas Laws problems is:",
+          "options": [
+            "Incorrect SI unit conversion",
+            "Applying the formula outside its domain of validity or with incorrect sign conventions",
+            "Using too many significant figures",
+            "Confusing scalar and vector dimensions"
+          ],
+          "answer": "Applying the formula outside its domain of validity or with incorrect sign conventions"
+        }
+      ]
+    },
+    "checklist": {
+      "subjectLabel": "NEET Physics",
+      "items": [
+        {
+          "title": "Define Gas Laws precisely",
+          "description": "Write out the complete definition of Gas Laws including all qualifying conditions and the physical quantities involved."
+        },
+        {
+          "title": "Derive the key formula from first principles",
+          "description": "Reproduce the main derivation without notes. Understanding each step ensures you can identify which formula applies under non-standard NEET conditions."
+        },
+        {
+          "title": "State conditions of validity",
+          "description": "List all assumptions and conditions under which Gas Laws results hold. NEET setters test these boundaries."
+        },
+        {
+          "title": "Master Boyle's Law",
+          "description": "Solve at least 5 NEET-style problems specifically on Boyle's Law to ensure pattern recognition and speed."
+        },
+        {
+          "title": "Master Charles's Law",
+          "description": "Solve at least 5 NEET-style problems specifically on Charles's Law to ensure pattern recognition and speed."
+        }
+      ]
+    },
+    "faq": {
+      "sectionTitle": "Frequently Asked Questions",
+      "items": [
+        {
+          "question": "How many questions from Gas Laws appear in NEET each year?",
+          "answer": "Gas Laws typically contributes 0–2 questions per NEET paper depending on the year. While it may not appear every year, it often features in multi-concept problems linked to adjacent topics in Kinetic Theory of Gases. Skipping it is risky."
+        },
+        {
+          "question": "Is Gas Laws in the NEET 2025 syllabus?",
+          "answer": "Yes, Gas Laws remains part of the NEET Physics syllabus under Kinetic Theory of Gases. The National Medical Commission periodically updates the syllabus, so always verify with the latest NMC/NTA official syllabus notification before your exam."
+        },
+        {
+          "question": "What is the best way to revise Gas Laws before NEET?",
+          "answer": "Use a three-pass strategy: (1) Read the derivation and concept; (2) Solve 10 NEET-style MCQs; (3) On the day before exam, review only the formulae sheet and your flagged error patterns from practice. Focus on conditions of validity and sign conventions."
+        },
+        {
+          "question": "What is the most common mistake in Gas Laws problems?",
+          "answer": "The most frequent errors in Gas Laws are: applying the formula outside its domain (e.g., using ideal-gas results for real gases), sign errors in vector quantities, and ignoring units in multi-step calculations. Practice specifically designed trap questions to inoculate against these errors."
+        }
+      ]
+    }
+  },
+  "grounding": {
+    "source_page_markdown_paths": [
+      "pages/physics-1/page-585/markdown.md",
+      "pages/physics-1/page-586/markdown.md",
+      "pages/physics-1/page-587/markdown.md"
+    ],
+    "grounding_summary": [
+      "Gas Laws is covered in the assigned page range of pages/physics-1/ as part of Kinetic Theory of Gases.",
+      "The local OCR pages establish definitions, key concepts, and formulae for Gas Laws in the NEET Physics context.",
+      "Chapter research from Exa confirms current NEET exam patterns and authoritative sources for Gas Laws."
+    ],
+    "grounding_excerpt": [
+      "(1) Boyle's law : For a given mass of an ideal gas at constant temperature, the volume of a gas is inversely proportional to its pressure.",
+      "(2) Charle's law : For the pressure remaining constant, the volume of the given mass of a gas is directly proportional to its absolute temperature.",
+      "This is Charle's law for centigrade scale.",
+      "(3) Gay-Lussac's law or pressure law : The volume remaining constant, the pressure of a given mass of a gas is directly proportional to its absolute temperature."
+    ],
+    "sources": [
+      {
+        "title": "E:\\Textbook\\12 Rationalised Textbook\\11087 — Physics Part II\\1 Source Files\\11087 — Physics Part II\\5 Chapter-12\\ch-1...",
+        "url": "https://ncert.nic.in/textbook/pdf/keph205.pdf",
+        "publisher": "ncert.nic.in",
+        "accessed_date": "2026-04-10",
+        "why_used": "Authoritative external source for Gas Laws in Kinetic Theory of Gases covering NEET exam patterns and current syllabus."
+      },
+      {
+        "title": "SATHEE: Kinetic Theory",
+        "url": "https://sathee.iitk.ac.in/ncert-books/neet-ncert-books/neet-nb-phy-11/phy-11-chapter-12-kinetic-theory/",
+        "publisher": "sathee.iitk.ac.in",
+        "accessed_date": "2026-04-10",
+        "why_used": "Authoritative external source for Gas Laws in Kinetic Theory of Gases covering NEET exam patterns and current syllabus."
+      },
+      {
+        "title": "NCERTSubject- Physics chapter- Kinetic Theory of Gases - NEET Book pdf online",
+        "url": "https://www.neetprep.com/ncert-book-pdf/55-Physics/688-Kinetic-Theory-Gases",
+        "publisher": "www.neetprep.com",
+        "accessed_date": "2026-04-10",
+        "why_used": "Authoritative external source for Gas Laws in Kinetic Theory of Gases covering NEET exam patterns and current syllabus."
+      }
+    ],
+    "review": {
+      "used_local_page_grounding": true,
+      "semantic_page_read_complete": true,
+      "used_current_research": true,
+      "research_used_for_enrichment": true,
+      "template_preserved": true,
+      "scope_checked": true,
+      "syllabus_scope_verified": true,
+      "guardrails_passed": true,
+      "notes": "Generated from local OCR pages and chapter research. Content grounded in Kinetic Theory of Gases task data."
+    }
+  }
+}

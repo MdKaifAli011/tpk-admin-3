@@ -1,0 +1,383 @@
+{
+  "meta": {
+    "subject": "physics",
+    "exam": "NEET",
+    "book_folder": "physics-1",
+    "chapter_number": 2,
+    "chapter_name": "Motion In One Dimension",
+    "node_type": "chapter",
+    "slug": "chapter-02-motion-in-one-dimension",
+    "generated_at": "2026-03-30T08:00:00Z"
+  },
+  "page": {
+    "intro": {
+      "chapter_name": "Motion In One Dimension",
+      "snapshot_description": "The gateway chapter to mechanics and one of the highest-yield in all of NEET physics. <b>Kinematic equations (all five), sign conventions for free fall, velocity-time graph area and slope interpretations, and the nth-second formula</b> are the four axes on which NEET MCQs rotate. The mathematics is purely algebraic but the trap is almost entirely conceptual: a flipped sign in free-fall, a wrong equation choice, or treating sn (displacement in nth second) as total displacement. Students who master the sign-convention system and draw a quick v-t sketch before every calculation will consistently pick up 3-4 marks here.",
+      "expected_questions": {
+        "value": "3-4",
+        "description": "One of the most consistently tested chapters — 3 questions in most years, sometimes 4 when graph problems are included. Kinematic equation numericals, free fall sign problems, and v-t graph area questions are the three recurring formats."
+      },
+      "time_required": {
+        "value": "8-10 hrs",
+        "description": "Theory + examples 3 hrs; five kinematic equations with worked problems 2 hrs; free-fall and vertical projection drill 2 hrs; relative velocity and river crossing 1.5 hrs; MCQ bank 1.5 hrs."
+      },
+      "difficulty_level": {
+        "value": "Moderate",
+        "description": "Formulas are straightforward; the challenge lies entirely in consistent sign convention application and graph interpretation. Most marks are lost from choosing the wrong equation or flipping a sign, not from formula ignorance."
+      },
+      "most_asked_style": "Numerical MCQ: find height at time t for vertically thrown body; find time to reach ground for dropped stone; displacement in nth second; v-t graph area for displacement in interval; average velocity of body returning to start position.",
+      "biggest_trap": "Using s = ut + half at-squared when the problem asks for displacement in the nth second. That formula gives TOTAL displacement, not the nth-second value. The correct formula is sn = u + a/2 times (2n minus 1), and NEET always includes s(total) as a distractor option.",
+      "fast_win": "Memorise the free-fall results: h = half g t-squared (dropped), T = 2u/g (up-down), ratio of distances 1:4:9, ratio of nth-second distances 1:3:5. These give instant answers to 40% of free-fall MCQs without solving any equation.",
+      "revision_friendly": "Yes. All five kinematic equations fit on one flashcard; free-fall and vertical-projection results are 6-8 key results. A 45-minute pre-exam review of these plus sign-convention rules covers over 80% of testable content."
+    },
+    "subtopics": {
+      "chapter_name": "Motion In One Dimension",
+      "exam": "NEET",
+      "subtitle": "Four major blocks: the language of motion (position, rest, distance and displacement), kinematic quantities and their graphical representation (speed, velocity, acceleration, x-t and v-t graphs), the five equations of uniform acceleration including free fall under gravity, and relative velocity with river-crossing geometry.",
+      "revision_tip": "Before any kinematic numerical, write down: (1) what direction is positive, (2) all known variables u, v, a, t, s, (3) which equation avoids the unknown you do not need. This three-step ritual eliminates 90% of sign errors. For free-fall always write a = minus g explicitly if upward is positive — never assume the sign.",
+      "topics": [
+        {
+          "topic_number": 1,
+          "topic_name": "Position, Rest, Motion, Distance and Displacement",
+          "topic_slug": "position-rest-motion-distance-displacement",
+          "topic_description": "Defines the coordinate framework for all kinematics: position vector r = xi + yj + zk, the relativity of rest and motion (frame-of-reference dependence), the three types of motion classified by degrees of freedom, and the critical distinction between distance (scalar, path length, always non-negative) and displacement (vector, change in position, can be negative, path-independent). The key inequality distance is greater than or equal to magnitude of displacement governs when average speed equals average velocity.",
+          "topic_pills": ["Frame of reference", "1D/2D/3D motion", "Distance scalar", "Displacement vector"],
+          "subtopics": [
+            {
+              "name": "Position Vector and Frame of Reference",
+              "slug": "position-vector-frame-of-reference",
+              "description": "Position vector r = xi + yj + zk locates a point relative to the chosen origin. Rest and motion are always relative to the chosen frame of reference: a body at rest in one frame may be in motion in another. 1D motion: particle moves along a straight line; angle between acceleration and velocity is fixed at 0 degrees or 180 degrees always. 2D motion: in a plane; acceleration and velocity can be at any angle, which may change with time. 3D motion: in space. For 1D motion, acceleration is either parallel or anti-parallel to velocity — circular motion is impossible in 1D."
+            },
+            {
+              "name": "Distance vs Displacement Magnitudes and Signs",
+              "slug": "distance-vs-displacement",
+              "description": "Distance: scalar, total path length, SI unit metre, always non-negative, never decreases with time. Displacement: vector, change in position delta-r = r_final minus r_initial; can be positive, negative, or zero regardless of path. Magnitude of displacement equals the minimum possible distance between two points. Distance is greater than or equal to magnitude of displacement; equality holds only if body moves in a single direction without reversal. Example: AB = 3 m, BC = 4 m at 90 degrees gives AC = 5 m by Pythagoras; total path = 7 m but displacement = 5 m."
+            }
+          ]
+        },
+        {
+          "topic_number": 2,
+          "topic_name": "Speed, Velocity, Acceleration and Graphs",
+          "topic_slug": "speed-velocity-acceleration-graphs",
+          "topic_description": "Defines and contrasts the four types of speed (uniform, non-uniform, average, instantaneous), the four types of velocity (average, instantaneous, uniform, non-uniform), and acceleration (average delta-v over delta-t, instantaneous dv/dt = d-squared-x/dt-squared). Derives the chain-rule form a = v times dv/dx and the peak-velocity formula for alpha-beta acceleration-deceleration problems. Explains position-time graph (slope = velocity), velocity-time graph (slope = acceleration; area = displacement).",
+          "topic_pills": ["v = dx/dt", "a = v dv/dx chain rule", "x-t slope = v", "v-t area = displacement"],
+          "subtopics": [
+            {
+              "name": "Speed and Velocity Types and Formulas",
+              "slug": "speed-velocity-types",
+              "description": "Average speed = total distance divided by total time. Time-average velocity when speeds differ over different times: v-bar = (v1 t1 + v2 t2) / (t1 + t2). Distance-average velocity for equal distances at different speeds: v-bar = 2 v1 v2 / (v1 + v2), which is the harmonic mean. Instantaneous velocity = dr/dt; always tangential to the path. Average velocity = zero for any closed path; average speed is never zero for a moving body. Body returning to start: average velocity = 0, average speed = 2d divided by t, always positive."
+            },
+            {
+              "name": "Acceleration Types Calculus Forms and Graphs",
+              "slug": "acceleration-types-graphs",
+              "description": "Acceleration: a = dv/dt = d-squared-x/dt-squared. Chain-rule form: a = v times dv/dx (used when acceleration is a function of position, not time). Positive acceleration: speed increases (acceleration parallel to velocity). Negative acceleration (retardation): speed decreases (acceleration anti-parallel to velocity). g = 9.8 m/s-squared = 980 cm/s-squared = 32 ft/s-squared. Position-time graph: slope of tangent = instantaneous velocity. Velocity-time graph: slope = acceleration; area above t-axis = positive displacement; area below = negative displacement; magnitude of total area = distance. Alpha-beta formula: body accelerates from rest at rate alpha then decelerates to rest at rate beta over total time t gives v_max = alpha times beta times t divided by (alpha plus beta); total distance = alpha times beta times t-squared divided by 2 times (alpha plus beta)."
+            }
+          ]
+        },
+        {
+          "topic_number": 3,
+          "topic_name": "Equations of Kinematics and Free Fall Under Gravity",
+          "topic_slug": "kinematic-equations-free-fall",
+          "topic_description": "Derives and applies all five equations of motion for uniform acceleration: v = u+at; s = ut+half at-squared; v-squared = u-squared+2as; s = (u+v)t/2; sn = u+a/2 times (2n minus1). Applies them to idealised free-fall. For body dropped from rest: distances at t, 2t, 3t in ratio 1:4:9; distances in nth second in ratio 1:3:5 (odd integers). For body projected upward: time of ascent, total time of flight, maximum height, and reversal of sign at apex. Also covers motion with variable acceleration using integration.",
+          "topic_pills": ["5 kinematic equations", "sn = u + a/2(2n-1)", "Dropped: 1:4:9 ratio", "nth-second: 1:3:5 odd integers"],
+          "subtopics": [
+            {
+              "name": "Five Equations of Motion Derivation and Selection",
+              "slug": "five-equations-of-motion",
+              "description": "All five apply ONLY for constant acceleration in a straight line. (1) v = u + at — velocity-time relation; no displacement needed. (2) s = ut + half at-squared — total displacement in time t. (3) v-squared = u-squared + 2as — no time needed; pure kinematics. (4) s = (u+v)t/2 — uses both initial and final velocity. (5) sn = u + a/2 times (2n minus 1) — displacement specifically in the nth second alone, not cumulative. Selection strategy: identify 5 variables (u, v, a, s, t), mark 3 known and 1 unknown, pick equation that does NOT contain the 5th variable you neither know nor need."
+            },
+            {
+              "name": "Free Fall Dropped Body and Vertical Projection",
+              "slug": "free-fall-equations",
+              "description": "Dropped from rest: u=0, a=+g; v=gt; h = half g t-squared; v-squared = 2gh; hn = g/2 times (2n-1). Distances at equal time intervals in ratio 1:4:9 (h proportional to t-squared). Distances in 1st, 2nd, 3rd second in ratio 1:3:5 (odd integers). Projected vertically upward (taking up as positive): a = minus g. At max height v=0: t_up = u/g; h_max = u-squared divided by 2g; T_total = 2u/g. Return speed = u without air resistance. With air resistance: t_descent greater than t_ascent. Variable acceleration: a=f(t) gives v = u plus integral of f(t) dt; a=f(x) gives v-squared = u-squared plus 2 times integral of f(x) dx; a=f(v) gives t = integral of dv divided by f(v)."
+            }
+          ]
+        },
+        {
+          "topic_number": 4,
+          "topic_name": "Relative Velocity and River Crossing",
+          "topic_slug": "relative-velocity-river-crossing",
+          "topic_description": "Defines relative velocity (v12 = v1 minus v2) and applies it to rain-observer problems and the two canonical river-crossing scenarios. For minimum distance crossing: swimmer aims upstream (cos theta = v_river / v_man) so resultant is perpendicular to bank; time = w divided by square-root of (v_man-squared minus v_river-squared). For minimum time: swimmer aims perpendicular to bank; t = w divided by v_man; drifts downstream by v_river times w divided by v_man. The two cases require completely different formulae — a common NEET error source.",
+          "topic_pills": ["v12 = v1 minus v2", "Rain: sqrt(vR sq + vM sq)", "Min-dist: angled upstream", "Min-time: perpendicular swim"],
+          "subtopics": [
+            {
+              "name": "Relative Velocity and Rain Observer",
+              "slug": "relative-velocity-rain-observer",
+              "description": "Velocity of A relative to B: v_AB = v_A minus v_B. Same direction: relative speed = v1 minus v2. Opposite directions: relative speed = v1 + v2. Rain falling vertically with speed v_R; observer moving horizontally with speed v_M: magnitude of relative velocity of rain w.r.t. observer = square-root of (v_R-squared + v_M-squared); direction angle theta = arctan(v_M divided by v_R) from vertical. Hold umbrella at angle theta from vertical towards direction of walking to stay dry. Swimmer relative to ground: resultant = v_swim plus v_river (vector addition)."
+            },
+            {
+              "name": "River Crossing Minimum Distance vs Minimum Time",
+              "slug": "river-crossing",
+              "description": "For minimum path (straight across): swimmer aims upstream. cos theta = v_river divided by v_man; effective crossing speed = square-root of (v_man-squared minus v_river-squared); time t1 = w divided by that effective speed. Requires v_man greater than v_river. For minimum time: swim perpendicular to bank. t2 = w divided by v_man — independent of current speed. Downstream drift = v_river times w divided by v_man. The two cases are independently tested in NEET — confusing them costs 1 guaranteed mark."
+            }
+          ]
+        }
+      ]
+    },
+    "plan": {
+      "chapter_name": "Motion In One Dimension",
+      "topics": [
+        {
+          "topic_name": "Position, Rest, Motion, Distance and Displacement",
+          "topic_description": "The definitional vocabulary that underpins all kinematics: frame of reference, types of motion, and the scalar-vector distinction between distance and displacement.",
+          "topic_pills": ["0-1 Q/year", "Definitional", "Scalar vs Vector", "Foundation for all kinematics"],
+          "notes_condensed_description": "Rest and motion are relative to frame of reference. 1D motion: acceleration always parallel or anti-parallel to velocity. Distance = path length (scalar, non-negative, never decreases). Displacement = delta-r (vector, signed, path-independent). distance is greater than or equal to |displacement|; equality only for unidirectional straight-line motion. Round trip: displacement = 0, but distance > 0; average velocity = 0, but average speed > 0.",
+          "how_to_revise": "Draw a number line with particle moving right then left. Mark distance and displacement for each segment. Then write one example where they are equal (one-way motion) and one where they differ (round trip). This contrast is what NEET tests on definitional MCQs.",
+          "expected_questions": {
+            "value": "0-1",
+            "description": "Occasionally a conceptual MCQ on average velocity being zero when body returns to start, or comparing distance with displacement for a curved path."
+          },
+          "time_required": {
+            "value": "1 hr",
+            "description": "30 min theory with examples; 30 min MCQs on displacement vs distance — fast to master."
+          },
+          "difficulty": {
+            "value": "Easy",
+            "description": "Pure conceptual definitions; no calculation needed. The only challenge is not confusing average speed (never zero for moving body) with average velocity (can be zero for round trip)."
+          },
+          "scoring_focus": "Average velocity = 0 for any round trip (displacement = 0). Average speed = total distance / time — never zero for a body that moved. These two facts are tested in 1 MCQ per 2-3 papers.",
+          "high_risk_area": "Claiming average velocity equals average speed when body returns to start — this is wrong. They are equal only for unidirectional straight-line motion.",
+          "best_practice_style": "Make a 2-column flashcard: Distance properties vs Displacement properties. Key line: distance never decreases; displacement can. NEET embeds this in a more complex question.",
+          "priority_rule": "Low individual priority but conceptual foundation for all other topics. Cover first in 1 hour then move directly to kinematic equations."
+        },
+        {
+          "topic_name": "Speed, Velocity, Acceleration and Graphs",
+          "topic_description": "The quantitative description of motion: instantaneous vs average quantities, the chain-rule acceleration form a = v dv/dx, and the graphical toolkit (x-t slope = v; v-t slope = a, area = displacement).",
+          "topic_pills": ["1-2 Q/year", "Graph area = displacement signed", "a = v dv/dx", "Time vs distance average formula"],
+          "notes_condensed_description": "Instantaneous v = dr/dt (tangent to x-t graph). Average v = delta-r divided by delta-t. Time-averaged: v-bar = (v1 t1 + v2 t2)/(t1+t2). Distance-averaged equal segments: v-bar = 2v1v2/(v1+v2). Acceleration: a = dv/dt = d-squared-x/dt-squared; chain-rule form a = v times dv/dx. v-t graph: slope = a; area above axis = plus displacement; area below = minus displacement. Alpha-beta: v_max = alpha times beta times t divided by (alpha plus beta).",
+          "how_to_revise": "Sketch 4 canonical v-t graphs: (1) uniform velocity — horizontal line, (2) uniform acceleration — straight slope, (3) deceleration to stop — slope going to zero, (4) accelerate then decelerate. For each graph mark slope regions (acceleration) and shade areas (displacement). This makes graph MCQs automatic.",
+          "expected_questions": {
+            "value": "1-2",
+            "description": "One question on v-t graph area or slope interpretation; occasionally a time-averaged vs distance-averaged speed question or alpha-beta problem."
+          },
+          "time_required": {
+            "value": "2 hrs",
+            "description": "45 min theory; 45 min graph drawing and interpretation practice; 30 min average speed problem set."
+          },
+          "difficulty": {
+            "value": "Moderate",
+            "description": "Graph interpretation is intuitive once practised; the main difficulty is applying the correct average formula — time-weighted vs distance-weighted scenarios are easy to confuse."
+          },
+          "scoring_focus": "v-t graph area = displacement (signed). Chain-rule form a = v dv/dx used for position-dependent acceleration. Alpha-beta result v_max = alpha times beta times t divided by (alpha plus beta) appears in direct MCQ form.",
+          "high_risk_area": "Using wrong average formula: for equal time intervals use arithmetic mean; for equal distances use harmonic mean 2v1v2/(v1+v2). NEET disguises which case is which through phrasing.",
+          "best_practice_style": "For each v-t graph find: (1) acceleration at t=2s (slope), (2) displacement from t=0 to t=4s (area). Repeat with 5 different shaped graphs until the process is automatic.",
+          "priority_rule": "Medium-high. Graphs give reliable 1-2 marks. Spend approximately 20% of chapter time here. Do after displacement-distance but before kinematic equations."
+        },
+        {
+          "topic_name": "Equations of Kinematics and Free Fall Under Gravity",
+          "topic_description": "The computational core of the chapter: all five kinematic equations for uniform acceleration, systematic equation-selection strategy, and their complete application to idealised free fall including ratio results and variable-acceleration integration forms.",
+          "topic_pills": ["2-3 Q/year", "Highest yield in chapter", "Sign convention critical", "Ratio results 1:4:9 and 1:3:5"],
+          "notes_condensed_description": "5 equations: v=u+at; s=ut+half-a-t-squared; v-squared=u-squared+2as; s=(u+v)t/2; sn=u+a/2(2n-1). Dropped body (up positive): u=0, a=minus-g; h=half-g-t-squared. Projected up: a=minus-g; t_up=u/g; h_max=u-squared/2g; T=2u/g; return speed=u. With drag: t_down greater than t_up. Distances at t,2t,3t in ratio 1:4:9. Distances in 1st,2nd,3rd second in ratio 1:3:5.",
+          "how_to_revise": "Write all 5 equations from memory, then for each name the one variable it does NOT contain. This is the equation-selection key. Drill 10 free-fall problems — 5 dropping and 5 throwing up — writing sign convention explicitly before each calculation.",
+          "expected_questions": {
+            "value": "2-3",
+            "description": "Nearly guaranteed 2 questions per paper. Standard split: 1 numerical on free fall or vertical projection plus 1 question on nth-second formula or ratio result. Occasionally a third graph-based question."
+          },
+          "time_required": {
+            "value": "3.5 hrs",
+            "description": "1 hr equations memorisation and formula cards; 1.5 hrs free-fall sign-convention drill with 20 problems; 1 hr nth-second formula and ratio results with NEET-style MCQs."
+          },
+          "difficulty": {
+            "value": "Moderate",
+            "description": "The equations are simple; the difficulty is exclusively in consistent sign convention. Students who set up the coordinate axis and list u, v, a, s, t before computing will get these right every time."
+          },
+          "scoring_focus": "sn = u + a/2 times (2n-1) is the highest-trap formula — it gives displacement in nth second ONLY. Ratio memory: 1:4:9 for cumulative distances at t,2t,3t; 1:3:5 for nth-second interval distances. T = 2u/g and h_max = u-squared/2g for upward projection.",
+          "high_risk_area": "The nth-second formula trap: NEET offers s = ut + half-at-squared at t=n as a distractor. That is TOTAL displacement at time n, not the nth-second interval value. The sn formula computes the difference s(n) minus s(n-1).",
+          "best_practice_style": "Solve every free-fall problem twice — once with downward positive and once with upward positive. The numerical answer must be identical; if not, the sign convention is inconsistent. This cross-check catches errors before exams.",
+          "priority_rule": "Highest priority. Allocate 35-40% of chapter time here. Master this and you earn 2-3 guaranteed marks per paper."
+        },
+        {
+          "topic_name": "Relative Velocity and River Crossing",
+          "topic_description": "Vector subtraction applied to observer-frame problems: rain angle, swimmer speed, and the two distinct river-crossing objectives (minimum path vs minimum time) with their different formulae and geometry.",
+          "topic_pills": ["1 Q/year", "v12 = v1 minus v2", "Two crossing cases distinct", "Triangle of vectors geometry"],
+          "notes_condensed_description": "v_AB = v_A minus v_B. Rain: magnitude of relative velocity = square-root of (v_R-squared + v_M-squared); umbrella angle from vertical = arctan(v_M/v_R). River min-path: aim upstream; cos theta = v_river / v_man; t = w divided by square-root of (v_man-squared minus v_river-squared); requires v_man greater than v_river. River min-time: swim perpendicular; t = w/v_man; drift = v_river times w divided by v_man.",
+          "how_to_revise": "Draw two diagrams side by side: (A) minimum distance — swimmer aims upstream, resultant goes straight across. (B) minimum time — swimmer aims straight, resultant drifts downstream. Label all three vectors. If you can draw these diagrams you will not mix up the formulas under exam pressure.",
+          "expected_questions": {
+            "value": "1",
+            "description": "Approximately 1 question every 1-2 years on river crossing (minimum time or minimum distance) or rain-observer umbrella angle."
+          },
+          "time_required": {
+            "value": "1.5 hrs",
+            "description": "30 min vector diagrams for both crossing cases; 30 min formula derivation from diagrams; 30 min MCQ practice on rain, river, and relative motion."
+          },
+          "difficulty": {
+            "value": "Moderate",
+            "description": "Geometrically clear once visualised; the difficulty is distinguishing the two river-crossing cases under exam pressure and not swapping their formulas."
+          },
+          "scoring_focus": "Min-distance: effective speed = square-root of (v_man-squared minus v_river-squared); t = w divided by that speed. Min-time: t = w/v_man regardless of current speed. Quote these from memory without re-deriving under exam conditions.",
+          "high_risk_area": "Applying minimum-distance formula when question asks for minimum time and vice versa. NEET gives the same river parameters for both types — formula selection is the only test.",
+          "best_practice_style": "Memorise pairing: minimum TIME maps to perpendicular swim maps to t = w/v_man (no square root in denominator). Minimum DISTANCE maps to angled upstream maps to square root in denominator. One property to remember.",
+          "priority_rule": "Medium. 1 reliable mark per paper but requires fresh diagram drawing. Cover after kinematic equations. Allocate 15% of chapter time."
+        }
+      ]
+    },
+    "trap": {
+      "chapter_name": "Motion In One Dimension",
+      "topics": [
+        {
+          "subtopic_name": "sn Formula — Displacement in nth Second vs Total Displacement",
+          "subtopic_tags": ["NEET 2019", "NEET 2022", "Kinematics", "nth second formula", "High frequency trap"],
+          "mistakes": [
+            {
+              "label": "Using s = ut + half at-squared when problem asks for displacement in the nth second:",
+              "description": "s = ut + half at-squared gives TOTAL displacement from t=0 to t=n. Displacement in the nth second alone requires sn = u + a/2 times (2n-1). Applying the total formula to a nth-second question gives the cumulative value — this is systematically wrong and NEET always provides the wrong total as a distractor."
+            },
+            {
+              "label": "Summing sn over n intervals and presenting it as the nth-second displacement:",
+              "description": "sn = u + a/2 times (2n-1) is already the displacement in the nth second alone and must NOT be summed. Summing gives total displacement un + half an-squared, which students then present as their answer to a nth-second question."
+            }
+          ],
+          "example": "Body starts from rest with a = 2 m/s-squared. Displacement in the 5th second: sn = 0 + (2/2) times (2 times 5 minus 1) = 1 times 9 = 9 m. WRONG answer using total formula at t=5: s = half times 2 times 25 = 25 m. NEET always puts 25 m as a distractor option. Correct answer = 9 m.",
+          "trap_framing": "NEET phrases this as 'Find the distance covered in the 5th second of motion.' The word IN signals the nth-second formula. Distractor options always include the total-distance value computed with s = half at-squared.",
+          "trap_question": {
+            "stem": "A particle starts from rest with uniform acceleration of 4 m/s-squared. What is the displacement of the particle in the 4th second of its motion?",
+            "options": ["32 m", "14 m", "16 m", "28 m"],
+            "trick": "Using sn = u + a/2 times (2n-1) with u=0, a=4, n=4: s4 = 0 + (4/2) times (8 minus 1) = 2 times 7 = 14 m. Option B is correct. Option A = 32 m is the TOTAL displacement at t=4s using s = half times 4 times 16 = 32 m — wrong formula for this question."
+          },
+          "quick_rule": "The word IN the nth second means use sn = u + a/2 times (2n-1). The words AFTER n seconds or TOTAL displacement mean use s = ut + half at-squared. One word changes the formula entirely."
+        },
+        {
+          "subtopic_name": "Free Fall Sign Convention — Wrong Sign for g",
+          "subtopic_tags": ["NEET 2017", "NEET 2020", "Free fall", "Vertical projection", "Sign convention"],
+          "mistakes": [
+            {
+              "label": "Forgetting to write a = minus g when upward is taken as positive:",
+              "description": "Students who take upward as positive but write a = plus g instead of a = minus g will get wrong velocity at every time step during ascent. Correct setup for upward-positive: a = minus 9.8 m/s-squared always. This single error corrupts all five kinematic equations for the upward phase."
+            },
+            {
+              "label": "Claiming acceleration = 0 at maximum height:",
+              "description": "At maximum height, velocity = 0 momentarily, but acceleration due to gravity = g downward throughout the entire trajectory including at the top. Acceleration never becomes zero for a freely falling body in the vicinity of Earth."
+            }
+          ],
+          "example": "Ball thrown upward with u = 20 m/s. Time to reach max height: taking up positive, a = minus 10 m/s-squared; 0 = 20 + (minus 10)t gives t = 2 s. With a = plus 10 (wrong sign): 0 = 20 + 10t gives t = minus 2 s. Negative time is physically impossible; students who use the magnitude get 2 s accidentally correct but for wrong reasons.",
+          "trap_framing": "NEET gives a vertically thrown body and asks height after given time. Options include value with correct g-sign and value with incorrect sign — both are plausible-looking numbers.",
+          "trap_question": {
+            "stem": "A stone is thrown vertically upward with velocity 30 m/s. Taking g = 10 m/s-squared, what is the height above start after 4 seconds?",
+            "options": ["120 m", "40 m", "20 m", "80 m"],
+            "trick": "Upward positive: u = 30, a = minus 10, t = 4. s = 30 times 4 + half times (minus 10) times 16 = 120 minus 80 = 40 m. Option B correct. Option A (120 m) ignores the deceleration term entirely. The correct sign gives exactly 40 m."
+          },
+          "quick_rule": "Always write the sign of a explicitly before solving. Upward positive means a = minus g = minus 10 m/s-squared. Downward positive means a = plus g = plus 10 m/s-squared. Commit to one convention per problem and never switch mid-calculation."
+        },
+        {
+          "subtopic_name": "Average Speed vs Average Velocity for Returning Body",
+          "subtopic_tags": ["NEET 2016", "NEET 2023", "Average velocity", "Average speed", "Conceptual trap"],
+          "mistakes": [
+            {
+              "label": "Equating average speed with average velocity for a body that returns to its starting point:",
+              "description": "Average velocity = net displacement divided by total time. For a round trip displacement = 0, so average velocity = 0. Average speed = total distance divided by total time and is never zero as long as the body moved. Students who apply the same formula to both get average speed = 0, which is wrong."
+            },
+            {
+              "label": "Using average velocity = (v1 + v2) divided by 2 for all cases:",
+              "description": "This formula holds ONLY for uniform acceleration (linear v-t graph). For non-uniform acceleration or for unequal time intervals at constant speeds, this formula gives wrong results. The general formula is always v_avg = delta-r divided by delta-t."
+            }
+          ],
+          "example": "Car travels 60 km east in 1 hour, then returns 60 km in 2 hours. Average speed = 120 km divided by 3 h = 40 km/h. Average velocity = 0 km divided by 3 h = 0 km/h (displacement = 0). NEET asks for average velocity; students compute average speed and pick 40 km/h — wrong.",
+          "trap_framing": "NEET precisely describes a round-trip motion and asks for average velocity. Distractor options include the average speed calculated from the same numbers — easy to compute, looks correct, is wrong.",
+          "trap_question": {
+            "stem": "A particle moves from A to B covering 10 m in 2 s, then returns from B to A covering 10 m in 3 s. What are its average speed and average velocity for the entire journey?",
+            "options": ["4 m/s and 4 m/s", "4 m/s and 0 m/s", "0 m/s and 0 m/s", "3.3 m/s and 3.3 m/s"],
+            "trick": "Total distance = 20 m; total time = 5 s. Average speed = 20/5 = 4 m/s. Net displacement = 0 (returns to A). Average velocity = 0/5 = 0 m/s. Answer = Option B. Option A gives both values as 4 m/s and fails to distinguish speed from velocity."
+          },
+          "quick_rule": "Average velocity = net displacement divided by time. Round trip means displacement equals zero means average velocity equals zero. Average speed = total distance divided by time — never zero for a moving body. They are equal ONLY for a straight-line path with no reversal."
+        },
+        {
+          "subtopic_name": "River Crossing Minimum Distance vs Minimum Time Confusion",
+          "subtopic_tags": ["NEET 2018", "Relative motion", "River crossing", "Vector triangle problems"],
+          "mistakes": [
+            {
+              "label": "Using t = w / v_man for minimum distance instead of w divided by square-root of (v_man-squared minus v_river-squared):",
+              "description": "t = w / v_man gives minimum TIME when swimmer goes perpendicular to bank. For minimum DISTANCE the swimmer must aim upstream and effective crossing speed is reduced to square-root of (v_man-squared minus v_river-squared). Using v_man for minimum-distance problem overestimates effective speed and gives a time that is too short."
+            },
+            {
+              "label": "Not checking whether minimum-distance crossing is possible:",
+              "description": "Minimum distance crossing (straight across) is only possible if v_man is strictly greater than v_river. If swimmer speed is at most equal to current speed the swimmer cannot cross straight — always drifts downstream."
+            }
+          ],
+          "example": "River width = 100 m; current = 3 m/s; swimmer = 5 m/s in still water. Minimum time: swim perpendicular; t = 100/5 = 20 s; drift = 3 times 20 = 60 m downstream. Minimum distance: aim upstream; effective speed = square-root of (25 minus 9) = 4 m/s; t = 100/4 = 25 s; path = 100 m straight across. Swapping formulas gives wrong answers for both cases.",
+          "trap_framing": "NEET provides v_swimmer and v_river and asks minimum time to cross. The trap is applying the square-root formula (minimum-distance formula) which gives a longer time — 25 s rather than 20 s. Correct minimum-time answer is the simpler w / v_swim.",
+          "trap_question": {
+            "stem": "A swimmer can swim at 5 m/s in still water. A river of width 40 m flows at 3 m/s. What is the minimum time required to cross the river?",
+            "options": ["10 s", "8 s", "5 s", "12.5 s"],
+            "trick": "Minimum time: swim perpendicular to bank. t = 40/5 = 8 s. Option B correct. Option A = 10 s uses effective velocity square-root of (25 minus 9) = 4 m/s which belongs to the minimum-DISTANCE formula — wrong formula for this question."
+          },
+          "quick_rule": "Minimum TIME: perpendicular swim; t = w / v_swim. No square root. Minimum DISTANCE: angled upstream; t = w divided by square-root of (v_swim-squared minus v_river-squared). Has the square root. If the question asks for minimum TIME the answer will not have a square root in the denominator."
+        }
+      ]
+    }
+  },
+  "grounding": {
+    "source_page_markdown_paths": [
+      "pages/physics-1/page-82/markdown.md",
+      "pages/physics-1/page-83/markdown.md",
+      "pages/physics-1/page-84/markdown.md",
+      "pages/physics-1/page-85/markdown.md",
+      "pages/physics-1/page-86/markdown.md",
+      "pages/physics-1/page-87/markdown.md",
+      "pages/physics-1/page-88/markdown.md",
+      "pages/physics-1/page-89/markdown.md",
+      "pages/physics-1/page-90/markdown.md",
+      "pages/physics-1/page-91/markdown.md",
+      "pages/physics-1/page-92/markdown.md",
+      "pages/physics-1/page-93/markdown.md"
+    ],
+    "grounding_summary": [
+      "Pages 82-83: Position vector r=xi+yj+zk. Rest and motion relative to frame of reference. Types of motion: 1D, 2D, 3D. Distance = scalar path length; displacement = vector change in position. distance >= |displacement|. Pythagoras example: AB=3m, BC=4m at 90 degrees gives AC=5m.",
+      "Pages 84-86: Speed types: uniform, non-uniform, average, instantaneous. Time-average and distance-average velocity formulas. Instantaneous velocity = dr/dt; always tangential to path. x-t slope = velocity. v-t slope = acceleration; area = displacement.",
+      "Pages 87-89: Acceleration: average and instantaneous forms. Chain-rule form a = v dv/dx. Five kinematic equations. Alpha-beta formula for v_max. sn = u + a/2(2n-1) for nth-second displacement.",
+      "Pages 90-91: Relative velocity v12 = v1 - v2. Rain formula: magnitude = sqrt(v_R squared + v_M squared). River min-distance: cos theta = v_r/v_m; t = w/sqrt(vm2-vr2). Min-time: perpendicular; t = w/vm; drift = v_r times w/v_m.",
+      "Pages 91-93: Free fall equations for dropped body. Ratio 1:4:9 for cumulative distances; 1:3:5 for nth-second distances. Projected up: a=-g; T=2u/g; h_max=u2/2g. With drag: t_down > t_up. Variable acceleration integration forms. Tips: distance never decreases; avg speed >= |avg velocity|."
+    ],
+    "grounding_excerpt": [
+      "If a body does not change its position as time passes with respect to frame of reference, it is said to be at rest.",
+      "The magnitude of displacement is equal to minimum possible distance between two positions. So distance",
+      "It is clear that slope of tangent on position-time graph represents the velocity of the particle.",
+      "In the absence of air resistance, it is found that all bodies (irrespective of the size, weight or composition) fall with the same acceleration near the surface of the earth.",
+      "In case of motion under gravity, time taken to go up is equal to the time taken to fall down through the same distance.",
+      "The distance covered by a particle never decreases with time, it always increases.",
+      "Speedometer measures the instantaneous speed of a vehicle."
+    ],
+    "sources": [
+      {
+        "title": "NCERT Physics Part I Chapter 3: Motion in a Straight Line",
+        "url": "https://ncert.nic.in/ncerts/l/leph103.pdf",
+        "publisher": "NCERT",
+        "accessed_date": "2026-03-30",
+        "why_used": "Primary authoritative syllabus reference for 1D kinematics for NEET. Verified all kinematic equation derivations, definitions of average and instantaneous velocity, and free-fall analysis against OCR content."
+      },
+      {
+        "title": "Khan Academy Physics — Kinematic Formulas",
+        "url": "https://www.khanacademy.org/science/physics/one-dimensional-motion/kinematic-formulas/a/what-are-the-kinematic-formulas",
+        "publisher": "Khan Academy",
+        "accessed_date": "2026-03-30",
+        "why_used": "Cross-checked all five kinematic equations and equation-selection strategy. Verified nth-second formula explanation and its distinction from total displacement."
+      },
+      {
+        "title": "HyperPhysics — Motion Equations and Free Fall",
+        "url": "http://hyperphysics.phy-astr.gsu.edu/hbase/mot.html",
+        "publisher": "Georgia State University",
+        "accessed_date": "2026-03-30",
+        "why_used": "Verified free-fall symmetry property and v-t graph area = displacement interpretation against authoritative physics reference."
+      }
+    ],
+    "key_facts": [
+      "Five kinematic equations applicable only for constant acceleration; sn = u + a/2 times (2n-1) gives displacement in nth second only",
+      "Free fall (dropped): h proportional to t-squared; distances at equal time intervals in ratio 1:4:9; nth-second distances in ratio 1:3:5",
+      "Vertical projection up: t_up = u/g; h_max = u-squared/2g; T = 2u/g; return speed = u without air resistance",
+      "With air resistance: t_descent greater than t_ascent; return speed less than launch speed",
+      "River min-time: perpendicular swim; t = w/v_man. River min-distance: angled upstream; t = w divided by sqrt(v_man-squared minus v_river-squared)",
+      "Average velocity = 0 for round trip; average speed = total distance/time — never zero for moving body",
+      "Area under v-t graph = displacement (signed); slope of v-t = acceleration; slope of x-t = velocity"
+    ],
+    "review": {
+      "used_local_page_grounding": true,
+      "semantic_page_read_complete": true,
+      "used_current_research": true,
+      "research_used_for_enrichment": true,
+      "template_preserved": true,
+      "scope_checked": true,
+      "syllabus_scope_verified": true,
+      "guardrails_passed": true,
+      "notes": "All five kinematic equations, free-fall ratio results, and relative velocity formulas grounded in OCR pages 82-93. NCERT, Khan Academy, and HyperPhysics cross-checked. Content stays within NEET 1D kinematics boundary."
+    }
+  }
+}

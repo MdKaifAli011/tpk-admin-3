@@ -14,7 +14,10 @@
     "import:neet-counseling": "node scripts/import-neet-counseling-pdf.mjs",
     "import:neet-counseling:r2": "node scripts/import-neet-counseling-pdf.mjs --round=2",
     "import:neet-counseling:r3": "node scripts/import-neet-counseling-pdf.mjs --round=3",
-    "normalize:media-folders": "node scripts/normalize-media-folders.mjs"
+    "normalize:media-folders": "node scripts/normalize-media-folders.mjs",
+    "import:contentdb-html": "node scripts/import-contentdb-html.mjs",
+    "delete:neet-subtopics-definitions": "node scripts/delete-neet-subtopics-definitions.mjs",
+    "delete:neet-subtopics-definitions:execute": "node scripts/delete-neet-subtopics-definitions.mjs --execute --yes"
   },
   "dependencies": {
     "@lexical/history": "^0.38.1",
@@ -26,7 +29,7 @@
     "@lexical/selection": "^0.38.1",
     "@lexical/utils": "^0.38.1",
     "@monaco-editor/react": "^4.7.0",
-    "axios": "^1.14.0",
+    "axios": "^1.15.0",
     "bcryptjs": "^3.0.3",
     "ckeditor4": "^4.25.1",
     "critters": "^0.0.23",
@@ -40,8 +43,8 @@
     "md-to-pdf": "^5.2.5",
     "monaco-editor": "^0.55.1",
     "mongoose": "^8.19.2",
-    "next": "16.2.2",
-    "nodemailer": "^8.0.4",
+    "next": "16.2.3",
+    "nodemailer": "^8.0.5",
     "pdf-parse": "^2.4.5",
     "prismjs": "^1.30.0",
     "qs": "^6.14.0",
@@ -51,14 +54,15 @@
     "slugify": "^1.6.6"
   },
   "overrides": {
+    "basic-ftp": "^5.2.2",
     "dompurify": "^3.3.3"
   },
   "devDependencies": {
-    "@next/bundle-analyzer": "16.2.2",
+    "@next/bundle-analyzer": "16.2.3",
     "@tailwindcss/postcss": "^4",
     "@types/react": "19.2.7",
     "eslint": "^9",
-    "eslint-config-next": "16.2.2",
+    "eslint-config-next": "16.2.3",
     "tailwindcss": "^4"
   }
 }

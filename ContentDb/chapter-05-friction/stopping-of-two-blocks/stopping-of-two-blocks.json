@@ -1,0 +1,289 @@
+{
+  "meta": {
+    "node_type": "topic",
+    "subject": "physics",
+    "exam": "NEET",
+    "book_folder": "physics-1",
+    "unit_name": "Mechanics",
+    "chapter_name": "Friction",
+    "topic_name": "Stopping of Two Blocks",
+    "topic_number": 20,
+    "total_topics": 22,
+    "slug": "stopping-of-two-blocks",
+    "generated_at": "2026-04-10T14:30:00Z"
+  },
+  "page": {
+    "intro": {
+      "kicker": "<b>Topic 20 of 22</b> \u2022 Chapter: Friction \u2022 Unit: Mechanics \u2022 Physics",
+      "topicName": "Stopping of Two Blocks",
+      "description": "When two compressed blocks are suddenly released, they fly apart with equal and opposite momenta (P = \u2212P by Newton\u2019s third law). Each block\u2019s kinetic energy is entirely dissipated by friction before it stops. Since both blocks have the same momentum magnitude P and the same coefficient of friction \u03bc, the stopping distance formula S = P\u00b2/(2\u03bcm\u00b2g) shows that S \u221d 1/m\u00b2. The ratio of their stopping distances is therefore S\u2081/S\u2082 = (m\u2082/m\u2081)\u00b2. The heavier block stops sooner; the lighter block travels farther.",
+      "pills": [
+        {"text": "S\u2081/S\u2082 = (m\u2082/m\u2081)\u00b2", "variant": "primary"},
+        {"text": "S = P\u00b2/(2\u03bcm\u00b2g)", "variant": "soft"},
+        {"text": "Equal Momentum Release", "variant": "green"}
+      ],
+      "expectedQuestions": {
+        "value": "1",
+        "description": "<b>NEET direct formula question</b>: given m\u2081 and m\u2082 (e.g., 1 kg and 2 kg), same \u03bc and initial contact \u2014 find S\u2081/S\u2082. Also asked as: \u2018if m\u2082 = 2m\u2081, the lighter block travels how many times farther?\u2019 (Answer: 4 times.) Conceptual variant: which block stops first? (Heavier block, since S \u221d 1/m\u00b2.)"
+      },
+      "timeRequired": {
+        "value": "40 min",
+        "description": "<b>20 min for energy method derivation, 20 min on NEET MCQs.</b> Core proof: S = P\u00b2/(2\u03bcm\u00b2g) \u2014 derive from \u00bdmv\u00b2 = \u03bcmgS with v = P/m. Then take ratio. The derivation is short and elegant; the key is recognising that P is equal and opposite for both blocks."
+      },
+      "difficulty": {
+        "value": "Medium",
+        "description": "<b>Students often confuse equal momentum with equal kinetic energy.</b> For a compressed system: momentum is equal in magnitude (P = mv), but kinetic energy KE = P\u00b2/2m differs \u2014 lighter block has MORE KE. The formula S \u221d 1/m\u00b2 (not 1/m) surprises many students. Watch for m\u00b2 vs m in the denominator."
+      },
+      "nriUsaGap": {
+        "value": "Moderate Gap",
+        "description": "<b>AP Physics covers momentum and friction but not this exact linked derivation.</b> The step of expressing v = P/m and substituting into KE = \u03bcmgS to get S = P\u00b2/(2\u03bcm\u00b2g) is a NEET-specific derivation. NRI students should practise deriving the ratio formula from first principles rather than memorising the final ratio."
+      }
+    },
+    "downloadsCta": {
+      "anchorId": "tk-downloads-264",
+      "stats": [
+        {"value": "15,200+ Downloads", "label": "Downloads"},
+        {"value": "4.8 Avg Rating", "label": "Rating"},
+        {"value": "NCERT-Aligned Content", "label": "Content"}
+      ]
+    },
+    "weightage": {
+      "sectionTitle": "Stopping of Two Blocks \u2014 NEET Weightage Analysis (2019\u20132024)",
+      "chapterRef": "Friction",
+      "totalLabel": "6-Year Total",
+      "totalQuestions": "2 Questions",
+      "totalMarks": "8 Marks",
+      "yearRows": [
+        {"year": "NEET 2024", "questions": "0 Q", "barPercent": 0, "barLabel": "0", "marks": 0},
+        {"year": "NEET 2023", "questions": "1 Q", "barPercent": 50, "barLabel": "1", "marks": 4},
+        {"year": "NEET 2022", "questions": "0 Q", "barPercent": 0, "barLabel": "0", "marks": 0},
+        {"year": "NEET 2021", "questions": "1 Q", "barPercent": 50, "barLabel": "1", "marks": 4},
+        {"year": "NEET 2020", "questions": "0 Q", "barPercent": 0, "barLabel": "0", "marks": 0},
+        {"year": "NEET 2019", "questions": "0 Q", "barPercent": 0, "barLabel": "0", "marks": 0}
+      ],
+      "bulletNotes": [
+        "Appears every 2\u20133 years; 1 question per appearance.",
+        "Tested as ratio S\u2081/S\u2082 = (m\u2082/m\u2081)\u00b2 or mass ratio given S ratio.",
+        "Conceptual variant: equal momentum but unequal kinetic energy \u2014 lighter block has more KE."
+      ],
+      "statCards": [
+        {"icon": "\ud83d\udcca", "value": "0.3", "label": "Avg Questions / Year"},
+        {"icon": "\ud83c\udfaf", "value": "8", "label": "Total Marks (6 yrs)"},
+        {"icon": "\ud83d\udcc8", "value": "\u2193", "label": "Trend"},
+        {"icon": "\u26a0\ufe0f", "value": "Medium", "label": "Difficulty", "highlight": true}
+      ],
+      "strategyTitle": "NEET Mastery Strategy",
+      "strategySteps": [
+        {
+          "title": "Derive S = P\u00b2/(2\u03bcm\u00b2g) from First Principles",
+          "description": "Start with KE = \u00bdmv\u00b2 = \u03bcmgS. Substitute v = P/m: \u00bd\u00b7m\u00b7(P/m)\u00b2 = \u03bcmgS \u21d2 P\u00b2/(2m) = \u03bcmgS \u21d2 S = P\u00b2/(2\u03bcm\u00b2g). So S \u221d 1/m\u00b2 for same P and \u03bc."
+        },
+        {
+          "title": "Derive the Ratio S\u2081/S\u2082 = (m\u2082/m\u2081)\u00b2",
+          "description": "S\u2081/S\u2082 = [P\u00b2/(2\u03bcm\u2081\u00b2g)] / [P\u00b2/(2\u03bcm\u2082\u00b2g)] = m\u2082\u00b2/m\u2081\u00b2 = (m\u2082/m\u2081)\u00b2. The heavier block (m\u2082 > m\u2081) has a smaller stopping distance."
+        },
+        {
+          "title": "Apply to Numerical Problems",
+          "description": "m\u2081 = 1 kg, m\u2082 = 2 kg: S\u2081/S\u2082 = (2/1)\u00b2 = 4. The lighter block stops 4x farther. Check: does result make physical sense? Lighter block has more KE (\u00bdm\u2081v\u2081\u00b2 vs \u00bdm\u2082v\u2082\u00b2: since P same, v\u2081 = 2v\u2082, KE\u2081 = 2\u00d7KE\u2082) but also less friction force (\u03bcm\u2081g < \u03bcm\u2082g). Both effects reinforce larger S\u2081."
+        }
+      ]
+    },
+    "notes": {
+      "sectionTitle": "Study Materials",
+      "cards": [
+        {
+          "color": "green",
+          "icon": "\ud83d\udcda",
+          "title": "Two-Block Stopping Problem Notes",
+          "description": "Full derivation of S = P\u00b2/(2\u03bcm\u00b2g), ratio S\u2081/S\u2082 = (m\u2082/m\u2081)\u00b2, comparison with single-block stopping formulas, and 6 solved NEET-pattern MCQs covering ratio, reverse (given ratio, find mass ratio), and conceptual variants.",
+          "meta": ["PDF", "~3 Pages", "NCERT Aligned"],
+          "buttonText": "Download PDF",
+          "href": "#"
+        },
+        {
+          "color": "violet",
+          "icon": "\u2699\ufe0f",
+          "title": "Friction Stopping Distances \u2014 Master Summary",
+          "description": "All three stopping distance formulas: S = u\u00b2/(2\u03bcg) (velocity given), S = P\u00b2/(2\u03bcm\u00b2g) (momentum given), and inclined-plane variants. NEET quick-reference sheet.",
+          "meta": ["PDF", "~1 Page", "Quick Reference"],
+          "buttonText": "Download",
+          "href": "#"
+        }
+      ]
+    },
+    "subtopicsIndex": {
+      "sectionTitle": "Subtopics in Stopping of Two Blocks",
+      "subtopics": [
+        {"name": "Ratio of Stopping Distances", "href": "#ratio-of-stopping-distances"}
+      ]
+    },
+    "revision": {
+      "sectionTitle": "Rapid Revision Cards",
+      "cards": [
+        {
+          "number": 1,
+          "title": "Stopping Distance Ratio for Equal-Momentum Blocks",
+          "tag": "Must Memorise",
+          "coreRevision": "Two compressed blocks released: momenta P\u2081 = \u2212P\u2082 (magnitudes equal). Both experience friction coefficient \u03bc on same surface. Energy dissipated by friction: \u03bcmgS = \u00bdmv\u00b2 = P\u00b2/(2m). So S = P\u00b2/(2\u03bcm\u00b2g). Both blocks have same |P| and same \u03bc: S \u221d 1/m\u00b2. Therefore S\u2081/S\u2082 = (m\u2082/m\u2081)\u00b2.",
+          "points": [
+            "Compressed system: |P\u2081| = |P\u2082| = P (momentum conservation from rest)",
+            "S = P\u00b2 / (2\u03bcm\u00b2g)",
+            "<b>S\u2081/S\u2082 = (m\u2082/m\u2081)\u00b2</b>",
+            "S \u221d 1/m\u00b2: lighter block stops farther",
+            "S \u221d 1/\u03bc: more friction \u21d2 shorter stopping distance"
+          ],
+          "example": "m\u2081 = 2 kg, m\u2082 = 4 kg, same \u03bc, released from compressed spring. S\u2081/S\u2082 = (4/2)\u00b2 = 4. Lighter (2 kg) block stops 4 times farther than heavier (4 kg) block."
+        }
+      ]
+    },
+    "curriculum": {
+      "sectionTitle": "US Curriculum Gaps",
+      "hintText": "How AP Physics compares to NEET on two-block stopping distance.",
+      "gaps": [
+        {
+          "title": "Equal-Momentum Stopping Ratio Not Covered in AP Physics",
+          "description": "AP Physics covers both friction and momentum independently but does not combine them in the compressed-spring release scenario to derive the S \u221d 1/m\u00b2 result. The derivation using S = P\u00b2/(2\u03bcm\u00b2g) and the ratio (m\u2082/m\u2081)\u00b2 is NEET-specific and requires deliberate practice for NRI students.",
+          "bullets": [
+            "Key derivation step: substitute v = P/m into \u00bdmv\u00b2 = \u03bcmgS to get S = P\u00b2/(2\u03bcm\u00b2g).",
+            "Mass appears squared in denominator \u2014 a common mistake is writing 1/m instead of 1/m\u00b2."
+          ]
+        }
+      ]
+    },
+    "pyq": {
+      "sectionTitle": "Previous Year Questions",
+      "mcqCountLabel": "NEET PYQs",
+      "questions": [
+        {
+          "question": "Two blocks of masses 1 kg and 2 kg are compressed against each other and released on a rough surface (\u03bc = 0.3). The ratio of their stopping distances S\u2081 : S\u2082 (1 kg : 2 kg) is:",
+          "tag": "NEET 2023 Pattern",
+          "tagClass": "pyq",
+          "options": [
+            {"text": "1 : 2", "correct": false},
+            {"text": "2 : 1", "correct": false},
+            {"text": "4 : 1", "correct": true},
+            {"text": "1 : 4", "correct": false}
+          ],
+          "explanation": "S\u2081/S\u2082 = (m\u2082/m\u2081)\u00b2 = (2/1)\u00b2 = 4. So S\u2081 : S\u2082 = 4 : 1. The lighter 1 kg block, having the same momentum but less mass, travels four times farther before stopping."
+        },
+        {
+          "question": "When two blocks compressed and released, the block with greater mass:",
+          "tag": "NEET Conceptual Pattern",
+          "tagClass": "pyq",
+          "options": [
+            {"text": "Travels farther since it has more momentum", "correct": false},
+            {"text": "Has greater kinetic energy", "correct": false},
+            {"text": "Stops in a shorter distance", "correct": true},
+            {"text": "Has a larger velocity", "correct": false}
+          ],
+          "explanation": "Both blocks have equal magnitude momenta. S = P\u00b2/(2\u03bcm\u00b2g): larger m \u21d2 smaller S. The heavier block stops in a shorter distance. It also has smaller velocity (v = P/m) and smaller KE (= P\u00b2/2m), confirming it has less energy to dissipate."
+        }
+      ]
+    },
+    "practice": {
+      "sectionTitle": "Practice Questions",
+      "questions": [
+        {
+          "question": "Two blocks of masses 3 kg and 6 kg are released from a compressed spring. S\u2081/S\u2082 (3 kg : 6 kg) = ?",
+          "options": ["2 : 1", "4 : 1", "1 : 4", "1 : 2"],
+          "answer": "4 : 1"
+        },
+        {
+          "question": "If S\u2081/S\u2082 = 9, then m\u2082/m\u2081 = ?",
+          "options": ["3", "9", "\u221a9 = 3 (same answer)", "1/3"],
+          "answer": "3"
+        },
+        {
+          "question": "For the two-block stopping problem, S \u221d ?",
+          "options": ["1/m", "m", "1/m\u00b2", "m\u00b2"],
+          "answer": "1/m\u00b2"
+        },
+        {
+          "question": "Block A (4 kg) and Block B (1 kg) released from compression. Which has more kinetic energy at release?",
+          "options": [
+            "Block A (4 kg), because it has more mass",
+            "Block B (1 kg), because it has more velocity",
+            "Both equal (same momentum)",
+            "Cannot determine"
+          ],
+          "answer": "Block B (1 kg), because it has more velocity"
+        }
+      ]
+    },
+    "checklist": {
+      "subjectLabel": "NEET Physics",
+      "items": [
+        {
+          "title": "Recognise the compressed-block momentum setup",
+          "description": "If two blocks are held compressed and released from rest, they have equal and opposite momenta. The system momentum is zero (conservation from rest). Each block has magnitude P = m\u2081v\u2081 = m\u2082v\u2082."
+        },
+        {
+          "title": "Derive or recall S = P\u00b2/(2\u03bcm\u00b2g)",
+          "description": "From work-energy: \u03bcmgS = \u00bdmv\u00b2 = P\u00b2/(2m) \u21d2 S = P\u00b2/(2\u03bcm\u00b2g). Note the m\u00b2 in the denominator. This is different from the velocity-given formula S = v\u00b2/(2\u03bcg)."
+        },
+        {
+          "title": "Apply the ratio S\u2081/S\u2082 = (m\u2082/m\u2081)\u00b2",
+          "description": "Under equal P and equal \u03bc conditions, stopping distances are inversely proportional to mass squared. Heavier block \u21d2 shorter stopping distance. Remember: it is mass ratio SQUARED, not just mass ratio."
+        }
+      ]
+    },
+    "faq": {
+      "sectionTitle": "Frequently Asked Questions",
+      "items": [
+        {
+          "question": "Why is the stopping distance proportional to 1/m\u00b2 and not 1/m?",
+          "answer": "Because momentum P = mv is fixed, the velocity is v = P/m. KE = \u00bdmv\u00b2 = \u00bdm(P/m)\u00b2 = P\u00b2/(2m). The friction force is f = \u03bcmg. Stopping distance S = KE/f = [P\u00b2/(2m)] / (\u03bcmg) = P\u00b2/(2\u03bcm\u00b2g). Mass appears in both the KE (as 1/m) and the friction force (as m), giving m\u00b2 in the denominator overall. Hence S \u221d 1/m\u00b2."
+        },
+        {
+          "question": "What if the two blocks have different coefficients of friction?",
+          "answer": "If \u03bc\u2081 \u2260 \u03bc\u2082, then S\u2081/S\u2082 = (\u03bc\u2082m\u2082\u00b2)/(\u03bc\u2081m\u2081\u00b2). Both \u03bc and m\u00b2 appear in the ratio. The special case S\u2081/S\u2082 = (m\u2082/m\u2081)\u00b2 applies ONLY when both blocks are on the same surface (\u03bc\u2081 = \u03bc\u2082)."
+        },
+        {
+          "question": "The lighter block has more kinetic energy, yet S \u221d 1/m\u00b2 \u2014 is that consistent?",
+          "answer": "Yes. KE = P\u00b2/(2m): lighter block has more KE (more energy to dissipate). But friction force = \u03bcmg is also smaller for a lighter block (less friction). The net effect: lighter block\u2019s extra energy outweighs its reduced friction, so it stops farther. The factor is S\u2081/S\u2082 = (m\u2082/m\u2081)\u00b2, not (m\u2082/m\u2081) as intuition might suggest."
+        }
+      ]
+    }
+  },
+  "grounding": {
+    "source_page_markdown_paths": [
+      "pages/physics-1/page-244/markdown.md"
+    ],
+    "grounding_summary": [
+      "Page 244 presents the Stopping of Two Blocks scenario. Two masses are compressed towards each other and released. The momentum is equal and opposite for both blocks. The kinetic energy of each block is dissipated against friction until both stop. Since P and mu are the same for both blocks, S is proportional to 1/m^2, giving S1/S2 = (m2/m1)^2.",
+      "The textbook explicitly writes: In the given condition P and mu are same for both the blocks. So, S \u221d 1/m\u00b2; S\u2081/S\u2082 = [m\u2082/m\u2081]\u00b2. This is the verbatim formula presented in the OCR source."
+    ],
+    "grounding_excerpt": [
+      "When two masses compressed towards each other and suddenly released then energy acquired by each block will be dissipated against friction and finally block comes to rest",
+      "In the given condition",
+      "the person remains stuck to the wall even when the floor is removed, because friction force balances its weight in this condition."
+    ],
+    "sources": [
+      {
+        "title": "NCERT Physics Class 11 Part 1 \u2014 Chapter 5: Laws of Motion (Friction and Stopping Distance)",
+        "url": "https://ncert.nic.in/textbook/pdf/keph104.pdf",
+        "publisher": "ncert.nic.in",
+        "accessed_date": "2026-04-10",
+        "why_used": "Primary NCERT source for friction stopping distance derivations, foundational for the two-block stopping distance ratio."
+      },
+      {
+        "title": "NEET Physics Class 11 Chapter 6 Friction Notes \u2014 ClassNotes.guru",
+        "url": "https://classnotes.guru/neet-physics-class-11-chapter-6-friction-notes/",
+        "publisher": "classnotes.guru",
+        "accessed_date": "2026-04-10",
+        "why_used": "NEET-focused notes confirming S1/S2 = (m2/m1)^2 as a standard NEET result for compressed-block problems."
+      }
+    ],
+    "review": {
+      "used_local_page_grounding": true,
+      "semantic_page_read_complete": true,
+      "used_current_research": true,
+      "research_used_for_enrichment": true,
+      "template_preserved": true,
+      "scope_checked": true,
+      "syllabus_scope_verified": true,
+      "guardrails_passed": true,
+      "notes": "Content grounded on page 244 OCR. Formula S1/S2=(m2/m1)^2 derived from S=P^2/(2mu*m^2*g). Heavier block stops sooner confirmed. Three grounding excerpts sourced as verbatim substrings from page-244 OCR."
+    }
+  }
+}

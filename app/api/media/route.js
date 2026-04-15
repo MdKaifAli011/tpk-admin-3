@@ -1,5 +1,7 @@
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
+/** Large PDF/document uploads (up to 200MB) may take several minutes on slow connections */
+export const maxDuration = 600;
 
 import { NextResponse } from "next/server";
 import { writeFile, mkdir } from "fs/promises";
@@ -13,39 +15,11 @@ import {
   errorResponse,
   handleApiError,
 } from "@/utils/apiResponse";
+import { validateMediaUploadForApi } from "@/lib/mediaUploadRules";
 
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
 const assetsBaseDir = path.join(process.cwd(), "public", "assets");
 const mediaBaseDir = path.join(assetsBaseDir, "media");
-
-const MIME_TO_TYPE = {
-  "image/png": "image",
-  "image/jpeg": "image",
-  "image/jpg": "image",
-  "image/gif": "image",
-  "image/webp": "image",
-  "image/svg+xml": "image",
-  "video/mp4": "video",
-  "video/webm": "video",
-  "video/ogg": "video",
-  "video/quicktime": "video",
-  "application/pdf": "document",
-  "application/msword": "document",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "document",
-  "application/vnd.ms-excel": "document",
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "document",
-  "text/plain": "document",
-  "text/csv": "document",
-};
-
-function getTypeFromMime(mimeType) {
-  if (!mimeType) return "file";
-  const t = MIME_TO_TYPE[mimeType];
-  if (t) return t;
-  if (mimeType.startsWith("image/")) return "image";
-  if (mimeType.startsWith("video/")) return "video";
-  return "file";
-}
 
 function safeFilename(name) {
   return String(name)
@@ -156,7 +130,16 @@ export async function POST(request) {
 
     await connectDB();
 
-    const formData = await request.formData();
+    let formData;
+    try {
+      formData = await request.formData();
+    } catch (parseErr) {
+      console.error("Media POST formData parse:", parseErr);
+      return errorResponse(
+        "The upload could not be read. If the file is large, set experimental.proxyClientMaxBodySize in next.config (e.g. \"210mb\") and restart the server. PDFs and documents can be up to 200 MB; images up to 10 MB.",
+        413,
+      );
+    }
     const file = formData.get("file");
     const name = formData.get("name") || "";
     const altText = formData.get("altText") || "";
@@ -168,14 +151,15 @@ export async function POST(request) {
       return errorResponse("File is required", 400);
     }
 
-    const maxSize = 100 * 1024 * 1024;
-    if (file.size > maxSize) {
-      return errorResponse("File size exceeds 100MB", 400);
+    const mimeType = file.type || "";
+    const originalName = file.name || "file";
+
+    const validation = validateMediaUploadForApi(mimeType, file.size, originalName);
+    if (!validation.ok) {
+      return errorResponse(validation.message, 400);
     }
 
-    const mimeType = file.type || "";
-    const type = getTypeFromMime(mimeType);
-    const originalName = file.name || "file";
+    const type = validation.category;
     const ext = originalName.includes(".")
       ? originalName.split(".").pop().toLowerCase()
       : "bin";

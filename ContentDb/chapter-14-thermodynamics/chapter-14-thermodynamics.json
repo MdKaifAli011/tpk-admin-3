@@ -1,0 +1,383 @@
+{
+  "meta": {
+    "subject": "physics",
+    "exam": "NEET",
+    "book_folder": "physics-1",
+    "chapter_number": 14,
+    "chapter_name": "Thermodynamics",
+    "node_type": "chapter",
+    "slug": "chapter-14-thermodynamics",
+    "generated_at": "2026-03-30T08:00:00Z"
+  },
+  "page": {
+    "intro": {
+      "chapter_name": "Thermodynamics",
+      "snapshot_description": "One of the most formula-dense and concept-rich chapters in NEET physics, thermodynamics tests the interplay of <b>heat, internal energy, and work</b> through precise sign conventions and process-specific equations. The <b>First Law (ΔQ = ΔU + ΔW)</b>, four thermodynamic processes (isothermal, adiabatic, isobaric, isochoric), the <b>Carnot efficiency formula η = 1 − T₂/T₁</b>, and COP of refrigerator are the four pillars of NEET scoring here. Mistakes cluster around one axis: sign convention confusion (work done BY vs ON the system, heat absorbed vs released, ΔU positive vs negative in adiabatic compression). Students who memorise the process table and apply absolute-temperature Kelvin in Carnot will harvest 3–4 marks reliably.",
+      "expected_questions": {
+        "value": "3-4",
+        "description": "Consistently high-yield — 3 questions in most NEET papers, sometimes 4. Standard split: 1 numerical on Carnot efficiency or COP; 1 question on process identification (isothermal/adiabatic/isochoric on PV graph); 1 conceptual on First Law sign conventions or Second Law statement. Work done in cyclic process from PV diagram area is a recurring fourth question."
+      },
+      "time_required": {
+        "value": "10-12 hrs",
+        "description": "First Law and sign convention drill 2 hrs; four process equations and PV graph shapes 3 hrs; Second Law and statements 1 hr; Carnot engine cycle derivation and efficiency 2 hrs; COP and refrigerator 1 hr; MCQ bank including entropy numericals 2-3 hrs."
+      },
+      "difficulty_level": {
+        "value": "Moderate-High",
+        "description": "Conceptual traps are numerous — sign conventions, absolute temperature requirement for Carnot, and adiabatic process behaviour (Q=0 but ΔT≠0). Numericals are manageable once the formula table is memorised. The Second Law statements (Kelvin-Planck, Clausius) are tested verbatim, requiring exact recall."
+      },
+      "most_asked_style": "Numerical MCQ: find Carnot efficiency given source and sink temperatures; find COP of refrigerator; find work done in isothermal process; identify process from PV diagram shape; find heat absorbed or work done in an adiabatic cycle.",
+      "biggest_trap": "Using Celsius instead of Kelvin in the Carnot efficiency formula η = 1 − T₂/T₁. The formula is valid ONLY in absolute (Kelvin) temperature. Using °C gives a completely wrong answer and NEET always includes the Celsius-based wrong result as a distractor option. Convert T₁ and T₂ to Kelvin before substituting.",
+      "fast_win": "Memorise the process table: isothermal (T const, ΔU=0, Q=W); adiabatic (Q=0, ΔU=−W); isochoric (V const, W=0, Q=ΔU); isobaric (P const, W=PΔV=μRΔT, Q=μCpΔT). These 4 rows answer 60% of process-identification and FLOT application MCQs instantly without derivation.",
+      "revision_friendly": "Yes. All four process results fit on a single A4 flashcard. Carnot efficiency and COP are 2 formulas. Second Law statements are 3 one-liners. A 1-hour pre-exam review of the process table + Carnot + COP covers 80% of testable content."
+    },
+    "subtopics": {
+      "chapter_name": "Thermodynamics",
+      "exam": "NEET",
+      "subtitle": "Four major blocks: First Law of Thermodynamics and its application to four thermodynamic processes (isobaric, isochoric, isothermal, adiabatic); isothermal and adiabatic process equations and PV diagram comparison; Second Law of Thermodynamics and cyclic processes (heat engine efficiency); Carnot engine cycle, efficiency derivation, COP of refrigerator, and entropy.",
+      "revision_tip": "Before any thermodynamics numerical, write down which process it is (identifies the constraint), then apply FLOT: ΔQ = ΔU + ΔW. The process constraint tells you which term is zero or which equation to use. For Carnot always write T in Kelvin first. For PV diagram area questions: clockwise = positive work; area under a curve = work for that stroke.",
+      "topics": [
+        {
+          "topic_number": 1,
+          "topic_name": "First Law of Thermodynamics and Processes",
+          "topic_slug": "first-law-thermodynamics-processes",
+          "topic_description": "States and applies the First Law ΔQ = ΔU + ΔW (conservation of energy in thermodynamic systems) to all four standard processes: isobaric (P constant, W=PΔV=μRΔT, Q=μCpΔT), isochoric (V constant, W=0, Q=ΔU=μCvΔT), along with sign conventions for heat, work, and internal energy. Internal energy of ideal gas ΔU = μCvΔT for any process. Work done by gas W = ∫P dV = area under PV curve.",
+          "topic_pills": ["ΔQ = ΔU + ΔW", "Isobaric: W=PΔV=μRΔT", "Isochoric: W=0, Q=ΔU", "Sign: expansion W>0, absorption Q>0"],
+          "subtopics": [
+            {
+              "name": "First Law Statement and Sign Conventions",
+              "slug": "first-law-sign-conventions",
+              "description": "First Law: ΔQ = ΔU + ΔW — heat supplied to a system equals increase in internal energy plus work done by system. Sign conventions: ΔQ positive when heat absorbed by system; ΔW positive when gas expands (work done BY system); ΔU positive when temperature rises. Internal energy: ΔU = μCvΔT = μ(R/(γ−1))ΔT = (PfVf − PiVi)/(γ−1) — valid for any process of an ideal gas. Work done W = ∫P dV; area between PV curve and volume axis; positive for expansion, negative for compression. In PV cyclic process: clockwise cycle → positive work; anticlockwise → negative work; net area = net work done."
+            },
+            {
+              "name": "Isobaric and Isochoric Process Equations",
+              "slug": "isobaric-isochoric-processes",
+              "description": "Isobaric process (P=constant): Charle's law obeyed V/T=constant. W = P(Vf−Vi) = μRΔT. Q = μCpΔT where Cp = (f/2+1)R. ΔU = μCvΔT. Bulk modulus K=0 (pressure does not change). Isobaric expansion: ΔU, ΔW, ΔQ all positive. Isobaric compression: all negative. Examples: boiling of water and freezing at constant pressure. Isochoric process (V=constant): Gay-Lussac's law P/T=constant. W = 0 since ΔV=0. Q = ΔU = μCvΔT = μR/(γ−1)ΔT. Cv = (f/2)R. Bulk modulus K=∞. Isochoric heating: pressure increases, ΔQ and ΔU positive. Slope on PV diagram is infinite (vertical line)."
+            }
+          ]
+        },
+        {
+          "topic_number": 2,
+          "topic_name": "Isothermal and Adiabatic Processes",
+          "topic_slug": "isothermal-adiabatic-processes",
+          "topic_description": "Isothermal process: T=constant, ΔU=0, Q=W=μRT ln(Vf/Vi); Boyle's law PV=constant; PV graph is rectangular hyperbola. Adiabatic process: Q=0, ΔU=−W; Poisson's law PVγ=constant, TVγ−1=constant; slope of adiabatic curve = γ × slope of isothermal curve. Work in adiabatic: W = μR(Ti−Tf)/(γ−1). Adiabatic expansion cools, adiabatic compression heats. Free expansion: Q=0, W=0, ΔU=0.",
+          "topic_pills": ["Isothermal: ΔU=0, Q=W=μRT ln(V₂/V₁)", "Adiabatic: Q=0, PVγ=const", "TVγ⁻¹=const; Adiabatic steeper than isothermal", "Free expansion: ΔU=0, W=0"],
+          "subtopics": [
+            {
+              "name": "Isothermal Process Details",
+              "slug": "isothermal-process",
+              "description": "Isothermal process: T=constant → ΔT=0 → ΔU=0. Boyle's law: PV=constant, P1V1=P2V2. Conditions: perfectly conducting walls; infinitely slow process. Specific heat = ∞ (C = Q/mΔT = ∞ since ΔT=0). Isothermal elasticity Eθ = P. Work done: W = μRT loge(Vf/Vi) = μRT loge(Pi/Pf). FLOT: ΔQ = ΔW (all absorbed heat goes into work). PV graph: rectangular hyperbola; isotherms at different temperatures are parallel, never intersect; T1 < T2 < T3 (higher T gives higher isotherm). Slope = −P/V. Area between isotherm and volume axis = work done."
+            },
+            {
+              "name": "Adiabatic Process and Free Expansion",
+              "slug": "adiabatic-free-expansion",
+              "description": "Adiabatic process: Q=0. Conditions: perfectly insulating walls; sudden/rapid process. FLOT: ΔU = −ΔW. If expansion (W>0): ΔU<0, temperature falls — adiabatic expansion produces cooling. If compression (W<0): ΔU>0, temperature rises — adiabatic compression produces heating. Poisson's law: PVγ=constant; TVγ−1=constant; Tγ/Pγ−1=constant. γ=Cp/Cv. Work done: W = (PiVi − PfVf)/(γ−1) = μR(Ti−Tf)/(γ−1). Adiabatic elasticity Eφ = γP. Specific heat = 0 (Q=0). Slope of adiabatic curve = −γ(P/V) = γ × slope of isothermal curve → adiabatic is always steeper than isothermal on PV graph. Examples: sudden tyre bursting; propagation of sound; expansion of steam in cylinder. Free expansion: both Q=0 and W=0, so ΔU=0 — temperature unchanged for ideal gas."
+            }
+          ]
+        },
+        {
+          "topic_number": 3,
+          "topic_name": "Second Law and Thermodynamic Cycles",
+          "topic_slug": "second-law-thermodynamic-cycles",
+          "topic_description": "Second Law: Clausius (heat cannot spontaneously flow from cold to hot body), Kelvin-Planck (no engine can have 100% efficiency). Heat engine: efficiency η = W/Q1 = (Q1−Q2)/Q1 = 1−Q2/Q1; always less than 1. Cyclic process: ΔU=0, Q=W; net work = area enclosed in PV diagram. Reversible vs irreversible processes. Entropy: dS = dQ/T; disorder measure; increases for irreversible processes.",
+          "topic_pills": ["Clausius: heat cold→hot needs work", "Kelvin-Planck: η<100% always", "Heat engine: η=1−Q₂/Q₁", "Entropy: dS=dQ/T"],
+          "subtopics": [
+            {
+              "name": "Second Law Statements and Heat Engine",
+              "slug": "second-law-heat-engine",
+              "description": "Second Law statements — Clausius: impossible for a self-acting machine to transfer heat from cold to hot body without external agency. Kelvin's: impossible to cool a body below coldest surroundings to do continuous work. Kelvin-Planck: impossible to extract heat and fully convert to work without producing other effect. Consequence: efficiency of any heat engine is always less than unity. Heat engine: working substance absorbs Q1 from source at T1, does work W, rejects Q2 to sink at T2. Efficiency η = W/Q1 = (Q1−Q2)/Q1 = 1 − Q2/Q1. Perfect engine (η=1) is impossible. For cyclic process: ΔU=0, so ΔQ=ΔW; net work = area enclosed by closed curve on PV diagram; clockwise=positive, anticlockwise=negative."
+            },
+            {
+              "name": "Entropy and Reversible Processes",
+              "slug": "entropy-reversible-processes",
+              "description": "Entropy: dS = dQ/T; measure of disorder of molecular motion. Greater disorder = greater entropy. At equilibrium, entropy is maximum. For state change at constant T: dS = ±mL/T (positive for absorption, negative for evolution). Temperature change: ΔS = mc loge(T2/T1) = 2.303 mc log10(T2/T1). For ideal gas: ΔS = μCv loge(T2/T1) + μR loge(V2/V1). Entropy is the mathematical form of Second Law. Reversible process: conditions include no dissipative forces, infinitely slow process, temperature difference between system and surroundings is negligible. All isothermal and adiabatic processes are reversible if performed very slowly. Irreversible processes: all natural processes — conduction, radiation, radioactive decay, free expansion, Joule-Thomson expansion. Irreversibility can be measured by entropy increase."
+            }
+          ]
+        },
+        {
+          "topic_number": 4,
+          "topic_name": "Carnot Engine and Efficiency",
+          "topic_slug": "carnot-engine-efficiency",
+          "topic_description": "Carnot engine: theoretical ideal engine with maximum possible efficiency η = 1 − T2/T1 (T in Kelvin). Four strokes: isothermal expansion at T1, adiabatic expansion T1→T2, isothermal compression at T2, adiabatic compression T2→T1. No real engine can exceed Carnot efficiency. Refrigerator (reverse Carnot): COP β = Q2/W = Q2/(Q1−Q2) = T2/(T1−T2). Relation: β = (1−η)/η.",
+          "topic_pills": ["η = 1 − T₂/T₁ (Kelvin only)", "COP β = T₂/(T₁−T₂)", "4 strokes: iso-expand, adi-expand, iso-compress, adi-compress", "No engine exceeds Carnot efficiency"],
+          "subtopics": [
+            {
+              "name": "Carnot Cycle Four Strokes and Efficiency Derivation",
+              "slug": "carnot-cycle-efficiency",
+              "description": "Carnot engine consists of: cylinder with non-conducting walls and conducting base; source at T1; sink at T2; non-conducting stand. Four strokes: (1) Isothermal expansion AB at T1: W1=Q1=RT1 loge(V2/V1); (2) Adiabatic expansion BC: temperature falls T1→T2, W2=R(T1−T2)/(γ−1); (3) Isothermal compression CD at T2: W3=Q2=RT2 loge(V3/V4); (4) Adiabatic compression DA: temperature rises T2→T1, W4=R(T1−T2)/(γ−1). Since W2=W4 (cancel), net work W=W1−W3=Q1−Q2 = area ABCD on PV diagram. Using adiabatic relation: V3/V4 = V2/V1, so loge(V3/V4) = loge(V2/V1). Efficiency: η = 1 − Q2/Q1 = 1 − T2loge(V3/V4)/[T1loge(V2/V1)] = 1 − T2/T1. Carnot theorem: no heat engine between two given temperatures can be more efficient than Carnot engine; all reversible engines between same temperatures have equal efficiency."
+            },
+            {
+              "name": "Refrigerator COP and Relation to Efficiency",
+              "slug": "refrigerator-cop",
+              "description": "Refrigerator = heat engine run in reverse. Working substance (refrigerant: liquid ammonia, freon) extracts Q2 from cold body at T2, external work W is done on it, releases Q1=W+Q2 to hot body at T1 (atmosphere). COP: β = Q2/W = Q2/(Q1−Q2). For Carnot refrigerator: Q1/Q2 = T1/T2, so β = T2/(T1−T2). β=0 when T2=0 K. Perfect refrigerator (W=0, β=∞) is impossible. Relation between COP and efficiency: β = (1−η)/η, or η = 1/(1+β). Practical efficiencies: steam engine 8–15%; petrol engine ~40%; diesel engine ~50–55%. Carnot efficiency is the upper bound — always greater than practical engine efficiency for same temperature limits."
+            }
+          ]
+        }
+      ]
+    },
+    "plan": {
+      "chapter_name": "Thermodynamics",
+      "topics": [
+        {
+          "topic_name": "First Law of Thermodynamics and Processes",
+          "topic_description": "The universal energy conservation law for thermodynamic systems: ΔQ = ΔU + ΔW, and its application to isobaric and isochoric processes with specific heat relations.",
+          "topic_pills": ["1-2 Q/year", "Sign convention traps", "Foundation for all processes", "ΔU = μCvΔT any process"],
+          "notes_condensed_description": "FLOT: ΔQ = ΔU + ΔW. Signs: Q+ (absorbed), W+ (expansion by gas), U+ (T rises). ΔU = μCvΔT = (PfVf−PiVi)/(γ−1) — always, any process. Isobaric: P=const; W=PΔV=μRΔT; Q=μCpΔT; Cp=(f/2+1)R. Isochoric: V=const; W=0; Q=ΔU=μCvΔT; Cv=(f/2)R. Work = area under PV curve. Cyclic: ΔU=0; Q=W; net work = enclosed area; clockwise=positive.",
+          "how_to_revise": "Make a 4-row process table with columns: Process | Constraint | W | Q | ΔU. Fill in the isobaric and isochoric rows first (they have the simpler equations). Then for each row write one NEET-style question. This table is directly tested — NEET gives a scenario and asks which process it is and what quantity is zero.",
+          "expected_questions": {
+            "value": "1-2",
+            "description": "One question on sign convention application in FLOT; occasionally one on PV diagram work = area or identifying isobaric vs isochoric from graph. Frequently embedded into Carnot cycle questions."
+          },
+          "time_required": {
+            "value": "2-3 hrs",
+            "description": "1 hr learning FLOT and sign conventions with worked examples; 1 hr isobaric and isochoric process drill; 30 min–1 hr PV graph area and cyclic process questions."
+          },
+          "difficulty": {
+            "value": "Moderate",
+            "description": "The equations are simple; the challenge is applying correct signs — especially distinguishing work done BY system (positive in FLOT) from work done ON system. Most errors are sign errors, not formula errors."
+          },
+          "scoring_focus": "Memorise ΔU = μCvΔT for any process — even isothermal formula for W uses T=const trick. For isochoric: W=0 so Q=ΔU exactly. For isobaric: W=μRΔT and Q=μCpΔT. These three results handle 90% of process-application questions.",
+          "high_risk_area": "Writing W = work done ON the system as positive — this violates the FLOT convention used in Indian textbooks (NCERT/standard). NEET uses: W = work done BY the system, positive for expansion. Mixing conventions mid-solution corrupts all three terms.",
+          "best_practice_style": "Before each computation write out the three-cell table: ΔQ = | ΔU = | ΔW = . Fill in what you know from the process, then solve for the unknown. This prevents the 'forgot one term' error that costs marks.",
+          "priority_rule": "High priority as foundational topic. Cover first in 2 hours. Mastering FLOT sign convention prevents errors in ALL subsequent topics. 35% of thermodynamics marks trace back to this topic."
+        },
+        {
+          "topic_name": "Isothermal and Adiabatic Processes",
+          "topic_description": "Two most-tested processes in NEET: isothermal (T=const, ΔU=0, Q=W=μRT ln ratio) and adiabatic (Q=0, ΔU=−W, Poisson's law PVγ=const). PV graph comparison is a direct NEET question.",
+          "topic_pills": ["1-2 Q/year", "Isothermal: ΔU=0", "Adiabatic steeper than isothermal", "Q=0 does NOT mean ΔT=0"],
+          "notes_condensed_description": "Isothermal: T=const; ΔU=0; PV=const (Boyle's); W=Q=μRT ln(Vf/Vi). Specific heat=∞. Slope= −P/V. Adiabatic: Q=0; ΔU=−W; PVγ=const; TVγ−1=const; W=μR(Ti−Tf)/(γ−1). Specific heat=0. Slope= −γP/V = γ × isothermal slope. Adiabatic is steeper. Adiabatic expansion → cooling (W>0, ΔU<0). Free expansion: Q=0, W=0, ΔU=0. Conditions: isothermal needs conducting walls + slow process; adiabatic needs insulating walls + fast process.",
+          "how_to_revise": "Draw a single PV diagram with one isothermal and one adiabatic curve originating from the same point. Label which is steeper (adiabatic). Write the work formula for each below the graph. Then write the adiabatic cooling statement as a sentence. This one diagram encodes 3 common NEET questions.",
+          "expected_questions": {
+            "value": "1-2",
+            "description": "One question per paper on adiabatic vs isothermal identification on PV graph or their relative slopes; occasionally a numerical on isothermal work W = nRT ln(V2/V1) or adiabatic work using temperature difference."
+          },
+          "time_required": {
+            "value": "2.5 hrs",
+            "description": "1 hr isothermal derivation, conditions, graph; 1 hr adiabatic Poisson's law, graph, work formula; 30 min free expansion and comparison table; 30–45 min MCQ drill."
+          },
+          "difficulty": {
+            "value": "Moderate",
+            "description": "Conceptual anchor: Q=0 in adiabatic does NOT mean temperature is constant — this is the key distinction. The formulas are more complex but the main NEET test is usually PV graph identification or slope comparison, not derivation."
+          },
+          "scoring_focus": "Three key facts: (1) Isothermal: ΔU=0, Q=W. (2) Adiabatic: Q=0, temperature changes. (3) Adiabatic curve is steeper than isothermal at the same point on PV graph. These 3 facts answer ~4 common NEET MCQs directly.",
+          "high_risk_area": "Claiming ΔT=0 for adiabatic process because Q=0. Q=0 means no heat exchange; temperature still changes because ΔU = −W ≠ 0. Adiabatic expansion always cooling; adiabatic compression always heating. This is tested conceptually in NEET.",
+          "best_practice_style": "Pair each process with its 'what is zero' fact: Isothermal → ΔU=0. Adiabatic → Q=0. Isochoric → W=0. Isobaric → ΔP=0. This single memory hook selects the simplification for FLOT immediately.",
+          "priority_rule": "High priority. Isothermal and adiabatic are tested every year in some form — graph identification, numerical, or conceptual. Allocate 25% of chapter time here."
+        },
+        {
+          "topic_name": "Second Law and Thermodynamic Cycles",
+          "topic_description": "The Second Law in three statement forms (Clausius, Kelvin, Kelvin-Planck), heat engine efficiency formula, cyclic process properties, and entropy as disorder measure.",
+          "topic_pills": ["1 Q/year", "η = 1 − Q₂/Q₁ < 1 always", "Clausius and Kelvin-Planck statements", "Entropy = disorder, dS = dQ/T"],
+          "notes_condensed_description": "Second Law: (Clausius) heat cannot flow cold→hot spontaneously; (Kelvin-Planck) cannot convert 100% heat to work. Heat engine: η = W/Q1 = (Q1−Q2)/Q1 = 1−Q2/Q1; always <1. Cyclic: ΔU=0; Q=W; net work = enclosed PV area; clockwise=positive. Entropy: dS=dQ/T; entropy function of probability; entropy increases in irreversible processes; max at equilibrium. Reversible process: no dissipation, infinitely slow, temperature equality. Irreversible: all natural processes.",
+          "how_to_revise": "Write all three Second Law statements in one sentence each, then write the heat engine box diagram (source → engine → sink) with Q1, W, Q2 labelled. From the diagram write η = (Q1−Q2)/Q1 directly. This box diagram is the fastest path to the formula without memorising the derivation.",
+          "expected_questions": {
+            "value": "1",
+            "description": "One question per 1–2 papers: either a Second Law statement identification (which statement applies to which scenario), or a PV graph cyclic area calculation, or an entropy change numerical. Not as frequent as Carnot but appears in conceptual MCQ sets."
+          },
+          "time_required": {
+            "value": "2 hrs",
+            "description": "45 min Second Law statements and implications; 45 min heat engine, efficiency formula, cyclic process PV area; 30 min entropy formula and numerical; 30 min MCQ drill on statement identification."
+          },
+          "difficulty": {
+            "value": "Moderate",
+            "description": "Efficiency formula is simple. The challenge is distinguishing the three Second Law statement flavours under NEET's phrasing. Entropy numericals are straightforward substitution into dS = mL/T or ΔS = mc ln(T2/T1)."
+          },
+          "scoring_focus": "η = (Q1−Q2)/Q1 = 1−Q2/Q1 for heat engine — this is directly tested numerically. For cyclic PV area: sum areas of each stroke (positive for expansion strokes, negative for compression). Net = enclosed area, sign from clockwise/anticlockwise.",
+          "high_risk_area": "Confusing heat engine efficiency η with COP of refrigerator β. They use different reference quantities: η = W/Q1 (input is Q1); β = Q2/W (input is W). Mixing them gives wrong values for both. NEET tests them in adjacent options.",
+          "best_practice_style": "Draw the heat engine box diagram and refrigerator box diagram side by side, labelling Q1, W, Q2 with arrows. Then write η and β from the diagrams. Visual separation prevents formula mixing under exam pressure.",
+          "priority_rule": "Medium. Second Law statements and heat engine efficiency are 1 reliable mark. Cover after Carnot since Carnot engine IS the ideal heat engine and η takes the same form."
+        },
+        {
+          "topic_name": "Carnot Engine and Efficiency",
+          "topic_description": "The most important single topic in the chapter: Carnot cycle four strokes, efficiency η = 1 − T2/T1 (Kelvin only), Carnot theorem (no real engine more efficient), COP of refrigerator β = T2/(T1−T2), and relation β = (1−η)/η.",
+          "topic_pills": ["2-3 Q/year", "η = 1 − T₂/T₁ (Kelvin only!)", "COP β = T₂/(T₁−T₂)", "Carnot is most efficient reversible engine"],
+          "notes_condensed_description": "Carnot engine 4 strokes: (1) Isothermal expansion at T1: Q1=RT1 ln(V2/V1); (2) Adiabatic expansion: T1→T2; (3) Isothermal compression at T2: Q2=RT2 ln(V3/V4); (4) Adiabatic compression: T2→T1. Net W = Q1−Q2 = area ABCD on PV graph. η = 1 − T2/T1 (T in Kelvin). Carnot theorem: η_real ≤ η_Carnot = 1 − T2/T1. Refrigerator: β = T2/(T1−T2). Relation: β = (1−η)/η. η→1 only if T2→0 or T1→∞ (impossible in practice).",
+          "how_to_revise": "Memorise the single formula η = 1 − T2/T1 with the rule: T1 = source (hotter), T2 = sink (cooler), both in Kelvin. Then derive COP algebraically from β = Q2/(Q1−Q2) = T2/(T1−T2) once — understanding the algebra prevents sign errors when NEET gives temperature values in Celsius.",
+          "expected_questions": {
+            "value": "2-3",
+            "description": "Most NEET papers include 1–2 Carnot efficiency numericals and 1 COP question. Standard formats: given T1 and T2, find η; given η, find T1 or T2; given COP improvement scenario, compare T values; given Q1 and η, find W and Q2."
+          },
+          "time_required": {
+            "value": "2.5 hrs",
+            "description": "1 hr Carnot cycle diagram and step-by-step derivation of η = 1−T2/T1; 30 min Carnot theorem and its implications; 45 min refrigerator COP formula and numerical drill; 30 min mixed MCQ bank."
+          },
+          "difficulty": {
+            "value": "Moderate",
+            "description": "The formula is simple once you know it. Main difficulty: temperature unit trap (Kelvin not Celsius) and COP vs efficiency confusion. Students who practise 10 Carnot numericals will get these marks reliably every paper."
+          },
+          "scoring_focus": "η = 1 − T2/T1 with T in Kelvin is the most directly tested formula in this chapter. Always convert °C to K by adding 273 before substituting. COP β = T2/(T1−T2) and the relation β = (1−η)/η are secondary but tested in 1 out of 3 papers.",
+          "high_risk_area": "Using °C instead of K in η = 1 − T2/T1. Example: source 227°C=500 K, sink 27°C=300 K. Correct η = 1 − 300/500 = 0.4 = 40%. Wrong (Celsius): η = 1 − 27/227 ≈ 0.88 — a completely different answer. NEET always includes both as options.",
+          "best_practice_style": "Write a dedicated conversion step before every Carnot problem: 'T1 = __°C + 273 = __ K; T2 = __°C + 273 = __ K'. This single habit eliminates the most common Carnot error. Never substitute Celsius values directly.",
+          "priority_rule": "Highest priority in this chapter. Carnot efficiency is guaranteed 1–2 marks per NEET paper. Allocate 25% of chapter time here. Master it before Second Law and entropy."
+        }
+      ]
+    },
+    "trap": {
+      "chapter_name": "Thermodynamics",
+      "topics": [
+        {
+          "subtopic_name": "Sign Convention — Work Done BY vs ON System in First Law",
+          "subtopic_tags": ["NEET 2019", "NEET 2022", "First Law", "Sign convention", "High frequency trap"],
+          "mistakes": [
+            {
+              "label": "Taking W = work done ON system as positive in ΔQ = ΔU + ΔW:",
+              "description": "NCERT and standard Indian textbooks define ΔW as work done BY the system, positive for expansion. Some sources (especially international thermodynamics texts) define positive W as work done ON the system and write ΔQ = ΔU − W. Mixing these conventions mid-solution — using expansion-positive for W but then treating compression as positive ΔW — gives wrong signs for ΔQ and ΔU. All NEET solutions must use: expansion → W positive; heat absorbed → Q positive."
+            },
+            {
+              "label": "Forgetting that ΔW = 0 in isochoric process and writing Q = ΔU + W = ΔU + PΔV ≠ 0:",
+              "description": "In an isochoric (constant volume) process, ΔV=0 → W=P·ΔV=0 always, regardless of pressure change. Students who write W=PΔV and then substitute ΔP·V or P·ΔV with a non-zero pressure change get wrong W. The volume does not change, so no PdV work is done."
+            }
+          ],
+          "example": "1 mole of gas compressed isothermally. Work done ON gas = 500 J. ΔU=0 (isothermal). FLOT: ΔQ = ΔU + ΔW. Here W = work done BY gas = −500 J (compression). So ΔQ = 0 + (−500) = −500 J. Heat is released by gas. WRONG if student treats W = +500 J: ΔQ = 0 + 500 = +500 J (heat absorbed — wrong physical interpretation).",
+          "trap_framing": "NEET writes 'work done on the gas is 200 J' then asks for heat exchange. Trap: student substitutes W = +200 J instead of W = −200 J (work done BY gas = −200 J). This flips the sign of ΔQ.",
+          "trap_question": {
+            "stem": "200 J of work is done on a system and 150 J of heat is absorbed by it. What is the change in internal energy of the system?",
+            "options": ["50 J", "350 J", "−50 J", "150 J"],
+            "trick": "Work done ON system = 200 J → work done BY system W = −200 J. ΔQ = +150 J (absorbed). FLOT: ΔU = ΔQ − ΔW = 150 − (−200) = 350 J. Answer B. Common wrong answer: 150 − 200 = −50 J (treats work on system as positive W in FLOT directly)."
+          },
+          "quick_rule": "In FLOT, W = work done BY system. If problem says 'work done ON the system = X', substitute W = −X. If gas expands, W is positive. If compressed, W is negative. Never skip the sign flip when converting 'work on' to 'work by'."
+        },
+        {
+          "subtopic_name": "Adiabatic Process — Q=0 Does NOT Mean Temperature is Constant",
+          "subtopic_tags": ["NEET 2018", "NEET 2021", "Adiabatic", "Temperature change", "Conceptual trap"],
+          "mistakes": [
+            {
+              "label": "Claiming ΔT = 0 because Q = 0 in adiabatic process:",
+              "description": "Q=0 means no heat exchange with surroundings. It does NOT constrain temperature. ΔU = −W: if gas expands (W>0), ΔU<0 and temperature falls. If gas is compressed (W<0), ΔU>0 and temperature rises. Temperature changes significantly in adiabatic processes — this is precisely why sudden tyre bursting causes cooling, and why adiabatic compression in a diesel engine is hot enough to ignite fuel."
+            },
+            {
+              "label": "Using ideal gas equation with T = constant for adiabatic process (applying Boyle's law PV=const instead of Poisson's law PVγ=const):",
+              "description": "Boyle's law PV=constant applies ONLY to isothermal processes. For adiabatic processes the correct relation is PVγ=constant. Since γ>1, pressure falls faster with volume increase in adiabatic than in isothermal, which is why the adiabatic curve is steeper. Using wrong law gives wrong P or V ratios."
+            }
+          ],
+          "example": "Gas expands adiabatically. Q=0, W=400 J (expansion). FLOT: ΔU = Q − W = 0 − 400 = −400 J. Since ΔU = μCvΔT, temperature decreases. WRONG claim: Q=0 → ΔU=0 → ΔT=0. Correct: Q=0 means ΔU=−W = −400 J; temperature falls.",
+          "trap_framing": "NEET asks: 'In an adiabatic expansion of an ideal gas, which of the following is correct?' Trap options include 'Temperature remains constant' or 'Internal energy is unchanged'. Both are wrong.",
+          "trap_question": {
+            "stem": "An ideal gas undergoes adiabatic compression. Which of the following is correct?",
+            "options": ["Temperature decreases and internal energy decreases", "Temperature increases and internal energy increases", "Temperature remains constant", "Heat is absorbed from surroundings"],
+            "trick": "Adiabatic compression: Q=0, W<0 (work done ON gas). FLOT: ΔU = 0 − W = −(negative) = positive. ΔU>0 → ΔT>0 → temperature increases. Internal energy increases. Answer B. Option C is the isothermal result wrongly applied to adiabatic. Option D violates Q=0."
+          },
+          "quick_rule": "Adiabatic expansion → cooling (ΔU = −W, W>0). Adiabatic compression → heating (ΔU = −W, W<0). Temperature ALWAYS changes in adiabatic process. Q=0 is about heat exchange, not temperature constancy — temperature constancy is isothermal."
+        },
+        {
+          "subtopic_name": "Carnot Efficiency — Celsius vs Kelvin Temperature",
+          "subtopic_tags": ["NEET 2016", "NEET 2019", "NEET 2023", "Carnot engine", "Temperature unit trap", "Highest frequency trap"],
+          "mistakes": [
+            {
+              "label": "Substituting temperatures in Celsius directly into η = 1 − T2/T1:",
+              "description": "η = 1 − T2/T1 is derived from the ratio of heat exchanged in isothermal processes, which involves absolute (Kelvin) temperature only. Using Celsius gives drastically wrong answers. Example: source at 127°C (400 K), sink at 27°C (300 K). Correct η = 1 − 300/400 = 0.25 = 25%. Using Celsius: η = 1 − 27/127 ≈ 0.79 = 79% — completely wrong. NEET systematically includes the Celsius-based wrong answer as an option."
+            },
+            {
+              "label": "Using COP formula β = T2/T1 instead of β = T2/(T1 − T2):",
+              "description": "COP of Carnot refrigerator is β = T2/(T1−T2), where the denominator is the temperature difference, not T1 alone. Students who misremember write β = T2/T1 which equals 1−η (a different quantity). Since T1−T2 < T1, the correct β is always greater than T2/T1."
+            }
+          ],
+          "example": "Source at 500°C, sink at 25°C. η = 1 − (25+273)/(500+273) = 1 − 298/773 ≈ 1 − 0.386 = 0.614 = 61.4%. Wrong (Celsius): η = 1 − 25/500 = 0.95 = 95%. NEET includes 95% as a distractor. Always add 273 first.",
+          "trap_framing": "NEET states 'source temperature 627°C and sink temperature 27°C, find efficiency' then lists options that include both the Kelvin-correct answer and the Celsius-substituted wrong answer. The Celsius answer looks more 'exact' which makes it tempting.",
+          "trap_question": {
+            "stem": "A Carnot engine operates between a source at 227°C and a sink at 27°C. What is the efficiency of the engine?",
+            "options": ["40%", "87%", "60%", "13%"],
+            "trick": "T1 = 227+273 = 500 K; T2 = 27+273 = 300 K. η = 1 − 300/500 = 1 − 0.6 = 0.4 = 40%. Answer A. Option B (≈87%) is from using η = 1 − 27/227 (Celsius direct) — the classic trap. Convert to Kelvin first, always."
+          },
+          "quick_rule": "Carnot efficiency: always add 273 to both temperatures before substituting. Write 'T1 = __K, T2 = __K' as a mandatory first step. No Carnot calculation should begin without this conversion step. If the answer looks too high (>70%), recheck whether Celsius conversion was done."
+        },
+        {
+          "subtopic_name": "PV Diagram Work — Clockwise vs Anticlockwise Sign and Stroke Areas",
+          "subtopic_tags": ["NEET 2017", "NEET 2020", "PV diagram", "Cyclic process", "Work done area"],
+          "mistakes": [
+            {
+              "label": "Taking net work = total area under all curves instead of area enclosed by the cycle:",
+              "description": "For a cyclic process on a PV diagram, net work = area ENCLOSED by the closed loop, not the total shaded area below all curves. Total area below each curve (including the return path) cancels partially. Only the enclosed area between the forward and return paths represents net work. This is a vector subtraction: expansion strokes (upper path) minus compression strokes (lower path)."
+            },
+            {
+              "label": "Assigning wrong sign to net work based on visual guess instead of direction of traversal:",
+              "description": "Net work is positive when the cycle is traversed clockwise on a PV diagram (forward expansion at higher pressure, return compression at lower pressure). Net work is negative when anticlockwise. Students sometimes confuse 'right-side larger' with 'positive' — the direction of traversal (clockwise vs anticlockwise) is the sole determinant of sign."
+            }
+          ],
+          "example": "Rectangular PV cycle: expansion at P2 from V1 to V2 (upper path), then isochoric drop P2→P1 at V2, then compression at P1 from V2 to V1 (lower path), then isochoric rise. Net W = W_expansion − W_compression = P2(V2−V1) − P1(V2−V1) = (P2−P1)(V2−V1) = area of rectangle. Clockwise traversal → positive net work.",
+          "trap_framing": "NEET draws a closed rectangular PV cycle and asks 'what is the work done in the cycle?' Trap answer: students add the area under the upper path (large positive) without subtracting the area under the return path (large negative), getting a number twice as large.",
+          "trap_question": {
+            "stem": "A gas undergoes a cyclic process on a PV diagram with P1=10⁵ Pa, P2=3×10⁵ Pa, V1=10⁻³ m³, V2=3×10⁻³ m³, traversed clockwise. What is the net work done?",
+            "options": ["4×10² J", "4 J", "8×10² J", "2×10² J"],
+            "trick": "Net work = area enclosed = (P2−P1)(V2−V1) = (3−1)×10⁵ × (3−1)×10⁻³ = 2×10⁵ × 2×10⁻³ = 4×10² J = 400 J. Answer A. Clockwise → positive. Option C doubles the area by summing both upper and lower paths without subtraction."
+          },
+          "quick_rule": "Cyclic PV diagram: net work = enclosed area only. Clockwise = positive net work. Anticlockwise = negative net work. Do NOT sum areas under all individual paths — only the loop area counts as net work. For a rectangle: net W = (P2−P1)(V2−V1)."
+        }
+      ]
+    }
+  },
+  "grounding": {
+    "source_page_markdown_paths": [
+      "pages/physics-1/page-624/markdown.md",
+      "pages/physics-1/page-625/markdown.md",
+      "pages/physics-1/page-626/markdown.md",
+      "pages/physics-1/page-627/markdown.md",
+      "pages/physics-1/page-628/markdown.md",
+      "pages/physics-1/page-629/markdown.md",
+      "pages/physics-1/page-630/markdown.md",
+      "pages/physics-1/page-631/markdown.md",
+      "pages/physics-1/page-632/markdown.md",
+      "pages/physics-1/page-633/markdown.md",
+      "pages/physics-1/page-634/markdown.md"
+    ],
+    "grounding_summary": [
+      "Pages 624-625: Chapter introduction — thermodynamics deals with heat-mechanical energy conversion. Thermodynamic system types (open/closed/isolated), variables (P,V,T), equation of state PV=μRT. Zeroth Law: if A and B are in equilibrium with C, they are in equilibrium with each other. Heat is path-dependent (ΔQ=μCΔT). Internal energy: ΔU = μCvΔT = (PfVf−PiVi)/(γ−1). Work W = ∫PdV = area under PV curve.",
+      "Pages 626-627: FLOT stated: ΔQ = ΔU + ΔW. Sign convention table: Q+ (supplied), W+ (expansion), U+ (T rises). Isobaric process: Charle's law V/T=const; W=PΔV=μRΔT; Q=μCpΔT; Cp=(f/2+1)R; bulk modulus=0. Isochoric process: Gay-Lussac's law P/T=const; W=0; Q=ΔU=μCvΔT; Cv=(f/2)R; bulk modulus=∞.",
+      "Pages 628-629: Isothermal process: T=const; PV=const (Boyle's law); specific heat=∞; isothermal elasticity Eθ=P; W=μRT loge(Vf/Vi). FLOT: ΔQ=ΔW since ΔU=0. PV graph is rectangular hyperbola; isotherms never intersect. Adiabatic process: Q=0; Poisson's law PVγ=const; TVγ−1=const; W=μR(Ti−Tf)/(γ−1); specific heat=0; adiabatic elasticity=γP; slope of adiabatic=γ×slope of isothermal → adiabatic is steeper.",
+      "Pages 630-631: Free expansion: Q=0, W=0, ΔU=0. Cyclic process: ΔU=0; Q=W; net work = enclosed PV area; clockwise (+), anticlockwise (−). Quasi-static process definition. Reversible process: no dissipation, infinitely slow, no temperature difference. Irreversible: all natural processes. Mixed PV, PT, VT graph identification for all four processes.",
+      "Pages 631-634: Heat engine: η=W/Q1=(Q1−Q2)/Q1=1−Q2/Q1; always <1. Refrigerator/heat pump: β=Q2/(Q1−Q2); Carnot refrigerator β=T2/(T1−T2). Second Law: Clausius, Kelvin, Kelvin-Planck statements. Carnot engine: 4 strokes (isothermal expansion, adiabatic expansion, isothermal compression, adiabatic compression); η=1−T2/T1. Carnot theorem: most efficient engine for given temperatures. Entropy: dS=dQ/T; disorder measure; ΔS=mc loge(T2/T1) for temperature change."
+    ],
+    "grounding_excerpt": [
+      "According to it heat given to a system (ΔQ) is equal to the sum of increase in its internal energy (ΔU) and the work done (ΔW) by the system against the surroundings. ΔQ = ΔU + ΔW",
+      "Since, these two conditions are not fully realised in practice, so no process is perfectly adiabatic.",
+      "If ΔW = positive then ΔU = negative so temperature decreases, i.e., adiabatic expansion produce cooling.",
+      "Clausius statement: It is impossible for a self acting machine to transfer heat from a colder body to a hotter one without the aid of an external agency.",
+      "So efficiency of Carnot engine η = 1 − T₂/T₁",
+      "Carnot stated that no heat engine working between two given temperatures of source and sink can be more efficient than a perfectly reversible engine (Carnot engine) working between the same two temperatures.",
+      "Entropy is a measure of disorder of molecular motion of a system. Greater is the disorder, greater is the entropy."
+    ],
+    "sources": [
+      {
+        "title": "NCERT Physics Part II — Chapter 12: Thermodynamics",
+        "url": "https://ncert.nic.in/ncerts/l/leph212.pdf",
+        "publisher": "NCERT",
+        "accessed_date": "2026-03-30",
+        "why_used": "Primary authoritative syllabus reference for thermodynamics for NEET. Verified First Law statement, sign conventions, process equations for isothermal/adiabatic/isobaric/isochoric, Carnot engine derivation, and Second Law statements against OCR content."
+      },
+      {
+        "title": "HyperPhysics — Thermodynamics: Carnot Cycle and Heat Engine",
+        "url": "http://hyperphysics.phy-astr.gsu.edu/hbase/thermo/carnot.html",
+        "publisher": "Georgia State University",
+        "accessed_date": "2026-03-30",
+        "why_used": "Cross-checked Carnot efficiency derivation η = 1 − T2/T1, four-stroke cycle work expressions, and the absolute temperature requirement against authoritative physics reference. Verified COP formula for refrigerator."
+      },
+      {
+        "title": "Khan Academy Physics — Thermodynamics: Laws and Processes",
+        "url": "https://www.khanacademy.org/science/physics/thermodynamics",
+        "publisher": "Khan Academy",
+        "accessed_date": "2026-03-30",
+        "why_used": "Verified PV diagram interpretations for cyclic processes, adiabatic vs isothermal slope comparison, and sign convention for work done by vs on the system. Confirmed Second Law statements and entropy concept descriptions."
+      }
+    ],
+    "key_facts": [
+      "First Law: ΔQ = ΔU + ΔW; W = work done BY system (positive for expansion); Q positive when absorbed by system",
+      "ΔU = μCvΔT = (PfVf − PiVi)/(γ−1) — valid for any process of an ideal gas",
+      "Isothermal: T=const, ΔU=0, Q=W=μRT ln(Vf/Vi); PV=const (Boyle's law); specific heat=∞",
+      "Adiabatic: Q=0, ΔU=−W, PVγ=const, TVγ−1=const; W=μR(Ti−Tf)/(γ−1); adiabatic slope = γ × isothermal slope (steeper)",
+      "Isochoric: W=0, Q=ΔU=μCvΔT; Isobaric: W=μRΔT, Q=μCpΔT",
+      "Carnot efficiency: η = 1 − T2/T1 (T in Kelvin ONLY); COP of refrigerator: β = T2/(T1−T2); relation: β = (1−η)/η",
+      "Second Law: Clausius (heat cold→hot needs external work); Kelvin-Planck (η<100% always); entropy dS=dQ/T (disorder measure)",
+      "Cyclic PV diagram: net work = enclosed area; clockwise = positive net work; ΔU=0 for complete cycle"
+    ],
+    "review": {
+      "used_local_page_grounding": true,
+      "semantic_page_read_complete": true,
+      "used_current_research": true,
+      "research_used_for_enrichment": true,
+      "template_preserved": true,
+      "scope_checked": true,
+      "syllabus_scope_verified": true,
+      "guardrails_passed": true,
+      "notes": "All thermodynamics content grounded in OCR pages 624-634. First Law, four process equations, Carnot derivation, Second Law statements, and entropy all verified against source pages. NCERT, HyperPhysics, and Khan Academy cross-checked. Content stays within NEET thermodynamics syllabus boundary (Chapter 14, Physics-1). Carnot four-stroke cycle verified from page 633, η=1−T2/T1 verified from page 633-634, COP from page 632."
+    }
+  }
+}

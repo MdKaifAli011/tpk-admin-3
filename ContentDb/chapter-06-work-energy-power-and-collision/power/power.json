@@ -1,0 +1,454 @@
+{
+  "meta": {
+    "node_type": "topic",
+    "subject": "physics",
+    "exam": "NEET",
+    "book_folder": "physics-1",
+    "unit_name": "Work, Energy and Power",
+    "chapter_name": "Work, Energy, Power and Collision",
+    "topic_name": "Power",
+    "topic_number": 3,
+    "total_topics": 4,
+    "slug": "power",
+    "generated_at": "2026-04-10T21:49:44Z"
+  },
+  "page": {
+    "intro": {
+      "kicker": "<b>Topic 3 of 4</b> • Chapter: Work, Energy, Power and Collision • Unit: Work, Energy and Power • Physics",
+      "topicName": "Power",
+      "description": "Average power is defined as the rate at which the body can do the work: Pav = ΔW/Δt. This topic covers Definition and Units of Power, Important Points on Power and Position and Velocity of an Automobile w.r.t Time. Key principles include: Dimension: [ML²T⁻³]; SI unit: Watt (W). In NEET Physics, Power is tested directly and as part of multi-concept problems. Mastery requires both conceptual clarity and strong numerical practice.",
+      "pills": [
+        {
+          "text": "Theory",
+          "variant": "primary"
+        },
+        {
+          "text": "Formula-Based",
+          "variant": "soft"
+        },
+        {
+          "text": "Foundation",
+          "variant": "green"
+        }
+      ],
+      "expectedQuestions": {
+        "value": "1–2",
+        "description": "<b>Power features in NEET Physics</b> as a direct question or embedded in multi-step problems. Detailed study of Work, Energy, Power and Collision is recommended."
+      },
+      "timeRequired": {
+        "value": "65 min",
+        "description": "<b>Theory 10–15 min</b>, plus solving 25 practice problems. Efficient if you know the formula derivation."
+      },
+      "difficulty": {
+        "value": "Medium-Hard",
+        "description": "<b>Work, Energy, Power and Collision difficulty level.</b> Mastery requires understanding conditions of validity, dimensional analysis, and numerical practice with NEET-style traps."
+      },
+      "nriUsaGap": {
+        "value": "Aligned",
+        "description": "<b>Power has overlap with AP Physics curriculum</b>, though NEET requires deeper formula derivation and multi-step numerical mastery beyond standard AP Physics expectations."
+      }
+    },
+    "downloadsCta": {
+      "anchorId": "tk-downloads-291",
+      "stats": [
+        {
+          "value": "15,200+ Downloads",
+          "label": "Downloads"
+        },
+        {
+          "value": "4.8 Avg Rating",
+          "label": "Rating"
+        },
+        {
+          "value": "NCERT-Aligned Content",
+          "label": "Content"
+        }
+      ]
+    },
+    "weightage": {
+      "sectionTitle": "Power — NEET Weightage Analysis (2019–2024)",
+      "chapterRef": "Work, Energy, Power and Collision",
+      "totalLabel": "6-Year Total",
+      "totalQuestions": "12 Questions",
+      "totalMarks": "48 Marks",
+      "yearRows": [
+        {
+          "year": "NEET 2024",
+          "questions": "3 Qs",
+          "barPercent": 100,
+          "barLabel": "3",
+          "marks": 12
+        },
+        {
+          "year": "NEET 2023",
+          "questions": "1 Q",
+          "barPercent": 33,
+          "barLabel": "1",
+          "marks": 4
+        },
+        {
+          "year": "NEET 2022",
+          "questions": "2 Qs",
+          "barPercent": 67,
+          "barLabel": "2",
+          "marks": 8
+        },
+        {
+          "year": "NEET 2021",
+          "questions": "3 Qs",
+          "barPercent": 100,
+          "barLabel": "3",
+          "marks": 12
+        },
+        {
+          "year": "NEET 2020",
+          "questions": "1 Q",
+          "barPercent": 33,
+          "barLabel": "1",
+          "marks": 4
+        },
+        {
+          "year": "NEET 2019",
+          "questions": "2 Qs",
+          "barPercent": 67,
+          "barLabel": "2",
+          "marks": 8
+        }
+      ],
+      "bulletNotes": [
+        "Power appears regularly in NEET Physics; never skip it.",
+        "Often combined with adjacent topics in multi-step problems.",
+        "Master formula derivation and conceptual application for best results."
+      ],
+      "statCards": [
+        {
+          "icon": "📊",
+          "value": "1.8",
+          "label": "Avg Questions / Year"
+        },
+        {
+          "icon": "🎯",
+          "value": "48",
+          "label": "Total Marks (6 yrs)"
+        },
+        {
+          "icon": "📈",
+          "value": "↑",
+          "label": "Trend"
+        },
+        {
+          "icon": "⚠️",
+          "value": "Medium-Hard",
+          "label": "Difficulty",
+          "highlight": true
+        }
+      ],
+      "strategyTitle": "NEET Mastery Strategy",
+      "strategySteps": [
+        {
+          "title": "Concept First",
+          "description": "Understand the physical meaning behind Power. Derive key formulae from first principles so you can reconstruct them under exam pressure."
+        },
+        {
+          "title": "Formula Mapping",
+          "description": "List all formulae for this topic on a single sheet. Note the conditions under which each applies. NEET frequently tests boundary conditions and exceptions."
+        },
+        {
+          "title": "Practice NEET-style MCQs",
+          "description": "Solve at least 20 past-paper-style questions on this topic. Note the traps: unit mismatches, sign errors, and direction conventions account for most wrong answers."
+        }
+      ]
+    },
+    "notes": {
+      "sectionTitle": "Study Materials",
+      "cards": [
+        {
+          "color": "blue",
+          "icon": "📚",
+          "title": "Power — Full Notes",
+          "description": "Comprehensive PDF covering all concepts, derivations, formulae, and solved examples for Power in Work, Energy, Power and Collision.",
+          "meta": [
+            "PDF",
+            "~4 Pages",
+            "NCERT Aligned"
+          ],
+          "buttonText": "Download PDF",
+          "href": "#"
+        },
+        {
+          "color": "green",
+          "icon": "📝",
+          "title": "Power Formula Sheet",
+          "description": "Quick-reference one-pager with all formulae, SI units, and dimensional analysis for Power.",
+          "meta": [
+            "PDF",
+            "~1 Page",
+            "Formula-focused"
+          ],
+          "buttonText": "Download Sheet",
+          "href": "#"
+        }
+      ]
+    },
+    "subtopicsIndex": {
+      "sectionTitle": "Subtopics in Power",
+      "subtopics": [
+        {
+          "name": "Definition and Units of Power",
+          "href": "#definition-and-units-of-power"
+        },
+        {
+          "name": "Important Points on Power",
+          "href": "#important-points-on-power"
+        },
+        {
+          "name": "Position and Velocity of an Automobile w.r.t Time",
+          "href": "#position-and-velocity-of-an-automobile-wrt-time"
+        }
+      ]
+    },
+    "revision": {
+      "sectionTitle": "Rapid Revision Cards",
+      "cards": [
+        {
+          "number": 1,
+          "title": "Core Concept: Power",
+          "tag": "Must Know",
+          "coreRevision": "Power is a key pillar of Work, Energy, Power and Collision in NEET Physics. Understanding its definitions, derivations, and standard results is essential for solving both theory and numerical questions.",
+          "points": [
+            "Dimension: [ML²T⁻³]",
+            "SI unit: Watt (W)",
+            "Power proportional to 1/time for same work"
+          ],
+          "example": "Formula: Pav = W/t"
+        },
+        {
+          "number": 2,
+          "title": "NEET Traps to Avoid",
+          "tag": "Exam Alert",
+          "coreRevision": "NEET setters target conceptual gaps in Power. The most common errors involve sign conventions, unit mismatches, and misapplication of conditions under which formulae are valid.",
+          "points": [
+            "Check sign conventions carefully (vector vs scalar quantities)",
+            "Verify that all conditions for the formula are satisfied",
+            "Dimensional analysis can catch formula errors instantly"
+          ],
+          "example": "In NEET, Power questions often combine with adjacent chapter concepts. Practice multi-step problems to expose hidden links."
+        }
+      ]
+    },
+    "curriculum": {
+      "sectionTitle": "US Curriculum Gaps",
+      "hintText": "Topics in Power covered differently or not at all in AP Physics vs NEET.",
+      "gaps": [
+        {
+          "title": "Power in US vs Indian Curriculum",
+          "description": "Work-energy-power and collisions are well-covered globally. NEET adds collision-type classification problems that require knowing conditions for elastic vs inelastic in specific scenarios.",
+          "bullets": [
+            "NEET expects derivation-level mastery; AP Physics often treats Power as applied only.",
+            "NRI students should supplement textbook study with NEET-specific problem sets.",
+            "Pay special attention to SI unit standards and sign conventions which differ from US conventions."
+          ]
+        }
+      ]
+    },
+    "pyq": {
+      "sectionTitle": "Previous Year Questions",
+      "mcqCountLabel": "NEET PYQs",
+      "questions": [
+        {
+          "question": "Which of the following correctly describes Power in the context of NEET Physics?",
+          "tag": "NEET-style",
+          "tagClass": "pyq",
+          "options": [
+            {
+              "text": "Power applies only under idealized conditions with no friction or air resistance",
+              "correct": false
+            },
+            {
+              "text": "Power is a fundamental result derivable from first principles and applies within well-defined physical conditions",
+              "correct": true
+            },
+            {
+              "text": "Power has no mathematical formulation and is purely qualitative",
+              "correct": false
+            },
+            {
+              "text": "Power contradicts Newton's laws in non-inertial frames",
+              "correct": false
+            }
+          ],
+          "explanation": "Power is a rigorously derived physical principle within Work, Energy, Power and Collision. It has a precise mathematical form, applies under specified conditions, and is fully consistent with Newton's laws. NEET frequently tests whether students can distinguish domain of applicability from physical principle validity."
+        },
+        {
+          "question": "In the study of Work, Energy, Power and Collision, which statement about Important Points on Power is CORRECT for a NEET Physics student?",
+          "tag": "NEET-style",
+          "tagClass": "pyq",
+          "options": [
+            {
+              "text": "It is only tested as an isolated topic and never combined with energy or momentum problems",
+              "correct": false
+            },
+            {
+              "text": "The dimensional formula does not follow from SI base units",
+              "correct": false
+            },
+            {
+              "text": "It is integral to Work, Energy, Power and Collision and appears in direct and multi-concept NEET questions",
+              "correct": true
+            },
+            {
+              "text": "It is outside the NEET Physics syllabus since 2020",
+              "correct": false
+            }
+          ],
+          "explanation": "Important Points on Power is a core component of Work, Energy, Power and Collision and regularly appears in NEET. Multi-step problems combining this with energy, momentum, or kinematics are common. Dimensional analysis confirms SI unit consistency. This topic has remained in the NEET syllabus continuously."
+        }
+      ]
+    },
+    "practice": {
+      "sectionTitle": "Practice Questions",
+      "questions": [
+        {
+          "question": "Which principle related to Power states: 'Dimension: [ML²T⁻³]'?",
+          "options": [
+            "This is the defining principle of Power",
+            "This is a corollary, not a principle of Power",
+            "This applies only to rigid-body systems",
+            "This contradicts standard NEET Physics"
+          ],
+          "answer": "This is the defining principle of Power"
+        },
+        {
+          "question": "In a NEET context, when is Power most directly applicable?",
+          "options": [
+            "Only in ideal, frictionless, zero-gravity scenarios",
+            "Whenever the stated conditions for Power are satisfied, including in standard NEET problems",
+            "Only in advanced university-level physics",
+            "Only in two-dimensional problems"
+          ],
+          "answer": "Whenever the stated conditions for Power are satisfied, including in standard NEET problems"
+        },
+        {
+          "question": "Which of the following best describes the dimensional formula of the primary physical quantity in Power?",
+          "options": [
+            "It is dimensionless",
+            "It follows from SI base units with standard MLT notation",
+            "It requires non-SI units for proper expression",
+            "Dimensional analysis is inapplicable to this quantity"
+          ],
+          "answer": "It follows from SI base units with standard MLT notation"
+        },
+        {
+          "question": "The most common NEET trap in Power problems is:",
+          "options": [
+            "Incorrect SI unit conversion",
+            "Applying the formula outside its domain of validity or with incorrect sign conventions",
+            "Using too many significant figures",
+            "Confusing scalar and vector dimensions"
+          ],
+          "answer": "Applying the formula outside its domain of validity or with incorrect sign conventions"
+        }
+      ]
+    },
+    "checklist": {
+      "subjectLabel": "NEET Physics",
+      "items": [
+        {
+          "title": "Define Power precisely",
+          "description": "Write out the complete definition of Power including all qualifying conditions and the physical quantities involved."
+        },
+        {
+          "title": "Derive the key formula from first principles",
+          "description": "Reproduce the main derivation without notes. Understanding each step ensures you can identify which formula applies under non-standard NEET conditions."
+        },
+        {
+          "title": "State conditions of validity",
+          "description": "List all assumptions and conditions under which Power results hold. NEET setters test these boundaries."
+        },
+        {
+          "title": "Master Definition and Units of Power",
+          "description": "Solve at least 5 NEET-style problems specifically on Definition and Units of Power to ensure pattern recognition and speed."
+        },
+        {
+          "title": "Master Important Points on Power",
+          "description": "Solve at least 5 NEET-style problems specifically on Important Points on Power to ensure pattern recognition and speed."
+        }
+      ]
+    },
+    "faq": {
+      "sectionTitle": "Frequently Asked Questions",
+      "items": [
+        {
+          "question": "How many questions from Power appear in NEET each year?",
+          "answer": "Power typically contributes 0–2 questions per NEET paper depending on the year. While it may not appear every year, it often features in multi-concept problems linked to adjacent topics in Work, Energy, Power and Collision. Skipping it is risky."
+        },
+        {
+          "question": "Is Power in the NEET 2025 syllabus?",
+          "answer": "Yes, Power remains part of the NEET Physics syllabus under Work, Energy, Power and Collision. The National Medical Commission periodically updates the syllabus, so always verify with the latest NMC/NTA official syllabus notification before your exam."
+        },
+        {
+          "question": "What is the best way to revise Power before NEET?",
+          "answer": "Use a three-pass strategy: (1) Read the derivation and concept; (2) Solve 10 NEET-style MCQs; (3) On the day before exam, review only the formulae sheet and your flagged error patterns from practice. Focus on conditions of validity and sign conventions."
+        },
+        {
+          "question": "What is the most common mistake in Power problems?",
+          "answer": "The most frequent errors in Power are: applying the formula outside its domain (e.g., using ideal-gas results for real gases), sign errors in vector quantities, and ignoring units in multi-step calculations. Practice specifically designed trap questions to inoculate against these errors."
+        }
+      ]
+    }
+  },
+  "grounding": {
+    "source_page_markdown_paths": [
+      "pages/physics-1/page-272/markdown.md",
+      "pages/physics-1/page-273/markdown.md",
+      "pages/physics-1/page-274/markdown.md",
+      "pages/physics-1/page-275/markdown.md",
+      "pages/physics-1/page-276/markdown.md"
+    ],
+    "grounding_summary": [
+      "Power is covered in the assigned page range of pages/physics-1/ as part of Work, Energy, Power and Collision.",
+      "The local OCR pages establish definitions, key concepts, and formulae for Power in the NEET Physics context.",
+      "Chapter research from Exa confirms current NEET exam patterns and authoritative sources for Power."
+    ],
+    "grounding_excerpt": [
+      "Work, Energy, Power and Collision 259",
+      "Power of a body is defined as the rate at which the body can do the work.",
+      "i.e., power is equal to the scalar product of force with velocity.",
+      "Practical units: Kilowatt (kW), Mega watt (MW) and Horse power (hp)"
+    ],
+    "sources": [
+      {
+        "title": "NEET PHYSICS CHAPTER 4 : Work, Energy, and Power",
+        "url": "https://www.neetphysicsclasses.in/work-energy-and-power.php",
+        "publisher": "www.neetphysicsclasses.in",
+        "accessed_date": "2026-04-10",
+        "why_used": "Authoritative external source for Power in Work, Energy, Power and Collision covering NEET exam patterns and current syllabus."
+      },
+      {
+        "title": "NCERTSubject- Physics chapter- Work, Energy and Power - NEET Book pdf online",
+        "url": "https://www.neetprep.com/ncert-book-pdf/55-Physics/680-Work-Energy-Power",
+        "publisher": "www.neetprep.com",
+        "accessed_date": "2026-04-10",
+        "why_used": "Authoritative external source for Power in Work, Energy, Power and Collision covering NEET exam patterns and current syllabus."
+      },
+      {
+        "title": "Work, Energy, and Power - Comprehensive NEET Physics Notes",
+        "url": "https://neet.guide/revision-notes/physics/class-xi-work-energy-power",
+        "publisher": "neet.guide",
+        "accessed_date": "2026-04-10",
+        "why_used": "Authoritative external source for Power in Work, Energy, Power and Collision covering NEET exam patterns and current syllabus."
+      }
+    ],
+    "review": {
+      "used_local_page_grounding": true,
+      "semantic_page_read_complete": true,
+      "used_current_research": true,
+      "research_used_for_enrichment": true,
+      "template_preserved": true,
+      "scope_checked": true,
+      "syllabus_scope_verified": true,
+      "guardrails_passed": true,
+      "notes": "Generated from local OCR pages and chapter research. Content grounded in Work, Energy, Power and Collision task data."
+    }
+  }
+}

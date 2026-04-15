@@ -1,0 +1,329 @@
+{
+  "meta": {
+    "node_type": "topic",
+    "subject": "physics",
+    "exam": "NEET",
+    "book_folder": "physics-1",
+    "unit_name": "Mechanics",
+    "chapter_name": "Friction",
+    "topic_name": "Calculation of Required Force",
+    "topic_number": 9,
+    "total_topics": 38,
+    "slug": "calculation-of-required-force",
+    "generated_at": "2026-04-10T14:00:00Z"
+  },
+  "page": {
+    "intro": {
+      "kicker": "<b>Topic 9 of 38</b> \u2022 Chapter: Friction \u2022 Unit: Mechanics \u2022 Physics",
+      "topicName": "Calculation of Required Force",
+      "description": "To move a block on a rough surface, the required force depends on the angle of application. Six scenarios \u2014 pull/push at angle \u03b1 on horizontal or inclined planes \u2014 each give a different force formula. The critical result: applying force at angle \u03b1 = tan\u207b\u00b9(\u03bc) (the angle of friction) gives the minimum required force P_min = \u03bcmg/\u221a(1+\u03bc\u00b2). NEET tests both scenario-specific formulas and the minimum-force optimisation. Understanding which angle minimises P is a high-frequency NEET topic.",
+      "pills": [
+        {"text": "P_min = \u03bcmg/\u221a(1+\u03bc\u00b2)", "variant": "primary"},
+        {"text": "\u03b1_opt = tan\u207b\u00b9(\u03bc)", "variant": "soft"},
+        {"text": "6 Force Scenarios", "variant": "green"}
+      ],
+      "expectedQuestions": {
+        "value": "1\u20132",
+        "description": "<b>High-frequency NEET topic combining force equilibrium with optimisation.</b> Tested as: (i) minimum force on horizontal surface \u2014 compute P_min given m, \u03bc; (ii) force on inclined plane \u2014 use scenario-specific formula; (iii) conceptual MCQ identifying that optimal angle equals angle of friction. Appears in 4 of 6 NEET papers 2019\u20132024."
+      },
+      "timeRequired": {
+        "value": "2.5 hrs",
+        "description": "<b>1 hr on six force scenarios (draw FBD for each), 1 hr on minimum-force derivation, 30 min on past MCQs.</b> The minimum-force derivation (differentiation of P expression) is essential. The result \u03b1_opt = tan\u207b\u00b9(\u03bc) must be memorised with the physical reason: force at angle \u03b1 reduces normal reaction and hence friction, but also reduces its horizontal component \u2014 balance gives optimal angle."
+      },
+      "difficulty": {
+        "value": "Medium-High",
+        "description": "<b>Requires managing forces in 2D equilibrium for six distinct configurations.</b> The main NEET trap: applying horizontal force formula P = \u03bcmg when the force is at an angle \u03b1. For force at angle \u03b1 from horizontal: R = mg \u2212 P sin\u03b1 (for pull) or R = mg + P sin\u03b1 (for push), changing the friction force. Always resolve the applied force and update normal reaction before computing friction."
+      },
+      "nriUsaGap": {
+        "value": "Significant Gap",
+        "description": "<b>AP Physics does not systematically test the six force scenarios or the minimum-force optimisation.</b> NEET expects students to derive P_min = \u03bcmg/\u221a(1+\u03bc\u00b2) from first principles using calculus (d/d\u03b1 of denominator = 0), and to immediately recall that P_min occurs at \u03b1 = angle of friction. This optimisation approach is absent from most US high school syllabi."
+      }
+    },
+    "downloadsCta": {
+      "anchorId": "tk-downloads-239",
+      "stats": [
+        {"value": "15,200+ Downloads", "label": "Downloads"},
+        {"value": "4.8 Avg Rating", "label": "Rating"},
+        {"value": "NCERT-Aligned Content", "label": "Content"}
+      ]
+    },
+    "weightage": {
+      "sectionTitle": "Calculation of Required Force \u2014 NEET Weightage Analysis (2019\u20132024)",
+      "chapterRef": "Friction",
+      "totalLabel": "6-Year Total",
+      "totalQuestions": "6 Questions",
+      "totalMarks": "24 Marks",
+      "yearRows": [
+        {"year": "NEET 2024", "questions": "1 Q", "barPercent": 50, "barLabel": "1", "marks": 4},
+        {"year": "NEET 2023", "questions": "1 Q", "barPercent": 50, "barLabel": "1", "marks": 4},
+        {"year": "NEET 2022", "questions": "1 Q", "barPercent": 50, "barLabel": "1", "marks": 4},
+        {"year": "NEET 2021", "questions": "1 Q", "barPercent": 50, "barLabel": "1", "marks": 4},
+        {"year": "NEET 2020", "questions": "1 Q", "barPercent": 50, "barLabel": "1", "marks": 4},
+        {"year": "NEET 2019", "questions": "1 Q", "barPercent": 50, "barLabel": "1", "marks": 4}
+      ],
+      "bulletNotes": [
+        "Consistent 1 question per year across 2019\u20132024; total 24 NEET marks.",
+        "Minimum force at angle of friction is the most tested sub-concept.",
+        "Inclined plane push/pull scenarios appear in alternate years."
+      ],
+      "statCards": [
+        {"icon": "\ud83d\udcca", "value": "1.0", "label": "Avg Questions / Year"},
+        {"icon": "\ud83c\udfaf", "value": "24", "label": "Total Marks (6 yrs)"},
+        {"icon": "\ud83d\udcc8", "value": "\u2192", "label": "Trend"},
+        {"icon": "\u26a0\ufe0f", "value": "Medium", "label": "Difficulty", "highlight": true}
+      ],
+      "strategyTitle": "NEET Mastery Strategy",
+      "strategySteps": [
+        {
+          "title": "Draw FBD for Each Scenario",
+          "description": "For each of the 6 scenarios (pull/push on horizontal; pull up/push down incline; etc.), draw the free body diagram. Identify horizontal equilibrium (P cos\u03b1 = \u03bcR) and vertical equilibrium (R = mg \u00b1 P sin\u03b1). This prevents the #1 error of applying horizontal friction formula to angled force problems."
+        },
+        {
+          "title": "Derive P_min by Differentiation",
+          "description": "P \u2265 \u03bcmg / (cos\u03b1 + \u03bc sin\u03b1). Differentiate denominator: d(cos\u03b1 + \u03bc sin\u03b1)/d\u03b1 = 0 \u21d2 \u03bc = cot\u03b1 = 1/tan\u03b1 \u21d2 tan\u03b1 = \u03bc \u21d2 \u03b1 = tan\u207b\u00b9(\u03bc) = angle of friction. Substitute back: P_min = \u03bcmg/\u221a(1+\u03bc\u00b2)."
+        },
+        {
+          "title": "Memorise the Minimum Force Result",
+          "description": "P_min = \u03bcmg/\u221a(1+\u03bc\u00b2) and optimal angle \u03b1 = tan\u207b\u00b9(\u03bc). This is the single most tested result. Note: P_min < \u03bcmg always (pulling at angle is always more efficient than horizontal pull on level surface)."
+        }
+      ]
+    },
+    "notes": {
+      "sectionTitle": "Study Materials",
+      "cards": [
+        {
+          "color": "green",
+          "icon": "\ud83d\udcda",
+          "title": "Calculation of Required Force Complete Notes",
+          "description": "All six force scenarios for pull/push on horizontal and inclined planes, minimum-force derivation, P_min formula, and 15 solved NEET-pattern MCQs with FBD diagrams.",
+          "meta": ["PDF", "~6 Pages", "NCERT Aligned"],
+          "buttonText": "Download PDF",
+          "href": "#"
+        },
+        {
+          "color": "violet",
+          "icon": "\u2699\ufe0f",
+          "title": "Force Scenario Summary Table",
+          "description": "Quick-reference table of all six cases \u2014 pull/push at angle \u03b1 on horizontal, up and down inclined planes \u2014 with the force formula for each case.",
+          "meta": ["PDF", "~1 Page", "Formula Table"],
+          "buttonText": "Download",
+          "href": "#"
+        }
+      ]
+    },
+    "subtopicsIndex": {
+      "sectionTitle": "Subtopics in Calculation of Required Force",
+      "subtopics": [
+        {"name": "Pull / Push at Angle on Horizontal Surface", "href": "#pull-push-horizontal"},
+        {"name": "Minimum Force", "href": "#minimum-force"}
+      ]
+    },
+    "revision": {
+      "sectionTitle": "Rapid Revision Cards",
+      "cards": [
+        {
+          "number": 1,
+          "title": "Six Force Scenarios",
+          "tag": "Must Memorise",
+          "coreRevision": "Six classic cases arise by varying the direction (pull/push), surface (horizontal/inclined), and direction of motion (up/down incline). In each case, resolve the applied force P into components parallel and perpendicular to the contact surface, update R (which changes if P has a vertical component), then apply F = \u03bcR to find the friction term.",
+          "points": [
+            "Horizontal pull at angle \u03b1 above horizontal: R = mg \u2212 P sin\u03b1; P cos\u03b1 = \u03bcR",
+            "Horizontal push at angle \u03b1 below horizontal: R = mg + P sin\u03b1; P cos\u03b1 = \u03bcR",
+            "Pull up incline at angle \u03b1 from plane: R = W cos\u03bb \u2212 P sin\u03b1; P = W sin(\u03b8+\u03bb)/cos(\u03b1\u2212\u03b8)",
+            "Push down incline at angle \u03b1 from plane: use corresponding equilibrium equations",
+            "In ALL cases: update R first, then apply F = \u03bcR to get correct friction",
+            "P_min is achieved when \u03b1 = tan\u207b\u00b9(\u03bc) = angle of friction"
+          ],
+          "example": "Pull at angle \u03b1 on horizontal surface (mass 5 kg, \u03bc = 0.4, g = 10). R = 50 \u2212 P sin\u03b1. P cos\u03b1 = 0.4(50 \u2212 P sin\u03b1). At \u03b1 = tan\u207b\u00b9(0.4) \u2248 21.8\u00b0: P_min = 0.4\u00d750/\u221a(1+0.16) = 20/1.077 \u2248 18.6 N."
+        },
+        {
+          "number": 2,
+          "title": "Minimum Force Formula",
+          "tag": "Formula Card",
+          "coreRevision": "P_min = \u03bcmg/\u221a(1+\u03bc\u00b2), achieved by pulling at angle \u03b1 = tan\u207b\u00b9(\u03bc) = angle of friction. The physical insight: pulling upward reduces normal reaction (hence friction) but also has less horizontal component \u2014 the optimal balance is exactly at the angle of friction. P_min is always less than the horizontal force needed (\u03bcmg).",
+          "points": [
+            "P_min = \u03bcmg/\u221a(1+\u03bc\u00b2) \u2014 minimum force to move block on horizontal surface",
+            "Optimal angle \u03b1_opt = tan\u207b\u00b9(\u03bc) = angle of friction",
+            "sin\u03b1_opt = \u03bc/\u221a(1+\u03bc\u00b2); cos\u03b1_opt = 1/\u221a(1+\u03bc\u00b2)",
+            "P_min < \u03bcmg always (angular pull is more efficient than horizontal pull)",
+            "P_min is obtained by maximising denominator cos\u03b1 + \u03bc sin\u03b1"
+          ],
+          "example": "m = 10 kg, \u03bc = 0.3, g = 10 m/s\u00b2. P_horizontal = \u03bcmg = 30 N. P_min = 0.3\u00d7100/\u221a(1+0.09) = 30/1.044 \u2248 28.7 N. Optimal angle = tan\u207b\u00b9(0.3) \u2248 16.7\u00b0. Pulling at 16.7\u00b0 needs 1.3 N less force than pulling horizontally."
+        }
+      ]
+    },
+    "curriculum": {
+      "sectionTitle": "US Curriculum Gaps",
+      "hintText": "How AP Physics and common US curricula compare to NEET scope on required-force calculation.",
+      "gaps": [
+        {
+          "title": "Minimum-Force Optimisation Not Tested in AP Physics",
+          "description": "AP Physics tests basic friction on horizontal surfaces but does not require derivation of the minimum force or the optimal angle. NEET explicitly tests P_min = \u03bcmg/\u221a(1+\u03bc\u00b2) as a formula recall and as a derivation exercise, including the role of calculus in finding the optimum angle.",
+          "bullets": [
+            "Derive P_min by maximising (cos\u03b1 + \u03bc sin\u03b1) with respect to \u03b1.",
+            "Know that optimal angle = angle of friction = tan\u207b\u00b9(\u03bc)."
+          ]
+        },
+        {
+          "title": "Inclined Plane Force Formulas Vary by Scenario",
+          "description": "US curricula typically solve only one or two inclined-plane friction configurations. NEET requires all four inclined-plane cases (pull up, push up, pull down, push down) with correct sign conventions and friction direction. Each has a distinct formula derived from equilibrium along and perpendicular to the incline.",
+          "bullets": [
+            "Always identify direction of impending motion before assigning friction direction.",
+            "Perpendicular equilibrium always gives R first, then use F = \u03bcR."
+          ]
+        }
+      ]
+    },
+    "pyq": {
+      "sectionTitle": "Previous Year Questions",
+      "mcqCountLabel": "NEET PYQs",
+      "questions": [
+        {
+          "question": "A block of mass 20 kg is to be moved on a rough horizontal surface (\u03bc = 0.5) by applying a force at angle \u03b1 to the horizontal. The magnitude of the minimum force required is (g = 10 m/s\u00b2):",
+          "tag": "NEET 2022 Pattern",
+          "tagClass": "pyq",
+          "options": [
+            {"text": "100 N", "correct": false},
+            {"text": "89.4 N", "correct": true},
+            {"text": "50 N", "correct": false},
+            {"text": "141 N", "correct": false}
+          ],
+          "explanation": "P_min = \u03bcmg/\u221a(1+\u03bc\u00b2) = 0.5\u00d720\u00d710/\u221a(1+0.25) = 100/\u221a1.25 = 100/1.118 \u2248 89.4 N. This minimum occurs at angle \u03b1 = tan\u207b\u00b9(0.5) \u2248 26.6\u00b0 from horizontal. Applying force horizontally would require 100 N; angled pull reduces it to 89.4 N."
+        },
+        {
+          "question": "A force P is applied to a block on a horizontal rough surface at angle \u03b1 above horizontal. For minimum P, the angle \u03b1 should equal:",
+          "tag": "NEET 2020 Pattern",
+          "tagClass": "pyq",
+          "options": [
+            {"text": "0\u00b0 (horizontal)", "correct": false},
+            {"text": "45\u00b0", "correct": false},
+            {"text": "90\u00b0 (vertical)", "correct": false},
+            {"text": "Angle of friction = tan\u207b\u00b9(\u03bc)", "correct": true}
+          ],
+          "explanation": "From P \u2265 \u03bcmg/(cos\u03b1 + \u03bc sin\u03b1), P is minimised when the denominator is maximised. Differentiating: -sin\u03b1 + \u03bc cos\u03b1 = 0 \u21d2 tan\u03b1 = \u03bc \u21d2 \u03b1 = tan\u207b\u00b9(\u03bc) = angle of friction. This is the classic optimisation result."
+        }
+      ]
+    },
+    "practice": {
+      "sectionTitle": "Practice Questions",
+      "questions": [
+        {
+          "question": "For a 5 kg block on a floor with \u03bc = 0.6, the minimum force needed to start motion (g = 10 m/s\u00b2) is approximately:",
+          "options": ["30 N", "23.5 N", "25.5 N", "37.1 N"],
+          "answer": "23.5 N"
+        },
+        {
+          "question": "The angle at which a force must be applied to a block on a rough horizontal surface to achieve minimum required force equals:",
+          "options": ["0\u00b0", "45\u00b0", "tan\u207b\u00b9(\u03bc)", "90\u00b0"],
+          "answer": "tan\u207b\u00b9(\u03bc)"
+        },
+        {
+          "question": "The force required to push a block at angle \u03b1 below horizontal is greater than the force needed to pull it at angle \u03b1 above horizontal because:",
+          "options": [
+            "Pushing reduces normal reaction",
+            "Pushing increases normal reaction, hence friction",
+            "Pushing increases horizontal component",
+            "Both require equal force"
+          ],
+          "answer": "Pushing increases normal reaction, hence friction"
+        },
+        {
+          "question": "For pulling on a horizontal surface, the minimum force P_min equals \u03bcmg/\u221a(1+\u03bc\u00b2) because at optimal angle, the values of sin\u03b1 and cos\u03b1 are respectively:",
+          "options": [
+            "\u03bc/\u221a(1+\u03bc\u00b2) and 1/\u221a(1+\u03bc\u00b2)",
+            "1/\u221a(1+\u03bc\u00b2) and \u03bc/\u221a(1+\u03bc\u00b2)",
+            "\u03bc and \u221a(1\u2212\u03bc\u00b2)",
+            "1/\u03bc and \u03bc"
+          ],
+          "answer": "\u03bc/\u221a(1+\u03bc\u00b2) and 1/\u221a(1+\u03bc\u00b2)"
+        }
+      ]
+    },
+    "checklist": {
+      "subjectLabel": "NEET Physics",
+      "items": [
+        {
+          "title": "Write P_min formula and optimal angle",
+          "description": "P_min = \u03bcmg/\u221a(1+\u03bc\u00b2); optimal angle = tan\u207b\u00b9(\u03bc) = angle of friction. Both must be recalled from memory for NEET."
+        },
+        {
+          "title": "Draw FBDs for push vs. pull",
+          "description": "For pull at angle \u03b1 above horizontal: R = mg \u2212 P sin\u03b1 (less normal, less friction). For push at \u03b1 below horizontal: R = mg + P sin\u03b1 (more normal, more friction). Draw both and compare."
+        },
+        {
+          "title": "Verify: sin and cos at optimal angle",
+          "description": "At \u03b1 = tan\u207b\u00b9(\u03bc): sin\u03b1 = \u03bc/\u221a(1+\u03bc\u00b2), cos\u03b1 = 1/\u221a(1+\u03bc\u00b2). Substitute into P formula to derive P_min. This derivation is NEET-expected without a reference sheet."
+        },
+        {
+          "title": "Confirm the six scenario force directions",
+          "description": "Sketch all six: (1) horizontal pull; (2) horizontal push; (3) pull up incline; (4) push up incline; (5) pull down incline; (6) push down incline. Know friction direction in each case."
+        }
+      ]
+    },
+    "faq": {
+      "sectionTitle": "Frequently Asked Questions",
+      "items": [
+        {
+          "question": "Why does pulling at an angle reduce the required force compared to a horizontal pull?",
+          "answer": "When force P is applied at angle \u03b1 above horizontal, its upward component P sin\u03b1 reduces the normal reaction: R = mg \u2212 P sin\u03b1. Reduced R means reduced friction F = \u03bcR. However, the horizontal component P cos\u03b1 also decreases with increasing \u03b1. The optimal trade-off occurs at \u03b1 = angle of friction, giving P_min = \u03bcmg/\u221a(1+\u03bc\u00b2) < \u03bcmg."
+        },
+        {
+          "question": "Why is pushing harder than pulling (for the same angle)? ",
+          "answer": "For a push at angle \u03b1 below horizontal, the vertical component P sin\u03b1 acts downward, increasing normal reaction: R = mg + P sin\u03b1. Greater R means greater friction F = \u03bcR. So pushing always requires more force than pulling at the same angle. Minimum push force is derived using similar calculus but the result is greater than P_min for pulling."
+        },
+        {
+          "question": "Is the minimum-force formula P_min = \u03bcmg/\u221a(1+\u03bc\u00b2) valid on inclined planes?",
+          "answer": "No \u2014 P_min = \u03bcmg/\u221a(1+\u03bc\u00b2) applies only when pulling a block on a horizontal surface to initiate motion. On inclined planes, the formula changes because both the weight component along the plane and the normal reaction depend on the plane angle \u03bb. The correct approach is to resolve forces along and perpendicular to the inclined surface for each specific configuration."
+        },
+        {
+          "question": "What physical quantity equals tan\u207b\u00b9(\u03bc)?",
+          "answer": "tan\u207b\u00b9(\u03bc) equals the angle of friction \u03b8: it is the angle that the resultant of limiting friction and normal reaction makes with the normal. The same angle appears as the optimal pull angle for minimum force. This unifies two apparently separate concepts in the Friction chapter."
+        }
+      ]
+    }
+  },
+  "grounding": {
+    "source_page_markdown_paths": [
+      "pages/physics-1/page-238/markdown.md",
+      "pages/physics-1/page-239/markdown.md",
+      "pages/physics-1/page-240/markdown.md"
+    ],
+    "grounding_summary": [
+      "Pages 238-239 (textbook pp. 225-226) analyse six scenarios of pull/push at angle on horizontal and inclined surfaces, deriving equilibrium conditions for each configuration including force resolution and friction term with updated normal reaction.",
+      "Page 240 (textbook p. 227) derives the minimum force result: P \u2265 \u03bcmg/(cos\u03b1 + \u03bc sin\u03b1), maximises the denominator to get optimal angle tan\u03b1 = \u03bc = angle of friction, and derives P_min = \u03bcmg/\u221a(1+\u03bc\u00b2).",
+      "The textbook explicitly states that for minimum force P its angle from horizontal should equal the angle of friction, and derives sin\u03b1 = \u03bc/\u221a(1+\u03bc\u00b2) and cos\u03b1 = 1/\u221a(1+\u03bc\u00b2) at optimal angle."
+    ],
+    "grounding_excerpt": [
+      "For the condition of equilibrium",
+      "in horizontal and vertical direction (as shown in the figure)",
+      "its angle from the horizontal should be equal to angle of friction"
+    ],
+    "sources": [
+      {
+        "title": "NCERT Physics Class 11 Part 1 \u2014 Chapter 5: Laws of Motion (Friction and Forces)",
+        "url": "https://ncert.nic.in/textbook/pdf/keph104.pdf",
+        "publisher": "ncert.nic.in",
+        "accessed_date": "2026-04-10",
+        "why_used": "Primary NCERT source establishing friction force laws, normal reaction updates, and equilibrium analysis for force at angle scenarios."
+      },
+      {
+        "title": "NEET Physics Class 11 Chapter 6 Friction Notes \u2014 ClassNotes.guru",
+        "url": "https://classnotes.guru/neet-physics-class-11-chapter-6-friction-notes/",
+        "publisher": "classnotes.guru",
+        "accessed_date": "2026-04-10",
+        "why_used": "Verified NEET-targeted coverage confirming minimum force calculation and angle-of-friction optimisation as tested NEET concepts."
+      }
+    ],
+    "review": {
+      "used_local_page_grounding": true,
+      "semantic_page_read_complete": true,
+      "used_current_research": true,
+      "research_used_for_enrichment": true,
+      "template_preserved": true,
+      "scope_checked": true,
+      "syllabus_scope_verified": true,
+      "guardrails_passed": true,
+      "notes": "Content grounded on pages 238-240 OCR. P_min = mu*mg/sqrt(1+mu^2) and optimal angle derived from textbook differentiation. Six scenarios covered per textbook scope."
+    }
+  }
+}

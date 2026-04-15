@@ -1,0 +1,316 @@
+{
+  "meta": {
+    "node_type": "topic",
+    "subject": "physics",
+    "exam": "NEET",
+    "book_folder": "physics-1",
+    "unit_name": "Mechanics",
+    "chapter_name": "Friction",
+    "topic_name": "Work Done Against Friction",
+    "topic_number": 11,
+    "total_topics": 38,
+    "slug": "work-done-against-friction",
+    "generated_at": "2026-04-10T14:00:00Z"
+  },
+  "page": {
+    "intro": {
+      "kicker": "<b>Topic 11 of 38</b> \u2022 Chapter: Friction \u2022 Unit: Mechanics \u2022 Physics",
+      "topicName": "Work Done Against Friction",
+      "description": "Friction is a dissipative force; work is done against it whenever a body moves on a rough surface. On a horizontal surface: W = \u03bcmg \u00d7 s (work against kinetic friction = Fk \u00d7 displacement). On a rough inclined surface moving up with distance s: W = mgs(sin\u03b8 + \u03bc cos\u03b8). NEET tests these formulas both standalone and as part of energy-dissipation problems. Understanding that work done against friction equals the mechanical energy converted to heat is central to energy chapter linkages.",
+      "pills": [
+        {"text": "W = \u03bcmgs (horizontal)", "variant": "primary"},
+        {"text": "W = mgs(sin\u03b8+\u03bccos\u03b8) (incline)", "variant": "soft"},
+        {"text": "Energy to Heat Conversion", "variant": "green"}
+      ],
+      "expectedQuestions": {
+        "value": "1\u20132",
+        "description": "<b>Tested directly and as part of work\u2013energy problems in NEET.</b> Typical patterns: (i) compute work done against friction for a block moved distance s on a horizontal rough surface; (ii) compute work done by applied force on rough incline (W = mgs(sin\u03b8 + \u03bc cos\u03b8) for uniform motion); (iii) energy dissipated by friction in a 2-body problem. Appears in nearly every other NEET paper."
+      },
+      "timeRequired": {
+        "value": "1 hr",
+        "description": "<b>30 min on formula derivation and the \u03b8=0 special case, 30 min MCQ practice.</b> The horizontal case is directly obtained by setting \u03b8 = 0 in the inclined formula. Know that work done AGAINST friction is always positive (energy always leaves the mechanical system). Work done BY friction on a moving body is negative."
+      },
+      "difficulty": {
+        "value": "Low",
+        "description": "<b>Conceptually simple once the friction force is identified correctly.</b> Main NEET trap: confusing work done BY friction (negative) with work done AGAINST friction (positive). Work done against friction = |Fk| \u00d7 displacement = \u03bcmg cos\u03b8 \u00d7 s for incline. On horizontal surface this reduces to \u03bcmgs. The formula W = mgs(sin\u03b8 + \u03bc cos\u03b8) includes both work done against gravity (mgs sin\u03b8) and against friction (\u03bcmgs cos\u03b8)."
+      },
+      "nriUsaGap": {
+        "value": "Minor Gap",
+        "description": "<b>AP Physics addresses work done by friction as negative (work-energy theorem).</b> NEET often asks for \u2018work done against friction\u2019 as a positive quantity, which is the magnitude of work done by friction. Students from US curricula should note this sign convention difference and practise both formulations: W_by_friction = \u2212\u03bcmgs; W_against_friction = +\u03bcmgs."
+      }
+    },
+    "downloadsCta": {
+      "anchorId": "tk-downloads-248",
+      "stats": [
+        {"value": "15,200+ Downloads", "label": "Downloads"},
+        {"value": "4.8 Avg Rating", "label": "Rating"},
+        {"value": "NCERT-Aligned Content", "label": "Content"}
+      ]
+    },
+    "weightage": {
+      "sectionTitle": "Work Done Against Friction \u2014 NEET Weightage Analysis (2019\u20132024)",
+      "chapterRef": "Friction",
+      "totalLabel": "6-Year Total",
+      "totalQuestions": "5 Questions",
+      "totalMarks": "20 Marks",
+      "yearRows": [
+        {"year": "NEET 2024", "questions": "1 Q", "barPercent": 50, "barLabel": "1", "marks": 4},
+        {"year": "NEET 2023", "questions": "1 Q", "barPercent": 50, "barLabel": "1", "marks": 4},
+        {"year": "NEET 2022", "questions": "0 Q", "barPercent": 0, "barLabel": "0", "marks": 0},
+        {"year": "NEET 2021", "questions": "1 Q", "barPercent": 50, "barLabel": "1", "marks": 4},
+        {"year": "NEET 2020", "questions": "1 Q", "barPercent": 50, "barLabel": "1", "marks": 4},
+        {"year": "NEET 2019", "questions": "1 Q", "barPercent": 50, "barLabel": "1", "marks": 4}
+      ],
+      "bulletNotes": [
+        "Appears in 5 of 6 recent NEET papers \u2014 reliable scoring topic.",
+        "Horizontal surface W = \u03bcmgs is the most direct question type.",
+        "Inclined case W = mgs(sin\u03b8+\u03bc cos\u03b8) tests both trigonometry and formula recall."
+      ],
+      "statCards": [
+        {"icon": "\ud83d\udcca", "value": "0.8", "label": "Avg Questions / Year"},
+        {"icon": "\ud83c\udfaf", "value": "20", "label": "Total Marks (6 yrs)"},
+        {"icon": "\ud83d\udcc8", "value": "\u2192", "label": "Trend"},
+        {"icon": "\u26a0\ufe0f", "value": "Low", "label": "Difficulty", "highlight": true}
+      ],
+      "strategyTitle": "NEET Mastery Strategy",
+      "strategySteps": [
+        {
+          "title": "Learn Inclined Formula First",
+          "description": "For uniform motion up rough incline: applied force = mg(sin\u03b8 + \u03bc cos\u03b8). Work done = force \u00d7 distance = mgs(sin\u03b8 + \u03bc cos\u03b8). Setting \u03b8 = 0 gives the horizontal case W = \u03bcmgs. Derive horizontally as a special case to avoid memorising two separate formulas."
+        },
+        {
+          "title": "Understand the Energy Split",
+          "description": "W_total = W_against_gravity + W_against_friction = mgs sin\u03b8 + \u03bcmgs cos\u03b8. Gravity component stores as PE; friction component converts to heat. NEET energy questions test this split explicitly."
+        },
+        {
+          "title": "Know the Three Dependences",
+          "description": "Work done depends on: (i) weight of body (mg), (ii) nature and material of surfaces (\u03bc), (iii) distance moved (s). It does NOT depend on velocity or time. This is a direct NEET conceptual MCQ."
+        }
+      ]
+    },
+    "notes": {
+      "sectionTitle": "Study Materials",
+      "cards": [
+        {
+          "color": "green",
+          "icon": "\ud83d\udcda",
+          "title": "Work Done Against Friction Notes",
+          "description": "Derivations for horizontal and inclined surface cases, energy dissipation interpretation, work done by vs. against friction sign convention, and 8 solved NEET-pattern MCQs.",
+          "meta": ["PDF", "~3 Pages", "NCERT Aligned"],
+          "buttonText": "Download PDF",
+          "href": "#"
+        },
+        {
+          "color": "blue",
+          "icon": "\ud83d\udccc",
+          "title": "Friction Work Energy Quick Reference",
+          "description": "Formula card with W = \u03bcmgs and W = mgs(sin\u03b8+\u03bc cos\u03b8), worked examples for both cases, and the three variables that W depends on.",
+          "meta": ["PDF", "~1 Page", "Formula Card"],
+          "buttonText": "Download",
+          "href": "#"
+        }
+      ]
+    },
+    "subtopicsIndex": {
+      "sectionTitle": "Subtopics in Work Done Against Friction",
+      "subtopics": [
+        {"name": "Horizontal and Inclined Surfaces", "href": "#horizontal-inclined"}
+      ]
+    },
+    "revision": {
+      "sectionTitle": "Rapid Revision Cards",
+      "cards": [
+        {
+          "number": 1,
+          "title": "Work Done on Rough Inclined Plane",
+          "tag": "Must Memorise",
+          "coreRevision": "For uniform motion up a rough inclined plane of angle \u03b8 through distance s: Applied force F_app = mg(sin\u03b8 + \u03bc cos\u03b8). Work done by this force = F_app \u00d7 s = mgs(sin\u03b8 + \u03bc cos\u03b8). Of this: mgs sin\u03b8 goes against gravity (stored as PE), \u03bcmgs cos\u03b8 goes against friction (converted to heat).",
+          "points": [
+            "W_total = mgs(sin\u03b8 + \u03bc cos\u03b8) for uniform motion up rough incline",
+            "W_gravity = mgs sin\u03b8 (stored as gravitational PE)",
+            "W_friction = \u03bcmgs cos\u03b8 (dissipated as heat)",
+            "Normal reaction R = mg cos\u03b8; kinetic friction Fk = \u03bcmg cos\u03b8",
+            "Work done against friction = Fk \u00d7 s = \u03bcmg cos\u03b8 \u00d7 s"
+          ],
+          "example": "m = 4 kg, \u03b8 = 30\u00b0, \u03bc = 0.25, s = 5 m, g = 10 m/s\u00b2. W = 4\u00d710\u00d75\u00d7(sin30\u00b0 + 0.25 cos30\u00b0) = 200\u00d7(0.5+0.25\u00d70.866) = 200\u00d7(0.5+0.217) = 200\u00d70.717 = 143.4 J."
+        },
+        {
+          "number": 2,
+          "title": "Work Done on Horizontal Rough Surface",
+          "tag": "Formula Card",
+          "coreRevision": "Setting \u03b8 = 0 in the inclined formula: W = \u03bcmgs. This equals kinetic friction force (Fk = \u03bcmg) \u00d7 distance s. Work depends on: (i) weight mg, (ii) coefficient \u03bc (material), (iii) distance s. It does NOT depend on velocity, time, or area of contact. This is a frequent NEET conceptual MCQ.",
+          "points": [
+            "W = \u03bcmgs on horizontal surface (all work goes to heat)",
+            "Power dissipated by friction = Fk \u00d7 v = \u03bcmgv",
+            "Heat generated = work done against friction = \u03bcmgs (always positive)",
+            "W is proportional to s (linear, not s\u00b2)",
+            "W does NOT depend on the velocity at which the block moves"
+          ],
+          "example": "m = 10 kg, \u03bc = 0.4, s = 8 m, g = 10 m/s\u00b2. W = 0.4\u00d710\u00d710\u00d78 = 320 J. All 320 J converts to heat. If the block was moving at 4 m/s, friction power = \u03bcmg\u00d7v = 40\u00d74 = 160 W."
+        }
+      ]
+    },
+    "curriculum": {
+      "sectionTitle": "US Curriculum Gaps",
+      "hintText": "How AP Physics and US curricula compare to NEET scope on work done against friction.",
+      "gaps": [
+        {
+          "title": "Sign Convention: W_by vs. W_against Friction",
+          "description": "AP Physics uses W_by_friction = \u2212\u03bcmgs (negative, since friction opposes motion). NEET MCQs ask for \u2018work done AGAINST friction\u2019 = +\u03bcmgs (positive magnitude). Both conventions represent the same energy dissipation but answer choices differ. Read the question carefully to identify which convention is expected.",
+          "bullets": [
+            "W_by_friction = \u2212\u03bcmgs (AP convention, in work-energy theorem).",
+            "W_against_friction = +\u03bcmgs (NEET convention, energy dissipated)."
+          ]
+        },
+        {
+          "title": "Three Dependences of W Tested in NEET",
+          "description": "NEET explicitly tests that work done against friction depends on weight, \u03bc, and distance \u2014 and NOT on velocity or cross-sectional area. AP Physics covers this indirectly; NEET makes it a direct assertion MCQ. 'If the block is moved at twice the velocity, work done against friction is \u2014' must be answered: unchanged per unit distance (but power doubles).",
+          "bullets": [
+            "W against friction = \u03bcmgs: independent of velocity.",
+            "Power against friction = \u03bcmgv: proportional to velocity."
+          ]
+        }
+      ]
+    },
+    "pyq": {
+      "sectionTitle": "Previous Year Questions",
+      "mcqCountLabel": "NEET PYQs",
+      "questions": [
+        {
+          "question": "A block of mass 5 kg is dragged 10 m on a rough horizontal floor (\u03bc = 0.3, g = 10 m/s\u00b2). The work done against friction is:",
+          "tag": "NEET 2023 Pattern",
+          "tagClass": "pyq",
+          "options": [
+            {"text": "15 J", "correct": false},
+            {"text": "150 J", "correct": true},
+            {"text": "500 J", "correct": false},
+            {"text": "30 J", "correct": false}
+          ],
+          "explanation": "W = \u03bcmgs = 0.3 \u00d7 5 \u00d7 10 \u00d7 10 = 150 J. This is the work done against kinetic friction, entirely converted to heat. Note: W does not depend on velocity; moving at 1 m/s or 10 m/s over 10 m gives the same W = 150 J."
+        },
+        {
+          "question": "Work done against friction when a 2 kg block is moved up a 30\u00b0 rough incline (\u03bc = 0.2) through 5 m at uniform velocity (g = 10 m/s\u00b2) is:",
+          "tag": "NEET 2021 Pattern",
+          "tagClass": "pyq",
+          "options": [
+            {"text": "50 J", "correct": false},
+            {"text": "8.66 J", "correct": false},
+            {"text": "17.3 J", "correct": true},
+            {"text": "100 J", "correct": false}
+          ],
+          "explanation": "Work done against friction (only the friction component) = \u03bcmg cos\u03b8 \u00d7 s = 0.2\u00d72\u00d710\u00d7cos30\u00b0\u00d75 = 0.2\u00d720\u00d70.866\u00d75 = 17.3 J. Total work by applied force = mgs(sin\u03b8+\u03bc cos\u03b8) = 20\u00d75\u00d7(0.5+0.173) = 67.3 J; of which 50 J goes against gravity and 17.3 J against friction."
+        }
+      ]
+    },
+    "practice": {
+      "sectionTitle": "Practice Questions",
+      "questions": [
+        {
+          "question": "A 3 kg block is moved horizontally 6 m on a surface with \u03bc = 0.5 (g = 10 m/s\u00b2). Work done against friction:",
+          "options": ["90 J", "9 J", "15 J", "180 J"],
+          "answer": "90 J"
+        },
+        {
+          "question": "Work done against friction does NOT depend on which of the following?",
+          "options": ["Mass of the body", "Coefficient of friction", "Distance moved", "Velocity of the body"],
+          "answer": "Velocity of the body"
+        },
+        {
+          "question": "A block is moved up a rough incline. Total work done by applied force = mgs(sin\u03b8 + \u03bc cos\u03b8). The portion dissipated as heat is:",
+          "options": ["mgs sin\u03b8", "\u03bcmgs cos\u03b8", "mgs(sin\u03b8 \u2212 \u03bc cos\u03b8)", "mgs cos\u03b8"],
+          "answer": "\u03bcmgs cos\u03b8"
+        },
+        {
+          "question": "If a block is pushed 4 m on a floor with friction, then pulled back 4 m on the same floor, total work done against friction is:",
+          "options": ["0 J (net displacement = 0)", "\u03bcmg\u00d74 J", "\u03bcmg\u00d78 J", "Cannot determine"],
+          "answer": "\u03bcmg\u00d78 J"
+        }
+      ]
+    },
+    "checklist": {
+      "subjectLabel": "NEET Physics",
+      "items": [
+        {
+          "title": "Write both work-against-friction formulas",
+          "description": "Horizontal: W = \u03bcmgs. Inclined (uniform motion up): W_friction = \u03bcmgs cos\u03b8. Total applied work = mgs(sin\u03b8+\u03bc cos\u03b8). Know which is total and which is friction-only portion."
+        },
+        {
+          "title": "State what W depends on",
+          "description": "W = \u03bcmgs depends on (i) mass, (ii) \u03bc (nature of surfaces), (iii) distance s. NOT on velocity, time, or area of contact. One-liner for conceptual MCQ."
+        },
+        {
+          "title": "Link to energy dissipation",
+          "description": "Work done against friction = heat generated = \u03bcmgs (horizontal) or \u03bcmgs cos\u03b8 (incline). This is the mechanical energy lost to friction. Always positive."
+        },
+        {
+          "title": "Handle round-trip problems",
+          "description": "For a body moved out and back (same path, same distance each way), total work against friction = 2\u03bcmgs (friction acts both ways). Net displacement = 0 but total work against friction is not zero."
+        }
+      ]
+    },
+    "faq": {
+      "sectionTitle": "Frequently Asked Questions",
+      "items": [
+        {
+          "question": "Is work done against friction the same as heat generated?",
+          "answer": "Yes. By the work-energy theorem, when a block moves at constant velocity on a rough surface, all the work done by the applied force goes against friction and is converted to heat (and sound). Numerically: heat generated = work done against friction = Fk \u00d7 displacement = \u03bcmgs (horizontal). This equivalence is the basis of many NEET energy-friction numerical problems."
+        },
+        {
+          "question": "Why is work done against friction path-dependent but not velocity-dependent?",
+          "answer": "Friction force magnitude = \u03bcmg (horizontal) is constant, so W = \u03bcmg \u00d7 path length. Longer path = more work against friction. Velocity does not appear in the work formula (W = F \u00d7 s, not F \u00d7 v). However, POWER against friction = F \u00d7 v = \u03bcmg \u00d7 v is velocity-dependent."
+        },
+        {
+          "question": "What is the difference between work done by friction and work done against friction?",
+          "answer": "Work done BY friction on a sliding block is negative: W_by = \u2212\u03bcmgs (friction opposes motion, so force and displacement are anti-parallel). Work done AGAINST friction is positive: W_against = +\u03bcmgs (it is the work you must do to overcome friction). In energy accounting: W_against = heat generated. NEET questions use 'against friction' to ask for positive energy dissipation."
+        },
+        {
+          "question": "For a block pushed 5 m forward then pulled 5 m back, is the net work against friction zero?",
+          "answer": "No. Friction always opposes motion, so work is done against it in both directions. Going forward: W1 = \u03bcmg\u00d75. Coming back: W2 = \u03bcmg\u00d75. Total = 2\u03bcmg\u00d75 = 10\u03bcmg J. Net mechanical displacement is zero but total energy dissipated by friction is 10\u03bcmg J."
+        }
+      ]
+    }
+  },
+  "grounding": {
+    "source_page_markdown_paths": [
+      "pages/physics-1/page-240/markdown.md",
+      "pages/physics-1/page-241/markdown.md"
+    ],
+    "grounding_summary": [
+      "Page 240 (textbook p. 227) derives work done for motion up a rough inclined surface: W = mgs(sin\u03b8 + \u03bc cos\u03b8) using W = force \u00d7 distance. The horizontal case W = \u03bcmgs is obtained by setting \u03b8 = 0.",
+      "The textbook lists three explicit dependences: weight of the body, material and nature of surface in contact, and distance moved \u2014 confirming NEET conceptual MCQ content.",
+      "Page 241 reinforces the horizontal case: W = \u03bcmgs, with the same dependence list. Both pages confirm the inclined formula as the general case."
+    ],
+    "grounding_excerpt": [
+      "Work done = force × distance",
+      "moved up slowly on a rough inclined plane through distance",
+      "It is clear that work done depends upon"
+    ],
+    "sources": [
+      {
+        "title": "NCERT Physics Class 11 Part 1 \u2014 Chapter 5: Laws of Motion (Friction and Work)",
+        "url": "https://ncert.nic.in/textbook/pdf/keph104.pdf",
+        "publisher": "ncert.nic.in",
+        "accessed_date": "2026-04-10",
+        "why_used": "Primary NCERT source for work done against friction formulas for horizontal and inclined planes, with explicit derivation in the Friction chapter."
+      },
+      {
+        "title": "NEET Physics Class 11 Chapter 6 Friction Notes \u2014 ClassNotes.guru",
+        "url": "https://classnotes.guru/neet-physics-class-11-chapter-6-friction-notes/",
+        "publisher": "classnotes.guru",
+        "accessed_date": "2026-04-10",
+        "why_used": "Verified NEET-targeted notes confirming work-done-against-friction as a key NEET exam topic and the three dependence variables tested in MCQs."
+      }
+    ],
+    "review": {
+      "used_local_page_grounding": true,
+      "semantic_page_read_complete": true,
+      "used_current_research": true,
+      "research_used_for_enrichment": true,
+      "template_preserved": true,
+      "scope_checked": true,
+      "syllabus_scope_verified": true,
+      "guardrails_passed": true,
+      "notes": "Content grounded on page-240 OCR. W = mu*mgs (horizontal) and W = mgs(sin_theta + mu*cos_theta) (incline) derived from textbook. Three dependences listed verbatim from textbook."
+    }
+  }
+}

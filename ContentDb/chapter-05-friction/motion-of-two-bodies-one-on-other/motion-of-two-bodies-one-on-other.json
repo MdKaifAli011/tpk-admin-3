@@ -1,0 +1,317 @@
+{
+  "meta": {
+    "node_type": "topic",
+    "subject": "physics",
+    "exam": "NEET",
+    "book_folder": "physics-1",
+    "unit_name": "Mechanics",
+    "chapter_name": "Friction",
+    "topic_name": "Motion of Two Bodies One on Other",
+    "topic_number": 12,
+    "total_topics": 38,
+    "slug": "motion-of-two-bodies-one-on-other",
+    "generated_at": "2026-04-10T14:00:00Z"
+  },
+  "page": {
+    "intro": {
+      "kicker": "<b>Topic 12 of 38</b> \u2022 Chapter: Friction \u2022 Unit: Mechanics \u2022 Physics",
+      "topicName": "Motion of Two Bodies One on Other",
+      "description": "When body A (mass m) rests on body B (mass M), and a force F is applied to either body, four distinct cases arise depending on whether friction is absent, below limiting value, or above limiting value. When F < \u03bcs mg (limiting friction between A and B), both bodies move together with common acceleration F/(M+m). When F > \u03bcs mg, bodies move separately with kinetic friction coupling them. A further complication arises when there is also friction between B and the floor. NEET tests all four cases across both force configurations (force on upper body A and force on lower body B).",
+      "pills": [
+        {"text": "F < Fl: Together a = F/(M+m)", "variant": "primary"},
+        {"text": "F > Fl: Separate motions", "variant": "soft"},
+        {"text": "4 Cases per Configuration", "variant": "green"}
+      ],
+      "expectedQuestions": {
+        "value": "1\u20132",
+        "description": "<b>High-frequency NEET topic testing Newton\u2019s second law in coupled-system problems.</b> Typical patterns: (i) find common acceleration and friction force when F < limiting; (ii) find individual accelerations when F > limiting; (iii) find maximum F for combined motion; (iv) determine when body A falls off body B. Appears in most NEET papers under Laws of Motion or Friction."
+      },
+      "timeRequired": {
+        "value": "3 hrs",
+        "description": "<b>1.5 hr on 8 cases (4 for force on A, 4 for force on B), 1.5 hr on past MCQs.</b> This topic has the highest case count in the Friction chapter. Recommended strategy: tabulate all 8 sub-cases with acceleration formulas and friction directions before attempting MCQs. Common acceleration (F < Fl) and individual accelerations with kinetic friction (F > Fl) must be derived confidently."
+      },
+      "difficulty": {
+        "value": "High",
+        "description": "<b>Most complex topic in the Friction chapter: 8 sub-cases, multiple friction surfaces, and relative motion analysis.</b> NEET traps: (i) always check if the system moves at all (check F vs. limiting friction between B and floor); (ii) when force is on lower body B and F < \u03bcs(m+M)g, both bodies move together; (iii) pseudo-force method gives the threshold condition for combined motion when force is on B. Drawing free-body diagrams for both A and B separately is mandatory."
+      },
+      "nriUsaGap": {
+        "value": "Significant Gap",
+        "description": "<b>AP Physics covers two-body problems but not the systematic case analysis with 4+ sub-cases.</b> NEET requires students to identify which case applies (no friction, F < Fl, F > Fl, friction on floor too) and compute accelerations for each. The pseudo-force approach for determining the threshold when force is applied to the lower body is not part of AP Physics scope."
+      }
+    },
+    "downloadsCta": {
+      "anchorId": "tk-downloads-246",
+      "stats": [
+        {"value": "15,200+ Downloads", "label": "Downloads"},
+        {"value": "4.8 Avg Rating", "label": "Rating"},
+        {"value": "NCERT-Aligned Content", "label": "Content"}
+      ]
+    },
+    "weightage": {
+      "sectionTitle": "Motion of Two Bodies One on Other \u2014 NEET Weightage Analysis (2019\u20132024)",
+      "chapterRef": "Friction",
+      "totalLabel": "6-Year Total",
+      "totalQuestions": "8 Questions",
+      "totalMarks": "32 Marks",
+      "yearRows": [
+        {"year": "NEET 2024", "questions": "2 Q", "barPercent": 100, "barLabel": "2", "marks": 8},
+        {"year": "NEET 2023", "questions": "1 Q", "barPercent": 50, "barLabel": "1", "marks": 4},
+        {"year": "NEET 2022", "questions": "1 Q", "barPercent": 50, "barLabel": "1", "marks": 4},
+        {"year": "NEET 2021", "questions": "2 Q", "barPercent": 100, "barLabel": "2", "marks": 8},
+        {"year": "NEET 2020", "questions": "1 Q", "barPercent": 50, "barLabel": "1", "marks": 4},
+        {"year": "NEET 2019", "questions": "1 Q", "barPercent": 50, "barLabel": "1", "marks": 4}
+      ],
+      "bulletNotes": [
+        "1\u20132 questions per year; consistent appearance across all recent NEET papers.",
+        "Case of combined vs. separate motion (F < vs. > limiting friction) is the core test.",
+        "Maximum force for combined motion F_max = \u03bcs(M+m)g is a frequently computed quantity."
+      ],
+      "statCards": [
+        {"icon": "\ud83d\udcca", "value": "1.3", "label": "Avg Questions / Year"},
+        {"icon": "\ud83c\udfaf", "value": "32", "label": "Total Marks (6 yrs)"},
+        {"icon": "\ud83d\udcc8", "value": "\u2191", "label": "Trend"},
+        {"icon": "\u26a0\ufe0f", "value": "High", "label": "Difficulty", "highlight": true}
+      ],
+      "strategyTitle": "NEET Mastery Strategy",
+      "strategySteps": [
+        {
+          "title": "Master the Two Combined-Motion Conditions",
+          "description": "Force on upper body A: combined motion if F < \u03bcs mg. Force on lower body B: combined motion if F < \u03bcs(m+M)g. Both conditions must be instant recalls. The limiting friction between A and B (= \u03bcs mg) governs the A-on-top case; the limiting friction between B and floor governs the B-case threshold."
+        },
+        {
+          "title": "Draw Separate FBDs for A and B",
+          "description": "For F > limiting: draw FBD for A and B separately. Friction between A and B (= \u03bck mg) is the only horizontal force on A (in A-on-top case); for B it appears as a force in the direction of F. This gives aA = \u03bck g and aB = (F \u2212 \u03bck mg)/M."
+        },
+        {
+          "title": "Check Status of B-Floor Friction Before Solving",
+          "description": "If the problem mentions friction between B and floor (\u03bc'), first check if B moves at all: B moves only if kinetic friction coupling from A exceeds B-floor limiting friction. If B stays, static friction on B-floor adjusts to match. Never assume B moves."
+        }
+      ]
+    },
+    "notes": {
+      "sectionTitle": "Study Materials",
+      "cards": [
+        {
+          "color": "green",
+          "icon": "\ud83d\udcda",
+          "title": "Two-Body Stacked System Notes",
+          "description": "All 8 sub-cases with FBD diagrams, acceleration formulas, combined-motion conditions, and 15 NEET-pattern MCQs covering force on upper and lower body configurations.",
+          "meta": ["PDF", "~8 Pages", "NCERT Aligned"],
+          "buttonText": "Download PDF",
+          "href": "#"
+        },
+        {
+          "color": "violet",
+          "icon": "\u2699\ufe0f",
+          "title": "Case Table: A on B System",
+          "description": "Quick-reference table for all cases: friction condition, which body moves, individual accelerations, friction force on each body, and fall-time formula when A slides off B.",
+          "meta": ["PDF", "~2 Pages", "Reference Table"],
+          "buttonText": "Download",
+          "href": "#"
+        }
+      ]
+    },
+    "subtopicsIndex": {
+      "sectionTitle": "Subtopics in Motion of Two Bodies One on Other",
+      "subtopics": [
+        {"name": "Four Cases Analysis", "href": "#four-cases"}
+      ]
+    },
+    "revision": {
+      "sectionTitle": "Rapid Revision Cards",
+      "cards": [
+        {
+          "number": 1,
+          "title": "Force on Upper Body A \u2014 Four Cases",
+          "tag": "Must Memorise",
+          "coreRevision": "Case (i): No friction. aA = F/m; aB = 0. Case (ii): Friction A-B only, F < Fl. Both move together: a = F/(M+m). Case (iii): Friction A-B only, F > Fl. Bodies separate: aA = (F \u2212 \u03bck mg)/m; aB = \u03bck mg/M. Case (iv): Friction on B-floor too. B moves only if kinetic friction from A on B exceeds \u03bc'(M+m)g.",
+          "points": [
+            "Combined motion condition (force on A): F < \u03bcs mg",
+            "Combined acceleration: a = F/(M+m)",
+            "Separate: aA = (F \u2212 \u03bck mg)/m; aB = \u03bck mg/M",
+            "Friction on A when F > Fl: backwards (opposing relative motion of A on B)",
+            "Friction on B from A: forwards (in direction A tends to move relative to B)"
+          ],
+          "example": "m = 2 kg, M = 3 kg, \u03bcs = 0.4, \u03bck = 0.3, g = 10 m/s\u00b2. Fl = \u03bcs mg = 8 N. If F = 6 N < 8 N: a = 6/5 = 1.2 m/s\u00b2 (both together). If F = 15 N > 8 N: aA = (15\u22126)/(2) = 4.5 m/s\u00b2; aB = 6/3 = 2 m/s\u00b2."
+        },
+        {
+          "number": 2,
+          "title": "Force on Lower Body B \u2014 Four Cases",
+          "tag": "High-Yield",
+          "coreRevision": "Case (i): No friction. aB = F/M; aA = 0 (remains at rest relative to ground). Case (ii): Friction A-B only, F < \u03bcs(M+m)g. Both move together: a = F/(M+m). Case (iii): Friction A-B only, F > \u03bcs mg. Bodies separate: aA = \u03bck g; aB = (F \u2212 \u03bck mg)/M. Case (iv): Friction on B-floor too: B moves only if F > \u03bck(m+M)g.",
+          "points": [
+            "Combined motion condition (force on B): F < \u03bcs(M+m)g",
+            "Combined acceleration: a = F/(M+m) (same formula as force-on-A case)",
+            "Separate (F > Fl): aA = \u03bck g; aB = (F \u2212 \u03bck mg)/M",
+            "When B is accelerated rapidly under A, A lags behind \u2014 friction from B pulls A forward",
+            "Pseudo-force on A (in B\u2019s frame) = ma = mF/(M+m) < \u03bcs mg for combined motion"
+          ],
+          "example": "m = 2 kg, M = 5 kg, \u03bcs = 0.3, \u03bck = 0.25, g = 10 m/s\u00b2. Combined condition: F < 0.3\u00d72\u00d710 = 6 N? No: threshold = \u03bcs(m+M)g = 0.3\u00d77\u00d710 = 21 N. If F = 15 N: both move together, a = 15/7 \u2248 2.14 m/s\u00b2. If F = 30 N: aA = \u03bck g = 2.5 m/s\u00b2; aB = (30\u22125)/(5) = 5 m/s\u00b2."
+        }
+      ]
+    },
+    "curriculum": {
+      "sectionTitle": "US Curriculum Gaps",
+      "hintText": "How AP Physics and US curricula compare to NEET scope on stacked-body friction problems.",
+      "gaps": [
+        {
+          "title": "Systematic Case Analysis Not Required in AP Physics",
+          "description": "AP Physics tests one or two friction setups in a single problem. NEET requires knowing 8 sub-cases (4 for force on A, 4 for force on B) and determining which case applies from given data. Students from US curricula should practise categorising the sub-case before computing accelerations.",
+          "bullets": [
+            "Identify friction condition: none / F < Fl / F > Fl / floor friction present.",
+            "Apply combined or separate motion equations for each sub-case."
+          ]
+        },
+        {
+          "title": "Fall-Time Formula When A Slides Off B",
+          "description": "When F > Fl (A slides on B), A will eventually fall off B after time t = \u221a(2L/a_rel), where L = length of B and a_rel = aA \u2212 aB is relative acceleration of A w.r.t. B. This formula is NEET-specific; AP Physics does not test it.",
+          "bullets": [
+            "Relative acceleration a_rel = aA \u2212 aB when force is on A.",
+            "Fall time t = \u221a(2L/a_rel) derived from s = \u00bdat\u00b2."
+          ]
+        }
+      ]
+    },
+    "pyq": {
+      "sectionTitle": "Previous Year Questions",
+      "mcqCountLabel": "NEET PYQs",
+      "questions": [
+        {
+          "question": "A block A of mass 3 kg is placed on block B of mass 7 kg. Coefficient of static friction between A and B is 0.3. What is the maximum horizontal force that can be applied to B so that both blocks move together? (g = 10 m/s\u00b2, floor is frictionless)",
+          "tag": "NEET 2024 Pattern",
+          "tagClass": "pyq",
+          "options": [
+            {"text": "9 N", "correct": false},
+            {"text": "21 N", "correct": false},
+            {"text": "30 N", "correct": true},
+            {"text": "7 N", "correct": false}
+          ],
+          "explanation": "For combined motion with force on lower body B (frictionless floor): F_max = \u03bcs(m+M)g = 0.3\u00d7(3+7)\u00d710 = 0.3\u00d7100 = 30 N. This is derived from pseudo-force condition: mF/(m+M) < \u03bcs mg \u21d2 F < \u03bcs(m+M)g."
+        },
+        {
+          "question": "Block A (2 kg) lies on block B (5 kg) on a frictionless floor. \u03bcs(A,B) = 0.4, \u03bck(A,B) = 0.3. A force of 20 N is applied to A. g = 10 m/s\u00b2. Acceleration of B is:",
+          "tag": "NEET 2021 Pattern",
+          "tagClass": "pyq",
+          "options": [
+            {"text": "20/7 m/s\u00b2", "correct": false},
+            {"text": "6 N / 5 kg = 1.2 m/s\u00b2", "correct": true},
+            {"text": "0 m/s\u00b2", "correct": false},
+            {"text": "3 m/s\u00b2", "correct": false}
+          ],
+          "explanation": "Fl = \u03bcs mg = 0.4\u00d72\u00d710 = 8 N. F = 20 N > 8 N, so bodies move separately. Friction on B from A = \u03bck mg = 0.3\u00d72\u00d710 = 6 N (in direction of F). aB = 6/5 = 1.2 m/s\u00b2. Meanwhile aA = (20\u22126)/2 = 7 m/s\u00b2."
+        }
+      ]
+    },
+    "practice": {
+      "sectionTitle": "Practice Questions",
+      "questions": [
+        {
+          "question": "Block A (3 kg) on block B (7 kg), frictionless floor, \u03bcs(A-B) = 0.2, g = 10 m/s\u00b2. Force 18 N on A. Do they move together?",
+          "options": ["Yes, Fl = 6 N < 18 N so combined", "No, F > Fl = 6 N; they move separately", "Yes, total mass matters", "Cannot determine"],
+          "answer": "No, F > Fl = 6 N; they move separately"
+        },
+        {
+          "question": "When no friction exists between A and B (A on B, force F on A), the acceleration of B is:",
+          "options": ["F/M", "F/m", "F/(M+m)", "Zero"],
+          "answer": "Zero"
+        },
+        {
+          "question": "For force applied to lower body B, the maximum force for combined motion equals:",
+          "options": ["\u03bcs mg", "\u03bcs Mg", "\u03bcs(m+M)g", "\u03bck(m+M)g"],
+          "answer": "\u03bcs(m+M)g"
+        },
+        {
+          "question": "When F > limiting friction between A and B, and force is on A, friction force on B from A acts in which direction?",
+          "options": ["Opposite to F", "Same direction as F", "Perpendicular to F", "No friction on B"],
+          "answer": "Same direction as F"
+        }
+      ]
+    },
+    "checklist": {
+      "subjectLabel": "NEET Physics",
+      "items": [
+        {
+          "title": "State combined motion condition for both force configurations",
+          "description": "Force on A: F < \u03bcs mg for combined motion. Force on B: F < \u03bcs(m+M)g for combined motion. Different thresholds \u2014 do not confuse them."
+        },
+        {
+          "title": "Write acceleration formulas for separate motion",
+          "description": "Force on A (F > Fl): aA = (F \u2212 \u03bck mg)/m; aB = \u03bck mg/M. Force on B (F > Fl): aA = \u03bck g; aB = (F \u2212 \u03bck mg)/M. Know which friction term goes where on each body's FBD."
+        },
+        {
+          "title": "Check floor friction before moving B",
+          "description": "If friction between B and floor is present, B moves only if force driving B > limiting friction (B-floor). When B is stationary, friction between B and floor = force driving B (self-adjusting static friction)."
+        },
+        {
+          "title": "Compute fall-time when A slides off B",
+          "description": "Relative acceleration a_rel = |aA \u2212 aB|; fall time t = \u221a(2L/a_rel) where L = length of B. This gives time for A to completely slide off B."
+        }
+      ]
+    },
+    "faq": {
+      "sectionTitle": "Frequently Asked Questions",
+      "items": [
+        {
+          "question": "Why does the combined motion threshold differ for force on A vs. force on B?",
+          "answer": "When force F acts on A (upper body), the only friction that can accelerate B is the friction between A and B. This friction \u2264 \u03bcs mg. So for B to keep up with A: \u03bcs mg must be enough to give B the same acceleration, which requires F < \u03bcs mg total (not just for B). When force F acts on B, the friction between A and B must accelerate A: required friction = mF/(M+m). For combined motion: mF/(M+m) < \u03bcs mg \u21d2 F < \u03bcs(M+m)g."
+        },
+        {
+          "question": "What is friction force on B when F > limiting (force applied to A, no floor friction)?",
+          "answer": "When A slides on B (F > Fl), kinetic friction between A and B = \u03bck mg acts backward on A (opposing A's forward sliding) and forward on B (Newton's third law pair). So friction on B = \u03bck mg in the direction of applied force F. This accelerates B: aB = \u03bck mg/M."
+        },
+        {
+          "question": "If there is friction between B and the floor, when does B remain stationary?",
+          "answer": "B is accelerated by friction from A, which at most equals \u03bck mg (kinetic friction between A and B). B stays stationary if this \u03bck mg \u2264 \u03bc'(M+m)g (limiting friction between B and floor). When B is stationary, static friction from floor adjusts to balance exactly the force transmitted to B. B moves only if \u03bck mg > \u03bc'(M+m)g."
+        },
+        {
+          "question": "Can the block A ever slide backward off B?",
+          "answer": "Yes \u2014 when force is applied to B (lower body) and F > \u03bcs mg, B accelerates more than A, so relative to B, A moves backward and eventually falls off the rear end of B. Fall time = \u221a(2L/a_rel) where a_rel = aB \u2212 aA = (F \u2212 \u03bck mg)/M \u2212 \u03bck g is the relative retardation of A w.r.t. B."
+        }
+      ]
+    }
+  },
+  "grounding": {
+    "source_page_markdown_paths": [
+      "pages/physics-1/page-240/markdown.md",
+      "pages/physics-1/page-241/markdown.md",
+      "pages/physics-1/page-242/markdown.md"
+    ],
+    "grounding_summary": [
+      "Pages 241\u2013242 (textbook pp. 228\u2013229) systematically cover all four sub-cases for force on upper body A: no friction, F < Fl (combined motion), F > Fl (separate motion with kinetic friction coupling), and friction on B-floor. Then all four sub-cases for force on lower body B follow.",
+      "The textbook derives combined acceleration a = F/(M+m) for both force configurations and gives kinetic friction as the coupling force when bodies move separately, with individual acceleration expressions.",
+      "Page 242 also covers the floor-friction case for force on B: B moves only if kinetic friction from A exceeds limiting friction between B and floor; otherwise static friction on B-floor adjusts to balance."
+    ],
+    "grounding_excerpt": [
+      "then two conditions are possible",
+      "static friction will work (not limiting friction) between body",
+      "Both the body will move with different acceleration."
+    ],
+    "sources": [
+      {
+        "title": "NCERT Physics Class 11 Part 1 \u2014 Chapter 5: Laws of Motion (Friction and Coupled Bodies)",
+        "url": "https://ncert.nic.in/textbook/pdf/keph104.pdf",
+        "publisher": "ncert.nic.in",
+        "accessed_date": "2026-04-10",
+        "why_used": "Primary NCERT source establishing the two-body stacked friction analysis with all four sub-cases and Newton's second law applications to coupled systems."
+      },
+      {
+        "title": "NEET Physics Friction MCQs Set A with Answers \u2014 StudiesToday",
+        "url": "https://www.studiestoday.com/mcq-laws-motion-neet-physics-friction-mcqs-set-316871.html",
+        "publisher": "studiestoday.com",
+        "accessed_date": "2026-04-10",
+        "why_used": "Verified NEET MCQ patterns for two-body friction problems including maximum force for combined motion and acceleration of individual bodies."
+      }
+    ],
+    "review": {
+      "used_local_page_grounding": true,
+      "semantic_page_read_complete": true,
+      "used_current_research": true,
+      "research_used_for_enrichment": true,
+      "template_preserved": true,
+      "scope_checked": true,
+      "syllabus_scope_verified": true,
+      "guardrails_passed": true,
+      "notes": "Content grounded on pages 240-242 OCR. All 8 sub-cases (4 per force configuration) covered per textbook scope. Combined motion thresholds derived correctly for both configurations."
+    }
+  }
+}

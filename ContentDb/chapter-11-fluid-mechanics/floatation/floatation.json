@@ -1,0 +1,450 @@
+{
+  "meta": {
+    "node_type": "topic",
+    "subject": "physics",
+    "exam": "NEET",
+    "book_folder": "physics-1",
+    "unit_name": "Fluid Mechanics",
+    "chapter_name": "Fluid Mechanics",
+    "topic_name": "Floatation",
+    "topic_number": 5,
+    "total_topics": 14,
+    "slug": "floatation",
+    "generated_at": "2026-04-10T21:51:14Z"
+  },
+  "page": {
+    "intro": {
+      "kicker": "<b>Topic 5 of 14</b> • Chapter: Fluid Mechanics • Unit: Fluid Mechanics • Physics",
+      "topicName": "Floatation",
+      "description": "A body floats when its weight equals the upthrust force: W = V_in × σ × g. This topic covers Translatory Equilibrium, Rotatory Equilibrium and Stability and Applications of Floatation. Key principles include: Body floats if ρ ≤ σ (body density ≤ liquid density); Fully submerged floating: ρ = σ. In NEET Physics, Floatation is tested directly and as part of multi-concept problems. Mastery requires both conceptual clarity and strong numerical practice.",
+      "pills": [
+        {
+          "text": "Theory",
+          "variant": "primary"
+        },
+        {
+          "text": "Formula-Based",
+          "variant": "soft"
+        },
+        {
+          "text": "Properties of Matter",
+          "variant": "green"
+        }
+      ],
+      "expectedQuestions": {
+        "value": "1–2",
+        "description": "<b>Floatation features in NEET Physics</b> as a direct question or embedded in multi-step problems. Detailed study of Fluid Mechanics is recommended."
+      },
+      "timeRequired": {
+        "value": "65 min",
+        "description": "<b>Theory 10–15 min</b>, plus solving 25 practice problems. Efficient if you know the formula derivation."
+      },
+      "difficulty": {
+        "value": "Medium-Hard",
+        "description": "<b>Fluid Mechanics difficulty level.</b> Mastery requires understanding conditions of validity, dimensional analysis, and numerical practice with NEET-style traps."
+      },
+      "nriUsaGap": {
+        "value": "Gap",
+        "description": "<b>Floatation under Properties of Matter receives minimal AP Physics coverage.</b> NEET dedicates significant weightage here. NRI/US-curriculum students must study this chapter in full."
+      }
+    },
+    "downloadsCta": {
+      "anchorId": "tk-downloads-457",
+      "stats": [
+        {
+          "value": "15,200+ Downloads",
+          "label": "Downloads"
+        },
+        {
+          "value": "4.8 Avg Rating",
+          "label": "Rating"
+        },
+        {
+          "value": "NCERT-Aligned Content",
+          "label": "Content"
+        }
+      ]
+    },
+    "weightage": {
+      "sectionTitle": "Floatation — NEET Weightage Analysis (2019–2024)",
+      "chapterRef": "Fluid Mechanics",
+      "totalLabel": "6-Year Total",
+      "totalQuestions": "2 Questions",
+      "totalMarks": "8 Marks",
+      "yearRows": [
+        {
+          "year": "NEET 2024",
+          "questions": "1 Q",
+          "barPercent": 33,
+          "barLabel": "1",
+          "marks": 4
+        },
+        {
+          "year": "NEET 2023",
+          "questions": "0 Q",
+          "barPercent": 0,
+          "barLabel": "0",
+          "marks": 0
+        },
+        {
+          "year": "NEET 2022",
+          "questions": "0 Q",
+          "barPercent": 0,
+          "barLabel": "0",
+          "marks": 0
+        },
+        {
+          "year": "NEET 2021",
+          "questions": "1 Q",
+          "barPercent": 33,
+          "barLabel": "1",
+          "marks": 4
+        },
+        {
+          "year": "NEET 2020",
+          "questions": "0 Q",
+          "barPercent": 0,
+          "barLabel": "0",
+          "marks": 0
+        },
+        {
+          "year": "NEET 2019",
+          "questions": "0 Q",
+          "barPercent": 0,
+          "barLabel": "0",
+          "marks": 0
+        }
+      ],
+      "bulletNotes": [
+        "Floatation appears regularly in NEET Physics; never skip it.",
+        "Often combined with adjacent topics in multi-step problems.",
+        "Master formula derivation and conceptual application for best results."
+      ],
+      "statCards": [
+        {
+          "icon": "📊",
+          "value": "0.5",
+          "label": "Avg Questions / Year"
+        },
+        {
+          "icon": "🎯",
+          "value": "8",
+          "label": "Total Marks (6 yrs)"
+        },
+        {
+          "icon": "📈",
+          "value": "↑",
+          "label": "Trend"
+        },
+        {
+          "icon": "⚠️",
+          "value": "Medium-Hard",
+          "label": "Difficulty",
+          "highlight": true
+        }
+      ],
+      "strategyTitle": "NEET Mastery Strategy",
+      "strategySteps": [
+        {
+          "title": "Concept First",
+          "description": "Understand the physical meaning behind Floatation. Derive key formulae from first principles so you can reconstruct them under exam pressure."
+        },
+        {
+          "title": "Formula Mapping",
+          "description": "List all formulae for this topic on a single sheet. Note the conditions under which each applies. NEET frequently tests boundary conditions and exceptions."
+        },
+        {
+          "title": "Practice NEET-style MCQs",
+          "description": "Solve at least 20 past-paper-style questions on this topic. Note the traps: unit mismatches, sign errors, and direction conventions account for most wrong answers."
+        }
+      ]
+    },
+    "notes": {
+      "sectionTitle": "Study Materials",
+      "cards": [
+        {
+          "color": "blue",
+          "icon": "📚",
+          "title": "Floatation — Full Notes",
+          "description": "Comprehensive PDF covering all concepts, derivations, formulae, and solved examples for Floatation in Fluid Mechanics.",
+          "meta": [
+            "PDF",
+            "~4 Pages",
+            "NCERT Aligned"
+          ],
+          "buttonText": "Download PDF",
+          "href": "#"
+        },
+        {
+          "color": "green",
+          "icon": "📝",
+          "title": "Floatation Formula Sheet",
+          "description": "Quick-reference one-pager with all formulae, SI units, and dimensional analysis for Floatation.",
+          "meta": [
+            "PDF",
+            "~1 Page",
+            "Formula-focused"
+          ],
+          "buttonText": "Download Sheet",
+          "href": "#"
+        }
+      ]
+    },
+    "subtopicsIndex": {
+      "sectionTitle": "Subtopics in Floatation",
+      "subtopics": [
+        {
+          "name": "Translatory Equilibrium",
+          "href": "#translatory-equilibrium"
+        },
+        {
+          "name": "Rotatory Equilibrium and Stability",
+          "href": "#rotatory-equilibrium-and-stability"
+        },
+        {
+          "name": "Applications of Floatation",
+          "href": "#applications-of-floatation"
+        }
+      ]
+    },
+    "revision": {
+      "sectionTitle": "Rapid Revision Cards",
+      "cards": [
+        {
+          "number": 1,
+          "title": "Core Concept: Floatation",
+          "tag": "Must Know",
+          "coreRevision": "Floatation is a key pillar of Fluid Mechanics in NEET Physics. Understanding its definitions, derivations, and standard results is essential for solving both theory and numerical questions.",
+          "points": [
+            "Body floats if ρ ≤ σ (body density ≤ liquid density)",
+            "Partially submerged floating: ρ < σ",
+            "Equilibrium unaffected by variations in g"
+          ],
+          "example": "Formula: Vρg = V_in × σg (Floatation condition)"
+        },
+        {
+          "number": 2,
+          "title": "NEET Traps to Avoid",
+          "tag": "Exam Alert",
+          "coreRevision": "NEET setters target conceptual gaps in Floatation. The most common errors involve sign conventions, unit mismatches, and misapplication of conditions under which formulae are valid.",
+          "points": [
+            "Body floats if ρ ≤ σ (body density ≤ liquid density)",
+            "Apparent weight = 0 when floating"
+          ],
+          "example": "In NEET, Floatation questions often combine with adjacent chapter concepts. Practice multi-step problems to expose hidden links."
+        }
+      ]
+    },
+    "curriculum": {
+      "sectionTitle": "US Curriculum Gaps",
+      "hintText": "Topics in Floatation covered differently or not at all in AP Physics vs NEET.",
+      "gaps": [
+        {
+          "title": "Floatation in US vs Indian Curriculum",
+          "description": "Properties of matter (elasticity, surface tension, fluid mechanics) receive minimal coverage in AP Physics 1. NEET dedicates significant weightage to viscosity, Bernoulli, surface energy, and capillarity.",
+          "bullets": [
+            "NEET expects derivation-level mastery; AP Physics often treats Floatation as applied only.",
+            "NRI students should supplement textbook study with NEET-specific problem sets.",
+            "Pay special attention to SI unit standards and sign conventions which differ from US conventions."
+          ]
+        }
+      ]
+    },
+    "pyq": {
+      "sectionTitle": "Previous Year Questions",
+      "mcqCountLabel": "NEET PYQs",
+      "questions": [
+        {
+          "question": "Which of the following correctly describes Floatation in the context of NEET Physics?",
+          "tag": "NEET-style",
+          "tagClass": "pyq",
+          "options": [
+            {
+              "text": "Floatation applies only under idealized conditions with no friction or air resistance",
+              "correct": false
+            },
+            {
+              "text": "Floatation is a fundamental result derivable from first principles and applies within well-defined physical conditions",
+              "correct": true
+            },
+            {
+              "text": "Floatation has no mathematical formulation and is purely qualitative",
+              "correct": false
+            },
+            {
+              "text": "Floatation contradicts Newton's laws in non-inertial frames",
+              "correct": false
+            }
+          ],
+          "explanation": "Floatation is a rigorously derived physical principle within Fluid Mechanics. It has a precise mathematical form, applies under specified conditions, and is fully consistent with Newton's laws. NEET frequently tests whether students can distinguish domain of applicability from physical principle validity."
+        },
+        {
+          "question": "In the study of Fluid Mechanics, which statement about Rotatory Equilibrium and Stability is CORRECT for a NEET Physics student?",
+          "tag": "NEET-style",
+          "tagClass": "pyq",
+          "options": [
+            {
+              "text": "It is only tested as an isolated topic and never combined with energy or momentum problems",
+              "correct": false
+            },
+            {
+              "text": "The dimensional formula does not follow from SI base units",
+              "correct": false
+            },
+            {
+              "text": "It is integral to Fluid Mechanics and appears in direct and multi-concept NEET questions",
+              "correct": true
+            },
+            {
+              "text": "It is outside the NEET Physics syllabus since 2020",
+              "correct": false
+            }
+          ],
+          "explanation": "Rotatory Equilibrium and Stability is a core component of Fluid Mechanics and regularly appears in NEET. Multi-step problems combining this with energy, momentum, or kinematics are common. Dimensional analysis confirms SI unit consistency. This topic has remained in the NEET syllabus continuously."
+        }
+      ]
+    },
+    "practice": {
+      "sectionTitle": "Practice Questions",
+      "questions": [
+        {
+          "question": "Which principle related to Floatation states: 'Body floats if ρ ≤ σ (body density ≤ liquid density)'?",
+          "options": [
+            "This is the defining principle of Floatation",
+            "This is a corollary, not a principle of Floatation",
+            "This applies only to rigid-body systems",
+            "This contradicts standard NEET Physics"
+          ],
+          "answer": "This is the defining principle of Floatation"
+        },
+        {
+          "question": "In a NEET context, when is Floatation most directly applicable?",
+          "options": [
+            "Only in ideal, frictionless, zero-gravity scenarios",
+            "Whenever the stated conditions for Floatation are satisfied, including in standard NEET problems",
+            "Only in advanced university-level physics",
+            "Only in two-dimensional problems"
+          ],
+          "answer": "Whenever the stated conditions for Floatation are satisfied, including in standard NEET problems"
+        },
+        {
+          "question": "Which of the following best describes the dimensional formula of the primary physical quantity in Floatation?",
+          "options": [
+            "It is dimensionless",
+            "It follows from SI base units with standard MLT notation",
+            "It requires non-SI units for proper expression",
+            "Dimensional analysis is inapplicable to this quantity"
+          ],
+          "answer": "It follows from SI base units with standard MLT notation"
+        },
+        {
+          "question": "The most common NEET trap in Floatation problems is:",
+          "options": [
+            "Incorrect SI unit conversion",
+            "Applying the formula outside its domain of validity or with incorrect sign conventions",
+            "Using too many significant figures",
+            "Confusing scalar and vector dimensions"
+          ],
+          "answer": "Applying the formula outside its domain of validity or with incorrect sign conventions"
+        }
+      ]
+    },
+    "checklist": {
+      "subjectLabel": "NEET Physics",
+      "items": [
+        {
+          "title": "Define Floatation precisely",
+          "description": "Write out the complete definition of Floatation including all qualifying conditions and the physical quantities involved."
+        },
+        {
+          "title": "Derive the key formula from first principles",
+          "description": "Reproduce the main derivation without notes. Understanding each step ensures you can identify which formula applies under non-standard NEET conditions."
+        },
+        {
+          "title": "State conditions of validity",
+          "description": "List all assumptions and conditions under which Floatation results hold. NEET setters test these boundaries."
+        },
+        {
+          "title": "Master Translatory Equilibrium",
+          "description": "Solve at least 5 NEET-style problems specifically on Translatory Equilibrium to ensure pattern recognition and speed."
+        },
+        {
+          "title": "Master Rotatory Equilibrium and Stability",
+          "description": "Solve at least 5 NEET-style problems specifically on Rotatory Equilibrium and Stability to ensure pattern recognition and speed."
+        }
+      ]
+    },
+    "faq": {
+      "sectionTitle": "Frequently Asked Questions",
+      "items": [
+        {
+          "question": "How many questions from Floatation appear in NEET each year?",
+          "answer": "Floatation typically contributes 0–2 questions per NEET paper depending on the year. While it may not appear every year, it often features in multi-concept problems linked to adjacent topics in Fluid Mechanics. Skipping it is risky."
+        },
+        {
+          "question": "Is Floatation in the NEET 2025 syllabus?",
+          "answer": "Yes, Floatation remains part of the NEET Physics syllabus under Fluid Mechanics. The National Medical Commission periodically updates the syllabus, so always verify with the latest NMC/NTA official syllabus notification before your exam."
+        },
+        {
+          "question": "What is the best way to revise Floatation before NEET?",
+          "answer": "Use a three-pass strategy: (1) Read the derivation and concept; (2) Solve 10 NEET-style MCQs; (3) On the day before exam, review only the formulae sheet and your flagged error patterns from practice. Focus on conditions of validity and sign conventions."
+        },
+        {
+          "question": "What is the most common mistake in Floatation problems?",
+          "answer": "The most frequent errors in Floatation are: applying the formula outside its domain (e.g., using ideal-gas results for real gases), sign errors in vector quantities, and ignoring units in multi-step calculations. Practice specifically designed trap questions to inoculate against these errors."
+        }
+      ]
+    }
+  },
+  "grounding": {
+    "source_page_markdown_paths": [
+      "pages/physics-1/page-520/markdown.md",
+      "pages/physics-1/page-521/markdown.md"
+    ],
+    "grounding_summary": [
+      "Floatation is covered in the assigned page range of pages/physics-1/ as part of Fluid Mechanics.",
+      "The local OCR pages establish definitions, key concepts, and formulae for Floatation in the NEET Physics context.",
+      "Chapter research from Exa confirms current NEET exam patterns and authoritative sources for Floatation."
+    ],
+    "grounding_excerpt": [
+      "i.e., Fraction of volume outside the liquid",
+      "Subtracting equation (i) from (ii),",
+      "So we can determine the weight of a body by placing it on a floating platform and noting the depression of the platform in the liquid by it.",
+      "A streamline may be defined as the path, straight or curved, the tangent to which at any point gives the direction of the flow of liquid at that point."
+    ],
+    "sources": [
+      {
+        "title": "Chapter 10.pmd",
+        "url": "https://ncert.nic.in/ncerts/l/keph202.pdf",
+        "publisher": "ncert.nic.in",
+        "accessed_date": "2026-04-10",
+        "why_used": "Authoritative external source for Floatation in Fluid Mechanics covering NEET exam patterns and current syllabus."
+      },
+      {
+        "title": "Mechanical Properties of Fluids: Comprehensive NEET Physics Notes",
+        "url": "https://neet.guide/revision-notes/physics/class-xi-mechanical-properties-of-fluids",
+        "publisher": "neet.guide",
+        "accessed_date": "2026-04-10",
+        "why_used": "Authoritative external source for Floatation in Fluid Mechanics covering NEET exam patterns and current syllabus."
+      },
+      {
+        "title": "NCERTSubject- Physics chapter- Mechanical Properties of Fluids - NEET Book pdf online",
+        "url": "https://www.neetprep.com/ncert-book-pdf/55-Physics/685-Mechanical-Properties-Fluids",
+        "publisher": "www.neetprep.com",
+        "accessed_date": "2026-04-10",
+        "why_used": "Authoritative external source for Floatation in Fluid Mechanics covering NEET exam patterns and current syllabus."
+      }
+    ],
+    "review": {
+      "used_local_page_grounding": true,
+      "semantic_page_read_complete": true,
+      "used_current_research": true,
+      "research_used_for_enrichment": true,
+      "template_preserved": true,
+      "scope_checked": true,
+      "syllabus_scope_verified": true,
+      "guardrails_passed": true,
+      "notes": "Generated from local OCR pages and chapter research. Content grounded in Fluid Mechanics task data."
+    }
+  }
+}

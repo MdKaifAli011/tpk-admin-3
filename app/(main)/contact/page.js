@@ -41,10 +41,16 @@ const ContactPage = () => {
             .map((e) => ({
               _id: e._id,
               name: String(e.name).trim(),
-              slug: (e.slug && String(e.slug).trim()) || String(e.name).toLowerCase().replace(/\s+/g, "-"),
-              orderNumber: typeof e.orderNumber === "number" ? e.orderNumber : 9999,
+              slug:
+                (e.slug && String(e.slug).trim()) ||
+                String(e.name).toLowerCase().replace(/\s+/g, "-"),
+              orderNumber:
+                typeof e.orderNumber === "number" ? e.orderNumber : 9999,
             }))
-            .sort((a, b) => a.orderNumber - b.orderNumber || a.name.localeCompare(b.name));
+            .sort(
+              (a, b) =>
+                a.orderNumber - b.orderNumber || a.name.localeCompare(b.name),
+            );
           setExploreExams(list);
         } else {
           setExploreExams([]);
@@ -116,7 +122,8 @@ const ContactPage = () => {
     {
       icon: FaChalkboardTeacher,
       title: "Explore our courses",
-      description: "Browse programs by exam — links load from your active exams.",
+      description:
+        "Browse programs by exam — links load from your active exams.",
       color: "bg-purple-500",
       type: "explore",
     },
@@ -143,27 +150,29 @@ const ContactPage = () => {
     setModalState((prev) => ({ ...prev, isTrialOpen: false }));
   };
 
-
-
   const officeHours = [
     { day: "Monday - Friday", time: "9:00 AM - 6:00 PM IST" },
     { day: "Saturday", time: "10:00 AM - 4:00 PM IST" },
     { day: "Sunday", time: "Closed" },
   ];
 
-
-
   return (
     <div className="space-y-8 py-6">
       {/* Hero Section */}
-      <section className="hero-section bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 rounded-xl p-6 md:p-8 lg:p-10 border border-purple-100" aria-labelledby="contact-title">
+      <section
+        className="hero-section bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 rounded-xl p-6 md:p-8 lg:p-10 border border-purple-100"
+        aria-labelledby="contact-title"
+      >
         <div className="text-center max-w-3xl mx-auto">
-          <h1 id="contact-title" className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+          <h1
+            id="contact-title"
+            className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4"
+          >
             Get In Touch With Us
           </h1>
           <p className="text-base sm:text-lg md:text-xl text-gray-600 mb-6 leading-relaxed">
-            Have questions? We're here to help! Reach out to our team and
-            we'll get back to you as soon as possible.
+            Have questions? We're here to help! Reach out to our team and we'll
+            get back to you as soon as possible.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4 text-xs sm:text-sm text-gray-600">
             <div className="flex items-center gap-2">
@@ -188,9 +197,9 @@ const ContactPage = () => {
             Send Us a Message
           </h2>
           <p className="text-gray-600 max-w-2xl mx-auto">
-            Fill out the form below and our team will get back to you within
-            24 hours. We're here to help with any questions about our
-            courses, admissions, or support services.
+            Fill out the form below and our team will get back to you within 24
+            hours. We're here to help with any questions about our courses,
+            admissions, or support services.
           </p>
         </div>
         <ContactForm />
@@ -209,7 +218,9 @@ const ContactPage = () => {
                 key={index}
                 className="bg-white rounded-xl p-6 shadow-md hover:shadow-lg transition-shadow border border-gray-100"
               >
-                <div className={`${info.color} w-12 h-12 rounded-lg flex items-center justify-center mb-4`}>
+                <div
+                  className={`${info.color} w-12 h-12 rounded-lg flex items-center justify-center mb-4`}
+                >
                   <Icon className="text-xl" />
                 </div>
                 <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3">
@@ -247,8 +258,9 @@ const ContactPage = () => {
               <div
                 key={index}
                 onClick={() => handleInquiryClick(item)}
-                className={`bg-gradient-to-br from-gray-50 to-white rounded-xl p-6 border border-gray-200 hover:shadow-lg transition-all border-l-4 ${item.color.replace('bg-', 'border-')} ${item.type === "modal" ? "cursor-pointer" : ""
-                  } group`}
+                className={`bg-gradient-to-br from-gray-50 to-white rounded-xl p-6 border border-gray-200 hover:shadow-lg transition-all border-l-4 ${item.color.replace("bg-", "border-")} ${
+                  item.type === "modal" ? "cursor-pointer" : ""
+                } group`}
               >
                 <div
                   className={`${item.color} w-14 h-14 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-md`}
@@ -263,7 +275,9 @@ const ContactPage = () => {
                     {exploreExams === null ? (
                       <p className="text-gray-500 text-sm">Loading exams…</p>
                     ) : exploreExams.length === 0 ? (
-                      <p className="text-gray-500 text-sm">No active exams to show yet.</p>
+                      <p className="text-gray-500 text-sm">
+                        No active exams to show yet.
+                      </p>
                     ) : (
                       <div className="flex flex-wrap gap-2">
                         {exploreExams.map((exam) => (
@@ -373,10 +387,7 @@ const ContactPage = () => {
         isOpen={modalState.isCounselorOpen}
         onClose={closeCounselorModal}
       />
-      <TrialModal
-        isOpen={modalState.isTrialOpen}
-        onClose={closeTrialModal}
-      />
+      <TrialModal isOpen={modalState.isTrialOpen} onClose={closeTrialModal} />
     </div>
   );
 };

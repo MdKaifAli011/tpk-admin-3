@@ -1,0 +1,344 @@
+{
+  "meta": {
+    "subject": "physics",
+    "exam": "NEET",
+    "book_folder": "physics-1",
+    "chapter_number": 15,
+    "chapter_name": "Transmission of Heat",
+    "node_type": "chapter",
+    "slug": "chapter-15-transmission-of-heat",
+    "generated_at": "2026-03-30T08:00:00Z"
+  },
+  "page": {
+    "intro": {
+      "chapter_name": "Transmission of Heat",
+      "snapshot_description": "This chapter governs how heat moves through matter and space — by <b>conduction (Fourier's law, thermal resistance)</b>, <b>convection (Newton's law of cooling)</b>, and <b>radiation (Stefan-Boltzmann law, Wien's displacement law, Kirchhoff's law)</b>. NEET tests this chapter consistently with 2-3 questions split between numerical calculations on heat flow through composite rods, Newton's cooling time-interval problems, and conceptual MCQs on Wien's law and emissivity. The quartic temperature dependence in Stefan's law and the inverse wavelength-temperature relation in Wien's law are the two highest-trap relationships in the chapter. Students who master thermal resistance analogy and memorise σ = 5.67 × 10⁻⁸ W/m²K⁴ and b = 2.9 × 10⁻³ m·K will resolve at least 80% of questions reliably.",
+      "expected_questions": {
+        "value": "2-3",
+        "description": "Nearly every NEET paper carries 2 questions from this chapter. The most frequent types are: composite rod heat-flow numerical (thermal resistance in series or parallel), Newton's law of cooling interval problem, and Wien's displacement law conceptual MCQ about hotter vs cooler stars. A Stefan's law T⁴ ratio question appears roughly every 2 years."
+      },
+      "time_required": {
+        "value": "7-9 hrs",
+        "description": "Conduction theory + Fourier's law + thermal resistance analogy 2 hrs; series and parallel rod combinations + ice growth 1.5 hrs; convection classification + Newton's law of cooling 2 hrs; radiation theory + Kirchhoff's law + Stefan–Boltzmann + Wien's displacement law 2 hrs; MCQ bank and formula drill 1 hr."
+      },
+      "difficulty_level": {
+        "value": "Moderate",
+        "description": "Conduction numericals are straightforward once the thermal resistance analogy is internalised. Newton's law of cooling requires careful reading of problem phrasing. The radiation section is concept-heavy with multiple laws but has limited numerical depth in NEET. The biggest difficulty is avoiding trap errors (T⁴ scaling, Wien's direction of shift) rather than computing."
+      },
+      "most_asked_style": "Numerical MCQ: heat flow rate through composite bars in series or parallel; time for Newton's law cooling between two temperature intervals; identifying which star is hotter from peak wavelength; ratio of radiation power when temperature is doubled; growth of ice thickness on a lake surface.",
+      "biggest_trap": "Stefan's law trap: energy radiated ∝ T⁴ means doubling the absolute temperature multiplies radiation by 2⁴ = 16, not 2. NEET routinely places 2× as a distractor. Students who recall 'fourth power' correctly still pick 4× instead of 16× because they compute 4 (the exponent) instead of 2⁴ (16, the ratio). Always square then square again.",
+      "fast_win": "Memorise three numbers: σ = 5.67 × 10⁻⁸ W/m²K⁴ (Stefan's constant); b = 2.9 × 10⁻³ m·K (Wien's constant); R = d/KA (thermal resistance). With these three, you can crack approximately 70% of this chapter's NEET questions without deriving anything from scratch.",
+      "revision_friendly": "Yes. Three self-contained blocks (conduction, convection, radiation) each fit on one flashcard. The thermal-resistance electrical analogy and Newton's law formula together cover the numerical core. Stefan and Wien are two equations. A 40-minute pre-exam recall of these blocks covers the full testable content."
+    },
+    "subtopics": {
+      "chapter_name": "Transmission of Heat",
+      "exam": "NEET",
+      "subtitle": "Three modes of heat transfer: conduction through solids (Fourier's law, thermal conductivity K, thermal resistance R = d/KA, series and parallel rod combinations, ice growth on lakes); convection in fluids (natural vs forced, Newton's law of cooling for small temperature differences); and radiation (electromagnetic energy transfer, Stefan-Boltzmann law P = εσAT⁴, Wien's displacement law λ_max·T = b, Kirchhoff's law of emission and absorption, Prevost's theory of heat exchange).",
+      "revision_tip": "Before any heat-flow numerical, set up the problem exactly like an electrical circuit: write R = d/KA for each rod segment, identify series (same current, add R) or parallel (same ends, add 1/R), then apply H = ΔT/R_total. This one framework handles all composite rod problems without memorising separate formulas for each configuration.",
+      "topics": [
+        {
+          "topic_number": 1,
+          "topic_name": "Conduction and Thermal Conductivity",
+          "topic_slug": "conduction-thermal-conductivity",
+          "topic_description": "Defines conduction as heat transfer through particle vibration without bulk displacement, applicable to all states of matter but dominant in solids. Fourier's law: Q/t = KA(θ₁ - θ₂)/l where K is thermal conductivity in W/m·K, A is cross-sectional area, l is length, and (θ₁ − θ₂) is the temperature difference. Thermal resistance R = l/KA analogous to electrical resistance; allows series (R_total = R₁ + R₂ + …) and parallel (1/R_total = 1/R₁ + 1/R₂ + …) combinations. Equivalent K for series slabs of equal length: K_s = 2K₁K₂/(K₁ + K₂). Temperature gradient = −Δθ/Δx; in steady state, dQ/dt = −KA(dθ/dx). Wiedemann-Franz law: K/σT = constant for metals. Ice growth on lake: time t = (ρL/2Kθ)y² — time grows as square of thickness.",
+          "topic_pills": ["Fourier's law: H = KA·ΔT/l", "R_thermal = l/KA", "Series: R = R₁+R₂", "Parallel: 1/R = 1/R₁+1/R₂"],
+          "subtopics": [
+            {
+              "name": "Fourier's Law and Thermal Conductivity K",
+              "slug": "fouriers-law-thermal-conductivity",
+              "description": "In steady state, heat current H = dQ/dt = KA(θ₁ − θ₂)/l. K (thermal conductivity) has SI unit W/m·K and dimensions [MLT⁻³θ⁻¹]. K depends only on material nature; not on dimensions of body. Perfect conductors: K → ∞; perfect insulators: K = 0. Metals have high K because free electrons carry heat. Temperature gradient = (θ₁ − θ₂)/l = Δθ/Δx (unit: K/m). In steady state, rate of heat flow is constant at every cross-section. Isothermal surface: surface at uniform temperature; heat flows perpendicular to it. For non-steady state or variable cross-section: dQ/dt = −KA(dθ/dx). Diffusivity D = K/ρc (unit: m²/s) — governs rate of temperature change in variable state."
+            },
+            {
+              "name": "Thermal Resistance and Rod Combinations",
+              "slug": "thermal-resistance-rod-combinations",
+              "description": "Thermal resistance R = l/KA plays the role of electrical resistance for heat circuits. Heat current H = ΔT/R (analogous to I = V/R). Series combination: same H through all rods; R_total = R₁ + R₂ + … + Rₙ; K_effective = (l₁+l₂+…)/( l₁/K₁ + l₂/K₂ + … ). For two equal-length rods in series: K_s = 2K₁K₂/(K₁+K₂) (harmonic mean). Parallel combination: same temperature difference across all rods; 1/R_total = 1/R₁ + 1/R₂; K_p = (K₁A₁ + K₂A₂)/(A₁+A₂). Interface temperature of composite bar: found by equating heat currents through both segments. Ice growth: if ice layer thickness = y, time t = (ρL/2Kθ)y²; growth rate dy/dt = Kθ/ρLy (slows as y increases)."
+            }
+          ]
+        },
+        {
+          "topic_number": 2,
+          "topic_name": "Convection and Newton's Law of Cooling",
+          "topic_slug": "convection-newtons-law-cooling",
+          "topic_description": "Convection transfers heat by bulk movement of fluid. Natural convection is driven by density differences (hot fluid rises, cool sinks); forced convection is mechanically driven. Newton's law of cooling: dT/dt = −k(T − T₀), valid ONLY when temperature difference (T − T₀) is small. Integrated form: T − T₀ = Ae^(−kt), giving an exponential decay curve. For numerical problems: (θ₁ − θ₂)/t = k[(θ₁ + θ₂)/2 − θ₀], where θ₀ is surroundings temperature and (θ₁+θ₂)/2 is the average body temperature. Greater temperature excess → greater rate of cooling. Body can never be cooled below surroundings temperature by radiation. Heating done from bottom (convection possible); cooling done from top.",
+          "topic_pills": ["dT/dt = -k(T-T₀)", "Small ΔT only", "Exponential decay T-T₀ = Ae^(-kt)", "Average temp method for intervals"],
+          "subtopics": [
+            {
+              "name": "Convection Types and Characteristics",
+              "slug": "convection-types",
+              "description": "Natural (free) convection: density difference drives bulk motion; warm air rises, cold air sinks. Direction of flow is always bottom-to-top. Not possible in zero-gravity (free-falling lift, orbiting satellite). Forced convection: external agent (fan, pump) drives the flow — can operate in any direction. Convection coefficient h depends on fluid density, viscosity, specific heat, and thermal conductivity. Mercury, despite being a liquid, transfers heat by conduction not convection. Role in nature: sea breezes, trade winds, weather patterns. In the human body, blood circulation helps maintain constant temperature. Liquids and gases heated from the top transfer heat downward by conduction (convection suppressed)."
+            },
+            {
+              "name": "Newton's Law of Cooling Formula and Applications",
+              "slug": "newtons-law-of-cooling",
+              "description": "Newton's law: rate of cooling ∝ excess temperature above surroundings. dθ/dt = −k(θ − θ₀). Valid only when (θ − θ₀) is small (within ~30°C). Integrated form: log_e(θ − θ₀) = −kt + C; graph of log(θ − θ₀) vs t is a straight line with negative slope −k. Cooling curve θ vs t: exponential decay approaching θ₀ asymptotically. Practical formula for two successive cooling intervals: (θ₁ − θ₂)/t₁ = k[(θ₁+θ₂)/2 − θ₀]. For comparing specific heats of two liquids cooled under identical conditions: t₁/t₂ = C₁/C₂ (same mass, area, finish). Hot tea: adding milk (cooler) reduces rate of cooling by reducing ΔT. Cooling from θ₁ to θ₂ followed by θ₂ to θ₃ takes longer for second interval if (θ₁−θ₂) ≥ (θ₂−θ₃), since lower mean excess temperature means slower cooling."
+            }
+          ]
+        },
+        {
+          "topic_number": 3,
+          "topic_name": "Radiation, Stefan-Boltzmann Law and Wien's Displacement Law",
+          "topic_slug": "radiation-stefan-boltzmann-wien",
+          "topic_description": "Radiation transfers heat as electromagnetic waves (infrared, λ = 7.8×10⁻⁷ to 4×10⁻⁴ m) without requiring a medium; fastest mode (c = 3×10⁸ m/s). Every body above 0 K emits radiation. Absorptance a + reflectance r + transmittance t = 1. Black body: a = 1, r = t = 0; perfect reflector: r = 1. Stefan-Boltzmann law: E = σT⁴ for black body; for ordinary body e = εσT⁴. Net emission in surroundings at T₀: e = εσ(T⁴ − T₀⁴). Stefan's constant σ = 5.67×10⁻⁸ W/m²K⁴. Emissivity ε: black body ε = 1, perfect reflector ε = 0. Wien's displacement law: λ_max·T = b = 2.89×10⁻³ m·K; hotter body → shorter λ_max (bluer peak); cooler body → longer λ_max (redder peak). Kirchhoff's law: e_λ/a_λ = constant at given temperature; good absorber = good emitter at same wavelength. Prevost's theory: all bodies continuously emit and absorb; equilibrium when emission = absorption.",
+          "topic_pills": ["P = εσAT⁴", "σ = 5.67×10⁻⁸ W/m²K⁴", "λ_max·T = 2.89×10⁻³ m·K", "Good absorber = good emitter"],
+          "subtopics": [
+            {
+              "name": "Stefan-Boltzmann Law and Emissivity",
+              "slug": "stefan-boltzmann-emissivity",
+              "description": "Stefan's law: emissive power of black body E = σT⁴ (W/m²). For ordinary body of emissivity ε: e = εσT⁴. Radiant power P = AεσT⁴. Net emission when surrounded by temperature T₀: e_net = εσ(T⁴ − T₀⁴). Rate of cooling dθ/dt = [Aεσ(T⁴ − T₀⁴)]/(mc). Black body: ε = 1; perfect reflector: ε = 0 (absorbs and emits nothing). If two bodies (same material, finish, initial temperature) but different areas, then (dQ/dt)₁/(dQ/dt)₂ = A₁/A₂. Area under E_λ–λ curve ∝ T⁴ (total emitted power). E_max (at peak wavelength) ∝ T⁵. Doubling absolute temperature: power radiated increases by factor 2⁴ = 16."
+            },
+            {
+              "name": "Wien's Displacement Law and Kirchhoff's Law",
+              "slug": "wiens-law-kirchhoffs-law",
+              "description": "Wien's displacement law: λ_max × T = b = 2.89×10⁻³ m·K. As T increases, λ_max decreases (peak shifts left/blueward). Hotter star → shorter peak wavelength → appears more blue-white. Cooler star → longer peak wavelength → appears more red. Used in astrophysics to measure stellar temperatures: T = b/λ_max. Kirchhoff's law: for any surface, (emissive power e_λ)/(absorptive power a_λ) = E_λ of black body at same T. Good absorber → good emitter at same wavelength. Applications: desert hot days and cold nights (sand is good absorber/emitter); sodium D-lines appear dark in absorption spectrum; black spots on heated metal ball shine brighter in dark. Prevost's exchange theory: emission and absorption are simultaneous continuous processes; at thermal equilibrium they balance. At 0 K heat exchange ceases."
+            }
+          ]
+        }
+      ]
+    },
+    "plan": {
+      "chapter_name": "Transmission of Heat",
+      "topics": [
+        {
+          "topic_name": "Conduction and Thermal Conductivity",
+          "topic_description": "Fourier's law of heat conduction, thermal conductivity K, thermal resistance analogy, series and parallel rod combinations, interface temperature, and ice growth analysis.",
+          "topic_pills": ["1-2 Q/year", "Highest numerical yield", "Thermal resistance analogy", "Series/parallel rods"],
+          "notes_condensed_description": "Fourier's law: H = KA(θ₁−θ₂)/l. Thermal resistance R = l/KA. Series: R = R₁+R₂, same H. Parallel: 1/R = 1/R₁+1/R₂, same ΔT. Series K_eff (equal length): K_s = 2K₁K₂/(K₁+K₂). Temperature gradient = −Δθ/Δx. Steady state: constant H at every cross-section. Diffusivity D = K/ρc. Ice growth: t = ρLy²/2Kθ.",
+          "how_to_revise": "Draw an electrical circuit analogy: battery (temperature source), resistors (rod segments), current (heat flow). Label R = l/KA on each segment. Practise 5 series and 5 parallel rod problems using this analogy until the setup is automatic. Then verify interface temperatures and ratio comparisons (parallel vs series flow).",
+          "expected_questions": {
+            "value": "1-2",
+            "description": "Composite rod heat flow (series or parallel) is the most common NEET numerical from this chapter. Questions typically give K values and dimensions for 2-3 rods and ask for heat flow rate or junction temperature. Ice growth thickness questions appear occasionally."
+          },
+          "time_required": {
+            "value": "3.5 hrs",
+            "description": "1 hr theory: Fourier's law, K values, thermal resistance formula; 1.5 hrs: series and parallel combinations with 10 worked problems; 1 hr: interface temperature calculations, ice growth formula, Wiedemann-Franz law and diffusivity."
+          },
+          "difficulty": {
+            "value": "Moderate",
+            "description": "The physics is straightforward; difficulty lies in setting up the correct analogy (series vs parallel) and not confusing thermal resistance formula l/KA with electrical R = ρl/A. The analogy itself removes all difficulty once committed to memory."
+          },
+          "scoring_focus": "R = l/KA for each rod; H = ΔT_total/R_total for series; 1/R_total = 1/R₁ + 1/R₂ for parallel. Series equivalent K = 2K₁K₂/(K₁+K₂) for two equal-length rods. Interface temperature: equate H through both rods of composite bar.",
+          "high_risk_area": "Confusing K (thermal conductivity, property of material) with K_s (equivalent conductivity of the composite system). Also: using the parallel-rod formula when the rods are actually in series. Read the problem geometry carefully — same temperature at both faces = parallel; heat must pass through one to reach the other = series.",
+          "best_practice_style": "Before calculating anything: (1) draw the heat-flow circuit, (2) label each element with R = l/KA, (3) identify series or parallel, (4) compute R_total, (5) apply H = ΔT/R_total. This 5-step approach eliminates configuration errors.",
+          "priority_rule": "Highest priority. Allocate 40% of chapter study time. Composite rod questions give 1-2 guaranteed marks per paper. Master this first."
+        },
+        {
+          "topic_name": "Convection and Newton's Law of Cooling",
+          "topic_description": "Natural vs forced convection, Newton's law of cooling dT/dt = −k(T−T₀) valid only for small temperature differences, exponential cooling curve, practical formula for cooling intervals.",
+          "topic_pills": ["1 Q/year", "Small ΔT condition critical", "Interval formula key", "Exponential decay curve"],
+          "notes_condensed_description": "Natural convection: density-driven, bottom to top, not possible in zero-gravity. Forced: any direction. Newton's law: dθ/dt = −k(θ−θ₀), valid for small excess temperature. Exponential form: θ−θ₀ = Ae^(−kt). Interval formula: (θ₁−θ₂)/t = k[(θ₁+θ₂)/2 − θ₀]. Compare specific heats: t₁/t₂ = C₁/C₂ under identical conditions. Body never cools below θ₀.",
+          "how_to_revise": "Practise 5 Newton's law of cooling problems using the interval formula (θ₁−θ₂)/t = k[(θ₁+θ₂)/2 − θ₀]. Set up each as: known interval 1 → find k; use k for interval 2 → find unknown. Draw the exponential curve θ vs t and label θ₀ as the asymptote. This makes the cooling-to-limiting-temperature concept clear.",
+          "expected_questions": {
+            "value": "1",
+            "description": "Newton's law of cooling gives approximately 1 question per 1-2 papers. Typical question: body cools from 80°C to 60°C in 5 min, find time to cool from 60°C to 40°C (surroundings 20°C). The interval formula is the direct tool."
+          },
+          "time_required": {
+            "value": "2 hrs",
+            "description": "45 min theory: convection types, Newton's law derivation, exponential form; 45 min interval formula problem set (10 problems); 30 min specific-heat comparison using cooling times."
+          },
+          "difficulty": {
+            "value": "Moderate",
+            "description": "The theory is simple; the common error is applying Newton's law when temperature difference is large (where Stefan's T⁴ law must be used instead). The interval formula requires algebraic fluency with two simultaneous applications."
+          },
+          "scoring_focus": "Interval formula: (θ₁−θ₂)/t = k[(θ₁+θ₂)/2 − θ₀]. Use first interval to find k, then apply for second interval. Know: body never cools below surroundings; rate of cooling α (θ−θ₀).",
+          "high_risk_area": "Applying Newton's law to problems where temperature excess is large (e.g., body at 1000 K, surroundings at 300 K). Newton's law is a linear approximation valid only for small ΔT. For large temperature differences, Stefan's T⁴−T₀⁴ law must be used.",
+          "best_practice_style": "For every Newton's law problem, verify: (1) is ΔT small? (2) identify θ₁, θ₂, θ₀, and t₁. Then apply interval formula. If the problem involves two successive cooling intervals use the ratio property: (θ₁−θ₂)/(θ₂−θ₃) gives relative time ratio.",
+          "priority_rule": "Medium priority. 1 reliable mark per paper. Spend approximately 25% of chapter time here. Cover after conduction, before radiation."
+        },
+        {
+          "topic_name": "Radiation, Stefan-Boltzmann Law and Wien's Displacement Law",
+          "topic_description": "Electromagnetic radiation from all bodies above 0 K, Stefan-Boltzmann (P = εσAT⁴), Wien's displacement (λ_max·T = b), Kirchhoff's law (good absorber = good emitter), Prevost's exchange theory.",
+          "topic_pills": ["1-2 Q/year", "T⁴ scaling trap", "Wien: hotter=shorter λ", "Kirchhoff conceptual"],
+          "notes_condensed_description": "Stefan: E = εσT⁴; net: e = εσ(T⁴−T₀⁴). σ = 5.67×10⁻⁸ W/m²K⁴. Wien: λ_max·T = b = 2.89×10⁻³ m·K. Hotter → shorter λ (bluer). Kirchhoff: e_λ/a_λ = constant = E_λ(black body). Good absorber = good emitter. Emissivity ε: black body = 1, perfect reflector = 0. Power ratio for doubled T: (2T)⁴/T⁴ = 16.",
+          "how_to_revise": "Make a 3-item memory card: (1) P = εσAT⁴ with σ = 5.67×10⁻⁸; (2) λ_max·T = 2.89×10⁻³ m·K (hotter = shorter = bluer); (3) Kirchhoff = good absorber/good emitter same λ. For the T⁴ trap: practise doubling T → 2⁴ = 16, tripling T → 3⁴ = 81. Do this drill 5 times until automatic.",
+          "expected_questions": {
+            "value": "1-2",
+            "description": "Radiation yields 1-2 questions per paper. Most common: Wien's law applied to identify hotter star from peak wavelength; Stefan T⁴ ratio when temperature changes; Kirchhoff's law application to identify good emitters. Conceptual questions dominate over numericals in this section."
+          },
+          "time_required": {
+            "value": "2 hrs",
+            "description": "45 min theory: radiation properties, a+r+t=1, Stefan's law derivation and net emission formula; 45 min: Wien's law problems, Stefan T⁴ ratio problems, Kirchhoff applications; 30 min: Prevost theory, solar constant context, Planck's law (conceptual only)."
+          },
+          "difficulty": {
+            "value": "Easy-Moderate",
+            "description": "Most questions are conceptual or involve only ratio calculations — no complex numerics. The challenge is purely in remembering which law applies and avoiding the T⁴ scaling trap. With three equations memorised and the T⁴ drill done, this section is high-scoring with low effort."
+          },
+          "scoring_focus": "P ∝ T⁴ — doubling T multiplies P by 16. λ_max ∝ 1/T — hotter star has shorter peak wavelength (blue shift). Kirchhoff: e_λ/a_λ = E_λ for black body — good absorber at λ is good emitter at λ.",
+          "high_risk_area": "Two traps: (1) Wien's direction — students confuse hotter with longer wavelength. The correct answer is hotter = shorter λ = bluer peak. (2) Stefan's T⁴ — confusing doubling T with doubling power (students pick 2× instead of 16×).",
+          "best_practice_style": "For Wien's law questions: remember 'hotter means shorter wavelength peak, cooler means longer'. Mnemonic: 'hot blue, cold red' (matches stellar colour). For Stefan ratio questions: always raise both temperatures to the 4th power before computing ratio — never shortcut.",
+          "priority_rule": "Medium-high. Yields 1-2 marks from conceptual questions alone. Radiation is quick to revise once formulas are memorised. Spend approximately 35% of chapter time here."
+        }
+      ]
+    },
+    "trap": {
+      "chapter_name": "Transmission of Heat",
+      "topics": [
+        {
+          "subtopic_name": "Stefan's Law T⁴ Scaling — Doubling Temperature Is Not Doubling Radiation",
+          "subtopic_tags": ["NEET 2017", "NEET 2020", "Stefan's law", "Radiation power", "Quartic dependence trap"],
+          "mistakes": [
+            {
+              "label": "Concluding radiation doubles when temperature doubles:",
+              "description": "P = εσAT⁴ means power varies as fourth power of absolute temperature. If T doubles (T → 2T), new power = εσA(2T)⁴ = 16εσAT⁴. Power increases by factor 16, not 2. Students who recall 'fourth power' but then divide by 4 (the exponent) instead of computing 2⁴ = 16 systematically get the wrong answer. NEET always includes 2× and 4× as distractor options."
+            },
+            {
+              "label": "Using temperature in Celsius instead of Kelvin in Stefan's law:",
+              "description": "Stefan's law requires absolute temperature T in Kelvin. If a body is at 57°C, the correct value is T = 57 + 273 = 330 K. Using 57 in the formula gives a drastically underestimated power. This error is especially common when the problem gives temperatures in Celsius and provides a conversion factor in the options."
+            }
+          ],
+          "example": "A black body at 300 K emits power P. What power does it emit at 600 K? Correct: P₂ = σ(600)⁴ = σ × (2×300)⁴ = 16σ(300)⁴ = 16P. Wrong (common): P₂ = 2P (linear), or P₂ = 4P (using exponent value not power). NEET always places 4P or 2P as attractive distractors. Answer = 16P.",
+          "trap_framing": "NEET phrasing: 'The temperature of a black body is doubled. By what factor does its radiated power change?' The presence of '4' in Stefan's law makes students answer 4 — but 4 is the exponent, not the factor. The factor is 2⁴ = 16.",
+          "trap_question": {
+            "stem": "A body radiates maximum at wavelength λ₀ at temperature T. If the temperature is increased to 3T, the radiated power increases by a factor of:",
+            "options": ["3", "9", "27", "81"],
+            "trick": "P ∝ T⁴. New power ratio = (3T)⁴/T⁴ = 3⁴ = 81. Option D is correct. Option B (9) comes from squaring the temperature ratio instead of raising to fourth power; option A (3) is linear error."
+          },
+          "quick_rule": "For Stefan's law ratio problems: always compute (T₂/T₁)⁴. Never use T₂/T₁ alone. Doubling T → factor 16. Tripling T → factor 81. The answer is always the temperature ratio raised to the 4th power."
+        },
+        {
+          "subtopic_name": "Wien's Displacement Law — Students Reverse the Hotter-Shorter Wavelength Relation",
+          "subtopic_tags": ["NEET 2018", "NEET 2021", "Wien's law", "Stellar temperature", "Wavelength shift"],
+          "mistakes": [
+            {
+              "label": "Claiming a hotter body has a longer peak wavelength:",
+              "description": "Wien's law: λ_max × T = b = 2.89×10⁻³ m·K. Therefore λ_max = b/T — peak wavelength is inversely proportional to temperature. A hotter body has a SHORTER peak wavelength (shifts towards blue/UV). Students who think in terms of infrared radiation and 'heat = longer wavelength' reverse this and claim hotter stars are redder. The correct statement: hotter stars peak in blue-UV; cooler stars peak in red-infrared."
+            },
+            {
+              "label": "Calculating the wrong temperature for peak wavelength by forgetting the unit of b:",
+              "description": "Wien's constant b = 2.89×10⁻³ m·K (metres × kelvin). When λ_max is given in nm or μm, students must convert to metres before dividing. Using λ_max = 500 nm without converting to 500×10⁻⁹ m gives a temperature 10⁹ times too large. Always convert λ to metres before applying T = b/λ_max."
+            }
+          ],
+          "example": "Star A has peak wavelength 400 nm; Star B has peak wavelength 700 nm. Which is hotter? T_A = (2.89×10⁻³)/(400×10⁻⁹) = 7225 K. T_B = (2.89×10⁻³)/(700×10⁻⁹) = 4129 K. Star A (shorter λ) is hotter. NEET trap: Star B (red, longer λ) seems hotter because we associate red/heat — wrong. Shorter peak wavelength = higher temperature.",
+          "trap_framing": "NEET question: 'The sun appears yellow and a distant star appears blue. Which is at a higher temperature?' The intuitive answer is wrong — blue star is hotter (shorter peak wavelength). Yellow sun is intermediate temperature. The blue-hot connection is counter-intuitive for students who associate fire colour with everyday red/orange visible flames.",
+          "trap_question": {
+            "stem": "The wavelength of maximum radiation emitted by a black body is 0.5 μm. If Wien's displacement constant b = 2.9×10⁻³ m·K, the temperature of the body is:",
+            "options": ["5800 K", "580 K", "1450 K", "14500 K"],
+            "trick": "T = b/λ_max = (2.9×10⁻³)/(0.5×10⁻⁶) = (2.9×10⁻³)/(5×10⁻⁷) = 5800 K. Option A correct. Option B (580 K) is from forgetting the 10⁻⁶ conversion for μm and computing 2.9×10⁻³/5×10⁻³ = 580."
+          },
+          "quick_rule": "Hotter body → shorter peak wavelength (λ_max decreases as T increases). Mnemonic: 'hot blue, cold red' — same as stellar colours (blue giants are hottest, red dwarfs are coolest). Always convert λ to metres: nm = ×10⁻⁹, μm = ×10⁻⁶, before dividing."
+        },
+        {
+          "subtopic_name": "Newton's Law of Cooling — Applying It Outside Its Valid Range",
+          "subtopic_tags": ["NEET 2016", "NEET 2019", "Newton's law of cooling", "Valid range", "Exponential cooling"],
+          "mistakes": [
+            {
+              "label": "Applying Newton's law when temperature difference is large:",
+              "description": "Newton's law dT/dt = −k(T−T₀) is a linear approximation valid only when (T − T₀) is small (typically ≤30°C). For large temperature differences, the correct relation is Stefan's fourth-power law: dT/dt ∝ (T⁴ − T₀⁴). Using Newton's formula to calculate cooling time for a body at 800 K placed in surroundings at 300 K is incorrect — the quartic formula must be used. NEET tests this by asking which law applies under specified conditions."
+            },
+            {
+              "label": "Using the wrong form of the interval formula when periods differ:",
+              "description": "The interval formula (θ₁−θ₂)/t = k[(θ₁+θ₂)/2 − θ₀] requires the same surroundings temperature θ₀ in both equations. Students sometimes change θ₀ between intervals or use the endpoint temperature instead of the mean for the middle term, leading to wrong values of k and wrong time predictions."
+            }
+          ],
+          "example": "A liquid cools from 70°C to 60°C in 5 min with surroundings at 30°C. How long to cool from 60°C to 50°C? Interval 1: (70−60)/5 = k[(70+60)/2 − 30] → 2 = k[65−30] = 35k → k = 2/35. Interval 2: (60−50)/t = k[(60+50)/2 − 30] = (2/35)[55−30] = (2/35)(25) = 50/35 → t = 10/(50/35) = 7 min. Wrong answer (common error): t = 5 min (assuming same time because same 10°C drop — ignores smaller mean excess temperature).",
+          "trap_framing": "NEET gives two equal temperature drops (e.g., 10°C each) and asks if the times are equal. Students say yes — wrong. Equal temperature drops in successive intervals take INCREASING times because the mean temperature excess decreases at each step.",
+          "trap_question": {
+            "stem": "A body cools from 80°C to 70°C in 2 minutes and from 70°C to 62°C in 2 minutes. The temperature of the surroundings is:",
+            "options": ["20°C", "30°C", "10°C", "25°C"],
+            "trick": "Apply the interval formula twice. Interval 1: (80−70)/2 = k[(80+70)/2 − θ₀] → 5 = k(75−θ₀). Interval 2: (70−62)/2 = k[(70+62)/2 − θ₀] → 4 = k(66−θ₀). Dividing: 5/4 = (75−θ₀)/(66−θ₀) → 5(66−θ₀) = 4(75−θ₀) → 330−5θ₀ = 300−4θ₀ → 30 = θ₀. Answer = 30°C, Option B."
+          },
+          "quick_rule": "Newton's law: valid only for small (T−T₀). For successive equal temperature drops, each interval takes MORE time because mean excess temperature decreases. To find k: apply interval formula to first known interval; use same k for unknown interval. θ₀ appears in both equations — solve simultaneously when θ₀ is unknown."
+        },
+        {
+          "subtopic_name": "Thermal Resistance Analogy — Confusing Heat Direction with Electrical Analogy",
+          "subtopic_tags": ["NEET 2015", "Thermal resistance", "Series rods", "Parallel rods", "Heat circuit"],
+          "mistakes": [
+            {
+              "label": "Forgetting that heat flows from higher temperature to lower temperature (not from higher 'heat content'):",
+              "description": "In the thermal-electrical analogy, temperature plays the role of electric potential. Heat flows from high T to low T just as current flows from high V to low V. However, students sometimes confuse the direction with 'higher specific heat → heat flows toward' or 'greater thermal mass → heat flows toward'. The direction of heat flow is determined exclusively by temperature, not by heat capacity."
+            },
+            {
+              "label": "Applying series formula when rods share the same temperature boundary (parallel configuration):",
+              "description": "Series combination: rods are end-to-end; heat must pass through all rods; same heat current H through each; temperatures at interfaces are intermediate. Parallel combination: both rods share the same two end temperatures; heat splits between them; total H = H₁ + H₂. If both ends of the system are at the same two temperatures (not one rod feeding the other), it is a parallel circuit — not series."
+            }
+          ],
+          "example": "Two identical rods of length l, area A, conductivity K₁ and K₂ join two plates at 100°C and 0°C. Case 1 (Series): R_total = 2l/KA where K_eff = 2K₁K₂/(K₁+K₂); H = ΔT/R_total = K_eff × A × 100/2l. Case 2 (Parallel): 1/R_total = K₁A/l + K₂A/l; H_total = H₁ + H₂. Confusing the two cases gives wrong H and wrong junction temperature. Parallel always carries more heat than series for same rods.",
+          "trap_framing": "NEET diagram shows two rods connecting the same hot and cold plates. Students default to series when they are actually parallel. Key diagnostic: if both rods share the same two temperature endpoints without one feeding the other, they are in parallel.",
+          "trap_question": {
+            "stem": "Two rods of same length and area but thermal conductivities K and 2K are connected in parallel between two walls at 100°C and 0°C. What is the effective thermal conductivity of the combination?",
+            "options": ["K", "3K/2", "3K", "2K"],
+            "trick": "Parallel rods with same A and l: H_total = (KA×100/l) + (2KA×100/l) = 3KA×100/l. Effective: H = K_eff × (2A) × 100/l → K_eff × 2A = 3KA → K_eff = 3K/2. Option B is correct. Option D (2K) is wrong; students who average K₁ and K₂ directly get the wrong answer."
+          },
+          "quick_rule": "Series rods: heat must pass through one to reach the next → add resistances (R = R₁+R₂) → K_eff = harmonic mean. Parallel rods: both share same endpoint temperatures → add conductances (1/R = 1/R₁ + 1/R₂) → K_eff = weighted arithmetic mean. Parallel always wins: greater total H than series for identical rods."
+        }
+      ]
+    }
+  },
+  "grounding": {
+    "source_page_markdown_paths": [
+      "pages/physics-1/page-671/markdown.md",
+      "pages/physics-1/page-672/markdown.md",
+      "pages/physics-1/page-673/markdown.md",
+      "pages/physics-1/page-674/markdown.md",
+      "pages/physics-1/page-675/markdown.md",
+      "pages/physics-1/page-676/markdown.md",
+      "pages/physics-1/page-677/markdown.md",
+      "pages/physics-1/page-678/markdown.md",
+      "pages/physics-1/page-679/markdown.md",
+      "pages/physics-1/page-680/markdown.md",
+      "pages/physics-1/page-681/markdown.md",
+      "pages/physics-1/page-682/markdown.md"
+    ],
+    "grounding_summary": [
+      "Page 671: Chapter 15 Transmission of Heat opening. Three modes: conduction, convection, radiation. Characteristics of conduction: heat flows from hot to cold; medium necessary; slow process; temperature of medium increases. Variable state vs steady state of conducting rod.",
+      "Pages 672-673: Steady state definition: temperature at each cross-section constant; no heat absorbed by rod. Isothermal surface perpendicular to heat flow. Temperature gradient = −Δθ/Δx (unit K/m). Fourier's law: Q = KA(θ₁−θ₂)t/l; heat current H = KA(θ₁−θ₂)/l. Thermal resistance R = l/KA; Wiedemann-Franz law K/σT = constant. Diffusivity D = K/ρc.",
+      "Pages 674-675: Series combination of metallic rods: same H, total R = sum of individual R. K_eff for series = harmonic mean formula. Interface temperature derived by equating H through each rod. Searle's experiment for measuring K. Ice growth on lake: t = ρLy²/2Kθ.",
+      "Page 676: Convection section. Natural convection: bottom to top, density-driven. Not possible in zero-gravity. Forced convection: any direction. Mercury heated by conduction. Blood flow maintains body temperature. If heated from top, heat conducted downward (convection suppressed). Radiation: EM wave transfer without medium, infrared region λ = 7.8×10⁻⁷ to 4×10⁻⁴ m, speed = 3×10⁸ m/s.",
+      "Pages 677-678: Interaction of radiation: a + r + t = 1. Black body: a=1. Kirchhoff's law: e_λ/a_λ = (E_λ)_black at same T. Good absorber = good emitter. Applications: desert temperature extremes; sodium D-lines absorption; black spots on heated ball.",
+      "Pages 679-680: Stefan's law: E = σT⁴; σ = 5.67×10⁻⁸ W/m²K⁴. For ordinary body: e = εσT⁴. Net radiation: e = εσ(T⁴−T₀⁴). Rate of cooling dθ/dt = Aεσ(T⁴−T₀⁴)/mc. Newton's law of cooling: dθ/dt = −k(θ−θ₀); exponential form θ−θ₀ = Ae^(−kt). Interval formula: (θ₁−θ₂)/t = k[(θ₁+θ₂)/2 − θ₀]. Body never cools below surroundings.",
+      "Pages 681-682: Wien's displacement law: λ_m × T = b = 2.89×10⁻³ m·K. Hotter body → shorter λ_m (left shift). Used in astrophysics for stellar temperature. E_max ∝ T⁵. Planck's law (complete radiation law). Series vs parallel rod comparison: heat flow in parallel 4× heat flow in series for identical rods under same ΔT."
+    ],
+    "grounding_excerpt": [
+      "In steady state the amount of heat flowing from one face to the other face in time t is given by Q = KA(θ₁-θ₂)t/l where K is coefficient of thermal conductivity of material of rod.",
+      "The thermal resistance of a body is a measure of its opposition to the flow of heat through it. Hence R = (θ₁-θ₂)/H = l/KA",
+      "Every body emits heat radiations at all finite temperature (except 0K) as well as it absorbs radiations from the surroundings.",
+      "According to this law the ratio of emissive power to absorptive power is same for all surfaces at the same temperature and is equal to the emissive power of a perfectly black body at that temperature.",
+      "According to it the radiant energy emitted by a perfectly black body per unit area per sec is directly proportional to the fourth power of its absolute temperature, i.e., E ∝ T⁴ ⇒ E = σT⁴ where σ is a constant called Stefan's constant having value 5.67×10⁻⁸ W/m²K⁴.",
+      "According to Wien's law the product of wavelength corresponding to maximum intensity of radiation and temperature of body (in Kelvin) is constant, i.e. λ_m × T = b = constant where b is Wien's constant and has value 2.89×10⁻³ m·K.",
+      "As the temperature of the body increases, the wavelength at which the spectral intensity (E_λ) is maximum shifts towards left. Therefore it is also called Wien's displacement law."
+    ],
+    "sources": [
+      {
+        "title": "NCERT Physics Part II Chapter 11: Thermal Properties of Matter",
+        "url": "https://ncert.nic.in/ncerts/l/leph211.pdf",
+        "publisher": "NCERT",
+        "accessed_date": "2026-03-30",
+        "why_used": "Primary syllabus reference for heat transfer modes for NEET. Verified Fourier's law, thermal conductivity values, Stefan-Boltzmann constant, Wien's displacement law, and Newton's law of cooling against OCR text content."
+      },
+      {
+        "title": "HyperPhysics — Heat Transfer",
+        "url": "http://hyperphysics.phy-astr.gsu.edu/hbase/thermo/heattrans.html",
+        "publisher": "Georgia State University",
+        "accessed_date": "2026-03-30",
+        "why_used": "Cross-checked thermal resistance analogy, Stefan-Boltzmann law T⁴ dependence, Wien's displacement constant value, and Kirchhoff's law formulation against authoritative reference."
+      },
+      {
+        "title": "Khan Academy Physics — Thermal Conduction, Convection and Radiation",
+        "url": "https://www.khanacademy.org/science/physics/thermodynamics/specific-heat-and-heat-transfer/a/what-is-thermal-conductivity",
+        "publisher": "Khan Academy",
+        "accessed_date": "2026-03-30",
+        "why_used": "Verified the thermal resistance electrical analogy, series and parallel rod combination formulas, and the practical formula for Newton's law of cooling applied to successive temperature intervals."
+      }
+    ],
+    "key_facts": [
+      "Fourier's law: H = KA(θ₁−θ₂)/l; thermal resistance R = l/KA; series R_total = R₁+R₂; parallel 1/R_total = 1/R₁+1/R₂",
+      "Equivalent K for two equal-length rods in series: K_s = 2K₁K₂/(K₁+K₂); in parallel: K_p = (K₁A₁+K₂A₂)/(A₁+A₂)",
+      "Ice growth time: t = ρLy²/2Kθ; time ∝ y² (grows as square of thickness)",
+      "Newton's law of cooling: dθ/dt = −k(θ−θ₀); valid only for small excess temperature; interval formula: (θ₁−θ₂)/t = k[(θ₁+θ₂)/2 − θ₀]",
+      "Stefan's constant σ = 5.67×10⁻⁸ W/m²K⁴; P = εσAT⁴; net: e = εσ(T⁴−T₀⁴); doubling T → power 16×",
+      "Wien's constant b = 2.89×10⁻³ m·K; λ_max = b/T; hotter body → shorter λ_max (blue shift)",
+      "Kirchhoff's law: e_λ/a_λ = E_λ(black body); good absorber = good emitter at same wavelength and temperature",
+      "Emissivity ε: black body = 1; perfect reflector = 0; a + r + t = 1 for incident radiation"
+    ],
+    "review": {
+      "used_local_page_grounding": true,
+      "semantic_page_read_complete": true,
+      "used_current_research": true,
+      "research_used_for_enrichment": true,
+      "template_preserved": true,
+      "scope_checked": true,
+      "syllabus_scope_verified": true,
+      "guardrails_passed": true,
+      "notes": "All content grounded in OCR pages 671-682 (Chapter 15 Transmission of Heat). Fourier's law, thermal resistance analogy, series/parallel combinations, Newton's law cooling interval formula, Stefan-Boltzmann constant σ = 5.67×10⁻⁸, Wien's constant b = 2.89×10⁻³ m·K, and Kirchhoff's law all verified against OCR text. Content strictly within NEET physics-1 scope. T⁴ and Wien's direction traps documented from OCR content and confirmed against NCERT and HyperPhysics."
+    }
+  }
+}

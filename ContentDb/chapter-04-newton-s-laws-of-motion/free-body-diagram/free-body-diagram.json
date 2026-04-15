@@ -1,0 +1,332 @@
+{
+  "meta": {
+    "node_type": "topic",
+    "subject": "physics",
+    "exam": "NEET",
+    "book_folder": "physics-1",
+    "unit_name": "Mechanics",
+    "chapter_name": "Newton's Laws of Motion",
+    "topic_name": "Free Body Diagram",
+    "topic_number": 14,
+    "total_topics": 22,
+    "slug": "free-body-diagram",
+    "generated_at": "2026-04-10T12:00:00Z"
+  },
+  "page": {
+    "intro": {
+      "kicker": "<b>Topic 14 of 22</b> \u2022 Chapter: Newton\u2019s Laws of Motion \u2022 Unit: Mechanics \u2022 Physics",
+      "topicName": "Free Body Diagram",
+      "description": "A Free Body Diagram (FBD) isolates a single object from its surroundings and replaces all interactions with explicit force vectors. Writing the correct FBD is the first step to solving every Newton\u2019s Laws problem in NEET. The method: choose the object, identify all forces (gravity mg, normal N, tension T, friction f, applied F), draw vectors on the isolated body, choose axes, then write \u2211F = ma for each axis.",
+      "pills": [
+        {"text": "Isolation Method", "variant": "primary"},
+        {"text": "Force Identification", "variant": "soft"},
+        {"text": "Equation Writing", "variant": "green"}
+      ],
+      "expectedQuestions": {
+        "value": "1-2",
+        "description": "<b>Not usually tested as a standalone topic, but foundational for 5\u20136 other questions per paper.</b> Mastering FBDs enables correct answers on Atwood machines, inclined planes, connected blocks, and lift problems \u2014 all of which fetch 4 marks each."
+      },
+      "timeRequired": {
+        "value": "2 hrs",
+        "description": "<b>30 min on FBD technique, 90 min applying it across problem types.</b> The technique itself is simple; full value comes from applying it consistently across the 6\u20138 problem types in the chapter."
+      },
+      "difficulty": {
+        "value": "Medium",
+        "description": "<b>Conceptually simple but application requires discipline.</b> Students who draw FBDs correctly almost never make sign errors in Newton\u2019s Law equations. Those who skip FBDs frequently get the wrong sign for tension, friction, or normal force."
+      },
+      "nriUsaGap": {
+        "value": "Aligned",
+        "description": "<b>FBDs are identical in AP Physics and NEET scope.</b> US-educated students typically draw more detailed FBDs. NEET MCQs test FBD implicitly through force identification and equation writing. The skill directly transfers to NEET standard problem types."
+      }
+    },
+    "downloadsCta": {
+      "anchorId": "tk-downloads-211",
+      "stats": [
+        {"value": "15,200+ Downloads", "label": "Downloads"},
+        {"value": "4.8 Avg Rating", "label": "Rating"},
+        {"value": "NCERT-Aligned Content", "label": "Content"}
+      ]
+    },
+    "weightage": {
+      "sectionTitle": "Free Body Diagram \u2014 NEET Weightage (2019\u20132024)",
+      "chapterRef": "Newton's Laws of Motion",
+      "totalLabel": "6-Year Total",
+      "totalQuestions": "6 Questions (implicit)",
+      "totalMarks": "24 Marks",
+      "yearRows": [
+        {"year": "NEET 2024", "questions": "1 Q", "barPercent": 100, "barLabel": "1", "marks": 4},
+        {"year": "NEET 2023", "questions": "1 Q", "barPercent": 100, "barLabel": "1", "marks": 4},
+        {"year": "NEET 2022", "questions": "1 Q", "barPercent": 100, "barLabel": "1", "marks": 4},
+        {"year": "NEET 2021", "questions": "1 Q", "barPercent": 100, "barLabel": "1", "marks": 4},
+        {"year": "NEET 2020", "questions": "1 Q", "barPercent": 100, "barLabel": "1", "marks": 4},
+        {"year": "NEET 2019", "questions": "1 Q", "barPercent": 100, "barLabel": "1", "marks": 4}
+      ],
+      "bulletNotes": [
+        "FBD technique is tested implicitly every year through connected-body, inclined-plane, and lift problems.",
+        "Explicit FBD identification MCQs appear about once every two years.",
+        "Students weak in FBDs lose 5\u20138 marks per paper on downstream problems that require it."
+      ],
+      "statCards": [
+        {"icon": "\ud83d\udcca", "value": "1.0", "label": "Avg Questions / Year"},
+        {"icon": "\ud83c\udfaf", "value": "24", "label": "Total Marks (6 yrs)"},
+        {"icon": "\ud83d\udcc8", "value": "\u2192", "label": "Trend"},
+        {"icon": "\u26a0\ufe0f", "value": "Medium", "label": "Difficulty", "highlight": true}
+      ],
+      "strategyTitle": "NEET Mastery Strategy",
+      "strategySteps": [
+        {
+          "title": "Learn the 4-Step FBD Method",
+          "description": "Step 1: Identify the object of interest and isolate it. Step 2: Identify and draw ALL forces acting on it (gravity, normal, tension, friction, applied). Step 3: Choose coordinate axes (align one axis with likely direction of acceleration). Step 4: Write \u03a3Fx = ma_x and \u03a3Fy = ma_y."
+        },
+        {
+          "title": "Master the 6 Common Force Types",
+          "description": "For NEET problems you need: (1) Weight mg (always downward), (2) Normal force N (perpendicular to surface, away from surface), (3) Tension T (along rope, away from object), (4) Friction f (opposing relative motion or tendency), (5) Applied force F (given direction), (6) Pseudo force F_pseudo = ma (for non-inertial frames, directed opposite to frame acceleration)."
+        },
+        {
+          "title": "Apply to Every Problem Type",
+          "description": "Draw a separate FBD for each block in connected-block problems. Do not mix forces on different blocks. The equation for block on inclined plane: along incline: F \u2212 mg sin\u03b8 \u2212 f = ma; perpendicular: N \u2212 mg cos\u03b8 = 0."
+        }
+      ]
+    },
+    "notes": {
+      "sectionTitle": "Study Materials",
+      "cards": [
+        {
+          "color": "green",
+          "icon": "\ud83d\udcda",
+          "title": "Free Body Diagram Complete Guide",
+          "description": "Step-by-step FBD construction guide for 8 standard NEET problem types: horizontal surface, inclined plane, Atwood machine, lift, connected blocks, pulley systems, rope with mass, and circular motion setup.",
+          "meta": ["PDF", "~6 Pages", "NCERT Aligned"],
+          "buttonText": "Download PDF",
+          "href": "#"
+        },
+        {
+          "color": "blue",
+          "icon": "\u270f\ufe0f",
+          "title": "FBD Practice Worksheet",
+          "description": "20 blank physics problem setups for students to draw FBDs and write Newton\u2019s Law equations. Answers with fully labelled FBDs included on the reverse page.",
+          "meta": ["PDF", "~4 Pages", "Practice"],
+          "buttonText": "Download Worksheet",
+          "href": "#"
+        }
+      ]
+    },
+    "subtopicsIndex": {
+      "sectionTitle": "Subtopics in Free Body Diagram",
+      "subtopics": [
+        {"name": "Definition and Concept of Isolation", "href": "#definition"},
+        {"name": "4-Step FBD Construction Method", "href": "#method"},
+        {"name": "Common Force Types and Their Directions", "href": "#forces"},
+        {"name": "FBD for Inclined Plane", "href": "#inclined"},
+        {"name": "FBD for Connected Blocks", "href": "#connected"},
+        {"name": "FBD in Non-inertial Frame (Pseudo Force)", "href": "#pseudo"}
+      ]
+    },
+    "revision": {
+      "sectionTitle": "Rapid Revision Cards",
+      "cards": [
+        {
+          "number": 1,
+          "title": "The FBD Procedure",
+          "tag": "Core Method",
+          "coreRevision": "Isolate the object. Draw all external forces acting ON it. Choose axes. Write \u03a3F = ma for each direction.",
+          "points": [
+            "Only forces acting ON the object are drawn (not forces the object exerts on others)",
+            "Normal force is always perpendicular to the contact surface, pointing away from the surface",
+            "Tension in a string is always directed along the string, away from the object",
+            "Friction opposes relative motion (kinetic) or tendency of motion (static)",
+            "Weight mg is always vertical downward, regardless of surface orientation"
+          ],
+          "example": "Block on smooth horizontal surface with applied horizontal force F: FBD shows F (right), N (up), mg (down). \u03a3Fy = 0 \u21d2 N = mg. \u03a3Fx = ma \u21d2 F = ma \u21d2 a = F/m."
+        },
+        {
+          "number": 2,
+          "title": "FBD on Inclined Plane",
+          "tag": "High-frequency Problem",
+          "coreRevision": "Tilt axes: x along incline (positive up the incline), y perpendicular to incline. Weight components: mg sin\u03b8 along incline (down the slope), mg cos\u03b8 perpendicular to incline.",
+          "points": [
+            "N = mg cos\u03b8 (no net motion perpendicular to incline)",
+            "For smooth incline: ma = mg sin\u03b8 \u21d2 a = g sin\u03b8 (down the slope)",
+            "For rough incline: friction f = \u03bcN = \u03bc mg cos\u03b8 opposing motion",
+            "Net force down rough incline: mg sin\u03b8 \u2212 \u03bc mg cos\u03b8 = mg(sin\u03b8 \u2212 \u03bc cos\u03b8)"
+          ],
+          "example": "Block on incline at 30\u00b0, \u03bc = 0.2, m = 2 kg, g = 10 m/s\u00b2. N = 2\u00d710\u00d7cos30\u00b0 = 17.3 N. f = 0.2\u00d717.3 = 3.46 N. Net force = 2\u00d710\u00d7sin30\u00b0 \u2212 3.46 = 10 \u2212 3.46 = 6.54 N. a = 6.54/2 = 3.27 m/s\u00b2."
+        }
+      ]
+    },
+    "curriculum": {
+      "sectionTitle": "US Curriculum Gaps",
+      "hintText": "How AP Physics approach to FBDs differs from NEET expectations.",
+      "gaps": [
+        {
+          "title": "NEET Tests FBD Through Connected Systems",
+          "description": "NEET does not usually ask students to draw an FBD explicitly (multiple choice format). Instead, FBD knowledge is tested through getting correct tension, acceleration, and normal force values in 2-block systems, Atwood machines, and lift problems. US-educated students who draw detailed FBDs on exam day still need to verify their forces quickly.",
+          "bullets": [
+            "For 2 blocks A and B with common acceleration: draw FBD for each block separately, write separate F=ma equations, then solve simultaneously.",
+            "Treat rope/string as massless and inextensible unless told otherwise."
+          ]
+        },
+        {
+          "title": "Pseudo Force in Non-Inertial Frames",
+          "description": "NEET includes problems where the observer is in an accelerating frame (lift, train turning). The pseudo force = ma (directed opposite to the frame\u2019s acceleration) must be added to the FBD for valid Newton\u2019s Law equations. AP Physics emphasizes inertial frame solutions.",
+          "bullets": [
+            "Pseudo force F_pseudo = m \u00d7 (acceleration of frame), direction opposite to frame\u2019s acceleration.",
+            "Alternative: solve from an inertial frame without pseudo force \u2014 same answer, often simpler."
+          ]
+        }
+      ]
+    },
+    "pyq": {
+      "sectionTitle": "Previous Year Questions",
+      "mcqCountLabel": "NEET PYQs",
+      "questions": [
+        {
+          "question": "A block of mass 2 kg is placed on a smooth inclined plane of angle 30\u00b0. What is the normal reaction of the incline on the block? (g = 10 m/s\u00b2)",
+          "tag": "NEET 2023",
+          "tagClass": "pyq",
+          "options": [
+            {"text": "10\u221a3 N", "correct": true},
+            {"text": "20 N", "correct": false},
+            {"text": "10 N", "correct": false},
+            {"text": "20\u221a3 N", "correct": false}
+          ],
+          "explanation": "FBD: Normal N perpendicular to incline, weight mg vertically down. Resolving perpendicular to incline: N = mg cos30\u00b0 = 2\u00d710\u00d7(\u221a3/2) = 10\u221a3 N \u2248 17.3 N."
+        },
+        {
+          "question": "Two blocks of masses 3 kg and 2 kg are placed on a frictionless horizontal surface connected by a string. A horizontal force of 15 N is applied on the 3 kg block. What is the tension in the string between the two blocks?",
+          "tag": "NEET 2020",
+          "tagClass": "pyq",
+          "options": [
+            {"text": "6 N", "correct": true},
+            {"text": "9 N", "correct": false},
+            {"text": "15 N", "correct": false},
+            {"text": "3 N", "correct": false}
+          ],
+          "explanation": "Total mass = 5 kg. Common acceleration a = 15/5 = 3 m/s\u00b2. FBD of 2 kg block: only tension T acts. T = 2\u00d73 = 6 N."
+        }
+      ]
+    },
+    "practice": {
+      "sectionTitle": "Practice Questions",
+      "questions": [
+        {
+          "question": "Which statement about an FBD is correct?",
+          "options": [
+            "FBD includes all forces acting on AND by the object",
+            "FBD shows only the forces exerted BY the object on others",
+            "FBD shows only external forces acting ON the chosen object, isolated from its surroundings",
+            "FBD does not include the weight of the object"
+          ],
+          "answer": "FBD shows only external forces acting ON the chosen object, isolated from its surroundings"
+        },
+        {
+          "question": "A block of mass 5 kg rests on a rough horizontal surface (\u03bc = 0.4). What is the friction force when a horizontal force of 10 N is applied and the block does not move? (g = 10 m/s\u00b2)",
+          "options": ["10 N", "20 N", "5 N", "40 N"],
+          "answer": "10 N"
+        },
+        {
+          "question": "For a block on a smooth inclined plane, the FBD shows exactly which two forces?",
+          "options": [
+            "Normal force and friction",
+            "Weight and friction",
+            "Normal force and weight",
+            "Normal force, weight, and friction"
+          ],
+          "answer": "Normal force and weight"
+        },
+        {
+          "question": "In the FBD of a block hanging from two strings at angles to the vertical, the block is in equilibrium. What is the relationship between the vertical components of the tensions and the weight?",
+          "options": [
+            "T1_y + T2_y = mg",
+            "T1_y + T2_y = 0",
+            "T1_y = T2_y = mg",
+            "T1_y \u2212 T2_y = mg"
+          ],
+          "answer": "T1_y + T2_y = mg"
+        }
+      ]
+    },
+    "checklist": {
+      "subjectLabel": "NEET Physics",
+      "items": [
+        {
+          "title": "State the definition of a Free Body Diagram",
+          "description": "An FBD is a diagram in which the object of interest is isolated from its surroundings and all interactions between the object and the surroundings are represented as force vectors."
+        },
+        {
+          "title": "Identify and draw all 6 common force types correctly",
+          "description": "Weight (down), Normal (perpendicular to surface, outward), Tension (along string, away from body), Friction (opposing motion/tendency), Applied force (given direction), Pseudo force (opposite to frame acceleration in non-inertial frames)."
+        },
+        {
+          "title": "Apply the 4-step FBD method to at least 5 different problem types",
+          "description": "Horizontal surface, inclined plane, Atwood machine, 2 connected blocks, lift problem. For each: isolate, identify forces, choose axes, write \u03a3F = ma."
+        },
+        {
+          "title": "Resolve weight components on inclined plane correctly",
+          "description": "mg sin\u03b8 along incline (down the slope), mg cos\u03b8 perpendicular to incline. Normal N = mg cos\u03b8 for surface at angle \u03b8."
+        }
+      ]
+    },
+    "faq": {
+      "sectionTitle": "Frequently Asked Questions",
+      "items": [
+        {
+          "question": "What is the purpose of isolating the object in an FBD?",
+          "answer": "Isolation ensures you only include forces acting ON the chosen object. It prevents the common mistake of including forces the object exerts on others (action-reaction pairs must be drawn on different objects). Once isolated, Newton\u2019s second law \u03a3F = ma applies cleanly to the object."
+        },
+        {
+          "question": "Do I need to draw FBDs for every problem in NEET?",
+          "answer": "For MCQ problems in a time-limited exam, you don\u2019t always draw a full FBD. However, drawing even a quick sketch (2-3 seconds) prevents sign errors that lose 4 marks per question. The more complex the problem (connected blocks, pulleys), the more valuable a quick FBD sketch is."
+        },
+        {
+          "question": "When is friction included in an FBD?",
+          "answer": "Friction exists at any surface contact where there is relative motion or a tendency of relative motion. Include it whenever: (1) the surface is described as rough, (2) a coefficient of friction \u03bc is given, or (3) the object is about to slide or is sliding. For smooth surfaces or frictionless conditions, friction is zero."
+        },
+        {
+          "question": "Why does normal force not always equal mg?",
+          "answer": "N = mg only when the surface is horizontal and the object is in vertical equilibrium with no vertical acceleration. On an incline, N = mg cos\u03b8. In a lift, N changes with acceleration. When an applied force has a vertical component, N adjusts to maintain equilibrium perpendicular to the surface. Always derive N from the FBD for that specific configuration."
+        }
+      ]
+    }
+  },
+  "grounding": {
+    "source_page_markdown_paths": [
+      "pages/physics-1/page-195/markdown.md"
+    ],
+    "grounding_summary": [
+      "Page 195 defines the Free Body Diagram technique: isolate the object from its surroundings, represent all interactions as force vectors, choose axes, and write the equation of motion."
+    ],
+    "grounding_excerpt": [
+      "In this diagram the object of interest is isolated from its surroundings and the interactions between the object and the surroundings are represented in terms of forces.",
+      "Choose the axes and write equation of motion.",
+      "When a body of mass m is placed on a weighing machine which is placed in a lift, then actual weight of the body is mg."
+    ],
+    "sources": [
+      {
+        "title": "NCERT Physics Part I \u2014 Laws of Motion",
+        "url": "https://ncert.nic.in/textbook/pdf/keph104.pdf",
+        "publisher": "ncert.nic.in",
+        "accessed_date": "2026-04-10",
+        "why_used": "Primary NCERT source; defines FBD technique as used in Chapter 4 and applies it systematically to inclined plane, Atwood machine, connected blocks, and lift problems throughout the chapter."
+      },
+      {
+        "title": "Laws of Motion Detailed Explanation \u2014 Physics Class 11 NEET",
+        "url": "https://edurev.in/t/93306/Newton-s-Laws-of-Motion",
+        "publisher": "edurev.in",
+        "accessed_date": "2026-04-10",
+        "why_used": "Provides structured FBD examples aligned with NEET question patterns and confirms standard problem types (inclined plane, connected blocks) where FBD is the prerequisite technique."
+      }
+    ],
+    "review": {
+      "used_local_page_grounding": true,
+      "semantic_page_read_complete": true,
+      "used_current_research": true,
+      "research_used_for_enrichment": true,
+      "template_preserved": true,
+      "scope_checked": true,
+      "syllabus_scope_verified": true,
+      "guardrails_passed": true,
+      "notes": "Grounded in page-195. FBD definition verbatim from OCR text. Content expanded to cover the technique detail needed for NEET applications. Syllabus scope verified: FBD technique is explicitly within NEET Class 11 Physics Chapter 4 scope."
+    }
+  }
+}

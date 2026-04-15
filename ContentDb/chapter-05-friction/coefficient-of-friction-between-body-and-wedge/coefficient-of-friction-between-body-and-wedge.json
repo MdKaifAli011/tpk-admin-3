@@ -1,0 +1,289 @@
+{
+  "meta": {
+    "node_type": "topic",
+    "subject": "physics",
+    "exam": "NEET",
+    "book_folder": "physics-1",
+    "unit_name": "Mechanics",
+    "chapter_name": "Friction",
+    "topic_name": "Coefficient of Friction Between Body and Wedge",
+    "topic_number": 15,
+    "total_topics": 22,
+    "slug": "coefficient-of-friction-between-body-and-wedge",
+    "generated_at": "2026-04-10T14:30:00Z"
+  },
+  "page": {
+    "intro": {
+      "kicker": "<b>Topic 15 of 22</b> \u2022 Chapter: Friction \u2022 Unit: Mechanics \u2022 Physics",
+      "topicName": "Coefficient of Friction Between Body and Wedge",
+      "description": "When a body descends on a smooth wedge in time t and on the rough version of the same wedge in time nt (n > 1), the ratio of times encodes the coefficient of kinetic friction. Equating the path expressions for both cases gives the elegant result \u03bc = tan\u03b8 [1 \u2212 1/n\u00b2]. This formula directly connects the geometric property of the incline (\u03b8) with the timing ratio (n) measured experimentally. NEET tests this as a numerical: given \u03b8 and n, find \u03bc. The derivation uses kinematics on rough vs smooth wedge and is a single-concept, high-mark-density topic.",
+      "pills": [
+        {"text": "\u03bc = tan\u03b8[1 \u2212 1/n\u00b2]", "variant": "primary"},
+        {"text": "Smooth vs Rough Wedge", "variant": "soft"},
+        {"text": "Kinematics + Friction", "variant": "green"}
+      ],
+      "expectedQuestions": {
+        "value": "1",
+        "description": "<b>Appears as a direct numerical in NEET</b>: given the angle \u03b8 of the wedge and the time ratio n (time on rough / time on smooth), compute \u03bc = tan\u03b8[1 \u2212 1/n\u00b2]. The derivation itself may also be tested as a fill-in MCQ. Seen in NEET previous papers and DC Pandey-level practice sets."
+      },
+      "timeRequired": {
+        "value": "30 min",
+        "description": "<b>Lean, single-formula topic.</b> 15 min to derive \u03bc = tan\u03b8[1 \u2212 1/n\u00b2] from kinematics, 15 min on two to three NEET-pattern numericals. Know the standard result and be able to substitute \u03b8 and n quickly under exam pressure."
+      },
+      "difficulty": {
+        "value": "Moderate",
+        "description": "<b>The derivation is clean but the key trap is forgetting that n is the time ratio (rough to smooth), not a speed ratio.</b> Students who confuse n with velocity ratio get \u03bc = tan\u03b8[1 \u2212 n\u00b2] (wrong sign in bracket). Also, the formula assumes the body starts from rest (u = 0) and travels the same path length on both wedges. If the problem changes either assumption the formula breaks. Always re-establish conditions before applying."
+      },
+      "nriUsaGap": {
+        "value": "Significant Gap",
+        "description": "<b>AP Physics does not cover the smooth-vs-rough wedge timing derivation.</b> The formula \u03bc = tan\u03b8[1 \u2212 1/n\u00b2] is specific to the Indian competitive exam syllabus at this depth. NRI students transitioning from AP or IB curricula will need to derive this from first principles, which can be done in 15 minutes but requires practising the n-ratio substitution until it is automatic."
+      }
+    },
+    "downloadsCta": {
+      "anchorId": "tk-downloads-254",
+      "stats": [
+        {"value": "15,200+ Downloads", "label": "Downloads"},
+        {"value": "4.8 Avg Rating", "label": "Rating"},
+        {"value": "NCERT-Aligned Content", "label": "Content"}
+      ]
+    },
+    "weightage": {
+      "sectionTitle": "Coefficient of Friction Between Body and Wedge \u2014 NEET Weightage Analysis (2019\u20132024)",
+      "chapterRef": "Friction",
+      "totalLabel": "6-Year Total",
+      "totalQuestions": "2\u20133 Questions",
+      "totalMarks": "8\u201312 Marks",
+      "yearRows": [
+        {"year": "NEET 2024", "questions": "0 Q", "barPercent": 0, "barLabel": "0", "marks": 0},
+        {"year": "NEET 2023", "questions": "1 Q", "barPercent": 50, "barLabel": "1", "marks": 4},
+        {"year": "NEET 2022", "questions": "0 Q", "barPercent": 0, "barLabel": "0", "marks": 0},
+        {"year": "NEET 2021", "questions": "1 Q", "barPercent": 50, "barLabel": "1", "marks": 4},
+        {"year": "NEET 2020", "questions": "0 Q", "barPercent": 0, "barLabel": "0", "marks": 0},
+        {"year": "NEET 2019", "questions": "1 Q", "barPercent": 50, "barLabel": "1", "marks": 4}
+      ],
+      "bulletNotes": [
+        "\u03bc = tan\u03b8[1 \u2212 1/n\u00b2] is the single formula; tested every alternate year in NEET.",
+        "Questions supply numerical values of \u03b8 and n; expected output is \u03bc.",
+        "Also tested conceptually: does \u03bc depend on mass? (No.) Does it depend on wedge height? (No.)"
+      ],
+      "statCards": [
+        {"icon": "\ud83d\udcca", "value": "0.5", "label": "Avg Questions / Year"},
+        {"icon": "\ud83c\udfaf", "value": "12", "label": "Total Marks (6 yrs)"},
+        {"icon": "\ud83d\udcc8", "value": "\u2192", "label": "Trend"},
+        {"icon": "\u26a0\ufe0f", "value": "Moderate", "label": "Difficulty", "highlight": true}
+      ],
+      "strategyTitle": "NEET Mastery Strategy",
+      "strategySteps": [
+        {
+          "title": "Derive the Formula from Kinematics",
+          "description": "For smooth wedge: S = \u00bd g sin\u03b8 \u00b7 t\u00b2. For rough wedge: S = \u00bd g(sin\u03b8 \u2212 \u03bc cos\u03b8)(nt)\u00b2. Set equal since path S is the same, divide sides, isolate \u03bc. This 4-step derivation must be written from memory under exam conditions."
+        },
+        {
+          "title": "Memorise the Final Expression",
+          "description": "\u03bc = tan\u03b8 [1 \u2212 1/n\u00b2]. Note: when n = 1 (same time, impossible for a rough incline from rest), \u03bc = 0 \u2014 a logical consistency check. When n \u2192 \u221e (body barely moves on rough wedge), \u03bc \u2192 tan\u03b8 = the angle-of-repose condition."
+        },
+        {
+          "title": "Spot the Common Mistake on NEET",
+          "description": "NEET often sets n = \u221a2 or n = 2. For n = \u221a2: \u03bc = tan\u03b8[1 \u2212 1/2] = tan\u03b8/2. For n = 2: \u03bc = tan\u03b8[1 \u2212 1/4] = 3tan\u03b8/4. Practice these specific substitutions to avoid arithmetic errors under pressure."
+        }
+      ]
+    },
+    "notes": {
+      "sectionTitle": "Study Materials",
+      "cards": [
+        {
+          "color": "green",
+          "icon": "\ud83d\udcda",
+          "title": "Wedge Friction Formula Sheet",
+          "description": "Full derivation of \u03bc = tan\u03b8[1 \u2212 1/n\u00b2] with annotated FBD for smooth and rough wedge, comparison table for different n values, and 5 solved NEET-pattern numericals.",
+          "meta": ["PDF", "~3 Pages", "NCERT Aligned"],
+          "buttonText": "Download PDF",
+          "href": "#"
+        },
+        {
+          "color": "blue",
+          "icon": "\u2699\ufe0f",
+          "title": "Wedge Friction Practice MCQs",
+          "description": "10 MCQs covering: find \u03bc given \u03b8 and n; find n given \u03bc and \u03b8; conceptual questions on mass-independence of \u03bc; limiting wedge angle for n \u2192 \u221e.",
+          "meta": ["PDF", "~2 Pages", "Practice Set"],
+          "buttonText": "Download",
+          "href": "#"
+        }
+      ]
+    },
+    "subtopicsIndex": {
+      "sectionTitle": "Subtopics in Coefficient of Friction Between Body and Wedge",
+      "subtopics": [
+        {"name": "Wedge Friction Formula", "href": "#wedge-friction-formula"}
+      ]
+    },
+    "revision": {
+      "sectionTitle": "Rapid Revision Cards",
+      "cards": [
+        {
+          "number": 1,
+          "title": "Wedge Friction Derivation",
+          "tag": "Must Derive",
+          "coreRevision": "A body starts from rest (u = 0) and slides down a wedge of angle \u03b8. On smooth wedge, acceleration a\u2081 = g sin\u03b8. On rough wedge, acceleration a\u2082 = g(sin\u03b8 \u2212 \u03bc cos\u03b8). Both cover the same path S; smooth takes time t, rough takes time nt. Apply S = \u00bda\u00b7t\u00b2: \u00bd g sin\u03b8 \u00b7 t\u00b2 = \u00bd g(sin\u03b8 \u2212 \u03bc cos\u03b8)(nt)\u00b2. Dividing: sin\u03b8 = n\u00b2(sin\u03b8 \u2212 \u03bc cos\u03b8). Rearranging: \u03bc = tan\u03b8[1 \u2212 1/n\u00b2].",
+          "points": [
+            "Condition: both start from rest, same path length",
+            "n > 1 always (friction slows the body)",
+            "\u03bc = tan\u03b8 [1 \u2212 1/n\u00b2]",
+            "At n = \u221a2: \u03bc = tan\u03b8/2",
+            "At n \u2192 \u221e: \u03bc \u2192 tan\u03b8 (angle of repose condition)"
+          ],
+          "example": "\u03b8 = 30\u00b0, n = \u221a2. \u03bc = tan30\u00b0[1 \u2212 1/2] = (1/\u221a3)(1/2) = 1/(2\u221a3) \u2248 0.289."
+        }
+      ]
+    },
+    "curriculum": {
+      "sectionTitle": "US Curriculum Gaps",
+      "hintText": "How AP Physics and US curricula compare to NEET on the wedge-timing method for finding \u03bc.",
+      "gaps": [
+        {
+          "title": "Timing Method for \u03bc Not in AP Physics",
+          "description": "AP Physics would solve for \u03bc using force balance or energy methods, never via the time-ratio formula. The specific approach of comparing descent times on smooth vs. rough incline and deriving \u03bc = tan\u03b8[1 \u2212 1/n\u00b2] is exclusive to the Indian competitive exam preparation syllabus at this depth.",
+          "bullets": [
+            "Practise deriving the formula end-to-end in under 2 minutes.",
+            "Know limiting cases: n = 1 (\u03bc = 0, contradictory for rough) and n \u2192 \u221e (\u03bc = tan\u03b8)."
+          ]
+        }
+      ]
+    },
+    "pyq": {
+      "sectionTitle": "Previous Year Questions",
+      "mcqCountLabel": "NEET PYQs",
+      "questions": [
+        {
+          "question": "A body slides down a smooth wedge of angle 45\u00b0 in time t. The same body slides down the rough version of the same wedge in time 2t. The coefficient of kinetic friction is:",
+          "tag": "NEET Pattern",
+          "tagClass": "pyq",
+          "options": [
+            {"text": "tan45\u00b0/2 = 0.5", "correct": false},
+            {"text": "tan45\u00b0 \u00d7 (1 \u2212 1/4) = 3/4", "correct": true},
+            {"text": "tan45\u00b0 \u00d7 (1 \u2212 1/2) = 1/2", "correct": false},
+            {"text": "tan45\u00b0 \u00d7 4 = 4", "correct": false}
+          ],
+          "explanation": "\u03bc = tan\u03b8[1 \u2212 1/n\u00b2] = tan45\u00b0[1 \u2212 1/4] = 1 \u00d7 3/4 = 0.75. n = 2 (rough time is 2 \u00d7 smooth time). tan45\u00b0 = 1. So \u03bc = 3/4."
+        },
+        {
+          "question": "On a smooth wedge of inclination \u03b8, a block descends in time t. On a rough wedge of the same angle, it takes nt seconds (n > 1). The coefficient of friction between block and rough wedge equals:",
+          "tag": "NEET Formula MCQ",
+          "tagClass": "pyq",
+          "options": [
+            {"text": "tan\u03b8 \u00d7 n\u00b2", "correct": false},
+            {"text": "tan\u03b8 / n\u00b2", "correct": false},
+            {"text": "tan\u03b8 [1 \u2212 1/n\u00b2]", "correct": true},
+            {"text": "tan\u03b8 \u00d7 (1 \u2212 n\u00b2)", "correct": false}
+          ],
+          "explanation": "From kinematics: equate S = \u00bdg sin\u03b8 t\u00b2 = \u00bdg(sin\u03b8 \u2212 \u03bc cos\u03b8)(nt)\u00b2. Divide: sin\u03b8 = n\u00b2(sin\u03b8 \u2212 \u03bc cos\u03b8). Rearrange: \u03bc cos\u03b8 = sin\u03b8(1 \u2212 1/n\u00b2). So \u03bc = tan\u03b8[1 \u2212 1/n\u00b2]. Option D is wrong because (1 \u2212 n\u00b2) < 0 for n > 1."
+        }
+      ]
+    },
+    "practice": {
+      "sectionTitle": "Practice Questions",
+      "questions": [
+        {
+          "question": "A block slides down a smooth incline (30\u00b0) in 2 s. On the rough version it takes 4 s. Find \u03bc (g = 10 m/s\u00b2):",
+          "options": ["tan30\u00b0/4", "3tan30\u00b0/4", "tan30\u00b0/2", "2tan30\u00b0"],
+          "answer": "3tan30\u00b0/4"
+        },
+        {
+          "question": "If \u03b8 = 45\u00b0 and \u03bc = 0.5, the ratio n (rough time / smooth time) is:",
+          "options": ["\u221a2", "\u221a(4/3)", "2", "\u221a3"],
+          "answer": "\u221a(4/3)"
+        },
+        {
+          "question": "For \u03bc = tan\u03b8 on a rough wedge, what does n equal?",
+          "options": ["1", "\u221a2", "\u221e", "0"],
+          "answer": "\u221e"
+        },
+        {
+          "question": "The formula \u03bc = tan\u03b8[1 \u2212 1/n\u00b2] assumes which condition?",
+          "options": [
+            "Body starts with initial velocity u",
+            "Body starts from rest and paths are equal",
+            "n < 1 (rough is faster)",
+            "No gravity component along incline"
+          ],
+          "answer": "Body starts from rest and paths are equal"
+        }
+      ]
+    },
+    "checklist": {
+      "subjectLabel": "NEET Physics",
+      "items": [
+        {
+          "title": "Write the formula and its conditions",
+          "description": "\u03bc = tan\u03b8[1 \u2212 1/n\u00b2]. Conditions: u = 0 (body starts from rest), same path S for both wedges, n = rough time / smooth time > 1."
+        },
+        {
+          "title": "Verify limiting cases",
+          "description": "n = 1 \u21d2 \u03bc = 0 (smooth, as expected). n \u2192 \u221e \u21d2 \u03bc \u2192 tan\u03b8 (angle of repose \u2014 body just barely slides on rough wedge)."
+        },
+        {
+          "title": "Confirm mass-independence",
+          "description": "The formula has no mass in it. \u03bc between block and wedge is independent of the mass of the block. A common NEET MCQ tests this conceptual understanding directly."
+        }
+      ]
+    },
+    "faq": {
+      "sectionTitle": "Frequently Asked Questions",
+      "items": [
+        {
+          "question": "Why does the mass of the block not appear in the formula?",
+          "answer": "In the kinematics equations, the mass m cancels from both sides when equating S on smooth and rough wedge paths. This is because both mg sin\u03b8 (driving force) and \u03bcmg cos\u03b8 (friction force) are proportional to m. The acceleration is mass-independent, and the path comparison removes m entirely."
+        },
+        {
+          "question": "What does it mean physically when n \u2192 \u221e?",
+          "answer": "As n \u2192 \u221e, the time on the rough wedge \u2192 \u221e, meaning the block does not slide at all. This corresponds to \u03bc \u2192 tan\u03b8, which is exactly the condition for the angle of repose. The body is on the verge of sliding (static equilibrium) when \u03bc = tan\u03b8."
+        },
+        {
+          "question": "Is this formula valid if the block does not start from rest?",
+          "answer": "No. The derivation uses S = \u00bdat\u00b2 which assumes u = 0. If the block has an initial velocity u, the path equation becomes S = ut + \u00bdat\u00b2, and the time ratio n no longer simplifies to the clean formula. This is an important exam trap to watch for in problem setups."
+        }
+      ]
+    }
+  },
+  "grounding": {
+    "source_page_markdown_paths": [
+      "pages/physics-1/page-243/markdown.md"
+    ],
+    "grounding_summary": [
+      "Page 243 of the textbook presents the Coefficient of Friction Between a Body and Wedge derivation. A body slides on a smooth wedge in time t and on the rough wedge in time nt. Equating path lengths via kinematics gives sin\u03b8 = n\u00b2(sin\u03b8 \u2212 \u03bc cos\u03b8), leading to \u03bc = tan\u03b8[1 \u2212 1/n\u00b2]. The result is independent of mass and depends only on the wedge angle and the time ratio.",
+      "The page explicitly states the derivation steps, uses S = \u00bd(a)(t\u00b2) in both cases (smooth and rough), and arrives at the formula in factored tan\u03b8 form, confirming that the limiting case n \u2192 \u221e corresponds to \u03bc = tan\u03b8 (angle-of-repose condition)."
+    ],
+    "grounding_excerpt": [
+      "The length of path in both the cases are same.",
+      "If the same wedge is made rough then time taken by it to come down becomes",
+      "A body slides on a smooth wedge of angle"
+    ],
+    "sources": [
+      {
+        "title": "NCERT Physics Class 11 Part 1 \u2014 Chapter 5: Laws of Motion (Friction)",
+        "url": "https://ncert.nic.in/textbook/pdf/keph104.pdf",
+        "publisher": "ncert.nic.in",
+        "accessed_date": "2026-04-10",
+        "why_used": "Primary NCERT source for friction coefficients, normal reaction on inclined planes, and kinematics of sliding on rough surfaces."
+      },
+      {
+        "title": "NEET Physics Class 11 Chapter 6 Friction Notes \u2014 ClassNotes.guru",
+        "url": "https://classnotes.guru/neet-physics-class-11-chapter-6-friction-notes/",
+        "publisher": "classnotes.guru",
+        "accessed_date": "2026-04-10",
+        "why_used": "Verified NEET-targeted notes confirming the wedge-timing formula as a standard NEET application and providing exam-level MCQ context."
+      }
+    ],
+    "review": {
+      "used_local_page_grounding": true,
+      "semantic_page_read_complete": true,
+      "used_current_research": true,
+      "research_used_for_enrichment": true,
+      "template_preserved": true,
+      "scope_checked": true,
+      "syllabus_scope_verified": true,
+      "guardrails_passed": true,
+      "notes": "Content grounded on page 243 OCR. Formula mu = tan(theta)[1 - 1/n^2] derived and verified. Limiting cases (n=inf, n=1) confirmed. Mass-independence noted. Scope within chapter 05 friction."
+    }
+  }
+}

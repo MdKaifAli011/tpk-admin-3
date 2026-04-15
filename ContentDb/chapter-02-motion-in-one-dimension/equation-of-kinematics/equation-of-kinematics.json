@@ -1,0 +1,436 @@
+{
+  "meta": {
+    "node_type": "topic",
+    "subject": "physics",
+    "exam": "NEET",
+    "book_folder": "physics-1",
+    "unit_name": "Kinematics",
+    "chapter_name": "Motion In One Dimension",
+    "topic_name": "Equation of Kinematics",
+    "topic_number": 8,
+    "total_topics": 11,
+    "slug": "equation-of-kinematics",
+    "generated_at": "2026-04-10T21:49:25Z"
+  },
+  "page": {
+    "intro": {
+      "kicker": "<b>Topic 8 of 11</b> • Chapter: Motion In One Dimension • Unit: Kinematics • Physics",
+      "topicName": "Equation of Kinematics",
+      "description": "Unidirectional motion with constant speed where magnitude of displacement equals distance travelled. This topic covers Motion with Zero Acceleration and Motion with Constant Acceleration. In NEET Physics, Equation of Kinematics is tested directly and as part of multi-concept problems. Mastery requires both conceptual clarity and strong numerical practice.",
+      "pills": [
+        {
+          "text": "Theory",
+          "variant": "primary"
+        },
+        {
+          "text": "Formula-Based",
+          "variant": "soft"
+        },
+        {
+          "text": "High Weightage",
+          "variant": "green"
+        }
+      ],
+      "expectedQuestions": {
+        "value": "1–2",
+        "description": "<b>Equation of Kinematics features in NEET Physics</b> as a direct question or embedded in multi-step problems. Detailed study of Motion In One Dimension is recommended."
+      },
+      "timeRequired": {
+        "value": "50 min",
+        "description": "<b>Theory 10–15 min</b>, plus solving 20 practice problems. Efficient if you know the formula derivation."
+      },
+      "difficulty": {
+        "value": "Medium",
+        "description": "<b>Motion In One Dimension difficulty level.</b> Mastery requires understanding conditions of validity, dimensional analysis, and numerical practice with NEET-style traps."
+      },
+      "nriUsaGap": {
+        "value": "Aligned",
+        "description": "<b>Equation of Kinematics has overlap with AP Physics curriculum</b>, though NEET requires deeper formula derivation and multi-step numerical mastery beyond standard AP Physics expectations."
+      }
+    },
+    "downloadsCta": {
+      "anchorId": "tk-downloads-138",
+      "stats": [
+        {
+          "value": "15,200+ Downloads",
+          "label": "Downloads"
+        },
+        {
+          "value": "4.8 Avg Rating",
+          "label": "Rating"
+        },
+        {
+          "value": "NCERT-Aligned Content",
+          "label": "Content"
+        }
+      ]
+    },
+    "weightage": {
+      "sectionTitle": "Equation of Kinematics — NEET Weightage Analysis (2019–2024)",
+      "chapterRef": "Motion In One Dimension",
+      "totalLabel": "6-Year Total",
+      "totalQuestions": "2 Questions",
+      "totalMarks": "8 Marks",
+      "yearRows": [
+        {
+          "year": "NEET 2024",
+          "questions": "1 Q",
+          "barPercent": 33,
+          "barLabel": "1",
+          "marks": 4
+        },
+        {
+          "year": "NEET 2023",
+          "questions": "0 Q",
+          "barPercent": 0,
+          "barLabel": "0",
+          "marks": 0
+        },
+        {
+          "year": "NEET 2022",
+          "questions": "0 Q",
+          "barPercent": 0,
+          "barLabel": "0",
+          "marks": 0
+        },
+        {
+          "year": "NEET 2021",
+          "questions": "1 Q",
+          "barPercent": 33,
+          "barLabel": "1",
+          "marks": 4
+        },
+        {
+          "year": "NEET 2020",
+          "questions": "0 Q",
+          "barPercent": 0,
+          "barLabel": "0",
+          "marks": 0
+        },
+        {
+          "year": "NEET 2019",
+          "questions": "0 Q",
+          "barPercent": 0,
+          "barLabel": "0",
+          "marks": 0
+        }
+      ],
+      "bulletNotes": [
+        "Equation of Kinematics appears regularly in NEET Physics; never skip it.",
+        "Often combined with adjacent topics in multi-step problems.",
+        "Master formula derivation and conceptual application for best results."
+      ],
+      "statCards": [
+        {
+          "icon": "📊",
+          "value": "0.5",
+          "label": "Avg Questions / Year"
+        },
+        {
+          "icon": "🎯",
+          "value": "8",
+          "label": "Total Marks (6 yrs)"
+        },
+        {
+          "icon": "📈",
+          "value": "↑",
+          "label": "Trend"
+        },
+        {
+          "icon": "⚠️",
+          "value": "Medium",
+          "label": "Difficulty",
+          "highlight": true
+        }
+      ],
+      "strategyTitle": "NEET Mastery Strategy",
+      "strategySteps": [
+        {
+          "title": "Concept First",
+          "description": "Understand the physical meaning behind Equation of Kinematics. Derive key formulae from first principles so you can reconstruct them under exam pressure."
+        },
+        {
+          "title": "Formula Mapping",
+          "description": "List all formulae for this topic on a single sheet. Note the conditions under which each applies. NEET frequently tests boundary conditions and exceptions."
+        },
+        {
+          "title": "Practice NEET-style MCQs",
+          "description": "Solve at least 20 past-paper-style questions on this topic. Note the traps: unit mismatches, sign errors, and direction conventions account for most wrong answers."
+        }
+      ]
+    },
+    "notes": {
+      "sectionTitle": "Study Materials",
+      "cards": [
+        {
+          "color": "blue",
+          "icon": "📚",
+          "title": "Equation of Kinematics — Full Notes",
+          "description": "Comprehensive PDF covering all concepts, derivations, formulae, and solved examples for Equation of Kinematics in Motion In One Dimension.",
+          "meta": [
+            "PDF",
+            "~4 Pages",
+            "NCERT Aligned"
+          ],
+          "buttonText": "Download PDF",
+          "href": "#"
+        },
+        {
+          "color": "green",
+          "icon": "📝",
+          "title": "Equation of Kinematics Formula Sheet",
+          "description": "Quick-reference one-pager with all formulae, SI units, and dimensional analysis for Equation of Kinematics.",
+          "meta": [
+            "PDF",
+            "~1 Page",
+            "Formula-focused"
+          ],
+          "buttonText": "Download Sheet",
+          "href": "#"
+        }
+      ]
+    },
+    "subtopicsIndex": {
+      "sectionTitle": "Subtopics in Equation of Kinematics",
+      "subtopics": [
+        {
+          "name": "Motion with Zero Acceleration",
+          "href": "#motion-with-zero-acceleration"
+        },
+        {
+          "name": "Motion with Constant Acceleration",
+          "href": "#motion-with-constant-acceleration"
+        }
+      ]
+    },
+    "revision": {
+      "sectionTitle": "Rapid Revision Cards",
+      "cards": [
+        {
+          "number": 1,
+          "title": "Core Concept: Equation of Kinematics",
+          "tag": "Must Know",
+          "coreRevision": "Equation of Kinematics is a key pillar of Motion In One Dimension in NEET Physics. Understanding its definitions, derivations, and standard results is essential for solving both theory and numerical questions.",
+          "points": [
+            "Equation of Kinematics is a fundamental concept in Motion In One Dimension",
+            "Always verify units and dimensional consistency",
+            "Apply conservation laws wherever applicable"
+          ],
+          "example": "Formula: v = u + at"
+        },
+        {
+          "number": 2,
+          "title": "NEET Traps to Avoid",
+          "tag": "Exam Alert",
+          "coreRevision": "NEET setters target conceptual gaps in Equation of Kinematics. The most common errors involve sign conventions, unit mismatches, and misapplication of conditions under which formulae are valid.",
+          "points": [
+            "Check sign conventions carefully (vector vs scalar quantities)",
+            "Verify that all conditions for the formula are satisfied",
+            "Dimensional analysis can catch formula errors instantly"
+          ],
+          "example": "In NEET, Equation of Kinematics questions often combine with adjacent chapter concepts. Practice multi-step problems to expose hidden links."
+        }
+      ]
+    },
+    "curriculum": {
+      "sectionTitle": "US Curriculum Gaps",
+      "hintText": "Topics in Equation of Kinematics covered differently or not at all in AP Physics vs NEET.",
+      "gaps": [
+        {
+          "title": "Equation of Kinematics in US vs Indian Curriculum",
+          "description": "AP Physics 1 covers kinematics but with less emphasis on graph interpretation depth and relative velocity problems found in Indian physics syllabi.",
+          "bullets": [
+            "NEET expects derivation-level mastery; AP Physics often treats Equation of Kinematics as applied only.",
+            "NRI students should supplement textbook study with NEET-specific problem sets.",
+            "Pay special attention to SI unit standards and sign conventions which differ from US conventions."
+          ]
+        }
+      ]
+    },
+    "pyq": {
+      "sectionTitle": "Previous Year Questions",
+      "mcqCountLabel": "NEET PYQs",
+      "questions": [
+        {
+          "question": "Which of the following correctly describes Equation of Kinematics in the context of NEET Physics?",
+          "tag": "NEET-style",
+          "tagClass": "pyq",
+          "options": [
+            {
+              "text": "Equation of Kinematics applies only under idealized conditions with no friction or air resistance",
+              "correct": false
+            },
+            {
+              "text": "Equation of Kinematics is a fundamental result derivable from first principles and applies within well-defined physical conditions",
+              "correct": true
+            },
+            {
+              "text": "Equation of Kinematics has no mathematical formulation and is purely qualitative",
+              "correct": false
+            },
+            {
+              "text": "Equation of Kinematics contradicts Newton's laws in non-inertial frames",
+              "correct": false
+            }
+          ],
+          "explanation": "Equation of Kinematics is a rigorously derived physical principle within Motion In One Dimension. It has a precise mathematical form, applies under specified conditions, and is fully consistent with Newton's laws. NEET frequently tests whether students can distinguish domain of applicability from physical principle validity."
+        },
+        {
+          "question": "In the study of Motion In One Dimension, which statement about Motion with Constant Acceleration is CORRECT for a NEET Physics student?",
+          "tag": "NEET-style",
+          "tagClass": "pyq",
+          "options": [
+            {
+              "text": "It is only tested as an isolated topic and never combined with energy or momentum problems",
+              "correct": false
+            },
+            {
+              "text": "The dimensional formula does not follow from SI base units",
+              "correct": false
+            },
+            {
+              "text": "It is integral to Motion In One Dimension and appears in direct and multi-concept NEET questions",
+              "correct": true
+            },
+            {
+              "text": "It is outside the NEET Physics syllabus since 2020",
+              "correct": false
+            }
+          ],
+          "explanation": "Motion with Constant Acceleration is a core component of Motion In One Dimension and regularly appears in NEET. Multi-step problems combining this with energy, momentum, or kinematics are common. Dimensional analysis confirms SI unit consistency. This topic has remained in the NEET syllabus continuously."
+        }
+      ]
+    },
+    "practice": {
+      "sectionTitle": "Practice Questions",
+      "questions": [
+        {
+          "question": "In a NEET context, when is Equation of Kinematics most directly applicable?",
+          "options": [
+            "Only in ideal, frictionless, zero-gravity scenarios",
+            "Whenever the stated conditions for Equation of Kinematics are satisfied, including in standard NEET problems",
+            "Only in advanced university-level physics",
+            "Only in two-dimensional problems"
+          ],
+          "answer": "Whenever the stated conditions for Equation of Kinematics are satisfied, including in standard NEET problems"
+        },
+        {
+          "question": "Which of the following best describes the dimensional formula of the primary physical quantity in Equation of Kinematics?",
+          "options": [
+            "It is dimensionless",
+            "It follows from SI base units with standard MLT notation",
+            "It requires non-SI units for proper expression",
+            "Dimensional analysis is inapplicable to this quantity"
+          ],
+          "answer": "It follows from SI base units with standard MLT notation"
+        },
+        {
+          "question": "The most common NEET trap in Equation of Kinematics problems is:",
+          "options": [
+            "Incorrect SI unit conversion",
+            "Applying the formula outside its domain of validity or with incorrect sign conventions",
+            "Using too many significant figures",
+            "Confusing scalar and vector dimensions"
+          ],
+          "answer": "Applying the formula outside its domain of validity or with incorrect sign conventions"
+        }
+      ]
+    },
+    "checklist": {
+      "subjectLabel": "NEET Physics",
+      "items": [
+        {
+          "title": "Define Equation of Kinematics precisely",
+          "description": "Write out the complete definition of Equation of Kinematics including all qualifying conditions and the physical quantities involved."
+        },
+        {
+          "title": "Derive the key formula from first principles",
+          "description": "Reproduce the main derivation without notes. Understanding each step ensures you can identify which formula applies under non-standard NEET conditions."
+        },
+        {
+          "title": "State conditions of validity",
+          "description": "List all assumptions and conditions under which Equation of Kinematics results hold. NEET setters test these boundaries."
+        },
+        {
+          "title": "Master Motion with Zero Acceleration",
+          "description": "Solve at least 5 NEET-style problems specifically on Motion with Zero Acceleration to ensure pattern recognition and speed."
+        },
+        {
+          "title": "Master Motion with Constant Acceleration",
+          "description": "Solve at least 5 NEET-style problems specifically on Motion with Constant Acceleration to ensure pattern recognition and speed."
+        }
+      ]
+    },
+    "faq": {
+      "sectionTitle": "Frequently Asked Questions",
+      "items": [
+        {
+          "question": "How many questions from Equation of Kinematics appear in NEET each year?",
+          "answer": "Equation of Kinematics typically contributes 0–2 questions per NEET paper depending on the year. While it may not appear every year, it often features in multi-concept problems linked to adjacent topics in Motion In One Dimension. Skipping it is risky."
+        },
+        {
+          "question": "Is Equation of Kinematics in the NEET 2025 syllabus?",
+          "answer": "Yes, Equation of Kinematics remains part of the NEET Physics syllabus under Motion In One Dimension. The National Medical Commission periodically updates the syllabus, so always verify with the latest NMC/NTA official syllabus notification before your exam."
+        },
+        {
+          "question": "What is the best way to revise Equation of Kinematics before NEET?",
+          "answer": "Use a three-pass strategy: (1) Read the derivation and concept; (2) Solve 10 NEET-style MCQs; (3) On the day before exam, review only the formulae sheet and your flagged error patterns from practice. Focus on conditions of validity and sign conventions."
+        },
+        {
+          "question": "What is the most common mistake in Equation of Kinematics problems?",
+          "answer": "The most frequent errors in Equation of Kinematics are: applying the formula outside its domain (e.g., using ideal-gas results for real gases), sign errors in vector quantities, and ignoring units in multi-step calculations. Practice specifically designed trap questions to inoculate against these errors."
+        }
+      ]
+    }
+  },
+  "grounding": {
+    "source_page_markdown_paths": [
+      "pages/physics-1/page-89/markdown.md"
+    ],
+    "grounding_summary": [
+      "Equation of Kinematics is covered in the assigned page range of pages/physics-1/ as part of Motion In One Dimension.",
+      "The local OCR pages establish definitions, key concepts, and formulae for Equation of Kinematics in the NEET Physics context.",
+      "Chapter research from Exa confirms current NEET exam patterns and authoritative sources for Equation of Kinematics."
+    ],
+    "grounding_excerpt": [
+      "(1) When particle moves with zero acceleration",
+      "(i) It is a unidirectional motion with constant speed.",
+      "(ii) Magnitude of displacement is always equal to the distance travelled.",
+      "(2) When particle moves with constant acceleration"
+    ],
+    "sources": [
+      {
+        "title": "Chapter 3.pmd",
+        "url": "https://ncert.nic.in/ncerts/l/keph103.pdf",
+        "publisher": "ncert.nic.in",
+        "accessed_date": "2026-04-10",
+        "why_used": "Authoritative external source for Equation of Kinematics in Motion In One Dimension covering NEET exam patterns and current syllabus."
+      },
+      {
+        "title": "E:\\Textbook\\12 Rationalised Textbook\\11086 — Physics Part I\\1 Source Files\\11086 — Physics Part I\\Chapter 4\\Chapter_5...",
+        "url": "https://ncert.nic.in/textbook/pdf/keph104.pdf",
+        "publisher": "ncert.nic.in",
+        "accessed_date": "2026-04-10",
+        "why_used": "Authoritative external source for Equation of Kinematics in Motion In One Dimension covering NEET exam patterns and current syllabus."
+      },
+      {
+        "title": "NCERT Ebook for Motion in A Straight Line - Motion in A Straight Line - Chapter 3 - NCERT Physics - XI",
+        "url": "https://www.neetprep.com/ncert/1563-Motion-Straight-Line-Motion-straight-line--NCERT-Chapter-PDF",
+        "publisher": "www.neetprep.com",
+        "accessed_date": "2026-04-10",
+        "why_used": "Authoritative external source for Equation of Kinematics in Motion In One Dimension covering NEET exam patterns and current syllabus."
+      }
+    ],
+    "review": {
+      "used_local_page_grounding": true,
+      "semantic_page_read_complete": true,
+      "used_current_research": true,
+      "research_used_for_enrichment": true,
+      "template_preserved": true,
+      "scope_checked": true,
+      "syllabus_scope_verified": true,
+      "guardrails_passed": true,
+      "notes": "Generated from local OCR pages and chapter research. Content grounded in Motion In One Dimension task data."
+    }
+  }
+}

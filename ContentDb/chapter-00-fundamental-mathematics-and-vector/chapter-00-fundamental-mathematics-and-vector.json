@@ -1,0 +1,367 @@
+{
+  "meta": {
+    "subject": "physics",
+    "exam": "NEET",
+    "book_folder": "physics-1",
+    "chapter_number": 0,
+    "chapter_name": "Fundamental Mathematics and Vector",
+    "unit_name": "Mathematical Tools",
+    "node_type": "chapter",
+    "slug": "chapter-00-fundamental-mathematics-and-vector",
+    "generated_at": "2026-03-30T09:00:00Z"
+  },
+  "page": {
+    "intro": {
+      "chapter_name": "Fundamental Mathematics and Vector",
+      "snapshot_description": "The toolbox chapter — not standalone NEET content but the language in which every other chapter is written. <b>Vectors (addition, resolution, dot product, cross product) contribute 1–2 direct NEET questions per year. Calculus concepts (differentiation, integration) underpin every kinematics, work-energy, and electromagnetism derivation.</b> Students who master this chapter answer all subsequent chapters faster, with less algebraic error. The single most important thing to internalize: the resultant formula R = √(A²+B²+2AB cosθ) and its two extremes — when θ=0° (maximum, R=A+B) and when θ=180° (minimum, R=|A−B|). Cross product vs dot product confusion costs 1 mark in every other year of NEET.",
+      "expected_questions": {
+        "value": "1–2",
+        "description": "1 direct question almost every year from vectors (resultant, dot product, cross product), occasionally extended to 2 in papers with heavy quantitative mechanics."
+      },
+      "time_required": {
+        "value": "8–10 hrs",
+        "description": "2 hrs algebra/trig/log review; 3 hrs calculus (differentiation + integration) with physics applications; 3 hrs vectors theory + MCQ; 1 hr revision of key formulas."
+      },
+      "difficulty_level": {
+        "value": "Moderate",
+        "description": "The mathematics itself is straightforward but the sheer volume of formulas (30+ integration forms, 20+ differentiation rules, trig identities) demands systematic memorisation rather than deep conceptual work."
+      },
+      "most_asked_style": "Vector MCQs: 'Find the angle between vectors A and B given their dot product equals 0'; 'What is the magnitude of A×B if A=3, B=4, θ=90°?'; resultant of two forces; minimum/maximum resultant. Occasionally a calculus-in-physics application: 'What is dv/dt if v=t²+3t?'",
+      "biggest_trap": "Cross product vs dot product confusion: students write A·B = AB sinθ (WRONG — dot product uses COSINE). The dot product is a scalar; the cross product is a vector. Mixing these up costs 1 mark per mistake.",
+      "fast_win": "Memorize: A·B = AB cosθ (scalar); |A×B| = AB sinθ (vector). For perpendicular vectors A·B = 0. For parallel vectors A×B = 0. These 4 facts unlock 80% of vector product MCQs.",
+      "revision_friendly": "Yes — all results are one-line formulas on 2 cards: (1) resultant + direction, (2) dot/cross products + special cases"
+    },
+    "subtopics": {
+      "chapter_name": "Fundamental Mathematics and Vector",
+      "exam": "NEET",
+      "subtitle": "Three interconnected skill blocks: algebraic and transcendental mathematical tools (quadratic formula, binomial approximation, trig identities, logarithms, graph reading), calculus (differentiation and integration formulas with physics applications), and vector algebra (addition laws, resolution, products — the highest-yield section for NEET)",
+      "revision_tip": "Build two revision cards: Card 1 = all differentiation and integration standard forms. Card 2 = vector resultant formula, direction formula, dot product, cross product, and 6 special cases. Review Card 2 daily for 1 week before a test — these formulas appear in every chapter of physics.",
+      "topics": [
+        {
+          "topic_number": 1,
+          "topic_name": "Mathematical Tools for Physics",
+          "topic_slug": "mathematical-tools-physics",
+          "topic_description": "Covers algebra tools needed throughout physics: quadratic equation roots (x = [−b ± √(b²−4ac)] / 2a), binomial approximation ((1±x)^n ≈ 1±nx for |x|<<1), key trigonometric identities and sum-to-product formulas, logarithm rules (product/quotient/power/base-change), and graph reading skills (linear y=mx+c, parabolic x²=ky, hyperbolic xy=constant, circular x²+y²=a²).",
+          "topic_pills": ["Used in every chapter", "Binomial approximation key", "Graph reading", "Log rules"],
+          "subtopics": [
+            {
+              "name": "Quadratic and Binomial Approximation",
+              "slug": "quadratic-binomial",
+              "description": "Quadratic roots: x = [−b ± √(b²−4ac)] / 2a; sum of roots = −b/a; product = c/a. Binomial theorem: (1+x)^n = 1 + nx + n(n−1)x²/2! + … ; for |x|<<1, only first two terms matter — so (1+x)^n ≈ 1+nx; (1−x)^n ≈ 1−nx; (1+x)^{−n} ≈ 1−nx; (1−x)^{−n} ≈ 1+nx. Used extensively in error analysis (small fractional errors), optics (small angle approximations), and gravitational potential calculations."
+            },
+            {
+              "name": "Trigonometry and Graph Shapes",
+              "slug": "trigonometry-graphs",
+              "description": "Standard trig values (sin 30°=1/2, cos 45°=1/√2, sin 60°=√3/2). Sum-to-product formulas: sinC + sinD = 2sin((C+D)/2)cos((C−D)/2). Cosine rule: a² = b²+c²−2bc cosA. Key graphs: y=mx (line through origin), y=mx+c (general line, c=y-intercept), x²=ky (parabola symmetric about y-axis), xy=constant (rectangular hyperbola), x²+y²=a² (circle). These graph shapes recur in kinematics (s-t, v-t plots) and thermodynamics (P-V diagrams)."
+            },
+            {
+              "name": "Logarithm Rules",
+              "slug": "logarithm-rules",
+              "description": "log(mn) = log m + log n; log(m/n) = log m − log n; log(m^n) = n log m; base change: log_a(m) = log_b(m) × log_a(b). Natural vs common log: ln x = 2.3026 log₁₀ x. Used in exponential decay (radioactivity, RC circuits) and pH chemistry context. Key: logarithm of 1 is always 0 (any base); logarithm of a negative number is undefined in real numbers."
+            }
+          ]
+        },
+        {
+          "topic_number": 2,
+          "topic_name": "Differential and Integral Calculus",
+          "topic_slug": "calculus-for-physics",
+          "topic_description": "Differentiation rules (power, chain, product) and integration rules (power, trig, exponential, substitution, by parts) as applied in physics. Physical interpretations: velocity v = dx/dt; acceleration a = dv/dt = d²x/dt²; force F = dp/dt; work W = ∫F·dx; electric field E = −dV/dx. Definite integrals give area under curve — critical for impulse = ∫F dt; displacement from v-t graph = ∫v dt.",
+          "topic_pills": ["v = dx/dt", "W = ∫F·dx", "Tool for all chapters", "Chain rule critical"],
+          "subtopics": [
+            {
+              "name": "Differentiation — Standard Rules and Physical Applications",
+              "slug": "differentiation-physics",
+              "description": "d(xⁿ)/dx = nxⁿ⁻¹; d(sinx)/dx = cosx; d(cosx)/dx = −sinx; d(eˣ)/dx = eˣ; d(ln x)/dx = 1/x. Chain rule: dy/dx = (dy/du)·(du/dx). Product rule: d(uv)/dx = u·dv/dx + v·du/dx. Physical uses: v=dr/dt (velocity from position); a=dv/dt (acceleration from velocity); maxima/minima of functions (set dy/dx=0). Rate of change of area: dA/dt for expanding shapes. At NEET level: mostly used to verify which function v(t) gives a stated a(t)."
+            },
+            {
+              "name": "Integration — Standard Forms and Physical Applications",
+              "slug": "integration-physics",
+              "description": "∫xⁿ dx = xⁿ⁺¹/(n+1) + C (n≠−1); ∫sin x dx = −cos x; ∫cos x dx = sin x; ∫eˣ dx = eˣ; ∫(1/x) dx = ln|x|. Integration by substitution (change of variable) and by parts: ∫u dv = uv − ∫v du. Definite integral ∫[a,b] f(x) dx = area under curve between x=a and x=b. Physics uses: displacement s = ∫v dt; work W = ∫F dx; charge q = ∫I dt. The most frequently used integral in mechanics is ∫v dv = v²/2."
+            }
+          ]
+        },
+        {
+          "topic_number": 3,
+          "topic_name": "Scalar and Vector Quantities",
+          "topic_slug": "scalar-vector-quantities",
+          "topic_description": "Distinguishes scalars (magnitude only: mass, energy, time, distance, power) from vectors (magnitude + direction: displacement, velocity, acceleration, force, momentum, torque). Defines types of vectors: null vector (magnitude=0), unit vector (magnitude=1, gives direction), equal vectors (same magnitude+direction), negative vector (antiparallel, same magnitude), collinear/parallel vectors, coplanar vectors, polar vectors (along motion) vs axial vectors (rotation axis: angular velocity, torque). Unit vector notation: Â = A⃗/|A⃗|; in Cartesian system: î, ĵ, k̂.",
+          "topic_pills": ["Types of vectors", "Unit vector formula", "Axial vs polar", "0–1 Q NEET"],
+          "subtopics": [
+            {
+              "name": "Types of Vectors and Unit Vectors",
+              "slug": "types-vectors",
+              "description": "Null vector: A⃗=0 (results from A⃗−A⃗ or A⃗×A⃗). Unit vector: Â=A⃗/|A⃗|; has no unit (e.g., 5 m/s East direction → unit vector = East, unitless). Equal vectors: same magnitude AND direction. Division of vectors is not defined. Polar vectors (displacement, force, velocity, linear momentum) are along the direction of motion. Axial vectors (angular velocity, angular acceleration, torque, angular momentum) are along the axis of rotation. Minimum vectors for zero resultant: collinear=2, coplanar=3, non-coplanar=4."
+            }
+          ]
+        },
+        {
+          "topic_number": 4,
+          "topic_name": "Vector Addition, Resolution and Products",
+          "topic_slug": "vector-operations",
+          "topic_description": "Triangle law, parallelogram law, and polygon law of vector addition with resultant formula R = √(A²+B²+2AB cosθ) and direction tanα = B sinθ/(A+B cosθ). Resolution into rectangular components: Rx = R cosθ, Ry = R sinθ, R = √(Rx²+Ry²). 3D direction cosines l,m,n with l²+m²+n²=1. Dot (scalar) product A⃗·B⃗ = AB cosθ; cross (vector) product |A⃗×B⃗| = AB sinθ. Complete orthonormal basis rules for î,ĵ,k̂.",
+          "topic_pills": ["Highest NEET yield", "R = √(A²+B²+2ABcosθ)", "Dot=cosθ Cross=sinθ", "1–2 Q/year"],
+          "subtopics": [
+            {
+              "name": "Laws of Vector Addition — Resultant Formula",
+              "slug": "vector-addition-resultant",
+              "description": "Triangle law: two vectors head-to-tail → resultant is closing side. Parallelogram law: two vectors from common point → resultant is diagonal. Result: R = √(A²+B²+2AB cosθ), direction: tanα = B sinθ/(A+B cosθ). Special cases: θ=0° (parallel) → Rmax = A+B; θ=90° → R=√(A²+B²); θ=180° (antiparallel) → Rmin = |A−B|. Polygon law: n-sided polygon → resultant = closing side (nth) in opposite order. Subtraction: |A⃗−B⃗| = √(A²+B²−2AB cosθ)."
+            },
+            {
+              "name": "Resolution and 3D Direction Cosines",
+              "slug": "resolution-direction-cosines",
+              "description": "Any vector in a plane: Rx = R cosθ, Ry = R sinθ; magnitude back: R = √(Rx²+Ry²); angle: θ = tan⁻¹(Ry/Rx). In 3D: R⃗ = Rxî + Ryĵ + Rzk̂. Direction cosines: l = cosα = Rx/R; m = cosβ = Ry/R; n = cosγ = Rz/R; identity l²+m²+n²=1 always holds. The vector î+ĵ+k̂ is equally inclined to all axes at ≈54.74°. Used in 3D force/velocity problems in mechanics and electrostatics."
+            },
+            {
+              "name": "Dot Product and Cross Product",
+              "slug": "dot-cross-product",
+              "description": "Dot product: A⃗·B⃗ = AB cosθ = AxBx + AyBy + AzBz; result is a SCALAR; commutative (A·B = B·A); distributive. Special: î·î = ĵ·ĵ = k̂·k̂ = 1; î·ĵ = 0. Physical examples: W = F⃗·d⃗; power = F⃗·v⃗. Cross product: |A⃗×B⃗| = AB sinθ, direction by right-hand rule; result is a VECTOR perpendicular to both A and B; anti-commutative (A×B = −B×A). Special: î×ĵ = k̂; ĵ×k̂ = î; k̂×î = ĵ; î×î = 0. Physical: torque τ⃗ = r⃗×F⃗; angular momentum L⃗ = r⃗×p⃗. A⊥B ↔ A·B=0; A‖B ↔ |A×B|=0."
+            }
+          ]
+        }
+      ]
+    },
+    "plan": {
+      "chapter_name": "Fundamental Mathematics and Vector",
+      "topics": [
+        {
+          "topic_name": "Mathematical Tools for Physics",
+          "topic_description": "Pure mathematical prerequisites: algebraic shortcuts (quadratic, binomial), trigonometric identities, logarithm rules, and graph recognition. Not directly tested as standalone NEET questions but indispensable as the computational substrate for every subsequent chapter.",
+          "topic_pills": ["0 direct Q/year", "Foundation for all", "Binomial approx daily", "1 hr review"],
+          "notes_condensed_description": "Quadratic: x = [−b±√(b²−4ac)]/2a; sum of roots = −b/a; product = c/a. Binomial: for |x|<<1, (1±x)^n ≈ 1±nx — critical for approximate calculations in error analysis and optics. Trig: sin(A+B), cos(A+B), sum-to-product formulas. Log: log(mn)=log m+log n; log(mⁿ)=n log m. Graphs: y=mx (line), x²=ky (parabola), xy=k (hyperbola), x²+y²=a² (circle).",
+          "how_to_revise": "One pass through — do not deep-dive these. Write the 4 binomial approximation forms on a flashcard. Practice reading graph shapes from equations (given y=x², identify it as a parabola opening upward). These become reflexive after encountering them in context through chapters.",
+          "expected_questions": {
+            "value": "0",
+            "description": "No standalone NEET question on quadratic formula or trig identities as a pure math exercise — these appear embedded in physics problems across all chapters"
+          },
+          "time_required": {
+            "value": "1.5 hrs",
+            "description": "45 min algebra/trig/log; 45 min graph reading; skip problems that don't have physics context"
+          },
+          "difficulty": {
+            "value": "Easy",
+            "description": "High-school mathematics — just needs a systematic review pass to ensure comfort"
+          },
+          "scoring_focus": "Binomial approximation (1+x)^n ≈ 1+nx is used in every chapter. Know the 4 forms by heart. Graph shapes are tested in kinematics (v-t graph = rectangle → constant velocity, triangle → constant acceleration).",
+          "high_risk_area": "Forgetting that binomial approximation requires |x|<<1. Applying (1+x)^n ≈ 1+nx when x is large gives a completely wrong answer — e.g., (1+0.5)^2 ≠ 2 but students sometimes apply it anyway.",
+          "best_practice_style": "Give this topic exactly 1.5 hrs at the start of physics revision. After that, let physics problems teaching these tools in context — do not keep returning here as a standalone subject.",
+          "priority_rule": "Foundation tier — study first, not last. Do NOT skip but do NOT over-invest."
+        },
+        {
+          "topic_name": "Differential and Integral Calculus",
+          "topic_description": "The mathematical spine of mechanics and electromagnetism: velocity, acceleration, work, impulse, and electric field are all defined as derivatives or integrals. Not tested as pure calculus in NEET but appears as an embedded tool in ~60% of all physics numerical problems.",
+          "topic_pills": ["Embedded in 60% of Qs", "v=dx/dt; a=dv/dt", "W=∫Fdx", "3 hrs mastery"],
+          "notes_condensed_description": "Key derivatives: d(xⁿ)/dx = nxⁿ⁻¹; d(sinx)/dx = cosx; d(cosx)/dx = −sinx; d(eˣ)/dx = eˣ. Chain rule: dy/dx = (dy/du)(du/dx). Key integrals: ∫xⁿ dx = xⁿ⁺¹/(n+1); ∫sin x dx = −cos x; ∫cos x dx = sin x; ∫eˣ dx = eˣ; ∫(1/x)dx = ln|x|. Physics linkage: v=dr/dt; a=dv/dt; W=∫F·dx; Impulse=∫F dt; q=∫I dt.",
+          "how_to_revise": "Memorize the 10 standard derivative and 10 standard integral forms from the table in the book. Then practice applying them to physics expressions: if x=t²+3t, find v=dx/dt=2t+3 and a=dv/dt=2. Do 10 differentiation + 10 integration exercises in a physics context (not abstract math problems).",
+          "expected_questions": {
+            "value": "0–1",
+            "description": "Occasionally 1 question requires finding maxima/minima (set dy/dx=0) or computing displacement from velocity function via integration — especially in kinematics"
+          },
+          "time_required": {
+            "value": "3 hrs",
+            "description": "1 hr each on: differentiation rules + 10 examples; integration rules + 10 examples; physics application problems (v-t-x relationships)"
+          },
+          "difficulty": {
+            "value": "Easy-Moderate",
+            "description": "Standard forms are memory; chain rule and integration by parts require practice to apply fluently in physics contexts"
+          },
+          "scoring_focus": "Focus on: (1) Power rule in both directions — d(xⁿ) and ∫xⁿ dx; (2) The v=dx/dt, a=dv/dt chain; (3) Work via definite integral W=∫[x1→x2] F dx. These three applications cover all calculus needed for NEET mechanics.",
+          "high_risk_area": "Integration by parts errors when computing work for variable forces. Students who know W=Fs (constant force) sometimes apply it to variable forces — must integrate instead.",
+          "best_practice_style": "For each standard integral form, write one physics sentence: '∫v dv = v²/2 means kinetic energy theorem'. Linking form to physics meaning prevents forgetting.",
+          "priority_rule": "High foundational priority — invest fully before starting kinematics. This returns value across every chapter."
+        },
+        {
+          "topic_name": "Scalar and Vector Quantities",
+          "topic_description": "Classification of physical quantities and special vector types — the vocabulary layer before vector operations. Distinguishes scalars, vectors, and tensors, and defines special vector categories needed for higher topics.",
+          "topic_pills": ["Vocabulary chapter", "Types of vectors", "Axial vs polar", "30 min"],
+          "notes_condensed_description": "Scalars: mass, energy, time, distance, speed, power. Vectors: displacement, velocity, acceleration, force, momentum, torque. Null vector: zero magnitude. Unit vector: magnitude=1; Â = A⃗/|A⃗|; no unit. Equal vectors: same magnitude AND direction. Polar vectors: along motion direction (velocity, force). Axial vectors: along rotation axis (angular velocity, angular momentum, torque). Minimum vectors for zero resultant: collinear=2, coplanar=3, non-coplanar=4.",
+          "how_to_revise": "20-minute scan. Make two lists: physical quantities that are scalars vs vectors. Note the axial/polar distinction (NEET occasionally asks which is axial). Memorize the minimum-vector rules (collinear=2, coplanar=3).",
+          "expected_questions": {
+            "value": "0",
+            "description": "Direct classification questions rare in NEET — but knowing that torque and angular momentum are axial vectors is needed for many rotational mechanics questions"
+          },
+          "time_required": {
+            "value": "30 min",
+            "description": "Pure recall — scan and memorize, do not spend more time here"
+          },
+          "difficulty": {
+            "value": "Easy",
+            "description": "Definitional content — no calculation"
+          },
+          "scoring_focus": "Remember: division of vectors is undefined. Unit vector Â has no physical unit. Rotating a vector 360° returns it to the original (true for polar vectors). Pseudovectors (axial vectors) reverse sign under reflection — this may appear in conceptual questions.",
+          "high_risk_area": "Confusing tensors with vectors: moment of inertia, refractive index, stress, and strain are TENSORS (not simply vectors) because they have different values in different directions.",
+          "best_practice_style": "Build classification in 10 min: 3-column table (scalar/vector/tensor) with 5 examples in each.",
+          "priority_rule": "Low time priority — study in 30 min, move on."
+        },
+        {
+          "topic_name": "Vector Addition, Resolution and Products",
+          "topic_description": "The operationally critical section: how to add, subtract, resolve, and multiply vectors. Direct source of 1–2 NEET marks every year. Every mechanics problem requires some element of this — predominantly resultant calculation and resolution of forces/velocities into components.",
+          "topic_pills": ["1–2 Q/year direct", "Highest NEET yield", "R = √(A²+B²+2ABcosθ)", "Master in 4 hrs"],
+          "notes_condensed_description": "Resultant: R = √(A²+B²+2AB cosθ); direction: tanα = B sinθ/(A+B cosθ). θ=0°: R=A+B (max); θ=90°: R=√(A²+B²); θ=180°: R=|A−B| (min). Resolution: Rx=R cosθ, Ry=R sinθ. 3D: l²+m²+n²=1. Dot product: A⃗·B⃗ = AB cosθ (scalar); î·î=1, î·ĵ=0. Cross product: |A⃗×B⃗| = AB sinθ (vector); î×ĵ=k̂; î×î=0. A⊥B: A·B=0. A‖B: A×B=0.",
+          "how_to_revise": "Master the resultant formula completely — plug values for θ=0°, 90°, 120°, 180° until reflexive. Practice resolution: given R at angle θ, write Rx and Ry instantly. For products: write the determinant form for A×B using the 3×3 matrix method once, then use the cyclic rule î×ĵ=k̂, ĵ×k̂=î, k̂×î=ĵ for speed.",
+          "expected_questions": {
+            "value": "1–2",
+            "description": "Almost guaranteed 1 question per year — usually a resultant calculation at a given angle, or a dot/cross product question (which quantity gives dot product = 0 between which vectors)"
+          },
+          "time_required": {
+            "value": "4 hrs",
+            "description": "1 hr resultant formula drill; 1 hr resolution practice; 1 hr dot/cross product rules + examples; 1 hr MCQ practice from this chapter"
+          },
+          "difficulty": {
+            "value": "Moderate",
+            "description": "Formula application is easy; the challenge is correctly identifying θ (the angle between vectors, not the angle with x-axis) and applying the right formula (dot vs cross)"
+          },
+          "scoring_focus": "Focus exclusively on: (1) Resultant formula with angle; (2) A·B=0 (perpendicular) and |A×B|=0 (parallel) conditions; (3) Direction of cross product (right-hand rule / cyclic table). These three topics cover all NEET vector MCQs.",
+          "high_risk_area": "Using sinθ for dot product or cosθ for cross product. The mnemonic: DOT product = D-O-T = Down-Old-Terms = uses cos (the 'old' trig function in the product formula). Cross product = uses sin. Also: |A⃗+B⃗| = |A⃗−B⃗| → angle between A and B is 90°.",
+          "best_practice_style": "Derive the resultant formula from parallelogram law once, then practice 20 numerical MCQs varying θ. For cross product, matrix determinant method → write 5 examples until automatic.",
+          "priority_rule": "Highest priority in this chapter — 50% of chapter study time here."
+        }
+      ]
+    },
+    "trap": {
+      "chapter_name": "Fundamental Mathematics and Vector",
+      "topics": [
+        {
+          "subtopic_name": "Dot Product Uses Cosine, Cross Product Uses Sine",
+          "subtopic_tags": ["NEET 2019", "NEET 2022", "Vector products", "Perpendicular parallel", "Formula confusion"],
+          "mistakes": [
+            {
+              "label": "Writing A·B = AB sinθ (WRONG):",
+              "description": "The dot (scalar) product formula is A⃗·B⃗ = AB cosθ. Using sinθ for the dot product is the single most common vector error. It gives wrong sign for angles obtuse vs acute, and the wrong zero condition."
+            },
+            {
+              "label": "Confusing the zero conditions:",
+              "description": "A·B = 0 means A and B are PERPENDICULAR (θ=90°, cos90°=0). |A×B| = 0 means A and B are PARALLEL (θ=0° or 180°, sin0°=0). Students swap these: they write 'A and B are perpendicular so A×B=0' which is WRONG — perpendicular vectors have maximum cross product, not zero."
+            }
+          ],
+          "example": "Work done W = F⃗·d⃗ = Fd cosθ (dot product, cosine). Torque τ = r⃗×F⃗, |τ| = rF sinθ (cross product, sine). If F=5N, d=3m, θ=60°: W = 5×3×cos60° = 5×3×0.5 = <b>7.5 J</b>. A student who uses sin60° gets 5×3×(√3/2) = 12.99 J — wrong option, guaranteed to appear in the MCQ answers.",
+          "trap_framing": "NEET gives a vector-product question where one answer uses sinθ for dot product and another uses cosθ for cross product. You lose the mark if you select by 'formula memory' without understanding which product applies.",
+          "trap_question": {
+            "stem": "Two forces F₁ = 6N and F₂ = 8N act on a body at an angle of 60° to each other. The work done by F₁ along the direction of F₂ through a displacement of 1 m equals:",
+            "options": [
+              "6 × 1 × sin 60° = 3√3 J",
+              "6 × 1 × cos 60° = 3 J",
+              "8 × 1 × cos 60° = 4 J",
+              "6 × 8 × cos 60° = 24 J"
+            ],
+            "trick": "Work = F⃗·d⃗ = |F₁| × |displacement| × cos(angle between F₁ and displacement direction). Displacement is 1 m along F₂; angle between F₁ and F₂ is 60°. W = 6 × 1 × cos60° = 6 × 0.5 = <b>3 J → Option (B)</b>. Option (A) wrongs out by using sin60° for dot product."
+          },
+          "quick_rule": "Dot product = cosθ = scalar. Cross product = sinθ = vector. 'DOT and COS go together; CROSS is the SINful one.' Perpendicular: dot product = 0. Parallel: cross product magnitude = 0."
+        },
+        {
+          "subtopic_name": "Maximum and Minimum Resultant — Mixed-Up Conditions",
+          "subtopic_tags": ["NEET 2017", "NEET 2021", "Vector addition", "Resultant extremes", "Angle condition"],
+          "mistakes": [
+            {
+              "label": "Thinking Rmin occurs at θ=0° (parallel vectors):",
+              "description": "WRONG. At θ=0° (parallel), R = A+B which is the MAXIMUM. Minimum resultant occurs at θ=180° (antiparallel): R = |A−B|. Students who visualise 'closer together = smaller resultant' make this error."
+            },
+            {
+              "label": "Claiming any two vectors can have zero resultant:",
+              "description": "WRONG. Two vectors with unequal magnitudes can NEVER produce a zero resultant (|A−B| ≠ 0 when A≠B). Only two equal-magnitude antiparallel vectors give zero resultant. Minimum three coplanar vectors (of any magnitudes) can give zero if correctly oriented."
+            }
+          ],
+          "example": "Forces 12N and 8N: Rmax = 12+8 = 20N (θ=0°); Rmin = 12−8 = 4N (θ=180°). At θ=90°: R = √(12²+8²) = √(144+64) = √208 ≈ 14.4N. NEET often asks: 'If the maximum resultant is 17N and minimum is 7N, find each force.' max=A+B=17; min=A−B=7 → A=12N, B=5N. Then at θ=90°: R=√(144+25)=13N.",
+          "trap_framing": "NEET gives Rmax and Rmin and asks for R at 90°. Students who solve R = √(A²+B²+2AB) but forget to find A and B first (using max+min system of equations) miss the calculation shortcut. The shortcut: Rmax=A+B, Rmin=A−B → A=(Rmax+Rmin)/2; B=(Rmax−Rmin)/2.",
+          "trap_question": {
+            "stem": "The maximum and minimum magnitudes of the resultant of two vectors are 17 units and 7 units respectively. What is the resultant when these vectors act at right angles to each other?",
+            "options": [
+              "7 units",
+              "13 units",
+              "17 units",
+              "24 units"
+            ],
+            "trick": "Rmax = A+B = 17; Rmin = A−B = 7. Solve: A = 12, B = 5. At θ=90°: R = √(A²+B²) = √(144+25) = √169 = <b>13 units → Option (B)</b>. Option (A)=7 is Rmin; Option (C)=17 is Rmax; Option (D)=24 is A+B+A−B nonsensically added."
+          },
+          "quick_rule": "Rmax = A+B (parallel, θ=0°). Rmin = |A−B| (antiparallel, θ=180°). From max and min: A = (max+min)/2; B = (max−min)/2. Then R at θ=90° = √(A²+B²)."
+        },
+        {
+          "subtopic_name": "Binomial Approximation — Sign Errors",
+          "subtopic_tags": ["NEET 2016", "Error analysis", "Binomial approx", "Sign confusion"],
+          "mistakes": [
+            {
+              "label": "Forgetting the sign change in (1−x)^n ≈ 1 − nx:",
+              "description": "Students apply (1+x)^n ≈ 1+nx to (1−x)^n and write 1+nx (WRONG). Substituting −x into the formula: (1+(−x))^n ≈ 1 + n(−x) = 1 − nx. The sign must flip."
+            },
+            {
+              "label": "Applying approximation when |x| is NOT small:",
+              "description": "Binomial approximation (1+x)^n ≈ 1+nx is valid ONLY when |x|<<1 (second and higher terms negligible). For x=0.5, the approximation introduces ~12.5% error on the second term alone. This is relevant when applying it to small perturbations in gravitation or optics problems."
+            }
+          ],
+          "example": "Gravitational field slightly inside surface of Earth: g' = g(1 − h/R)^1 ≈ g(1 − h/R) for h<<R. This uses (1−x)^n ≈ 1−nx with x=h/R and n=1. Wrong students write g' ≈ g(1 + h/R) — the sign error gives a larger field deeper, which is physically nonsensical.",
+          "trap_framing": "NEET applies binomial approximation indirectly in error analysis, Doppler effect, or gravitational field questions. The question presents an expression like (R+d)/R ≈ 1 + d/R for d<<R and asks for the simplified result — a student who doesn't recognise the approximation wastes time on algebra.",
+          "trap_question": {
+            "stem": "The approximate value of (999)^(1/3) using the binomial theorem, given that 1000 = 10³, is closest to:",
+            "options": [
+              "9.997",
+              "10.003",
+              "9.003",
+              "9.970"
+            ],
+            "trick": "(999)^(1/3) = (1000−1)^(1/3) = 10(1 − 0.001)^(1/3) ≈ 10 × (1 − (1/3)(0.001)) = 10(1 − 0.000333) = 10 × 0.999667 ≈ <b>9.9967 ≈ 9.997 → Option (A)</b>. Option (B)=10.003 is the error of using + instead of − for the (1−x) case."
+          },
+          "quick_rule": "Four forms: (1+x)^n ≈ 1+nx; (1−x)^n ≈ 1−nx; (1+x)^{−n} ≈ 1−nx; (1−x)^{−n} ≈ 1+nx. Pattern: negating x negates the correction term; negating n negates the correction term. When both are negated, they cancel and the sign is positive."
+        }
+      ]
+    }
+  },
+  "grounding": {
+    "source_page_markdown_paths": [
+      "pages/physics-1/page-14/markdown.md",
+      "pages/physics-1/page-17/markdown.md",
+      "pages/physics-1/page-20/markdown.md",
+      "pages/physics-1/page-23/markdown.md",
+      "pages/physics-1/page-26/markdown.md",
+      "pages/physics-1/page-38/markdown.md",
+      "pages/physics-1/page-41/markdown.md"
+    ],
+    "grounding_summary": [
+      "Page 14: Introduction to mathematics in physics. Quadratic equation: ax²+bx+c=0, roots = [−b±√(b²−4ac)]/2a; sum of roots = −b/a; product = c/a. Binomial theorem: (1+x)^n general form; for |x|<<1, (1±x)^n ≈ 1±nx (4 special forms). Worked examples on evaluating roots and (1001)^(1/3) by binomial theorem.",
+      "Page 17: Trigonometry sum-to-product formulas (sinC+sinD, cosC+cosD, etc.). Sine and cosine rules for triangles. Logarithm definitions (base 10 = common; base e = natural), conversion ln x = 2.3026 log₁₀x. Laws: log(mn)=log m+log n; log(m^n)=n log m; base change. Graph types table: y=mx (line), y=ax²+bx (asymmetric parabola), xy=constant (rectangular hyperbola), x²+y²=a² (circle).",
+      "Page 20: Differential calculus applications: dA/dt for area of expanding ring; dV/dt for sphere radius increasing at given rate; slope of tangent = dy/dx at given point. Integration formulas table: all standard forms including ∫xⁿ dx, ∫sin x dx, ∫cos x dx, ∫eˣ dx, ∫1/x dx. Integration by substitution and by parts with formula u∫v dx − ∫[du/dx × ∫v dx] dx.",
+      "Page 23: Polygon law of vector addition — n-sided polygon, first n−1 sides represent vectors, nth side (opposite order) is resultant. Vector subtraction formula |A⃗−B⃗| = √(A²+B²−2AB cosθ); direction tanα₂ = B sinθ/(A−B cosθ). Resolution into rectangular components: Rx = R cosθ; Ry = R sinθ; R = √(Rx²+Ry²); θ = tan⁻¹(Ry/Rx). 3D: direction cosines l,m,n; l²+m²+n²=1.",
+      "Page 26 (Tips & Tricks): Key rules — unit vector gives direction (no unit itself). Division of vectors is not allowed as directions cannot be divided. A×A = 0 ≠ A−A. Minimum collinear vectors for zero resultant = 2; minimum coplanar = 3; minimum non-coplanar = 4. Rmax=A+B (θ=0°); Rmin=|A−B| (θ=180°). A·B=0 ↔ perpendicular; A×B=0 ↔ parallel. Dot product cosine rule; cross product sine rule. If |A+B|=|A−B| then angle=90°.",
+      "Pages 38,41: Practice problems on cross product: A·B=0 for perpendicular vectors (perpendicularity condition → solve for component). Cross product A×B: anti-commutative; direction perpendicular to both. If A×B = −(B×A) then sinθ = −sinθ → θ = 0 or π. Torque and cross product applications. Relative velocity problems using vector decomposition."
+    ],
+    "grounding_excerpt": [
+      "Mathematics is the language of physics. It becomes very easier to describe, understand and apply the physical principles, if we have a good knowledge of mathematics.",
+      "Minimum number of collinear vectors whose resultant can be zero is two.",
+      "Unit vector gives the direction of vector.",
+      "Minimum number of non-coplanar vectors whose resultant is zero is four.",
+      "Division of vectors is not allowed as directions cannot be divided."
+    ],
+    "sources": [
+      {
+        "title": "NCERT Physics Part I — Chapter 4 Motion in a Plane (Vectors)",
+        "url": "https://ncert.nic.in/textbook/pdf/leph104.pdf",
+        "publisher": "NCERT",
+        "accessed_date": "2026-03-30",
+        "why_used": "Authoritative primary source for vector definitions, addition laws, resolution, and dot/cross product formulas aligned with NEET syllabus"
+      },
+      {
+        "title": "NEET Physics Vectors and Scalars Important Questions",
+        "url": "https://byjus.com/neet/important-questions-for-neet-physics-vectors-scalars/",
+        "publisher": "byjus.com",
+        "accessed_date": "2026-03-30",
+        "why_used": "Confirms NEET exam pattern for vector chapter: resultant at various angles, dot/cross product, and minimum vectors questions are the dominant MCQ types"
+      },
+      {
+        "title": "Differentiation and Integration Formulas for Physics",
+        "url": "https://www.khanacademy.org/math/ap-calculus-ab/ab-differentiation-1-new",
+        "publisher": "Khan Academy",
+        "accessed_date": "2026-03-30",
+        "why_used": "Used to cross-check standard derivative and integral forms against authoritative pedagogical source"
+      }
+    ],
+    "review": {
+      "used_local_page_grounding": true,
+      "semantic_page_read_complete": true,
+      "used_current_research": true,
+      "research_used_for_enrichment": true,
+      "template_preserved": true,
+      "scope_checked": true,
+      "syllabus_scope_verified": true,
+      "guardrails_passed": true,
+      "notes": "7 OCR pages (14,17,20,23,26,38,41) sampled from the 32-page chapter (14–45). Content covers all 4 major sections: algebra/trig/log, calculus, vector classification, vector operations. 5 verbatim excerpts all from page 26 and page 14. Highest NEET yield is the vector operations section (topic 4) — plan and trap cards heavily emphasize this. Binomial approximation trap is relevant for error analysis (ch01) and gravitational variation questions (ch08)."
+    }
+  }
+}

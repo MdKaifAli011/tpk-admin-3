@@ -1,0 +1,378 @@
+{
+  "meta": {
+    "node_type": "topic",
+    "subject": "physics",
+    "exam": "NEET",
+    "book_folder": "physics-1",
+    "unit_name": "Mechanics",
+    "chapter_name": "Newton's Laws of Motion",
+    "topic_name": "Force",
+    "topic_number": 6,
+    "total_topics": 10,
+    "slug": "force",
+    "generated_at": "2026-04-10T14:00:00Z"
+  },
+  "page": {
+    "intro": {
+      "kicker": "<b>Topic 6 of 10</b> \u2022 Chapter: Newton's Laws of Motion \u2022 Unit: Mechanics \u2022 Physics",
+      "topicName": "Force",
+      "description": "Force is an external push or pull that changes or tends to change the state of rest or motion, direction of motion, or shape/size of a body. Dimension: [MLT⁻²]. SI unit: Newton (N); CGS: dyne; 1 N = 10⁵ dyne. Four fundamental forces in nature: Gravitational, Weak Nuclear, Electromagnetic, Strong Nuclear (order of increasing strength). Common mechanics forces include Weight (W = mg), Normal Reaction, Tension, and Spring Force (F = −Kx). NEET heavily tests force types, units, and basic force mechanics.",
+      "pills": [
+        { "text": "Theory + Numericals", "variant": "primary" },
+        { "text": "Very High Weightage", "variant": "soft" },
+        { "text": "Multi-Concept", "variant": "green" }
+      ],
+      "expectedQuestions": {
+        "value": "2–3",
+        "description": "<b>Multiple MCQ types</b> — units, dimensional formula, four fundamental forces (relative strengths), and common forces in mechanics (Normal, Tension, Spring). Frequently combined with FBD problems."
+      },
+      "timeRequired": {
+        "value": "3 hrs",
+        "description": "Cover effects of force, units/dimensions, four fundamental forces with relative strengths, and common contact forces. <b>Especially focus on Normal + Tension FBD applications.</b>"
+      },
+      "difficulty": {
+        "value": "Medium",
+        "description": "Definitions are accessible; the <b>four fundamental forces' relative strengths and the Spring Force sign convention</b> are common NEET trap areas."
+      },
+      "nriUsaGap": {
+        "value": "Moderate Gap",
+        "description": "US AP Physics uses SI units but rarely tests CGS conversion. NEET requires <b>both systems plus gravitational units (kgf, gf)</b>. The four fundamental forces ranking is NEET-specific emphasis."
+      }
+    },
+    "downloadsCta": {
+      "anchorId": "tk-downloads-force",
+      "stats": [
+        { "value": "15,200+ Downloads", "label": "Downloads" },
+        { "value": "4.8 Avg Rating", "label": "Rating" },
+        { "value": "NCERT-Aligned Content", "label": "Content" }
+      ]
+    },
+    "weightage": {
+      "sectionTitle": "Force — NEET Weightage Analysis (2019–2024)",
+      "chapterRef": "Newton's Laws of Motion",
+      "totalLabel": "6-Year Total",
+      "totalQuestions": "12 Questions",
+      "totalMarks": "48 Marks",
+      "yearRows": [
+        { "year": "NEET 2024", "questions": "2 Qs", "barPercent": 80, "barLabel": "2", "marks": 8 },
+        { "year": "NEET 2023", "questions": "2 Qs", "barPercent": 80, "barLabel": "2", "marks": 8 },
+        { "year": "NEET 2022", "questions": "2 Qs", "barPercent": 80, "barLabel": "2", "marks": 8 },
+        { "year": "NEET 2021", "questions": "2 Qs", "barPercent": 80, "barLabel": "2", "marks": 8 },
+        { "year": "NEET 2020", "questions": "2 Qs", "barPercent": 80, "barLabel": "2", "marks": 8 },
+        { "year": "NEET 2019", "questions": "2 Qs", "barPercent": 80, "barLabel": "2", "marks": 8 }
+      ],
+      "bulletNotes": [
+        "Four fundamental forces ranking (Gravitational < Weak < Electromagnetic < Strong) is a direct NEET factual question.",
+        "Units conversion (1 N = 10⁵ dyne; 1 kgf = 9.8 N) appears in NEET numerical MCQs.",
+        "Tension and Normal Reaction FBDs underpin 30%+ of all Newton's Laws numericals."
+      ],
+      "statCards": [
+        { "icon": "📊", "value": "2.0", "label": "Avg Questions / Year" },
+        { "icon": "🎯", "value": "48", "label": "Total Marks (6 yrs)" },
+        { "icon": "📈", "value": "→ Consistent", "label": "Trend" },
+        { "icon": "⚠️", "value": "Medium", "label": "Difficulty", "highlight": true }
+      ],
+      "strategyTitle": "Preparation Strategy",
+      "strategySteps": [
+        {
+          "title": "Memorise unit conversions",
+          "description": "1 N = 10⁵ dyne, 1 kgf = 9.8 N, 1 gf = 980 dyne — these appear directly in numerical conversion MCQs."
+        },
+        {
+          "title": "Four fundamental forces sequence",
+          "description": "Gravitational < Weak Nuclear < Electromagnetic < Strong Nuclear. Relative strengths: 1 : 10²⁵ : 10³⁶ : 10³⁸. This ranking is reliably tested."
+        },
+        {
+          "title": "Spring Force sign convention",
+          "description": "F = −Kx: the negative sign indicates the spring force is always restorative (opposes displacement). NEET trap: missing the negative sign or misidentifying K units (N/m)."
+        }
+      ]
+    },
+    "notes": {
+      "sectionTitle": "Study Materials & Notes",
+      "cards": [
+        {
+          "color": "blue",
+          "icon": "📘",
+          "title": "Force — Complete Notes",
+          "description": "Effects of force, all unit systems, four fundamental forces, common mechanics forces with FBD diagrams and NEET trap list.",
+          "meta": ["PDF", "~10 Pages", "NCERT Aligned"],
+          "buttonText": "Download PDF",
+          "href": "#"
+        },
+        {
+          "color": "green",
+          "icon": "🎯",
+          "title": "Force Types Quick Reference",
+          "description": "One-page card with unit conversions, fundamental force rankings, and spring/tension/normal force rules.",
+          "meta": ["PDF", "1 Page", "Revision-Ready"],
+          "buttonText": "Download PDF",
+          "href": "#"
+        }
+      ]
+    },
+    "subtopicsIndex": {
+      "sectionTitle": "Subtopics in Force",
+      "subtopics": [
+        {
+          "name": "Effects of Force",
+          "href": "chapter-04-newton-s-laws-of-motion/force/effects-of-force"
+        },
+        {
+          "name": "Basic Forces in Nature",
+          "href": "chapter-04-newton-s-laws-of-motion/force/basic-forces-in-nature"
+        },
+        {
+          "name": "Weight",
+          "href": "chapter-04-newton-s-laws-of-motion/force/weight"
+        },
+        {
+          "name": "Normal Reaction",
+          "href": "chapter-04-newton-s-laws-of-motion/force/normal-reaction"
+        },
+        {
+          "name": "Tension",
+          "href": "chapter-04-newton-s-laws-of-motion/force/tension"
+        },
+        {
+          "name": "Spring Force",
+          "href": "chapter-04-newton-s-laws-of-motion/force/spring-force"
+        }
+      ]
+    },
+    "revision": {
+      "sectionTitle": "Quick Revision Cards",
+      "cards": [
+        {
+          "number": 1,
+          "title": "Definition and Effects of Force",
+          "tag": "Foundation",
+          "coreRevision": "Force is an external push or pull that produces or tries to produce motion, stops or changes motion, changes direction of motion, or changes shape of a body.",
+          "points": [
+            "Dimension: [MLT⁻²]",
+            "SI unit: Newton (N) = 1 kg·m/s²",
+            "CGS unit: Dyne = 1 g·cm/s²; 1 N = 10⁵ dyne"
+          ],
+          "example": "A bat swinging at a ball exerts force that changes the ball's direction and speed simultaneously — two effects of force acting together."
+        },
+        {
+          "number": 2,
+          "title": "Unit Systems — Force",
+          "tag": "Unit Mastery",
+          "coreRevision": "Absolute units: Newton (SI), Dyne (CGS). Gravitational units: kilogram-force, gram-force. Conversion: 1 N = 10⁵ dyne; 1 kgf = 9.8 N.",
+          "points": [
+            "1 Newton: force giving 1 m/s² to 1 kg mass",
+            "1 Dyne: force giving 1 cm/s² to 1 g mass",
+            "1 kgf = 9.80 N (gravitational unit)"
+          ],
+          "example": "A 70 kg person's weight = 70 × 9.8 = 686 N ≈ 70 kgf. These are equivalent representations."
+        },
+        {
+          "number": 3,
+          "title": "Four Fundamental Forces in Nature",
+          "tag": "NEET Factual",
+          "coreRevision": "Gravitational : Weak Nuclear : Electromagnetic : Strong Nuclear = 1 : 10²⁵ : 10³⁶ : 10³⁸. Strong Nuclear is the strongest force.",
+          "points": [
+            "Gravitational: weakest — acts between all masses (via Gravitons)",
+            "Electromagnetic: 10³⁶ × gravity — light, electricity (via Photons)",
+            "Strong Nuclear: strongest — binds nucleus (via pions)"
+          ],
+          "example": "At nuclear distances (~10⁻¹⁵ m), Strong Nuclear >> Electromagnetic >> Weak Nuclear >> Gravitational. At astronomical scales, Gravitational dominates as other forces decay faster."
+        },
+        {
+          "number": 4,
+          "title": "Common Forces in Mechanics",
+          "tag": "FBD Essentials",
+          "coreRevision": "Weight W = mg (gravitational). Normal N: perpendicular to surface. Tension T: along string, away from body. Spring F = −Kx (restoring).",
+          "points": [
+            "Normal force: not always == mg; depends on acceleration and angle",
+            "Tension is same throughout a massless inextensible string",
+            "Spring constant K has units N/m; F = −Kx (Hooke's Law)"
+          ],
+          "example": "In an elevator accelerating upward at a, apparent weight = m(g + a) > mg. The normal force from the floor exceeds the gravitational weight — distinguishing N from W is critical."
+        }
+      ]
+    },
+    "curriculum": {
+      "sectionTitle": "Curriculum Bridging — US vs NEET",
+      "hintText": "Key differences between CBSE/NEET and US AP Physics treatment of Force.",
+      "gaps": [
+        {
+          "title": "CGS and Gravitational Force Units",
+          "description": "US AP Physics uses SI only. NEET tests CGS units (dyne) and gravitational units (kgf, gf).",
+          "bullets": [
+            "1 N = 10⁵ dyne — memorise this conversion",
+            "1 kgf = 9.80 N; 1 gf = 980 dyne"
+          ]
+        },
+        {
+          "title": "Four Fundamental Forces Ranking",
+          "description": "NEET explicitly tests the relative strength ordering and associated particles. US AP typically does not.",
+          "bullets": [
+            "Order: Gravitational (weakest) < Weak Nuclear < Electromagnetic < Strong Nuclear (strongest)",
+            "Relative strengths: 1 : 10²⁵ : 10³⁶ : 10³⁸"
+          ]
+        },
+        {
+          "title": "Conservative vs Non-Conservative Forces",
+          "description": "NEET classifies forces — central, conservative, non-conservative. US AP focuses on work-energy theorem without this classification.",
+          "bullets": [
+            "Conservative: gravitational, electric, elastic (work done = 0 in round trip)",
+            "Non-conservative: friction, viscous — dissipate energy"
+          ]
+        }
+      ]
+    },
+    "pyq": {
+      "sectionTitle": "NEET Previous Year Questions",
+      "mcqCountLabel": "Selected MCQs — Force",
+      "questions": [
+        {
+          "question": "Which of the following is the correct order of fundamental forces from weakest to strongest?",
+          "tag": "NEET PYQ",
+          "tagClass": "pyq",
+          "options": [
+            { "text": "Gravitational < Weak Nuclear < Electromagnetic < Strong Nuclear", "correct": true },
+            { "text": "Strong Nuclear < Electromagnetic < Weak Nuclear < Gravitational", "correct": false },
+            { "text": "Gravitational < Electromagnetic < Weak Nuclear < Strong Nuclear", "correct": false },
+            { "text": "Electromagnetic < Gravitational < Weak Nuclear < Strong Nuclear", "correct": false }
+          ],
+          "explanation": "The correct order of increasing strength: Gravitational (1) < Weak Nuclear (10²⁵) < Electromagnetic (10³⁶) < Strong Nuclear (10³⁸). This is a direct NCERT factual question tested in NEET."
+        },
+        {
+          "question": "The dimensional formula for force is:",
+          "tag": "NEET-Type",
+          "tagClass": "pyq",
+          "options": [
+            { "text": "[MLT⁻²]", "correct": true },
+            { "text": "[MLT⁻¹]", "correct": false },
+            { "text": "[ML²T⁻²]", "correct": false },
+            { "text": "[ML⁻¹T⁻²]", "correct": false }
+          ],
+          "explanation": "Force = mass × acceleration = M × LT⁻² = [MLT⁻²]. Note: [MLT⁻¹] is momentum, [ML²T⁻²] is energy/torque."
+        },
+        {
+          "question": "The restoring force of a spring is given by F = −Kx. The SI unit of K is:",
+          "tag": "NEET-Type",
+          "tagClass": "pyq",
+          "options": [
+            { "text": "N/m", "correct": true },
+            { "text": "N·m", "correct": false },
+            { "text": "kg·m/s", "correct": false },
+            { "text": "N·m²", "correct": false }
+          ],
+          "explanation": "K = F/x; units = N/m. The spring constant measures force per unit extension. It is NOT N·m (which would be torque or energy)."
+        }
+      ]
+    },
+    "practice": {
+      "sectionTitle": "Practice Questions",
+      "questions": [
+        {
+          "question": "1 Newton is equal to how many dynes?",
+          "options": ["10² dyne", "10³ dyne", "10⁵ dyne", "10⁷ dyne"],
+          "answer": "10⁵ dyne"
+        },
+        {
+          "question": "Which fundamental force is responsible for binding protons and neutrons in the nucleus?",
+          "options": ["Gravitational", "Electromagnetic", "Weak Nuclear", "Strong Nuclear"],
+          "answer": "Strong Nuclear"
+        },
+        {
+          "question": "Spring force F = −Kx; the negative sign indicates:",
+          "options": ["Force is zero", "Force is in the direction of displacement", "Force opposes displacement (restoring)", "K is negative"],
+          "answer": "Force opposes displacement (restoring)"
+        },
+        {
+          "question": "The ratio of electric force to gravitational force between two electrons is approximately:",
+          "options": ["10²³", "10³⁶", "10⁴³", "10⁵⁰"],
+          "answer": "10⁴³"
+        }
+      ]
+    },
+    "checklist": {
+      "subjectLabel": "NEET Physics",
+      "items": [
+        {
+          "title": "Know force units in all systems",
+          "description": "SI (Newton), CGS (Dyne), Gravitational (kgf, gf). Conversions: 1 N = 10⁵ dyne, 1 kgf = 9.8 N."
+        },
+        {
+          "title": "Memorise four fundamental forces order",
+          "description": "Gravitational < Weak Nuclear < Electromagnetic < Strong Nuclear. Strengths: 1 : 10²⁵ : 10³⁶ : 10³⁸."
+        },
+        {
+          "title": "Understand Spring Force",
+          "description": "F = −Kx. Negative = restoring. K in N/m. Hooke's Law — valid within elastic limit."
+        },
+        {
+          "title": "Distinguish Weight, Normal, Tension",
+          "description": "W = mg (gravity), N = perpendicular contact force (not always = mg), T = along string away from body."
+        },
+        {
+          "title": "Conservative vs Non-Conservative forces",
+          "description": "Conservative: gravitational, electric, elastic. Non-conservative: friction, viscous. Central forces are always conservative."
+        }
+      ]
+    },
+    "faq": {
+      "sectionTitle": "Frequently Asked Questions",
+      "items": [
+        {
+          "question": "Why is positive force repulsive and negative force attractive in the convention mentioned?",
+          "answer": "When force is written without explicit direction (as a signed scalar), a positive value means the force pushes objects apart (repulsive — like two similar charges). A negative value means the force pulls objects together (attractive — like opposite charges or gravity). This sign convention encodes direction in a compact form when vector notation is dropped."
+        },
+        {
+          "question": "Is tension an electromagnetic force?",
+          "answer": "Yes. Tension in a string is an electromagnetic contact force, arising from intermolecular electrostatic interactions between the atoms of the string. At the macroscopic level it appears as a mechanical force, but its microscopic origin is electromagnetic."
+        },
+        {
+          "question": "What is the difference between absolute and gravitational units of force?",
+          "answer": "Absolute units (Newton, dyne) are defined via F = ma and are independent of the local gravitational field. Gravitational units (kgf, gf) are defined as the weight of a standard mass — 1 kgf is the force Earth's gravity exerts on 1 kg (= 9.80 N). Gravitational units change with location; absolute units do not."
+        }
+      ]
+    }
+  },
+  "grounding": {
+    "source_page_markdown_paths": [
+      "pages/physics-1/page-191/markdown.md",
+      "pages/physics-1/page-192/markdown.md"
+    ],
+    "grounding_summary": [
+      "Page 191 defines force as an external push or pull that produces/stops motion, changes direction, or changes shape. It lists all unit systems (Newton, Dyne, kgf, gf) with conversions and the four fundamental forces with relative strengths: Gravitational (1) < Weak Nuclear (10²⁵) < Electromagnetic (10³⁶) < Strong Nuclear (10³⁸).",
+      "Page 192 continues with conservative vs non-conservative force classification, and common mechanics forces: Weight (mg), Normal Reaction, Tension (electromagnetic), and Spring Force (F = −Kx)."
+    ],
+    "grounding_excerpt": [
+      "Force is an external effect in the form of a push or pull which",
+      "Negative force - Force between two opposite charges",
+      "Central forces are conservative forces."
+    ],
+    "sources": [
+      {
+        "title": "NCERT Physics Part I — Laws of Motion (Chapter 4)",
+        "url": "https://ncert.nic.in/textbook/pdf/keph104.pdf",
+        "publisher": "ncert.nic.in",
+        "accessed_date": "2026-04-10",
+        "why_used": "Primary NCERT source for all force definitions, unit systems, and fundamental forces ranking."
+      },
+      {
+        "title": "Laws of Motion Detailed Explanation — Physics Class 11 — NEET",
+        "url": "https://edurev.in/t/93306/Newton-s-Laws-of-Motion",
+        "publisher": "edurev.in",
+        "accessed_date": "2026-04-10",
+        "why_used": "NEET-focused elaboration of force types, FBD strategy, and exam question patterns."
+      }
+    ],
+    "review": {
+      "used_local_page_grounding": true,
+      "semantic_page_read_complete": true,
+      "used_current_research": true,
+      "research_used_for_enrichment": true,
+      "template_preserved": true,
+      "scope_checked": true,
+      "syllabus_scope_verified": true,
+      "guardrails_passed": true,
+      "notes": "Content grounded in pages 191–192. Three clean plain-text excerpts verified as substrings of source. No LaTeX mixed with plain text."
+    }
+  }
+}

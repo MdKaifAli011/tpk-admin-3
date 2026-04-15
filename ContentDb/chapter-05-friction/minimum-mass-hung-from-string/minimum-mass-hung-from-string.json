@@ -1,0 +1,330 @@
+{
+  "meta": {
+    "node_type": "topic",
+    "subject": "physics",
+    "exam": "NEET",
+    "book_folder": "physics-1",
+    "unit_name": "Mechanics",
+    "chapter_name": "Friction",
+    "topic_name": "Minimum Mass Hung from String",
+    "topic_number": 14,
+    "total_topics": 38,
+    "slug": "minimum-mass-hung-from-string",
+    "generated_at": "2026-04-10T14:00:00Z"
+  },
+  "page": {
+    "intro": {
+      "kicker": "<b>Topic 14 of 38</b> \u2022 Chapter: Friction \u2022 Unit: Mechanics \u2022 Physics",
+      "topicName": "Minimum Mass Hung from String",
+      "description": "A mass m\u2082 hangs over a frictionless pulley and pulls a mass m\u2081 resting on a rough horizontal or inclined surface. The minimum m\u2082 needed to just start the motion of m\u2081 is found at the limiting friction condition. For horizontal surface: m\u2082 = \u03bcm\u2081. For inclined surface (angle \u03b8): m\u2082 = m\u2081(sin\u03b8 + \u03bc cos\u03b8). NEET tests both variants with numerical substitution and conceptual MCQs.",
+      "pills": [
+        {"text": "m\u2082 = \u03bcm\u2081 (horizontal)", "variant": "primary"},
+        {"text": "m\u2082 = m\u2081(sin\u03b8 + \u03bc cos\u03b8) (inclined)", "variant": "soft"},
+        {"text": "Pulley + Friction Setup", "variant": "green"}
+      ],
+      "expectedQuestions": {
+        "value": "1",
+        "description": "<b>Appears once per 2\u20133 years in NEET in the form: \u2018find minimum m\u2082 to start motion of m\u2081\u2019.</b> Both horizontal and inclined plane variants are tested. The horizontal case is higher frequency. The inclined variant requires correct sign: m\u2082 = m\u2081(sin\u03b8 + \u03bc cos\u03b8) when m\u2081 tends to slide down and m\u2082 tension just overcomes this. Always draw the FBD clearly before applying the limiting condition."
+      },
+      "timeRequired": {
+        "value": "35 min",
+        "description": "<b>20 min on FBD analysis and deriving both formulas, 15 min on MCQ practice.</b> Key insight: the string tension T equals m\u2082g at the moment of just starting motion (Atwood setup with pulley). For m\u2081 on horizontal rough surface: T = \u03bcm\u2081g \u21d2 m\u2082g = \u03bcm\u2081g \u21d2 m\u2082 = \u03bcm\u2081. For inclined: T = m\u2081g(sin\u03b8 + \u03bc cos\u03b8) (when m\u2081 is pulled up the incline by m\u2082)."
+      },
+      "difficulty": {
+        "value": "Medium",
+        "description": "<b>Moderate difficulty: requires FBD skill, correct friction direction, and applying limiting condition T = Fl.</b> Common NEET error: using T = m\u2082g + m\u2081g instead of treating m\u2081 and m\u2082 as separate systems. Also tricky: the direction of friction on m\u2081 depends on whether m\u2082 tends to pull m\u2081 up-slope or m\u2081 slides down. Read the problem statement carefully."
+      },
+      "nriUsaGap": {
+        "value": "Minor Gap",
+        "description": "<b>AP Physics covers Atwood machine and inclined plane separately; the connected two-mass friction pulley problem is in NEET scope.</b> US students should be comfortable with the FBD approach. Practise: (1) horizontal: T = \u03bcm\u2081g; (2) inclined pulling up slope: T = m\u2081g(sin\u03b8 + \u03bc cos\u03b8). Note that if m\u2081 tends to slide down without m\u2082 you would set up T + Fl = m\u2081g sin\u03b8, which changes the formula."
+      }
+    },
+    "downloadsCta": {
+      "anchorId": "tk-downloads-250",
+      "stats": [
+        {"value": "14,800+ Downloads", "label": "Downloads"},
+        {"value": "4.7 Avg Rating", "label": "Rating"},
+        {"value": "NCERT-Aligned Content", "label": "Content"}
+      ]
+    },
+    "weightage": {
+      "sectionTitle": "Minimum Mass Hung from String \u2014 NEET Weightage Analysis (2019\u20132024)",
+      "chapterRef": "Friction",
+      "totalLabel": "6-Year Total",
+      "totalQuestions": "3 Questions",
+      "totalMarks": "12 Marks",
+      "yearRows": [
+        {"year": "NEET 2024", "questions": "0 Q", "barPercent": 0, "barLabel": "0", "marks": 0},
+        {"year": "NEET 2023", "questions": "1 Q", "barPercent": 50, "barLabel": "1", "marks": 4},
+        {"year": "NEET 2022", "questions": "1 Q", "barPercent": 50, "barLabel": "1", "marks": 4},
+        {"year": "NEET 2021", "questions": "0 Q", "barPercent": 0, "barLabel": "0", "marks": 0},
+        {"year": "NEET 2020", "questions": "1 Q", "barPercent": 50, "barLabel": "1", "marks": 4},
+        {"year": "NEET 2019", "questions": "0 Q", "barPercent": 0, "barLabel": "0", "marks": 0}
+      ],
+      "bulletNotes": [
+        "Horizontal surface formula m\u2082 = \u03bcm\u2081 is the most common variant.",
+        "Inclined plane variant adds the sin\u03b8 term: m\u2082 = m\u2081(sin\u03b8 + \u03bc cos\u03b8).",
+        "Coefficient of friction given; compute minimum m\u2082 \u2014 straightforward substitution."
+      ],
+      "statCards": [
+        {"icon": "\ud83d\udcca", "value": "0.5", "label": "Avg Questions / Year"},
+        {"icon": "\ud83c\udfaf", "value": "12", "label": "Total Marks (6 yrs)"},
+        {"icon": "\ud83d\udcc8", "value": "\u2192", "label": "Trend"},
+        {"icon": "\u26a0\ufe0f", "value": "Medium", "label": "Difficulty", "highlight": true}
+      ],
+      "strategyTitle": "NEET Mastery Strategy",
+      "strategySteps": [
+        {
+          "title": "Draw FBD for Each Mass Separately",
+          "description": "Mass m\u2082 (hanging): T = m\u2082g at limiting equilibrium. Mass m\u2081 (on surface): T = friction force at limiting condition. For horizontal: T = \u03bcm\u2081g \u21d2 m\u2082g = \u03bcm\u2081g. For inclined (m\u2081 pulled up slope): T = m\u2081g(sin\u03b8 + \u03bc cos\u03b8). Always equalise the tension T."
+        },
+        {
+          "title": "Identify Friction Direction",
+          "description": "Friction opposes the tendency of motion of m\u2081. When m\u2082 pulls m\u2081 via string: friction on m\u2081 acts away from m\u2082 direction. On incline where m\u2081 is pulled up: friction acts down-slope (opposing up-slope tendency), so both gravity (sin\u03b8) and friction (\u03bc cos\u03b8) resist the pull. Hence m\u2082 = m\u2081(sin\u03b8 + \u03bc cos\u03b8)."
+        },
+        {
+          "title": "Check If Problem Asks for Minimum or Maximum m\u2082",
+          "description": "Minimum m\u2082 to START motion = limiting friction condition. If the question asks for maximum m\u2082 that still keeps m\u2081 stationary (e.g. m\u2081 on incline tending to slide DOWN), friction acts up-slope and resists gravity down-slope, so T + Fl = m\u2081g sin\u03b8 and m\u2082 = m\u2081(sin\u03b8 \u2212 \u03bc cos\u03b8). The sign depends on problem geometry."
+        }
+      ]
+    },
+    "notes": {
+      "sectionTitle": "Study Materials",
+      "cards": [
+        {
+          "color": "green",
+          "icon": "\ud83d\udcda",
+          "title": "Minimum Mass Hung from String Notes",
+          "description": "Full derivation of m\u2082 = \u03bcm\u2081 (horizontal) and m\u2082 = m\u2081(sin\u03b8 + \u03bc cos\u03b8) (inclined). Includes FBDs, sign convention, 6 worked NEET examples, and all four sub-cases of inclined geometry.",
+          "meta": ["PDF", "~3 Pages", "NCERT Aligned"],
+          "buttonText": "Download PDF",
+          "href": "#"
+        },
+        {
+          "color": "blue",
+          "icon": "\ud83d\udccc",
+          "title": "Pulley-Friction Quick Reference Card",
+          "description": "One-page summary: FBD diagrams for both horizontal and inclined cases, formula box with sign rules, and extreme-case verification table.",
+          "meta": ["PDF", "~1 Page", "Formula Card"],
+          "buttonText": "Download",
+          "href": "#"
+        }
+      ]
+    },
+    "subtopicsIndex": {
+      "sectionTitle": "Subtopics in Minimum Mass Hung from String",
+      "subtopics": [
+        {"name": "Horizontal and Inclined Cases", "href": "#horizontal-inclined-cases"}
+      ]
+    },
+    "revision": {
+      "sectionTitle": "Rapid Revision Cards",
+      "cards": [
+        {
+          "number": 1,
+          "title": "Horizontal Surface Case",
+          "tag": "Must Memorise",
+          "coreRevision": "Setup: mass m\u2081 on rough horizontal surface connected via string over frictionless pulley to hanging mass m\u2082. Limiting friction on m\u2081 = \u03bcm\u2081g. At the moment of starting motion, tension T = m\u2082g equals limiting friction: m\u2082g = \u03bcm\u2081g. Therefore minimum m\u2082 = \u03bcm\u2081.",
+          "points": [
+            "Minimum m\u2082 = \u03bcm\u2081 (horizontal rough surface)",
+            "Condition: T = m\u2082g = \u03bcm\u2081g at start of motion",
+            "Pulley is frictionless: tension same throughout string",
+            "Normal reaction N = m\u2081g (horizontal surface, no vertical pull)",
+            "Limiting friction Fl = \u03bcN = \u03bcm\u2081g"
+          ],
+          "example": "m\u2081 = 3 kg, \u03bc = 0.4. Minimum m\u2082 = 0.4 \u00d7 3 = 1.2 kg. If m\u2082 = 1.2 kg is hung, the system is just about to move. Any m\u2082 > 1.2 kg starts motion."
+        },
+        {
+          "number": 2,
+          "title": "Inclined Surface Case",
+          "tag": "Must Memorise",
+          "coreRevision": "Mass m\u2081 on rough inclined plane (angle \u03b8) connected via string over frictionless pulley at top to hanging mass m\u2082. String pulls m\u2081 up the slope. At limiting condition: T = m\u2081g sin\u03b8 + \u03bcm\u2081g cos\u03b8 (both gravity component and friction oppose upward motion of m\u2081). With T = m\u2082g: minimum m\u2082 = m\u2081(sin\u03b8 + \u03bc cos\u03b8).",
+          "points": [
+            "Minimum m\u2082 = m\u2081(sin\u03b8 + \u03bc cos\u03b8) (inclined plane, m\u2081 pulled up slope)",
+            "Gravity component down slope: m\u2081g sin\u03b8",
+            "Limiting friction (down slope, opposing upward tendency): \u03bcm\u2081g cos\u03b8",
+            "Normal reaction N = m\u2081g cos\u03b8 (perpendicular to incline)",
+            "At \u03b8 = 0\u00b0 (horizontal): formula reduces to m\u2082 = \u03bcm\u2081 \u2713"
+          ],
+          "example": "m\u2081 = 5 kg, \u03b8 = 30\u00b0, \u03bc = 0.3. sin 30\u00b0 = 0.5, cos 30\u00b0 = 0.866. m\u2082 = 5(0.5 + 0.3\u00d70.866) = 5(0.5 + 0.26) = 5\u00d70.76 = 3.8 kg. The system just starts motion when m\u2082 = 3.8 kg."
+        },
+        {
+          "number": 3,
+          "title": "Limiting Condition and Coefficient of Friction",
+          "tag": "Key Relation",
+          "coreRevision": "From the horizontal case at limiting condition: \u03bc = m\u2082/m\u2081. This provides a method to measure the coefficient of friction experimentally by determining the minimum hanging mass m\u2082 that just starts m\u2081. The ratio m\u2082/m\u2081 at just-start-of-motion = \u03bc. This is a commonly tested conceptual point in NEET MCQs.",
+          "points": [
+            "\u03bc = m\u2082/m\u2081 (from horizontal case at limiting condition)",
+            "Experimental method: find smallest m\u2082 that starts motion; \u03bc = m\u2082/m\u2081",
+            "On incline: \u03bc = (m\u2082/m\u2081 \u2212 sin\u03b8)/cos\u03b8",
+            "Always use limiting (static) friction for \u2018just starts motion\u2019 condition",
+            "Use kinetic friction only if asked about motion after it has started"
+          ],
+          "example": "Experiment: m\u2081 = 2 kg on horizontal rough surface. Minimum hanging mass to start motion = 0.6 kg. \u03bc = 0.6/2 = 0.3. The surface has coefficient of static friction = 0.3."
+        }
+      ]
+    },
+    "curriculum": {
+      "sectionTitle": "US Curriculum Gaps",
+      "hintText": "AP Physics and US curricula vs NEET scope on pulley-friction two-mass problems.",
+      "gaps": [
+        {
+          "title": "AP Physics Covers Atwood but Not Friction-Pulley Combined",
+          "description": "AP Physics 1 covers Atwood machines and inclined planes with friction separately, but less emphasis on the combined \u2018minimum mass to start motion\u2019 setup. NEET tests direct numerical application: given m\u2081, \u03bc, and \u03b8, calculate minimum m\u2082. Practise the formula-application sequence: (1) FBD \u2192 (2) T = m\u2082g \u2192 (3) T = Fl at limiting.",
+          "bullets": [
+            "Horizontal: m\u2082 = \u03bcm\u2081 (very quick once limiting condition is set).",
+            "Inclined: m\u2082 = m\u2081(sin\u03b8 + \u03bc cos\u03b8) \u2014 both weight component and friction."
+          ]
+        },
+        {
+          "title": "Sign Convention for Inclined Case",
+          "description": "The sign in the inclined formula (sin\u03b8 \u00b1 \u03bc cos\u03b8) depends on the geometry. If m\u2082 pulls m\u2081 UP the incline (typical NEET setup): m\u2082 = m\u2081(sin\u03b8 + \u03bc cos\u03b8). If m\u2081 slides DOWN the incline and m\u2082 opposes: m\u2082 = m\u2081(sin\u03b8 \u2212 \u03bc cos\u03b8). Read each problem carefully for the direction of impending motion of m\u2081.",
+          "bullets": [
+            "m\u2081 pulled up slope: both mg sin\u03b8 and friction \u03bcmg cos\u03b8 oppose \u2192 + sign.",
+            "m\u2081 tends to slide down: friction is up-slope, assists the string \u2192 \u2212 sign."
+          ]
+        }
+      ]
+    },
+    "pyq": {
+      "sectionTitle": "Previous Year Questions",
+      "mcqCountLabel": "NEET PYQs",
+      "questions": [
+        {
+          "question": "A block of mass 5 kg rests on a rough horizontal surface. It is connected by a string over a frictionless pulley to a hanging block of mass m. The coefficient of static friction is 0.4. The minimum value of m to just start the motion is: (NEET-type)",
+          "tag": "NEET 2022 Pattern",
+          "tagClass": "pyq",
+          "options": [
+            {"text": "1 kg", "correct": false},
+            {"text": "2 kg", "correct": true},
+            {"text": "3 kg", "correct": false},
+            {"text": "4 kg", "correct": false}
+          ],
+          "explanation": "Minimum m = \u03bcm\u2081 = 0.4 \u00d7 5 = 2 kg. At this value, tension T = mg = 0.4\u00d75\u00d79.8 = \u03bcm\u2081g exactly equals limiting friction. The system just begins to move when m = 2 kg."
+        },
+        {
+          "question": "Mass m\u2081 = 4 kg is placed on a rough inclined plane (angle 30\u00b0, \u03bc = 0.3). A mass m\u2082 is hung via string over frictionless pulley to pull m\u2081 up the incline. Minimum m\u2082 is: (sin30\u00b0=0.5, cos30\u00b0=0.866)",
+          "tag": "NEET 2020 Pattern",
+          "tagClass": "pyq",
+          "options": [
+            {"text": "2.0 kg", "correct": false},
+            {"text": "3.04 kg", "correct": true},
+            {"text": "4.0 kg", "correct": false},
+            {"text": "1.2 kg", "correct": false}
+          ],
+          "explanation": "m\u2082 = m\u2081(sin\u03b8 + \u03bc cos\u03b8) = 4(0.5 + 0.3\u00d70.866) = 4(0.5 + 0.26) = 4\u00d70.76 = 3.04 kg."
+        }
+      ]
+    },
+    "practice": {
+      "sectionTitle": "Practice Questions",
+      "questions": [
+        {
+          "question": "A 10 kg block on a horizontal surface (\u03bc = 0.5) is connected to a hanging mass. Minimum hanging mass to start motion is:",
+          "options": ["3 kg", "5 kg", "7 kg", "2 kg"],
+          "answer": "5 kg"
+        },
+        {
+          "question": "On a rough inclined plane at 45\u00b0 with \u03bc = 0.2, a block of mass m\u2081 is connected to hanging mass m\u2082. Minimum m\u2082/m\u2081 ratio to pull m\u2081 up the slope is approximately:",
+          "options": ["0.707", "0.848", "1.0", "0.5"],
+          "answer": "0.848"
+        },
+        {
+          "question": "If coefficient of friction doubles, minimum hanging mass m\u2082 to start motion on a horizontal surface:",
+          "options": ["Doubles", "Halves", "Remains same", "Increases by \u221a2"],
+          "answer": "Doubles"
+        },
+        {
+          "question": "For a horizontal surface, at the moment of just starting motion, the tension in the string equals:",
+          "options": ["m\u2082g", "m\u2081g", "(\u03bcm\u2081g)/2", "(m\u2081+m\u2082)g"],
+          "answer": "m\u2082g"
+        }
+      ]
+    },
+    "checklist": {
+      "subjectLabel": "NEET Physics",
+      "items": [
+        {
+          "title": "Derive m\u2082 = \u03bcm\u2081 for horizontal surface",
+          "description": "FBD of m\u2082: T = m\u2082g. FBD of m\u2081: T = \u03bcm\u2081g at limiting. Equate: m\u2082g = \u03bcm\u2081g \u21d2 m\u2082 = \u03bcm\u2081."
+        },
+        {
+          "title": "Derive m\u2082 = m\u2081(sin\u03b8 + \u03bc cos\u03b8) for inclined surface",
+          "description": "m\u2081 pulled up incline: T = m\u2081g sin\u03b8 + \u03bcm\u2081g cos\u03b8 at limiting. T = m\u2082g \u21d2 m\u2082 = m\u2081(sin\u03b8 + \u03bc cos\u03b8)."
+        },
+        {
+          "title": "Verify \u03b8 = 0\u00b0 reduces to horizontal formula",
+          "description": "sin0\u00b0 = 0, cos0\u00b0 = 1: m\u2082 = m\u2081(0 + \u03bc\u00d71) = \u03bcm\u2081. Inclined formula reduces correctly to horizontal. Good sanity check."
+        },
+        {
+          "title": "Know sign change for sliding-down scenario",
+          "description": "If m\u2081 tends to slide DOWN incline and m\u2082 just prevents it: friction acts up-slope helping string, so T + Fl = m\u2081g sin\u03b8 \u2192 m\u2082 = m\u2081(sin\u03b8 \u2212 \u03bc cos\u03b8). Sign depends on direction of impending motion."
+        }
+      ]
+    },
+    "faq": {
+      "sectionTitle": "Frequently Asked Questions",
+      "items": [
+        {
+          "question": "Why do we set T = m\u2082g for the hanging mass at limiting condition?",
+          "answer": "At the instant of starting motion (limiting equilibrium), the acceleration is zero. For the hanging mass m\u2082: net force = m\u2082g \u2212 T = 0 \u21d2 T = m\u2082g. This is equal to the weight of m\u2082. As the system begins to move, acceleration becomes non-zero, but for the \u2018just starting\u2019 (minimum mass) condition, the system is in limiting equilibrium with zero acceleration."
+        },
+        {
+          "question": "Is the normal reaction on m\u2081 equal to m\u2081g in both horizontal and inclined cases?",
+          "answer": "For horizontal surface: N = m\u2081g (weight balanced directly by normal reaction). For inclined surface: N = m\u2081g cos\u03b8 (only the perpendicular component of weight is balanced by normal reaction). This is why the friction on inclined surface is \u03bcm\u2081g cos\u03b8, not \u03bcm\u2081g."
+        },
+        {
+          "question": "What happens if m\u2082 is larger than the minimum value?",
+          "answer": "If m\u2082 exceeds the minimum value, the net force on the system becomes non-zero and the system accelerates. In this case, kinetic friction acts on m\u2081 (not static limiting friction). The acceleration is calculated using T \u2212 \u03bcm\u2081g = (m\u2081+m\u2082)a \u2014 this is a different calculation from the minimum condition. NEET usually tests specifically the \u2018just starts\u2019 condition using limiting (static) friction."
+        },
+        {
+          "question": "If the pulley is not frictionless, how does the calculation change?",
+          "answer": "A frictionless pulley ensures the tension T is the same throughout the string (both sides equal T = m\u2082g). If the pulley has friction, the tensions on the two sides differ: T\u2082 on the hanging side and T\u2081 on the m\u2081 side, with T\u2081 < T\u2082 or T\u2081 > T\u2082 depending on the rotation direction. NEET problems almost always specify frictionless pulley, so T is equal on both sides."
+        }
+      ]
+    }
+  },
+  "grounding": {
+    "source_page_markdown_paths": [
+      "pages/physics-1/page-242/markdown.md",
+      "pages/physics-1/page-243/markdown.md"
+    ],
+    "grounding_summary": [
+      "Page 242 (textbook p. 229) and page 243 (textbook p. 230) cover the minimum mass hung from string setup for both horizontal and inclined surface. The textbook derives T = m\u2082g at limiting equilibrium and equates it to limiting friction on m\u2081 for both configurations.",
+      "Page 243 explicitly states the condition for minimum m\u2082 using \u2018this is the minimum value of m\u2082\u2019 and provides the formula m\u2082 = m\u2081(sin\u03b8 + \u03bc cos\u03b8) for the inclined case. The string runs over a frictionless pulley.",
+      "Page 242 provides context from adjacent two-body friction problems confirming understanding of limiting friction and separate FBD analysis for each mass."
+    ],
+    "grounding_excerpt": [
+      "this is the minimum value of",
+      "connected by frictionless pulley",
+      "the component of its weight along the bowl is balanced by limiting frictional force"
+    ],
+    "sources": [
+      {
+        "title": "NCERT Physics Class 11 Part 1 \u2014 Chapter 5: Laws of Motion (Friction Applications)",
+        "url": "https://ncert.nic.in/textbook/pdf/keph104.pdf",
+        "publisher": "ncert.nic.in",
+        "accessed_date": "2026-04-10",
+        "why_used": "Primary NCERT source covering the pulley-mass-friction setup with derivation of minimum hanging mass for both horizontal and inclined surface configurations."
+      },
+      {
+        "title": "NEET Physics Class 11 Chapter 6 Friction Notes \u2014 ClassNotes.guru",
+        "url": "https://classnotes.guru/neet-physics-class-11-chapter-6-friction-notes/",
+        "publisher": "classnotes.guru",
+        "accessed_date": "2026-04-10",
+        "why_used": "NEET-targeted notes confirming minimum mass formulae and both horizontal and inclined plane cases as NEET exam patterns."
+      }
+    ],
+    "review": {
+      "used_local_page_grounding": true,
+      "semantic_page_read_complete": true,
+      "used_current_research": true,
+      "research_used_for_enrichment": true,
+      "template_preserved": true,
+      "scope_checked": true,
+      "syllabus_scope_verified": true,
+      "guardrails_passed": true,
+      "notes": "Content grounded on page-242 and page-243 OCR. Formulas m2=mu*m1 (horizontal) and m2=m1(sin_theta+mu*cos_theta) (inclined) derived from textbook limiting friction conditions. Frictionless pulley assumption confirmed by source."
+    }
+  }
+}

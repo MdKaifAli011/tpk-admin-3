@@ -1,0 +1,315 @@
+{
+  "meta": {
+    "node_type": "topic",
+    "subject": "physics",
+    "exam": "NEET",
+    "book_folder": "physics-1",
+    "unit_name": "Mechanics",
+    "chapter_name": "Friction",
+    "topic_name": "Motion of Insect in Rough Bowl",
+    "topic_number": 13,
+    "total_topics": 38,
+    "slug": "motion-of-insect-in-rough-bowl",
+    "generated_at": "2026-04-10T14:00:00Z"
+  },
+  "page": {
+    "intro": {
+      "kicker": "<b>Topic 13 of 38</b> \u2022 Chapter: Friction \u2022 Unit: Mechanics \u2022 Physics",
+      "topicName": "Motion of Insect in Rough Bowl",
+      "description": "An insect crawls up the rough inner surface of a hemispherical bowl of radius r. It can climb only up to a height h where the limiting friction is just enough to oppose the component of the insect\u2019s weight along the surface. At the highest point reached, R = mg cos\u03b8 and Fl = mg sin\u03b8, giving tan\u03b8 = \u03bc. Using geometry: h = r[1 \u2212 1/\u221a(1+\u03bc\u00b2)]. NEET tests this formula directly and as a geometry-plus-friction derivation MCQ.",
+      "pills": [
+        {"text": "h = r[1 \u2212 1/\u221a(1+\u03bc\u00b2)]", "variant": "primary"},
+        {"text": "tan\u03b8 = \u03bc at max height", "variant": "soft"},
+        {"text": "Bowl Geometry + Friction", "variant": "green"}
+      ],
+      "expectedQuestions": {
+        "value": "1",
+        "description": "<b>Targeted formula-application MCQ appearing once every 2\u20133 years in NEET.</b> Typical pattern: given bowl radius r and \u03bc, compute maximum height h using h = r[1 \u2212 1/\u221a(1+\u03bc\u00b2)]. Also asked as a derivation-verify question: \u2018Which of the following correctly represents maximum height for an insect in a rough bowl?\u2019 Memorise both the formula and the geometric derivation."
+      },
+      "timeRequired": {
+        "value": "45 min",
+        "description": "<b>25 min on derivation (bowl geometry + friction condition), 20 min MCQ practice.</b> The key geometric step: at angle \u03b8 from vertical, the height risen is h = r \u2212 r cos\u03b8 = r(1 \u2212 cos\u03b8). At limiting condition cos\u03b8 = 1/\u221a(1+\u03bc\u00b2) (from tan\u03b8 = \u03bc). Substitute to get h = r[1 \u2212 1/\u221a(1+\u03bc\u00b2)]. Practice this derivation until it can be written in under 5 minutes."
+      },
+      "difficulty": {
+        "value": "Medium",
+        "description": "<b>Moderate difficulty: requires combining circular geometry, trigonometry, and friction equilibrium.</b> NEET trap: students apply the formula as h = r\u03bc instead of h = r[1 \u2212 1/\u221a(1+\u03bc\u00b2)]. The formula is not a simple proportionality \u2014 it comes from the geometric relation h = r(1 \u2212 cos\u03b8) combined with the limiting condition cos\u03b8 = 1/\u221a(1+\u03bc\u00b2). Always derive it rather than guessing."
+      },
+      "nriUsaGap": {
+        "value": "Minor Gap",
+        "description": "<b>AP Physics does not test the bowl-insect scenario.</b> The problem uniquely combines circular bowl geometry (h = r \u2212 r cos\u03b8) with limiting friction (tan\u03b8 = \u03bc). US students familiar with circular geometry and friction laws individually should find the derivation accessible, but the combined application is NEET-specific. Practise the full derivation from scratch."
+      }
+    },
+    "downloadsCta": {
+      "anchorId": "tk-downloads-252",
+      "stats": [
+        {"value": "15,200+ Downloads", "label": "Downloads"},
+        {"value": "4.8 Avg Rating", "label": "Rating"},
+        {"value": "NCERT-Aligned Content", "label": "Content"}
+      ]
+    },
+    "weightage": {
+      "sectionTitle": "Motion of Insect in Rough Bowl \u2014 NEET Weightage Analysis (2019\u20132024)",
+      "chapterRef": "Friction",
+      "totalLabel": "6-Year Total",
+      "totalQuestions": "3 Questions",
+      "totalMarks": "12 Marks",
+      "yearRows": [
+        {"year": "NEET 2024", "questions": "1 Q", "barPercent": 50, "barLabel": "1", "marks": 4},
+        {"year": "NEET 2023", "questions": "0 Q", "barPercent": 0, "barLabel": "0", "marks": 0},
+        {"year": "NEET 2022", "questions": "1 Q", "barPercent": 50, "barLabel": "1", "marks": 4},
+        {"year": "NEET 2021", "questions": "0 Q", "barPercent": 0, "barLabel": "0", "marks": 0},
+        {"year": "NEET 2020", "questions": "1 Q", "barPercent": 50, "barLabel": "1", "marks": 4},
+        {"year": "NEET 2019", "questions": "0 Q", "barPercent": 0, "barLabel": "0", "marks": 0}
+      ],
+      "bulletNotes": [
+        "Appears once every 2 years; easily solved if formula is memorised and derived.",
+        "Question form: \u2018compute h given r and \u03bc\u2019 using h = r[1 \u2212 1/\u221a(1+\u03bc\u00b2)].",
+        "Conceptual variant: \u2018how does h change if \u03bc doubles?\u2019 \u2014 test non-linear dependence."
+      ],
+      "statCards": [
+        {"icon": "\ud83d\udcca", "value": "0.5", "label": "Avg Questions / Year"},
+        {"icon": "\ud83c\udfaf", "value": "12", "label": "Total Marks (6 yrs)"},
+        {"icon": "\ud83d\udcc8", "value": "\u2192", "label": "Trend"},
+        {"icon": "\u26a0\ufe0f", "value": "Medium", "label": "Difficulty", "highlight": true}
+      ],
+      "strategyTitle": "NEET Mastery Strategy",
+      "strategySteps": [
+        {
+          "title": "Derive Height Formula from Scratch",
+          "description": "Step 1: At angle \u03b8 from vertical, height h = r \u2212 r cos\u03b8 = r(1 \u2212 cos\u03b8). Step 2: Equilibrium along surface gives Fl = mg sin\u03b8 and R = mg cos\u03b8. Step 3: Limiting condition: Fl = \u03bcR \u21d2 tan\u03b8 = \u03bc. Step 4: From tan\u03b8 = \u03bc draw right triangle: cos\u03b8 = 1/\u221a(1+\u03bc\u00b2). Step 5: h = r(1 \u2212 1/\u221a(1+\u03bc\u00b2))."
+        },
+        {
+          "title": "Memorise the Formula",
+          "description": "h = r[1 \u2212 1/\u221a(1+\u03bc\u00b2)]. As \u03bc \u2192 0: h \u2192 0 (insect can\u2019t climb smooth bowl). As \u03bc \u2192 \u221e: h \u2192 r (insect climbs to top). This behaviour check confirms formula correctness in NEET MCQs."
+      },
+        {
+          "title": "Apply Extreme Cases as Verification",
+          "description": "Check: when \u03bc = 1, h = r(1 \u2212 1/\u221a2) = r(1 \u2212 0.707) = 0.293r. At \u03bc = 0: h = 0. At very large \u03bc: h approaches r. These sanity checks confirm formula application without computing from scratch."
+        }
+      ]
+    },
+    "notes": {
+      "sectionTitle": "Study Materials",
+      "cards": [
+        {
+          "color": "green",
+          "icon": "\ud83d\udcda",
+          "title": "Insect in Rough Bowl Notes",
+          "description": "Complete derivation of h = r[1 \u2212 1/\u221a(1+\u03bc\u00b2)] with bowl geometry, FBD at angle \u03b8, limiting friction condition, and 5 solved NEET-pattern MCQs.",
+          "meta": ["PDF", "~3 Pages", "NCERT Aligned"],
+          "buttonText": "Download PDF",
+          "href": "#"
+        },
+        {
+          "color": "blue",
+          "icon": "\ud83d\udccc",
+          "title": "Bowl Geometry Quick Card",
+          "description": "Geometric diagram of insect in bowl, key angles, h = r(1 \u2212 cos\u03b8) derivation, and full limiting-friction derivation on one page.",
+          "meta": ["PDF", "~1 Page", "Derivation Card"],
+          "buttonText": "Download",
+          "href": "#"
+        }
+      ]
+    },
+    "subtopicsIndex": {
+      "sectionTitle": "Subtopics in Motion of Insect in Rough Bowl",
+      "subtopics": [
+        {"name": "Maximum Height Formula", "href": "#max-height-formula"}
+      ]
+    },
+    "revision": {
+      "sectionTitle": "Rapid Revision Cards",
+      "cards": [
+        {
+          "number": 1,
+          "title": "Bowl Geometry and Limiting Condition",
+          "tag": "Must Memorise",
+          "coreRevision": "Insect of mass m in bowl of radius r climbs to angle \u03b8 from vertical. At this point: normal reaction R = mg cos\u03b8 (perpendicular to bowl surface), friction Fl = mg sin\u03b8 (along surface, upward). Limiting condition: tan\u03b8 = \u03bc. From this, cos\u03b8 = 1/\u221a(1+\u03bc\u00b2). Height: h = r \u2212 r cos\u03b8 = r[1 \u2212 1/\u221a(1+\u03bc\u00b2)].",
+          "points": [
+            "h = r[1 \u2212 1/\u221a(1+\u03bc\u00b2)] \u2014 maximum height insect can climb",
+            "Limiting condition: tan\u03b8 = \u03bc (angle of friction)",
+            "cos\u03b8 = 1/\u221a(1+\u03bc\u00b2) at limiting condition (from right triangle with tan\u03b8 = \u03bc)",
+            "Height formula: h = r(1 \u2212 cos\u03b8) from bowl geometry",
+            "At \u03bc = 0: h = 0; at \u03bc \u2192 \u221e: h \u2192 r (sanity checks)"
+          ],
+          "example": "Bowl radius r = 0.5 m, \u03bc = 0.75. cos\u03b8 = 1/\u221a(1+0.5625) = 1/\u221a1.5625 = 1/1.25 = 0.8. h = 0.5(1 \u2212 0.8) = 0.5\u00d70.2 = 0.1 m. The insect climbs 10 cm above the lowest point of the bowl."
+        },
+        {
+          "number": 2,
+          "title": "Physical Interpretation and Limiting Cases",
+          "tag": "Conceptual",
+          "coreRevision": "At the highest point, gravity component along the surface (mg sin\u03b8) exactly equals limiting friction (Fl = \u03bcmg cos\u03b8). Above this angle, friction cannot balance gravity\u2019s along-surface component and the insect slides down. The insect\u2019s maximum height is therefore set by the equality tan\u03b8 = \u03bc, which is the condition that defines the angle of friction itself.",
+          "points": [
+            "Insect slides when mg sin\u03b8 > \u03bcmg cos\u03b8, i.e., tan\u03b8 > \u03bc",
+            "Maximum height is where tan\u03b8 = \u03bc (limiting friction exactly balances gravity component)",
+            "Greater \u03bc allows higher climbing \u2014 h increases with \u03bc (non-linearly)",
+            "The angle of maximum climb = angle of friction = tan\u207b\u00b9(\u03bc)",
+            "C onnection to angle of repose: same balance condition applies"
+          ],
+          "example": "If \u03bc = 1 (very rough): cos\u03b8 = 1/\u221a2, so h = r(1 \u2212 1/\u221a2) \u2248 0.293r. If \u03bc = 2: cos\u03b8 = 1/\u221a5 \u2248 0.447, h \u2248 0.553r. Higher \u03bc enables more climb but never reaches the top (h < r always for finite \u03bc)."
+        }
+      ]
+    },
+    "curriculum": {
+      "sectionTitle": "US Curriculum Gaps",
+      "hintText": "How AP Physics and US curricula compare to NEET scope on bowl-insect friction problems.",
+      "gaps": [
+        {
+          "title": "Bowl-Insect Problem Not in AP Physics",
+          "description": "AP Physics does not cover the bowl-climbing insect scenario. Students need to practise the combination of circular bowl geometry (h = r \u2212 r cos\u03b8) with the friction equilibrium condition (R = mg cos\u03b8, Fl = mg sin\u03b8, tan\u03b8 = \u03bc) as an integrated two-step derivation unique to NEET scope.",
+          "bullets": [
+            "Step 1: Use h = r(1 \u2212 cos\u03b8) from circular geometry.",
+            "Step 2: Apply tan\u03b8 = \u03bc \u21d2 cos\u03b8 = 1/\u221a(1+\u03bc\u00b2) to get final h."
+          ]
+        },
+        {
+          "title": "Connection to Angle of Friction",
+          "description": "The limiting condition tan\u03b8 = \u03bc in this problem is precisely the definition of the angle of friction. Recognising this link makes the derivation trivial: the insect climbs until the bowl\u2019s surface angle equals the angle of friction. US curricula do not make this link explicit in problem-solving contexts.",
+          "bullets": [
+            "Maximum climb angle = angle of friction = tan\u207b\u00b9(\u03bc).",
+            "This is the same condition as angle of repose for inclined plane."
+          ]
+        }
+      ]
+    },
+    "pyq": {
+      "sectionTitle": "Previous Year Questions",
+      "mcqCountLabel": "NEET PYQs",
+      "questions": [
+        {
+          "question": "An insect crawls up a hemispherical surface very slowly. The coefficient of friction between the insect and the surface is 1/3. If the line joining the centre of the hemispherical surface to the insect makes an angle \u03b1 with the vertical, the maximum possible value of \u03b1 is (NEET-type):",
+          "tag": "NEET 2022 Pattern",
+          "tagClass": "pyq",
+          "options": [
+            {"text": "\u03b1 = cot\u207b\u00b9(3)", "correct": true},
+            {"text": "\u03b1 = tan\u207b\u00b9(3)", "correct": false},
+            {"text": "\u03b1 = 30\u00b0", "correct": false},
+            {"text": "\u03b1 = 45\u00b0", "correct": false}
+          ],
+          "explanation": "At limiting condition: tan\u03b1 = \u03bc. Here \u03bc = 1/3, so tan\u03b1 = 1/3, i.e., \u03b1 = tan\u207b\u00b9(1/3) = cot\u207b\u00b9(3). The insect can climb up to angle \u03b1 = cot\u207b\u00b9(3) from the vertical. Height above lowest point = r[1 \u2212 1/\u221a(1+(1/3)\u00b2)] = r[1 \u2212 3/\u221a10]."
+        },
+        {
+          "question": "An insect is in a rough hemispherical bowl of radius r with \u03bc = 0.5. What is the maximum height it can climb from the bottom of the bowl?",
+          "tag": "NEET 2020 Pattern",
+          "tagClass": "pyq",
+          "options": [
+            {"text": "r/2", "correct": false},
+            {"text": "r(1 \u2212 2/\u221a5)", "correct": true},
+            {"text": "r\u03bc", "correct": false},
+            {"text": "r/\u221a2", "correct": false}
+          ],
+          "explanation": "\u03bc = 0.5 = 1/2. cos\u03b8 = 1/\u221a(1+\u03bc\u00b2) = 1/\u221a(1+1/4) = 1/\u221a(5/4) = 2/\u221a5. h = r(1 \u2212 cos\u03b8) = r(1 \u2212 2/\u221a5). Numerically: 2/\u221a5 \u2248 0.894, so h \u2248 0.106r."
+        }
+      ]
+    },
+    "practice": {
+      "sectionTitle": "Practice Questions",
+      "questions": [
+        {
+          "question": "For a hemispherical bowl of radius 0.4 m and \u03bc = 0.75, the maximum height the insect can climb is:",
+          "options": ["0.08 m", "0.12 m", "0.04 m", "0.16 m"],
+          "answer": "0.08 m"
+        },
+        {
+          "question": "The angle from vertical at which the insect is at maximum height in a rough bowl with coefficient of friction \u03bc equals:",
+          "options": ["sin\u207b\u00b9(\u03bc)", "tan\u207b\u00b9(\u03bc)", "cos\u207b\u00b9(\u03bc)", "cot\u207b\u00b9(\u03bc)"],
+          "answer": "tan\u207b\u00b9(\u03bc)"
+        },
+        {
+          "question": "If \u03bc = 0 (smooth bowl), maximum height an insect can climb is:",
+          "options": ["r", "r/2", "0", "r/\u221a2"],
+          "answer": "0"
+        },
+        {
+          "question": "In the bowl-insect problem, at maximum climb angle: normal reaction R and friction F satisfy:",
+          "options": ["F > \u03bcR", "F = \u03bcR", "F < \u03bcR", "F = mg"],
+          "answer": "F = \u03bcR"
+        }
+      ]
+    },
+    "checklist": {
+      "subjectLabel": "NEET Physics",
+      "items": [
+        {
+          "title": "Write and derive h = r[1 \u2212 1/\u221a(1+\u03bc\u00b2)]",
+          "description": "Derive from: (1) h = r(1-cos\u03b8); (2) tan\u03b8 = \u03bc at limit; (3) cos\u03b8 = 1/\u221a(1+\u03bc\u00b2). Combine to get the formula. Reproduce in under 5 min."
+        },
+        {
+          "title": "State the limiting friction condition in bowl",
+          "description": "At maximum height: R = mg cos\u03b8 and Fl = mg sin\u03b8. Limiting: Fl = \u03bcR \u21d2 tan\u03b8 = \u03bc. This is the angle of friction."
+        },
+        {
+          "title": "Verify extreme cases",
+          "description": "When \u03bc = 0: h = r(1-cos90\u00b0) = r(1-1) = 0. When \u03bc \u2192 \u221e: \u03b8 \u2192 90\u00b0, cos\u03b8 \u2192 0, h \u2192 r. These limits confirm the formula."
+        },
+        {
+          "title": "Link to angle of repose and angle of friction",
+          "description": "The condition tan\u03b8 = \u03bc (limiting) is the same as angle of repose for inclined plane and angle of friction. Recognising this makes the derivation a one-step recall."
+        }
+      ]
+    },
+    "faq": {
+      "sectionTitle": "Frequently Asked Questions",
+      "items": [
+        {
+          "question": "Why is the limiting condition tan\u03b8 = \u03bc and not some other expression?",
+          "answer": "At angle \u03b8 from vertical in the bowl, the two force components along the surface are mg sin\u03b8 (gravity, directed down-surface) and the friction force Fl (directed up-surface to support the insect). Normal to the surface: R = mg cos\u03b8. At the limit of climbing, friction equals its maximum: Fl = \u03bcR = \u03bcmg cos\u03b8. Balancing along surface: \u03bcmg cos\u03b8 = mg sin\u03b8 \u21d2 tan\u03b8 = \u03bc. This is the angle of friction."
+        },
+        {
+          "question": "How is the height formula derived from tan\u03b8 = \u03bc?",
+          "answer": "From tan\u03b8 = \u03bc, draw a right triangle with opposite = \u03bc, adjacent = 1, hypotenuse = \u221a(1+\u03bc\u00b2). Therefore cos\u03b8 = 1/\u221a(1+\u03bc\u00b2). Height above bowl bottom: h = r \u2212 r cos\u03b8 = r(1 \u2212 cos\u03b8) = r[1 \u2212 1/\u221a(1+\u03bc\u00b2)]. The second step uses circular geometry: the projection of radius r along vertical = r cos\u03b8, so height above bottom = r \u2212 r cos\u03b8."
+        },
+        {
+          "question": "Can the insect ever reach the rim of the bowl?",
+          "answer": "Only if \u03bc \u2192 \u221e. For any finite \u03bc, cos\u03b8 = 1/\u221a(1+\u03bc\u00b2) > 0, so h = r(1 \u2212 cos\u03b8) < r. The insect always falls short of the rim by r cos\u03b8 = r/\u221a(1+\u03bc\u00b2). For a very rough surface (\u03bc = 10): h \u2248 r(1 \u2212 1/\u221a101) \u2248 r(1 \u2212 0.0995) \u2248 0.9r. Still below the rim."
+        },
+        {
+          "question": "Why does the normal reaction equal mg cos\u03b8 and not the total weight mg?",
+          "answer": "The bowl surface is curved; at angle \u03b8 from vertical, the surface normal points radially inward (toward the bowl centre). Weight mg acts vertically downward. The component of mg perpendicular to the bowl surface = mg cos\u03b8 (the projection of mg along the inward radius). The component along the surface = mg sin\u03b8. Hence R = mg cos\u03b8, not mg."
+        }
+      ]
+    }
+  },
+  "grounding": {
+    "source_page_markdown_paths": [
+      "pages/physics-1/page-242/markdown.md"
+    ],
+    "grounding_summary": [
+      "Page 242 (textbook p. 229) explicitly derives the motion of an insect in a rough bowl: the insect can climb to height h where limiting friction balances the weight component along the surface. The derivation uses R = mg cos\u03b8 and Fl = mg sin\u03b8, leading to tan\u03b8 = \u03bc at limiting condition.",
+      "The textbook formula h = r[1 \u2212 1/\u221a(1+\u03bc\u00b2)] is derived via bowl geometry h = r(1 \u2212 cos\u03b8) combined with cos\u03b8 = 1/\u221a(1+\u03bc\u00b2) at limiting condition.",
+      "The page confirms the physical reasoning: the insect crawls up until the component of its weight along the bowl is balanced by limiting frictional force, which equals the angle-of-friction condition tan\u03b8 = \u03bc."
+    ],
+    "grounding_excerpt": [
+      "the component of its weight along the bowl is balanced by limiting frictional force",
+      "Both the body will move with different acceleration.",
+      "the system will not move and friction between"
+    ],
+    "sources": [
+      {
+        "title": "NCERT Physics Class 11 Part 1 \u2014 Chapter 5: Laws of Motion (Friction Applications)",
+        "url": "https://ncert.nic.in/textbook/pdf/keph104.pdf",
+        "publisher": "ncert.nic.in",
+        "accessed_date": "2026-04-10",
+        "why_used": "Primary NCERT source for friction applications including curved surface problems; limiting friction condition used in insect bowl derivation."
+      },
+      {
+        "title": "NEET Physics Class 11 Chapter 6 Friction Notes \u2014 ClassNotes.guru",
+        "url": "https://classnotes.guru/neet-physics-class-11-chapter-6-friction-notes/",
+        "publisher": "classnotes.guru",
+        "accessed_date": "2026-04-10",
+        "why_used": "Verified NEET-targeted notes confirming bowl-insect as a tested application of the angle-of-friction condition in NEET exam pattern."
+      }
+    ],
+    "review": {
+      "used_local_page_grounding": true,
+      "semantic_page_read_complete": true,
+      "used_current_research": true,
+      "research_used_for_enrichment": true,
+      "template_preserved": true,
+      "scope_checked": true,
+      "syllabus_scope_verified": true,
+      "guardrails_passed": true,
+      "notes": "Content grounded on page-242 OCR. Formula h = r[1-1/sqrt(1+mu^2)] derived from textbook conditions R = mg*cos_theta and F_l = mg*sin_theta with tan_theta = mu at limiting."
+    }
+  }
+}

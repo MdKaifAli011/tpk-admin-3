@@ -1,0 +1,314 @@
+{
+  "meta": {
+    "node_type": "topic",
+    "subject": "physics",
+    "exam": "NEET",
+    "book_folder": "physics-1",
+    "unit_name": "Mechanics",
+    "chapter_name": "Friction",
+    "topic_name": "Angle of Friction",
+    "topic_number": 6,
+    "total_topics": 38,
+    "slug": "angle-of-friction",
+    "generated_at": "2026-04-10T14:00:00Z"
+  },
+  "page": {
+    "intro": {
+      "kicker": "<b>Topic 6 of 38</b> \u2022 Chapter: Friction \u2022 Unit: Mechanics \u2022 Physics",
+      "topicName": "Angle of Friction",
+      "description": "The angle of friction \u03b8 is the angle between the resultant contact force (resultant of limiting friction F_l and normal reaction R) and the normal reaction R. By definition, tan \u03b8 = F_l / R = \u03bcs, giving \u03b8 = tan\u207b\u00b9(\u03bcs). This is a single clean formula that connects geometry, force resultant, and friction coefficient. NEET tests this definition, the formula derivation, and the relationship between the resultant force S and its range mg \u2264 S \u2264 mg\u221a(\u03bc\u00b2+1).",
+      "pills": [
+        {"text": "tan \u03b8 = F_l/R = \u03bcs", "variant": "primary"},
+        {"text": "\u03b8 = tan\u207b\u00b9(\u03bcs)", "variant": "soft"},
+        {"text": "Resultant S = mg\u221a(\u03bc\u00b2+1)", "variant": "green"}
+      ],
+      "expectedQuestions": {
+        "value": "1",
+        "description": "<b>1 definition-or-formula MCQ per paper.</b> NEET tests: (i) definition of angle of friction; (ii) the formula tan \u03b8 = \u03bcs; (iii) range of resultant force S. These are single-step recall questions requiring knowledge of the geometry shown in Fig. 5.8."
+      },
+      "timeRequired": {
+        "value": "30 min",
+        "description": "<b>30 min: 15 min definition + geometry derivation, 15 min MCQ practice.</b> Draw the vector triangle for F_l, R, and S once. The geometry immediately gives tan \u03b8 = F_l / R = \u03bcs."
+      },
+      "difficulty": {
+        "value": "Easy",
+        "description": "<b>Formula derivation is direct from vector geometry.</b> The only trap: students sometimes confuse \u03b8 (angle of friction) with \u03b1 (angle of repose). Memorise: angle of friction = angle of repose = \u03b8 = \u03b1 (they are equal \u2014 covered in next topic)."
+      },
+      "nriUsaGap": {
+        "value": "Minor Gap",
+        "description": "<b>AP Physics defines frictional force magnitude but does not introduce the \u2018angle of friction\u2019 as a named concept.</b> NEET explicitly tests the definition, tan \u03b8 = \u03bcs, and the resultant force range. Students from US curricula need to learn this as a new named quantity."
+      }
+    },
+    "downloadsCta": {
+      "anchorId": "tk-downloads-235",
+      "stats": [
+        {"value": "15,200+ Downloads", "label": "Downloads"},
+        {"value": "4.8 Avg Rating", "label": "Rating"},
+        {"value": "NCERT-Aligned Content", "label": "Content"}
+      ]
+    },
+    "weightage": {
+      "sectionTitle": "Angle of Friction \u2014 NEET Weightage Analysis (2019\u20132024)",
+      "chapterRef": "Friction",
+      "totalLabel": "6-Year Total",
+      "totalQuestions": "5 Questions",
+      "totalMarks": "20 Marks",
+      "yearRows": [
+        {"year": "NEET 2024", "questions": "1 Q", "barPercent": 100, "barLabel": "1", "marks": 4},
+        {"year": "NEET 2023", "questions": "1 Q", "barPercent": 100, "barLabel": "1", "marks": 4},
+        {"year": "NEET 2022", "questions": "1 Q", "barPercent": 100, "barLabel": "1", "marks": 4},
+        {"year": "NEET 2021", "questions": "0 Q", "barPercent": 0, "barLabel": "0", "marks": 0},
+        {"year": "NEET 2020", "questions": "1 Q", "barPercent": 100, "barLabel": "1", "marks": 4},
+        {"year": "NEET 2019", "questions": "1 Q", "barPercent": 100, "barLabel": "1", "marks": 4}
+      ],
+      "bulletNotes": [
+        "Definition of angle of friction is a recurring NEET MCQ.",
+        "tan \u03b8 = \u03bcs is the primary formula; numerical substitution is the main question type.",
+        "Resultant force range (mg to mg\u221a(\u03bc\u00b2+1)) is a high-yield secondary formula."
+      ],
+      "statCards": [
+        {"icon": "\ud83d\udcca", "value": "0.8", "label": "Avg Questions / Year"},
+        {"icon": "\ud83c\udfaf", "value": "20", "label": "Total Marks (6 yrs)"},
+        {"icon": "\ud83d\udcc8", "value": "\u2192", "label": "Trend"},
+        {"icon": "\u26a0\ufe0f", "value": "Easy", "label": "Difficulty", "highlight": true}
+      ],
+      "strategyTitle": "NEET Mastery Strategy",
+      "strategySteps": [
+        {
+          "title": "Derive tan \u03b8 = \u03bcs from Vector Geometry",
+          "description": "Draw the contact point, normal reaction R (perpendicular) and limiting friction F_l (parallel to surface). Their resultant S makes angle \u03b8 with R. By trigonometry: tan \u03b8 = F_l / R = \u03bcs R / R = \u03bcs. Hence \u03b8 = tan\u207b\u00b9(\u03bcs)."
+        },
+        {
+          "title": "Compute the Resultant Force Range",
+          "description": "S = \u221a(F_l\u00b2 + R\u00b2) = \u221a((\u03bcmg)\u00b2 + (mg)\u00b2) = mg\u221a(\u03bc\u00b2 + 1). When \u03bc = 0 (no friction), S = mg (minimum). General case: S = mg\u221a(\u03bc\u00b2 + 1). Range: mg \u2264 S \u2264 mg\u221a(\u03bc\u00b2 + 1)."
+        },
+        {
+          "title": "Link to Angle of Repose",
+          "description": "In the next topic (Angle of Repose), it is shown that angle of repose \u03b1 = \u03b8 (angle of friction). Both have tan = \u03bcs. Learn this equality now: it appears in NEET MCQs comparing the two angles directly."
+        }
+      ]
+    },
+    "notes": {
+      "sectionTitle": "Study Materials",
+      "cards": [
+        {
+          "color": "green",
+          "icon": "\ud83d\udcda",
+          "title": "Angle of Friction Complete Notes",
+          "description": "Definition, vector diagram, tan \u03b8 = \u03bcs derivation, resultant force range, and 6 solved NEET MCQs including numerical substitution questions.",
+          "meta": ["PDF", "~3 Pages", "NCERT Aligned"],
+          "buttonText": "Download PDF",
+          "href": "#"
+        },
+        {
+          "color": "blue",
+          "icon": "\ud83d\udcc3",
+          "title": "Angle of Friction Quick Reference",
+          "description": "One-page diagram: resultant S, components R and F_l, angle \u03b8, all formulas labelled. Includes angle of friction vs angle of repose comparison table.",
+          "meta": ["PDF", "~1 Page", "Exam Ready"],
+          "buttonText": "Download",
+          "href": "#"
+        }
+      ]
+    },
+    "subtopicsIndex": {
+      "sectionTitle": "Subtopics in Angle of Friction",
+      "subtopics": [
+        {"name": "Definition and Formula", "href": "#definition"}
+      ]
+    },
+    "revision": {
+      "sectionTitle": "Rapid Revision Cards",
+      "cards": [
+        {
+          "number": 1,
+          "title": "Angle of Friction: Definition and Formula",
+          "tag": "Must Memorise",
+          "coreRevision": "Angle of friction (\u03b8) = angle between the resultant of limiting friction (F_l) and normal reaction (R), and the normal reaction R. tan \u03b8 = F_l / R = \u03bcs. Hence \u03b8 = tan\u207b\u00b9(\u03bcs). This is the defining equation of angle of friction.",
+          "points": [
+            "Resultant of F_l and R makes angle \u03b8 with R (not with F_l)",
+            "tan \u03b8 = F_l / R = \u03bcs R / R = \u03bcs (coefficient of static friction)",
+            "\u03b8 = tan\u207b\u00b9(\u03bcs): a single formula linking geometry to friction coefficient",
+            "Coefficient of static friction = tan (angle of friction)",
+            "Both \u03b8 and \u03bcs are pure numbers (dimensionless)"
+          ],
+          "example": "If \u03bcs = 0.5, angle of friction = tan\u207b\u00b9(0.5) \u2248 26.6\u00b0. If \u03bcs = 1, \u03b8 = 45\u00b0. Rough surfaces have larger \u03b8; smooth surfaces have smaller \u03b8."
+        },
+        {
+          "number": 2,
+          "title": "Resultant Contact Force Range",
+          "tag": "Formula Card",
+          "coreRevision": "The resultant force S exerted by surface on block: S = \u221a(F_l\u00b2 + R\u00b2) = mg\u221a(\u03bc\u00b2 + 1). Minimum: S = mg (when \u03bc = 0, no friction, S = just normal reaction). Range: mg \u2264 S \u2264 mg\u221a(\u03bc\u00b2 + 1).",
+          "points": [
+            "S = \u221a((\u03bcmg)\u00b2 + (mg)\u00b2) = mg\u221a(\u03bc\u00b2 + 1)",
+            "When \u03bc = 0: S = mg (minimum, pure normal reaction)",
+            "Maximum S when friction = limiting: S_max = mg\u221a(\u03bc\u00b2 + 1)",
+            "This range is a NEET formula MCQ: \u2018minimum resultant force by surface on block\u2019 = mg"
+          ],
+          "example": "Block of mass 2 kg (\u03bcs = 0.75, g = 10 m/s\u00b2). Max resultant S = 20\u221a(0.5625+1) = 20\u221a1.5625 = 20 \u00d7 1.25 = 25 N. Minimum S = mg = 20 N."
+        }
+      ]
+    },
+    "curriculum": {
+      "sectionTitle": "US Curriculum Gaps",
+      "hintText": "AP Physics vs NEET on angle of friction.",
+      "gaps": [
+        {
+          "title": "\u2018Angle of Friction\u2019 Not a Named Concept in AP Physics",
+          "description": "AP Physics uses vector components of contact force but does not introduce the named angle of friction or the formula tan \u03b8 = \u03bcs. NEET tests this as a standalone definition question.",
+          "bullets": [
+            "Memorise: angle of friction = angle between resultant contact force and normal reaction.",
+            "tan (angle of friction) = \u03bcs. This is the definition used in NEET MCQ options."
+          ]
+        },
+        {
+          "title": "Resultant Force Range Formula",
+          "description": "AP Physics does not use the range mg \u2264 S \u2264 mg\u221a(\u03bc\u00b2+1). NEET includes this as a direct formula question, often asking \u2018what is the minimum force exerted by the surface on the block\u2019 (answer: mg).",
+          "bullets": [
+            "Minimum resultant force by surface = mg (when no friction acts, S = R = mg).",
+            "Maximum resultant = mg\u221a(\u03bc\u00b2+1) (when friction is at limiting value)."
+          ]
+        }
+      ]
+    },
+    "pyq": {
+      "sectionTitle": "Previous Year Questions",
+      "mcqCountLabel": "NEET PYQs",
+      "questions": [
+        {
+          "question": "The angle of friction is defined as the angle which the resultant of limiting friction and normal reaction makes with:",
+          "tag": "NEET 2022",
+          "tagClass": "pyq",
+          "options": [
+            {"text": "The limiting friction force", "correct": false},
+            {"text": "The surface", "correct": false},
+            {"text": "The normal reaction", "correct": true},
+            {"text": "The applied force", "correct": false}
+          ],
+          "explanation": "By definition, angle of friction \u03b8 is the angle between the resultant contact force S (resultant of F_l and R) and the normal reaction R. Hence tan \u03b8 = F_l/R = \u03bcs."
+        },
+        {
+          "question": "If the coefficient of static friction between a surface and a block is \u03bcs = tan 30\u00b0, the angle of friction is:",
+          "tag": "NEET 2020",
+          "tagClass": "pyq",
+          "options": [
+            {"text": "30\u00b0", "correct": true},
+            {"text": "60\u00b0", "correct": false},
+            {"text": "45\u00b0", "correct": false},
+            {"text": "15\u00b0", "correct": false}
+          ],
+          "explanation": "tan \u03b8 = \u03bcs = tan 30\u00b0, therefore \u03b8 = 30\u00b0. The angle of friction equals the inverse tangent of the static friction coefficient. If \u03bcs = tan 30\u00b0 = 1/\u221a3 \u2248 0.577, then \u03b8 = 30\u00b0."
+        }
+      ]
+    },
+    "practice": {
+      "sectionTitle": "Practice Questions",
+      "questions": [
+        {
+          "question": "For angle of friction \u03b8 = 45\u00b0, the coefficient of static friction is:",
+          "options": ["0", "0.5", "1", "\u221a2"],
+          "answer": "1"
+        },
+        {
+          "question": "Coefficient of static friction = tan (angle of friction). This statement is:",
+          "options": ["True", "False", "True only for smooth surfaces", "True only for metals"],
+          "answer": "True"
+        },
+        {
+          "question": "A block of mass m rests on a rough horizontal surface (\u03bc). The minimum force exerted by the surface on the block is:",
+          "options": ["0", "mg", "\u03bcmg", "mg\u221a(\u03bc\u00b2+1)"],
+          "answer": "mg"
+        },
+        {
+          "question": "The angle of friction for \u03bcs = \u221a3 is:",
+          "options": ["30\u00b0", "45\u00b0", "60\u00b0", "90\u00b0"],
+          "answer": "60\u00b0"
+        }
+      ]
+    },
+    "checklist": {
+      "subjectLabel": "NEET Physics",
+      "items": [
+        {
+          "title": "State the definition of angle of friction",
+          "description": "Angle between the resultant of limiting friction and normal reaction, and the normal reaction. This exact wording appears in NEET MCQ options."
+        },
+        {
+          "title": "Derive tan \u03b8 = \u03bcs",
+          "description": "From the vector triangle: tan \u03b8 = F_l / R = \u03bcR / R = \u03bc. Hence coefficient of static friction equals tangent of angle of friction."
+        },
+        {
+          "title": "Compute the resultant force S range",
+          "description": "S = mg\u221a(\u03bc\u00b2 + 1). Range: mg (min, when \u03bc = 0) to mg\u221a(\u03bc\u00b2 + 1) (max, when friction is limiting)."
+        },
+        {
+          "title": "Know that angle of friction = angle of repose",
+          "description": "\u03b8 = \u03b1, since both have tan = \u03bcs. This equality is the bridge to the angle of repose topic and often appears as a direct MCQ."
+        }
+      ]
+    },
+    "faq": {
+      "sectionTitle": "Frequently Asked Questions",
+      "items": [
+        {
+          "question": "Why is the angle measured from the normal reaction, not from the friction force?",
+          "answer": "The angle of friction is the angle between the resultant S and the normal reaction R. This is because the normal reaction is the reference direction (perpendicular to surface). The fraction of the resultant that is tilted away from \u2018pure perpendicular\u2019 is precisely what the angle of friction measures. Measuring from F_l would give the complementary angle (90\u00b0 \u2212 \u03b8)."
+        },
+        {
+          "question": "Can the angle of friction exceed 45\u00b0?",
+          "answer": "Yes, if \u03bcs > 1. Rubber on concrete has \u03bcs \u2248 0.6\u20130.8 (\u03b8 \u2248 31\u00b0\u201338\u00b0). Certain rubber-rubber contacts have \u03bcs > 1, giving \u03b8 > 45\u00b0. The angle has no fundamental upper limit, though most engineering surfaces have \u03bcs < 1."
+        },
+        {
+          "question": "What is the physical significance of the resultant S?",
+          "answer": "S is the total contact force exerted by the surface on the block \u2014 the vector sum of the normal reaction R and the friction force F. When there is no friction (\u03bc = 0), S = R = mg (minimum). When friction is at its limiting value, S is maximised at mg\u221a(\u03bc\u00b2 + 1). For a block on a horizontal surface at rest, S always points from the surface into the block."
+        },
+        {
+          "question": "Is the angle of friction the same as the friction angle used in engineering soil mechanics?",
+          "answer": "Conceptually yes: engineering geomechanics uses the \u2018angle of internal friction\u2019 (or friction angle \u03c6) defined exactly as tan\u207b\u00b9(\u03bcs) for granular materials. The NEET definition is the same but applied to solid surface pairs rather than soil particles. The physical origin is identical \u2014 both relate the tangential-to-normal ratio of contact forces."
+        }
+      ]
+    }
+  },
+  "grounding": {
+    "source_page_markdown_paths": [
+      "pages/physics-1/page-238/markdown.md"
+    ],
+    "grounding_summary": [
+      "Page 238 defines angle of friction as the angle which the resultant of limiting friction and normal reaction makes with the normal reaction, with tan \u03b8 = F_l / R = \u03bcs explicitly derived.",
+      "The page derives the resultant force S = \u221a((\u03bcmg)\u00b2 + (mg)\u00b2) = mg\u221a(\u03bc\u00b2+1) and states the range mg \u2264 S \u2264 mg\u221a(\u03bc\u00b2+1).",
+      "The textbook explicitly states: \u2018coefficient of static friction is equal to tangent of the angle of friction\u2019 \u2014 the primary definition tested in NEET."
+    ],
+    "grounding_excerpt": [
+      "Angle of friction may be defined as the angle which the resultant of limiting friction and normal reaction makes with the normal reaction.",
+      "Hence coefficient of static friction is equal to tangent of the angle of friction.",
+      "when there is no friction"
+    ],
+    "sources": [
+      {
+        "title": "NCERT Physics Part I \u2014 Laws of Motion (Angle of Friction)",
+        "url": "https://ncert.nic.in/textbook/pdf/keph104.pdf",
+        "publisher": "ncert.nic.in",
+        "accessed_date": "2026-04-10",
+        "why_used": "Primary NCERT source for angle of friction definition, tan \u03b8 = \u03bcs formula, and resultant force range as tested in NEET."
+      },
+      {
+        "title": "Friction \u2014 Physics Class 11 \u2014 NEET (EduRev)",
+        "url": "https://edurev.in/t/93714/Friction",
+        "publisher": "edurev.in",
+        "accessed_date": "2026-04-10",
+        "why_used": "Confirms NEET exam patterns for angle of friction including definition MCQs and numerical substitution questions with tan\u207b\u00b9(\u03bcs)."
+      }
+    ],
+    "review": {
+      "used_local_page_grounding": true,
+      "semantic_page_read_complete": true,
+      "used_current_research": true,
+      "research_used_for_enrichment": true,
+      "template_preserved": true,
+      "scope_checked": true,
+      "syllabus_scope_verified": true,
+      "guardrails_passed": true,
+      "notes": "Content grounded in page-238 OCR markdown. Formula tan \u03b8 = \u03bcs and resultant range from textbook. Verbatim excerpts verified. No dual_cta."
+    }
+  }
+}

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { LoadingWrapper, LoadingSpinner } from "../ui/SkeletonLoader";
 import {
   FaPlus,
@@ -13,6 +13,11 @@ import {
   FaUpload,
   FaDownload,
   FaCheck,
+  FaFolder,
+  FaFolderOpen,
+  FaSearch,
+  FaArrowUp,
+  FaSyncAlt,
 } from "react-icons/fa";
 import { ToastContainer, useToast } from "../ui/Toast";
 import { PermissionButton } from "../common/PermissionButton";
@@ -20,6 +25,7 @@ import { usePermissions, getPermissionMessage } from "../../hooks/usePermissions
 import api from "@/lib/api";
 import DownloadListPagination from "../common/DownloadListPagination";
 import DownloadListSearchBar from "../common/DownloadListSearchBar";
+import { validateMediaFileClient } from "@/lib/mediaUploadRules";
 
 /** True if URL or uploaded path is set for this file record. */
 function isDownloadResourcePresent(file) {
@@ -405,9 +411,467 @@ const StatusBadge = ({ status, onClick }) => {
 /** Root / subfolder dropdowns load up to this many rows (no per-page UI on this screen). */
 const DROPDOWN_LIST_LIMIT = 500;
 
+const MEDIA_BROWSER_DOC_LIMIT = 100;
+
+function formatBytes(n) {
+  if (n == null || Number.isNaN(n)) return "—";
+  const b = Number(n);
+  if (b < 1024) return `${b} B`;
+  if (b < 1024 * 1024) return `${(b / 1024).toFixed(1)} KB`;
+  return `${(b / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+/**
+ * Ensure media URL is absolute:
+ * - hosted env => https://your-domain/...
+ * - local env => http://localhost:port/...
+ */
+function toAbsoluteMediaUrl(rawUrl) {
+  const value = String(rawUrl || "").trim();
+  if (!value) return "";
+  if (/^https?:\/\//i.test(value)) return value;
+  if (value.startsWith("//")) {
+    if (typeof window !== "undefined" && window.location?.protocol) {
+      return `${window.location.protocol}${value}`;
+    }
+    return `https:${value}`;
+  }
+  if (typeof window !== "undefined" && window.location?.origin) {
+    try {
+      return new URL(value, window.location.origin).toString();
+    } catch {
+      return value;
+    }
+  }
+  return value;
+}
+
+/**
+ * Modal: browse Media Library folders and pick a document (PDF, Office, etc.) for the download "upload" URL/path.
+ */
+function MediaLibraryDocumentPicker({
+  open,
+  onClose,
+  onPick,
+  showError,
+  showSuccess,
+  canUpload,
+}) {
+  const [folderPath, setFolderPath] = useState("");
+  const [foldersFlat, setFoldersFlat] = useState([]);
+  const [docs, setDocs] = useState([]);
+  const [loadingFolders, setLoadingFolders] = useState(false);
+  const [loadingDocs, setLoadingDocs] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const uploadInputRef = useRef(null);
+  const [searchInput, setSearchInput] = useState("");
+  const [searchApplied, setSearchApplied] = useState("");
+
+  const subfoldersHere = useMemo(
+    () =>
+      foldersFlat.filter((f) => (f.parentPath || "") === folderPath).sort((a, b) => (a.name || "").localeCompare(b.name || "")),
+    [foldersFlat, folderPath],
+  );
+
+  const breadcrumbParts = useMemo(
+    () => (folderPath ? folderPath.split("/").filter(Boolean) : []),
+    [folderPath],
+  );
+  const parentFolderPath = useMemo(() => {
+    if (!folderPath) return "";
+    const parts = folderPath.split("/").filter(Boolean);
+    if (parts.length <= 1) return "";
+    return parts.slice(0, -1).join("/");
+  }, [folderPath]);
+
+  const loadFolders = useCallback(async () => {
+    setLoadingFolders(true);
+    try {
+      const res = await api.get("/media/folders");
+      if (res.data?.success && res.data.data) {
+        setFoldersFlat(res.data.data.folders ?? []);
+      } else {
+        setFoldersFlat([]);
+      }
+    } catch (err) {
+      console.error("Media folders fetch:", err);
+      showError("Could not load media folders. Check permissions and try again.");
+      setFoldersFlat([]);
+    } finally {
+      setLoadingFolders(false);
+    }
+  }, [showError]);
+
+  const loadDocuments = useCallback(async () => {
+    setLoadingDocs(true);
+    try {
+      const params = new URLSearchParams({
+        type: "document",
+        folder: folderPath,
+        page: "1",
+        limit: String(MEDIA_BROWSER_DOC_LIMIT),
+      });
+      if (searchApplied.trim()) params.set("search", searchApplied.trim());
+      const res = await api.get(`/media?${params.toString()}`);
+      if (res.data?.success) {
+        setDocs(res.data.data?.data ?? []);
+      } else {
+        setDocs([]);
+      }
+    } catch (err) {
+      console.error("Media documents fetch:", err);
+      showError("Could not load documents from the media library.");
+      setDocs([]);
+    } finally {
+      setLoadingDocs(false);
+    }
+  }, [folderPath, searchApplied, showError]);
+
+  const handleUploadFromModal = useCallback(
+    async (event) => {
+      const file = event?.target?.files?.[0];
+      if (!file) return;
+
+      const precheck = validateMediaFileClient(file);
+      if (!precheck.ok) {
+        showError(precheck.message || "File is not allowed.");
+        if (uploadInputRef.current) uploadInputRef.current.value = "";
+        return;
+      }
+      if (precheck.category !== "document") {
+        showError("Only documents can be uploaded from this picker. Use PDF or Office files.");
+        if (uploadInputRef.current) uploadInputRef.current.value = "";
+        return;
+      }
+
+      setUploading(true);
+      setUploadProgress(0);
+      try {
+        const fd = new FormData();
+        fd.append("file", file);
+        fd.append("name", file.name.replace(/\.[^.]+$/, ""));
+        if (folderPath.trim()) fd.append("folder", folderPath.trim());
+
+        const res = await api.post("/media", fd, {
+          onUploadProgress: (progressEvent) => {
+            const loaded = progressEvent?.loaded ?? 0;
+            const total = progressEvent?.total ?? 0;
+            if (!total) return;
+            setUploadProgress(Math.min(100, Math.round((loaded / total) * 100)));
+          },
+        });
+
+        if (res.data?.success) {
+          showSuccess(`Uploaded "${file.name}"`);
+          await Promise.all([loadFolders(), loadDocuments()]);
+        } else {
+          showError(res.data?.message || "Upload failed.");
+        }
+      } catch (err) {
+        showError(err?.response?.data?.message || "Upload failed.");
+      } finally {
+        setUploading(false);
+        setUploadProgress(0);
+        if (uploadInputRef.current) uploadInputRef.current.value = "";
+      }
+    },
+    [folderPath, loadDocuments, loadFolders, showError, showSuccess],
+  );
+
+  useEffect(() => {
+    if (!open) return;
+    setFolderPath("");
+    setSearchInput("");
+    setSearchApplied("");
+    setUploadProgress(0);
+    setUploading(false);
+    loadFolders();
+  }, [open, loadFolders]);
+
+  useEffect(() => {
+    if (!open) return;
+    loadDocuments();
+  }, [open, loadDocuments]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, onClose]);
+
+  if (!open) return null;
+
+  const navigateToPath = (path) => {
+    setFolderPath(typeof path === "string" ? path : "");
+    setSearchApplied("");
+    setSearchInput("");
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-[120] flex items-center justify-center bg-black/60 p-3 backdrop-blur-[2px] sm:p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="media-doc-picker-title"
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div className="flex max-h-[min(92vh,760px)] w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl">
+        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-gray-200 px-4 py-3 sm:px-5">
+          <div className="min-w-0">
+            <h2 id="media-doc-picker-title" className="text-lg font-semibold text-gray-900">
+              Browse media library — documents
+            </h2>
+            <p className="text-xs text-gray-500 mt-0.5">
+              Pick a file stored in Media Management. Its public URL will fill the download file path.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="shrink-0 rounded-lg p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700"
+            aria-label="Close"
+          >
+            <FaTimes className="h-5 w-5" />
+          </button>
+        </div>
+
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden sm:flex-row">
+          {/* Folders */}
+          <div className="flex w-full shrink-0 flex-col border-b border-gray-200 sm:w-56 sm:border-b-0 sm:border-r sm:border-gray-200">
+            <div className="border-b border-gray-100 px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-gray-400">
+              Folders
+            </div>
+            <div className="min-h-[140px] max-h-[220px] overflow-y-auto sm:max-h-none sm:flex-1">
+              {loadingFolders ? (
+                <div className="flex justify-center py-8">
+                  <LoadingSpinner size="small" />
+                </div>
+              ) : (
+                <nav className="p-2 space-y-0.5">
+                  <button
+                    type="button"
+                    onClick={() => navigateToPath("")}
+                    className={`flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-sm transition-colors ${
+                      folderPath === "" ? "bg-blue-50 font-medium text-blue-800" : "text-gray-700 hover:bg-gray-50"
+                    }`}
+                  >
+                    <FaFolderOpen className="h-4 w-4 shrink-0 text-amber-600" />
+                    Root
+                  </button>
+                  {subfoldersHere.map((f) => (
+                    <button
+                      key={f.path}
+                      type="button"
+                      onClick={() => navigateToPath(f.path)}
+                      className={`flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-sm transition-colors ${
+                        folderPath === f.path ? "bg-blue-50 font-medium text-blue-800" : "text-gray-700 hover:bg-gray-50"
+                      }`}
+                    >
+                      <FaFolder className="h-4 w-4 shrink-0 text-yellow-600" />
+                      <span className="truncate">{f.name || f.path}</span>
+                    </button>
+                  ))}
+                  {subfoldersHere.length === 0 && (
+                    <p className="px-2 py-3 text-xs text-gray-500">
+                      No child folders here. You can upload a document directly to this folder.
+                    </p>
+                  )}
+                </nav>
+              )}
+            </div>
+          </div>
+
+          {/* Documents list */}
+          <div className="flex min-h-0 flex-1 flex-col">
+            <div className="shrink-0 space-y-2 border-b border-gray-100 bg-gray-50/40 px-3 py-2 sm:px-4">
+              <div className="flex flex-wrap items-center gap-1 text-xs text-gray-600">
+                <span className="font-medium text-gray-500">Path:</span>
+                <button type="button" className="text-blue-600 hover:underline" onClick={() => navigateToPath("")}>
+                  media
+                </button>
+                {breadcrumbParts.map((seg, i) => {
+                  const pathUp = breadcrumbParts.slice(0, i + 1).join("/");
+                  const label = foldersFlat.find((x) => x.path === pathUp)?.name || seg;
+                  return (
+                    <span key={pathUp} className="flex items-center gap-1">
+                      <span className="text-gray-300">/</span>
+                      <button type="button" className="truncate max-w-[120px] text-blue-600 hover:underline" onClick={() => navigateToPath(pathUp)} title={pathUp}>
+                        {label}
+                      </button>
+                    </span>
+                  );
+                })}
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => navigateToPath(parentFolderPath)}
+                  disabled={!folderPath}
+                  className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  title="Go up one folder"
+                >
+                  <FaArrowUp className="h-3 w-3" /> Up
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    loadFolders();
+                    loadDocuments();
+                  }}
+                  disabled={loadingDocs || loadingFolders}
+                  className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  title="Refresh files and folders"
+                >
+                  <FaSyncAlt className={`h-3 w-3 ${loadingDocs || loadingFolders ? "animate-spin" : ""}`} />
+                  Refresh
+                </button>
+
+                <div className="relative min-w-0 flex-1">
+                  <FaSearch className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="search"
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        setSearchApplied(searchInput.trim());
+                      }
+                    }}
+                    placeholder="Search in this folder…"
+                    className="w-full rounded-lg border border-gray-200 py-1.5 pl-8 pr-2 text-sm focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSearchApplied(searchInput.trim())}
+                  className="shrink-0 rounded-lg bg-gray-800 px-3 py-1.5 text-xs font-medium text-white hover:bg-gray-900"
+                >
+                  Search
+                </button>
+                {canUpload && (
+                  <label className="shrink-0 inline-flex cursor-pointer items-center gap-1 rounded-lg bg-[#0056FF] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#0044CC]">
+                    <FaUpload className={`h-3.5 w-3.5 ${uploading ? "animate-pulse" : ""}`} />
+                    {uploading ? "Uploading…" : "Upload doc"}
+                    <input
+                      ref={uploadInputRef}
+                      type="file"
+                      accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.rtf,.odt,.ods,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/plain,text/csv"
+                      className="hidden"
+                      onChange={handleUploadFromModal}
+                      disabled={uploading}
+                    />
+                  </label>
+                )}
+                {searchApplied ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchInput("");
+                      setSearchApplied("");
+                    }}
+                    className="shrink-0 rounded-lg border border-gray-200 px-2 py-1.5 text-xs text-gray-600 hover:bg-gray-50"
+                  >
+                    Clear
+                  </button>
+                ) : null}
+              </div>
+              {uploading && (
+                <div className="h-1.5 w-full overflow-hidden rounded-full bg-blue-100">
+                  <div
+                    className="h-full rounded-full bg-[#0056FF] transition-all duration-200"
+                    style={{ width: `${uploadProgress}%` }}
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="min-h-0 flex-1 overflow-y-auto">
+              {loadingDocs ? (
+                <div className="flex flex-col items-center justify-center py-16">
+                  <LoadingSpinner size="medium" />
+                  <p className="mt-2 text-sm text-gray-500">Loading documents…</p>
+                </div>
+              ) : docs.length === 0 ? (
+                <div className="px-4 py-12 text-center text-sm text-gray-500">
+                  No documents in this folder{searchApplied ? " matching your search" : ""}. Upload PDFs or Office files in{" "}
+                  <span className="font-medium text-gray-700">Media Management</span>, or open another folder.
+                </div>
+              ) : (
+                <ul className="divide-y divide-gray-100">
+                  {docs.map((item) => (
+                    <li key={item._id} className="flex flex-col gap-2 px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-4">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-start gap-2">
+                          <FaFileAlt className="mt-0.5 h-4 w-4 shrink-0 text-blue-600" />
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-medium text-gray-900" title={item.name}>
+                              {item.name || item.fileName}
+                            </p>
+                            <p className="truncate text-xs text-gray-500 font-mono" title={item.fileName}>
+                              {item.fileName}
+                            </p>
+                            <p
+                              className="truncate text-[11px] text-gray-400"
+                              title={toAbsoluteMediaUrl(item.url)}
+                            >
+                              {toAbsoluteMediaUrl(item.url)}
+                            </p>
+                            <p className="text-xs text-gray-400 mt-0.5">{formatBytes(item.size)}</p>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex shrink-0 items-center gap-2 sm:flex-col sm:items-end">
+                        <a
+                          href={toAbsoluteMediaUrl(item.url)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs font-medium text-blue-600 hover:underline"
+                        >
+                          Preview
+                        </a>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            onPick({
+                              url: toAbsoluteMediaUrl(item.url),
+                              size: item.size,
+                              mimeType: item.mimeType || "",
+                              name: item.name || item.fileName,
+                            });
+                          }}
+                          className="rounded-lg bg-[#0056FF] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#0044CC]"
+                        >
+                          Use this file
+                        </button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            {docs.length >= MEDIA_BROWSER_DOC_LIMIT ? (
+              <p className="shrink-0 border-t border-gray-100 bg-amber-50 px-3 py-2 text-[11px] text-amber-900">
+                Showing the first {MEDIA_BROWSER_DOC_LIMIT} documents. Refine the folder or search in Media Management for more.
+              </p>
+            ) : null}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const DownloadFileManagement = () => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
+  const [showMediaLibraryBrowser, setShowMediaLibraryBrowser] = useState(false);
   const [editingFile, setEditingFile] = useState(null);
   const [isDataLoading, setIsDataLoading] = useState(false);
   const [isFormLoading, setIsFormLoading] = useState(false);
@@ -429,12 +893,15 @@ const DownloadFileManagement = () => {
     fileType: "url",
     fileUrl: "",
     uploadedFile: "",
+    fileSize: "",
+    mimeType: "",
     description: "",
     status: "active",
   });
 
   const [formError, setFormError] = useState(null);
   const { toasts, removeToast, success, error: showError } = useToast();
+  const { canCreate } = usePermissions();
   const isFetchingRef = useRef(false);
 
   const loadFoldersForDropdown = async () => {
@@ -571,7 +1038,6 @@ const DownloadFileManagement = () => {
 
   useEffect(() => {
     loadFoldersForDropdown();
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- initial load only
   }, []);
 
   useEffect(() => {
@@ -648,6 +1114,14 @@ const DownloadFileManagement = () => {
         fileType: formData.fileType,
         fileUrl: formData.fileType === "url" ? formData.fileUrl.trim() : undefined,
         uploadedFile: formData.fileType === "upload" ? formData.uploadedFile.trim() : undefined,
+        fileSize:
+          formData.fileType === "upload" && formData.fileSize !== "" && !Number.isNaN(Number(formData.fileSize))
+            ? Number(formData.fileSize)
+            : undefined,
+        mimeType:
+          formData.fileType === "upload" && String(formData.mimeType || "").trim()
+            ? String(formData.mimeType).trim()
+            : undefined,
         description: formData.description || "",
         status: formData.status,
       };
@@ -661,6 +1135,8 @@ const DownloadFileManagement = () => {
           fileType: "url",
           fileUrl: "",
           uploadedFile: "",
+          fileSize: "",
+          mimeType: "",
           description: "",
           status: "active",
         });
@@ -703,6 +1179,14 @@ const DownloadFileManagement = () => {
         fileType: formData.fileType,
         fileUrl: formData.fileType === "url" ? formData.fileUrl.trim() : undefined,
         uploadedFile: formData.fileType === "upload" ? formData.uploadedFile.trim() : undefined,
+        fileSize:
+          formData.fileType === "upload" && formData.fileSize !== "" && !Number.isNaN(Number(formData.fileSize))
+            ? Number(formData.fileSize)
+            : undefined,
+        mimeType:
+          formData.fileType === "upload" && String(formData.mimeType || "").trim()
+            ? String(formData.mimeType).trim()
+            : undefined,
         description: formData.description || "",
         status: formData.status,
       };
@@ -718,6 +1202,8 @@ const DownloadFileManagement = () => {
           fileType: "url",
           fileUrl: "",
           uploadedFile: "",
+          fileSize: "",
+          mimeType: "",
           description: "",
           status: "active",
         });
@@ -736,9 +1222,72 @@ const DownloadFileManagement = () => {
 
   const handleFormChange = (e) => {
     const { name, value } = e.target;
+    if (name === "uploadedFile") {
+      setFormData((prev) => ({
+        ...prev,
+        uploadedFile: value,
+        fileSize: "",
+        mimeType: "",
+      }));
+      setFormError(null);
+      return;
+    }
+    if (name === "fileType") {
+      if (value === "url") {
+        setFormData((prev) => ({
+          ...prev,
+          fileType: value,
+          uploadedFile: "",
+          fileSize: "",
+          mimeType: "",
+        }));
+      } else {
+        setFormData((prev) => ({
+          ...prev,
+          fileType: value,
+          fileUrl: "",
+        }));
+      }
+      setFormError(null);
+      return;
+    }
     setFormData((prev) => ({ ...prev, [name]: value }));
     setFormError(null);
   };
+
+  const handleFileTypeTabChange = (value) => {
+    if (value === "url") {
+      setFormData((prev) => ({
+        ...prev,
+        fileType: "url",
+        uploadedFile: "",
+        fileSize: "",
+        mimeType: "",
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        fileType: "upload",
+        fileUrl: "",
+      }));
+    }
+    setFormError(null);
+  };
+
+  const handleMediaLibraryPick = useCallback((picked) => {
+    const absoluteUrl = toAbsoluteMediaUrl(picked.url);
+    setFormData((prev) => ({
+      ...prev,
+      fileType: "upload",
+      uploadedFile: absoluteUrl,
+      fileSize: picked.size != null ? String(picked.size) : "",
+      mimeType: picked.mimeType || "",
+      name: prev.name.trim() ? prev.name : (picked.name || "").trim() || prev.name,
+    }));
+    setShowMediaLibraryBrowser(false);
+    setFormError(null);
+    success("Document selected from media library");
+  }, [success]);
 
   const handleToggleStatus = async (file) => {
     const isActive = file.status === "active";
@@ -814,6 +1363,8 @@ const DownloadFileManagement = () => {
       fileType: file.fileType,
       fileUrl: file.fileUrl || "",
       uploadedFile: file.uploadedFile || "",
+      fileSize: file.fileSize != null && file.fileSize !== "" ? String(file.fileSize) : "",
+      mimeType: file.mimeType || "",
       description: file.description || "",
       status: file.status,
     });
@@ -828,6 +1379,8 @@ const DownloadFileManagement = () => {
       fileType: "url",
       fileUrl: "",
       uploadedFile: "",
+      fileSize: "",
+      mimeType: "",
       description: "",
       status: "active",
     });
@@ -835,6 +1388,7 @@ const DownloadFileManagement = () => {
     setShowAddForm(false);
     setShowEditForm(false);
     setEditingFile(null);
+    setShowMediaLibraryBrowser(false);
   };
 
   const handleFolderSelect = (e) => {
@@ -908,6 +1462,8 @@ const DownloadFileManagement = () => {
                       fileType: "url",
                       fileUrl: "",
                       uploadedFile: "",
+                      fileSize: "",
+                      mimeType: "",
                       description: "",
                       status: "active",
                     });
@@ -1073,24 +1629,43 @@ const DownloadFileManagement = () => {
 
                 {/* File Type */}
                 <div className="space-y-2 md:col-span-2">
-                  <label
-                    htmlFor="fileType"
-                    className="block text-sm font-medium text-gray-700"
-                  >
+                  <label className="block text-sm font-medium text-gray-700">
                     File Type <span className="text-red-500">*</span>
                   </label>
-                  <select
-                    id="fileType"
-                    name="fileType"
-                    value={formData.fileType}
-                    onChange={handleFormChange}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-all"
-                    required
-                    disabled={isFormLoading}
+                  <div
+                    className="inline-flex rounded-lg border border-blue-200 bg-white p-1 shadow-sm"
+                    role="tablist"
+                    aria-label="File Type"
                   >
-                    <option value="url">URL Link</option>
-                    <option value="upload">File Upload</option>
-                  </select>
+                    <button
+                      type="button"
+                      role="tab"
+                      aria-selected={formData.fileType === "url"}
+                      onClick={() => handleFileTypeTabChange("url")}
+                      disabled={isFormLoading}
+                      className={`rounded-md px-4 py-1.5 text-sm font-semibold transition-colors ${
+                        formData.fileType === "url"
+                          ? "bg-[#0056FF] text-white shadow-sm"
+                          : "text-gray-700 hover:bg-blue-50"
+                      } disabled:opacity-50`}
+                    >
+                      URL
+                    </button>
+                    <button
+                      type="button"
+                      role="tab"
+                      aria-selected={formData.fileType === "upload"}
+                      onClick={() => handleFileTypeTabChange("upload")}
+                      disabled={isFormLoading}
+                      className={`rounded-md px-4 py-1.5 text-sm font-semibold transition-colors ${
+                        formData.fileType === "upload"
+                          ? "bg-[#0056FF] text-white shadow-sm"
+                          : "text-gray-700 hover:bg-blue-50"
+                      } disabled:opacity-50`}
+                    >
+                      Upload
+                    </button>
+                  </div>
                 </div>
 
                 {/* File URL (shown when fileType is "url") */}
@@ -1125,24 +1700,52 @@ const DownloadFileManagement = () => {
                       htmlFor="uploadedFile"
                       className="block text-sm font-medium text-gray-700"
                     >
-                      File Path <span className="text-gray-400">(optional)</span>
+                      File URL / path <span className="text-gray-400">(optional)</span>
                     </label>
-                    <div className="relative">
-                      <FaUpload className="absolute left-3 top-3.5 text-gray-400 w-4 h-4" />
-                      <input
-                        type="text"
-                        id="uploadedFile"
-                        name="uploadedFile"
-                        value={formData.uploadedFile}
-                        onChange={handleFormChange}
-                        placeholder="/uploads/files/document.pdf"
-                        className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm placeholder-gray-400 transition-all"
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-stretch">
+                      <div className="relative min-w-0 flex-1">
+                        <FaUpload className="absolute left-3 top-3.5 text-gray-400 w-4 h-4 pointer-events-none" />
+                        <input
+                          type="text"
+                          id="uploadedFile"
+                          name="uploadedFile"
+                          value={formData.uploadedFile}
+                          onChange={handleFormChange}
+                          placeholder="https://… or /path/from/media — use Browse to pick from Media Library"
+                          className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm placeholder-gray-400 transition-all"
+                          disabled={isFormLoading}
+                        />
+                      </div>
+                      <PermissionButton
+                        action="edit"
+                        type="button"
+                        onClick={() => setShowMediaLibraryBrowser(true)}
                         disabled={isFormLoading}
-                      />
+                        className="shrink-0 inline-flex items-center justify-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-4 py-2.5 text-sm font-semibold text-blue-800 hover:bg-blue-100 disabled:opacity-50"
+                        title="Open folder browser for documents in Media Management"
+                      >
+                        <FaFolderOpen className="h-4 w-4 shrink-0" />
+                        Browse library
+                      </PermissionButton>
                     </div>
                     <p className="text-xs text-gray-500 mt-1">
-                      Note: File upload functionality can be integrated with your file storage system
+                      Use <strong className="font-medium text-gray-700">Browse library</strong> to navigate media folders and attach a document. You can still paste any public URL or path manually.
                     </p>
+                    {(formData.mimeType || formData.fileSize) && (
+                      <p className="text-xs text-gray-600 rounded-md bg-gray-50 border border-gray-100 px-2 py-1.5">
+                        {formData.mimeType ? (
+                          <span>
+                            MIME: <span className="font-mono">{formData.mimeType}</span>
+                            {formData.fileSize ? " · " : ""}
+                          </span>
+                        ) : null}
+                        {formData.fileSize ? (
+                          <span>
+                            Size: <span className="font-medium">{formatBytes(Number(formData.fileSize))}</span>
+                          </span>
+                        ) : null}
+                      </p>
+                    )}
                   </div>
                 )}
 
@@ -1285,6 +1888,15 @@ const DownloadFileManagement = () => {
           </div>
         )}
       </div>
+
+      <MediaLibraryDocumentPicker
+        open={showMediaLibraryBrowser}
+        onClose={() => setShowMediaLibraryBrowser(false)}
+        onPick={handleMediaLibraryPick}
+        showError={showError}
+        showSuccess={success}
+        canUpload={canCreate}
+      />
     </>
   );
 };

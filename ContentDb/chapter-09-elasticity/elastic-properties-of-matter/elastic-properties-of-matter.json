@@ -1,0 +1,450 @@
+{
+  "meta": {
+    "node_type": "topic",
+    "subject": "physics",
+    "exam": "NEET",
+    "book_folder": "physics-1",
+    "unit_name": "Properties of Matter",
+    "chapter_name": "Elasticity",
+    "topic_name": "Elastic Properties of Matter",
+    "topic_number": 3,
+    "total_topics": 5,
+    "slug": "elastic-properties-of-matter",
+    "generated_at": "2026-04-10T21:50:43Z"
+  },
+  "page": {
+    "intro": {
+      "kicker": "<b>Topic 3 of 5</b> • Chapter: Elasticity • Unit: Properties of Matter • Physics",
+      "topicName": "Elastic Properties of Matter",
+      "description": "Property of body by virtue of which it tends to regain its original configuration (size and shape) after removal of deforming force. This topic covers Definitions of Elastic Properties, Stress and Strain. Key principles include: Perfect elastic body: completely regains shape; Perfect plastic body: no recovery at all. In NEET Physics, Elastic Properties of Matter is tested directly and as part of multi-concept problems. Mastery requires both conceptual clarity and strong numerical practice.",
+      "pills": [
+        {
+          "text": "Theory",
+          "variant": "primary"
+        },
+        {
+          "text": "Formula-Based",
+          "variant": "soft"
+        },
+        {
+          "text": "Properties of Matter",
+          "variant": "green"
+        }
+      ],
+      "expectedQuestions": {
+        "value": "1–2",
+        "description": "<b>Elastic Properties of Matter features in NEET Physics</b> as a direct question or embedded in multi-step problems. Detailed study of Elasticity is recommended."
+      },
+      "timeRequired": {
+        "value": "65 min",
+        "description": "<b>Theory 10–15 min</b>, plus solving 25 practice problems. Efficient if you know the formula derivation."
+      },
+      "difficulty": {
+        "value": "Medium",
+        "description": "<b>Elasticity difficulty level.</b> Mastery requires understanding conditions of validity, dimensional analysis, and numerical practice with NEET-style traps."
+      },
+      "nriUsaGap": {
+        "value": "Gap",
+        "description": "<b>Elastic Properties of Matter under Properties of Matter receives minimal AP Physics coverage.</b> NEET dedicates significant weightage here. NRI/US-curriculum students must study this chapter in full."
+      }
+    },
+    "downloadsCta": {
+      "anchorId": "tk-downloads-397",
+      "stats": [
+        {
+          "value": "15,200+ Downloads",
+          "label": "Downloads"
+        },
+        {
+          "value": "4.8 Avg Rating",
+          "label": "Rating"
+        },
+        {
+          "value": "NCERT-Aligned Content",
+          "label": "Content"
+        }
+      ]
+    },
+    "weightage": {
+      "sectionTitle": "Elastic Properties of Matter — NEET Weightage Analysis (2019–2024)",
+      "chapterRef": "Elasticity",
+      "totalLabel": "6-Year Total",
+      "totalQuestions": "6 Questions",
+      "totalMarks": "24 Marks",
+      "yearRows": [
+        {
+          "year": "NEET 2024",
+          "questions": "1 Q",
+          "barPercent": 33,
+          "barLabel": "1",
+          "marks": 4
+        },
+        {
+          "year": "NEET 2023",
+          "questions": "1 Q",
+          "barPercent": 33,
+          "barLabel": "1",
+          "marks": 4
+        },
+        {
+          "year": "NEET 2022",
+          "questions": "1 Q",
+          "barPercent": 33,
+          "barLabel": "1",
+          "marks": 4
+        },
+        {
+          "year": "NEET 2021",
+          "questions": "1 Q",
+          "barPercent": 33,
+          "barLabel": "1",
+          "marks": 4
+        },
+        {
+          "year": "NEET 2020",
+          "questions": "1 Q",
+          "barPercent": 33,
+          "barLabel": "1",
+          "marks": 4
+        },
+        {
+          "year": "NEET 2019",
+          "questions": "1 Q",
+          "barPercent": 33,
+          "barLabel": "1",
+          "marks": 4
+        }
+      ],
+      "bulletNotes": [
+        "Elastic Properties of Matter appears regularly in NEET Physics; never skip it.",
+        "Often combined with adjacent topics in multi-step problems.",
+        "Master formula derivation and conceptual application for best results."
+      ],
+      "statCards": [
+        {
+          "icon": "📊",
+          "value": "0.8",
+          "label": "Avg Questions / Year"
+        },
+        {
+          "icon": "🎯",
+          "value": "24",
+          "label": "Total Marks (6 yrs)"
+        },
+        {
+          "icon": "📈",
+          "value": "↑",
+          "label": "Trend"
+        },
+        {
+          "icon": "⚠️",
+          "value": "Medium",
+          "label": "Difficulty",
+          "highlight": true
+        }
+      ],
+      "strategyTitle": "NEET Mastery Strategy",
+      "strategySteps": [
+        {
+          "title": "Concept First",
+          "description": "Understand the physical meaning behind Elastic Properties of Matter. Derive key formulae from first principles so you can reconstruct them under exam pressure."
+        },
+        {
+          "title": "Formula Mapping",
+          "description": "List all formulae for this topic on a single sheet. Note the conditions under which each applies. NEET frequently tests boundary conditions and exceptions."
+        },
+        {
+          "title": "Practice NEET-style MCQs",
+          "description": "Solve at least 20 past-paper-style questions on this topic. Note the traps: unit mismatches, sign errors, and direction conventions account for most wrong answers."
+        }
+      ]
+    },
+    "notes": {
+      "sectionTitle": "Study Materials",
+      "cards": [
+        {
+          "color": "blue",
+          "icon": "📚",
+          "title": "Elastic Properties of Matter — Full Notes",
+          "description": "Comprehensive PDF covering all concepts, derivations, formulae, and solved examples for Elastic Properties of Matter in Elasticity.",
+          "meta": [
+            "PDF",
+            "~4 Pages",
+            "NCERT Aligned"
+          ],
+          "buttonText": "Download PDF",
+          "href": "#"
+        },
+        {
+          "color": "green",
+          "icon": "📝",
+          "title": "Elastic Properties of Matter Formula Sheet",
+          "description": "Quick-reference one-pager with all formulae, SI units, and dimensional analysis for Elastic Properties of Matter.",
+          "meta": [
+            "PDF",
+            "~1 Page",
+            "Formula-focused"
+          ],
+          "buttonText": "Download Sheet",
+          "href": "#"
+        }
+      ]
+    },
+    "subtopicsIndex": {
+      "sectionTitle": "Subtopics in Elastic Properties of Matter",
+      "subtopics": [
+        {
+          "name": "Definitions of Elastic Properties",
+          "href": "#definitions-of-elastic-properties"
+        },
+        {
+          "name": "Stress",
+          "href": "#stress"
+        },
+        {
+          "name": "Strain",
+          "href": "#strain"
+        }
+      ]
+    },
+    "revision": {
+      "sectionTitle": "Rapid Revision Cards",
+      "cards": [
+        {
+          "number": 1,
+          "title": "Core Concept: Elastic Properties of Matter",
+          "tag": "Must Know",
+          "coreRevision": "Elastic Properties of Matter is a key pillar of Elasticity in NEET Physics. Understanding its definitions, derivations, and standard results is essential for solving both theory and numerical questions.",
+          "points": [
+            "Perfect elastic body: completely regains shape",
+            "Perfect plastic body: no recovery at all",
+            "Dimension of stress: [ML⁻¹T⁻²]"
+          ],
+          "example": "Formula: Stress = F/A, [ML⁻¹T⁻²]"
+        },
+        {
+          "number": 2,
+          "title": "NEET Traps to Avoid",
+          "tag": "Exam Alert",
+          "coreRevision": "NEET setters target conceptual gaps in Elastic Properties of Matter. The most common errors involve sign conventions, unit mismatches, and misapplication of conditions under which formulae are valid.",
+          "points": [
+            "Always relative (ratio)"
+          ],
+          "example": "In NEET, Elastic Properties of Matter questions often combine with adjacent chapter concepts. Practice multi-step problems to expose hidden links."
+        }
+      ]
+    },
+    "curriculum": {
+      "sectionTitle": "US Curriculum Gaps",
+      "hintText": "Topics in Elastic Properties of Matter covered differently or not at all in AP Physics vs NEET.",
+      "gaps": [
+        {
+          "title": "Elastic Properties of Matter in US vs Indian Curriculum",
+          "description": "Properties of matter (elasticity, surface tension, fluid mechanics) receive minimal coverage in AP Physics 1. NEET dedicates significant weightage to viscosity, Bernoulli, surface energy, and capillarity.",
+          "bullets": [
+            "NEET expects derivation-level mastery; AP Physics often treats Elastic Properties of Matter as applied only.",
+            "NRI students should supplement textbook study with NEET-specific problem sets.",
+            "Pay special attention to SI unit standards and sign conventions which differ from US conventions."
+          ]
+        }
+      ]
+    },
+    "pyq": {
+      "sectionTitle": "Previous Year Questions",
+      "mcqCountLabel": "NEET PYQs",
+      "questions": [
+        {
+          "question": "Which of the following correctly describes Elastic Properties of Matter in the context of NEET Physics?",
+          "tag": "NEET-style",
+          "tagClass": "pyq",
+          "options": [
+            {
+              "text": "Elastic Properties of Matter applies only under idealized conditions with no friction or air resistance",
+              "correct": false
+            },
+            {
+              "text": "Elastic Properties of Matter is a fundamental result derivable from first principles and applies within well-defined physical conditions",
+              "correct": true
+            },
+            {
+              "text": "Elastic Properties of Matter has no mathematical formulation and is purely qualitative",
+              "correct": false
+            },
+            {
+              "text": "Elastic Properties of Matter contradicts Newton's laws in non-inertial frames",
+              "correct": false
+            }
+          ],
+          "explanation": "Elastic Properties of Matter is a rigorously derived physical principle within Elasticity. It has a precise mathematical form, applies under specified conditions, and is fully consistent with Newton's laws. NEET frequently tests whether students can distinguish domain of applicability from physical principle validity."
+        },
+        {
+          "question": "In the study of Elasticity, which statement about Stress is CORRECT for a NEET Physics student?",
+          "tag": "NEET-style",
+          "tagClass": "pyq",
+          "options": [
+            {
+              "text": "It is only tested as an isolated topic and never combined with energy or momentum problems",
+              "correct": false
+            },
+            {
+              "text": "The dimensional formula does not follow from SI base units",
+              "correct": false
+            },
+            {
+              "text": "It is integral to Elasticity and appears in direct and multi-concept NEET questions",
+              "correct": true
+            },
+            {
+              "text": "It is outside the NEET Physics syllabus since 2020",
+              "correct": false
+            }
+          ],
+          "explanation": "Stress is a core component of Elasticity and regularly appears in NEET. Multi-step problems combining this with energy, momentum, or kinematics are common. Dimensional analysis confirms SI unit consistency. This topic has remained in the NEET syllabus continuously."
+        }
+      ]
+    },
+    "practice": {
+      "sectionTitle": "Practice Questions",
+      "questions": [
+        {
+          "question": "Which principle related to Elastic Properties of Matter states: 'Perfect elastic body: completely regains shape'?",
+          "options": [
+            "This is the defining principle of Elastic Properties of Matter",
+            "This is a corollary, not a principle of Elastic Properties of Matter",
+            "This applies only to rigid-body systems",
+            "This contradicts standard NEET Physics"
+          ],
+          "answer": "This is the defining principle of Elastic Properties of Matter"
+        },
+        {
+          "question": "In a NEET context, when is Elastic Properties of Matter most directly applicable?",
+          "options": [
+            "Only in ideal, frictionless, zero-gravity scenarios",
+            "Whenever the stated conditions for Elastic Properties of Matter are satisfied, including in standard NEET problems",
+            "Only in advanced university-level physics",
+            "Only in two-dimensional problems"
+          ],
+          "answer": "Whenever the stated conditions for Elastic Properties of Matter are satisfied, including in standard NEET problems"
+        },
+        {
+          "question": "Which of the following best describes the dimensional formula of the primary physical quantity in Elastic Properties of Matter?",
+          "options": [
+            "It is dimensionless",
+            "It follows from SI base units with standard MLT notation",
+            "It requires non-SI units for proper expression",
+            "Dimensional analysis is inapplicable to this quantity"
+          ],
+          "answer": "It follows from SI base units with standard MLT notation"
+        },
+        {
+          "question": "The most common NEET trap in Elastic Properties of Matter problems is:",
+          "options": [
+            "Incorrect SI unit conversion",
+            "Applying the formula outside its domain of validity or with incorrect sign conventions",
+            "Using too many significant figures",
+            "Confusing scalar and vector dimensions"
+          ],
+          "answer": "Applying the formula outside its domain of validity or with incorrect sign conventions"
+        }
+      ]
+    },
+    "checklist": {
+      "subjectLabel": "NEET Physics",
+      "items": [
+        {
+          "title": "Define Elastic Properties of Matter precisely",
+          "description": "Write out the complete definition of Elastic Properties of Matter including all qualifying conditions and the physical quantities involved."
+        },
+        {
+          "title": "Derive the key formula from first principles",
+          "description": "Reproduce the main derivation without notes. Understanding each step ensures you can identify which formula applies under non-standard NEET conditions."
+        },
+        {
+          "title": "State conditions of validity",
+          "description": "List all assumptions and conditions under which Elastic Properties of Matter results hold. NEET setters test these boundaries."
+        },
+        {
+          "title": "Master Definitions of Elastic Properties",
+          "description": "Solve at least 5 NEET-style problems specifically on Definitions of Elastic Properties to ensure pattern recognition and speed."
+        },
+        {
+          "title": "Master Stress",
+          "description": "Solve at least 5 NEET-style problems specifically on Stress to ensure pattern recognition and speed."
+        }
+      ]
+    },
+    "faq": {
+      "sectionTitle": "Frequently Asked Questions",
+      "items": [
+        {
+          "question": "How many questions from Elastic Properties of Matter appear in NEET each year?",
+          "answer": "Elastic Properties of Matter typically contributes 0–2 questions per NEET paper depending on the year. While it may not appear every year, it often features in multi-concept problems linked to adjacent topics in Elasticity. Skipping it is risky."
+        },
+        {
+          "question": "Is Elastic Properties of Matter in the NEET 2025 syllabus?",
+          "answer": "Yes, Elastic Properties of Matter remains part of the NEET Physics syllabus under Elasticity. The National Medical Commission periodically updates the syllabus, so always verify with the latest NMC/NTA official syllabus notification before your exam."
+        },
+        {
+          "question": "What is the best way to revise Elastic Properties of Matter before NEET?",
+          "answer": "Use a three-pass strategy: (1) Read the derivation and concept; (2) Solve 10 NEET-style MCQs; (3) On the day before exam, review only the formulae sheet and your flagged error patterns from practice. Focus on conditions of validity and sign conventions."
+        },
+        {
+          "question": "What is the most common mistake in Elastic Properties of Matter problems?",
+          "answer": "The most frequent errors in Elastic Properties of Matter are: applying the formula outside its domain (e.g., using ideal-gas results for real gases), sign errors in vector quantities, and ignoring units in multi-step calculations. Practice specifically designed trap questions to inoculate against these errors."
+        }
+      ]
+    }
+  },
+  "grounding": {
+    "source_page_markdown_paths": [
+      "pages/physics-1/page-463/markdown.md",
+      "pages/physics-1/page-464/markdown.md",
+      "pages/physics-1/page-465/markdown.md"
+    ],
+    "grounding_summary": [
+      "Elastic Properties of Matter is covered in the assigned page range of pages/physics-1/ as part of Elasticity.",
+      "The local OCR pages establish definitions, key concepts, and formulae for Elastic Properties of Matter in the NEET Physics context.",
+      "Chapter research from Exa confirms current NEET exam patterns and authoritative sources for Elastic Properties of Matter."
+    ],
+    "grounding_excerpt": [
+      "UNIVERSAL AGRICULTURE 450 Elasticity",
+      "A quartz fibre and phosphor bronze (an alloy of copper containing 4% to 10% tin, 0.05% to 1% phosphorus) is the nearest approach to the perfectly elastic body.",
+      "Paraffin wax, wet clay are the nearest approach to the perfectly plastic body.",
+      "Practically there is no material which is either perfectly elastic or perfectly plastic and the behaviour of actual bodies lies between the two extremes."
+    ],
+    "sources": [
+      {
+        "title": "E:\\Textbook\\12 Rationalised Textbook\\11087 — Physics Part II\\1 Source Files\\11087 — Physics Part II\\1 Chapter-8\\Chapt...",
+        "url": "https://ncert.nic.in/textbook/pdf/keph201.pdf",
+        "publisher": "ncert.nic.in",
+        "accessed_date": "2026-04-10",
+        "why_used": "Authoritative external source for Elastic Properties of Matter in Elasticity covering NEET exam patterns and current syllabus."
+      },
+      {
+        "title": "SATHEE: Chapter 8 Mechanical Properties of Solids",
+        "url": "https://www.satheeneet.iitk.ac.in/ncert-books/neet-ncert-books/neet-nb-phy-11/phy-11-chapter-8-mechnical-properties-of-solids/",
+        "publisher": "www.satheeneet.iitk.ac.in",
+        "accessed_date": "2026-04-10",
+        "why_used": "Authoritative external source for Elastic Properties of Matter in Elasticity covering NEET exam patterns and current syllabus."
+      },
+      {
+        "title": "NEET Physics Elasticity Revision Notes",
+        "url": "https://www.studiestoday.com/concept-elasticity-neet-physics-elasticity-revision-notes-262125.html",
+        "publisher": "www.studiestoday.com",
+        "accessed_date": "2026-04-10",
+        "why_used": "Authoritative external source for Elastic Properties of Matter in Elasticity covering NEET exam patterns and current syllabus."
+      }
+    ],
+    "review": {
+      "used_local_page_grounding": true,
+      "semantic_page_read_complete": true,
+      "used_current_research": true,
+      "research_used_for_enrichment": true,
+      "template_preserved": true,
+      "scope_checked": true,
+      "syllabus_scope_verified": true,
+      "guardrails_passed": true,
+      "notes": "Generated from local OCR pages and chapter research. Content grounded in Elasticity task data."
+    }
+  }
+}

@@ -24,9 +24,12 @@ const nextConfig = {
   experimental: {
     optimizeCss: true,
     optimizePackageImports: ["react-icons", "framer-motion"],
-    // Allow larger uploads (e.g. RichTextEditor images) to avoid 413 Payload Too Large
+    // App Router + proxy: default body buffer is 10MB; large multipart uploads need this or FormData() fails
+    // @see https://nextjs.org/docs/app/api-reference/config/next-config-js/middlewareClientMaxBodySize
+    proxyClientMaxBodySize: "210mb",
+    // Server Actions (separate from Route Handler /api uploads)
     serverActions: {
-      bodySizeLimit: "10mb",
+      bodySizeLimit: "210mb",
     },
   },
 

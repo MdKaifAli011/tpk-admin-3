@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import {
   FaImage,
-  FaFile,
   FaFileAlt,
   FaClock,
   FaTrash,
@@ -27,19 +26,27 @@ import {
 import { ToastContainer, useToast } from "../ui/Toast";
 import { LoadingWrapper, LoadingSpinner } from "../ui/SkeletonLoader";
 import api from "@/lib/api";
-import { usePermissions } from "../../hooks/usePermissions";
 import { useFilterPersistence } from "../../hooks/useFilterPersistence";
 import { useDebouncedSearchQuery } from "../../hooks/useDebouncedSearchQuery";
 import PaginationBar from "../ui/PaginationBar";
+import {
+  validateMediaFileClient,
+  MEDIA_UPLOAD_HINT_IMAGE,
+  MEDIA_UPLOAD_HINT_DOCUMENT,
+  MEDIA_UPLOAD_HINT_ALL,
+  MEDIA_FILE_ACCEPT_DOCUMENTS_ONLY,
+} from "@/lib/mediaUploadRules";
+import { usePermissions, getPermissionMessage } from "../../hooks/usePermissions";
 
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/self-study";
 
+const UPLOAD_REQUEST_MS = 15 * 60 * 1000;
+
+/** Library: all media, or filter to images / documents only */
 const TYPES = [
   { id: "all", label: "All folders", icon: FaFolderOpen },
   { id: "image", label: "Images", icon: FaImage },
-  { id: "video", label: "Videos", icon: FaFile },
   { id: "document", label: "Documents", icon: FaFileAlt },
-  { id: "file", label: "Files", icon: FaFile },
 ];
 
 const typeToExt = (type) => {
@@ -110,7 +117,7 @@ function slugifyPath(p) {
 }
 
 export default function MediaManagement() {
-  const [activeFilter, setActiveFilter] = useState("image");
+  const [activeFilter, setActiveFilter] = useState("all");
   const [viewMode, setViewMode] = useState("library");
   const [filterState, setFilterState] = useFilterPersistence("media", { viewMode: "grid", searchQuery: "" });
   const { page, limit, viewMode: layoutView, searchQuery } = filterState;
@@ -119,6 +126,8 @@ export default function MediaManagement() {
   const [pagination, setPagination] = useState({ total: 0, totalPages: 0, hasNextPage: false, hasPrevPage: false });
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadStatusText, setUploadStatusText] = useState("");
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [editingItem, setEditingItem] = useState(null);
   const [editForm, setEditForm] = useState({ name: "", altText: "", fileName: "" });
@@ -144,13 +153,63 @@ export default function MediaManagement() {
   const [moveCopyModal, setMoveCopyModal] = useState(null); // null | "move" | "copy"
   const [moveCopyDestination, setMoveCopyDestination] = useState("");
   const [moveCopyLoading, setMoveCopyLoading] = useState(false);
+  const [selectionMode, setSelectionMode] = useState(false);
   const fileInputRef = useRef(null);
   const { toasts, removeToast, success, error: showError } = useToast();
-  const { role } = usePermissions();
-  const isAdmin = role === "admin";
+  const { role, canCreate, canEdit, canDelete } = usePermissions();
+  /** Bulk select / trash actions need at least edit (move) or delete */
+  const showSelectionTools = canEdit || canDelete;
+  const permHint = (action) => getPermissionMessage(action, role || "viewer") || undefined;
+
+  const uploadAccept = useMemo(() => {
+    if (activeFilter === "document") return MEDIA_FILE_ACCEPT_DOCUMENTS_ONLY;
+    if (activeFilter === "image") return "image/*";
+    return `image/*,${MEDIA_FILE_ACCEPT_DOCUMENTS_ONLY}`;
+  }, [activeFilter]);
+  const uploadHint =
+    activeFilter === "document"
+      ? MEDIA_UPLOAD_HINT_DOCUMENT
+      : activeFilter === "image"
+        ? MEDIA_UPLOAD_HINT_IMAGE
+        : MEDIA_UPLOAD_HINT_ALL;
+
+  const libraryTypeQuery = useMemo(
+    () => (activeFilter === "all" ? undefined : activeFilter),
+    [activeFilter],
+  );
 
   const openPreview = (item) => {
     if (item?.type === "image" || item?.type === "video") setPreviewItem(item);
+  };
+
+  const handleFileActivate = (item) => {
+    if (selectionMode) {
+      toggleSelect(item._id);
+      return;
+    }
+    if (viewMode === "trash") {
+      if (item.type === "image" || item.type === "video") openPreview(item);
+      return;
+    }
+    if (item.type === "image" || item.type === "video") {
+      openPreview(item);
+    } else if (canEdit) {
+      openEdit(item);
+    }
+  };
+
+  const handleFolderNavigate = (folderPath) => {
+    setCurrentFolderPath(folderPath);
+    setFolderMenuOpen(null);
+    setFilterState({ page: 1 });
+  };
+
+  const handleFolderRowActivate = (f) => {
+    if (selectionMode) {
+      toggleSelectFolder(f.path);
+      return;
+    }
+    handleFolderNavigate(f.path);
   };
 
   const fetchFolders = useCallback(async (mediaType) => {
@@ -208,13 +267,23 @@ export default function MediaManagement() {
   }, [page, limit, searchQuery, activeFilter, viewMode, currentFolderPath]);
 
   useEffect(() => {
-    if (viewMode === "library") fetchFolders(activeFilter === "all" ? undefined : activeFilter);
+    if (viewMode === "library") fetchFolders(libraryTypeQuery);
     else fetchFolders();
-  }, [viewMode, activeFilter, fetchFolders]);
+  }, [viewMode, libraryTypeQuery, fetchFolders]);
 
   useEffect(() => {
     if (viewMode === "library") setCurrentFolderPath("");
-  }, [activeFilter]);
+  }, [activeFilter, viewMode]);
+
+  useEffect(() => {
+    if (viewMode === "recent" || viewMode === "trash") setCurrentFolderPath("");
+  }, [viewMode]);
+
+  useEffect(() => {
+    setSelectionMode(false);
+    setSelectedIds(new Set());
+    setSelectedFolderPaths(new Set());
+  }, [activeFilter, viewMode]);
 
   useEffect(() => {
     if (!deleteFolder?.path) {
@@ -243,7 +312,7 @@ export default function MediaManagement() {
         success("Folder created");
         setShowCreateFolder(false);
         setNewFolderName("");
-        if (viewMode === "library") fetchFolders(activeFilter);
+        if (viewMode === "library") fetchFolders(libraryTypeQuery);
         else fetchFolders();
         setCurrentFolderPath(res.data.data?.path ?? slugifyPath(currentFolderPath ? `${currentFolderPath}/${name}` : name));
         setFilterState({ page: 1 });
@@ -266,7 +335,7 @@ export default function MediaManagement() {
         success("Folder renamed");
         setRenameFolder(null);
         setRenameName("");
-        if (viewMode === "library") fetchFolders(activeFilter);
+        if (viewMode === "library") fetchFolders(libraryTypeQuery);
         else fetchFolders();
         setFilterState({ page: 1 });
       } else showError(res.data?.message || "Failed to rename folder");
@@ -291,7 +360,7 @@ export default function MediaManagement() {
         if (currentFolderPath === deleteFolder.path || currentFolderPath.startsWith(deleteFolder.path + "/")) {
           setCurrentFolderPath("");
         }
-        if (viewMode === "library") fetchFolders(activeFilter);
+        if (viewMode === "library") fetchFolders(libraryTypeQuery);
         else fetchFolders();
         setFilterState({ page: 1 });
       } else showError(res.data?.message || "Failed to delete folder");
@@ -312,31 +381,96 @@ export default function MediaManagement() {
   const handleUpload = async (e) => {
     const files = e.target.files;
     if (!files?.length) return;
+    const list = Array.from(files);
     setUploading(true);
+    setUploadProgress(0);
+    setUploadStatusText(`Checking ${list.length} file(s)…`);
+
     let done = 0;
     let failed = 0;
-    for (const file of Array.from(files)) {
+    const errorLines = [];
+    const total = list.length;
+
+    for (let i = 0; i < list.length; i++) {
+      const file = list[i];
+      const precheck = validateMediaFileClient(file);
+      if (!precheck.ok) {
+        failed++;
+        errorLines.push(`${file.name}: ${precheck.message}`);
+        setUploadProgress(Math.round(((i + 1) / total) * 100));
+        continue;
+      }
+      if (
+        viewMode === "library" &&
+        activeFilter !== "all" &&
+        precheck.category &&
+        ((activeFilter === "image" && precheck.category !== "image") ||
+          (activeFilter === "document" && precheck.category !== "document"))
+      ) {
+        failed++;
+        errorLines.push(
+          `${file.name}: Wrong tab — use ${precheck.category === "image" ? "Images" : "Documents"} for this file type.`,
+        );
+        setUploadProgress(Math.round(((i + 1) / total) * 100));
+        continue;
+      }
+
       try {
+        setUploadStatusText(`Uploading file ${i + 1} of ${total}: ${file.name}`);
         const formData = new FormData();
         formData.append("file", file);
         formData.append("name", file.name.replace(/\.[^.]+$/, ""));
         if (currentFolderPath.trim()) formData.append("folder", currentFolderPath.trim());
+
         const res = await api.post("/media", formData, {
-          headers: { "Content-Type": "multipart/form-data" },
+          timeout: UPLOAD_REQUEST_MS,
+          onUploadProgress: (progressEvent) => {
+            const loaded = progressEvent.loaded ?? 0;
+            const totalBytes = progressEvent.total;
+            if (!totalBytes || totalBytes <= 0) return;
+            const fileFraction = loaded / totalBytes;
+            const overallPct = ((i + fileFraction) / total) * 100;
+            setUploadProgress(Math.min(100, Math.round(overallPct)));
+          },
         });
         if (res.data?.success) done++;
-        else failed++;
-      } catch {
+        else {
+          failed++;
+          errorLines.push(
+            `${file.name}: ${res.data?.message || "Upload was rejected by the server."}`,
+          );
+        }
+      } catch (err) {
         failed++;
+        const msg =
+          err.response?.data?.message ||
+          err.message ||
+          "Upload failed. Check file type and size, then try again.";
+        errorLines.push(`${file.name}: ${msg}`);
       }
+      setUploadProgress(Math.round(((i + 1) / total) * 100));
     }
+
     setUploading(false);
+    setUploadStatusText("");
+    setUploadProgress(0);
     if (fileInputRef.current) fileInputRef.current.value = "";
+
     if (done) {
-      success(`${done} file(s) uploaded`);
+      success(
+        done === 1
+          ? "1 file uploaded successfully."
+          : `${done} files uploaded successfully.`,
+      );
       fetchMedia();
+      if (viewMode === "library") fetchFolders(libraryTypeQuery);
     }
-    if (failed) showError(`${failed} file(s) failed to upload`);
+    if (failed) {
+      const preview = errorLines.slice(0, 5).join(" · ");
+      const more =
+        errorLines.length > 5 ? ` · … and ${errorLines.length - 5} more` : "";
+      showError(`${failed} file(s) could not upload. ${preview}${more}`);
+    }
   };
 
   const toggleSelect = (id) => {
@@ -457,15 +591,13 @@ export default function MediaManagement() {
   const breadcrumbSegments = useMemo(() => currentFolderPath ? currentFolderPath.split("/").filter(Boolean) : [], [currentFolderPath]);
   const displayItems = items;
 
-  const selectedItem = useMemo(() => displayItems.find((i) => i._id === Array.from(selectedIds)[0]), [displayItems, selectedIds]);
-
   return (
     <>
       <ToastContainer toasts={toasts} removeToast={removeToast} />
       <div className="">
         <div className="pt-8">
           <div className="flex flex-col lg:flex-row min-h-[600px] gap-0">
-            {/* Library sidebar — keep Images, Videos, Documents, Files, Recent, Trash */}
+            {/* Library sidebar: All folders / Images / Documents, Recent, Trash */}
             <aside className="w-full shrink-0 border border-slate-200 rounded-xl bg-white lg:w-56  overflow-hidden">
               <div className="px-3 py-4">
                 <p className="mb-2 px-2 text-[10px] font-medium uppercase tracking-widest text-slate-400">Library</p>
@@ -521,7 +653,10 @@ export default function MediaManagement() {
               <div className="mb-6 flex items-end justify-between">
                 <div>
                   <h1 className="text-2xl font-bold text-slate-800">Media Management</h1>
-                  <p className="text-sm text-slate-500 mt-0.5">Upload, organize, and manage your learning resources in a list view.</p>
+                  <p className="text-sm text-slate-500 mt-0.5">
+                    Use <span className="font-medium text-slate-600">All folders</span> to see every folder and file, or switch to{" "}
+                    <span className="font-medium text-slate-600">Images</span> / <span className="font-medium text-slate-600">Documents</span> to filter uploads and the file list.
+                  </p>
                 </div>
                 <div className="flex items-center gap-2">
                   <button
@@ -589,116 +724,205 @@ export default function MediaManagement() {
                         className="w-full pl-10 pr-4 py-2 bg-slate-50 border-0 focus:ring-1 focus:ring-[#0052CC] rounded-lg text-sm"
                   />
                 </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       {viewMode === "trash" ? (
                         <>
-                          <button
-                            type="button"
-                            onClick={restoreSelectedItems}
-                            disabled={selectedIds.size === 0}
-                            className="flex items-center gap-2 px-4 py-2 text-white font-medium text-sm bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50"
-                            title="Restore selected items"
-                          >
-                            <FaUndo className="h-4 w-4" /> Restore
-                          </button>
-                          <button
-                            type="button"
-                            onClick={async () => {
-                              const ids = Array.from(selectedIds);
-                              if (ids.length === 0) return;
-                              if (!confirm(`Permanently delete ${ids.length} item(s)? This cannot be undone.`)) return;
-                              for (const id of ids) {
-                                try { await api.delete(`/media/${id}?permanent=true`); } catch { /* ignore */ }
-                              }
-                              setSelectedIds(new Set());
-                              success(ids.length === 1 ? "Permanently deleted" : `${ids.length} items permanently deleted`);
-                              fetchMedia();
-                            }}
-                            className="flex items-center gap-2 px-4 py-2 text-white font-medium text-sm bg-red-600 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
-                            disabled={selectedIds.size === 0}
-                            title="Permanently delete selected"
-                          >
-                            <FaTrash className="h-4 w-4" /> Delete permanently
-                          </button>
+                          {showSelectionTools && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (selectionMode) {
+                                  setSelectionMode(false);
+                                  setSelectedIds(new Set());
+                                  setSelectedFolderPaths(new Set());
+                                } else {
+                                  setSelectionMode(true);
+                                }
+                              }}
+                              className="flex items-center gap-2 px-4 py-2 text-slate-700 font-medium text-sm bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+                            >
+                              {selectionMode ? "Done" : "Select"}
+                            </button>
+                          )}
+                          {selectionMode && canEdit && (
+                            <button
+                              type="button"
+                              onClick={restoreSelectedItems}
+                              disabled={selectedIds.size === 0}
+                              className="flex items-center gap-2 px-4 py-2 text-white font-medium text-sm bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50"
+                              title={permHint("edit")}
+                            >
+                              <FaUndo className="h-4 w-4" /> Restore
+                            </button>
+                          )}
+                          {selectionMode && canDelete && (
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                const ids = Array.from(selectedIds);
+                                if (ids.length === 0) return;
+                                if (!confirm(`Permanently delete ${ids.length} item(s)? This cannot be undone.`)) return;
+                                for (const id of ids) {
+                                  try { await api.delete(`/media/${id}?permanent=true`); } catch { /* ignore */ }
+                                }
+                                setSelectedIds(new Set());
+                                setSelectionMode(false);
+                                success(ids.length === 1 ? "Permanently deleted" : `${ids.length} items permanently deleted`);
+                                fetchMedia();
+                              }}
+                              className="flex items-center gap-2 px-4 py-2 text-white font-medium text-sm bg-red-600 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
+                              disabled={selectedIds.size === 0}
+                              title={permHint("delete")}
+                            >
+                              <FaTrash className="h-4 w-4" /> Delete permanently
+                            </button>
+                          )}
                         </>
                       ) : (
                         <>
-                          <button
-                            type="button"
-                            onClick={async () => {
-                              const ids = Array.from(selectedIds);
-                              const paths = Array.from(selectedFolderPaths);
-                              if (ids.length === 0 && paths.length === 0) return;
-                              if (paths.length > 0 && isAdmin) {
-                                if (!confirm(`Delete ${paths.length} selected folder(s)?\n\nOnly empty folders can be deleted. Folders that contain files or subfolders will be skipped.`)) return;
-                                let deleted = 0;
-                                let skipped = 0;
-                                for (const p of paths) {
-                                  try {
-                                    const res = await api.delete("/media/folders", { data: { path: p } });
-                                    if (res.data?.success) deleted++;
-                                    else skipped++;
-                                  } catch {
-                                    skipped++;
+                          {showSelectionTools && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (selectionMode) {
+                                  setSelectionMode(false);
+                                  setSelectedIds(new Set());
+                                  setSelectedFolderPaths(new Set());
+                                } else {
+                                  setSelectionMode(true);
+                                }
+                              }}
+                              className="flex items-center gap-2 px-4 py-2 text-slate-700 font-medium text-sm bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+                            >
+                              {selectionMode ? "Done" : "Select"}
+                            </button>
+                          )}
+                          {selectionMode && canDelete && (
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                const ids = Array.from(selectedIds);
+                                const paths = Array.from(selectedFolderPaths);
+                                if (ids.length === 0 && paths.length === 0) return;
+                                if (paths.length > 0 && canDelete) {
+                                  if (
+                                    !confirm(
+                                      `Delete ${paths.length} selected folder(s)?\n\nOnly empty folders can be deleted. Folders that contain files or subfolders will be skipped.`,
+                                    )
+                                  ) {
+                                    return;
                                   }
+                                  let deleted = 0;
+                                  let skipped = 0;
+                                  for (const p of paths) {
+                                    try {
+                                      const res = await api.delete("/media/folders", { data: { path: p } });
+                                      if (res.data?.success) deleted++;
+                                      else skipped++;
+                                    } catch {
+                                      skipped++;
+                                    }
+                                  }
+                                  setSelectedFolderPaths(new Set());
+                                  if (currentFolderPath && paths.some((p) => p === currentFolderPath || currentFolderPath.startsWith(`${p}/`))) {
+                                    setCurrentFolderPath("");
+                                  }
+                                  if (viewMode === "library") fetchFolders(libraryTypeQuery);
+                                  else fetchFolders();
+                                  if (deleted) success(deleted === 1 ? "1 folder deleted" : `${deleted} folder(s) deleted`);
+                                  if (skipped) showError(skipped === 1 ? "1 folder could not be deleted (not empty)" : `${skipped} folder(s) could not be deleted (not empty)`);
                                 }
+                                if (ids.length > 0) {
+                                  for (const id of ids) {
+                                    try { await api.delete(`/media/${id}`); } catch { /* ignore */ }
+                                  }
+                                  setSelectedIds(new Set());
+                                  success(ids.length === 1 ? "Moved to trash" : `${ids.length} items moved to trash`);
+                                  fetchMedia();
+                                }
+                                setSelectionMode(false);
                                 setSelectedFolderPaths(new Set());
-                                if (currentFolderPath && paths.some((p) => p === currentFolderPath || currentFolderPath.startsWith(p + "/"))) {
-                                  setCurrentFolderPath("");
-                                }
-                                if (viewMode === "library") fetchFolders(activeFilter);
-                                else fetchFolders();
-                                if (deleted) success(deleted === 1 ? "1 folder deleted" : `${deleted} folder(s) deleted`);
-                                if (skipped) showError(skipped === 1 ? "1 folder could not be deleted (not empty)" : `${skipped} folder(s) could not be deleted (not empty)`);
+                              }}
+                              className="flex items-center gap-2 px-4 py-2 text-white font-medium text-sm bg-red-600 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
+                              disabled={
+                                (selectedIds.size === 0 && selectedFolderPaths.size === 0) || !canDelete
                               }
-                              if (ids.length > 0) {
-                                for (const id of ids) {
-                                  try { await api.delete(`/media/${id}`); } catch { /* ignore */ }
-                                }
-                                setSelectedIds(new Set());
-                                success(ids.length === 1 ? "Moved to trash" : `${ids.length} items moved to trash`);
-                                fetchMedia();
-                              }
-                            }}
-                            className="flex items-center gap-2 px-4 py-2 text-white font-medium text-sm bg-red-600 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
-                            disabled={selectedIds.size === 0 && (selectedFolderPaths.size === 0 || !isAdmin)}
-                            title={selectedFolderPaths.size > 0 && selectedIds.size === 0 ? "Delete selected folders (empty only)" : "Move selected files to trash / delete selected folders"}
-                          >
-                            <FaTrash className="h-4 w-4" /> Delete
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => { setMoveCopyModal("move"); setMoveCopyDestination(currentFolderPath); }}
-                            disabled={selectedIds.size === 0}
-                            className="flex items-center gap-2 px-4 py-2 text-slate-700 font-medium text-sm bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors disabled:opacity-50"
-                            title="Move selected to another folder"
-                          >
-                            <FaFolderOpen className="h-4 w-4" /> Move
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => { setMoveCopyModal("copy"); setMoveCopyDestination(currentFolderPath); }}
-                            disabled={selectedIds.size === 0}
-                            className="flex items-center gap-2 px-4 py-2 text-slate-700 font-medium text-sm bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors disabled:opacity-50"
-                            title="Copy selected to another folder"
-                          >
-                            <FaCopy className="h-4 w-4" /> Copy
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => { setShowCreateFolder(true); setNewFolderName(""); setFolderMenuOpen(null); }}
-                            className="flex items-center gap-2 px-4 py-2 text-slate-700 font-medium text-sm bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
-                          >
-                            <FaFolder className="h-4 w-4" /> New Folder
-                          </button>
-                          <label className="flex items-center gap-2 px-4 py-2 text-white font-medium text-sm bg-[#0052CC] rounded-lg hover:bg-[#0044AA] transition-colors cursor-pointer">
-                            <FaUpload className={`h-4 w-4 ${uploading ? "animate-pulse" : ""}`} />
-                  {uploading ? "Uploading…" : "Upload"}
-                            <input ref={fileInputRef} type="file" multiple className="hidden" onChange={handleUpload} disabled={uploading} />
-                          </label>
+                              title={permHint("delete")}
+                            >
+                              <FaTrash className="h-4 w-4" /> Delete
+                            </button>
+                          )}
+                          {selectionMode && canEdit && (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => { setMoveCopyModal("move"); setMoveCopyDestination(currentFolderPath); }}
+                                disabled={selectedIds.size === 0}
+                                className="flex items-center gap-2 px-4 py-2 text-slate-700 font-medium text-sm bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors disabled:opacity-50"
+                                title={permHint("edit")}
+                              >
+                                <FaFolderOpen className="h-4 w-4" /> Move
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => { setMoveCopyModal("copy"); setMoveCopyDestination(currentFolderPath); }}
+                                disabled={selectedIds.size === 0}
+                                className="flex items-center gap-2 px-4 py-2 text-slate-700 font-medium text-sm bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors disabled:opacity-50"
+                                title={permHint("edit")}
+                              >
+                                <FaCopy className="h-4 w-4" /> Copy
+                              </button>
+                            </>
+                          )}
+                          {viewMode === "library" && canCreate && (
+                            <button
+                              type="button"
+                              onClick={() => { setShowCreateFolder(true); setNewFolderName(""); setFolderMenuOpen(null); }}
+                              className="flex items-center gap-2 px-4 py-2 text-slate-700 font-medium text-sm bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+                              title={permHint("create")}
+                            >
+                              <FaFolder className="h-4 w-4" /> New Folder
+                            </button>
+                          )}
+                          {viewMode === "library" && canCreate && (
+                            <label className="flex items-center gap-2 px-4 py-2 text-white font-medium text-sm bg-[#0052CC] rounded-lg hover:bg-[#0044AA] transition-colors cursor-pointer">
+                              <FaUpload className={`h-4 w-4 ${uploading ? "animate-pulse" : ""}`} />
+                              {uploading ? "Uploading…" : "Upload"}
+                              <input
+                                ref={fileInputRef}
+                                type="file"
+                                multiple
+                                accept={uploadAccept}
+                                className="hidden"
+                                onChange={handleUpload}
+                                disabled={uploading}
+                                title={uploadHint}
+                              />
+                            </label>
+                          )}
                         </>
                       )}
                     </div>
+                  </div>
+                  <div className="mt-4 space-y-3">
+                    {viewMode === "library" && (
+                      <p className="flex items-start gap-2 rounded-lg border border-blue-100 bg-blue-50/90 px-3 py-2.5 text-xs leading-relaxed text-slate-700">
+                        <FaInfoCircle className="mt-0.5 h-4 w-4 shrink-0 text-[#0052CC]" aria-hidden />
+                        <span>{uploadHint}</span>
+                      </p>
+                    )}
+                    {uploading && (
+                      <div className="space-y-2">
+                        <p className="text-xs font-medium text-slate-800">{uploadStatusText || "Uploading…"}</p>
+                        <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-200" aria-hidden>
+                          <div
+                            className="h-full rounded-full bg-[#0052CC] transition-[width] duration-200 ease-out"
+                            style={{ width: `${uploadProgress}%` }}
+                          />
+                        </div>
+                        <p className="text-[11px] text-slate-500">{uploadProgress}%</p>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -711,14 +935,20 @@ export default function MediaManagement() {
                       <table className="w-full text-left border-collapse">
                         <thead className="sticky top-0 bg-slate-50 z-10 border-b border-slate-200">
                           <tr>
-                            <th className="w-12 px-4 py-3">
-                  <input
-                                type="checkbox"
-                                checked={(subfolders.length > 0 || displayItems.length > 0) && selectedIds.size === displayItems.length && selectedFolderPaths.size === subfolders.length}
-                                onChange={selectAll}
-                                className="rounded border-slate-300 text-[#0052CC] focus:ring-[#0052CC] h-4 w-4"
-                              />
-                            </th>
+                            {selectionMode && (
+                              <th className="w-12 px-4 py-3">
+                                <input
+                                  type="checkbox"
+                                  checked={
+                                    (subfolders.length > 0 || displayItems.length > 0) &&
+                                    selectedIds.size === displayItems.length &&
+                                    selectedFolderPaths.size === subfolders.length
+                                  }
+                                  onChange={selectAll}
+                                  className="rounded border-slate-300 text-[#0052CC] focus:ring-[#0052CC] h-4 w-4"
+                                />
+                              </th>
+                            )}
                             <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Name</th>
                             <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Date Modified</th>
                             <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Type</th>
@@ -730,17 +960,19 @@ export default function MediaManagement() {
                           {viewMode === "library" && subfolders.map((f) => (
                             <tr
                               key={`folder-${f.path}`}
-                              className={`group cursor-pointer transition-colors ${selectedFolderPaths.has(f.path) ? "bg-blue-50/30" : "hover:bg-slate-50"}`}
-                              onClick={() => { setCurrentFolderPath(f.path); setFolderMenuOpen(null); setFilterState({ page: 1 }); }}
+                              className={`group cursor-pointer transition-colors ${selectionMode && selectedFolderPaths.has(f.path) ? "bg-blue-50/30" : "hover:bg-slate-50"}`}
+                              onClick={() => handleFolderRowActivate(f)}
                             >
-                              <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
-                                <input
-                                  type="checkbox"
-                                  checked={selectedFolderPaths.has(f.path)}
-                                  onChange={() => toggleSelectFolder(f.path)}
-                                  className="rounded border-slate-300 text-[#0052CC] focus:ring-[#0052CC] h-4 w-4"
-                                />
-                              </td>
+                              {selectionMode && (
+                                <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                                  <input
+                                    type="checkbox"
+                                    checked={selectedFolderPaths.has(f.path)}
+                                    onChange={() => toggleSelectFolder(f.path)}
+                                    className="rounded border-slate-300 text-[#0052CC] focus:ring-[#0052CC] h-4 w-4"
+                                  />
+                                </td>
+                              )}
                               <td className="px-4 py-3">
                                 <div className="flex items-center gap-3">
                                   <FaFolder className="h-6 w-6 shrink-0 text-yellow-500" />
@@ -762,18 +994,22 @@ export default function MediaManagement() {
                                   </button>
                                   {folderMenuOpen === f.path && (
                                     <div className="absolute right-0 top-full z-20 mt-1 min-w-[160px] rounded-lg border border-slate-200 bg-white py-1 shadow-lg" onClick={(e) => e.stopPropagation()}>
-                                      <button type="button" onClick={() => { setShowCreateFolder(true); setNewFolderName(""); setCurrentFolderPath(f.path); setFolderMenuOpen(null); setFilterState({ page: 1 }); }} className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50">
-                                        <FaPlus className="h-3.5 w-3.5 text-slate-400" /> New subfolder
-                                      </button>
-                                      <button type="button" onClick={() => { setRenameFolder({ path: f.path, name: f.name || f.path }); setRenameName(f.name || f.path); setFolderMenuOpen(null); }} className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50">
-                                        <FaEdit className="h-3.5 w-3.5 text-slate-400" /> Rename
-                                      </button>
-                                      {isAdmin && (
+                                      {canCreate && (
+                                        <button type="button" onClick={() => { setShowCreateFolder(true); setNewFolderName(""); setCurrentFolderPath(f.path); setFolderMenuOpen(null); setFilterState({ page: 1 }); }} className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50">
+                                          <FaPlus className="h-3.5 w-3.5 text-slate-400" /> New subfolder
+                                        </button>
+                                      )}
+                                      {canEdit && (
+                                        <button type="button" onClick={() => { setRenameFolder({ path: f.path, name: f.name || f.path }); setRenameName(f.name || f.path); setFolderMenuOpen(null); }} className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50">
+                                          <FaEdit className="h-3.5 w-3.5 text-slate-400" /> Rename
+                                        </button>
+                                      )}
+                                      {canDelete && (
                                         <button type="button" onClick={() => { setDeleteFolder({ path: f.path, name: f.name || f.path }); setFolderMenuOpen(null); }} className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50">
                                           <FaTrash className="h-3.5 w-3.5" /> Delete
-                  </button>
-                )}
-              </div>
+                                        </button>
+                                      )}
+                                    </div>
                                   )}
                                 </div>
                               </td>
@@ -782,18 +1018,19 @@ export default function MediaManagement() {
                           {displayItems.map((item) => (
                             <tr
                               key={item._id}
-                              className={`group cursor-pointer transition-colors ${selectedIds.has(item._id) ? "bg-blue-50/30" : "hover:bg-slate-50"}`}
-                              onClick={() => toggleSelect(item._id)}
-                              onDoubleClick={(e) => { e.stopPropagation(); openPreview(item); }}
+                              className={`group cursor-pointer transition-colors ${selectionMode && selectedIds.has(item._id) ? "bg-blue-50/30" : "hover:bg-slate-50"}`}
+                              onClick={() => handleFileActivate(item)}
                             >
-                              <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
-                                <input
-                                  type="checkbox"
-                                  checked={selectedIds.has(item._id)}
-                                  onChange={() => toggleSelect(item._id)}
-                                  className="rounded border-slate-300 text-[#0052CC] focus:ring-[#0052CC] h-4 w-4"
-                                />
-                              </td>
+                              {selectionMode && (
+                                <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                                  <input
+                                    type="checkbox"
+                                    checked={selectedIds.has(item._id)}
+                                    onChange={() => toggleSelect(item._id)}
+                                    className="rounded border-slate-300 text-[#0052CC] focus:ring-[#0052CC] h-4 w-4"
+                                  />
+                                </td>
+                              )}
                               <td className="px-4 py-3">
                                 <div className="flex items-center gap-3">
                                   {item.type === "image" ? (
@@ -835,30 +1072,42 @@ export default function MediaManagement() {
                                           <button type="button" onClick={() => { copyUrl(item.url); setFileMenuOpen(null); }} className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50">
                                             <FaCopy className="h-3.5 w-3.5 text-slate-400" /> Copy URL
                                           </button>
-                                          <button type="button" onClick={() => { restoreItem(item._id); setFileMenuOpen(null); }} className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-emerald-700 hover:bg-emerald-50">
-                                            <FaUndo className="h-3.5 w-3.5" /> Restore
-                                          </button>
-                                          <button type="button" onClick={() => { deletePermanent(item._id); setFileMenuOpen(null); }} className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50">
-                                            <FaTrash className="h-3.5 w-3.5" /> Delete permanently
-                                          </button>
+                                          {canEdit && (
+                                            <button type="button" onClick={() => { restoreItem(item._id); setFileMenuOpen(null); }} className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-emerald-700 hover:bg-emerald-50">
+                                              <FaUndo className="h-3.5 w-3.5" /> Restore
+                                            </button>
+                                          )}
+                                          {canDelete && (
+                                            <button type="button" onClick={() => { deletePermanent(item._id); setFileMenuOpen(null); }} className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50">
+                                              <FaTrash className="h-3.5 w-3.5" /> Delete permanently
+                                            </button>
+                                          )}
                                         </>
                                       ) : (
                                         <>
-                                          <button type="button" onClick={() => { openEdit(item); setFileMenuOpen(null); }} className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50">
-                                            <FaEdit className="h-3.5 w-3.5 text-slate-400" /> Edit
-                                          </button>
+                                          {canEdit && (
+                                            <button type="button" onClick={() => { openEdit(item); setFileMenuOpen(null); }} className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50">
+                                              <FaEdit className="h-3.5 w-3.5 text-slate-400" /> Edit
+                                            </button>
+                                          )}
                                           <button type="button" onClick={() => { copyUrl(item.url); setFileMenuOpen(null); }} className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50">
                                             <FaCopy className="h-3.5 w-3.5 text-slate-400" /> Copy URL
                                           </button>
-                                          <button type="button" onClick={() => { setSelectedIds(new Set([item._id])); setMoveCopyModal("move"); setMoveCopyDestination(currentFolderPath); setFileMenuOpen(null); }} className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50">
-                                            <FaFolderOpen className="h-3.5 w-3.5 text-slate-400" /> Move to folder
-                                          </button>
-                                          <button type="button" onClick={() => { setSelectedIds(new Set([item._id])); setMoveCopyModal("copy"); setMoveCopyDestination(currentFolderPath); setFileMenuOpen(null); }} className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50">
-                                            <FaCopy className="h-3.5 w-3.5 text-slate-400" /> Copy to folder
-                                          </button>
-                                          <button type="button" onClick={() => { moveToTrash(item._id); setFileMenuOpen(null); }} className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50">
-                                            <FaTrash className="h-3.5 w-3.5" /> Move to trash
-                                          </button>
+                                          {canEdit && (
+                                            <>
+                                              <button type="button" onClick={() => { setSelectedIds(new Set([item._id])); setMoveCopyModal("move"); setMoveCopyDestination(currentFolderPath); setFileMenuOpen(null); }} className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50">
+                                                <FaFolderOpen className="h-3.5 w-3.5 text-slate-400" /> Move to folder
+                                              </button>
+                                              <button type="button" onClick={() => { setSelectedIds(new Set([item._id])); setMoveCopyModal("copy"); setMoveCopyDestination(currentFolderPath); setFileMenuOpen(null); }} className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50">
+                                                <FaCopy className="h-3.5 w-3.5 text-slate-400" /> Copy to folder
+                                              </button>
+                                            </>
+                                          )}
+                                          {canDelete && (
+                                            <button type="button" onClick={() => { moveToTrash(item._id); setFileMenuOpen(null); }} className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50">
+                                              <FaTrash className="h-3.5 w-3.5" /> Move to trash
+                                            </button>
+                                          )}
                                         </>
                                       )}
                                     </div>
@@ -878,7 +1127,7 @@ export default function MediaManagement() {
                         <p className="mt-1 text-sm text-slate-500 text-center max-w-xs">
                           {viewMode === "trash" ? "Trash is empty." : "Upload files or choose another folder or type."}
                         </p>
-                        {viewMode === "library" && (
+                        {viewMode === "library" && canCreate && (
                           <button type="button" onClick={() => fileInputRef.current?.click()} disabled={uploading} className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[#0052CC] px-4 py-2 text-sm font-medium text-white hover:bg-[#0044AA] disabled:opacity-60">
                             <FaUpload className="h-4 w-4" /> Upload files
                           </button>
@@ -895,15 +1144,18 @@ export default function MediaManagement() {
                           <button
                             key={f.path}
                             type="button"
-                            onClick={(e) => { e.stopPropagation(); toggleSelectFolder(f.path); }}
-                            onDoubleClick={(e) => { e.stopPropagation(); setCurrentFolderPath(f.path); setFolderMenuOpen(null); setFilterState({ page: 1 }); }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (selectionMode) toggleSelectFolder(f.path);
+                              else handleFolderNavigate(f.path);
+                            }}
                             className={`flex min-w-[120px] items-center gap-2.5 rounded-xl border px-3 py-2.5 shadow-sm transition-colors ${
-                              selectedFolderPaths.has(f.path)
+                              selectionMode && selectedFolderPaths.has(f.path)
                                 ? "border-[#0052CC] bg-[#E8EFFF] ring-2 ring-[#0052CC] ring-offset-2"
                                 : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"
                             }`}
                           >
-                            {selectedFolderPaths.has(f.path) && (
+                            {selectionMode && selectedFolderPaths.has(f.path) && (
                               <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#0052CC] text-white">
                                 <FaCheck className="h-3 w-3" />
                               </span>
@@ -919,15 +1171,14 @@ export default function MediaManagement() {
                       <div
                         key={item._id}
                         className={`group relative overflow-hidden rounded-xl border bg-white transition-all duration-200 ${
-                          selectedIds.has(item._id)
+                          selectionMode && selectedIds.has(item._id)
                             ? "border-slate-900 ring-2 ring-slate-900 ring-offset-2 shadow-md"
                             : "border-slate-200 hover:border-slate-300 hover:shadow-md"
                         }`}
                       >
                         <div
                           className="relative aspect-square flex cursor-pointer items-center justify-center overflow-hidden bg-slate-100"
-                          onClick={() => toggleSelect(item._id)}
-                          onDoubleClick={(e) => { e.stopPropagation(); openPreview(item); }}
+                          onClick={() => handleFileActivate(item)}
                         >
                           {item.type === "image" ? (
                             <>
@@ -943,10 +1194,7 @@ export default function MediaManagement() {
                               </div>
                             </>
                           ) : item.type === "video" ? (
-                            <div
-                              className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-b from-slate-800 to-slate-900"
-                              onClick={(e) => { e.stopPropagation(); openPreview(item); }}
-                            >
+                            <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-b from-slate-800 to-slate-900">
                               <span className="flex h-16 w-16 items-center justify-center rounded-full bg-white/95 text-slate-800 shadow-xl transition-transform group-hover:scale-110">
                                 <FaPlay className="h-7 w-7 ml-1" />
                               </span>
@@ -964,7 +1212,7 @@ export default function MediaManagement() {
                         <div className="absolute left-2 top-2 rounded-md bg-slate-900/80 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white backdrop-blur-sm">
                           {typeToExt(item.type)}
                         </div>
-                        {selectedIds.has(item._id) && (
+                        {selectionMode && selectedIds.has(item._id) && (
                           <div className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-slate-900 text-white shadow-md">
                             <FaCheck className="h-3.5 w-3.5" />
                           </div>
@@ -997,30 +1245,42 @@ export default function MediaManagement() {
                                   <button type="button" onClick={(e) => { e.stopPropagation(); copyUrl(item.url); setFileMenuOpen(null); }} className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-50">
                                     <FaCopy className="h-3.5 w-3.5 text-slate-400" /> Copy URL
                                   </button>
-                                  <button type="button" onClick={(e) => { e.stopPropagation(); restoreItem(item._id); setFileMenuOpen(null); }} className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm text-emerald-700 hover:bg-emerald-50">
-                                    <FaUndo className="h-3.5 w-3.5" /> Restore
-                                  </button>
-                                  <button type="button" onClick={(e) => { e.stopPropagation(); deletePermanent(item._id); setFileMenuOpen(null); }} className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm text-red-600 hover:bg-red-50">
-                                    <FaTrash className="h-3.5 w-3.5" /> Delete permanently
-                                  </button>
+                                  {canEdit && (
+                                    <button type="button" onClick={(e) => { e.stopPropagation(); restoreItem(item._id); setFileMenuOpen(null); }} className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm text-emerald-700 hover:bg-emerald-50">
+                                      <FaUndo className="h-3.5 w-3.5" /> Restore
+                                    </button>
+                                  )}
+                                  {canDelete && (
+                                    <button type="button" onClick={(e) => { e.stopPropagation(); deletePermanent(item._id); setFileMenuOpen(null); }} className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm text-red-600 hover:bg-red-50">
+                                      <FaTrash className="h-3.5 w-3.5" /> Delete permanently
+                                    </button>
+                                  )}
                                 </>
                               ) : (
                                 <>
-                                  <button type="button" onClick={(e) => { e.stopPropagation(); openEdit(item); setFileMenuOpen(null); }} className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-50">
-                                    <FaEdit className="h-3.5 w-3.5 text-slate-400" /> Edit
-                                  </button>
+                                  {canEdit && (
+                                    <button type="button" onClick={(e) => { e.stopPropagation(); openEdit(item); setFileMenuOpen(null); }} className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-50">
+                                      <FaEdit className="h-3.5 w-3.5 text-slate-400" /> Edit
+                                    </button>
+                                  )}
                                   <button type="button" onClick={(e) => { e.stopPropagation(); copyUrl(item.url); setFileMenuOpen(null); }} className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-50">
                                     <FaCopy className="h-3.5 w-3.5 text-slate-400" /> Copy URL
                                   </button>
-                                  <button type="button" onClick={(e) => { e.stopPropagation(); setSelectedIds(new Set([item._id])); setMoveCopyModal("move"); setMoveCopyDestination(currentFolderPath); setFileMenuOpen(null); }} className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-50">
-                                    <FaFolderOpen className="h-3.5 w-3.5 text-slate-400" /> Move to folder
-                                  </button>
-                                  <button type="button" onClick={(e) => { e.stopPropagation(); setSelectedIds(new Set([item._id])); setMoveCopyModal("copy"); setMoveCopyDestination(currentFolderPath); setFileMenuOpen(null); }} className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-50">
-                                    <FaCopy className="h-3.5 w-3.5 text-slate-400" /> Copy to folder
-                                  </button>
-                                  <button type="button" onClick={(e) => { e.stopPropagation(); moveToTrash(item._id); setFileMenuOpen(null); }} className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm text-red-600 hover:bg-red-50">
-                                    <FaTrash className="h-3.5 w-3.5" /> Move to trash
-                                  </button>
+                                  {canEdit && (
+                                    <>
+                                      <button type="button" onClick={(e) => { e.stopPropagation(); setSelectedIds(new Set([item._id])); setMoveCopyModal("move"); setMoveCopyDestination(currentFolderPath); setFileMenuOpen(null); }} className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-50">
+                                        <FaFolderOpen className="h-3.5 w-3.5 text-slate-400" /> Move to folder
+                                      </button>
+                                      <button type="button" onClick={(e) => { e.stopPropagation(); setSelectedIds(new Set([item._id])); setMoveCopyModal("copy"); setMoveCopyDestination(currentFolderPath); setFileMenuOpen(null); }} className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-50">
+                                        <FaCopy className="h-3.5 w-3.5 text-slate-400" /> Copy to folder
+                                      </button>
+                                    </>
+                                  )}
+                                  {canDelete && (
+                                    <button type="button" onClick={(e) => { e.stopPropagation(); moveToTrash(item._id); setFileMenuOpen(null); }} className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm text-red-600 hover:bg-red-50">
+                                      <FaTrash className="h-3.5 w-3.5" /> Move to trash
+                                    </button>
+                                  )}
                                 </>
                               )}
                           </div>
@@ -1040,6 +1300,11 @@ export default function MediaManagement() {
                         {viewMode === "trash" ? "Trash is empty." : "Upload files or choose another folder or type."}
                       </p>
                       {viewMode === "library" && (
+                        <p className="mt-3 max-w-md text-center text-xs leading-relaxed text-slate-600">
+                          {uploadHint}
+                        </p>
+                      )}
+                      {viewMode === "library" && canCreate && (
                         <button type="button" onClick={() => fileInputRef.current?.click()} disabled={uploading} className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[#0052CC] px-4 py-2 text-sm font-medium text-white hover:bg-[#0044AA] disabled:opacity-60">
                           <FaUpload className="h-4 w-4" /> Upload files
                         </button>
@@ -1212,38 +1477,46 @@ export default function MediaManagement() {
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-2 pt-2">
-                  <button
-                    type="button"
-                    onClick={saveEdit}
-                    disabled={savingEdit}
-                    className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
-                  >
-                    {savingEdit ? "Saving…" : "Save"}
-                  </button>
-                  {editingItem.deletedAt ? (
+                  {canEdit && (
                     <button
                       type="button"
-                      onClick={() => restoreItem(editingItem._id)}
-                      className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
+                      onClick={saveEdit}
+                      disabled={savingEdit}
+                      className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
                     >
-                      Restore
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => moveToTrash(editingItem._id)}
-                      className="rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-white hover:bg-amber-600"
-                    >
-                      Move to trash
+                      {savingEdit ? "Saving…" : "Save"}
                     </button>
                   )}
-                  <button
-                    type="button"
-                    onClick={() => deletePermanent(editingItem._id)}
-                    className="rounded-lg bg-red-500 px-4 py-2 text-sm font-medium text-white hover:bg-red-600"
-                  >
-                    Delete permanently
-                  </button>
+                  {editingItem.deletedAt ? (
+                    canEdit && (
+                      <button
+                        type="button"
+                        onClick={() => restoreItem(editingItem._id)}
+                        className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
+                      >
+                        Restore
+                      </button>
+                    )
+                  ) : (
+                    canDelete && (
+                      <button
+                        type="button"
+                        onClick={() => moveToTrash(editingItem._id)}
+                        className="rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-white hover:bg-amber-600"
+                      >
+                        Move to trash
+                      </button>
+                    )
+                  )}
+                  {canDelete && (
+                    <button
+                      type="button"
+                      onClick={() => deletePermanent(editingItem._id)}
+                      className="rounded-lg bg-red-500 px-4 py-2 text-sm font-medium text-white hover:bg-red-600"
+                    >
+                      Delete permanently
+                    </button>
+                  )}
                 </div>
               </div>
             </div>

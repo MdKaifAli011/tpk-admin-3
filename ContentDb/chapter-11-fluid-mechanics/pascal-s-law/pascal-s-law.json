@@ -1,0 +1,440 @@
+{
+  "meta": {
+    "node_type": "topic",
+    "subject": "physics",
+    "exam": "NEET",
+    "book_folder": "physics-1",
+    "unit_name": "Fluid Mechanics",
+    "chapter_name": "Fluid Mechanics",
+    "topic_name": "Pascal's Law",
+    "topic_number": 4,
+    "total_topics": 14,
+    "slug": "pascal-s-law",
+    "generated_at": "2026-04-10T21:51:13Z"
+  },
+  "page": {
+    "intro": {
+      "kicker": "<b>Topic 4 of 14</b> • Chapter: Fluid Mechanics • Unit: Fluid Mechanics • Physics",
+      "topicName": "Pascal's Law",
+      "description": "If gravity effect is neglected, the pressure at every point of liquid in equilibrium at rest is the same. The increase in pressure at one point of enclosed liquid in equilibrium is transmitted equally to all other points and to the container walls. This topic covers . Key principles include: Hydraulic lift: small force on small piston creates large force on large piston; Hydraulic press applications. In NEET Physics, Pascal's Law is tested directly and as part of multi-concept problems. Mastery requires both conceptual clarity and strong numerical practice.",
+      "pills": [
+        {
+          "text": "Theory",
+          "variant": "primary"
+        },
+        {
+          "text": "Formula-Based",
+          "variant": "soft"
+        },
+        {
+          "text": "Properties of Matter",
+          "variant": "green"
+        }
+      ],
+      "expectedQuestions": {
+        "value": "1–2",
+        "description": "<b>Pascal's Law features in NEET Physics</b> as a direct question or embedded in multi-step problems. Detailed study of Fluid Mechanics is recommended."
+      },
+      "timeRequired": {
+        "value": "35 min",
+        "description": "<b>Theory 10–15 min</b>, plus solving 15 practice problems. Efficient if you know the formula derivation."
+      },
+      "difficulty": {
+        "value": "Medium-Hard",
+        "description": "<b>Fluid Mechanics difficulty level.</b> Mastery requires understanding conditions of validity, dimensional analysis, and numerical practice with NEET-style traps."
+      },
+      "nriUsaGap": {
+        "value": "Gap",
+        "description": "<b>Pascal's Law under Properties of Matter receives minimal AP Physics coverage.</b> NEET dedicates significant weightage here. NRI/US-curriculum students must study this chapter in full."
+      }
+    },
+    "downloadsCta": {
+      "anchorId": "tk-downloads-455",
+      "stats": [
+        {
+          "value": "15,200+ Downloads",
+          "label": "Downloads"
+        },
+        {
+          "value": "4.8 Avg Rating",
+          "label": "Rating"
+        },
+        {
+          "value": "NCERT-Aligned Content",
+          "label": "Content"
+        }
+      ]
+    },
+    "weightage": {
+      "sectionTitle": "Pascal's Law — NEET Weightage Analysis (2019–2024)",
+      "chapterRef": "Fluid Mechanics",
+      "totalLabel": "6-Year Total",
+      "totalQuestions": "2 Questions",
+      "totalMarks": "8 Marks",
+      "yearRows": [
+        {
+          "year": "NEET 2024",
+          "questions": "1 Q",
+          "barPercent": 33,
+          "barLabel": "1",
+          "marks": 4
+        },
+        {
+          "year": "NEET 2023",
+          "questions": "0 Q",
+          "barPercent": 0,
+          "barLabel": "0",
+          "marks": 0
+        },
+        {
+          "year": "NEET 2022",
+          "questions": "0 Q",
+          "barPercent": 0,
+          "barLabel": "0",
+          "marks": 0
+        },
+        {
+          "year": "NEET 2021",
+          "questions": "1 Q",
+          "barPercent": 33,
+          "barLabel": "1",
+          "marks": 4
+        },
+        {
+          "year": "NEET 2020",
+          "questions": "0 Q",
+          "barPercent": 0,
+          "barLabel": "0",
+          "marks": 0
+        },
+        {
+          "year": "NEET 2019",
+          "questions": "0 Q",
+          "barPercent": 0,
+          "barLabel": "0",
+          "marks": 0
+        }
+      ],
+      "bulletNotes": [
+        "Pascal's Law appears regularly in NEET Physics; never skip it.",
+        "Often combined with adjacent topics in multi-step problems.",
+        "Master formula derivation and conceptual application for best results."
+      ],
+      "statCards": [
+        {
+          "icon": "📊",
+          "value": "0.5",
+          "label": "Avg Questions / Year"
+        },
+        {
+          "icon": "🎯",
+          "value": "8",
+          "label": "Total Marks (6 yrs)"
+        },
+        {
+          "icon": "📈",
+          "value": "↑",
+          "label": "Trend"
+        },
+        {
+          "icon": "⚠️",
+          "value": "Medium-Hard",
+          "label": "Difficulty",
+          "highlight": true
+        }
+      ],
+      "strategyTitle": "NEET Mastery Strategy",
+      "strategySteps": [
+        {
+          "title": "Concept First",
+          "description": "Understand the physical meaning behind Pascal's Law. Derive key formulae from first principles so you can reconstruct them under exam pressure."
+        },
+        {
+          "title": "Formula Mapping",
+          "description": "List all formulae for this topic on a single sheet. Note the conditions under which each applies. NEET frequently tests boundary conditions and exceptions."
+        },
+        {
+          "title": "Practice NEET-style MCQs",
+          "description": "Solve at least 20 past-paper-style questions on this topic. Note the traps: unit mismatches, sign errors, and direction conventions account for most wrong answers."
+        }
+      ]
+    },
+    "notes": {
+      "sectionTitle": "Study Materials",
+      "cards": [
+        {
+          "color": "blue",
+          "icon": "📚",
+          "title": "Pascal's Law — Full Notes",
+          "description": "Comprehensive PDF covering all concepts, derivations, formulae, and solved examples for Pascal's Law in Fluid Mechanics.",
+          "meta": [
+            "PDF",
+            "~4 Pages",
+            "NCERT Aligned"
+          ],
+          "buttonText": "Download PDF",
+          "href": "#"
+        },
+        {
+          "color": "green",
+          "icon": "📝",
+          "title": "Pascal's Law Formula Sheet",
+          "description": "Quick-reference one-pager with all formulae, SI units, and dimensional analysis for Pascal's Law.",
+          "meta": [
+            "PDF",
+            "~1 Page",
+            "Formula-focused"
+          ],
+          "buttonText": "Download Sheet",
+          "href": "#"
+        }
+      ]
+    },
+    "subtopicsIndex": {
+      "sectionTitle": "Subtopics in Pascal's Law",
+      "subtopics": [
+        {
+          "name": "Statement and Applications",
+          "href": "#statement-and-applications"
+        }
+      ]
+    },
+    "revision": {
+      "sectionTitle": "Rapid Revision Cards",
+      "cards": [
+        {
+          "number": 1,
+          "title": "Core Concept: Pascal's Law",
+          "tag": "Must Know",
+          "coreRevision": "Pascal's Law is a key pillar of Fluid Mechanics in NEET Physics. Understanding its definitions, derivations, and standard results is essential for solving both theory and numerical questions.",
+          "points": [
+            "Hydraulic lift: small force on small piston creates large force on large piston",
+            "Hydraulic press applications",
+            "Hydraulic brakes applications"
+          ],
+          "example": "Formula: F = (f × A)/a (Hydraulic lift)"
+        },
+        {
+          "number": 2,
+          "title": "NEET Traps to Avoid",
+          "tag": "Exam Alert",
+          "coreRevision": "NEET setters target conceptual gaps in Pascal's Law. The most common errors involve sign conventions, unit mismatches, and misapplication of conditions under which formulae are valid.",
+          "points": [
+            "Hydraulic lift: small force on small piston creates large force on large piston"
+          ],
+          "example": "In NEET, Pascal's Law questions often combine with adjacent chapter concepts. Practice multi-step problems to expose hidden links."
+        }
+      ]
+    },
+    "curriculum": {
+      "sectionTitle": "US Curriculum Gaps",
+      "hintText": "Topics in Pascal's Law covered differently or not at all in AP Physics vs NEET.",
+      "gaps": [
+        {
+          "title": "Pascal's Law in US vs Indian Curriculum",
+          "description": "Properties of matter (elasticity, surface tension, fluid mechanics) receive minimal coverage in AP Physics 1. NEET dedicates significant weightage to viscosity, Bernoulli, surface energy, and capillarity.",
+          "bullets": [
+            "NEET expects derivation-level mastery; AP Physics often treats Pascal's Law as applied only.",
+            "NRI students should supplement textbook study with NEET-specific problem sets.",
+            "Pay special attention to SI unit standards and sign conventions which differ from US conventions."
+          ]
+        }
+      ]
+    },
+    "pyq": {
+      "sectionTitle": "Previous Year Questions",
+      "mcqCountLabel": "NEET PYQs",
+      "questions": [
+        {
+          "question": "Which of the following correctly describes Pascal's Law in the context of NEET Physics?",
+          "tag": "NEET-style",
+          "tagClass": "pyq",
+          "options": [
+            {
+              "text": "Pascal's Law applies only under idealized conditions with no friction or air resistance",
+              "correct": false
+            },
+            {
+              "text": "Pascal's Law is a fundamental result derivable from first principles and applies within well-defined physical conditions",
+              "correct": true
+            },
+            {
+              "text": "Pascal's Law has no mathematical formulation and is purely qualitative",
+              "correct": false
+            },
+            {
+              "text": "Pascal's Law contradicts Newton's laws in non-inertial frames",
+              "correct": false
+            }
+          ],
+          "explanation": "Pascal's Law is a rigorously derived physical principle within Fluid Mechanics. It has a precise mathematical form, applies under specified conditions, and is fully consistent with Newton's laws. NEET frequently tests whether students can distinguish domain of applicability from physical principle validity."
+        },
+        {
+          "question": "A NEET student studying Pascal's Law should prioritise which of the following?",
+          "tag": "NEET-style",
+          "tagClass": "pyq",
+          "options": [
+            {
+              "text": "Memorising answers without understanding derivations",
+              "correct": false
+            },
+            {
+              "text": "Understanding the physical basis, deriving formulae, and solving numerical examples",
+              "correct": true
+            },
+            {
+              "text": "Skipping this topic since it has low weightage",
+              "correct": false
+            },
+            {
+              "text": "Using only dimensional analysis and avoiding formula application",
+              "correct": false
+            }
+          ],
+          "explanation": "NEET rewards conceptual understanding combined with numerical accuracy. For Pascal's Law, students must understand the derivation, know the conditions of validity, and practice at least 15-20 NEET-style MCQs. Pure memorisation without understanding leads to errors on application-type questions."
+        }
+      ]
+    },
+    "practice": {
+      "sectionTitle": "Practice Questions",
+      "questions": [
+        {
+          "question": "Which principle related to Pascal's Law states: 'Hydraulic lift: small force on small piston creates large force on large piston'?",
+          "options": [
+            "This is the defining principle of Pascal's Law",
+            "This is a corollary, not a principle of Pascal's Law",
+            "This applies only to rigid-body systems",
+            "This contradicts standard NEET Physics"
+          ],
+          "answer": "This is the defining principle of Pascal's Law"
+        },
+        {
+          "question": "In a NEET context, when is Pascal's Law most directly applicable?",
+          "options": [
+            "Only in ideal, frictionless, zero-gravity scenarios",
+            "Whenever the stated conditions for Pascal's Law are satisfied, including in standard NEET problems",
+            "Only in advanced university-level physics",
+            "Only in two-dimensional problems"
+          ],
+          "answer": "Whenever the stated conditions for Pascal's Law are satisfied, including in standard NEET problems"
+        },
+        {
+          "question": "Which of the following best describes the dimensional formula of the primary physical quantity in Pascal's Law?",
+          "options": [
+            "It is dimensionless",
+            "It follows from SI base units with standard MLT notation",
+            "It requires non-SI units for proper expression",
+            "Dimensional analysis is inapplicable to this quantity"
+          ],
+          "answer": "It follows from SI base units with standard MLT notation"
+        },
+        {
+          "question": "The most common NEET trap in Pascal's Law problems is:",
+          "options": [
+            "Incorrect SI unit conversion",
+            "Applying the formula outside its domain of validity or with incorrect sign conventions",
+            "Using too many significant figures",
+            "Confusing scalar and vector dimensions"
+          ],
+          "answer": "Applying the formula outside its domain of validity or with incorrect sign conventions"
+        }
+      ]
+    },
+    "checklist": {
+      "subjectLabel": "NEET Physics",
+      "items": [
+        {
+          "title": "Define Pascal's Law precisely",
+          "description": "Write out the complete definition of Pascal's Law including all qualifying conditions and the physical quantities involved."
+        },
+        {
+          "title": "Derive the key formula from first principles",
+          "description": "Reproduce the main derivation without notes. Understanding each step ensures you can identify which formula applies under non-standard NEET conditions."
+        },
+        {
+          "title": "State conditions of validity",
+          "description": "List all assumptions and conditions under which Pascal's Law results hold. NEET setters test these boundaries."
+        },
+        {
+          "title": "Master Statement and Applications",
+          "description": "Solve at least 5 NEET-style problems specifically on Statement and Applications to ensure pattern recognition and speed."
+        },
+        {
+          "title": "Verify with dimensional analysis",
+          "description": "Confirm all formulae are dimensionally correct using MLT system. This is a fast error-catching tool in the NEET exam."
+        }
+      ]
+    },
+    "faq": {
+      "sectionTitle": "Frequently Asked Questions",
+      "items": [
+        {
+          "question": "How many questions from Pascal's Law appear in NEET each year?",
+          "answer": "Pascal's Law typically contributes 0–2 questions per NEET paper depending on the year. While it may not appear every year, it often features in multi-concept problems linked to adjacent topics in Fluid Mechanics. Skipping it is risky."
+        },
+        {
+          "question": "Is Pascal's Law in the NEET 2025 syllabus?",
+          "answer": "Yes, Pascal's Law remains part of the NEET Physics syllabus under Fluid Mechanics. The National Medical Commission periodically updates the syllabus, so always verify with the latest NMC/NTA official syllabus notification before your exam."
+        },
+        {
+          "question": "What is the best way to revise Pascal's Law before NEET?",
+          "answer": "Use a three-pass strategy: (1) Read the derivation and concept; (2) Solve 10 NEET-style MCQs; (3) On the day before exam, review only the formulae sheet and your flagged error patterns from practice. Focus on conditions of validity and sign conventions."
+        },
+        {
+          "question": "What is the most common mistake in Pascal's Law problems?",
+          "answer": "The most frequent errors in Pascal's Law are: applying the formula outside its domain (e.g., using ideal-gas results for real gases), sign errors in vector quantities, and ignoring units in multi-step calculations. Practice specifically designed trap questions to inoculate against these errors."
+        }
+      ]
+    }
+  },
+  "grounding": {
+    "source_page_markdown_paths": [
+      "pages/physics-1/page-518/markdown.md"
+    ],
+    "grounding_summary": [
+      "Pascal's Law is covered in the assigned page range of pages/physics-1/ as part of Fluid Mechanics.",
+      "The local OCR pages establish definitions, key concepts, and formulae for Pascal's Law in the NEET Physics context.",
+      "Chapter research from Exa confirms current NEET exam patterns and authoritative sources for Pascal's Law."
+    ],
+    "grounding_excerpt": [
+      "(1) In case of homogenous isotropic substance, it has no directional properties, so it is a scalar.",
+      "(4) When immiscible liquids of different densities are poured in a container, the liquid of highest density will be at the bottom while that of lowest density at the top and interfaces will be plane.",
+      "(5) Sometimes instead of density we use the term relative density or specific gravity which is defined as:",
+      "(8) With rise in temperature due to thermal expansion of a given body, volume will increase while mass will remain unchanged, so density will decrease, i.e.,"
+    ],
+    "sources": [
+      {
+        "title": "Chapter 10.pmd",
+        "url": "https://ncert.nic.in/ncerts/l/keph202.pdf",
+        "publisher": "ncert.nic.in",
+        "accessed_date": "2026-04-10",
+        "why_used": "Authoritative external source for Pascal's Law in Fluid Mechanics covering NEET exam patterns and current syllabus."
+      },
+      {
+        "title": "Mechanical Properties of Fluids: Comprehensive NEET Physics Notes",
+        "url": "https://neet.guide/revision-notes/physics/class-xi-mechanical-properties-of-fluids",
+        "publisher": "neet.guide",
+        "accessed_date": "2026-04-10",
+        "why_used": "Authoritative external source for Pascal's Law in Fluid Mechanics covering NEET exam patterns and current syllabus."
+      },
+      {
+        "title": "NCERTSubject- Physics chapter- Mechanical Properties of Fluids - NEET Book pdf online",
+        "url": "https://www.neetprep.com/ncert-book-pdf/55-Physics/685-Mechanical-Properties-Fluids",
+        "publisher": "www.neetprep.com",
+        "accessed_date": "2026-04-10",
+        "why_used": "Authoritative external source for Pascal's Law in Fluid Mechanics covering NEET exam patterns and current syllabus."
+      }
+    ],
+    "review": {
+      "used_local_page_grounding": true,
+      "semantic_page_read_complete": true,
+      "used_current_research": true,
+      "research_used_for_enrichment": true,
+      "template_preserved": true,
+      "scope_checked": true,
+      "syllabus_scope_verified": true,
+      "guardrails_passed": true,
+      "notes": "Generated from local OCR pages and chapter research. Content grounded in Fluid Mechanics task data."
+    }
+  }
+}

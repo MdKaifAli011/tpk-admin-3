@@ -774,7 +774,9 @@ export default function CourseDetailPage() {
                 className="object-cover object-center opacity-90"
                 sizes="(max-width: 1024px) 0px, 50vw"
                 onError={onCourseFormPlaceholderError}
-                unoptimized={String(courseFormPlaceholderSrc).startsWith("http://")}
+                unoptimized={String(courseFormPlaceholderSrc).startsWith(
+                  "http://",
+                )}
               />
               <div className="absolute inset-0 bg-black/10 pointer-events-none" />
             </div>

@@ -1,0 +1,415 @@
+{
+  "meta": {
+    "subject": "physics",
+    "exam": "NEET",
+    "book_folder": "physics-1",
+    "chapter_number": 3,
+    "chapter_name": "Motion In Two Dimension",
+    "node_type": "chapter",
+    "slug": "chapter-03-motion-in-two-dimension",
+    "generated_at": "2026-03-30T08:00:00Z"
+  },
+  "page": {
+    "intro": {
+      "chapter_name": "Motion In Two Dimension",
+      "snapshot_description": "One of the highest-yield mechanics chapters in NEET. Two-dimensional motion splits into <b>projectile motion (oblique and horizontal) and circular motion (uniform and non-uniform)</b>. NEET tests the trajectory equations, time-of-flight and range formulas, complementary-angle range equality, centripetal force expressions, banking and skidding conditions, and bending of cyclist. The chapter rewards formula fluency combined with careful sign and direction awareness; errors arise almost entirely from mixing up components or applying the wrong angle.",
+      "expected_questions": {
+        "value": "3-4",
+        "description": "A consistently tested chapter — typically 2 projectile questions and 1–2 circular motion questions per year. Range formula, maximum height, centripetal force, and banking angle are the four perennial MCQ types."
+      },
+      "time_required": {
+        "value": "8-10 hrs",
+        "description": "Oblique projectile theory + worked examples 2.5 hrs; horizontal projectile 1 hr; circular motion definitions and centripetal force 2 hrs; banking, skidding, overturning, vertical circle 2 hrs; MCQ drill 1.5 hrs."
+      },
+      "difficulty_level": {
+        "value": "Moderate",
+        "description": "Formulas are manageable but the chapter has many distinct cases (oblique vs horizontal projectile, level vs banked road, uniform vs non-uniform circular motion). Most errors arise from applying the wrong case formula, not from calculation mistakes."
+      },
+      "most_asked_style": "Numerical MCQ: find range / maximum height for a given u and θ; complementary-angle problems; safe speed on banked or level road; centripetal acceleration given speed and radius; bending angle for a cyclist.",
+      "biggest_trap": "Confusing Range = u²sin2θ/g (which requires sinθ AND cosθ component) with Maximum Height = u²sin²θ/2g (only sinθ). NEET sets up problems where values of both are close and swapping them still gives a plausible-looking answer.",
+      "fast_win": "Memorise the five golden results: T = 2u sinθ/g; R = u²sin2θ/g; H = u²sin²θ/2g; R_max = u²/g at 45°; H at R_max = R_max/4. These appear in more than half of all NEET projectile questions directly.",
+      "revision_friendly": "Yes. All major formulas fit on two flashcards (one for projectile, one for circular motion). Complementary-angle rules and the three applications (skidding, banking, overturning) can be reviewed in 30 minutes."
+    },
+    "subtopics": {
+      "chapter_name": "Motion In Two Dimension",
+      "exam": "NEET",
+      "subtitle": "Four major blocks: oblique projectile (trajectory, T, R, H, complementary angles, max range), horizontal projectile (time of flight, range, velocity components), uniform circular motion (angular quantities, centripetal acceleration and force, centrifugal force), and applications of circular motion (skidding, banking, bending of cyclist, overturning, vertical circle).",
+      "revision_tip": "For every projectile MCQ write the three key formulas first (T, R, H). For every circular motion MCQ write F = mv²/r. Then identify what is given and what is asked — 80 % of problems solve themselves once those are written.",
+      "topics": [
+        {
+          "topic_number": 1,
+          "topic_name": "Oblique Projectile Motion",
+          "topic_slug": "oblique-projectile-motion",
+          "topic_description": "A body projected at angle θ with horizontal speed u follows a parabolic trajectory governed by y = x tanθ − gx²/(2u²cos²θ). The horizontal (u cosθ) and vertical (u sinθ) components act independently. Key results: T = 2u sinθ/g; H = u²sin²θ/2g; R = u²sin2θ/g; R_max = u²/g at θ = 45° with H = R_max/4. Complementary angles θ and (90°−θ) give equal R. R = 4H cotθ; if R = nH then tanθ = 4/n. Relative motion between two projectiles tracks a straight line. KE at highest point = (1/2)mu²cos²θ.",
+          "topic_pills": ["Trajectory equation", "Time of flight", "Horizontal range", "Maximum height", "Complementary angles", "Max range at 45°"],
+          "subtopics": [
+            {
+              "name": "Trajectory of Oblique Projectile",
+              "slug": "trajectory-oblique-projectile",
+              "description": "Resolving initial velocity u into horizontal u cosθ and vertical u sinθ, and eliminating time gives y = x tanθ − gx²/(2u²cos²θ). This is a parabola of the form y = ax − bx². The trajectory can also be written y = x tanθ [1 − x/R] where R = u²sin2θ/g. The principle of physical independence of motions means horizontal and vertical motions are entirely independent of each other."
+            },
+            {
+              "name": "Time of Flight, Range and Maximum Height",
+              "slug": "time-of-flight-range-maximum-height",
+              "description": "Time of flight T = 2u sinθ/g (time to go up equals time to come down). Horizontal range R = u²sin2θ/g. Maximum height H = u²sin²θ/2g. For maximum range at 45°: R_max = u²/g and corresponding H = u²/4g = R_max/4. Relation between R and H: R = 4H cotθ. If R = nH then tanθ = 4/n."
+            },
+            {
+              "name": "Complementary Angles and Other Properties",
+              "slug": "complementary-angles-other-properties",
+              "description": "For complementary projection angles θ and (90°−θ): R₁ = R₂ (same range); T₁/T₂ = tanθ; H₁/H₂ = tan²θ. T₁T₂ = 2R/g. Motion of projectile A relative to B is a straight line since the ratio y/x = constant. KE at highest point K' = K cos²θ (only horizontal component remains). Angular momentum at highest point L = mu³cosθsin²θ / 2g."
+            }
+          ]
+        },
+        {
+          "topic_number": 2,
+          "topic_name": "Horizontal Projectile Motion",
+          "topic_slug": "horizontal-projectile-motion",
+          "topic_description": "A body projected horizontally with speed u from height h. The horizontal velocity remains constant at u throughout. Vertical velocity builds from zero under gravity. Trajectory: y = gx²/2u² (downward parabola). Time of flight T = √(2h/g). Horizontal range R = u√(2h/g). Instantaneous speed v = √(u² + 2gy). Angle of velocity with horizontal: tanφ = √(2gy)/u = gt/u.",
+          "topic_pills": ["Constant horizontal velocity", "Parabolic trajectory", "T = √(2h/g)", "v = √(u²+2gy)"],
+          "subtopics": [
+            {
+              "name": "Trajectory, Time of Flight and Range",
+              "slug": "trajectory-time-of-flight-range-horizontal",
+              "description": "Horizontal displacement x = ut; vertical displacement y = ½gt² (initial vertical velocity = 0). Eliminating t: y = gx²/2u². Time to reach ground from height h: T = √(2h/g). Range on the ground: R = uT = u√(2h/g). Bodies thrown horizontally from the same height with the same or different horizontal speeds reach the ground in the same time T = √(2h/g) because their vertical motions are identical."
+            },
+            {
+              "name": "Instantaneous Velocity in Horizontal Projection",
+              "slug": "instantaneous-velocity-horizontal-projection",
+              "description": "vₓ = u (constant horizontal component). vy = gt = √(2gy) (growing vertical component). Resultant speed v = √(u² + (gt)²) = √(u² + 2gy). Direction of velocity w.r.t horizontal: tanφ = vy/vx = √(2gy)/u = gt/u. The angle φ increases continuously from 0 to 90° as the body falls from the projection point to the ground."
+            }
+          ]
+        },
+        {
+          "topic_number": 3,
+          "topic_name": "Uniform Circular Motion",
+          "topic_slug": "uniform-circular-motion",
+          "topic_description": "A particle moving in a circle at constant speed. Angular displacement θ is an axial vector. Angular velocity ω = dθ/dt = 2π/T = 2πn (axial vector). Centripetal acceleration a = v²/r = ω²r, always directed towards centre. Centripetal force F = mv²/r = mω²r. Work done by centripetal force is always zero (force ⊥ displacement). Centrifugal force is a fictitious reaction force in the rotating frame. Angular acceleration α = dω/dt = 0 for uniform circular motion.",
+          "topic_pills": ["ω = 2π/T = 2πn", "a = v²/r = ω²r", "F = mv²/r", "Work by centripetal = 0"],
+          "subtopics": [
+            {
+              "name": "Angular Quantities and Kinematics",
+              "slug": "angular-quantities-kinematics",
+              "description": "Angular displacement θ (dimensionless, axial vector; 2π rad = 360° = 1 revolution). Angular velocity ω = dθ/dt; ω = 2π/T = 2πn; dimensions [T⁻¹]; units rad s⁻¹. Relation between linear and angular: v = ωr; ds = dθ × r. Angular acceleration α = dω/dt; dimensions [T⁻²]. For uniform circular motion ω = constant so α = 0. Equations of circular motion mirror kinematic equations: ω₂ = ω₁ + αt; θ = ω₁t + ½αt²; ω₂² = ω₁² + 2αθ."
+            },
+            {
+              "name": "Centripetal Acceleration and Centripetal Force",
+              "slug": "centripetal-acceleration-force",
+              "description": "Centripetal acceleration magnitude: a = v²/r = ω²r = 4π²n²r = 4π²r/T²; always directed radially inward. Centripetal force is not a separate force but whatever real force (tension, friction, gravity, normal, magnetic) is directed towards the centre. F = mv²/r = mω²r. The work done by centripetal force is always zero because force is perpendicular to instantaneous velocity."
+            },
+            {
+              "name": "Centrifugal Force",
+              "slug": "centrifugal-force",
+              "description": "A fictitious (pseudo) force that appears in the rotating frame of reference. Its magnitude equals the centripetal force mv²/r but acts radially outward. It has no physical reality in the inertial frame; it arises only to balance centripetal force for an observer co-rotating with the body. It should never be invoked in inertial frame analysis."
+            }
+          ]
+        },
+        {
+          "topic_number": 4,
+          "topic_name": "Applications of Circular Motion",
+          "topic_slug": "applications-circular-motion",
+          "topic_description": "Practical consequences of centripetal force requirements: (1) Skidding on level road — safe speed v ≤ √(μrg). (2) Banking of road — tan θ = v²/rg; with friction v_max = √(rg(μ+tanθ)/(1−μtanθ)). (3) Bending of cyclist — same relation tan θ = v²/rg because horizontal reaction provides centripetal force. (4) Overturning of vehicle — happens when v > √(gra/h) where a = half wheel-base and h = centre-of-gravity height. (5) Vertical circle — minimum speed at lowest point √(5gl); critical speed at top √(gl).",
+          "topic_pills": ["Safe speed = √(μrg)", "Banking tanθ = v²/rg", "Cyclist tanθ = v²/rg", "Overturning v = √(gra/h)", "Vertical circle u_min = √(5gl)"],
+          "subtopics": [
+            {
+              "name": "Skidding of Vehicle on Level Road",
+              "slug": "skidding-vehicle-level-road",
+              "description": "When a vehicle takes a turn, friction provides centripetal force. For no skidding: μmg ≥ mv²/r so v_safe ≤ √(μrg). This safe speed is independent of mass. Maximum safe speed depends only on road radius and coefficient of friction between tyre and road. On a rotating platform, maximum angular velocity for no skidding of an object at radius r is ω_max = √(μg/r)."
+            },
+            {
+              "name": "Banking of Roads and Bending of Cyclist",
+              "slug": "banking-roads-bending-cyclist",
+              "description": "Banking: outer edge raised by height h over road width l. Normal reaction resolves into R cosθ (balances mg) and R sinθ (provides centripetal force). Result: tanθ = v²/rg = h/l. With friction: v_max = √(rg(μ+tanθ)/(1−μtanθ)). Bending of cyclist: the cyclist leans inward so that horizontal component of road-reaction provides centripetal force and vertical component balances weight; same result tanθ = v²/rg."
+            },
+            {
+              "name": "Overturning of Vehicle and Vertical Circle",
+              "slug": "overturning-vehicle-vertical-circle",
+              "description": "Overturning: inner wheel (R₁) loses contact when v > √(gra/h) where a = half track width, h = height of CG. For vertical circle (string of length l): minimum speed at bottom to complete loop = √(5gl); speed at top = √(gl); tension at bottom = 6mg, at top = 0. Block leaves frictionless hemisphere at height h = 2r/3 from ground. Non-uniform circular motion: tangential acceleration aₜ = dv/dt and centripetal aₓ = v²/r; net acceleration = √(aₜ²+aₓ²)."
+            }
+          ]
+        }
+      ]
+    },
+    "plan": {
+      "chapter_name": "Motion In Two Dimension",
+      "topics": [
+        {
+          "topic_name": "Oblique Projectile Motion",
+          "topic_description": "Derive trajectory equation, T, R, H from component-wise kinematics. Understand complementary-angle range equality and derivation of R_max = u²/g at 45°.",
+          "topic_pills": ["Trajectory parabola", "T = 2u sinθ/g", "R = u²sin2θ/g", "H = u²sin²θ/2g"],
+          "notes_condensed_description": "Trajectory: y = x tanθ − gx²/(2u²cos²θ). T = 2u sinθ/g. R = u²sin2θ/g. H = u²sin²θ/2g. R_max = u²/g at 45°; H at that point = R_max/4. Complementary angles give same R, T₁/T₂ = tanθ, H₁/H₂ = tan²θ. R = 4H cotθ; R = nH → tanθ = 4/n. KE at top = KE_initial × cos²θ.",
+          "how_to_revise": "Write all five results in one column. Then solve: (i) find H and R given u=20 m/s θ=30°; (ii) find θ if R=H; (iii) complementary angle problem. These three MCQ types cover 90 % of NEET pattern.",
+          "expected_questions": {
+            "value": "1-2",
+            "description": "One numerical (find R or H or T) plus occasionally one complementary-angle or max-range result MCQ."
+          },
+          "time_required": {
+            "value": "2.5 hrs",
+            "description": "Derivation and theory 1 hr; formula drill and 5 worked examples 1 hr; MCQ practice 30 min."
+          },
+          "difficulty": {
+            "value": "Moderate",
+            "description": "Formulas are straightforward but the variety of sub-cases (complementary angles, R vs H relations, max range) means students need systematic practice."
+          },
+          "scoring_focus": "Know T, R, H cold. For complementary angles remember: same R, T ratio = tanθ, H ratio = tan²θ. For max range: 45°, R_max = u²/g, H = R/4.",
+          "high_risk_area": "Confusing H = u²sin²θ/2g with R = u²sin2θ/g — NEET frequently places both as options. Also, applying the horizontal range formula when the projectile lands at a different height from projection.",
+          "best_practice_style": "Substitution numericals (given u, θ find R/H/T). Also short proof: show R = 4H cotθ. Complementary angle MCQs at higher difficulty.",
+          "priority_rule": "High priority. Appears every year. Master T, R, H before anything else in this chapter."
+        },
+        {
+          "topic_name": "Horizontal Projectile Motion",
+          "topic_description": "Projectile launched horizontally from height h; trajectory y = gx²/2u²; T = √(2h/g); R = u√(2h/g); v = √(u²+2gy).",
+          "topic_pills": ["T = √(2h/g)", "R = u√(2h/g)", "v = √(u²+2gy)", "tanφ = √(2gy)/u"],
+          "notes_condensed_description": "Horizontal speed constant = u. Vertical builds: vy = gt. T = √(2h/g). R = u√(2h/g). Speed at height y from launch: v = √(u²+2gy). Angle of velocity: tanφ = vy/u. Trajectory: y = gx²/(2u²) — downward parabola.",
+          "how_to_revise": "Practice two problem types: (i) find where the body lands given h and u; (ii) find speed and angle at a given height y (or at ground). Both types appear in NEET.",
+          "expected_questions": {
+            "value": "1",
+            "description": "One question, often asking for range or angle at impact for a horizontally projected body."
+          },
+          "time_required": {
+            "value": "1 hr",
+            "description": "Short derivation 20 min + 4 examples 40 min."
+          },
+          "difficulty": {
+            "value": "Easy-Moderate",
+            "description": "Simpler than oblique projection because initial vertical velocity = 0. Most students find this section straightforward once T = √(2h/g) is memorised."
+          },
+          "scoring_focus": "T = √(2h/g) and R = u√(2h/g) are the two direct-scoring formulas. For velocity, know v = √(u²+2gy).",
+          "high_risk_area": "Forgetting that the horizontal component of velocity stays constant (= u) throughout. Students sometimes erroneously apply Newton's equations to the horizontal direction.",
+          "best_practice_style": "Short one-step or two-step numericals. NEET may combine with free-fall comparisons (e.g., which body reaches ground first).",
+          "priority_rule": "Medium priority. Quick to cover; one predictable question type."
+        },
+        {
+          "topic_name": "Uniform Circular Motion",
+          "topic_description": "Angular kinematics (ω, α, θ), centripetal acceleration a = v²/r = ω²r, centripetal force F = mv²/r, centrifugal (fictitious) force, work done = 0.",
+          "topic_pills": ["ω = 2π/T", "a = v²/r = ω²r", "F = mv²/r", "Work = 0"],
+          "notes_condensed_description": "ω = 2π/T = 2πn. Centripetal acceleration a = v²/r = ω²r = 4π²n²r, directed inward. Centripetal force = mv²/r (provided by tension/friction/gravity/normal as situation requires). Work by centripetal force = 0 (perpendicular to velocity). α = 0 for uniform circular motion. Centrifugal force is fictitious — appears only in rotating frame.",
+          "how_to_revise": "Memorise a = v²/r and F = mv²/r. Practice identifying what plays the role of centripetal force in each physical situation (string tension, friction, gravity components). Then use F_net = mv²/r to solve.",
+          "expected_questions": {
+            "value": "1",
+            "description": "Usually one direct numerical: find centripetal force or acceleration given speed and radius."
+          },
+          "time_required": {
+            "value": "1.5 hrs",
+            "description": "Angular quantities and derivation 40 min; centripetal force concept and examples 50 min."
+          },
+          "difficulty": {
+            "value": "Easy-Moderate",
+            "description": "Conceptually clear once the direction convention is established. Numerically straightforward."
+          },
+          "scoring_focus": "Know a = v²/r = ω²r and F = mv²/r. Understanding that centripetal force is always zero net work is a frequent True/False type MCQ.",
+          "high_risk_area": "Treating centrifugal force as a real force in inertial frame analysis. Also confusing centripetal acceleration direction (inward) with velocity direction (tangential).",
+          "best_practice_style": "Identification MCQs (which force is centripetal in a given setting) plus numericals for a and F.",
+          "priority_rule": "High priority. Directly tested; formulas are simple; scoring is easy with minimal preparation."
+        },
+        {
+          "topic_name": "Applications of Circular Motion",
+          "topic_description": "Skidding (v ≤ √(μrg)), banking (tanθ = v²/rg), bending of cyclist (tanθ = v²/rg), overturning (v = √(gra/h)), vertical circle (u_min = √(5gl)).",
+          "topic_pills": ["v_safe = √(μrg)", "Banking tanθ = v²/rg", "Overturning v = √(gra/h)", "Vertical circle √(5gl)"],
+          "notes_condensed_description": "Skidding: v_safe ≤ √(μrg); mass independent. Banking: tanθ = v²/rg = h/l; with friction v_max = √(rg(μ+tanθ)/(1−μtanθ)). Cyclist bending: same tanθ = v²/rg. Overturning: v = √(gra/h); inner wheel R₁ lifts first. Vertical circle (string l): v_min at bottom = √(5gl); speed at top = √(gl); tension bottom = 6mg, top = 0. Block on hemisphere: detaches at h = 2r/3.",
+          "how_to_revise": "Write each application scenario and its governing formula. Practice: (i) banking angle for given speed; (ii) max speed on level road given μ; (iii) overturning speed. These three types are standard NEET MCQs.",
+          "expected_questions": {
+            "value": "1",
+            "description": "Usually one application question — banking angle or safe speed derivation in a new context."
+          },
+          "time_required": {
+            "value": "2 hrs",
+            "description": "Banking and skidding 45 min; bending and overturning 30 min; vertical circle 45 min."
+          },
+          "difficulty": {
+            "value": "Moderate-Hard",
+            "description": "Multiple real-world scenarios each with slightly different free-body diagrams. Vertical circle analysis is the hardest subtopic in the chapter."
+          },
+          "scoring_focus": "Banking formula tanθ = v²/rg appears most often. Safe speed √(μrg) and overturning speed √(gra/h) appear regularly.",
+          "high_risk_area": "Vertical circle — students often forget the minimum speed condition √(5gl) applies at the bottom, not the top. Also mixing up banking with flat-road conditions.",
+          "best_practice_style": "Free-body-diagram derivation questions followed by numerical substitution. NEET often tests: 'what happens to safe speed if mass doubles?' (answer: unchanged — mass cancels).",
+          "priority_rule": "High priority. Banking and safe speed appear almost every year. Vertical circle appears every 2–3 years."
+        }
+      ]
+    },
+    "trap": {
+      "chapter_name": "Motion In Two Dimension",
+      "topics": [
+        {
+          "subtopic_name": "Confusing Range and Height Formulas",
+          "subtopic_tags": ["Oblique Projectile", "Range", "Maximum Height"],
+          "mistakes": [
+            {
+              "label": "Swapping sin2θ and sin²θ",
+              "description": "R = u²sin2θ/g uses sin2θ = 2sinθcosθ (involves both components). H = u²sin²θ/2g uses sin²θ (only vertical component). Students swap the sin-squared vs sin-double-angle and get the wrong formula."
+            },
+            {
+              "label": "Using oblique range formula when launch and landing heights differ",
+              "description": "R = u²sin2θ/g only holds when the projectile returns to the same vertical height as launch. When landing on a cliff or slope, this formula is inapplicable."
+            }
+          ],
+          "example": "u = 20 m/s, θ = 30°. R = 400 × sin60° / 10 = 400 × (√3/2) / 10 = 20√3 m ≈ 34.6 m. H = 400 × sin²30° / 20 = 400 × 0.25 / 20 = 5 m. Note R >> H at 30°.",
+          "trap_framing": "NEET lists H and R as answer options A and B with values swapped to catch formula confusion.",
+          "trap_question": {
+            "stem": "A ball is projected with initial velocity 20 m/s at 30° above horizontal. What is its maximum height? (g=10 m/s²)",
+            "options": ["5 m", "20√3 m", "10 m", "√3 m"],
+            "trick": "Correct answer is 5 m (H = u²sin²θ/2g). Option B (20√3 m) is the range and is deliberately placed to trap students who swap formulas."
+          },
+          "quick_rule": "H uses sin²θ over 2g; R uses sin2θ over g. sin2θ contains a factor of 2 that compensates the extra g in the denominator, making R much larger than H for angles below 45°."
+        },
+        {
+          "subtopic_name": "Complementary Angles — Range Equality vs Other Quantities",
+          "subtopic_tags": ["Oblique Projectile", "Complementary Angles"],
+          "mistakes": [
+            {
+              "label": "Assuming time of flight is also equal for complementary angles",
+              "description": "Range is equal for θ and (90°−θ), but time of flight T₁/T₂ = tanθ ≠ 1. NEET exploits this by asking about T after planting the range-equality concept."
+            },
+            {
+              "label": "Forgetting that maximum height ratio is tan²θ",
+              "description": "H₁/H₂ = tan²θ, not tanθ. Students who recall the T ratio often write the same for H."
+            }
+          ],
+          "example": "θ = 30°, θ' = 60°. T₁/T₂ = tan30° = 1/√3. H₁/H₂ = tan²30° = 1/3. R₁/R₂ = 1.",
+          "trap_framing": "Question states two projectiles have equal range. 'Which pair has equal time of flight?' — the trap is that equal range does NOT imply equal T.",
+          "trap_question": {
+            "stem": "Two projectiles are thrown with the same speed at 30° and 60° to the horizontal. The ratio of their times of flight T₁ : T₂ is:",
+            "options": ["1:√3", "1:3", "1:1", "√3:1"],
+            "trick": "Correct answer is 1:√3 (T = 2usinθ/g so ratio = sin30°/sin60° = (1/2)/(√3/2) = 1/√3). Students picking 1:1 confuse this with the equal-range result."
+          },
+          "quick_rule": "For complementary angles: RANGE is equal; TIME OF FLIGHT ratio = tanθ (of the smaller angle); HEIGHT ratio = tan²θ (of the smaller angle)."
+        },
+        {
+          "subtopic_name": "Work Done By Centripetal Force",
+          "subtopic_tags": ["Uniform Circular Motion", "Centripetal Force", "Work Done"],
+          "mistakes": [
+            {
+              "label": "Thinking centripetal force does work because speed is maintained",
+              "description": "Centripetal force keeps the particle on the circular path but is always perpendicular to velocity. Since W = F·d·cosθ and θ = 90°, work is always zero regardless of the speed or duration."
+            },
+            {
+              "label": "Confusing centripetal force with centrifugal force in inertial frame",
+              "description": "In the ground (inertial) frame, centrifugal force does not exist. Only centripetal force acts, directed inward, doing zero work."
+            }
+          ],
+          "example": "An electron orbits a nucleus at constant speed. KE stays constant because the electrostatic force (centripetal) does zero work at every instant.",
+          "trap_framing": "MCQ: 'How much work does the centripetal force do on a satellite in one complete orbit?' — distractor answers include non-zero values.",
+          "trap_question": {
+            "stem": "A particle moves in a uniform circular path. The work done by the centripetal force in one complete revolution is:",
+            "options": ["Zero", "mv²/r × 2πr", "−mv²/r × 2πr", "mv²"],
+            "trick": "Correct answer is Zero. Centripetal force is always perpendicular to displacement (tangent), so dot product F·ds = 0 at every point. No work is accumulated over any arc or full revolution."
+          },
+          "quick_rule": "Centripetal force ⊥ velocity always → Work = 0 always. Same logic applies to magnetic force on a charged particle in a field."
+        },
+        {
+          "subtopic_name": "Banking Angle vs Safe Speed on Level Road",
+          "subtopic_tags": ["Banking of Road", "Circular Motion Applications"],
+          "mistakes": [
+            {
+              "label": "Applying the banking formula to a flat (level) road",
+              "description": "On a flat road, there is no banking angle; safe speed comes from friction alone: v ≤ √(μrg). Students incorrectly include a tanθ term when θ = 0 for a flat road."
+            },
+            {
+              "label": "Forgetting that safe speed on level road is mass-independent",
+              "description": "v_safe = √(μrg) has no m in it because centripetal force required and friction force available both scale identically with mass. NEET tests 'effect of doubling mass on safe speed' — answer is no change."
+            }
+          ],
+          "example": "μ = 0.5, r = 50 m, g = 10 m/s². v_safe = √(0.5 × 50 × 10) = √250 = 5√10 m/s ≈ 15.8 m/s. Doubling mass: v_safe still = 5√10 m/s.",
+          "trap_framing": "NEET asks max safe speed on a circular level road and lists mass-dependent options.",
+          "trap_question": {
+            "stem": "A vehicle of mass 1000 kg takes a circular turn of radius 50 m on a flat road (μ = 0.5, g = 10 m/s²). The maximum safe speed is:",
+            "options": ["5√10 m/s", "50 m/s", "5√10/1000 m/s", "10√5 m/s and depends on mass"],
+            "trick": "Correct answer is 5√10 m/s. Mass cancels completely. Option C (dividing by mass) is the main trap for students who write μmg = mv²/r without cancelling m."
+          },
+          "quick_rule": "Safe speed on a level road = √(μrg). Mass does NOT appear. For banking without friction: tanθ = v²/rg, again mass-independent."
+        }
+      ]
+    }
+  },
+  "grounding": {
+    "source_page_markdown_paths": [
+      "pages/physics-1/page-134/markdown.md",
+      "pages/physics-1/page-135/markdown.md",
+      "pages/physics-1/page-136/markdown.md",
+      "pages/physics-1/page-137/markdown.md",
+      "pages/physics-1/page-138/markdown.md",
+      "pages/physics-1/page-139/markdown.md",
+      "pages/physics-1/page-140/markdown.md",
+      "pages/physics-1/page-141/markdown.md",
+      "pages/physics-1/page-142/markdown.md",
+      "pages/physics-1/page-143/markdown.md",
+      "pages/physics-1/page-144/markdown.md",
+      "pages/physics-1/page-145/markdown.md",
+      "pages/physics-1/page-146/markdown.md",
+      "pages/physics-1/page-147/markdown.md",
+      "pages/physics-1/page-148/markdown.md"
+    ],
+    "grounding_summary": [
+      "Page 134: Introduction to projectile motion, definition of projectile, assumptions (no air resistance, constant g), principle of physical independence of motions — horizontal uniform, vertical uniformly accelerated.",
+      "Page 135: Types of projectile motion (oblique, horizontal, inclined). Oblique projectile: what stays constant (horizontal velocity, energy) and what changes. Trajectory derivation y = x tanθ − gx²/(2u²cos²θ). Displacement vector.",
+      "Page 136: Instantaneous velocity magnitude v = √(u²+g²t²−2ugt sinθ), direction tanα = (u sinθ−gt)/(u cosθ). Change in velocity and momentum at highest point and for complete motion.",
+      "Page 137: Time of flight T = 2u sinθ/g. Complementary angles: T ratio = tanθ; T product = 2R/g. Time difference formula for equal-height points.",
+      "Page 138: Horizontal range R = u²sin2θ/g. Complementary angles give equal R. Max range at 45°: R_max = u²/g; H at max range = R_max/4. R = 4H cotθ. R = nH implies tanθ = 4/n.",
+      "Page 139: Horizontal projectile — trajectory y = gx²/2u², time of flight T = √(2h/g), range R = u√(2h/g), instantaneous velocity v = √(u²+2gy), direction tanφ = √(2gy)/u.",
+      "Page 140: Further horizontal projectile properties, comparison of bodies thrown from same height.",
+      "Page 141: Circular motion definition, displacement and distance on circular arc, angular displacement (axial vector). Start of angular velocity definitions.",
+      "Page 142: Angular velocity ω = 2π/T = 2πn. Angular acceleration α; for uniform circular: α = 0. Centripetal acceleration a = v²/r = ω²r directed radially inward. Centripetal force F = mv²/r.",
+      "Page 143: Centripetal force table (various physical situations). Centrifugal force as fictitious inertial force in rotating frame. Work done by centripetal force = 0. Skidding condition v_safe ≤ √(μrg).",
+      "Page 144: Bending of cyclist: tanθ = v²/rg; cyclist leans inward. Banking of road: tanθ = v²/rg = h/l; with friction v_max = √(rg(μ+tanθ)/(1−μtanθ)).",
+      "Page 145: Overturning of vehicle: inner wheel lifts first; v_overturn = √(gra/h). Charged particle in magnetic field: radius r = mv/qB. Road reaction on concave/convex bridge.",
+      "Page 146: Non-uniform circular motion: tangential and centripetal accelerations. Equations of circular motion analogous to linear equations. Vertical circle introduction.",
+      "Page 147: Vertical circle: condition table for various initial speeds. Critical speed at lowest point = √(5gl). Block on frictionless hemisphere detaches at h = 2r/3.",
+      "Page 148: Conical pendulum — T = mgl/√(l²−r²); ω = √(g/h); time period Tp = 2π√(h/g). Tips and tricks for projectile motion: KE at top = (1/2)mu²cos²θ."
+    ],
+    "grounding_excerpt": [
+      "The trajectory of a projectile moving under the influence of a constant acceleration is a parabola.",
+      "A body which is in flight through the atmosphere under the effect of gravity alone and is not being propelled by any fuel is called projectile and its motion is called projectile motion.",
+      "The motion of a projectile is a two-dimensional motion. So, it can be discussed in two parts. Horizontal motion and vertical motion. These two motions take place independent of each other. This is called the principle of physical independence of motions.",
+      "Angular displacement is an axial vector quantity.",
+      "When a particle moves in a circle at a constant speed then the motion is said to be a uniform circular motion.",
+      "The work done by centripetal force is always zero as it is perpendicular to velocity and hence instantaneous displacement.",
+      "When a vehicle takes a turn on a circular path it requires centripetal force.",
+      "A cyclist provides himself the necessary centripetal force by leaning inward on a horizontal track, while going round a curve.",
+      "Thus motion of a projectile relative to another projectile is a straight line.",
+      "When a car moves in a circular path with speed more than a certain maximum speed then it overturns even if friction is sufficient to avoid skidding and its inner wheel leaves the ground first"
+    ],
+    "sources": [
+      {
+        "title": "NCERT Physics Part I — Chapter 4: Motion in a Plane",
+        "url": "https://ncert.nic.in/ncerts/l/leph104.pdf",
+        "publisher": "NCERT",
+        "accessed_date": "2026-03-30",
+        "why_used": "Primary authoritative syllabus reference for 2D kinematics for NEET. Verified trajectory equations, time-of-flight and range derivations, centripetal acceleration and force definitions against OCR textbook content."
+      },
+      {
+        "title": "HyperPhysics — Projectile Motion and Circular Motion",
+        "url": "http://hyperphysics.phy-astr.gsu.edu/hbase/traj.html",
+        "publisher": "Georgia State University",
+        "accessed_date": "2026-03-30",
+        "why_used": "Cross-checked trajectory parabola derivation, horizontal projection formulas, centripetal acceleration direction, and banking angle derivation against authoritative physics reference."
+      }
+    ],
+    "key_facts": [
+      "Trajectory of oblique projectile: y = x tanθ − gx²/(2u²cos²θ)",
+      "Time of flight: T = 2u sinθ/g",
+      "Horizontal range: R = u²sin2θ/g",
+      "Maximum height: H = u²sin²θ/2g",
+      "Maximum range at θ = 45°: R_max = u²/g; corresponding H = R_max/4",
+      "Complementary angles (θ and 90°−θ): equal range, T₁/T₂ = tanθ, H₁/H₂ = tan²θ",
+      "R = 4H cotθ; R = nH implies tanθ = 4/n",
+      "Horizontal projectile: T = √(2h/g); R = u√(2h/g); v = √(u²+2gy)",
+      "Centripetal acceleration: a = v²/r = ω²r; angular frequency ω = 2π/T = 2πn",
+      "Centripetal force: F = mv²/r = mω²r; work done by centripetal force = 0",
+      "Safe speed on level road: v_safe ≤ √(μrg) — mass independent",
+      "Banking angle: tanθ = v²/rg = h/l",
+      "Bending of cyclist: tanθ = v²/rg",
+      "Overturning speed: v = √(gra/h)",
+      "Vertical circle minimum speed at bottom: u_min = √(5gl)"
+    ],
+    "review": {
+      "used_local_page_grounding": true,
+      "semantic_page_read_complete": true,
+      "used_current_research": true,
+      "research_used_for_enrichment": false,
+      "template_preserved": true,
+      "scope_checked": true,
+      "syllabus_scope_verified": true,
+      "guardrails_passed": true,
+      "notes": "All content derived exclusively from OCR pages 134-148 of physics-1 textbook. All grounding excerpts verified as verbatim text from the source markdown files. NEET syllabus scope confirmed — chapter is fully within NEET physics curriculum."
+    }
+  }
+}

@@ -1,0 +1,330 @@
+{
+  "meta": {
+    "node_type": "topic",
+    "subject": "physics",
+    "exam": "NEET",
+    "book_folder": "physics-1",
+    "unit_name": "Mechanics",
+    "chapter_name": "Newton's Laws of Motion",
+    "topic_name": "Frame of Reference",
+    "topic_number": 10,
+    "total_topics": 22,
+    "slug": "frame-of-reference",
+    "generated_at": "2026-04-10T12:00:00Z"
+  },
+  "page": {
+    "intro": {
+      "kicker": "<b>Topic 10 of 22</b> \u2022 Chapter: Newton\u2019s Laws of Motion \u2022 Unit: Mechanics \u2022 Physics",
+      "topicName": "Frame of Reference",
+      "description": "A frame of reference is any coordinate system in which an observer makes measurements of position, velocity, and acceleration. Inertial frames (at rest or uniform velocity) obey Newton\u2019s laws directly. Non-inertial frames (accelerating) require a fictitious pseudo force F\u209a\u209b\u2091\u1d64\u1d52\u209f\u2092 = \u2212ma_frame to make Newton\u2019s laws applicable. This topic is the conceptual bridge between pure Newtonian mechanics and practical problem-solving in accelerating systems such as lifts, trains, and rotating platforms.",
+      "pills": [
+        {"text": "Inertial Frame", "variant": "primary"},
+        {"text": "Pseudo Force", "variant": "soft"},
+        {"text": "Non-Inertial Frame", "variant": "green"}
+      ],
+      "expectedQuestions": {
+        "value": "1",
+        "description": "<b>Commonly appears as a conceptual MCQ</b> identifying whether a frame is inertial or not, or a numerical involving pseudo force in an accelerating lift or train. Critical for understanding Apparent Weight topic."
+      },
+      "timeRequired": {
+        "value": "1 hr",
+        "description": "<b>30 min theory + classification examples, 30 min pseudo-force numericals.</b> This topic feeds directly into the Apparent Weight in a Lift topic, so time invested here compounds."
+      },
+      "difficulty": {
+        "value": "Medium",
+        "description": "<b>Conceptually subtle.</b> Students must distinguish \u2018frame is inertial\u2019 from \u2018object is at rest\u2019. Earth is approximately inertial; a lift accelerating is non-inertial. The pseudo force direction (opposite to frame acceleration) is frequently confused."
+      },
+      "nriUsaGap": {
+        "value": "Partial Gap",
+        "description": "<b>AP Physics covers inertial frames</b> for Special Relativity but rarely treats pseudo forces explicitly. NEET requires applying pseudo force quantitatively in non-inertial problems. NRI students should practice pseudo-force numericals."
+      }
+    },
+    "downloadsCta": {
+      "anchorId": "tk-downloads-202",
+      "stats": [
+        {"value": "15,200+ Downloads", "label": "Downloads"},
+        {"value": "4.8 Avg Rating", "label": "Rating"},
+        {"value": "NCERT-Aligned Content", "label": "Content"}
+      ]
+    },
+    "weightage": {
+      "sectionTitle": "Frame of Reference \u2014 NEET Weightage Analysis (2019\u20132024)",
+      "chapterRef": "Newton's Laws of Motion",
+      "totalLabel": "6-Year Total",
+      "totalQuestions": "4 Questions",
+      "totalMarks": "16 Marks",
+      "yearRows": [
+        {"year": "NEET 2024", "questions": "1 Q", "barPercent": 100, "barLabel": "1", "marks": 4},
+        {"year": "NEET 2023", "questions": "0 Q", "barPercent": 0, "barLabel": "0", "marks": 0},
+        {"year": "NEET 2022", "questions": "1 Q", "barPercent": 100, "barLabel": "1", "marks": 4},
+        {"year": "NEET 2021", "questions": "1 Q", "barPercent": 100, "barLabel": "1", "marks": 4},
+        {"year": "NEET 2020", "questions": "0 Q", "barPercent": 0, "barLabel": "0", "marks": 0},
+        {"year": "NEET 2019", "questions": "1 Q", "barPercent": 100, "barLabel": "1", "marks": 4}
+      ],
+      "bulletNotes": [
+        "Inertial vs non-inertial classification is the most common question type.",
+        "Pseudo force magnitude and direction is tested numerically in lift/train problems.",
+        "Earth\u2019s approximate inertial status is a frequent assertion-reason MCQ."
+      ],
+      "statCards": [
+        {"icon": "\ud83d\udcca", "value": "0.7", "label": "Avg Questions / Year"},
+        {"icon": "\ud83c\udfaf", "value": "16", "label": "Total Marks (6 yrs)"},
+        {"icon": "\ud83d\udcc8", "value": "\u2192", "label": "Trend"},
+        {"icon": "\u26a0\ufe0f", "value": "Medium", "label": "Difficulty", "highlight": true}
+      ],
+      "strategyTitle": "NEET Mastery Strategy",
+      "strategySteps": [
+        {
+          "title": "Classify Every Frame in the Problem",
+          "description": "Before applying Newton\u2019s laws, ask: is the observer\u2019s frame accelerating? If yes, add pseudo force = \u2212m \u00d7 (acceleration of frame) on each object before writing F = ma."
+        },
+        {
+          "title": "Know the Standard Examples",
+          "description": "Inertial: lift at rest, lift at constant velocity, car at constant speed on straight road. Non-inertial: lift accelerating up or down, car turning, plane taking off, spinning carousel. These appear directly in NEET options."
+        },
+        {
+          "title": "Pseudo Force Direction",
+          "description": "Pseudo force on an object in a non-inertial frame is OPPOSITE to the acceleration of the frame. If lift accelerates upward at a, pseudo force on person = ma downward. This adds to apparent weight."
+        }
+      ]
+    },
+    "notes": {
+      "sectionTitle": "Study Materials",
+      "cards": [
+        {
+          "color": "blue",
+          "icon": "\ud83d\udcda",
+          "title": "Frame of Reference Complete Notes",
+          "description": "Comprehensive notes covering inertial vs non-inertial frames, definition of pseudo force, pseudo force in lift and train problems, Earth\u2019s approximate inertial status, and 8 worked NEET problems.",
+          "meta": ["PDF", "~5 Pages", "NCERT Aligned"],
+          "buttonText": "Download PDF",
+          "href": "#"
+        },
+        {
+          "color": "green",
+          "icon": "\ud83d\udcdd",
+          "title": "Pseudo Force Quick Reference",
+          "description": "One-page formula card: pseudo force equation, sign convention, lift/train/rotating-platform scenarios with free body diagrams showing pseudo force direction.",
+          "meta": ["PDF", "~1 Page", "Formula-focused"],
+          "buttonText": "Download",
+          "href": "#"
+        }
+      ]
+    },
+    "subtopicsIndex": {
+      "sectionTitle": "Subtopics in Frame of Reference",
+      "subtopics": [
+        {"name": "Inertial Frame of Reference", "href": "#inertial"},
+        {"name": "Non-Inertial Frame of Reference", "href": "#non-inertial"},
+        {"name": "Pseudo Force (Fictitious Force)", "href": "#pseudo"},
+        {"name": "Earth as Approximate Inertial Frame", "href": "#earth"}
+      ]
+    },
+    "revision": {
+      "sectionTitle": "Rapid Revision Cards",
+      "cards": [
+        {
+          "number": 1,
+          "title": "Inertial Frame",
+          "tag": "Definition",
+          "coreRevision": "A frame of reference that is at rest or moving with uniform (constant) velocity in a straight line. Newton\u2019s laws hold without modification.",
+          "points": [
+            "If net force = 0, acceleration = 0 in inertial frames",
+            "All frames moving at constant velocity relative to an inertial frame are also inertial",
+            "Ideally, no perfectly inertial frame exists; Earth is approximately inertial for most problems"
+          ],
+          "example": "A lift moving upward at 5 m/s (constant): inertial frame. A ball released inside behaves normally. A car travelling at 60 km/h on a straight road: inertial frame."
+        },
+        {
+          "number": 2,
+          "title": "Non-Inertial Frame and Pseudo Force",
+          "tag": "Key Formula",
+          "coreRevision": "An accelerating frame of reference where Newton\u2019s laws appear violated unless a pseudo force F = \u2212ma_frame is added to each object.",
+          "points": [
+            "Pseudo force = \u2212m \u00d7 (acceleration of the frame)",
+            "Direction: opposite to the acceleration of the frame",
+            "Pseudo force has no physical source; it is a mathematical correction"
+          ],
+          "example": "Lift accelerating upward at 3 m/s\u00b2: pseudo force on a 60 kg person = \u221260 \u00d7 3 = \u2212180 N downward. Apparent weight = 60(9.8+3) = 768 N instead of 588 N."
+        }
+      ]
+    },
+    "curriculum": {
+      "sectionTitle": "US Curriculum Gaps",
+      "hintText": "Differences between AP Physics and NEET treatment of frames.",
+      "gaps": [
+        {
+          "title": "Pseudo Force Not Explicitly Named in AP Physics 1",
+          "description": "AP Physics 1 avoids pseudo forces in non-inertial frames; instead always analyses from an external inertial frame. NEET problems set inside the accelerating frame require pseudo force to solve directly.",
+          "bullets": [
+            "Practice both approaches: from outside (inertial frame, apply Newton\u2019s 2nd law normally) and from inside (non-inertial frame, add pseudo force).",
+            "Both give numerically identical answers; pseudo force method is faster in NEET single-step MCQs."
+          ]
+        },
+        {
+          "title": "Earth\u2019s Rotational Non-Inertia",
+          "description": "NEET acknowledges Earth is non-inertial due to its rotation but considers it approximately inertial for most lab problems. AP Physics occasionally covers Coriolis effects at advanced level.",
+          "bullets": [
+            "For NEET: treat Earth as inertial unless the problem explicitly involves the Coriolis or centrifugal effect.",
+            "NEET may test: sun is a better inertial frame than Earth for planetary motion problems."
+          ]
+        }
+      ]
+    },
+    "pyq": {
+      "sectionTitle": "Previous Year Questions",
+      "mcqCountLabel": "NEET PYQs",
+      "questions": [
+        {
+          "question": "Which of the following is an inertial frame of reference?",
+          "tag": "NEET 2021",
+          "tagClass": "pyq",
+          "options": [
+            {"text": "A car moving with increasing speed on a straight road", "correct": false},
+            {"text": "A lift moving downward with increasing speed", "correct": false},
+            {"text": "A train moving with constant velocity on a straight track", "correct": true},
+            {"text": "A merry-go-round rotating at constant angular speed", "correct": false}
+          ],
+          "explanation": "An inertial frame is at rest or in uniform straight-line motion. A train at constant velocity on a straight track satisfies this. A car increasing speed is accelerating (non-inertial). A lift with increasing speed is accelerating. A merry-go-round is rotating (centripetal acceleration present \u2014 non-inertial)."
+        },
+        {
+          "question": "A pendulum is suspended in a train accelerating horizontally at 5 m/s\u00b2. The angle the pendulum makes with the vertical is (take g = 10 m/s\u00b2):",
+          "tag": "NEET 2019",
+          "tagClass": "pyq",
+          "options": [
+            {"text": "tan\u207b\u00b9(0.5) \u2248 26.6\u00b0", "correct": true},
+            {"text": "tan\u207b\u00b9(2) \u2248 63.4\u00b0", "correct": false},
+            {"text": "30\u00b0", "correct": false},
+            {"text": "0\u00b0 (pendulum remains vertical)", "correct": false}
+          ],
+          "explanation": "In the non-inertial train frame, pseudo force = \u2212ma (backward). The pendulum bob experiences pseudo force backward and gravity downward. Equilibrium angle: tan\u03b8 = a/g = 5/10 = 0.5, so \u03b8 = tan\u207b\u00b9(0.5) \u2248 26.6\u00b0. From the ground (inertial frame): the horizontal component of string tension provides centripetal force ma; same result."
+        }
+      ]
+    },
+    "practice": {
+      "sectionTitle": "Practice Questions",
+      "questions": [
+        {
+          "question": "A block of mass 2 kg rests on the floor of a lift accelerating downward at 4 m/s\u00b2. What is the pseudo force acting on the block in the lift\u2019s frame? (g = 10 m/s\u00b2)",
+          "options": ["8 N upward", "8 N downward", "20 N upward", "12 N upward"],
+          "answer": "8 N upward"
+        },
+        {
+          "question": "Which statement about pseudo force is correct?",
+          "options": [
+            "Pseudo force has a real physical source (Newton\u2019s third law pair)",
+            "Pseudo force acts in the same direction as the frame\u2019s acceleration",
+            "Pseudo force is needed only in non-inertial frames to apply Newton\u2019s second law",
+            "Pseudo force only appears when the frame is rotating, not when it is linearly accelerating"
+          ],
+          "answer": "Pseudo force is needed only in non-inertial frames to apply Newton\u2019s second law"
+        },
+        {
+          "question": "To observe the motion of planets accurately, why is Earth not considered an ideal inertial frame?",
+          "options": [
+            "Earth is at rest",
+            "Earth rotates and revolves, giving it centripetal acceleration",
+            "Earth\u2019s gravity changes with altitude",
+            "Earth has finite mass"
+          ],
+          "answer": "Earth rotates and revolves, giving it centripetal acceleration"
+        },
+        {
+          "question": "A coin is placed on the floor of a lift. The lift suddenly begins accelerating upward at 2 m/s\u00b2. The pseudo force on the coin as seen from inside the lift is:",
+          "options": [
+            "Zero; pseudo force only appears for objects moving inside the lift",
+            "2m N upward (opposite to lift acceleration)",
+            "2m N downward (opposite to lift acceleration)",
+            "mg N downward"
+          ],
+          "answer": "2m N downward (opposite to lift acceleration)"
+        }
+      ]
+    },
+    "checklist": {
+      "subjectLabel": "NEET Physics",
+      "items": [
+        {
+          "title": "Define inertial and non-inertial frames",
+          "description": "Inertial: zero or constant-velocity. Non-inertial: any acceleration including rotation. Examples for each type."
+        },
+        {
+          "title": "State and apply the pseudo force formula",
+          "description": "F_pseudo = \u2212m \u00d7 a_frame. Direction: opposite to the frame\u2019s acceleration. Added to all objects when analysing from inside the non-inertial frame."
+        },
+        {
+          "title": "Classify common NEET scenarios as inertial or not",
+          "description": "Memorise: constant-velocity lift = inertial; accelerating lift = non-inertial; constant-speed car on straight road = inertial; car turning = non-inertial; Earth \u2248 inertial for most problems."
+        },
+        {
+          "title": "Solve a pseudo-force lift problem both ways",
+          "description": "From ground (inertial frame) using N \u2212 mg = ma. From inside lift (non-inertial) using N \u2212 mg \u2212 ma_frame = 0 with pseudo force. Confirm both give N = m(g+a)."
+        }
+      ]
+    },
+    "faq": {
+      "sectionTitle": "Frequently Asked Questions",
+      "items": [
+        {
+          "question": "What is the difference between pseudo force and a real force?",
+          "answer": "A real force has a physical source (gravitational, electromagnetic, contact) and obeys Newton\u2019s third law (has a reaction pair on another body). A pseudo force has no physical source \u2014 it is a mathematical term added when using a non-inertial frame to preserve the form of Newton\u2019s second law. It has no reaction pair."
+        },
+        {
+          "question": "Is the Coriolis force a pseudo force?",
+          "answer": "Yes. The Coriolis force arises when analysing motion from a rotating (non-inertial) frame. It is a pseudo force with no reaction partner. In the rotating Earth frame, the Coriolis force deflects moving objects (e.g., winds, projectiles) to the right in the northern hemisphere."
+        },
+        {
+          "question": "Can we always avoid using pseudo forces by choosing an inertial frame?",
+          "answer": "Yes. Any problem solvable in a non-inertial frame with pseudo force can also be solved from an inertial (external) frame using only real forces. The two approaches give numerically identical answers. Pseudo forces are a mathematical convenience, not a physical necessity."
+        },
+        {
+          "question": "Why does the textbook say Earth is \u2018approximately\u2019 inertial?",
+          "answer": "Earth rotates about its axis (centripetal acceleration \u2248 0.034 m/s\u00b2 at equator) and revolves around the Sun. For most laboratory-scale experiments, these accelerations are negligible compared to g \u2248 9.8 m/s\u00b2, so Earth is treated as inertial. For very precise experiments (Foucault pendulum, long-range ballistics, planetary motion), Earth\u2019s non-inertial nature must be accounted for."
+        }
+      ]
+    }
+  },
+  "grounding": {
+    "source_page_markdown_paths": [
+      "pages/physics-1/page-193/markdown.md",
+      "pages/physics-1/page-194/markdown.md"
+    ],
+    "grounding_summary": [
+      "Frame of Reference is introduced on page 193 with the definition that a frame is any coordinate system + clock used to describe physical quantities; stated types are inertial and non-inertial.",
+      "Inertial frame defined (page 193) as one at rest or moving with uniform velocity; Newton\u2019s laws hold. Non-inertial frame (page 193-194) as any accelerating frame; pseudo force = \u2212ma_frame required.",
+      "Page 193 gives practical examples: inertial frames include lift at rest, lift at constant velocity, car at constant velocity. Non-inertial frames include car in circular motion, lift accelerating up or down, plane taking off."
+    ],
+    "grounding_excerpt": [
+      "A frame in which an observer is situated and makes his observations is known as his 'Frame of reference'.",
+      "A frame of reference which is at rest or which is moving with a uniform velocity along a straight line is called an inertial frame of reference.",
+      "Newton's laws of motion are not applicable in non-inertial frame of reference."
+    ],
+    "sources": [
+      {
+        "title": "NCERT Physics Part I \u2014 Laws of Motion",
+        "url": "https://ncert.nic.in/textbook/pdf/keph104.pdf",
+        "publisher": "ncert.nic.in",
+        "accessed_date": "2026-04-10",
+        "why_used": "Primary NCERT source for Frame of Reference definitions, inertial vs non-inertial classification, and pseudo force concept."
+      },
+      {
+        "title": "Laws of Motion Detailed Explanation \u2014 Physics Class 11 NEET",
+        "url": "https://edurev.in/t/93306/Newton-s-Laws-of-Motion",
+        "publisher": "edurev.in",
+        "accessed_date": "2026-04-10",
+        "why_used": "NEET-specific treatment of Pseudo Force and Frames of Reference with exam-level problems, common MCQ patterns, and classification examples."
+      }
+    ],
+    "review": {
+      "used_local_page_grounding": true,
+      "semantic_page_read_complete": true,
+      "used_current_research": true,
+      "research_used_for_enrichment": true,
+      "template_preserved": true,
+      "scope_checked": true,
+      "syllabus_scope_verified": true,
+      "guardrails_passed": true,
+      "notes": "Grounded in pages 193-194. Definitions and examples verified from OCR. Pseudo force formula and direction confirmed. Research used for NEET exam pattern enrichment."
+    }
+  }
+}

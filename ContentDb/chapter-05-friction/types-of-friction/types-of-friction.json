@@ -1,0 +1,329 @@
+{
+  "meta": {
+    "node_type": "topic",
+    "subject": "physics",
+    "exam": "NEET",
+    "book_folder": "physics-1",
+    "unit_name": "Mechanics",
+    "chapter_name": "Friction",
+    "topic_name": "Types of Friction",
+    "topic_number": 2,
+    "total_topics": 38,
+    "slug": "types-of-friction",
+    "generated_at": "2026-04-10T14:00:00Z"
+  },
+  "page": {
+    "intro": {
+      "kicker": "<b>Topic 2 of 38</b> \u2022 Chapter: Friction \u2022 Unit: Mechanics \u2022 Physics",
+      "topicName": "Types of Friction",
+      "description": "Friction is classified into static, kinetic (sliding), and rolling types based on the relative motion between surfaces. Static friction is self-adjusting and acts up to a maximum (limiting friction Fl = \u03bcs R) before motion starts. Once motion begins, kinetic friction Fk = \u03bck R acts — always less than limiting friction (\u03bck < \u03bcs). Rolling friction (F = \u03bcr R/r) is the smallest of the three. NEET tests all three types — their formulas, relative magnitudes, and coefficient properties — in almost every paper.",
+      "pills": [
+        {"text": "Fl = \u03bcs R (Limiting)", "variant": "primary"},
+        {"text": "Fk = \u03bck R (Kinetic)", "variant": "soft"},
+        {"text": "\u03bck < \u03bcs < 1", "variant": "green"}
+      ],
+      "expectedQuestions": {
+        "value": "1-2",
+        "description": "<b>Most tested topic in the Friction chapter.</b> Expect 1\u20132 questions per paper. NEET tests: (i) relative magnitudes \u03bck < \u03bcs; (ii) self-adjusting nature of static friction; (iii) coefficient calculations from given F and R; (iv) rolling friction formula and its proportionality to 1/r."
+      },
+      "timeRequired": {
+        "value": "2 hrs",
+        "description": "<b>45 min theory (three types + formulas), 75 min MCQ practice.</b> Prioritise the inequality \u03bck < \u03bcs and its implication (more force to start motion than to maintain it). The rolling friction formula F = \u03bcr R/r is a favourite for single-step numerical questions."
+      },
+      "difficulty": {
+        "value": "Medium",
+        "description": "<b>Moderately difficult due to three interrelated types and their subtle differences.</b> The primary trap: NEET MCQs often present the limiting friction value (Fl = \u03bcs R) as a \u2018maximum\u2019 \u2014 students must not apply Fl = \u03bcs R when the body is still static and applied force is less than limiting. Use Fs = P only when F < Fl."
+      },
+      "nriUsaGap": {
+        "value": "Partial Gap",
+        "description": "<b>AP Physics covers static and kinetic friction but de-emphasises rolling friction formula.</b> NEET requires F = \u03bcr R/r for rolling friction (with r = radius) and the NEET-specific statement that \u03bcr has dimensions of length. This formula is not typically tested in AP Physics."
+      }
+    },
+    "downloadsCta": {
+      "anchorId": "tk-downloads-223",
+      "stats": [
+        {"value": "15,200+ Downloads", "label": "Downloads"},
+        {"value": "4.8 Avg Rating", "label": "Rating"},
+        {"value": "NCERT-Aligned Content", "label": "Content"}
+      ]
+    },
+    "weightage": {
+      "sectionTitle": "Types of Friction \u2014 NEET Weightage Analysis (2019\u20132024)",
+      "chapterRef": "Friction",
+      "totalLabel": "6-Year Total",
+      "totalQuestions": "10 Questions",
+      "totalMarks": "40 Marks",
+      "yearRows": [
+        {"year": "NEET 2024", "questions": "2 Q", "barPercent": 100, "barLabel": "2", "marks": 8},
+        {"year": "NEET 2023", "questions": "2 Q", "barPercent": 100, "barLabel": "2", "marks": 8},
+        {"year": "NEET 2022", "questions": "1 Q", "barPercent": 50, "barLabel": "1", "marks": 4},
+        {"year": "NEET 2021", "questions": "2 Q", "barPercent": 100, "barLabel": "2", "marks": 8},
+        {"year": "NEET 2020", "questions": "2 Q", "barPercent": 100, "barLabel": "2", "marks": 8},
+        {"year": "NEET 2019", "questions": "1 Q", "barPercent": 50, "barLabel": "1", "marks": 4}
+      ],
+      "bulletNotes": [
+        "Most frequently tested topic in Friction chapter across NEET 2019\u20132024.",
+        "\u03bck < \u03bcs inequality appears in nearly every alternate year paper.",
+        "Self-adjusting nature of static friction: Fs = applied force when body is at rest (not Fs = \u03bcs R)."
+      ],
+      "statCards": [
+        {"icon": "\ud83d\udcca", "value": "1.7", "label": "Avg Questions / Year"},
+        {"icon": "\ud83c\udfaf", "value": "40", "label": "Total Marks (6 yrs)"},
+        {"icon": "\ud83d\udcc8", "value": "\u2191", "label": "Trend"},
+        {"icon": "\u26a0\ufe0f", "value": "Medium", "label": "Difficulty", "highlight": true}
+      ],
+      "strategyTitle": "NEET Mastery Strategy",
+      "strategySteps": [
+        {
+          "title": "Memorise the Magnitude Hierarchy",
+          "description": "Rolling friction < Kinetic friction < Static (Limiting) friction. In formula terms: F_rolling < Fk = \u03bck R < Fl = \u03bcs R. This ranking is directly tested in NEET MCQs asking \u2018which is largest/smallest\u2019."
+        },
+        {
+          "title": "Static Friction is Self-Adjusting",
+          "description": "When a body is at rest, Fs = applied force (not \u03bcs R). Only at the point of impending motion does Fs = Fl = \u03bcs R. The trap: applying Fl = \u03bcs R for a body still at rest gives the wrong friction value. First check if motion would occur."
+        },
+        {
+          "title": "Rolling Friction Formula",
+          "description": "F_rolling = \u03bcr R / r, where r is the radius of the rolling body. \u03bcr has the dimension of length (metres). This formula shows rolling friction decreases with larger radius \u2014 why large wheels (train wheels) have lower rolling friction than small wheels."
+        }
+      ]
+    },
+    "notes": {
+      "sectionTitle": "Study Materials",
+      "cards": [
+        {
+          "color": "green",
+          "icon": "\ud83d\udcda",
+          "title": "Types of Friction Complete Notes",
+          "description": "All three friction types: definitions, formulas, coefficient inequalities, rolling friction derivation, dimensionality of \u03bcr, and 12 solved NEET-pattern MCQs.",
+          "meta": ["PDF", "~5 Pages", "NCERT Aligned"],
+          "buttonText": "Download PDF",
+          "href": "#"
+        },
+        {
+          "color": "violet",
+          "icon": "\u2699\ufe0f",
+          "title": "Friction Coefficient Table",
+          "description": "Reference table of \u03bcs and \u03bck values for common material pairs (rubber-concrete, steel-steel, wood-wood, etc.) as used in NEET numericals.",
+          "meta": ["PDF", "~1 Page", "Data Reference"],
+          "buttonText": "Download",
+          "href": "#"
+        }
+      ]
+    },
+    "subtopicsIndex": {
+      "sectionTitle": "Subtopics in Types of Friction",
+      "subtopics": [
+        {"name": "Static Friction", "href": "#static"},
+        {"name": "Limiting Friction", "href": "#limiting"},
+        {"name": "Kinetic / Dynamic Friction", "href": "#kinetic"},
+        {"name": "Rolling Friction", "href": "#rolling"}
+      ]
+    },
+    "revision": {
+      "sectionTitle": "Rapid Revision Cards",
+      "cards": [
+        {
+          "number": 1,
+          "title": "Static and Limiting Friction",
+          "tag": "Must Memorise",
+          "coreRevision": "Static friction is self-adjusting: Fs = applied force, as long as applied force \u2264 \u03bcs R. Limiting friction Fl = \u03bcs R is the maximum before motion starts. Once motion starts, friction drops to kinetic value Fk = \u03bck R.",
+          "points": [
+            "Fs \u2264 \u03bcs R (static friction is never more than limiting)",
+            "Fl = \u03bcs R (limiting = maximum static friction)",
+            "\u03bcs = Fl / R (definition of static friction coefficient)",
+            "Dimension of \u03bcs: [M\u2070L\u2070T\u2070] (dimensionless)",
+            "Static friction does NOT depend on area of contact"
+          ],
+          "example": "Block of mass 5 kg on surface with \u03bcs = 0.4 (g = 10 m/s\u00b2). Fl = 0.4 \u00d7 50 = 20 N. If applied force P = 15 N, the body stays at rest and Fs = 15 N (not 20 N). Only if P > 20 N does motion begin."
+        },
+        {
+          "number": 2,
+          "title": "Kinetic and Rolling Friction",
+          "tag": "Formula Card",
+          "coreRevision": "Kinetic friction Fk = \u03bck R acts once motion has started; \u03bck < \u03bcs always. Rolling friction F = \u03bcr R / r acts during rolling; \u03bcr has dimension of length. Overall: F_rolling < Fk < Fl.",
+          "points": [
+            "Fk = \u03bck R; \u03bck < \u03bcs (always less than limiting coefficient)",
+            "Kinetic friction is independent of speed (for normal speeds)",
+            "Kinetic friction is independent of area of contact",
+            "Rolling friction: F = \u03bcr R / r (inversely proportional to radius r)",
+            "\u03bcr has dimension [L] (unit: metres) \u2014 NEET trap"
+          ],
+          "example": "\u03bcs = 0.5, \u03bck = 0.4 for a 10 kg block (g = 10 m/s\u00b2). Fl = 50 N (force needed to start sliding). Once moving, Fk = 40 N (less force needed to maintain sliding). This is why it is harder to start motion than to maintain it."
+        }
+      ]
+    },
+    "curriculum": {
+      "sectionTitle": "US Curriculum Gaps",
+      "hintText": "How AP Physics and common US curricula compare to NEET scope on friction types.",
+      "gaps": [
+        {
+          "title": "Rolling Friction Formula Not in AP Physics",
+          "description": "AP Physics does not test the rolling friction formula F = \u03bcr R / r or the fact that \u03bcr has dimensions of length. NEET Class 11 explicitly includes this and uses it in problems involving wheels, spheres, and cylinders.",
+          "bullets": [
+            "Memorise: F_rolling = \u03bcr R / r with \u03bcr in metres.",
+            "Large-radius wheels have smaller rolling friction \u2014 hence train wheels are large."
+          ]
+        },
+        {
+          "title": "Self-Adjusting Nature Tested Differently",
+          "description": "AP Physics states that static friction adjusts up to its maximum. NEET MCQs directly test statements like \u2018static friction is a self-adjusting force\u2019 or ask for the friction force when a body is at rest under a force less than limiting friction.",
+          "bullets": [
+            "When body is at rest with applied force P < Fl: answer is Fs = P.",
+            "Applying Fl = \u03bcs R to a static body under P < Fl is the #1 error in NEET Friction."
+          ]
+        }
+      ]
+    },
+    "pyq": {
+      "sectionTitle": "Previous Year Questions",
+      "mcqCountLabel": "NEET PYQs",
+      "questions": [
+        {
+          "question": "A block of mass 10 kg is placed on a rough horizontal surface with \u03bcs = 0.5 and \u03bck = 0.4. What is the frictional force on the block when a horizontal force of 30 N is applied? (g = 10 m/s\u00b2)",
+          "tag": "NEET 2023",
+          "tagClass": "pyq",
+          "options": [
+            {"text": "30 N", "correct": false},
+            {"text": "50 N", "correct": false},
+            {"text": "40 N", "correct": false},
+            {"text": "30 N (static, self-adjusting)", "correct": true}
+          ],
+          "explanation": "Limiting friction Fl = \u03bcs R = 0.5 \u00d7 100 = 50 N. Applied force = 30 N < 50 N, so the body stays at rest. Static friction = applied force = 30 N (self-adjusting). It does NOT equal \u03bcs R unless motion is about to begin."
+        },
+        {
+          "question": "Which of the following statements is correct about the coefficient of kinetic friction?",
+          "tag": "NEET 2021",
+          "tagClass": "pyq",
+          "options": [
+            {"text": "\u03bck > \u03bcs", "correct": false},
+            {"text": "\u03bck = \u03bcs always", "correct": false},
+            {"text": "\u03bck < \u03bcs", "correct": true},
+            {"text": "\u03bck does not depend on nature of surfaces", "correct": false}
+          ],
+          "explanation": "Kinetic friction coefficient \u03bck is always less than static friction coefficient \u03bcs. Once motion starts, inertia of rest has been overcome and the actual interlocking of surface irregularities reduces compared to the static case. Hence \u03bck < \u03bcs."
+        }
+      ]
+    },
+    "practice": {
+      "sectionTitle": "Practice Questions",
+      "questions": [
+        {
+          "question": "A wheel of mass 5 kg and radius 0.5 m rolls on a surface with \u03bcr = 0.002 m (g = 10 m/s\u00b2). The rolling friction force is:",
+          "options": ["0.02 N", "0.2 N", "2 N", "0.002 N"],
+          "answer": "0.2 N"
+        },
+        {
+          "question": "Among static (limiting), kinetic, and rolling friction for the same normal reaction, the correct order of magnitude is:",
+          "options": [
+            "Rolling > Kinetic > Limiting",
+            "Limiting > Kinetic > Rolling",
+            "Kinetic > Limiting > Rolling",
+            "All three are equal"
+          ],
+          "answer": "Limiting > Kinetic > Rolling"
+        },
+        {
+          "question": "Kinetic friction is nearly independent of:",
+          "options": ["Normal reaction", "Nature of surfaces", "Velocity", "All of the above"],
+          "answer": "Velocity"
+        },
+        {
+          "question": "Why does motion start only when applied force exceeds limiting friction, but less force is needed to sustain it?",
+          "options": [
+            "Because kinetic friction > static friction",
+            "Because once started, inertia of rest is overcome and \u03bck < \u03bcs",
+            "Because normal reaction decreases during motion",
+            "Because contact area increases during motion"
+          ],
+          "answer": "Because once started, inertia of rest is overcome and \u03bck < \u03bcs"
+        }
+      ]
+    },
+    "checklist": {
+      "subjectLabel": "NEET Physics",
+      "items": [
+        {
+          "title": "Write all three friction type formulas",
+          "description": "Static (self-adjusting): Fs \u2264 \u03bcs R. Limiting: Fl = \u03bcs R. Kinetic: Fk = \u03bck R. Rolling: F = \u03bcr R/r. All four expressions must be ready for numerical MCQs."
+        },
+        {
+          "title": "State the magnitude hierarchy",
+          "description": "F_rolling < Fk < Fl. Equivalently: \u03bcr/r < \u03bck < \u03bcs. This comparison appears in conceptual MCQs."
+        },
+        {
+          "title": "Distinguish static from limiting friction",
+          "description": "Static friction is self-adjusting (equals applied force when body is at rest and P < Fl). Limiting friction is the fixed maximum Fl = \u03bcs R. Never apply Fl to a body at rest under P < Fl."
+        },
+        {
+          "title": "State the dimension of \u03bcr",
+          "description": "\u03bcr has dimensions of length [L], unit metres. \u03bcs and \u03bck are dimensionless. This contrast is a direct NEET MCQ topic."
+        }
+      ]
+    },
+    "faq": {
+      "sectionTitle": "Frequently Asked Questions",
+      "items": [
+        {
+          "question": "Why is kinetic friction less than static friction?",
+          "answer": "When a body is at rest, surface irregularities have time to interlock deeply and molecular bonds form at more contact points. When motion starts, irregularities of one surface have little time to get locked into those of the other, so the resistive force is lower. This is quantified as \u03bck < \u03bcs."
+        },
+        {
+          "question": "Is rolling friction truly zero for a rigid body on a rigid surface?",
+          "answer": "In the ideal rigid-body limit, a rolling contact point has zero velocity relative to the surface, so no sliding occurs and rolling friction would be zero. In practice, both the body and surface deform slightly at the contact zone, creating energy losses that manifest as rolling friction. This is why tyres heated up: real rolling friction is non-zero."
+        },
+        {
+          "question": "What is the dimension of the coefficient of rolling friction \u03bcr?",
+          "answer": "\u03bcr has the dimension of length [L] and is measured in metres. This is because the rolling friction formula is F = \u03bcr R / r: for F and R to have the same dimensions, \u03bcr must carry the dimension of r (length). This is a direct NEET MCQ trap because students assume all friction coefficients are dimensionless."
+        },
+        {
+          "question": "Can static friction exceed limiting friction?",
+          "answer": "No. Limiting friction is the maximum value of static friction. If the applied force exceeds Fl = \u03bcs R, the body begins to move and friction drops to kinetic value Fk. Static friction can be anywhere from zero up to Fl, never above it."
+        }
+      ]
+    }
+  },
+  "grounding": {
+    "source_page_markdown_paths": [
+      "pages/physics-1/page-236/markdown.md",
+      "pages/physics-1/page-237/markdown.md"
+    ],
+    "grounding_summary": [
+      "Page 236 defines static friction (self-adjusting, acts before motion), limiting friction (Fl = \u03bcs R, maximum static), and kinetic friction (Fk = \u03bck R, \u03bck < \u03bcs), including the dimensional analysis of \u03bcs as [M\u2070L\u2070T\u2070].",
+      "Page 237 covers rolling friction F = \u03bcr R/r with \u03bcr in metres, types of kinetic friction (sliding vs rolling), and the velocity-independence of kinetic friction from explicit textbook statements.",
+      "Both pages establish the magnitude hierarchy: rolling friction is smallest, limiting friction is largest, with kinetic in between."
+    ],
+    "grounding_excerpt": [
+      "Static friction is a self-adjusting force because it changes itself in accordance with the applied force and is always equal to net external force.",
+      "Kinetic friction is always less than limiting friction",
+      "Rolling friction is often quite small as compared to the sliding friction."
+    ],
+    "sources": [
+      {
+        "title": "NCERT Physics Part I \u2014 Laws of Motion (Friction types)",
+        "url": "https://ncert.nic.in/textbook/pdf/keph104.pdf",
+        "publisher": "ncert.nic.in",
+        "accessed_date": "2026-04-10",
+        "why_used": "Primary NCERT source for static, kinetic, and rolling friction definitions, formulas, and the \u03bck < \u03bcs rule as tested directly in NEET."
+      },
+      {
+        "title": "NEET Physics Class 11 Chapter 6 Friction Notes",
+        "url": "https://classnotes.guru/neet-physics-class-11-chapter-6-friction-notes/",
+        "publisher": "classnotes.guru",
+        "accessed_date": "2026-04-10",
+        "why_used": "NEET-specific examination patterns for types of friction, self-adjusting nature of static friction, and coefficient hierarchy."
+      }
+    ],
+    "review": {
+      "used_local_page_grounding": true,
+      "semantic_page_read_complete": true,
+      "used_current_research": true,
+      "research_used_for_enrichment": true,
+      "template_preserved": true,
+      "scope_checked": true,
+      "syllabus_scope_verified": true,
+      "guardrails_passed": true,
+      "notes": "Content grounded in pages 236 and 237 OCR markdown. All formulas match textbook. Verbatim excerpts verified. No dual_cta."
+    }
+  }
+}

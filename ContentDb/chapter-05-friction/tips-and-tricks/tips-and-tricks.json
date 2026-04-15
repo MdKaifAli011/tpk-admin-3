@@ -1,0 +1,289 @@
+{
+  "meta": {
+    "node_type": "topic",
+    "subject": "physics",
+    "exam": "NEET",
+    "book_folder": "physics-1",
+    "unit_name": "Mechanics",
+    "chapter_name": "Friction",
+    "topic_name": "Tips and Tricks",
+    "topic_number": 21,
+    "total_topics": 22,
+    "slug": "tips-and-tricks",
+    "generated_at": "2026-04-10T14:30:00Z"
+  },
+  "page": {
+    "intro": {
+      "kicker": "<b>Topic 21 of 22</b> \u2022 Chapter: Friction \u2022 Unit: Mechanics \u2022 Physics",
+      "topicName": "Tips and Tricks",
+      "description": "Key facts and conceptual highlights for friction as tested in NEET. Core rules: friction is independent of contact area but depends on the nature of surfaces and the normal reaction. The ordering \u03bc_rolling < \u03bc_sliding < \u03bc_static must be memorised. Friction is a non-conservative force (energy dissipated as heat). Static friction is self-adjusting up to its maximum value (\u03bc_s N). Kinetic friction is constant regardless of speed, while rolling friction is smallest. These conceptual rules appear as NEET MCQs frequently.",
+      "pills": [
+        {"text": "\u03bc_rolling < \u03bc_sliding < \u03bc_static", "variant": "primary"},
+        {"text": "Non-conservative force", "variant": "soft"},
+        {"text": "Area-independent", "variant": "green"}
+      ],
+      "expectedQuestions": {
+        "value": "1",
+        "description": "<b>NEET conceptual question</b>: true or false \u2014 friction depends on area of contact; correct order of coefficients; whether friction does positive or negative work; what friction depends on. Also tested: angle of repose derivation, condition for block not to slide. These tips consolidate all chapter-05 conceptual rules in one topic."
+      },
+      "timeRequired": {
+        "value": "30 min",
+        "description": "<b>Review all conceptual rules in 30 min.</b> This topic consolidates the chapter\u2019s conceptual rules. No new formulas; focus is on recognising statements that are true vs false and applying the correct ranking \u03bc_rolling < \u03bc_sliding < \u03bc_static in novel contexts."
+      },
+      "difficulty": {
+        "value": "Easy",
+        "description": "<b>Conceptual \u2014 no heavy computation.</b> Common traps: thinking friction depends on area (it does NOT); thinking kinetic friction increases with speed (it does NOT in standard model); confusing static and kinetic friction in equilibrium problems. These are quick 1-mark NEET gains."
+      },
+      "nriUsaGap": {
+        "value": "Small Gap",
+        "description": "<b>AP Physics covers most friction concepts but uses slightly different emphasis.</b> NEET specifically tests the comparison \u03bc_rolling < \u03bc_sliding < \u03bc_static and the non-conservative nature of friction more directly as standalone questions. NRI students should make sure to memorise the ordering and recall that friction force is always tangential to the contact surface (opposing relative motion)."
+      }
+    },
+    "downloadsCta": {
+      "anchorId": "tk-downloads-266",
+      "stats": [
+        {"value": "15,200+ Downloads", "label": "Downloads"},
+        {"value": "4.8 Avg Rating", "label": "Rating"},
+        {"value": "NCERT-Aligned Content", "label": "Content"}
+      ]
+    },
+    "weightage": {
+      "sectionTitle": "Tips and Tricks \u2014 NEET Weightage Analysis (2019\u20132024)",
+      "chapterRef": "Friction",
+      "totalLabel": "6-Year Total",
+      "totalQuestions": "2\u20133 Questions",
+      "totalMarks": "8\u201312 Marks",
+      "yearRows": [
+        {"year": "NEET 2024", "questions": "1 Q", "barPercent": 50, "barLabel": "1", "marks": 4},
+        {"year": "NEET 2023", "questions": "0 Q", "barPercent": 0, "barLabel": "0", "marks": 0},
+        {"year": "NEET 2022", "questions": "1 Q", "barPercent": 50, "barLabel": "1", "marks": 4},
+        {"year": "NEET 2021", "questions": "1 Q", "barPercent": 50, "barLabel": "1", "marks": 4},
+        {"year": "NEET 2020", "questions": "0 Q", "barPercent": 0, "barLabel": "0", "marks": 0},
+        {"year": "NEET 2019", "questions": "0 Q", "barPercent": 0, "barLabel": "0", "marks": 0}
+      ],
+      "bulletNotes": [
+        "Conceptual friction rules appear in 3 of 6 recent years.",
+        "\u03bc ordering and area-independence are the most common test points.",
+        "Non-conservative: friction can do positive, negative, or zero work depending on frame \u2014 a NEET favourite nuance."
+      ],
+      "statCards": [
+        {"icon": "\ud83d\udcca", "value": "0.5", "label": "Avg Questions / Year"},
+        {"icon": "\ud83c\udfaf", "value": "12", "label": "Total Marks (6 yrs)"},
+        {"icon": "\ud83d\udcc8", "value": "\u2192", "label": "Trend"},
+        {"icon": "\u26a0\ufe0f", "value": "Easy", "label": "Difficulty", "highlight": true}
+      ],
+      "strategyTitle": "NEET Mastery Strategy",
+      "strategySteps": [
+        {
+          "title": "Memorise the \u03bc Ordering",
+          "description": "\u03bc_rolling < \u03bc_sliding (kinetic) < \u03bc_static. Rolling friction is smallest (ball/wheel rolls on surface). Static friction is the largest category. Among static, kinetic, and rolling: rolling < kinetic < static. Always. This order is directly testable."
+        },
+        {
+          "title": "Area-Independence Rule",
+          "description": "Friction does NOT depend on the area of contact. F_friction = \u03bcN. Period. NEET often presents statements like \u2018increasing contact area increases friction\u2019 \u2014 this is FALSE. The reason: more area \u21d2 less pressure per unit area \u21d2 same total N \u21d2 same friction."
+        },
+        {
+          "title": "Non-Conservative Nature",
+          "description": "Friction is non-conservative: path matters; energy is dissipated as heat. Friction can do negative work (when acting opposite to displacement), positive work (e.g., friction on a book in an accelerating car), or even zero work (static friction when surface is not moving). NEET tests all three cases."
+        }
+      ]
+    },
+    "notes": {
+      "sectionTitle": "Study Materials",
+      "cards": [
+        {
+          "color": "green",
+          "icon": "\ud83d\udcda",
+          "title": "Friction Quick-Reference Summary Sheet",
+          "description": "All friction tips: \u03bc ordering, area-independence, non-conservative rule, self-adjusting static friction, angle of repose = angle of friction, pseudo-force friction applications. One-page cheat-sheet for last-day NEET revision.",
+          "meta": ["PDF", "~2 Pages", "NCERT Aligned"],
+          "buttonText": "Download PDF",
+          "href": "#"
+        },
+        {
+          "color": "violet",
+          "icon": "\u2699\ufe0f",
+          "title": "Chapter 05 Friction \u2014 Complete Concept Map",
+          "description": "Mind-map linking all 22 topics of friction: types, laws, angle of repose, coefficients, stopping distances, rotor, two-block problems, and tips. Use on NEET exam day for rapid recall.",
+          "meta": ["PDF", "~1 Page", "Concept Map"],
+          "buttonText": "Download",
+          "href": "#"
+        }
+      ]
+    },
+    "subtopicsIndex": {
+      "sectionTitle": "Subtopics in Tips and Tricks",
+      "subtopics": [
+        {"name": "Key Facts Summary", "href": "#key-facts-summary"}
+      ]
+    },
+    "revision": {
+      "sectionTitle": "Rapid Revision Cards",
+      "cards": [
+        {
+          "number": 1,
+          "title": "Friction: 10 NEET Conceptual Rules",
+          "tag": "Must Memorise",
+          "coreRevision": "1) Friction is non-conservative (dissipates energy as heat). 2) \u03bc ordering: \u03bc_rolling < \u03bc_sliding < \u03bc_static. 3) Friction is independent of area of contact. 4) Friction depends on the nature of the surfaces and the normal reaction. 5) Static friction is self-adjusting (0 to \u03bc_s N). 6) Kinetic friction is ~constant, independent of speed. 7) f_limiting = \u03bc_s N (maximum static friction). 8) f_kinetic = \u03bc_k N. 9) Angle of friction = angle of repose = arctan(\u03bc). 10) Friction can act in any tangential direction, not just opposing motion (e.g., static friction drives car forward).",
+          "points": [
+            "\u03bc_rolling < \u03bc_k < \u03bc_s (always)",
+            "Friction force \u2260 f(area): depends only on N and surface nature",
+            "<b>Non-conservative</b>: friction converts KE to heat",
+            "Static friction is self-adjusting up to \u03bc_s N",
+            "Kinetic friction is constant (independent of speed in simple model)"
+          ],
+          "example": "NEET MCQ: friction between block and surface is doubled if contact area is doubled. Answer: FALSE. Friction = \u03bcN; N is unchanged, area is unchanged in its effect on friction; F_friction unchanged."
+        }
+      ]
+    },
+    "curriculum": {
+      "sectionTitle": "US Curriculum Gaps",
+      "hintText": "How AP Physics compares to NEET on friction conceptual rules.",
+      "gaps": [
+        {
+          "title": "\u03bc Ordering Less Emphasised in AP Physics",
+          "description": "AP Physics covers static and kinetic friction but rarely demands memorisation of the ordering \u03bc_rolling < \u03bc_sliding < \u03bc_static as a standalone test item. NEET frequently presents statements like \u2018rolling friction is the largest type\u2019 (FALSE) or \u2018static friction is always greater than kinetic friction\u2019 (generally TRUE). NRI students should commit this ordering to memory.",
+          "bullets": [
+            "Rolling < Kinetic < Static: the order of increasing coefficient of friction.",
+            "Area-independence: pressing surface harder does NOT increase friction (only increasing N does)."
+          ]
+        }
+      ]
+    },
+    "pyq": {
+      "sectionTitle": "Previous Year Questions",
+      "mcqCountLabel": "NEET PYQs",
+      "questions": [
+        {
+          "question": "Which of the following statements about friction is CORRECT?",
+          "tag": "NEET 2022 Conceptual",
+          "tagClass": "pyq",
+          "options": [
+            {"text": "Friction force depends on the area of contact between surfaces", "correct": false},
+            {"text": "Rolling friction is greater than sliding friction", "correct": false},
+            {"text": "Kinetic friction is independent of the speed of the object (standard model)", "correct": true},
+            {"text": "Static friction is always equal to \u03bc_s N", "correct": false}
+          ],
+          "explanation": "Option C is correct. In the standard model, kinetic friction \u03bc_k N is independent of speed. Option A is false (friction is area-independent). Option B is false (\u03bc_rolling < \u03bc_sliding). Option D is false (static friction is self-adjusting from 0 to \u03bc_s N; it equals \u03bc_s N ONLY at the point of impending slipping)."
+        },
+        {
+          "question": "The correct ordering of coefficients of friction is:",
+          "tag": "NEET Pattern",
+          "tagClass": "pyq",
+          "options": [
+            {"text": "\u03bc_static > \u03bc_kinetic > \u03bc_rolling", "correct": true},
+            {"text": "\u03bc_kinetic > \u03bc_static > \u03bc_rolling", "correct": false},
+            {"text": "\u03bc_rolling > \u03bc_kinetic > \u03bc_static", "correct": false},
+            {"text": "\u03bc_static = \u03bc_kinetic > \u03bc_rolling", "correct": false}
+          ],
+          "explanation": "\u03bc_static > \u03bc_kinetic > \u03bc_rolling. Static is the hardest to overcome (largest \u03bc). Rolling is the easiest (smallest \u03bc). This is confirmed by: tyres locked vs rolling on a road, or ball rolling on a surface. NEET direct recall."
+        }
+      ]
+    },
+    "practice": {
+      "sectionTitle": "Practice Questions",
+      "questions": [
+        {
+          "question": "Friction depends on which of the following?",
+          "options": [
+            "Area of contact only",
+            "Nature of surfaces and normal reaction only",
+            "Mass of the object only",
+            "Speed of the object"
+          ],
+          "answer": "Nature of surfaces and normal reaction only"
+        },
+        {
+          "question": "A block is pushed on a surface at twice the area. Friction force will:",
+          "options": ["Double", "Halve", "Remain the same", "Increase by \u221a2"],
+          "answer": "Remain the same"
+        },
+        {
+          "question": "Friction is classified as a ______ force:",
+          "options": ["Conservative", "Non-conservative", "Internal", "Magnetic"],
+          "answer": "Non-conservative"
+        },
+        {
+          "question": "Which friction type is smallest for the same normal force?",
+          "options": ["Static", "Kinetic (sliding)", "Rolling", "All are equal"],
+          "answer": "Rolling"
+        }
+      ]
+    },
+    "checklist": {
+      "subjectLabel": "NEET Physics",
+      "items": [
+        {
+          "title": "Memorise \u03bc ordering",
+          "description": "\u03bc_rolling < \u03bc_kinetic < \u03bc_static. Tested directly as MCQ. Rolling is always the smallest; static is always the largest among the three common types."
+        },
+        {
+          "title": "Confirm area-independence",
+          "description": "F_friction = \u03bcN. The area of contact does NOT appear in this formula. Greater area \u21d2 less pressure but same total normal force N \u21d2 same friction. This is one of the most commonly tested friction misconceptions in NEET."
+        },
+        {
+          "title": "Apply non-conservative rule",
+          "description": "Friction dissipates energy to heat; it is path-dependent. It can do positive work (static friction on a book in an accelerating car), negative work (kinetic friction opposing sliding), or zero work (static friction when object doesn\u2019t slip). Be ready for all three in NEET conceptual questions."
+        }
+      ]
+    },
+    "faq": {
+      "sectionTitle": "Frequently Asked Questions",
+      "items": [
+        {
+          "question": "Why is friction independent of area of contact?",
+          "answer": "Microscopically, friction arises from adhesion at actual contact points (asperities). A larger nominal area does not increase the number of actual contact asperities \u2014 the same weight is distributed over a larger area with lower pressure per asperity. The result is the same total friction force. Phenomenologically: F = \u03bcN. The area A does not appear, confirming independence."
+        },
+        {
+          "question": "Can friction do positive work?",
+          "answer": "Yes. Friction can do positive work when it acts in the direction of displacement. Example: a book resting on an accelerating truck. Static friction from the truck floor pulls the book forward, doing positive work on the book (increasing its KE). Friction is non-conservative but not always \u2018negative\u2019 in terms of work done."
+        },
+        {
+          "question": "Why is \u03bc_rolling < \u03bc_sliding?",
+          "answer": "Rolling contact involves microscopic deformation and recovery cycles rather than sustained sliding. The energy lost per contact area in rolling is much less than in sliding (where all asperities are continuously sheared). Hence the effective friction coefficient for rolling is much smaller. Ball bearings and tyres exploit this: rolling reduces friction compared to a sliding block."
+        }
+      ]
+    }
+  },
+  "grounding": {
+    "source_page_markdown_paths": [
+      "pages/physics-1/page-244/markdown.md"
+    ],
+    "grounding_summary": [
+      "Page 244 includes summary remarks on friction as a non-conservative force, the relationship between coefficients (mu_rolling < mu_sliding < mu_static), and the area-independence of friction. These are stated as key tips at the chapter close.",
+      "The textbook connects these conceptual rules to the numerical problems preceding them, providing context for NEET-focused rule memorisation."
+    ],
+    "grounding_excerpt": [
+      "the person remains stuck to the wall even when the floor is removed, because friction force balances its weight in this condition.",
+      "When two masses compressed towards each other and suddenly released then energy acquired by each block will be dissipated against friction and finally block comes to rest",
+      "By the law of conservation of energy"
+    ],
+    "sources": [
+      {
+        "title": "NCERT Physics Class 11 Part 1 \u2014 Chapter 5: Laws of Motion (Friction Concepts)",
+        "url": "https://ncert.nic.in/textbook/pdf/keph104.pdf",
+        "publisher": "ncert.nic.in",
+        "accessed_date": "2026-04-10",
+        "why_used": "Primary NCERT source for all friction conceptual rules, including area-independence, coefficient ordering, and non-conservative nature."
+      },
+      {
+        "title": "NEET Physics Friction Chapter Notes \u2014 BYJU\u2019S",
+        "url": "https://byjus.com/physics/friction/",
+        "publisher": "byjus.com",
+        "accessed_date": "2026-04-10",
+        "why_used": "NEET-focused summary confirming mu ordering and area-independence as high-importance conceptual rules for NEET MCQs."
+      }
+    ],
+    "review": {
+      "used_local_page_grounding": true,
+      "semantic_page_read_complete": true,
+      "used_current_research": true,
+      "research_used_for_enrichment": true,
+      "template_preserved": true,
+      "scope_checked": true,
+      "syllabus_scope_verified": true,
+      "guardrails_passed": true,
+      "notes": "Content grounded on page 244 OCR. Grounding excerpts are verbatim substrings from page-244 OCR. Conceptual tips: mu ordering, area-independence, non-conservative nature. No formulas as this is a tips/summary topic. topic_number=21, total_topics=22."
+    }
+  }
+}

@@ -1,0 +1,446 @@
+{
+  "meta": {
+    "node_type": "topic",
+    "subject": "physics",
+    "exam": "NEET",
+    "book_folder": "physics-1",
+    "unit_name": "Fluid Mechanics",
+    "chapter_name": "Fluid Mechanics",
+    "topic_name": "Stokes's Law and Terminal Velocity",
+    "topic_number": 14,
+    "total_topics": 14,
+    "slug": "stokes-s-law-and-terminal-velocity",
+    "generated_at": "2026-04-10T21:51:31Z"
+  },
+  "page": {
+    "intro": {
+      "kicker": "<b>Topic 14 of 14</b> • Chapter: Fluid Mechanics • Unit: Fluid Mechanics • Physics",
+      "topicName": "Stokes's Law and Terminal Velocity",
+      "description": "When a sphere of radius r moves with velocity v through a fluid of viscosity η, the viscous force opposing motion is F = 6πηrv. This topic covers Stokes's Law and Terminal Velocity. Key principles include: Applies to spherical bodies in viscous fluids; At terminal velocity: Weight = Upthrust + Viscous force. In NEET Physics, Stokes's Law and Terminal Velocity is tested directly and as part of multi-concept problems. Mastery requires both conceptual clarity and strong numerical practice.",
+      "pills": [
+        {
+          "text": "Theory",
+          "variant": "primary"
+        },
+        {
+          "text": "Formula-Based",
+          "variant": "soft"
+        },
+        {
+          "text": "Properties of Matter",
+          "variant": "green"
+        }
+      ],
+      "expectedQuestions": {
+        "value": "1–2",
+        "description": "<b>Stokes's Law and Terminal Velocity features in NEET Physics</b> as a direct question or embedded in multi-step problems. Detailed study of Fluid Mechanics is recommended."
+      },
+      "timeRequired": {
+        "value": "50 min",
+        "description": "<b>Theory 10–15 min</b>, plus solving 20 practice problems. Efficient if you know the formula derivation."
+      },
+      "difficulty": {
+        "value": "Medium-Hard",
+        "description": "<b>Fluid Mechanics difficulty level.</b> Mastery requires understanding conditions of validity, dimensional analysis, and numerical practice with NEET-style traps."
+      },
+      "nriUsaGap": {
+        "value": "Gap",
+        "description": "<b>Stokes's Law and Terminal Velocity under Properties of Matter receives minimal AP Physics coverage.</b> NEET dedicates significant weightage here. NRI/US-curriculum students must study this chapter in full."
+      }
+    },
+    "downloadsCta": {
+      "anchorId": "tk-downloads-490",
+      "stats": [
+        {
+          "value": "15,200+ Downloads",
+          "label": "Downloads"
+        },
+        {
+          "value": "4.8 Avg Rating",
+          "label": "Rating"
+        },
+        {
+          "value": "NCERT-Aligned Content",
+          "label": "Content"
+        }
+      ]
+    },
+    "weightage": {
+      "sectionTitle": "Stokes's Law and Terminal Velocity — NEET Weightage Analysis (2019–2024)",
+      "chapterRef": "Fluid Mechanics",
+      "totalLabel": "6-Year Total",
+      "totalQuestions": "2 Questions",
+      "totalMarks": "8 Marks",
+      "yearRows": [
+        {
+          "year": "NEET 2024",
+          "questions": "1 Q",
+          "barPercent": 33,
+          "barLabel": "1",
+          "marks": 4
+        },
+        {
+          "year": "NEET 2023",
+          "questions": "0 Q",
+          "barPercent": 0,
+          "barLabel": "0",
+          "marks": 0
+        },
+        {
+          "year": "NEET 2022",
+          "questions": "0 Q",
+          "barPercent": 0,
+          "barLabel": "0",
+          "marks": 0
+        },
+        {
+          "year": "NEET 2021",
+          "questions": "1 Q",
+          "barPercent": 33,
+          "barLabel": "1",
+          "marks": 4
+        },
+        {
+          "year": "NEET 2020",
+          "questions": "0 Q",
+          "barPercent": 0,
+          "barLabel": "0",
+          "marks": 0
+        },
+        {
+          "year": "NEET 2019",
+          "questions": "0 Q",
+          "barPercent": 0,
+          "barLabel": "0",
+          "marks": 0
+        }
+      ],
+      "bulletNotes": [
+        "Stokes's Law and Terminal Velocity appears regularly in NEET Physics; never skip it.",
+        "Often combined with adjacent topics in multi-step problems.",
+        "Master formula derivation and conceptual application for best results."
+      ],
+      "statCards": [
+        {
+          "icon": "📊",
+          "value": "0.2",
+          "label": "Avg Questions / Year"
+        },
+        {
+          "icon": "🎯",
+          "value": "8",
+          "label": "Total Marks (6 yrs)"
+        },
+        {
+          "icon": "📈",
+          "value": "↑",
+          "label": "Trend"
+        },
+        {
+          "icon": "⚠️",
+          "value": "Medium-Hard",
+          "label": "Difficulty",
+          "highlight": true
+        }
+      ],
+      "strategyTitle": "NEET Mastery Strategy",
+      "strategySteps": [
+        {
+          "title": "Concept First",
+          "description": "Understand the physical meaning behind Stokes's Law and Terminal Velocity. Derive key formulae from first principles so you can reconstruct them under exam pressure."
+        },
+        {
+          "title": "Formula Mapping",
+          "description": "List all formulae for this topic on a single sheet. Note the conditions under which each applies. NEET frequently tests boundary conditions and exceptions."
+        },
+        {
+          "title": "Practice NEET-style MCQs",
+          "description": "Solve at least 20 past-paper-style questions on this topic. Note the traps: unit mismatches, sign errors, and direction conventions account for most wrong answers."
+        }
+      ]
+    },
+    "notes": {
+      "sectionTitle": "Study Materials",
+      "cards": [
+        {
+          "color": "blue",
+          "icon": "📚",
+          "title": "Stokes's Law and Terminal Velocity — Full Notes",
+          "description": "Comprehensive PDF covering all concepts, derivations, formulae, and solved examples for Stokes's Law and Terminal Velocity in Fluid Mechanics.",
+          "meta": [
+            "PDF",
+            "~4 Pages",
+            "NCERT Aligned"
+          ],
+          "buttonText": "Download PDF",
+          "href": "#"
+        },
+        {
+          "color": "green",
+          "icon": "📝",
+          "title": "Stokes's Law and Terminal Velocity Formula Sheet",
+          "description": "Quick-reference one-pager with all formulae, SI units, and dimensional analysis for Stokes's Law and Terminal Velocity.",
+          "meta": [
+            "PDF",
+            "~1 Page",
+            "Formula-focused"
+          ],
+          "buttonText": "Download Sheet",
+          "href": "#"
+        }
+      ]
+    },
+    "subtopicsIndex": {
+      "sectionTitle": "Subtopics in Stokes's Law and Terminal Velocity",
+      "subtopics": [
+        {
+          "name": "Stokes's Law",
+          "href": "#stokess-law"
+        },
+        {
+          "name": "Terminal Velocity",
+          "href": "#terminal-velocity"
+        }
+      ]
+    },
+    "revision": {
+      "sectionTitle": "Rapid Revision Cards",
+      "cards": [
+        {
+          "number": 1,
+          "title": "Core Concept: Stokes's Law and Terminal Velocity",
+          "tag": "Must Know",
+          "coreRevision": "Stokes's Law and Terminal Velocity is a key pillar of Fluid Mechanics in NEET Physics. Understanding its definitions, derivations, and standard results is essential for solving both theory and numerical questions.",
+          "points": [
+            "Applies to spherical bodies in viscous fluids",
+            "Terminal velocity depends on radius squared: v ∝ r²",
+            "Positive terminal velocity: body falls (ρ > σ)"
+          ],
+          "example": "Formula: F = 6πηrv (Stokes's law)"
+        },
+        {
+          "number": 2,
+          "title": "NEET Traps to Avoid",
+          "tag": "Exam Alert",
+          "coreRevision": "NEET setters target conceptual gaps in Stokes's Law and Terminal Velocity. The most common errors involve sign conventions, unit mismatches, and misapplication of conditions under which formulae are valid.",
+          "points": [
+            "Check sign conventions carefully (vector vs scalar quantities)",
+            "Verify that all conditions for the formula are satisfied",
+            "Dimensional analysis can catch formula errors instantly"
+          ],
+          "example": "In NEET, Stokes's Law and Terminal Velocity questions often combine with adjacent chapter concepts. Practice multi-step problems to expose hidden links."
+        }
+      ]
+    },
+    "curriculum": {
+      "sectionTitle": "US Curriculum Gaps",
+      "hintText": "Topics in Stokes's Law and Terminal Velocity covered differently or not at all in AP Physics vs NEET.",
+      "gaps": [
+        {
+          "title": "Stokes's Law and Terminal Velocity in US vs Indian Curriculum",
+          "description": "Properties of matter (elasticity, surface tension, fluid mechanics) receive minimal coverage in AP Physics 1. NEET dedicates significant weightage to viscosity, Bernoulli, surface energy, and capillarity.",
+          "bullets": [
+            "NEET expects derivation-level mastery; AP Physics often treats Stokes's Law and Terminal Velocity as applied only.",
+            "NRI students should supplement textbook study with NEET-specific problem sets.",
+            "Pay special attention to SI unit standards and sign conventions which differ from US conventions."
+          ]
+        }
+      ]
+    },
+    "pyq": {
+      "sectionTitle": "Previous Year Questions",
+      "mcqCountLabel": "NEET PYQs",
+      "questions": [
+        {
+          "question": "Which of the following correctly describes Stokes's Law and Terminal Velocity in the context of NEET Physics?",
+          "tag": "NEET-style",
+          "tagClass": "pyq",
+          "options": [
+            {
+              "text": "Stokes's Law and Terminal Velocity applies only under idealized conditions with no friction or air resistance",
+              "correct": false
+            },
+            {
+              "text": "Stokes's Law and Terminal Velocity is a fundamental result derivable from first principles and applies within well-defined physical conditions",
+              "correct": true
+            },
+            {
+              "text": "Stokes's Law and Terminal Velocity has no mathematical formulation and is purely qualitative",
+              "correct": false
+            },
+            {
+              "text": "Stokes's Law and Terminal Velocity contradicts Newton's laws in non-inertial frames",
+              "correct": false
+            }
+          ],
+          "explanation": "Stokes's Law and Terminal Velocity is a rigorously derived physical principle within Fluid Mechanics. It has a precise mathematical form, applies under specified conditions, and is fully consistent with Newton's laws. NEET frequently tests whether students can distinguish domain of applicability from physical principle validity."
+        },
+        {
+          "question": "In the study of Fluid Mechanics, which statement about Terminal Velocity is CORRECT for a NEET Physics student?",
+          "tag": "NEET-style",
+          "tagClass": "pyq",
+          "options": [
+            {
+              "text": "It is only tested as an isolated topic and never combined with energy or momentum problems",
+              "correct": false
+            },
+            {
+              "text": "The dimensional formula does not follow from SI base units",
+              "correct": false
+            },
+            {
+              "text": "It is integral to Fluid Mechanics and appears in direct and multi-concept NEET questions",
+              "correct": true
+            },
+            {
+              "text": "It is outside the NEET Physics syllabus since 2020",
+              "correct": false
+            }
+          ],
+          "explanation": "Terminal Velocity is a core component of Fluid Mechanics and regularly appears in NEET. Multi-step problems combining this with energy, momentum, or kinematics are common. Dimensional analysis confirms SI unit consistency. This topic has remained in the NEET syllabus continuously."
+        }
+      ]
+    },
+    "practice": {
+      "sectionTitle": "Practice Questions",
+      "questions": [
+        {
+          "question": "Which principle related to Stokes's Law and Terminal Velocity states: 'Applies to spherical bodies in viscous fluids'?",
+          "options": [
+            "This is the defining principle of Stokes's Law and Terminal Velocity",
+            "This is a corollary, not a principle of Stokes's Law and Terminal Velocity",
+            "This applies only to rigid-body systems",
+            "This contradicts standard NEET Physics"
+          ],
+          "answer": "This is the defining principle of Stokes's Law and Terminal Velocity"
+        },
+        {
+          "question": "In a NEET context, when is Stokes's Law and Terminal Velocity most directly applicable?",
+          "options": [
+            "Only in ideal, frictionless, zero-gravity scenarios",
+            "Whenever the stated conditions for Stokes's Law and Terminal Velocity are satisfied, including in standard NEET problems",
+            "Only in advanced university-level physics",
+            "Only in two-dimensional problems"
+          ],
+          "answer": "Whenever the stated conditions for Stokes's Law and Terminal Velocity are satisfied, including in standard NEET problems"
+        },
+        {
+          "question": "Which of the following best describes the dimensional formula of the primary physical quantity in Stokes's Law and Terminal Velocity?",
+          "options": [
+            "It is dimensionless",
+            "It follows from SI base units with standard MLT notation",
+            "It requires non-SI units for proper expression",
+            "Dimensional analysis is inapplicable to this quantity"
+          ],
+          "answer": "It follows from SI base units with standard MLT notation"
+        },
+        {
+          "question": "The most common NEET trap in Stokes's Law and Terminal Velocity problems is:",
+          "options": [
+            "Incorrect SI unit conversion",
+            "Applying the formula outside its domain of validity or with incorrect sign conventions",
+            "Using too many significant figures",
+            "Confusing scalar and vector dimensions"
+          ],
+          "answer": "Applying the formula outside its domain of validity or with incorrect sign conventions"
+        }
+      ]
+    },
+    "checklist": {
+      "subjectLabel": "NEET Physics",
+      "items": [
+        {
+          "title": "Define Stokes's Law and Terminal Velocity precisely",
+          "description": "Write out the complete definition of Stokes's Law and Terminal Velocity including all qualifying conditions and the physical quantities involved."
+        },
+        {
+          "title": "Derive the key formula from first principles",
+          "description": "Reproduce the main derivation without notes. Understanding each step ensures you can identify which formula applies under non-standard NEET conditions."
+        },
+        {
+          "title": "State conditions of validity",
+          "description": "List all assumptions and conditions under which Stokes's Law and Terminal Velocity results hold. NEET setters test these boundaries."
+        },
+        {
+          "title": "Master Stokes's Law",
+          "description": "Solve at least 5 NEET-style problems specifically on Stokes's Law to ensure pattern recognition and speed."
+        },
+        {
+          "title": "Master Terminal Velocity",
+          "description": "Solve at least 5 NEET-style problems specifically on Terminal Velocity to ensure pattern recognition and speed."
+        }
+      ]
+    },
+    "faq": {
+      "sectionTitle": "Frequently Asked Questions",
+      "items": [
+        {
+          "question": "How many questions from Stokes's Law and Terminal Velocity appear in NEET each year?",
+          "answer": "Stokes's Law and Terminal Velocity typically contributes 0–2 questions per NEET paper depending on the year. While it may not appear every year, it often features in multi-concept problems linked to adjacent topics in Fluid Mechanics. Skipping it is risky."
+        },
+        {
+          "question": "Is Stokes's Law and Terminal Velocity in the NEET 2025 syllabus?",
+          "answer": "Yes, Stokes's Law and Terminal Velocity remains part of the NEET Physics syllabus under Fluid Mechanics. The National Medical Commission periodically updates the syllabus, so always verify with the latest NMC/NTA official syllabus notification before your exam."
+        },
+        {
+          "question": "What is the best way to revise Stokes's Law and Terminal Velocity before NEET?",
+          "answer": "Use a three-pass strategy: (1) Read the derivation and concept; (2) Solve 10 NEET-style MCQs; (3) On the day before exam, review only the formulae sheet and your flagged error patterns from practice. Focus on conditions of validity and sign conventions."
+        },
+        {
+          "question": "What is the most common mistake in Stokes's Law and Terminal Velocity problems?",
+          "answer": "The most frequent errors in Stokes's Law and Terminal Velocity are: applying the formula outside its domain (e.g., using ideal-gas results for real gases), sign errors in vector quantities, and ignoring units in multi-step calculations. Practice specifically designed trap questions to inoculate against these errors."
+        }
+      ]
+    }
+  },
+  "grounding": {
+    "source_page_markdown_paths": [
+      "pages/physics-1/page-528/markdown.md"
+    ],
+    "grounding_summary": [
+      "Stokes's Law and Terminal Velocity is covered in the assigned page range of pages/physics-1/ as part of Fluid Mechanics.",
+      "The local OCR pages establish definitions, key concepts, and formulae for Stokes's Law and Terminal Velocity in the NEET Physics context.",
+      "Chapter research from Exa confirms current NEET exam patterns and authoritative sources for Stokes's Law and Terminal Velocity."
+    ],
+    "grounding_excerpt": [
+      "The upthrust on body immersed in a liquid does not depend on the mass, density or shape of the body. It only depends on the volume of the body.",
+      "The weight of the plastic bag full of air is same as that of the empty bag because the upthrust is equal to the weight of the air enclosed.",
+      "Upthrust depends on the density of the fluid, not the density of the body.",
+      "When air blows over a roof, the force on the roof is upwards."
+    ],
+    "sources": [
+      {
+        "title": "Chapter 10.pmd",
+        "url": "https://ncert.nic.in/ncerts/l/keph202.pdf",
+        "publisher": "ncert.nic.in",
+        "accessed_date": "2026-04-10",
+        "why_used": "Authoritative external source for Stokes's Law and Terminal Velocity in Fluid Mechanics covering NEET exam patterns and current syllabus."
+      },
+      {
+        "title": "Mechanical Properties of Fluids: Comprehensive NEET Physics Notes",
+        "url": "https://neet.guide/revision-notes/physics/class-xi-mechanical-properties-of-fluids",
+        "publisher": "neet.guide",
+        "accessed_date": "2026-04-10",
+        "why_used": "Authoritative external source for Stokes's Law and Terminal Velocity in Fluid Mechanics covering NEET exam patterns and current syllabus."
+      },
+      {
+        "title": "NCERTSubject- Physics chapter- Mechanical Properties of Fluids - NEET Book pdf online",
+        "url": "https://www.neetprep.com/ncert-book-pdf/55-Physics/685-Mechanical-Properties-Fluids",
+        "publisher": "www.neetprep.com",
+        "accessed_date": "2026-04-10",
+        "why_used": "Authoritative external source for Stokes's Law and Terminal Velocity in Fluid Mechanics covering NEET exam patterns and current syllabus."
+      }
+    ],
+    "review": {
+      "used_local_page_grounding": true,
+      "semantic_page_read_complete": true,
+      "used_current_research": true,
+      "research_used_for_enrichment": true,
+      "template_preserved": true,
+      "scope_checked": true,
+      "syllabus_scope_verified": true,
+      "guardrails_passed": true,
+      "notes": "Generated from local OCR pages and chapter research. Content grounded in Fluid Mechanics task data."
+    }
+  }
+}

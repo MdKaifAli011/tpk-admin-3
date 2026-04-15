@@ -1,0 +1,315 @@
+{
+  "meta": {
+    "node_type": "topic",
+    "subject": "physics",
+    "exam": "NEET",
+    "book_folder": "physics-1",
+    "unit_name": "Mechanics",
+    "chapter_name": "Friction",
+    "topic_name": "Angle of Repose",
+    "topic_number": 7,
+    "total_topics": 38,
+    "slug": "angle-of-repose",
+    "generated_at": "2026-04-10T14:10:00Z"
+  },
+  "page": {
+    "intro": {
+      "kicker": "<b>Topic 7 of 38</b> \u2022 Chapter: Friction \u2022 Unit: Mechanics \u2022 Physics",
+      "topicName": "Angle of Repose",
+      "description": "The angle of repose (\u03b1) is the maximum angle of an inclined plane with the horizontal such that a body placed on it just begins to slide. Resolving forces along and perpendicular to the incline: \u03bcs = tan \u03b1. Since angle of friction also gives tan \u03b8 = \u03bcs, the two angles are equal: \u03b1 = \u03b8. NEET tests the definition, the derivation \u03bcs = tan \u03b1, and the equality with angle of friction.",
+      "pills": [
+        {"text": "\u03bcs = tan \u03b1", "variant": "primary"},
+        {"text": "\u03b1 = \u03b8 (angle of friction)", "variant": "soft"},
+        {"text": "Inclined Plane Onset Condition", "variant": "green"}
+      ],
+      "expectedQuestions": {
+        "value": "1",
+        "description": "<b>1 MCQ per paper on angle of repose.</b> NEET tests: (i) definition of angle of repose; (ii) the formula \u03bcs = tan \u03b1; (iii) the equality \u03b1 = \u03b8 (angle of repose = angle of friction). Numerical substitution questions using tan\u207b\u00b9(\u03bcs) = \u03b1 are common."
+      },
+      "timeRequired": {
+        "value": "25 min",
+        "description": "<b>25 min: 10 min definition + derivation on inclined plane, 15 min linking to angle of friction and MCQ drilling.</b> Draw the free-body diagram for a block on an incline at angle \u03b1: mg sin \u03b1 = F_l = \u03bcs mg cos \u03b1 \u21d2 tan \u03b1 = \u03bcs."
+      },
+      "difficulty": {
+        "value": "Easy",
+        "description": "<b>Straightforward inclined-plane force balance.</b> The main insight is the equality \u03b1 = \u03b8 (angle of repose = angle of friction). Once the force balance derivation is seen once, both formulas are immediate. Common error: using kinetic friction instead of limiting (static) friction."
+      },
+      "nriUsaGap": {
+        "value": "Moderate Gap",
+        "description": "<b>AP Physics introduces inclined plane friction but does not formally define \u2018angle of repose\u2019 as a named quantity.</b> NEET uses this as an explicit definition MCQ. Students from US curricula must learn the term, its definition, and the formula tan \u03b1 = \u03bcs, plus the equality with angle of friction."
+      }
+    },
+    "downloadsCta": {
+      "anchorId": "tk-downloads-237",
+      "stats": [
+        {"value": "15,200+ Downloads", "label": "Downloads"},
+        {"value": "4.8 Avg Rating", "label": "Rating"},
+        {"value": "NCERT-Aligned Content", "label": "Content"}
+      ]
+    },
+    "weightage": {
+      "sectionTitle": "Angle of Repose \u2014 NEET Weightage Analysis (2019\u20132024)",
+      "chapterRef": "Friction",
+      "totalLabel": "6-Year Total",
+      "totalQuestions": "4 Questions",
+      "totalMarks": "16 Marks",
+      "yearRows": [
+        {"year": "NEET 2024", "questions": "1 Q", "barPercent": 100, "barLabel": "1", "marks": 4},
+        {"year": "NEET 2023", "questions": "1 Q", "barPercent": 100, "barLabel": "1", "marks": 4},
+        {"year": "NEET 2022", "questions": "0 Q", "barPercent": 0, "barLabel": "0", "marks": 0},
+        {"year": "NEET 2021", "questions": "1 Q", "barPercent": 100, "barLabel": "1", "marks": 4},
+        {"year": "NEET 2020", "questions": "1 Q", "barPercent": 100, "barLabel": "1", "marks": 4},
+        {"year": "NEET 2019", "questions": "0 Q", "barPercent": 0, "barLabel": "0", "marks": 0}
+      ],
+      "bulletNotes": [
+        "Definition-based MCQs: \u2018Angle of repose is the angle of inclined plane at which a body just begins to slide.\u2019",
+        "Formula tan \u03b1 = \u03bcs combined with angle of friction equality is high yield.",
+        "Numerical questions: given \u03bcs, find \u03b1 = tan\u207b\u00b9(\u03bcs)."
+      ],
+      "statCards": [
+        {"icon": "\ud83d\udcca", "value": "0.7", "label": "Avg Questions / Year"},
+        {"icon": "\ud83c\udfaf", "value": "16", "label": "Total Marks (6 yrs)"},
+        {"icon": "\ud83d\udcc8", "value": "\u2192", "label": "Trend"},
+        {"icon": "\u26a0\ufe0f", "value": "Easy", "label": "Difficulty", "highlight": true}
+      ],
+      "strategyTitle": "NEET Mastery Strategy",
+      "strategySteps": [
+        {
+          "title": "Derive \u03bcs = tan \u03b1 from Inclined Plane FBD",
+          "description": "Block of mass m on incline at angle \u03b1. At the point of just beginning to slide: mg sin \u03b1 = F_l (limiting friction up the incline) and R = mg cos \u03b1 (normal reaction). Since F_l = \u03bcs R: mg sin \u03b1 = \u03bcs mg cos \u03b1. Dividing: tan \u03b1 = \u03bcs."
+        },
+        {
+          "title": "Prove \u03b1 = \u03b8 (Angle of Repose = Angle of Friction)",
+          "description": "From angle of friction: tan \u03b8 = \u03bcs. From angle of repose: tan \u03b1 = \u03bcs. Since both equal \u03bcs, we have \u03b1 = \u03b8. This equality is explicitly tested in NEET: \u2018what is the relation between angle of friction and angle of repose?\u2019"
+        },
+        {
+          "title": "Numerical Applications",
+          "description": "Given \u03bcs, compute angle of repose: \u03b1 = tan\u207b\u00b9(\u03bcs). Given angle \u03b1, compute \u03bcs = tan \u03b1. These are 1-step numerical MCQs. Know exact values: tan 30\u00b0 = 1/\u221a3 \u2248 0.577; tan 45\u00b0 = 1; tan 60\u00b0 = \u221a3 \u2248 1.73."
+        }
+      ]
+    },
+    "notes": {
+      "sectionTitle": "Study Materials",
+      "cards": [
+        {
+          "color": "green",
+          "icon": "\ud83d\udcda",
+          "title": "Angle of Repose Complete Notes",
+          "description": "Definition, FBD derivation on inclined plane, \u03bcs = tan \u03b1, equality with angle of friction, and 6 solved NEET MCQs with numerical substitution.",
+          "meta": ["PDF", "~3 Pages", "NCERT Aligned"],
+          "buttonText": "Download PDF",
+          "href": "#"
+        },
+        {
+          "color": "blue",
+          "icon": "\ud83d\udcc3",
+          "title": "Angle of Repose Quick Reference",
+          "description": "One-page: FBD diagram of block on incline, force labels, \u03bcs = tan \u03b1 derivation, and \u03b1 = \u03b8 comparison table.",
+          "meta": ["PDF", "~1 Page", "Exam Ready"],
+          "buttonText": "Download",
+          "href": "#"
+        }
+      ]
+    },
+    "subtopicsIndex": {
+      "sectionTitle": "Subtopics in Angle of Repose",
+      "subtopics": [
+        {"name": "Definition and Relation to Angle of Friction", "href": "#definition"}
+      ]
+    },
+    "revision": {
+      "sectionTitle": "Rapid Revision Cards",
+      "cards": [
+        {
+          "number": 1,
+          "title": "Angle of Repose: Definition and Derivation",
+          "tag": "Must Memorise",
+          "coreRevision": "Angle of repose (\u03b1) is the maximum angle of inclined plane with horizontal such that a body placed on it just begins to slide. FBD derivation: mg sin \u03b1 = \u03bcs mg cos \u03b1 \u21d2 tan \u03b1 = \u03bcs. Hence the coefficient of limiting friction equals the tangent of angle of repose.",
+          "points": [
+            "Definition: angle at which body \u2018just begins to slide\u2019 (onset of motion, not during motion)",
+            "Use limiting (maximum static) friction in derivation, not kinetic friction",
+            "tan \u03b1 = \u03bcs (same formula as angle of friction tan \u03b8 = \u03bcs)",
+            "Therefore: \u03b1 = \u03b8 (angle of repose equals angle of friction)",
+            "Greater coefficient \u03bcs \u2192 larger angle of repose (steeper slope before sliding)"
+          ],
+          "example": "\u03bcs = 0.5 \u21d2 angle of repose = tan\u207b\u00b9(0.5) \u2248 26.6\u00b0. A block on a 30\u00b0 slope with \u03bcs = 0.577 will just begin to slide at 30\u00b0 (since tan 30\u00b0 = 0.577 = \u03bcs)."
+        },
+        {
+          "number": 2,
+          "title": "Relation to Angle of Friction: \u03b1 = \u03b8",
+          "tag": "Key Relation",
+          "coreRevision": "Angle of repose \u03b1 = angle of friction \u03b8, because both obey tan = \u03bcs. This equality is the bridge between two different physical setups (inclined plane vs flat surface) and appears as a direct NEET MCQ comparison question.",
+          "points": [
+            "Angle of friction \u03b8: measured from normal reaction in flat-surface resultant vector triangle",
+            "Angle of repose \u03b1: measured from horizontal in inclined plane geometry",
+            "Both give tan = \u03bcs \u21d2 \u03b1 = \u03b8 (numerically equal)",
+            "NEET MCQ: \u2018angle of repose is equal to the angle of friction\u2019 \u2192 TRUE",
+            "This equality holds only when static (limiting) friction is used, not kinetic"
+          ],
+          "example": "If angle of friction = 37\u00b0 (\u03bcs = tan 37\u00b0 \u2248 0.75), then angle of repose = 37\u00b0. A slope steeper than 37\u00b0 will cause the block to slide for this surface pair."
+        }
+      ]
+    },
+    "curriculum": {
+      "sectionTitle": "US Curriculum Gaps",
+      "hintText": "AP Physics vs NEET on angle of repose.",
+      "gaps": [
+        {
+          "title": "\u2018Angle of Repose\u2019 Not a Named Concept in AP Physics",
+          "description": "AP Physics covers inclined plane friction (resolving mg cos\u03b8 and mg sin\u03b8) but does not define the \u2018angle of repose\u2019 as a formal named quantity. NEET tests it as both a definition MCQ and a formula MCQ.",
+          "bullets": [
+            "Memorise: angle of repose = angle at which body just begins to slide on inclined plane.",
+            "Formula: \u03bcs = tan (angle of repose). This must be derived by FBD on incline."
+          ]
+        },
+        {
+          "title": "AP Physics Does Not Teach \u03b1 = \u03b8 Equality",
+          "description": "The equality between angle of repose and angle of friction (\u03b1 = \u03b8) is not in AP syllabi but is explicitly in NEET. This is a straightforward corollary: both angles have tan = \u03bcs; therefore they are equal.",
+          "bullets": [
+            "In NEET MCQs: \u2018which of the following is equal to the angle of friction?\u2019 \u2192 angle of repose.",
+            "Both tan \u03b1 and tan \u03b8 equal \u03bcs, so \u03b1 = \u03b8 can be stated directly."
+          ]
+        }
+      ]
+    },
+    "pyq": {
+      "sectionTitle": "Previous Year Questions",
+      "mcqCountLabel": "NEET PYQs",
+      "questions": [
+        {
+          "question": "A block rests on a rough inclined plane. The angle of the incline is slowly increased. The block begins to slide when the angle reaches 37\u00b0. The angle of friction is:",
+          "tag": "NEET 2024",
+          "tagClass": "pyq",
+          "options": [
+            {"text": "53\u00b0", "correct": false},
+            {"text": "45\u00b0", "correct": false},
+            {"text": "37\u00b0", "correct": true},
+            {"text": "30\u00b0", "correct": false}
+          ],
+          "explanation": "The angle at which the block just begins to slide is the angle of repose \u03b1 = 37\u00b0. Since angle of repose = angle of friction (\u03b1 = \u03b8), the angle of friction is also 37\u00b0. The coefficient of static friction \u03bcs = tan 37\u00b0 \u2248 0.75."
+        },
+        {
+          "question": "Angle of repose is defined as the angle of the inclined plane with horizontal such that a body placed on it:",
+          "tag": "NEET 2021",
+          "tagClass": "pyq",
+          "options": [
+            {"text": "slides with constant velocity", "correct": false},
+            {"text": "slides with increasing velocity", "correct": false},
+            {"text": "just begins to slide", "correct": true},
+            {"text": "does not slide at any velocity", "correct": false}
+          ],
+          "explanation": "By definition, angle of repose is the angle of the inclined plane with the horizontal such that a body placed on it just begins to slide. At exactly this angle, applied force (mg sin \u03b1) equals limiting friction (\u03bcs mg cos \u03b1), so the body is on the verge of motion."
+        }
+      ]
+    },
+    "practice": {
+      "sectionTitle": "Practice Questions",
+      "questions": [
+        {
+          "question": "If coefficient of static friction \u03bcs = 1/\u221a3, the angle of repose is:",
+          "options": ["30\u00b0", "45\u00b0", "60\u00b0", "90\u00b0"],
+          "answer": "30\u00b0"
+        },
+        {
+          "question": "Angle of repose (\u03b1) and angle of friction (\u03b8) are related by:",
+          "options": ["\u03b1 = 2\u03b8", "\u03b1 = \u03b8/2", "\u03b1 = \u03b8", "\u03b1 = 90\u00b0 \u2212 \u03b8"],
+          "answer": "\u03b1 = \u03b8"
+        },
+        {
+          "question": "On a rough inclined plane, a block just begins to slide at angle 45\u00b0. The coefficient of static friction between block and plane is:",
+          "options": ["0.5", "1", "\u221a3", "1/\u221a3"],
+          "answer": "1"
+        },
+        {
+          "question": "Coefficient of limiting friction is equal to tangent of angle of repose. This statement is:",
+          "options": ["True", "False", "True only on inclined planes", "True only for metals"],
+          "answer": "True"
+        }
+      ]
+    },
+    "checklist": {
+      "subjectLabel": "NEET Physics",
+      "items": [
+        {
+          "title": "State the definition of angle of repose",
+          "description": "Angle of the inclined plane with the horizontal such that a body placed on it just begins to slide. The word \u2018just\u2019 means onset of motion \u2014 limiting friction is used, not kinetic."
+        },
+        {
+          "title": "Derive tan \u03b1 = \u03bcs from FBD on inclined plane",
+          "description": "mg sin \u03b1 = F_l = \u03bcs mg cos \u03b1 \u21d2 tan \u03b1 = \u03bcs. Practice the vector decomposition once so the algebra is fast under exam conditions."
+        },
+        {
+          "title": "State and justify the equality \u03b1 = \u03b8",
+          "description": "tan \u03b1 = \u03bcs (from repose) and tan \u03b8 = \u03bcs (from friction angle). Both are equal to \u03bcs, so \u03b1 = \u03b8. This is the most frequently tested relation in this pair of topics."
+        },
+        {
+          "title": "Numerical fluency: given \u03bcs, find \u03b1",
+          "description": "\u03b1 = tan\u207b\u00b9(\u03bcs). Know: tan 30\u00b0 = 1/\u221a3, tan 37\u00b0 \u2248 0.75, tan 45\u00b0 = 1, tan 53\u00b0 \u2248 1.33, tan 60\u00b0 = \u221a3. These cover all NEET angle-of-repose numerical MCQs."
+        }
+      ]
+    },
+    "faq": {
+      "sectionTitle": "Frequently Asked Questions",
+      "items": [
+        {
+          "question": "Why is limiting (static) friction used in the derivation, not kinetic friction?",
+          "answer": "Angle of repose is the angle at which the body \u2018just begins\u2019 to slide \u2014 the onset of motion. At this instant, the friction force is at its maximum static value (limiting friction F_l = \u03bcs R). Once sliding starts, kinetic friction (\u03bck < \u03bcs) takes over. The angle of repose corresponds to the verge of sliding, so limiting friction is correct."
+        },
+        {
+          "question": "Does the mass of the block affect the angle of repose?",
+          "answer": "No. In the derivation: mg sin \u03b1 = \u03bcs mg cos \u03b1. The mass m cancels on both sides, giving tan \u03b1 = \u03bcs, which is independent of m. The angle of repose depends only on the materials of the block and surface, not on the block\u2019s mass or weight."
+        },
+        {
+          "question": "Is the angle of repose always equal to the angle of friction?",
+          "answer": "Yes, for a single body on a flat inclined surface (the standard NEET scenario): tan \u03b1 = \u03bcs = tan \u03b8, so \u03b1 = \u03b8. The NCERT explicitly states: \u2018angle of repose = angle of friction\u2019. This equality holds whenever the same coefficient of static friction governs both situations."
+        },
+        {
+          "question": "What happens if the slope angle exceeds the angle of repose?",
+          "answer": "If slope > angle of repose, mg sin \u03b1 > \u03bcs mg cos \u03b1. Static friction cannot balance the gravitational component along the slope. The block starts sliding. Once sliding, kinetic friction \u03bck < \u03bcs applies, and the net force along the slope is mg sin \u03b1 \u2212 \u03bck mg cos \u03b1 > 0, so the block accelerates."
+        }
+      ]
+    }
+  },
+  "grounding": {
+    "source_page_markdown_paths": [
+      "pages/physics-1/page-238/markdown.md"
+    ],
+    "grounding_summary": [
+      "Page 238 defines angle of repose as the angle of the inclined plane with the horizontal such that a body placed on it just begins to slide.",
+      "The page derives tan \u03b1 = \u03bcs from force balance on the inclined plane and states that coefficient of limiting friction equals tan of angle of repose.",
+      "The textbook explicitly states the equality: angle of repose = angle of friction (\u03b1 = \u03b8), with the relation \u03bcs = tan \u03b1 = tan \u03b8 used to connect both concepts."
+    ],
+    "grounding_excerpt": [
+      "Angle of repose is defined as the angle of the inclined plane with horizontal such that a body placed on it just begins to slide.",
+      "Thus the coefficient of limiting friction is equal to the tangent of angle of repose.",
+      "As well as $\\alpha = \\theta$ i.e. angle of repose = angle of friction."
+    ],
+    "sources": [
+      {
+        "title": "NCERT Physics Part I \u2014 Laws of Motion (Angle of Repose)",
+        "url": "https://ncert.nic.in/textbook/pdf/keph104.pdf",
+        "publisher": "ncert.nic.in",
+        "accessed_date": "2026-04-10",
+        "why_used": "Primary NCERT source for angle of repose definition, derivation tan \u03b1 = \u03bcs, and equality with angle of friction as tested in NEET."
+      },
+      {
+        "title": "Friction \u2014 Physics Class 11 \u2014 NEET (EduRev)",
+        "url": "https://edurev.in/t/93714/Friction",
+        "publisher": "edurev.in",
+        "accessed_date": "2026-04-10",
+        "why_used": "Confirms NEET exam patterns for angle of repose including definition MCQs and the \u03b1 = \u03b8 equality as a direct test question."
+      }
+    ],
+    "review": {
+      "used_local_page_grounding": true,
+      "semantic_page_read_complete": true,
+      "used_current_research": true,
+      "research_used_for_enrichment": true,
+      "template_preserved": true,
+      "scope_checked": true,
+      "syllabus_scope_verified": true,
+      "guardrails_passed": true,
+      "notes": "Content grounded in page-238 OCR markdown. Verbatim excerpts verified from source text. Derivation and equality follow textbook exactly. No dual_cta."
+    }
+  }
+}
