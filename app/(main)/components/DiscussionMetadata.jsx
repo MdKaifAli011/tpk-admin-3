@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useSearchParams, usePathname } from "next/navigation";
 import api from "@/lib/api";
 import { APP_CONFIG } from "@/constants";
+import { stripHtml } from "../lib/utils/contentUtils";
 
 /**
  * Client-side component to update metadata for discussion threads
@@ -47,11 +48,7 @@ export default function DiscussionMetadata({ entityData = {} }) {
         const entityName = entityData?.name || thread.chapterId?.name || thread.subjectId?.name || thread.examId?.name || "";
 
         // Clean HTML from content for description
-        const cleanContent = (thread.content || "")
-          .replace(/<[^>]+>/g, "")
-          .replace(/\s+/g, " ")
-          .trim()
-          .substring(0, 150);
+        const cleanContent = stripHtml(thread.content || "").substring(0, 150);
 
         const threadTitle = thread.title || "Discussion Thread";
         const tags = thread.tags?.join(", ") || "";

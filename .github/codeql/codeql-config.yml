@@ -1,5 +1,5 @@
 # Vendored/third-party assets: avoid CodeQL first-party rules on minified libraries (MathJax, CKEditor samples).
 name: CodeQL config
 paths-ignore:
-  - public/vendor/mathjax/**
-  - public/vendor/ckeditor/samples/**
+  - public/vendor/**
+  - public/**/old/jquery.html

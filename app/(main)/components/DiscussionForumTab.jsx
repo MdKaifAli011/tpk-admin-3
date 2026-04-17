@@ -15,6 +15,7 @@ import { marked } from "marked";
 import DOMPurify from "dompurify";
 import RichTextEditor from "@/app/(admin)/components/ui/RichTextEditor";
 import RichContent from "./RichContent";
+import { stripHtml } from "../lib/utils/contentUtils";
 import Card from "./Card";
 import Button from "./Button";
 import DiscussionMetadata from "./DiscussionMetadata";
@@ -228,7 +229,7 @@ const ThreadCard = ({ thread, onClick }) => {
                 {thread.title}
               </h3>
               <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed mb-4">
-                {(thread.content || "").replace(/<[^>]+>/g, "").substring(0, 160)}...
+                {stripHtml(thread.content || "").substring(0, 160)}...
               </p>
 
               <div className="flex items-center flex-wrap gap-x-4 gap-y-2 text-xs text-gray-500">

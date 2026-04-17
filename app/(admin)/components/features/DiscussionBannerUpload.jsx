@@ -38,6 +38,28 @@ const DiscussionBannerUpload = () => {
     return getUrlWithBasePath(url);
   }, []);
 
+  const getSafeImageSrc = useCallback(
+    (url) => {
+      const resolved = String(getImageUrl(url) || "").trim();
+      if (!resolved) return "";
+      if (resolved.startsWith("/")) return resolved;
+
+      try {
+        const parsed = new URL(resolved, window.location.origin);
+        const protocol = parsed.protocol.toLowerCase();
+        return protocol === "http:" ||
+          protocol === "https:" ||
+          protocol === "blob:" ||
+          protocol === "data:"
+          ? parsed.href
+          : "";
+      } catch {
+        return "";
+      }
+    },
+    [getImageUrl],
+  );
+
   // ✅ PERFECTED: Clean URL for backend storage
   const cleanImageUrl = useCallback((url) => {
     return cleanUrlFromBasePath(url);
@@ -539,7 +561,7 @@ const DiscussionBannerUpload = () => {
                   {previewUrl && (
                     <div className="relative">
                       <img
-                        src={previewUrl}
+                        src={getSafeImageSrc(previewUrl)}
                         alt="Preview"
                         className="w-full h-48 object-cover rounded-xl border-2 border-gray-200 shadow-sm"
                         onError={(e) => {
@@ -750,7 +772,7 @@ const DiscussionBannerUpload = () => {
 
                     <div className="relative mb-4 mt-8">
                       <img
-                        src={banner.url}
+                        src={getSafeImageSrc(banner.url)}
                         alt={banner.altText || "Banner"}
                         className="w-full h-32 object-cover rounded-lg border border-gray-100 shadow-sm"
                         onLoad={(e) => {
@@ -868,7 +890,7 @@ const DiscussionBannerUpload = () => {
                           {hasBanners && banners[0] && (
                             <div className="w-full h-28 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg overflow-hidden">
                               <img
-                                src={banners[0].url}
+                                src={getSafeImageSrc(banners[0].url)}
                                 alt={`${exam.name} banner`}
                                 className="w-full h-full object-cover"
                                 onError={(e) => {

@@ -16,6 +16,7 @@ import { getThreadHierarchyQueryString } from "@/lib/discussionThreadQuery";
 import { useFilterPersistence } from "../../hooks/useFilterPersistence";
 import { useDebouncedSearchQuery } from "../../hooks/useDebouncedSearchQuery";
 import PaginationBar from "../ui/PaginationBar";
+import { stripHtml } from "@/app/(main)/lib/utils/contentUtils";
 
 const timeAgo = (date) => {
     const seconds = Math.floor((new Date() - new Date(date)) / 1000);
@@ -464,7 +465,7 @@ const DiscussionManagement = () => {
             showError("Title is required");
             return;
         }
-        const contentStrip = (createContent || "").replace(/<[^>]+>/g, "").trim();
+        const contentStrip = stripHtml(createContent || "").trim();
         if (!contentStrip) {
             showError("Content is required");
             return;

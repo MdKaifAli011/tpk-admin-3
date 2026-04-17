@@ -13,6 +13,7 @@ import { FaTimes, FaPlay, FaSpinner } from "react-icons/fa";
 import { lazy, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import loadMathJax from "../lib/utils/mathJaxLoader";
+import { decodeHtmlEntities } from "../lib/utils/contentUtils";
 import { logger } from "@/utils/logger";
 
 const RICH_COMMON_CSS_LINK_ID = "rich-common-css-link";
@@ -74,19 +75,7 @@ const decodeAttr = (str) => {
     decodeCache.set(str, value);
     return value;
   }
-  let decoded = String(str);
-  let prev;
-  do {
-    prev = decoded;
-    decoded = decoded
-      .replace(/&quot;/g, '"')
-      .replace(/&amp;/g, "&")
-      .replace(/&lt;/g, "<")
-      .replace(/&gt;/g, ">")
-      .replace(/&#39;/g, "'")
-      .replace(/&#x27;/g, "'")
-      .trim();
-  } while (decoded !== prev);
+  const decoded = decodeHtmlEntities(String(str)).trim();
   if (decodeCache.size >= MAX_DECODE_CACHE_SIZE) {
     const firstKey = decodeCache.keys().next().value;
     decodeCache.delete(firstKey);

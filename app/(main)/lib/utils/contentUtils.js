@@ -3,6 +3,96 @@
  * Client-side utilities for HTML content processing
  */
 
+const NAMED_HTML_ENTITIES = {
+  nbsp: " ",
+  amp: "&",
+  lt: "<",
+  gt: ">",
+  quot: '"',
+  apos: "'",
+};
+
+function decodeNumericEntity(entityBody) {
+  const isHex = entityBody.startsWith("#x") || entityBody.startsWith("#X");
+  const isDecimal = entityBody.startsWith("#");
+  if (!isHex && !isDecimal) return null;
+
+  const raw = isHex ? entityBody.slice(2) : entityBody.slice(1);
+  const value = Number.parseInt(raw, isHex ? 16 : 10);
+  if (!Number.isFinite(value)) return null;
+
+  try {
+    return String.fromCodePoint(value);
+  } catch {
+    return null;
+  }
+}
+
+function stripTagsSafely(html) {
+  const input = String(html || "");
+  let output = "";
+  let inTag = false;
+  let tagContent = "";
+  let skipContentUntilTag = null;
+
+  for (let i = 0; i < input.length; i++) {
+    const ch = input[i];
+
+    if (!inTag) {
+      if (ch === "<") {
+        inTag = true;
+        tagContent = "";
+      } else if (!skipContentUntilTag) {
+        output += ch;
+      }
+      continue;
+    }
+
+    if (ch === ">") {
+      const rawTag = tagContent.trim().toLowerCase();
+      const isClosingTag = rawTag.startsWith("/");
+      const tagName = (isClosingTag ? rawTag.slice(1) : rawTag)
+        .split(/[\s/>]/)
+        .filter(Boolean)[0];
+
+      if (!isClosingTag && (tagName === "script" || tagName === "style")) {
+        skipContentUntilTag = tagName;
+      } else if (isClosingTag && tagName === skipContentUntilTag) {
+        skipContentUntilTag = null;
+      }
+
+      inTag = false;
+      tagContent = "";
+    } else {
+      tagContent += ch;
+    }
+  }
+
+  return output;
+}
+
+export function decodeHtmlEntities(input) {
+  const text = String(input || "");
+  if (!text) return "";
+
+  if (typeof window !== "undefined" && typeof document !== "undefined") {
+    try {
+      const textarea = document.createElement("textarea");
+      textarea.innerHTML = text;
+      return textarea.value;
+    } catch {
+      // Fall through to server-safe decoder.
+    }
+  }
+
+  return text.replace(/&(#x?[0-9a-fA-F]+|[a-zA-Z]+);/g, (full, body) => {
+    const numeric = decodeNumericEntity(body);
+    if (numeric != null) return numeric;
+    const named = NAMED_HTML_ENTITIES[String(body || "").toLowerCase()];
+    return named != null ? named : full;
+  });
+}
+
 /**
  * Strip HTML tags and get plain text
  * @param {string} html - HTML content
@@ -25,28 +115,8 @@ export function stripHtml(html) {
     }
   }
 
-  // Fallback: strip tags iteratively, then decode entities until stable (server-safe)
-  let out = String(html || "");
-  for (let i = 0; i < 24; i++) {
-    const next = out
-      .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, "")
-      .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, "")
-      .replace(/<[^>]+>/g, "");
-    if (next === out) break;
-    out = next;
-  }
-  let prev;
-  do {
-    prev = out;
-    out = out
-      .replace(/&nbsp;/g, " ")
-      .replace(/&amp;/g, "&")
-      .replace(/&lt;/g, "<")
-      .replace(/&gt;/g, ">")
-      .replace(/&quot;/g, '"')
-      .replace(/&#39;/g, "'")
-      .replace(/&#x27;/g, "'");
-  } while (out !== prev);
+  // Server-safe fallback: strip tags with a small state machine and decode entities once.
+  const out = decodeHtmlEntities(stripTagsSafely(html));
   return out.replace(/\s+/g, " ").trim();
 }
 
