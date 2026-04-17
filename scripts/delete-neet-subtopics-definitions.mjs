@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Delete SubTopics + Definitions for NEET (Biology, Physics, Chemistry only).
+ * Delete SubTopics + Definitions for NEET (Biology only).
  *
  * Default mode is DRY RUN (no writes):
  *   node scripts/delete-neet-subtopics-definitions.mjs
@@ -37,7 +37,8 @@ const EXECUTE = process.argv.includes("--execute");
 const FORCE_YES = process.argv.includes("--yes");
 const examArg = process.argv.find((arg) => arg.startsWith("--exam="));
 const EXAM_NAME = (examArg?.split("=")[1] || "NEET").trim();
-const TARGET_SUBJECTS = ["Biology", "Physics", "Chemistry"];
+/** Restrict deletion to Biology only (Chemistry/Physics are intentionally excluded). */
+const TARGET_SUBJECTS = ["Biology"];
 
 if (!MONGODB_URI) {
   console.error("❌ MONGODB_URI is required (set in .env).");

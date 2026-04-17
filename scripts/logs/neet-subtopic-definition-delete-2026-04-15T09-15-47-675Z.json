@@ -1,0 +1,19 @@
+{
+  "createdAt": "2026-04-15T09:15:47.676Z",
+  "mode": "EXECUTE",
+  "exam": "NEET",
+  "targetSubjects": [
+    "Biology"
+  ],
+  "subjectCount": 1,
+  "subTopicCount": 0,
+  "definitionCount": 0,
+  "subjects": [
+    {
+      "id": "6918499a31c478dca9bb053c",
+      "name": "Biology"
+    }
+  ],
+  "subTopics": [],
+  "definitions": []
+}

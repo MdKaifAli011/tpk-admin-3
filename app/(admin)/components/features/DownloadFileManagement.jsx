@@ -805,54 +805,56 @@ function MediaLibraryDocumentPicker({
                 </div>
               ) : (
                 <ul className="divide-y divide-gray-100">
-                  {docs.map((item) => (
-                    <li key={item._id} className="flex flex-col gap-2 px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-4">
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-start gap-2">
-                          <FaFileAlt className="mt-0.5 h-4 w-4 shrink-0 text-blue-600" />
-                          <div className="min-w-0">
-                            <p className="truncate text-sm font-medium text-gray-900" title={item.name}>
-                              {item.name || item.fileName}
-                            </p>
-                            <p className="truncate text-xs text-gray-500 font-mono" title={item.fileName}>
+                  {docs.map((item) => {
+                    const displayName = (item.name || item.fileName || "").trim() || "Untitled";
+                    const showStoredName =
+                      item.name &&
+                      item.fileName &&
+                      String(item.name).trim() !== String(item.fileName).trim();
+                    return (
+                      <li
+                        key={item._id}
+                        className="flex items-center gap-3 px-3 py-2.5 sm:px-4 hover:bg-gray-50/80"
+                      >
+                        <FaFileAlt className="h-4 w-4 shrink-0 text-blue-600" aria-hidden />
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-medium text-gray-900" title={displayName}>
+                            {displayName}
+                          </p>
+                          {showStoredName ? (
+                            <p className="truncate text-xs text-gray-500" title={item.fileName}>
                               {item.fileName}
                             </p>
-                            <p
-                              className="truncate text-[11px] text-gray-400"
-                              title={toAbsoluteMediaUrl(item.url)}
-                            >
-                              {toAbsoluteMediaUrl(item.url)}
-                            </p>
-                            <p className="text-xs text-gray-400 mt-0.5">{formatBytes(item.size)}</p>
-                          </div>
+                          ) : null}
+                          <p className="text-[11px] text-gray-400">{formatBytes(item.size)}</p>
                         </div>
-                      </div>
-                      <div className="flex shrink-0 items-center gap-2 sm:flex-col sm:items-end">
-                        <a
-                          href={toAbsoluteMediaUrl(item.url)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs font-medium text-blue-600 hover:underline"
-                        >
-                          Preview
-                        </a>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            onPick({
-                              url: toAbsoluteMediaUrl(item.url),
-                              size: item.size,
-                              mimeType: item.mimeType || "",
-                              name: item.name || item.fileName,
-                            });
-                          }}
-                          className="rounded-lg bg-[#0056FF] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#0044CC]"
-                        >
-                          Use this file
-                        </button>
-                      </div>
-                    </li>
-                  ))}
+                        <div className="flex shrink-0 items-center gap-2">
+                          <a
+                            href={toAbsoluteMediaUrl(item.url)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-50"
+                          >
+                            Preview
+                          </a>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              onPick({
+                                url: toAbsoluteMediaUrl(item.url),
+                                size: item.size,
+                                mimeType: item.mimeType || "",
+                                name: item.name || item.fileName,
+                              });
+                            }}
+                            className="rounded-md bg-[#0056FF] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#0044CC]"
+                          >
+                            Use this file
+                          </button>
+                        </div>
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
             </div>
