@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { usePathname } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 import {
     FaUser,
     FaEnvelope,
@@ -38,6 +38,8 @@ import { useExamPreparedDefault } from "./context/ExamLeadContext";
 
 const TrialModal = ({ isOpen, onClose }) => {
     const examPreparedDefault = useExamPreparedDefault();
+    const { exam } = useParams();
+    const resolvedPrepared = String(examPreparedDefault || exam || "").trim();
     const pathname = usePathname();
     const { src: formPlaceholderImgSrc, onError: onFormPlaceholderError } =
         useFormPlaceholderImage(pathname, basePath, { variant: "default" });
@@ -168,7 +170,7 @@ const TrialModal = ({ isOpen, onClose }) => {
                 country: formData.country.trim(),
                 className: formData.className.trim(),
                 phoneNumber: formData.countryCode + formData.phoneNumber.trim(),
-                prepared: [examPreparedDefault, formData.subject]
+                prepared: [resolvedPrepared, formData.subject]
                     .map((s) => String(s || "").trim())
                     .filter(Boolean)
                     .join(" — "),

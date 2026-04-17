@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { usePathname } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 import {
   FaUser,
   FaEnvelope,
@@ -48,6 +48,7 @@ const TestSubmissionRegistrationModal = ({
   formId = "registration-practice", // Default form ID for practice test registration
 }) => {
   const examPreparedDefault = useExamPreparedDefault();
+  const { exam } = useParams();
   const pathname = usePathname();
   const { src: formPlaceholderImgSrc, onError: onFormPlaceholderError } =
     useFormPlaceholderImage(pathname, basePath, { variant: "default" });
@@ -313,7 +314,10 @@ const TestSubmissionRegistrationModal = ({
         password: formData.password,
         phoneNumber: fullPhoneNumber,
         className: formData.className.trim(),
-        prepared: formData.prepared?.trim() || examPreparedDefault || null,
+        prepared:
+          formData.prepared?.trim() ||
+          String(examPreparedDefault || exam || "").trim() ||
+          null,
         country: formData.country || null,
         source: sourceUrl, // Send the full URL (pathname + query params) where student registered from
         formId: formId, // Send form ID to track registration source

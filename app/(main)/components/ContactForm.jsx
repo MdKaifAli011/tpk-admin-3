@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
 import {
   FaUser,
   FaEnvelope,
@@ -35,6 +36,9 @@ import { useExamPreparedDefault } from "./context/ExamLeadContext";
 
 const ContactForm = () => {
   const examPreparedDefault = useExamPreparedDefault();
+  const { exam } = useParams();
+  const resolvedPrepared =
+    String(examPreparedDefault || exam || "").trim() || null;
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -148,7 +152,7 @@ const ContactForm = () => {
         form_name: "contact-form", // Form identifier
         form_id: "contact-form", // Form ID to track registration source
         source: sourcePath, // Full URL with query parameters
-        prepared: examPreparedDefault,
+        prepared: resolvedPrepared,
       });
 
       if (response.data?.success) {

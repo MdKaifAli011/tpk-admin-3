@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { usePathname } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 import {
   FaUser,
   FaEnvelope,
@@ -46,6 +46,7 @@ const DiscussionForumSavePostModal = ({
   formId = "Discussion-forum-save-post",
 }) => {
   const examPreparedDefault = useExamPreparedDefault();
+  const { exam } = useParams();
   const pathname = usePathname();
   const { src: formPlaceholderImgSrc, onError: onFormPlaceholderError } =
     useFormPlaceholderImage(pathname, basePath, { variant: "discussion" });
@@ -304,7 +305,10 @@ const DiscussionForumSavePostModal = ({
         password: formData.password,
         phoneNumber: fullPhoneNumber,
         className: formData.className.trim(),
-        prepared: formData.prepared?.trim() || examPreparedDefault || null,
+        prepared:
+          formData.prepared?.trim() ||
+          String(examPreparedDefault || exam || "").trim() ||
+          null,
         country: formData.country || null,
         source: sourceUrl,
         formId,

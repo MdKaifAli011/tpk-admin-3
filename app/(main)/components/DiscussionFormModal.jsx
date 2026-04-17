@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { usePathname } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 import {
   FaUser,
   FaEnvelope,
@@ -42,6 +42,9 @@ const DiscussionFormModal = ({
   initialData = {}
 }) => {
   const examPreparedDefault = useExamPreparedDefault();
+  const { exam } = useParams();
+  const resolvedPrepared =
+    String(examPreparedDefault || exam || "").trim() || null;
   const pathname = usePathname();
   const { src: formPlaceholderImgSrc, onError: onFormPlaceholderError } =
     useFormPlaceholderImage(pathname, basePath, { variant: "discussion" });
@@ -164,7 +167,7 @@ const DiscussionFormModal = ({
         form_name: formId, // Form identifier (for backward compatibility)
         form_id: formId, // Form ID to track registration source
         source: sourcePath, // Full URL with query parameters
-        prepared: examPreparedDefault,
+        prepared: resolvedPrepared,
       });
 
       if (!leadResponse.data?.success) {

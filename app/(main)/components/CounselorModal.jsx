@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { usePathname } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 import {
     FaUser,
     FaEnvelope,
@@ -38,6 +38,8 @@ import { useExamPreparedDefault } from "./context/ExamLeadContext";
 const CounselorModal = ({
     isOpen,
     onClose,
+    onSuccess,
+    preparedValue = "",
     title = "Talk to Our Expert Counselors",
     badgeText = "Connect With Expert Counselor",
     formName = "Connect With Counselor",
@@ -45,6 +47,8 @@ const CounselorModal = ({
     successMessage = "Thank you! Your request has been sent. A counselor will contact you shortly.",
     submitButtonText = "Request Connection",
 }) => {
+    const examPreparedDefault = useExamPreparedDefault();
+    const { exam } = useParams();
     const pathname = usePathname();
     const { src: formPlaceholderImgSrc, onError: onFormPlaceholderError } =
         useFormPlaceholderImage(pathname, basePath, { variant: "default" });
@@ -63,6 +67,10 @@ const CounselorModal = ({
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitStatus, setSubmitStatus] = useState(null);
     const [submitMessage, setSubmitMessage] = useState("");
+    const normalizedPreparedValue = String(preparedValue || "").trim();
+    const normalizedExamPreparedDefault = String(examPreparedDefault || exam || "").trim();
+    const resolvedPrepared =
+        normalizedPreparedValue || normalizedExamPreparedDefault || null;
 
     const {
         verificationQuestion,
@@ -179,12 +187,16 @@ const CounselorModal = ({
                 form_name: formName,
                 form_id: formId,
                 source: sourcePath,
-                prepared: examPreparedDefault,
+                prepared: resolvedPrepared,
             });
 
             if (response.data?.success) {
                 setSubmitStatus("success");
                 setSubmitMessage(successMessage);
+
+                if (typeof onSuccess === "function") {
+                    onSuccess();
+                }
 
                 // Reset form
                 setFormData({

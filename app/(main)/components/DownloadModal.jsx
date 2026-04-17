@@ -1,5 +1,5 @@
 "use client";
-import { usePathname } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import {
   FaUser,
@@ -36,6 +36,9 @@ import { useExamPreparedDefault } from "./context/ExamLeadContext";
 
 const DownloadModal = ({ isOpen, onClose, onSuccess }) => {
   const examPreparedDefault = useExamPreparedDefault();
+  const { exam } = useParams();
+  const resolvedPrepared =
+    String(examPreparedDefault || exam || "").trim() || null;
   const pathname = usePathname();
   const { src: formPlaceholderImgSrc, onError: onFormPlaceholderError } =
     useFormPlaceholderImage(pathname, basePath, { variant: "default" });
@@ -136,7 +139,7 @@ const DownloadModal = ({ isOpen, onClose, onSuccess }) => {
         phoneNumber: formData.countryCode + formData.phoneNumber.trim(),
         form_name: "download-modal", // Form identifier
         source: typeof window !== "undefined" ? window.location.pathname : "", // Current path (e.g., /neet)
-        prepared: examPreparedDefault,
+        prepared: resolvedPrepared,
       });
 
       if (response.data?.success) {

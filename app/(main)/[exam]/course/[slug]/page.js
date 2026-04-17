@@ -89,6 +89,7 @@ export default function CourseDetailPage() {
   const [loading, setLoading] = useState(true);
   const [videoModalOpen, setVideoModalOpen] = useState(false);
   const [counselorModalOpen, setCounselorModalOpen] = useState(false);
+  const [brochureModalOpen, setBrochureModalOpen] = useState(false);
   const [contactFormData, setContactFormData] = useState({
     name: "",
     email: "",
@@ -254,7 +255,9 @@ export default function CourseDetailPage() {
         form_name: "course-contact",
         form_id: "course-contact",
         source: sourcePath,
-        prepared: examPreparedDefault,
+        prepared: String(
+          examPreparedDefault || course?.examId?.name || examSlug || "",
+        ).trim() || null,
       });
       if (response.data?.success) {
         setContactSubmitStatus("success");
@@ -381,7 +384,37 @@ export default function CourseDetailPage() {
     String(course.brochureButtonUrl).trim() !== ""
       ? String(course.brochureButtonUrl).trim()
       : "/contact";
-  const brochureIsExternal = /^https?:\/\//i.test(brochureButtonUrl);
+  const brochureFormId =
+    typeof slug === "string" && slug.trim() ? slug.trim() : "course-brochure";
+  const coursePreparedValue =
+    String(examPreparedDefault || course?.examId?.name || examSlug || "").trim() ||
+    null;
+
+  const getResolvedBrochureUrl = () => {
+    const rawUrl = String(brochureButtonUrl || "").trim();
+    if (!rawUrl) return `${basePath}/contact`;
+    if (/^https?:\/\//i.test(rawUrl)) return rawUrl;
+    if (!rawUrl.startsWith("/")) return rawUrl;
+
+    const normalizedBasePath =
+      basePath && basePath !== "/"
+        ? `/${String(basePath).replace(/^\/+|\/+$/g, "")}`
+        : "";
+
+    if (!normalizedBasePath) return rawUrl;
+    if (
+      rawUrl === normalizedBasePath ||
+      rawUrl.startsWith(`${normalizedBasePath}/`)
+    ) {
+      return rawUrl;
+    }
+    return `${normalizedBasePath}${rawUrl}`;
+  };
+
+  const openBrochureUrl = () => {
+    if (typeof window === "undefined") return;
+    window.location.href = getResolvedBrochureUrl();
+  };
 
   return (
     <div className="min-h-screen bg-white text-slate-900 space-y-6 mt-6">
@@ -525,16 +558,14 @@ export default function CourseDetailPage() {
                   {formatPrice(course.price)}
                 </span> */}
 
-                <Link
-                  href={brochureButtonUrl}
+                <button
+                  type="button"
+                  onClick={() => setBrochureModalOpen(true)}
                   className="inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 transition-colors shadow-sm"
-                  {...(brochureIsExternal
-                    ? { target: "_blank", rel: "noopener noreferrer" }
-                    : {})}
                 >
                   <FaDownload className="w-4 h-4 shrink-0" />
                   Download Course Brochure
-                </Link>
+                </button>
 
                 <button
                   type="button"
@@ -667,6 +698,19 @@ export default function CourseDetailPage() {
             <CounselorModal
               isOpen={counselorModalOpen}
               onClose={() => setCounselorModalOpen(false)}
+              preparedValue={coursePreparedValue}
+            />
+            <CounselorModal
+              isOpen={brochureModalOpen}
+              onClose={() => setBrochureModalOpen(false)}
+              onSuccess={openBrochureUrl}
+              preparedValue={coursePreparedValue}
+              title="Download Course Brochure"
+              badgeText="Complete form to download"
+              formName="course-brochure-download"
+              formId={brochureFormId}
+              successMessage="Thank you! Redirecting you to the course brochure."
+              submitButtonText="Submit & Download"
             />
           </div>
         </div>
